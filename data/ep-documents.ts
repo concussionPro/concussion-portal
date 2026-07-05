@@ -501,6 +501,11 @@ export const EP_DOCUMENTS: EpDocument[] = [
       },
       { type: 'section', title: '1. Background & referral' },
       {
+        type: 'callout',
+        tone: 'info',
+        text: 'Running the program on SST Trainer? Attach the auto-generated episode report (Patients → GP report): serial measured-threshold trajectory, verified session counts and flare history — the objective progress evidence for section 3, without transcription.',
+      },
+      {
         type: 'fields',
         cols: 1,
         items: [
@@ -589,6 +594,11 @@ export const EP_DOCUMENTS: EpDocument[] = [
         ],
       },
       { type: 'section', title: '1. Injury & referral' },
+      {
+        type: 'callout',
+        tone: 'info',
+        text: 'Running the program on SST Trainer? Attach the auto-generated episode report (Patients → GP report) — measured-threshold trajectory, verified sessions, flares — as the objective capacity evidence.',
+      },
       {
         type: 'fields',
         cols: 1,
@@ -681,6 +691,23 @@ export const EP_DOCUMENTS: EpDocument[] = [
         type: 'p',
         text: '“Thank you for referring [patient] following their concussion of [date]. On treadmill testing the patient reached a symptom threshold at 148 bpm (symptoms rose from 2/10 to 5/10), consistent with an exercise-intolerance presentation. I have commenced sub-symptom-threshold aerobic reconditioning, prescribing steady-state aerobic work at approximately 125 bpm (around 85% of threshold) to drive autonomic recovery without provoking symptoms. The patient is now tolerating Stage 2–3 reconditioning with good adherence and a falling symptom score (12/22 at baseline, 5/22 this week). I will continue to progress the heart-rate ceiling as tolerance improves and update you at the next milestone. As the patient approaches return to full training, I recommend medical review to consider clearance for return-to-contact, which sits outside my scope as an exercise physiologist.”',
       },
+      { type: 'section', title: 'Objective program data (SST Trainer)' },
+      {
+        type: 'p',
+        text: 'If the program ran on SST Trainer, attach the auto-generated episode report (Patients → GP report) — it carries the serial measured-threshold trajectory with source provenance, verified home-session counts and flare history. Summarise the headline numbers in the letter body so the referrer can act without opening the attachment.',
+      },
+      {
+        type: 'fields',
+        cols: 2,
+        items: [
+          { label: 'Graded tests completed', hint: 'count + dates' },
+          { label: 'Latest measured threshold', hint: 'bpm + prescribed band' },
+          { label: 'Home sessions (verified)', hint: 'e.g. 22 total · 19 sensor-verified' },
+          { label: 'Symptom flares during training', hint: 'count; note any red-flag stops' },
+          { label: 'Latest re-test interpretation', hint: 'e.g. no symptom exacerbation to volitional exhaustion' },
+          { label: 'Trajectory attached?', hint: 'SST episode report — yes/no' },
+        ],
+      },
       { type: 'section', title: 'Your letter' },
       {
         type: 'fields',
@@ -691,6 +718,11 @@ export const EP_DOCUMENTS: EpDocument[] = [
           { label: 'Progress against baseline' },
           { label: 'Recommendation & hand-back point' },
         ],
+      },
+      {
+        type: 'callout',
+        tone: 'scope',
+        text: 'Recommendation branch — pick ONE and keep the decision with the referrer. RECOVERED tolerance (re-test provokes no symptoms to volitional exhaustion): “The rehabilitation goal has been met on objective criteria; I recommend medical review to consider clearance for return to contact.” UNRESOLVED tolerance (threshold still below expected capacity, or flares persisting): “Exercise intolerance is improving but not resolved — I recommend extension of the treatment plan to continue supervised sub-symptom training, with re-testing before clearance is considered.” Either way the same data goes to the referrer; only the recommendation differs.',
       },
       {
         type: 'callout',
