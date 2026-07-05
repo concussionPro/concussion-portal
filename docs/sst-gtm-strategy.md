@@ -211,11 +211,11 @@ Subject: "Closing the founding group"
 computed from actual founding count — never faked (ACL + honesty doctrine).
 
 ## 5. The offer (founding partnership)
-**TRIAL (owner 2026-07-06, LOCKED): "Your first 5 patients are free."**
-Usage-based: 5 patient episodes (distinct patient, ≥1 graded test) per
+**TRIAL (owner 2026-07-06, LOCKED): "Your first 3 patients are free."**
+Usage-based: 3 patient episodes (distinct patient, ≥1 graded test) per
 clinic code — no card, no clock. Calendar trials expire mid-episode;
 patient-count self-scales, the trial metric IS the activation metric, and
-patient #6 converts the clinic at the moment of need. 14-day-dark
+patient #4 converts the clinic at the moment of need. 14-day-dark
 concierge nudge stays. Founding clinics convert onto the founding lock.
 
 **PRICING (researched 2026-07-06, pending owner sign-off):** List A$79

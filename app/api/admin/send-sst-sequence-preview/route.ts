@@ -33,7 +33,7 @@ Zac Lewis — Osteopath, Concussion Education Australia`,
     },
     warmPricing: {
       subject: 'What SST Trainer costs a clinic',
-      body: `Straightforward: your first five patients are free — whole team, no card, no time limit. After that it's the founding rate, locked for good. Most clinics find one retained concussion patient covers the year. Reply "set us up" and your clinic code is live this week.`,
+      body: `Straightforward: your first three patients are free — whole team, no card, no time limit. After that it's the founding rate, locked for good. Most clinics find one retained concussion patient covers the year. Reply "set us up" and your clinic code is live this week.`,
     },
     warmTrial: {
       subject: 'Run a graded test on yourself',
