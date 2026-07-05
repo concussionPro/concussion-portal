@@ -502,7 +502,7 @@ export const EP_DOCUMENTS: EpDocument[] = [
       { type: 'section', title: '1. Background & referral' },
       {
         type: 'callout',
-        tone: 'info',
+        tone: 'key',
         text: 'Running the program on SST Trainer? Attach the auto-generated episode report (Patients → GP report): serial measured-threshold trajectory, verified session counts and flare history — the objective progress evidence for section 3, without transcription.',
       },
       {
@@ -596,7 +596,7 @@ export const EP_DOCUMENTS: EpDocument[] = [
       { type: 'section', title: '1. Injury & referral' },
       {
         type: 'callout',
-        tone: 'info',
+        tone: 'key',
         text: 'Running the program on SST Trainer? Attach the auto-generated episode report (Patients → GP report) — measured-threshold trajectory, verified sessions, flares — as the objective capacity evidence.',
       },
       {
