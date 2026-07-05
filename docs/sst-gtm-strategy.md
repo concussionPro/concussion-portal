@@ -157,15 +157,42 @@ Subject: founding clinics — supervised sub-symptom rehab
 >
 > Interested? Just reply.
 
-### T2 — engagement-parsed (engine already grades this)
-- viewed pricing → "happy to walk the numbers for your clinic size"
-- opened trial → "your demo code is DEMO00 — run a graded test on yourself"
-- read-only → one-paragraph vignette: what a flare looks like on the
-  dashboard the day it happens vs. at next Thursday's review.
+### T2 — engagement-parsed, 7 business days after T1 (engine grades intent)
+All variants: subject concrete, complete sentences, facts then value, no
+competitor names.
 
-### T3 — honest close
-"We're closing the founding group at [N] clinics — after that it's the
-standard plan. One reply holds a seat." (N must be real and enforced.)
+- **hot** (returned / next-step / pricing≥45s) — Subject: "Setting up
+  {ClinicName}"
+  > You spent some time with our material, so I'll keep this short. Founding
+  > setup is one email from us: your clinic code, patient links and QR the
+  > same day, and your first patient on a measured program that week. Reply
+  > "set us up" and it's done — or tell me what's holding you back.
+- **warm-pricing** — Subject: "What SST Trainer costs a clinic"
+  > Happy to walk the numbers through for a clinic your size — most find
+  > one retained concussion patient covers the founding rate for the year.
+  > Reply with a good time, or "interested" and I'll send the setup email.
+- **warm-trial** (opened the demo) — Subject: "Run a graded test on yourself"
+  > The demo code DEMO00 runs the full graded test — 10 minutes with any
+  > heart-rate source. The threshold it measures on you is the same
+  > instrument your patients train against at home. When you've tried it,
+  > reply "interested" and I'll set your clinic up.
+- **cool** (read, no strong signal) — Subject: "The GP report writes itself"
+  > One thing clinics ask about most: at episode end, SST Trainer produces
+  > the single-page report you already owe the referring GP — measured
+  > threshold trajectory, symptom tables per session, and a clearance-or-
+  > extend recommendation, ready for your signature. Reply "sample" and
+  > I'll send you one generated from demo data.
+
+### T3 — honest founding close, 8 business days after T2
+Subject: "Closing the founding group"
+> We're capping the founding group at {N} clinics so we can work directly
+> with each one — {remaining} places are left as I write this. Founding
+> clinics keep their terms for good and steer what gets built next. If the
+> timing's wrong, no hard feelings — one reply either way and I'll stop
+> writing.
+
+{N} must be REAL and enforced (owner to set; suggest 25). {remaining}
+computed from actual founding count — never faked (ACL + honesty doctrine).
 
 ## 5. The offer (founding partnership)
 - Set up now: clinic code, patient links, QR, invites, hub — same week.
