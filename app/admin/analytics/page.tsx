@@ -95,7 +95,7 @@ interface RetargetingData {
   geography?: GeoEntry[]
   summary: {
     totalVisitors: number; returningVisitors: number; returningRate: number
-    pricingViewers: number; pricingToConversion: number; converters: number
+    pricingViewers: number; portalPricingViewers?: number; pricingToConversion: number; converters: number
     /** Verified reference-book (Clinical Reference Text) purchases in the
      *  window — reported separately, never counted as course conversions. */
     bookPurchases?: number
@@ -407,7 +407,7 @@ interface TargetsByType {
 /** Per-institution partner portal engagement row. */
 interface PartnerEngagementRow {
   slug: string; name: string; status: string; tier: number
-  views: number; ctaClicks: number; avgDwellMs: number | null
+  views: number; rawHits?: number; ctaClicks: number; avgDwellMs: number | null
   lastViewedAt: string | null; topSection: string | null
 }
 
@@ -1537,8 +1537,11 @@ export default function AnalyticsDashboard() {
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><Target size={16} className="text-[var(--accent)]" /></div>
               </div>
-              <p className="stat-value">{fmtNum(retargetingData.summary.pricingViewers)}</p>
+              <p className="stat-value">{fmtNum(retargetingData.summary.pricingViewers + (retargetingData.summary.portalPricingViewers ?? 0))}</p>
               <p className="stat-label mt-1">Pricing Viewers</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {fmtNum(retargetingData.summary.pricingViewers)} site · {fmtNum(retargetingData.summary.portalPricingViewers ?? 0)} prospect portals
+              </p>
             </div>
             <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('funnel')} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
@@ -3758,6 +3761,7 @@ export default function AnalyticsDashboard() {
                                   <tr>
                                     <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Institution</th>
                                     <th className="text-left px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Status</th>
+                                    <th className="text-right px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold" title="ALL link fetches incl. mail-gateway scanners — 0 here means the email/link was never even fetched (deliverability), >0 with 0 views means delivered but no human open yet">Fetches</th>
                                     <th className="text-right px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Views</th>
                                     <th className="text-right px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">CTA clicks</th>
                                     <th className="text-right px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Avg dwell</th>
@@ -3772,6 +3776,7 @@ export default function AnalyticsDashboard() {
                                         <a href={`/partners/${p.slug}`} target="_blank" rel="noopener" className="hover:text-[var(--accent)]">{p.name}</a>
                                       </td>
                                       <td className="px-2 py-2 text-[var(--muted-foreground)] capitalize">{p.status}</td>
+                                      <td className={`px-2 py-2 text-right tabular-nums ${(p.rawHits ?? 0) > 0 ? 'text-slate-500' : 'text-red-400 font-semibold'}`}>{p.rawHits ?? 0}</td>
                                       <td className={`px-2 py-2 text-right tabular-nums font-semibold ${p.views > 0 ? 'text-violet-700' : 'text-slate-300'}`}>{p.views}</td>
                                       <td className={`px-2 py-2 text-right tabular-nums font-semibold ${p.ctaClicks > 0 ? 'text-emerald-700' : 'text-slate-300'}`}>{p.ctaClicks}</td>
                                       <td className="px-2 py-2 text-right tabular-nums text-[var(--muted-foreground)]">{p.avgDwellMs ? `${Math.round(p.avgDwellMs / 1000)}s` : '—'}</td>

@@ -175,6 +175,10 @@ export async function recordPartnerView(input: {
 export interface PartnerEngagement {
   partnerId: number
   views: number          // non-bot view + section_view events
+  /** ALL fetches incl. gateway scanners — the deliverability signal.
+   *  rawHits=0 → the link was never fetched (delivery problem);
+   *  rawHits>0, views=0 → delivered + detonated, no human open yet. */
+  rawHits: number
   ctaClicks: number
   avgDwellMs: number | null
   lastViewedAt: string | null
@@ -188,29 +192,45 @@ const PARTNER_BOT_REGEX = 'bot|crawl|spider|slurp|bingpreview|mediapartners|face
 export async function getPartnerEngagement(): Promise<Map<number, PartnerEngagement>> {
   await ensurePartnerViewsTable()
   const { rows } = await sql<{
-    partner_id: number; views: number; cta_clicks: number; avg_dwell_ms: number | null; last_viewed_at: string | null; top_section: string | null
+    partner_id: number; views: number; raw_hits: number; cta_clicks: number; avg_dwell_ms: number | null; last_viewed_at: string | null; top_section: string | null
   }>`
-    WITH human AS (
+    WITH all_hits AS (
+      SELECT partner_id, COUNT(*)::int AS raw_hits FROM partner_portal_views GROUP BY partner_id
+    ), human AS (
       SELECT * FROM partner_portal_views
       WHERE COALESCE(user_agent, '') !~* ${PARTNER_BOT_REGEX}
+    ), agg AS (
+      SELECT
+        partner_id,
+        COUNT(*) FILTER (WHERE interaction_type IN ('view','section_view'))::int AS views,
+        COUNT(*) FILTER (WHERE interaction_type = 'cta_click')::int AS cta_clicks,
+        AVG(dwell_ms) FILTER (WHERE interaction_type = 'exit')::int AS avg_dwell_ms,
+        MAX(created_at)::text AS last_viewed_at,
+        (SELECT section_visited FROM human h2 WHERE h2.partner_id = h.partner_id
+           AND interaction_type IN ('view','section_view')
+         GROUP BY section_visited ORDER BY COUNT(*) DESC LIMIT 1) AS top_section
+      FROM human h
+      GROUP BY partner_id
     )
+    -- Base on ALL fetches so a scanner-only partner still gets a row —
+    -- rawHits with zero human views IS the diagnostic.
     SELECT
-      partner_id,
-      COUNT(*) FILTER (WHERE interaction_type IN ('view','section_view'))::int AS views,
-      COUNT(*) FILTER (WHERE interaction_type = 'cta_click')::int AS cta_clicks,
-      AVG(dwell_ms) FILTER (WHERE interaction_type = 'exit')::int AS avg_dwell_ms,
-      MAX(created_at)::text AS last_viewed_at,
-      (SELECT section_visited FROM human h2 WHERE h2.partner_id = h.partner_id
-         AND interaction_type IN ('view','section_view')
-       GROUP BY section_visited ORDER BY COUNT(*) DESC LIMIT 1) AS top_section
-    FROM human h
-    GROUP BY partner_id
+      a.partner_id,
+      a.raw_hits,
+      COALESCE(g.views, 0) AS views,
+      COALESCE(g.cta_clicks, 0) AS cta_clicks,
+      g.avg_dwell_ms,
+      g.last_viewed_at,
+      g.top_section
+    FROM all_hits a
+    LEFT JOIN agg g ON g.partner_id = a.partner_id
   `
   const map = new Map<number, PartnerEngagement>()
   for (const r of rows) {
     map.set(r.partner_id, {
       partnerId: r.partner_id,
       views: r.views ?? 0,
+      rawHits: r.raw_hits ?? 0,
       ctaClicks: r.cta_clicks ?? 0,
       avgDwellMs: r.avg_dwell_ms ?? null,
       lastViewedAt: r.last_viewed_at ?? null,

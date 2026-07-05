@@ -524,7 +524,7 @@ function countBookPurchases(rawEvents: StoredEvent[]): number {
   return rawEvents.filter((e) => e.eventType === 'reference_purchase').length;
 }
 
-function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) {
+async function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[], windowStartIso: string) {
   // Group sessions by IP to find returning high-intent visitors
   const ipData = new Map<string, {
     ip: string; sessions: SessionSummary[]; totalPageviews: number;
@@ -584,6 +584,22 @@ function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) 
     }));
 
   // Summary stats
+  // Portal pricing-section viewers (prospect_portal_views is client-event
+  // only for section_view, so every row is a real browser).
+  let portalPricingViewers = 0;
+  try {
+    const { rows: ppv } = await sql`
+      SELECT COUNT(DISTINCT clinic_id)::int AS n
+      FROM prospect_portal_views
+      WHERE interaction_type = 'section_view'
+        AND section_visited = 'pricing'
+        AND created_at >= ${windowStartIso}
+    `;
+    portalPricingViewers = ppv[0]?.n ?? 0;
+  } catch {
+    /* table may not exist in fresh envs — tile just shows 0 */
+  }
+
   const totalVisitors = ipData.size;
   const returningVisitors = Array.from(ipData.values()).filter((d) => d.sessions.length > 1).length;
   const pricingViewerEntries = Array.from(ipData.values()).filter((d) => d.pricingViews > 0);
@@ -620,6 +636,12 @@ function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) 
       returningVisitors,
       returningRate: totalVisitors > 0 ? returningVisitors / totalVisitors : 0,
       pricingViewers,
+      // Prospect-portal pricing exposure (goal 1: cold outreach is the
+      // primary channel and it never routes through /pricing — the in-portal
+      // pricing SECTION is where prospects actually see the offer). Distinct
+      // clinics whose portal pricing section entered the viewport in-window,
+      // scanner-proof by construction (IntersectionObserver only).
+      portalPricingViewers,
       // Same-unit rate: purchasing pricing-viewer IPs ÷ pricing-viewer IPs.
       // Success-page based per IP (server purchases can't be joined to IPs).
       pricingToConversion: pricingViewers > 0 ? convertedPricingViewers / pricingViewers : 0,
@@ -1140,7 +1162,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (type === 'retargeting') {
     const currentEvents = await getEventsForDateRange(currentDates);
     const sessions = buildSessionSummaries(currentEvents);
-    const retargeting = buildRetargeting(sessions, currentEvents);
+    const retargeting = await buildRetargeting(sessions, currentEvents, new Date(Date.now() - days * 86_400_000).toISOString());
     return NextResponse.json(retargeting, {
       headers: { 'Cache-Control': 'no-store' },
     });

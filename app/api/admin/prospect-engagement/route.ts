@@ -1626,7 +1626,7 @@ export async function GET(req: NextRequest) {
         if (e?.lastViewedAt && (!lastViewed || e.lastViewedAt > lastViewed)) lastViewed = e.lastViewedAt
         return {
           slug: p.slug, name: p.name, status: p.status, tier: p.tier,
-          views, ctaClicks, avgDwellMs: e?.avgDwellMs ?? null,
+          views, rawHits: e?.rawHits ?? 0, ctaClicks, avgDwellMs: e?.avgDwellMs ?? null,
           lastViewedAt: e?.lastViewedAt ?? null, topSection: e?.topSection ?? null,
         }
       })
