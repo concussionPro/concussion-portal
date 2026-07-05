@@ -245,19 +245,21 @@ export default function HomeClient() {
           </div>
         </section>
 
-        {/* ── Clinical instruments — included with the course ───────────── */}
+        {/* ── Clinical instruments — founding-period access with enrolment.
+            Clinical Testing becomes a paid monthly subscription (owner,
+            2026-07-05) — never promise 'included forever'. ── */}
         <section className="section-padding relative z-10">
           <InstrumentKeyframes />
           <div className="max-w-[960px] mx-auto">
             <div className="text-center mb-8 md:mb-10">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
-                Included with the course
+                Yours with enrolment through the founding period
               </span>
               <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
                 Two clinical instruments, <span className="text-gradient">not just modules</span>
               </h2>
               <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-xl mx-auto">
-                Every enrolment includes your own clinic code and the tools to use it: prescribe
+                Enrol during the founding period and your clinic code activates both instruments: prescribe
                 measured-threshold exercise rehab from your patients&apos; own watches, and run
                 self-administered SCAT6 baselines for whole clubs.
               </p>
