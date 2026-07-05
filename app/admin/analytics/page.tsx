@@ -122,7 +122,7 @@ interface Insight {
 type Period = '24h' | '7d' | '30d' | '90d'
 // 'google-ads' tab removed 2026-07-02 — the Google Ads channel was retired
 // June 2026 (cold B2B outreach is the primary sales channel).
-type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects'
+type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects' | 'sst'
 
 interface ProspectSend {
   id: number
@@ -1464,6 +1464,7 @@ export default function AnalyticsDashboard() {
     { id: 'pool', label: 'Ready to Train', icon: MapPin },
     { id: 'preseason', label: 'Preseason', icon: Building2 },
     { id: 'prospects', label: 'B2B Prospects', icon: Building2 },
+    { id: 'sst', label: 'SST Outreach', icon: Activity },
     { id: 'users', label: 'Users', icon: Mail },
     { id: 'report', label: 'Daily Report', icon: Newspaper },
   ]
@@ -2620,6 +2621,8 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── Daily Report ──────────────────────────────────────────── */}
+            {activeTab === 'sst' && <SstOutreachTab />}
+
             {activeTab === 'report' && (
               <div className="space-y-4">
                 <SectionTitle title="Daily Report" subtitle={`Summary for ${period === '24h' ? 'today' : period === '7d' ? 'the last 7 days' : period === '30d' ? 'the last 30 days' : 'the last 90 days'} · ${new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`} />
@@ -5716,6 +5719,101 @@ export default function AnalyticsDashboard() {
           <p className="text-xs text-[var(--muted-foreground)] opacity-40">
             Self-hosted analytics · Postgres event store (Neon)
           </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── SST Outreach — the launch funnel for the Clinical Testing suite ──────
+   Replies-only doctrine: clinics provisioned → activated (first patient
+   ≤14d) → patients → sessions/wk. Cold-sequence sends/replies join when
+   the SST sequence ships in the prospect engine. (owner 2026-07-06) */
+function SstOutreachTab() {
+  const [data, setData] = useState<{
+    summary: {
+      provisioned: number; activated: number; activationRate: number; dark14: number
+      totalPatients: number; sessionsThisWeek: number
+      coldSends: number | null; coldReplies: number | null
+    }
+    clinics: Array<{
+      code: string; name: string; createdAt: string; patients: number; sessions: number
+      firstSessionAt: string | null; lastActivity: string | null
+      activated: boolean; needsConcierge: boolean
+    }>
+  } | null>(null)
+  const [err, setErr] = useState(false)
+
+  useEffect(() => {
+    void fetch('/api/admin/sst-outreach', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then(setData)
+      .catch(() => setErr(true))
+  }, [])
+
+  if (err) return <div className="card p-6 text-sm text-red-600">SST outreach data failed to load.</div>
+  if (!data) return <div className="card p-6 text-sm text-[var(--muted-foreground)]">Loading SST outreach…</div>
+
+  const s = data.summary
+  const tiles: Array<{ label: string; value: string; sub?: string }> = [
+    { label: 'Clinics provisioned', value: String(s.provisioned) },
+    { label: 'Activated ≤14d', value: String(s.activated), sub: `${Math.round(s.activationRate * 100)}% of provisioned` },
+    { label: 'Dark >14d (concierge)', value: String(s.dark14) },
+    { label: 'Patients on program', value: String(s.totalPatients) },
+    { label: 'Sessions this week', value: String(s.sessionsThisWeek) },
+    { label: 'Cold sends / replies', value: s.coldSends == null ? '—' : `${s.coldSends} / ${s.coldReplies}`, sub: s.coldSends == null ? 'joins when the SST sequence goes live' : undefined },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        {tiles.map((t) => (
+          <div key={t.label} className="card stat-tile">
+            <p className="stat-value">{t.value}</p>
+            <p className="stat-label mt-1">{t.label}</p>
+            {t.sub && <p className="mt-0.5 text-[10px] text-[var(--muted-foreground)]">{t.sub}</p>}
+          </div>
+        ))}
+      </div>
+
+      <div className="card p-0 overflow-hidden">
+        <div className="px-4 pt-4 pb-2">
+          <SectionTitle title="Founding clinics" subtitle="Provisioned clinic codes with real usage — DEMO00 excluded · dark >14 days = your concierge call list" />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-[rgba(13,115,119,0.05)]">
+              <tr>
+                {['Clinic', 'Code', 'Provisioned', 'Patients', 'Sessions', 'Last activity', 'Status'].map((h, i) => (
+                  <th key={h} className={`px-3 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold ${i >= 3 && i <= 4 ? 'text-right' : 'text-left'}`}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.clinics.length === 0 && (
+                <tr><td colSpan={7} className="px-3 py-6 text-center text-[var(--muted-foreground)]">No clinics provisioned yet — founding launch pending.</td></tr>
+              )}
+              {data.clinics.map((c) => (
+                <tr key={c.code} className="border-t border-slate-100 hover:bg-slate-50/60">
+                  <td className="px-3 py-2 font-semibold text-[var(--foreground)]">{c.name}</td>
+                  <td className="px-3 py-2 font-mono text-[var(--muted-foreground)]">{c.code}</td>
+                  <td className="px-3 py-2 text-[var(--muted-foreground)] whitespace-nowrap">{new Date(c.createdAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</td>
+                  <td className="px-3 py-2 text-right tabular-nums font-semibold">{c.patients}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{c.sessions}</td>
+                  <td className="px-3 py-2 text-[var(--muted-foreground)] whitespace-nowrap">{c.lastActivity ? new Date(c.lastActivity).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—'}</td>
+                  <td className="px-3 py-2">
+                    {c.activated ? (
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">activated</span>
+                    ) : c.needsConcierge ? (
+                      <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">dark — call them</span>
+                    ) : (
+                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-500">onboarding</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -204,7 +204,7 @@ function Shell() {
         }
         setClinic(c)
         const pRes = await fetch(
-          `/api/sst/clinic-sessions?clinic=${encodeURIComponent(c.code)}&k=${encodeURIComponent(c.viewKey)}`,
+          `/api/sst/clinic-sessions?code=${encodeURIComponent(c.code)}&k=${encodeURIComponent(c.viewKey)}`,
         )
         if (!pRes.ok) throw new Error(`sessions ${pRes.status}`)
         const pData = await pRes.json()

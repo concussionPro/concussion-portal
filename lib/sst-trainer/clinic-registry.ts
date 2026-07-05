@@ -190,27 +190,33 @@ export async function createSstClinic(args: {
   const viewKey = crypto.randomBytes(18).toString('base64url')
   const createdAt = new Date().toISOString()
 
-  // KV first — it's the registry every access check reads.
-  await kv.set(`clinic:${code}`, {
-    clinicName,
-    contactName,
-    email,
-    viewKey,
-    product: 'sst',
-    createdAt,
-  })
+  // Postgres FIRST (2026-07-06 audit): the PG row is the EMAIL-IDEMPOTENCY
+  // index (getSstClinicByEmail reads it). When it was best-effort, a failed
+  // mirror write let a later re-POST mint a SECOND code + key for the same
+  // clinic, orphaning the first welcome email's key. Fail provisioning
+  // loudly instead — the caller retries and idempotency holds.
+  await ensureSstClinicsTable()
+  await sql`
+    INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, created_at)
+    VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${createdAt})
+    ON CONFLICT (code) DO NOTHING
+  `
 
-  // Postgres mirror for durability/admin (best-effort: the KV record is the
-  // live gate; a missed mirror row must not fail provisioning).
+  // KV second — the registry every access check reads. If this fails, remove
+  // the PG row so a retry re-mints cleanly instead of returning a code whose
+  // auth record doesn't exist.
   try {
-    await ensureSstClinicsTable()
-    await sql`
-      INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, created_at)
-      VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${createdAt})
-      ON CONFLICT (code) DO NOTHING
-    `
+    await kv.set(`clinic:${code}`, {
+      clinicName,
+      contactName,
+      email,
+      viewKey,
+      product: 'sst',
+      createdAt,
+    })
   } catch (err) {
-    console.error('[sst-clinic-registry] Postgres mirror write failed:', err)
+    await sql`DELETE FROM sst_clinics WHERE code = ${code}`.catch(() => {})
+    throw err
   }
 
   return { code, clinicName, contactName, email, viewKey, createdAt }
