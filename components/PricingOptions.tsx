@@ -231,11 +231,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
   // Read pre-selected location, promo code, and UTM params from URL.
   //
-  // Default to Melbourne — it's the only confirmed workshop, so any user
-  // clicking the Complete Course button without an explicit choice is
-  // overwhelmingly going to want Melbourne. Defaulting prevents the
-  // "Enrol Now with no location" footgun that previously sent a full-course
-  // checkout to Stripe with location=undefined. URL ?location= still wins.
+  // Default nomination = Melbourne (largest interest pool; its first round
+  // DELIVERED June 2026 and the next round collects). Buyers can pick any city.
   const [selectedLocation, setSelectedLocation] = useState<string>('melbourne')
   const [cityProgress, setCityProgress] = useState<Record<string, CityProgress>>({})
   const [promoCode, setPromoCode] = useState<string | null>(null)

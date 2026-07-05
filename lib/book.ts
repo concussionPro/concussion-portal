@@ -1,6 +1,6 @@
 /**
  * Clinical Reference Text — product config + Stripe checkout.
- * A$67 one-time digital purchase. Delivered via access-gated download route.
+ * A$97 one-time (RETIRED as a sellable 2026-07-05; legacy fulfilment only) digital purchase. Delivered via access-gated download route.
  */
 
 import { getStripe } from '@/lib/stripe'

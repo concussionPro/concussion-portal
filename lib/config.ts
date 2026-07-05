@@ -46,7 +46,7 @@ export const CONFIG = {
     // standalone workshop-upgrade price because the clinic already paid
     // for the bundle — this is the marginal in-person cost only.
     PRICE_CLINIC_WORKSHOP_UPGRADE: 497,
-    SCAT_MASTERY_CPD_POINTS: 0,
+    SCAT_MASTERY_CPD_POINTS: 1,
     SCAT_MASTERY_MODULES: 3,
     PROMO_CODE: 'SCAT6',
   },

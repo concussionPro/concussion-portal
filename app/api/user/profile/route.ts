@@ -40,18 +40,20 @@ export async function PATCH(request: NextRequest) {
 
     // Reissue session cookie if name changed (name is embedded in JWT)
     if (updates.name && updates.name !== sessionData.name) {
+      // Reissue at the standard long-lived duration — a name edit must not
+      // silently shorten a 1-year session to 7 days (2026-07-05 audit R4).
       const newToken = createJWTSession(
         sessionData.userId,
         sessionData.email,
         updates.name,
         sessionData.accessLevel,
-        false
+        true
       )
       response.cookies.set('session', newToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60,
+        maxAge: 365 * 24 * 60 * 60,
         path: '/',
       })
     }
