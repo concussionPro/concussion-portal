@@ -222,6 +222,14 @@ function Shell() {
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
                 Patients
               </h1>
+              <p className="mx-auto mb-2 max-w-md text-[13px] text-muted-foreground leading-relaxed">
+                Every patient on your code with their measured threshold, band, verified-session
+                count and the serial-HRt recovery trajectory — the instrument your re-test
+                decisions read from.
+              </p>
+              <a href="/clinical-hub" target="_blank" rel="noopener noreferrer" className="mb-5 inline-block text-xs font-bold text-accent">
+                Preview the Clinical Hub with demo patients →
+              </a>
               <a
                 href={CONFIG.SHOP_URL}
                 className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"

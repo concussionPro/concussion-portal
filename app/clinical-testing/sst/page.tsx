@@ -8,6 +8,7 @@ import PlatformApp from '@/app/platform/app/page'
 import Link from 'next/link'
 import { Lock, ArrowRight, ChevronLeft } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { SstWatchVisual } from '@/components/clinical/InstrumentVisuals'
 
 /**
  * /clinical-testing/sst — the SST Trainer's baked-in portal page.
@@ -59,6 +60,11 @@ function Shell() {
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
                 SST Trainer
               </h1>
+              <div className="mx-auto mb-5 max-w-xs rounded-2xl bg-[#16243f] p-4 text-left">
+                <SstWatchVisual />
+                <p className="mt-3 mb-0 text-xs text-slate-300/90">The real app: measured threshold, live band, verified sessions.</p>
+                <a href="/sst-trainer" target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-bold text-teal-300">Try the patient demo →</a>
+              </div>
               <a
                 href={CONFIG.SHOP_URL}
                 className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"

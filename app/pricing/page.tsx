@@ -470,6 +470,8 @@ function PricingContent() {
                 <tbody>
                   {([
                     ['8 online modules', true, true],
+                    ['Clinical Testing suite — SST Trainer + club baseline testing (founding period)', true, true],
+                    ['Your clinic code — patients & clubs link straight to you', true, true],
                     ['Clinical Toolkit downloads', true, true],
                     ['CPD certificate (online)', '8 pts', '8 pts'],
                     ['Lifetime access', true, true],

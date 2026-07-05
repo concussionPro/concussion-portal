@@ -18,6 +18,7 @@ import {
   Share2,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { BaselineLaptopVisual } from '@/components/clinical/InstrumentVisuals'
 
 /**
  * /clinical-testing/baseline — the pre-season baseline tool's own portal page
@@ -125,6 +126,11 @@ function Shell() {
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
                 Pre-Season Baseline Testing
               </h1>
+              <div className="mx-auto mb-5 max-w-sm rounded-2xl border border-slate-200 bg-white p-4 text-left">
+                <BaselineLaptopVisual />
+                <p className="mt-3 mb-0 text-xs text-slate-500">One club link · ~5 min per athlete · PDF report to your clinic inbox.</p>
+                <a href="/preseason/b/DEMO00" target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-bold text-[#b45309]">Run the athlete demo →</a>
+              </div>
               <a
                 href={CONFIG.SHOP_URL}
                 className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"

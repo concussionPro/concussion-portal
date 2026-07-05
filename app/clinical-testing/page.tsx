@@ -89,28 +89,49 @@ function Shell() {
         <Sidebar />
         <main className="flex-1 ml-0 md:ml-64 p-6 sm:p-8">
           <div className="max-w-2xl mx-auto">
-            <div className="glass-premium rounded-2xl p-8 sm:p-10 text-center">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-5 h-5 text-amber-600" />
+            {/* SHOW-THEN-SELL (2026-07-05): the real instruments, then the ask —
+                generic lock cards demonstrated zero value (conversion audit). */}
+            <div className="glass-premium rounded-2xl p-6 sm:p-8">
+              <div className="text-center mb-6">
+                <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700 mb-2">
+                  <Lock className="mb-0.5 mr-1 inline h-3 w-3" /> Unlocks with enrolment · founding period
+                </p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">
+                  Your patient instruments
+                </h1>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
+                  This is the real suite paying members run: a clinic code of your own, measured-
+                  threshold exercise rehab on the patient&rsquo;s watch, and club-wide SCAT6
+                  baselines with reports to your inbox.
+                </p>
               </div>
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700 mb-2">
-                Paid course content
-              </p>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
-                Clinical Testing
-              </h1>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-lg mx-auto">
-                The live patient instruments — your own clinic code, the SST Trainer (measured
-                heart-rate-threshold exercise rehab), and self-administered pre-season SCAT6
-                baseline testing for your clubs and teams.
-              </p>
-              <a
-                href={CONFIG.SHOP_URL}
-                className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"
-              >
-                Unlock with Concussion Clinical Mastery
-                <ArrowRight className="w-4 h-4" />
-              </a>
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 mb-6">
+                <div className="rounded-2xl bg-[#16243f] p-4">
+                  <SstWatchVisual />
+                  <p className="mt-3 mb-0 text-[13px] font-bold text-white">SST Trainer</p>
+                  <p className="mt-0.5 mb-0 text-xs text-slate-300/90">Measured threshold → 80–90% band → verified sessions → recovery trajectory.</p>
+                  <a href="/sst-trainer" target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-block text-xs font-bold text-teal-300 hover:text-teal-200">
+                    Try the patient demo →
+                  </a>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <BaselineLaptopVisual />
+                  <p className="mt-3 mb-0 text-[13px] font-bold text-[#16243f]">Pre-Season Baseline</p>
+                  <p className="mt-0.5 mb-0 text-xs text-slate-500">One club link · ~5 min per athlete · PDF report to your clinic.</p>
+                  <a href="/preseason/b/DEMO00" target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-block text-xs font-bold text-[#b45309] hover:text-[#92400e]">
+                    Run the athlete demo →
+                  </a>
+                </div>
+              </div>
+              <div className="text-center">
+                <a
+                  href={CONFIG.SHOP_URL}
+                  className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"
+                >
+                  Unlock with Concussion Clinical Mastery
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
             </div>
           </div>
         </main>

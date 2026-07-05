@@ -53,6 +53,14 @@ function Shell() {
               <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-lg mx-auto">
                 Six referral-building outreach templates — schools, sports clubs, GP practices, surf life saving, endurance sport, plus a capability one-pager. Each with a follow-up schedule and AHPRA advertising compliance notes.
               </p>
+              <div className="mx-auto mb-5 grid max-w-md grid-cols-2 gap-2 text-left">
+                {['Schools & sport programs', 'Sports clubs', 'GP practices', 'Surf life saving', 'Endurance events', 'Capability one-pager'].map((t) => (
+                  <div key={t} className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-[11.5px] font-semibold text-slate-400">
+                    {t}
+                    <span className="mt-0.5 block text-[9px] font-normal">letter + follow-up schedule · AHPRA notes</span>
+                  </div>
+                ))}
+              </div>
               <a
                 href={CONFIG.SHOP_URL}
                 className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"
