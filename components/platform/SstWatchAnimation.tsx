@@ -12,11 +12,11 @@ import Image from 'next/image'
  */
 
 const FRAMES = [
-  { src: '/instruments/watch2/1-band.png', label: 'Your band' },
-  { src: '/instruments/watch2/2-safety.png', label: 'Safety check' },
-  { src: '/instruments/watch2/3-test.png', label: 'Graded test' },
-  { src: '/instruments/watch2/4-training.png', label: 'Train live' },
-  { src: '/instruments/watch2/5-progress.png', label: 'Recovery' },
+  { src: '/instruments/watch3/1-band.png', label: 'Your band' },
+  { src: '/instruments/watch3/2-safety.png', label: 'Safety check' },
+  { src: '/instruments/watch3/3-test.png', label: 'Graded test' },
+  { src: '/instruments/watch3/4-training.png', label: 'Train live' },
+  { src: '/instruments/watch3/5-progress.png', label: 'Recovery' },
 ]
 const N = FRAMES.length
 const HOLD_MS = 2600
@@ -42,7 +42,7 @@ export function SstWatchAnimation() {
               with object-cover — the content sits centered with a comfortable
               black bezel and the rounded corners only ever clip black. */}
           <div className="rounded-[34px] bg-black p-[6px]">
-            <div className="relative h-[300px] w-[200px] overflow-hidden rounded-[22px] bg-black">
+            <div className="relative h-[250px] w-[200px] overflow-hidden rounded-[18px] bg-black">
               <div
                 className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
                 style={{ transform: `translateX(-${i * 200}px)` }}
@@ -53,7 +53,7 @@ export function SstWatchAnimation() {
                       src={f.src}
                       alt={`SST Trainer — ${f.label}`}
                       width={200}
-                      height={300}
+                      height={250}
                       className="block h-full w-full object-cover"
                       priority
                     />
