@@ -49,6 +49,18 @@ function Cta({ variant = 'primary', href, children }: { variant?: 'primary' | 'g
   )
 }
 
+function FreeBadge({ note }: { note: string }) {
+  return (
+    <div className="mt-1 flex flex-col gap-1.5">
+      <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-[13.5px] font-bold text-emerald-800">
+        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
+        Free for your first 3 patients — no card, no time limit
+      </span>
+      <span className="text-[12.5px] font-medium text-slate-400">Then your founding rate. {note}</span>
+    </div>
+  )
+}
+
 /* ── SST Trainer — full landing ─────────────────────────────────────────── */
 const SST_FACTS = [
   { stat: '12 vs 21.5 days', body: 'Median recovery for patients who completed their prescribed sub-symptom sessions versus those who didn’t.', cite: 'Leddy et al., adolescent SRC cohort (PMC9378725), p = 0.016' },
@@ -75,7 +87,7 @@ function SstTab() {
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
           <div className="mt-1 flex flex-wrap gap-3"><Cta href="/sst/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/sst/evidence">See the evidence →</Cta></div>
-          <p className="mt-0.5 text-[13px] font-semibold text-slate-500">First 3 patients free · Buffalo-protocol graded test · their own wearable</p>
+          <FreeBadge note="Buffalo-protocol graded test · their own wearable" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
       </Section>
@@ -135,7 +147,7 @@ function BaselineTab() {
             holding their baseline, and the rehab that follows.
           </p>
           <div className="mt-1 flex flex-wrap gap-3"><Cta href="/sst/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta></div>
-          <p className="mt-0.5 text-[13px] font-semibold text-slate-500">One link per club · ~5 min per athlete · PDF report to your clinic</p>
+          <FreeBadge note="One link per club · ~5 min per athlete · report to your clinic" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center">
           <div className="w-full max-w-[460px]"><BaselineLaptopVisual /></div>
@@ -167,6 +179,66 @@ function BaselineTab() {
         </div>
       </Section>
     </>
+  )
+}
+
+/* ── The data comes back to you (clinician portal loopback) ─────────────── */
+function ClinicianLoopback() {
+  const items = [
+    { t: 'Every session, live', b: 'Each home session syncs to your dashboard as it happens — heart rate, minutes in-band, symptom score.' },
+    { t: 'Flares flag to you', b: 'A symptom flare surfaces in your review queue the same day, not at the next appointment.' },
+    { t: 'The recovery trajectory', b: 'A serial measured-threshold curve per patient — the instrument your re-test and clearance calls read from.' },
+    { t: 'The GP report writes itself', b: 'At episode end, a single-page PDF: trajectory, symptom tables, and a clearance-or-extend recommendation to sign.' },
+  ]
+  return (
+    <Section className="pb-16">
+      <div className="rounded-[22px] border p-8 sm:p-10" style={{ background: NAVY, borderColor: NAVY }}>
+        <span className="text-[12px] font-bold uppercase tracking-[0.1em]" style={{ color: '#7fd4c8' }}>Your clinician portal</span>
+        <h2 className="mb-2 mt-2 font-extrabold tracking-[-0.02em] text-white" style={{ fontSize: 'clamp(24px,3vw,34px)', lineHeight: 1.1 }}>
+          The patient trains at home. Everything comes back to you.
+        </h2>
+        <p className="m-0 mb-7 max-w-[640px] text-[14.5px] leading-[1.55]" style={{ color: '#b9c6da' }}>
+          Signing up gives you a login to the CEA portal. That&rsquo;s where the data lands — you don&rsquo;t
+          chase the patient, you review what the app sends back between appointments.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((i) => (
+            <div key={i.t} className="rounded-[16px] p-5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <h3 className="m-0 mb-1.5 text-[15px] font-extrabold text-white">{i.t}</h3>
+              <p className="m-0 text-[12.5px] leading-[1.5]" style={{ color: '#a7c2c5' }}>{i.b}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Section>
+  )
+}
+
+/* ── What founding clinics get (visible benefits) ───────────────────────── */
+function FoundingBenefits() {
+  const perks = [
+    { icon: '🔒', t: 'Your rate, locked for life', b: 'A$49 / A$99 / A$149 by team size — half what later clinics will pay. Locked for as long as you stay.' },
+    { icon: '⚡', t: 'Priority onboarding', b: 'Your clinic code, patient links and hub set up within the week, with a direct line to our clinical team.' },
+    { icon: '🧭', t: 'Shape the roadmap', b: 'Early access to every new tool and module, and real input into what we build next.' },
+    { icon: '📍', t: 'Referral-directory listing', b: 'A founding-clinic listing when our patient-facing referral directory launches — new patients find you.' },
+  ]
+  return (
+    <Section className="pb-16">
+      <div className="mb-[22px] text-center">
+        <span className="inline-flex items-center gap-2 rounded-full px-[13px] py-[7px] text-[12px] font-bold" style={{ background: '#e6f3da', color: '#3c7a1f' }}>Only 20 founding places</span>
+        <h2 className="mb-2 mt-3 text-[clamp(26px,3vw,36px)] font-extrabold leading-[1.05] tracking-[-0.02em]">What founding clinics get</h2>
+        <p className="mx-auto m-0 max-w-[560px] text-[15px] leading-[1.5] text-slate-500">Beyond a lower price — the benefits of being early, for as long as you stay with us.</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {perks.map((p) => (
+          <div key={p.t} className="rounded-[16px] border border-slate-200 bg-white p-6">
+            <span className="text-[22px]">{p.icon}</span>
+            <h3 className="mb-1.5 mt-2 text-[16px] font-extrabold leading-[1.15]">{p.t}</h3>
+            <p className="m-0 text-[13px] leading-[1.5] text-slate-500">{p.b}</p>
+          </div>
+        ))}
+      </div>
+    </Section>
   )
 }
 
@@ -216,24 +288,27 @@ export function SstSuiteLanding() {
   return (
     <div className="pt-[92px] md:pt-[110px]">
       {/* prominent tool toggle — switches the whole landing */}
-      <div className="mx-auto mb-2 flex max-w-[1180px] justify-center px-6 md:px-8">
-        <div className="inline-flex rounded-[16px] border border-slate-200 bg-white p-1.5 shadow-sm">
+      <div className="mx-auto mb-4 flex max-w-[1180px] flex-col items-center gap-2 px-6 md:px-8">
+        <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-400">The Clinical Testing suite — pick a tool</p>
+        <div className="inline-flex w-full max-w-[560px] rounded-[18px] border border-slate-200 bg-white p-2 shadow-[0_10px_30px_-18px_rgba(22,36,63,.4)]">
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              className="rounded-[12px] px-6 py-2.5 text-center transition-colors"
+              className="flex-1 rounded-[13px] px-6 py-4 text-center transition-colors"
               style={{ background: tab === t.id ? NAVY : 'transparent', color: tab === t.id ? '#fff' : '#475569' }}
             >
-              <span className="block text-[15px] font-extrabold leading-none">{t.label}</span>
-              <span className="mt-1 block text-[11px] font-medium opacity-70">{t.sub}</span>
+              <span className="block text-[19px] font-extrabold leading-none tracking-[-0.01em]">{t.label}</span>
+              <span className="mt-1.5 block text-[12.5px] font-medium opacity-70">{t.sub}</span>
             </button>
           ))}
         </div>
       </div>
 
       {tab === 'sst' ? <SstTab /> : <BaselineTab />}
+      <ClinicianLoopback />
+      <FoundingBenefits />
       <SharedPricing />
     </div>
   )
