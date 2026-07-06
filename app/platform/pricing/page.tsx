@@ -283,7 +283,7 @@ export default function PlatformPricingPage() {
               </span>
               <span
                 className="rounded px-1.5 py-0.5 text-[10px] font-bold"
-                style={{ background: tier.popular ? 'rgba(255,255,255,.16)' : '#ecfdf5', color: tier.popular ? '#fff' : '#047857' }}
+                style={{ background: '#ecfdf5', color: '#047857' }}
               >
                 half price · founding
               </span>
