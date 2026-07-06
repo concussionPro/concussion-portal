@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: 'SST Trainer + Baseline — concussion Clinical Testing for clinics | Concussion Education Australia',
   description:
     'The Clinical Testing suite for concussion clinics: measured sub-symptom exercise rehab on the patient’s own watch, plus pre-season SCAT6 baseline testing — one licence, first-line care, data and the GP report back to you.',
-  alternates: { canonical: '/sst' },
+  alternates: { canonical: '/clinical-suite' },
 }
 
 export default function SstLandingPage() {
@@ -27,7 +27,7 @@ export default function SstLandingPage() {
       className={`${hanken.className} ${spaceGrotesk.variable} min-h-screen w-full text-slate-900`}
       style={{ background: 'radial-gradient(120% 75% at 82% -8%, #effbfa 0%, #f8fafc 46%, #f1f5f9 100%)' }}
     >
-      <SiteNav />
+      <SiteNav logoHref="/clinical-suite" />
       <SstSuiteLanding />
     </div>
   )

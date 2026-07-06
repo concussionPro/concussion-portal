@@ -86,7 +86,7 @@ function SstTab() {
             patient trains in it between appointments. SST Trainer is the delivery layer: you prescribe
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/sst/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/sst/evidence">See the evidence →</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/clinical-suite/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence →</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
@@ -146,7 +146,7 @@ function BaselineTab() {
             any computer, report to your clinic inbox. When an injury happens mid-season, you’re the clinic
             holding their baseline, and the rehab that follows.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/sst/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/clinical-suite/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta></div>
           <FreeBadge note="One link per club · ~5 min per athlete · report to your clinic" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center">
@@ -258,7 +258,7 @@ function SharedPricing() {
               <p className="m-0 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t.name}</p>
               <p className="m-0 text-[13px] text-slate-500">{t.who}</p>
               <p className="m-0 mt-3 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}<span className="text-[14px] font-semibold text-slate-400"> / month</span></p>
-              <Link href="/sst/founding" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Start free</Link>
+              <Link href="/clinical-suite/founding" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Start free</Link>
               <ul className="mt-5 flex flex-col gap-2.5 p-0">
                 {t.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.45] text-slate-600">
@@ -276,7 +276,7 @@ function SharedPricing() {
         <div className="flex flex-col items-center gap-[13px] rounded-[22px] border p-9 text-center" style={{ background: 'linear-gradient(135deg, #effbfa, #e6f6f3)', borderColor: '#c5ebe4' }}>
           <h2 className="m-0 font-extrabold tracking-[-0.02em]" style={{ fontSize: 'clamp(22px,2.6vw,30px)', lineHeight: 1.1 }}>Be one of our first 20 founding clinics.</h2>
           <p className="m-0 max-w-[560px] text-[14.5px] leading-[1.55] text-slate-600">First-line concussion care, delivered — measured rehab and pre-season baselines on one licence. Free through the founding period, your first three patients free, and your rate locked for life.</p>
-          <div className="mt-1 flex flex-wrap justify-center gap-[11px]"><Cta href="/sst/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/sst/evidence">See the evidence</Cta></div>
+          <div className="mt-1 flex flex-wrap justify-center gap-[11px]"><Cta href="/clinical-suite/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
         </div>
       </Section>
     </>

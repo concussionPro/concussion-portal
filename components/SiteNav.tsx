@@ -16,7 +16,7 @@ const BASE_NAV_ITEMS = [
 
 type AuthState = { accessLevel: string } | null // null = loading/unknown
 
-export function SiteNav() {
+export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -84,7 +84,7 @@ export function SiteNav() {
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className="flex items-center justify-between h-[60px]">
           <Link
-            href="/"
+            href={logoHref}
             className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-accent rounded"
             aria-label="Concussion Education Australia home"
           >

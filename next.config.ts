@@ -35,10 +35,14 @@ const nextConfig: NextConfig = {
       { source: '/trial', destination: '/scat-mastery', permanent: true },
       // SST marketing funnel lives at the PUBLIC /sst namespace (owner
       // 2026-07-06) — the /platform variants were noindex. One canonical.
-      { source: '/platform/founding', destination: '/sst/founding', permanent: false },
-      { source: '/platform/pricing', destination: '/sst/pricing', permanent: false },
-      { source: '/platform/evidence', destination: '/sst/evidence', permanent: false },
-      { source: '/platform/clinicians', destination: '/sst', permanent: false },
+      // Public Clinical Testing suite funnel lives at /clinical-suite
+      // (owner 2026-07-06: kill /platform, kill /sst). One canonical.
+      { source: '/sst', destination: '/clinical-suite', permanent: false },
+      { source: '/sst/:path*', destination: '/clinical-suite/:path*', permanent: false },
+      { source: '/platform/founding', destination: '/clinical-suite/founding', permanent: false },
+      { source: '/platform/pricing', destination: '/clinical-suite/pricing', permanent: false },
+      { source: '/platform/evidence', destination: '/clinical-suite/evidence', permanent: false },
+      { source: '/platform/clinicians', destination: '/clinical-suite', permanent: false },
     ]
   },
 
