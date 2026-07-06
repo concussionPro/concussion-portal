@@ -199,9 +199,11 @@ function ClinicianLoopback() {
         <h2 className="mb-2 mt-2 font-extrabold tracking-[-0.02em] text-white" style={{ fontSize: 'clamp(24px,3vw,34px)', lineHeight: 1.1 }}>
           The patient trains at home. Everything comes back to you.
         </h2>
-        <p className="m-0 mb-7 max-w-[640px] text-[14.5px] leading-[1.55]" style={{ color: '#b9c6da' }}>
+        <p className="m-0 mb-7 max-w-[660px] text-[14.5px] leading-[1.55]" style={{ color: '#b9c6da' }}>
           Signing up gives you a login to the CEA portal. That&rsquo;s where the data lands — you don&rsquo;t
-          chase the patient, you review what the app sends back between appointments.
+          chase the patient, you review what the app sends back between appointments. And because the tool
+          lives on your patient&rsquo;s own phone at home, treatment doesn&rsquo;t lapse the moment they leave the
+          clinic — it carries on until the episode is genuinely closed.
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((i) => (
@@ -210,6 +212,15 @@ function ClinicianLoopback() {
               <p className="m-0 text-[12.5px] leading-[1.5]" style={{ color: '#a7c2c5' }}>{i.b}</p>
             </div>
           ))}
+        </div>
+        <div className="mt-6 rounded-[16px] px-6 py-5" style={{ background: 'rgba(127,212,200,0.1)', border: '1px solid rgba(127,212,200,0.22)' }}>
+          <h3 className="m-0 mb-1.5 text-[15px] font-extrabold" style={{ color: '#7fd4c8' }}>Built for continuation, not one-off visits</h3>
+          <p className="m-0 max-w-[720px] text-[13px] leading-[1.55]" style={{ color: '#cdd9e8' }}>
+            Every scheduled re-test is a checkpoint — a reason the patient books back in rather than drifting
+            off after visit two. Patients who finish a structured program get better, and the ones who get
+            better are the ones who refer the next athlete, coach and teammate. The monthly licence is a
+            fraction of the value of a single completed episode of care.
+          </p>
         </div>
       </div>
     </Section>

@@ -12,11 +12,11 @@ import Image from 'next/image'
  */
 
 const FRAMES = [
-  { src: '/instruments/baseline-flow/1.png', label: 'Athlete details' },
-  { src: '/instruments/baseline-flow/2.png', label: 'Symptom scale' },
-  { src: '/instruments/baseline-flow/3.png', label: 'Cognitive test' },
-  { src: '/instruments/baseline-flow/4.png', label: 'Delayed recall' },
-  { src: '/instruments/baseline-flow/5.png', label: 'Report' },
+  { src: '/instruments/baseline-flow2/1.png', label: 'Athlete details' },
+  { src: '/instruments/baseline-flow2/2.png', label: 'Symptom scale' },
+  { src: '/instruments/baseline-flow2/3.png', label: 'Cognitive test' },
+  { src: '/instruments/baseline-flow2/4.png', label: 'Delayed recall' },
+  { src: '/instruments/baseline-flow2/5.png', label: 'Report' },
 ]
 const N = FRAMES.length
 const HOLD_MS = 2600

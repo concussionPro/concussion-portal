@@ -149,8 +149,12 @@ const nextConfig: NextConfig = {
             value: 'strict-origin-when-cross-origin'
           },
           {
+            // bluetooth=(self): the clinician Connect-a-strap wizard (Clinical
+            // Hub / clinical-testing) calls navigator.bluetooth.requestDevice —
+            // a restrictive Permissions-Policy that omits `bluetooth` makes
+            // Chrome/Brave reject it instantly (picker "flickers", never opens).
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
+            value: 'camera=(), microphone=(), geolocation=(), bluetooth=(self)'
           },
           {
             key: 'Content-Security-Policy',

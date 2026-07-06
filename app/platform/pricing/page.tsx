@@ -16,6 +16,7 @@ type Tier = {
   name: string
   who: string
   price: string
+  full: string
   unit: string
   cta: string
   href: string
@@ -40,6 +41,7 @@ const TIERS: Tier[] = [
     name: 'Single',
     who: 'One clinician',
     price: 'A$49',
+    full: 'A$98',
     unit: '/ month · both tools',
     cta: 'Start free',
     href: FOUNDING_HREF,
@@ -68,6 +70,7 @@ const TIERS: Tier[] = [
     name: 'Small clinic',
     who: 'Up to 5 clinicians',
     price: 'A$99',
+    full: 'A$198',
     unit: '/ month · both tools',
     cta: 'Start a founding clinic',
     href: FOUNDING_HREF,
@@ -96,6 +99,7 @@ const TIERS: Tier[] = [
     name: 'Enterprise',
     who: 'Up to 15 clinicians',
     price: 'A$149',
+    full: 'A$298',
     unit: '/ month · both tools',
     cta: 'Talk to us',
     href: FOUNDING_HREF,
@@ -273,6 +277,17 @@ export default function PlatformPricingPage() {
               </span>
             </div>
 
+            <div className="mb-0.5 flex items-center gap-2">
+              <span className="text-[16px] font-semibold" style={{ color: tier.subColor, textDecoration: 'line-through' }}>
+                {tier.full}
+              </span>
+              <span
+                className="rounded px-1.5 py-0.5 text-[10px] font-bold"
+                style={{ background: tier.popular ? 'rgba(255,255,255,.16)' : '#ecfdf5', color: tier.popular ? '#fff' : '#047857' }}
+              >
+                half price · founding
+              </span>
+            </div>
             <div className="flex items-baseline gap-[5px]">
               <span
                 className="text-[34px] font-semibold"
