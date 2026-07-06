@@ -211,15 +211,12 @@ export default function SstConnectWizard({
             ) : adapterOn === false ? (
               <div className={card}>
                 <p className={body}>
-                  Bluetooth looks switched off on this computer. Turn it on
-                  {platform.mac ? ' (menu bar → Bluetooth, or System Settings → Bluetooth)' : ''} and this step will pass.
+                  This browser reports Bluetooth as off — but that check is
+                  unreliable on {platform.mac ? 'macOS' : 'some computers'}. If your Bluetooth is on
+                  and your watch is broadcasting, just continue — the pairing dialog is the real test.
+                  If your watch doesn&rsquo;t appear, turn Bluetooth on
+                  {platform.mac ? ' (menu bar → Bluetooth)' : ''} and scan again.
                 </p>
-                <button type="button" className={`${quietBtn} mt-2.5`} onClick={() => {
-                  const bt = (navigator as unknown as { bluetooth?: { getAvailability?: () => Promise<boolean> } }).bluetooth
-                  bt?.getAvailability?.().then(setAdapterOn)
-                }}>
-                  I turned it on — check again
-                </button>
               </div>
             ) : (
               <div className={card}>
@@ -229,7 +226,10 @@ export default function SstConnectWizard({
                 </p>
               </div>
             )}
-            {btSupported !== false && adapterOn !== false && (
+            {/* Never hard-block on getAvailability() (unreliable on macOS) —
+                if Web Bluetooth is supported at all, let them reach the scan;
+                the requestDevice chooser is the true availability test. */}
+            {btSupported !== false && (
               <button type="button" className={primaryBtn} onClick={() => setStep('broadcast')}>
                 Next — get the watch ready
               </button>
