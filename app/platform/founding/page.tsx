@@ -23,11 +23,11 @@ const VOLUMES: { value: string; label: string }[] = [
 ]
 
 const PERKS = [
-  'Free during the founding period',
-  'When paid plans launch, founding clinics lock A$99/month — for life',
-  'Unlimited clinicians & patients on one licence',
-  'Your feedback directly shapes the product roadmap',
-  'The patient app is always free to download',
+  'Founding rate locked for life — A$49/month, half the A$99 standard rate',
+  'Your first 3 patients free — no card, no time limit',
+  'Priority onboarding: your clinic code, patient links and hub set up within the week',
+  'A direct line to our clinical team, and early access to every new tool and module',
+  'A founding-clinic listing when our referral directory launches',
 ]
 
 const labelCls = 'mb-[6px] block text-[13px] font-bold'
@@ -93,7 +93,7 @@ export default function FoundingClinicPage() {
             style={{ background: '#e6f3da', color: PLATFORM.green }}
           >
             <span className="h-[7px] w-[7px] rounded-full" style={{ background: '#57a82e' }} />
-            First 50 clinics · founding program
+            First 20 clinics · founding cohort
           </span>
           <h1
             className="m-0 font-extrabold tracking-[-0.03em]"
@@ -101,15 +101,17 @@ export default function FoundingClinicPage() {
           >
             Be one of our first
             <br />
-            <span style={{ color: PLATFORM.green }}>50 founding clinics.</span>
+            <span style={{ color: PLATFORM.green }}>20 founding clinics.</span>
           </h1>
           <p
             className="m-0 max-w-[440px] font-normal text-slate-600"
             style={{ fontSize: 'clamp(14.5px, 1.4vw, 16px)', lineHeight: 1.55 }}
           >
-            Free during the founding period — and when paid plans launch, founding clinics lock
-            A$99/month, for life. Your feedback shapes the product, and your patients never pay.
-            Tell us about your clinic and Zac will set you up personally.
+            SST Trainer delivers first-line concussion care — the Buffalo-protocol graded test and
+            sub-symptom aerobic training (Amsterdam 2023), on the wearable your patients already own.
+            We&rsquo;re onboarding a small founding cohort now: lock A$49/month for life (half the
+            A$99 standard), your first three patients free, and priority onboarding as we grow with
+            you.
           </p>
           <div className="mt-1 flex flex-col gap-[11px]">
             {PERKS.map((p) => (

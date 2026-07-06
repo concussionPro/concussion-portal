@@ -4,7 +4,7 @@ import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/Pla
 // ─────────────────────────────────────────────────────────────────────────────
 // SST Trainer — Pricing.  "Pricing built for clinics, not patients."
 // Primary action: the FREE founding-clinic tier (real users = AU concussion /
-// vestibular / POTS clinics). Hooks: patients never pay + first 50 founding
+// vestibular / POTS clinics). Hooks: patients never pay + first 20 founding
 // clinics. Founding application → /platform/founding signup form (captures the
 // lead in Postgres + notifies Zac; replaced the flaky mailto).
 // Faithful to the CEA-Site build (navy #16243f, green #3c7a1f, Hanken Grotesk).
@@ -85,11 +85,11 @@ const TIERS: Tier[] = [
     ctaBorder: 'none',
     features: [
       'Free during the founding period',
-      'When paid plans launch, founding clinics lock A$99/month — for life',
+      'When paid plans launch, founding clinics lock A$49/month — for life',
       'One flat price — unlimited clinicians & patients',
       'No per-seat fees as your team grows',
       'Live in-session monitoring, measured-HRt trajectory, flare flags & review queue',
-      'Planned standard rate A$149/month after the founding period',
+      'Planned standard rate A$99/month after the founding period',
     ],
   },
   {
@@ -151,7 +151,7 @@ const FAQS = [
   },
   {
     q: 'What does “founding period” actually mean?',
-    a: 'The platform is free during the founding period. When paid plans launch, founding clinics lock A$99/month — for life. No card is taken today, and nothing is billed until then.',
+    a: 'The platform is free during the founding period. When paid plans launch, founding clinics lock A$49/month for life — half the A$99 standard rate. No card is taken today, and nothing is billed until then.',
   },
   {
     q: 'Who owns the data?',
@@ -433,15 +433,16 @@ export default function PlatformPricingPage() {
             className="m-0 font-extrabold tracking-[-0.02em]"
             style={{ fontSize: 'clamp(22px, 2.6vw, 30px)', lineHeight: 1.1 }}
           >
-            Be one of our first 50 founding clinics.
+            Be one of our first 20 founding clinics.
           </h2>
           <p
             className="m-0 max-w-[520px] text-[14.5px] font-normal text-slate-500"
             style={{ lineHeight: 1.55 }}
           >
             Free during the founding period. When paid plans launch, founding
-            clinics lock A$99/month — for life. Your feedback shapes the product
-            while we build the evidence together.
+            clinics lock A$49/month for life — half the A$99 standard rate.
+            Priority onboarding, a direct line to our team, and a founding-clinic
+            listing when the referral directory launches.
           </p>
           <Link
             href={FOUNDING_HREF}
