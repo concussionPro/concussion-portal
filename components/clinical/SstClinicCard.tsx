@@ -191,9 +191,20 @@ export function SstClinicCard() {
             {clinic.code}
           </p>
           {usage?.plan === 'trial' && usage.cap != null && (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-              Free trial · {usage.patientCount} of {usage.cap} patients used
-              {!usage.canAddPatient && <span className="font-bold"> — subscribe to add more</span>}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                Free trial · {usage.patientCount} of {usage.cap} patients used
+              </span>
+              {!usage.canAddPatient && (
+                <Link href="/clinical-testing/subscribe" className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-white hover:bg-accent/90">
+                  Subscribe to add more →
+                </Link>
+              )}
+            </div>
+          )}
+          {usage?.plan === 'active' && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+              Subscribed · unlimited patients
             </p>
           )}
         </div>

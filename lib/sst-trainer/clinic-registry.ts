@@ -111,6 +111,49 @@ export async function isExistingPatient(rawCode: unknown, label: string): Promis
   }
 }
 
+/**
+ * Flip a clinic's billing plan (Stripe webhook → here). 'active' lifts the
+ * 3-patient trial cap; reverting to 'trial' re-applies the admission gate
+ * but never blocks existing patients. Stripe ids stashed for the billing
+ * portal. Writes KV (the live gate) + best-effort PG columns.
+ */
+export async function setSstClinicPlan(
+  rawCode: unknown,
+  plan: 'trial' | 'active',
+  stripe?: { customerId?: string; subscriptionId?: string },
+): Promise<void> {
+  const code = normaliseClinicCode(rawCode)
+  if (!code || code === DEMO_CLINIC_CODE) return
+  const rec = await getClinic(code)
+  if (!rec) return
+  const prev = rec as unknown as Record<string, unknown>
+  await kv.set(`clinic:${code}`, {
+    ...rec,
+    plan,
+    stripeCustomerId: stripe?.customerId ?? prev.stripeCustomerId,
+    stripeSubscriptionId: stripe?.subscriptionId ?? prev.stripeSubscriptionId,
+  })
+  try {
+    await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
+    await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`
+    await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`
+    await sql`
+      UPDATE sst_clinics SET plan = ${plan},
+        stripe_customer_id = COALESCE(${stripe?.customerId ?? null}, stripe_customer_id),
+        stripe_subscription_id = COALESCE(${stripe?.subscriptionId ?? null}, stripe_subscription_id)
+      WHERE code = ${code}
+    `
+  } catch (err) {
+    console.error('[sst-registry] setSstClinicPlan PG mirror failed:', err)
+  }
+}
+
+/** The Stripe customer id stored on a clinic (for the billing portal). */
+export async function getSstClinicStripeCustomer(rawCode: unknown): Promise<string | null> {
+  const rec = (await getClinic(rawCode)) as unknown as Record<string, unknown> | null
+  return (rec?.stripeCustomerId as string) ?? null
+}
+
 /** Uppercase, trim; returns '' when the code can't possibly be valid. */
 export function normaliseClinicCode(raw: unknown): string {
   const code = String(raw ?? '').trim().toUpperCase()

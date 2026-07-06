@@ -363,13 +363,28 @@ function formatLocation(slug: string): string {
  * Set the IDs in env. If either is missing the subscribe route reports the
  * tier as unavailable, so this stays inert until you launch it.
  */
-export const SST_SUBSCRIPTION_PRICES: Record<'monthly' | 'annual', string | undefined> = {
-  monthly: process.env.STRIPE_SST_MONTHLY_PRICE_ID,
-  annual: process.env.STRIPE_SST_ANNUAL_PRICE_ID,
+/**
+ * The three Clinical Testing tiers (owner 2026-07-06) → env Stripe price IDs.
+ * Amounts live in the Stripe Dashboard prices, never in code, so the plan
+ * can change without a deploy. A missing ID makes that tier unavailable.
+ *   single     A$49/mo  · 1 clinician
+ *   clinic     A$99/mo  · up to 5 clinicians
+ *   enterprise A$149/mo · up to 15 clinicians
+ */
+export type SstPlan = 'single' | 'clinic' | 'enterprise'
+
+export const SST_PLANS: Record<SstPlan, { label: string; seats: number; priceId: string | undefined }> = {
+  single: { label: 'Single', seats: 1, priceId: process.env.STRIPE_SST_SINGLE_PRICE_ID },
+  clinic: { label: 'Small clinic', seats: 5, priceId: process.env.STRIPE_SST_CLINIC_PRICE_ID },
+  enterprise: { label: 'Enterprise', seats: 15, priceId: process.env.STRIPE_SST_ENTERPRISE_PRICE_ID },
+}
+
+export function sstPlanPriceId(plan: SstPlan): string | undefined {
+  return SST_PLANS[plan]?.priceId
 }
 
 export function sstSubscriptionsConfigured(): boolean {
-  return Boolean(SST_SUBSCRIPTION_PRICES.monthly && SST_SUBSCRIPTION_PRICES.annual)
+  return Object.values(SST_PLANS).some((p) => Boolean(p.priceId))
 }
 
 /**
@@ -378,18 +393,20 @@ export function sstSubscriptionsConfigured(): boolean {
  */
 export async function createSstSubscriptionCheckoutSession({
   plan,
+  clinicCode,
   customerEmail,
   successUrl,
   cancelUrl,
 }: {
-  plan: 'monthly' | 'annual'
+  plan: SstPlan
+  clinicCode: string
   customerEmail?: string
   successUrl: string
   cancelUrl: string
 }): Promise<Stripe.Checkout.Session> {
-  const price = SST_SUBSCRIPTION_PRICES[plan]
+  const price = sstPlanPriceId(plan)
   if (!price) {
-    throw new CheckoutUnavailableError('SST subscriptions are not available yet.')
+    throw new CheckoutUnavailableError('That plan is not available yet.')
   }
   return getStripe().checkout.sessions.create({
     mode: 'subscription',
@@ -399,14 +416,17 @@ export async function createSstSubscriptionCheckoutSession({
     cancel_url: cancelUrl,
     allow_promotion_codes: true,
     billing_address_collection: 'auto',
+    // clinicCode is the join key the webhook uses to flip the clinic to
+    // 'active' and lift the 3-patient trial cap.
     metadata: {
       product: 'sst-trainer',
       plan,
+      clinicCode,
       source: 'portal-dashboard',
       timestamp: new Date().toISOString(),
     },
     subscription_data: {
-      metadata: { product: 'sst-trainer', plan, email: customerEmail || '' },
+      metadata: { product: 'sst-trainer', plan, clinicCode, email: customerEmail || '' },
     },
   })
 }

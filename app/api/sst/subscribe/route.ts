@@ -1,54 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
-import {
-  createSstSubscriptionCheckoutSession,
-  sstSubscriptionsConfigured,
-  CheckoutUnavailableError,
-} from '@/lib/stripe'
+import { hasClinicalAccess } from '@/lib/sst-trainer/access'
+import { getSstClinicByEmail } from '@/lib/sst-trainer/clinic-registry'
+import { createSstSubscriptionCheckoutSession, sstPlanPriceId, type SstPlan } from '@/lib/stripe'
+import { CheckoutUnavailableError } from '@/lib/stripe'
 
 /**
- * POST /api/sst/subscribe  { plan: 'monthly' | 'annual' }
- *
- * Starts a Stripe Checkout (subscription mode) for the in-dashboard SST app.
- * Requires a logged-in user. Inert until the Stripe price IDs are set in env
- * (sstSubscriptionsConfigured() === false → 503), so it cannot affect anyone
- * pre-launch. App-store users (free, clinic-code) never hit this route.
+ * POST /api/sst/subscribe { plan: 'single'|'clinic'|'enterprise' }
+ * Starts a Stripe subscription Checkout for the signed-in clinic. On success
+ * the webhook flips the clinic to 'active' (lifts the 3-patient trial cap).
  */
-export async function POST(request: NextRequest) {
+const PLANS: SstPlan[] = ['single', 'clinic', 'enterprise']
+
+export async function POST(req: NextRequest) {
+  const token = req.cookies.get('session')?.value
+  const session = token ? verifySessionToken(token) : null
+  if (!session || !(await hasClinicalAccess({ email: session.email, accessLevel: session.accessLevel }))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  const body = await req.json().catch(() => ({}))
+  const plan = body?.plan as SstPlan
+  if (!PLANS.includes(plan)) {
+    return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
+  }
+  if (!sstPlanPriceId(plan)) {
+    return NextResponse.json({ error: 'That plan is not available yet.' }, { status: 503 })
+  }
+  const clinic = await getSstClinicByEmail(session.email.toLowerCase())
+  if (!clinic) {
+    return NextResponse.json({ error: 'Create your clinic code first.' }, { status: 400 })
+  }
+  const origin = req.nextUrl.origin
   try {
-    if (!sstSubscriptionsConfigured()) {
-      return NextResponse.json(
-        { error: 'SST subscriptions are not available yet.' },
-        { status: 503 }
-      )
-    }
-
-    const sessionToken = request.cookies.get('session')?.value
-    const sessionData = sessionToken ? verifySessionToken(sessionToken) : null
-    if (!sessionData) {
-      return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
-    }
-
-    const body = await request.json().catch(() => ({}))
-    const plan = body?.plan
-    if (plan !== 'monthly' && plan !== 'annual') {
-      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
-    }
-
-    const origin = request.nextUrl.origin
-    const session = await createSstSubscriptionCheckoutSession({
+    const checkout = await createSstSubscriptionCheckoutSession({
       plan,
-      customerEmail: sessionData.email,
-      successUrl: `${origin}/sst-trainer?subscribed=1&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${origin}/dashboard?sst_cancelled=1`,
+      clinicCode: clinic.code,
+      customerEmail: session.email,
+      successUrl: `${origin}/clinical-testing?subscribed=1`,
+      cancelUrl: `${origin}/platform/pricing`,
     })
-
-    return NextResponse.json({ url: session.url })
-  } catch (error) {
-    if (error instanceof CheckoutUnavailableError) {
-      return NextResponse.json({ error: error.message }, { status: 503 })
+    return NextResponse.json({ url: checkout.url })
+  } catch (err) {
+    if (err instanceof CheckoutUnavailableError) {
+      return NextResponse.json({ error: err.message }, { status: 503 })
     }
-    console.error('SST subscribe error:', error)
-    return NextResponse.json({ error: 'Could not start checkout' }, { status: 500 })
+    console.error('[sst-subscribe] checkout failed:', err)
+    return NextResponse.json({ error: 'Could not start checkout.' }, { status: 500 })
   }
 }

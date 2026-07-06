@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
+import { setSstClinicPlan } from '@/lib/sst-trainer/clinic-registry'
 
 export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
@@ -160,6 +161,14 @@ export async function POST(request: NextRequest) {
         await handleChargeRefunded(event.data.object as Stripe.Charge)
         break
 
+      // SST Trainer subscriptions — flip the clinic's plan (lifts/re-applies
+      // the 3-patient trial cap). checkout.session.completed already routes
+      // to handleCheckoutCompleted, which branches on product='sst-trainer'.
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted':
+        await handleSstSubscriptionChange(event.data.object as Stripe.Subscription)
+        break
+
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }
@@ -204,6 +213,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.error('No customer email in checkout session:', session.id)
     // Throw so the webhook returns 500 and Stripe retries
     throw new Error(`No customer email in checkout session ${session.id}`)
+  }
+
+  // SST Trainer subscription — a Clinical Testing clinic converting off the
+  // free trial. Flip the clinic to 'active' (lifts the 3-patient cap) and
+  // stash the Stripe customer/subscription for the billing portal. Isolated
+  // from course provisioning; returns early.
+  if (session.mode === 'subscription' && session.metadata?.product === 'sst-trainer') {
+    const clinicCode = session.metadata?.clinicCode
+    if (clinicCode) {
+      await setSstClinicPlan(clinicCode, 'active', {
+        customerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
+        subscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
+      })
+      console.log(`SST subscription active for clinic ${clinicCode}`)
+    } else {
+      console.error('SST subscription checkout without clinicCode:', session.id)
+    }
+    return
   }
 
   // Reference-book purchase path — separate from course checkout. Provisions the
@@ -1046,4 +1073,26 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   } catch (err) {
     console.error(`Failed to downgrade ${redact(email)} after refund:`, err)
   }
+}
+
+/**
+ * SST subscription status change → clinic plan. 'active'/'trialing' keep the
+ * clinic on the paid plan (no cap); anything else (cancelled, unpaid,
+ * past_due, deleted) reverts to 'trial'. The trial gate only restricts
+ * ADMITTING new patients — existing patients are never blocked, so a lapse
+ * never severs care mid-episode.
+ */
+async function handleSstSubscriptionChange(sub: Stripe.Subscription) {
+  if (sub.metadata?.product !== 'sst-trainer') return
+  const clinicCode = sub.metadata?.clinicCode
+  if (!clinicCode) {
+    console.error('SST subscription change without clinicCode:', sub.id)
+    return
+  }
+  const active = sub.status === 'active' || sub.status === 'trialing'
+  await setSstClinicPlan(clinicCode, active ? 'active' : 'trial', {
+    customerId: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id,
+    subscriptionId: sub.id,
+  })
+  console.log(`SST clinic ${clinicCode} → ${active ? 'active' : 'trial'} (sub ${sub.status})`)
 }
