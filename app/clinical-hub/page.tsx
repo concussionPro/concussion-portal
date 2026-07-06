@@ -719,9 +719,8 @@ export default function ClinicalHubPage() {
     if (s) updatePatient(p.id, { stage: s })
   }
 
-  // TODO(clinic registry): /api/sst/clinic-sessions doesn't return clinicName
-  // yet — the KV clinic registry (`clinic:{code}`) holds the clinic record;
-  // once the API surfaces the name in its response this fallback disappears.
+  // clinic-sessions returns clinicName; the `?? code` is a defensive fallback
+  // for the pre-load tick (and any legacy record without a name).
   const clinicTitle = isDemo
     ? 'Carter Sports & Spinal (demo)'
     : clinicName ?? `${clinicCode} · Your clinic`

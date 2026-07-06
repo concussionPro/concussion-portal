@@ -37,6 +37,7 @@ const MODALITIES: { id: TestModality; label: string; sub: string }[] = [
   { id: 'treadmill', label: 'Treadmill', sub: 'Raise the incline each minute' },
   { id: 'bike', label: 'Stationary bike', sub: 'Raise the resistance each minute' },
   { id: 'walk', label: 'Brisk walking', sub: 'Walk a little faster each minute' },
+  { id: 'other', label: 'Other aerobic exercise', sub: 'Elliptical, rower, swim, step — anything steady' },
 ]
 
 function effortInstruction(modality: TestModality, minute: number): string {
@@ -48,6 +49,8 @@ function effortInstruction(modality: TestModality, minute: number): string {
         return 'Start pedalling at an easy, steady pace with light resistance.'
       case 'walk':
         return 'Start walking at an easy, comfortable pace.'
+      case 'other':
+        return 'Start at an easy, steady effort you can keep up — just enough to get moving.'
     }
   }
   switch (modality) {
@@ -59,6 +62,8 @@ function effortInstruction(modality: TestModality, minute: number): string {
       return 'Increase the resistance one step (or pedal a little harder). You should feel it get slightly harder each minute.'
     case 'walk':
       return 'Walk a little faster than the last minute — enough that it feels slightly harder.'
+    case 'other':
+      return 'Lift the effort one small step — enough that it feels slightly harder than the last minute.'
   }
 }
 

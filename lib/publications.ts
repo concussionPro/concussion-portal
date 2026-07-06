@@ -57,6 +57,20 @@ export const publications: Publication[] = [
       'A tools/methods paper describing a pure-function clinical engine, a multi-source heart-rate abstraction (BLE strap, camera PPG, manual), and a fail-closed “no fabricated signal” guarantee that delivers a measured (not estimated) heart-rate threshold between clinical visits. A provenance and signal-quality guarantee — not an accuracy or efficacy claim.',
   },
   {
+    id: 'sst-protocol-framework',
+    program: 'Concussion — exercise rehabilitation',
+    primary: true,
+    title:
+      'A Standardised Clinician-Supervised Digital Workflow for Sub-Symptom-Threshold Aerobic Exercise After Concussion',
+    authors: 'Lewis Z.',
+    venue: 'protocols.io → JMIR Research Protocols',
+    venueType: 'Peer-reviewed journal',
+    year: '2026',
+    status: 'in-preparation',
+    summary:
+      'A protocol/framework paper standardising the five-stage clinician-supervised workflow — baseline, a measured heart-rate threshold, the sub-symptom training band, live-monitored between-visit rehabilitation, and graded return. A standardisation of delivery, not an efficacy claim.',
+  },
+  {
     id: 'neurovision-joss',
     program: 'Concussion — oculomotor screening',
     title: 'NeuroVision: An Open-Source Engine for Webcam-Based Oculomotor and Gaze Measurement',

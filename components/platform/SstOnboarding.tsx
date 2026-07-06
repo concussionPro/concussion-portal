@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Condition } from '@/lib/sst-trainer/protocol'
+import { loadState } from '@/lib/sst-trainer/store'
 import type { WelcomeSelection, TrainerMode } from '@/lib/sst-trainer/store'
 import { HR_SOURCES, isNativeApp, type HrSource } from '@/components/sst-trainer/hr-source'
 import {
@@ -106,6 +107,9 @@ export default function SstOnboarding({
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
   const [pairError, setPairError] = useState<string | null>(null)
   const [showBroadcastHelp, setShowBroadcastHelp] = useState(false)
+  // Trial-cap gate: a full free trial blocks a BRAND-NEW patient self-enrolling
+  // via the QR/code path (the cap otherwise only bound the clinician invite).
+  const [trialFull, setTrialFull] = useState(false)
   // The source currently mid-pair (set on tap, BEFORE the async connect resolves
   // and updates `device`) so the tapped row shows "Connecting…" right away.
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -134,6 +138,7 @@ export default function SstOnboarding({
     }
     const seq = ++checkSeq.current
     setCodeStatus('checking')
+    setTrialFull(false)
     const result = await validateClinicCode(trimmed)
     if (seq !== checkSeq.current) return // superseded by a newer check
     if (result === null) {
@@ -142,6 +147,20 @@ export default function SstOnboarding({
     } else if (result.valid) {
       setCodeStatus('valid')
       setClinicName(result.clinicName)
+      // A returning patient on THIS device (already enrolled with this code) is
+      // never blocked — only a genuinely new patient is capped. Fail OPEN on a
+      // read error: never wrongly block care over an entitlement hiccup.
+      const alreadyHere = loadState()?.clinicCode?.toUpperCase() === trimmed.toUpperCase()
+      if (!alreadyHere) {
+        try {
+          const res = await fetch(`/api/sst/clinic-entitlement?code=${encodeURIComponent(trimmed)}`)
+          if (seq !== checkSeq.current) return
+          const ent = res.ok ? await res.json() : null
+          setTrialFull(ent != null && ent.canAddPatient === false)
+        } catch {
+          if (seq === checkSeq.current) setTrialFull(false)
+        }
+      }
     } else {
       setCodeStatus('invalid')
       setClinicName(null)
@@ -206,7 +225,8 @@ export default function SstOnboarding({
 
   const nameMissing = mode === 'clinic-code' && patientName.trim().length === 0
   const codeNotValid = mode === 'clinic-code' && codeStatus !== 'valid'
-  const blocked = codeNotValid || nameMissing || goal === null
+  const trialBlocked = mode === 'clinic-code' && trialFull
+  const blocked = codeNotValid || nameMissing || goal === null || trialBlocked
 
   const continueLabel =
     goal === null
@@ -215,7 +235,9 @@ export default function SstOnboarding({
         ? 'Enter your clinic code to continue'
         : nameMissing
           ? 'Add your name to continue'
-          : 'Continue'
+          : trialBlocked
+            ? 'This clinic’s free trial is full'
+            : 'Continue'
 
   const condition: Condition = 'concussion'
 
@@ -518,6 +540,18 @@ export default function SstOnboarding({
           I agree that my <strong>de-identified</strong>{' '}session data may be used to monitor and improve this service and the quality of care. No name or contact details are shared, and I can withdraw any time. Declining doesn&rsquo;t affect my care — my results still go to my own clinician.
         </span>
       </label>
+
+      {trialBlocked && (
+        <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
+          <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
+            This clinic&rsquo;s free trial is full
+          </p>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-[#8a6a2c]">
+            {clinicName ?? 'Your clinic'} has used all three free-trial patients. Ask them to add you —
+            once they&rsquo;re on a plan you can start straight away.
+          </p>
+        </div>
+      )}
 
       <PrimaryButton
         disabled={blocked}

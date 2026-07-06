@@ -37,7 +37,7 @@ export type Condition =
   | 'cardiac'
 
 /** How the graded test is being performed — stored on the result for the clinician. */
-export type TestModality = 'treadmill' | 'bike' | 'walk'
+export type TestModality = 'treadmill' | 'bike' | 'walk' | 'other'
 
 /** A single minute/stage of the guided graded (threshold-finding) test. */
 export interface TestStage {
