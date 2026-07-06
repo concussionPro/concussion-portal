@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { SstWatchAnimation } from '@/components/platform/SstWatchAnimation'
-import { BaselineLaptopVisual } from '@/components/clinical/InstrumentVisuals'
+import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 
 /**
  * /sst — the Clinical Testing landing with a top toggle between TWO FULL
@@ -151,7 +151,7 @@ function BaselineTab() {
           <FreeBadge note="One link per club · ~5 min per athlete · report to your clinic" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center">
-          <div className="w-full max-w-[460px]"><BaselineLaptopVisual /></div>
+          <BaselineLaptopAnimation />
         </div>
       </Section>
 
