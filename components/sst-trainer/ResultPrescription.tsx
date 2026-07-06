@@ -128,6 +128,19 @@ export default function ResultPrescription({
             </div>
           </div>
 
+          {rx.prolongedRecoveryRisk && (
+            <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
+              <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
+                Your threshold is on the low side
+              </p>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-[#8a6a2c]">
+                A heart-rate threshold this low (under 135 bpm) is linked to a slower recovery in the
+                research (Haider et&nbsp;al. 2019). Stay inside the band, and let your clinician guide how
+                long and how often you train — they may keep sessions shorter and check in more often.
+              </p>
+            </div>
+          )}
+
           <p className="m-0 rounded-[14px] bg-[#eef4f4] px-3.5 py-3 text-xs leading-relaxed text-[#3b4f52]">
             {rx.summary}
           </p>

@@ -56,6 +56,8 @@ const REFERENCES = [
   'Leddy JJ, Willer B, et al. Early Subthreshold Aerobic Exercise for Sport-Related Concussion: a randomized clinical trial. JAMA Pediatrics, 2019.',
   'Leddy JJ, et al. Early targeted heart-rate aerobic exercise vs placebo stretching for sport-related concussion in adolescents: a randomised controlled trial. The Lancet Child & Adolescent Health, 2021.',
   'Haider MN, Leddy JJ, Willer BS, et al. Exercise for Sport-Related Concussion and Persistent Postconcussive Symptoms (review). Sports Health, 2021.',
+  'Haider MN, Leddy JJ, Wilber CG, et al. The Predictive Capacity of the Buffalo Concussion Treadmill Test after Sport-Related Concussion in Adolescents. Frontiers in Neurology, 2019 (HRt <135 bpm and ΔHR ≤50 bpm predict prolonged recovery).',
+  'Popoli DM, Leddy JJ, et al. Practical Management: A Standardized Aerobic Exercise Program for Adolescents with Concussion in the Absence of Graded Exercise Testing. Clinical Journal of Sport Medicine, 2023.',
   'Janssen A, Pope R, Rando N. Clinical application of the Buffalo Concussion Treadmill Test and Bike Test: a systematic review, 2022.',
   'Leddy JJ, et al. A preliminary study of sub-symptom threshold exercise training for refractory post-concussion syndrome. Clinical Journal of Sport Medicine, 2010.',
   'Patricios JS, Schneider KJ, Dvorak J, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport — Amsterdam, October 2022. British Journal of Sports Medicine, 2023.',

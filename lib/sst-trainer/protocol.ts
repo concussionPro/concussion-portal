@@ -161,14 +161,54 @@ export interface Prescription {
   sessionMinutes: number
   daysPerWeek: number
   stopRisePoints: number
+  /**
+   * HRt below the validated prolonged-recovery cutoff. Haider MN et al.,
+   * "The Predictive Capacity of the BCTT," Front Neurol 2019 (PMC6492460):
+   * absolute HRt < 135 bpm — and ΔHR (threshold − resting) ≤ 50 bpm (73% sens /
+   * 78% spec) — are associated with prolonged (>30-day) recovery. This is a
+   * PROGNOSTIC flag, NOT a dose modifier: the evidence provides no validated
+   * severity-adjusted starting dose, so we surface the risk rather than inventing
+   * a shorter prescription.
+   */
+  prolongedRecoveryRisk: boolean
   summary: string
+  /** clinician-facing note when prolongedRecoveryRisk is set (else null) */
+  clinicianNote: string | null
 }
 
-/** Convert an HRt into the sub-symptom-threshold training prescription. */
-export function computePrescription(hrt: number, condition: Condition = 'concussion'): Prescription {
+/**
+ * Convert an HRt into the sub-symptom-threshold training prescription.
+ *
+ * DOSE IS EVIDENCE-FIXED, individualised ONLY by the %-of-HRt band:
+ *  - intensity 80–90% of the HR at symptom exacerbation (Leddy et al., JAMA
+ *    Pediatrics 2019 used 80%; Haider/Leddy, Sports Health 2021 give the 80–90%
+ *    band). A low HRt already yields a gentle absolute band — that IS the
+ *    individualisation.
+ *  - ~20 min/day, most days (5–7/wk) — FIXED from day one in the RCTs; those
+ *    protocols progressed by HEART RATE (+5–10 bpm/day if tolerated), NOT by
+ *    lengthening sessions (Haider/Leddy, Sports Health 2021).
+ *  - within-session stop at a ≥2-pt symptom rise on 0–10 (Leddy 2019).
+ *
+ * There is NO published rule that shortens the starting dose by severity of
+ * exercise intolerance, so we do not invent one. Instead we compute the
+ * validated prognostic flag (Haider 2019) and hand dose judgement for those
+ * patients to the clinician.
+ */
+export function computePrescription(
+  hrt: number,
+  condition: Condition = 'concussion',
+  opts: { restingHr?: number | null } = {},
+): Prescription {
   const d = CONDITION_DEFAULTS[condition]
   const lowerBpm = Math.round(hrt * d.lowerPct)
   const upperBpm = Math.round(hrt * d.upperPct)
+
+  const deltaHr = typeof opts.restingHr === 'number' && Number.isFinite(opts.restingHr) ? hrt - opts.restingHr : null
+  const prolongedRecoveryRisk = hrt < 135 || (deltaHr !== null && deltaHr <= 50)
+  const clinicianNote = prolongedRecoveryRisk
+    ? `Threshold ${hrt} bpm${deltaHr !== null ? ` (ΔHR ${deltaHr} bpm)` : ''} is below the validated prolonged-recovery cutoff (HRt <135 bpm${deltaHr !== null ? ' / ΔHR ≤50 bpm' : ''}; Haider 2019). This predicts a slower recovery — oversee dosing directly, keep the band conservative, and re-assess more frequently. The evidence gives no severity-adjusted dose, so a shorter starting session is a clinical judgement, not an app default.`
+    : null
+
   return {
     hrt,
     lowerBpm,
@@ -176,6 +216,8 @@ export function computePrescription(hrt: number, condition: Condition = 'concuss
     sessionMinutes: d.sessionMinutes,
     daysPerWeek: d.daysPerWeek,
     stopRisePoints: SESSION_STOP_RISE,
+    prolongedRecoveryRisk,
+    clinicianNote,
     summary: `Train at ${lowerBpm}-${upperBpm} bpm (${Math.round(d.lowerPct * 100)}-${Math.round(d.upperPct * 100)}% of your ${hrt} bpm threshold). Aim for ${d.sessionMinutes} minutes, ${d.daysPerWeek} days a week. Keep your heart rate under ${upperBpm} bpm. Stop the session if your symptoms rise ${SESSION_STOP_RISE} or more points above how you felt before you started.`,
   }
 }
