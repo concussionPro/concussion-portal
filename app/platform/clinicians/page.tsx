@@ -85,6 +85,27 @@ const DASH = [
   'Clearance-ready signal on a no-intolerance re-test',
 ]
 
+// Headline research facts — every figure cited, every claim about compliance
+// or recovery attributed to the literature (never to the app). Owner:
+// "clear research based facts should be present."
+const FACTS: { stat: string; body: string; cite: string }[] = [
+  {
+    stat: '12 vs 21.5 days',
+    body: 'Median recovery for patients who completed their prescribed sub-symptom sessions versus those who didn’t.',
+    cite: 'Leddy et al., adolescent SRC cohort (PMC9378725), p = 0.016',
+  },
+  {
+    stat: '~4 in 10',
+    body: 'Patients fell short of even two-thirds of their prescribed exercise volume — unseen until the next visit on a paper diary.',
+    cite: 'Same cohort; home-exercise adherence in physiotherapy runs as low as 50%',
+  },
+  {
+    stat: 'First-line',
+    body: 'Sub-symptom aerobic exercise is first-line concussion care — measured threshold, ~20 min/day, 6 of 7 days.',
+    cite: 'Patricios et al., Amsterdam consensus 2023 (BJSM); Leddy, JAMA Pediatrics 2019',
+  },
+]
+
 export default function CliniciansPage() {
   return (
     <div
@@ -173,6 +194,28 @@ export default function CliniciansPage() {
           ))}
         </div>
       </header>
+
+      {/* ── Research facts band ────────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1180px] px-8 pb-11 pt-1.5">
+        <div className="grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
+          {FACTS.map((f) => (
+            <div key={f.stat} className="rounded-[18px] border border-slate-200 bg-white p-6">
+              <div
+                className="font-extrabold tracking-[-0.02em]"
+                style={{ fontSize: 'clamp(24px, 2.6vw, 30px)', color: '#3f9020', lineHeight: 1.05 }}
+              >
+                {f.stat}
+              </div>
+              <p className="mt-2 text-[13.5px] font-normal leading-[1.5] text-slate-600">{f.body}</p>
+              <p className="mt-3 text-[11px] italic leading-[1.4] text-slate-400">{f.cite}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-center text-[12px] text-slate-400">
+          Recovery figures describe compliance with the exercise protocol, not the app. SST Trainer
+          is the delivery layer that makes that compliance measurable.
+        </p>
+      </section>
 
       {/* ── Measured, not estimated (the wedge) ────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-8 pb-11 pt-1.5">
@@ -306,11 +349,12 @@ export default function CliniciansPage() {
             className="m-0 font-extrabold tracking-[-0.02em]"
             style={{ fontSize: 'clamp(22px, 2.6vw, 28px)', lineHeight: 1.1 }}
           >
-            Free for your first patients.
+            Your first 3 patients are free.
           </h2>
-          <p className="m-0 max-w-[520px] text-[14px] font-normal leading-[1.55] text-slate-600">
-            Join the founding program — full access, your founding rate locked, and a say in the
-            roadmap. The patient app is always free.
+          <p className="m-0 max-w-[540px] text-[14px] font-normal leading-[1.55] text-slate-600">
+            Patients reach the app only through your clinic code — it&apos;s your tool, your patients,
+            your data. Run your first three on us (no card, no time limit), then lock your founding
+            rate and keep a say in the roadmap.
           </p>
           <div className="flex flex-wrap justify-center gap-[11px]">
             <Link

@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   // landing link so the owner can walk the whole cold-pitch experience.
   if (mode === 't1-live') {
     const s = SST_SEQUENCE
-    const landing = 'https://portal.concussion-education-australia.com/platform/clinicians'
+    const landing = 'https://portal.concussion-education-australia.com/sst'
     const esc = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     const html = `<div style="font-family:-apple-system,'Segoe UI',sans-serif;max-width:560px;color:#1e293b;line-height:1.6;font-size:14px">
       <p style="font-size:11px;color:#64748b;margin:0 0 14px">PROSPECT VIEW · T1 as sent, plus the landing link (cold email itself carries NO link — this is for your review)</p>
