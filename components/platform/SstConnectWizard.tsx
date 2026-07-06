@@ -109,6 +109,10 @@ export default function SstConnectWizard({
   const [failure, setFailure] = useState<{ title: string; fixes: string[] } | null>(null)
   const [bpm, setBpm] = useState<number | null>(null)
   const [silent, setSilent] = useState(false)
+  // Brave ships navigator.bluetooth but disables Web Bluetooth behind a flag,
+  // so requestDevice resolves to nothing (picker "doesn't launch"). We can't
+  // force it on — detect it and give the exact fix instead of a dead click.
+  const [isBrave, setIsBrave] = useState(false)
   const connRef = useRef<LiveHrConnection | null>(null)
 
   // Environment check runs on open. Native shell exposes its BLE bridge through
@@ -122,6 +126,11 @@ export default function SstConnectWizard({
     setSilent(false)
     const p = detectPlatform()
     setPlatform(p)
+    // Brave exposes navigator.brave.isBrave() (async). Web Bluetooth is off by
+    // default and can't be enabled per-site — only via brave://flags + relaunch.
+    const brave = (navigator as unknown as { brave?: { isBrave?: () => Promise<boolean> } }).brave
+    if (brave?.isBrave) brave.isBrave().then((v) => setIsBrave(!!v)).catch(() => setIsBrave(false))
+    else setIsBrave(false)
     const bt = (navigator as unknown as { bluetooth?: { getAvailability?: () => Promise<boolean> } }).bluetooth
     const native = !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()
     const supported = native || !!bt
@@ -200,6 +209,19 @@ export default function SstConnectWizard({
 
         {step === 'env' && (
           <>
+            {isBrave && (
+              <div className={card} style={{ borderColor: '#f59e0b', background: '#fffbeb' }}>
+                <p className={body}>
+                  <strong>Brave blocks Web Bluetooth by default</strong> — that&rsquo;s why the picker doesn&rsquo;t open
+                  (the Privacy &amp; Security toggle doesn&rsquo;t control it). Two ways through:
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-[13.5px] text-amber-900">
+                  <li>Open <code className="rounded bg-amber-100 px-1">brave://flags/#brave-web-bluetooth-api</code>, set it to <strong>Enabled</strong>, and relaunch Brave — then scan.</li>
+                  <li>Or just open this page in <strong>Chrome or Edge</strong>, where it works out of the box.</li>
+                  <li>Either way, <strong>Skip below</strong> and type readings in works right now.</li>
+                </ul>
+              </div>
+            )}
             {btSupported === false ? (
               <div className={card}>
                 <p className={body}>

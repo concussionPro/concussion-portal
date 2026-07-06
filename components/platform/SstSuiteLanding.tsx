@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { SstWatchAnimation } from '@/components/platform/SstWatchAnimation'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
-import { Lock, Zap, Compass, MapPin, Clock, Link2, FileText } from 'lucide-react'
+import { Clock, Link2, FileText } from 'lucide-react'
 
 /**
  * /sst — the Clinical Testing landing with a top toggle between TWO FULL
@@ -228,33 +227,6 @@ function ClinicianLoopback() {
 }
 
 /* ── What founding clinics get (visible benefits) ───────────────────────── */
-function FoundingBenefits() {
-  const perks = [
-    { Icon: Lock, t: 'Your rate, locked for life', b: 'A$49 / A$99 / A$149 by team size — half what later clinics will pay. Locked for as long as you stay.' },
-    { Icon: Zap, t: 'Priority onboarding', b: 'Your clinic code, patient links and hub set up within the week, with a direct line to our clinical team.' },
-    { Icon: Compass, t: 'Shape the roadmap', b: 'Early access to every new tool and module, and real input into what we build next.' },
-    { Icon: MapPin, t: 'Referral-directory listing', b: 'A founding-clinic listing when our patient-facing referral directory launches — new patients find you.' },
-  ]
-  return (
-    <Section className="pb-16">
-      <div className="mb-[22px] text-center">
-        <span className="inline-flex items-center gap-2 rounded-full px-[13px] py-[7px] text-[12px] font-bold" style={{ background: '#e6f3da', color: '#3c7a1f' }}>Only 20 founding places</span>
-        <h2 className="mb-2 mt-3 text-[clamp(26px,3vw,36px)] font-extrabold leading-[1.05] tracking-[-0.02em]">What founding clinics get</h2>
-        <p className="mx-auto m-0 max-w-[560px] text-[15px] leading-[1.5] text-slate-500">Beyond a lower price — the benefits of being early, for as long as you stay with us.</p>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {perks.map((p) => (
-          <div key={p.t} className="rounded-[16px] border border-slate-200 bg-white p-6">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[11px]" style={{ background: '#e6f3da', color: '#3c7a1f' }}><p.Icon size={19} /></span>
-            <h3 className="mb-1.5 mt-2 text-[16px] font-extrabold leading-[1.15]">{p.t}</h3>
-            <p className="m-0 text-[13px] leading-[1.5] text-slate-500">{p.b}</p>
-          </div>
-        ))}
-      </div>
-    </Section>
-  )
-}
-
 /* ── Shared: pricing (both tools) + founding CTA ────────────────────────── */
 function SharedPricing() {
   return (
@@ -297,32 +269,44 @@ function SharedPricing() {
   )
 }
 
-export function SstSuiteLanding() {
-  const [tab, setTab] = useState<TabId>('sst')
+/** Two standalone pages share this shell — /clinical-suite (SST Trainer) and
+ *  /clinical-suite/baseline. The toggle NAVIGATES between them (owner: each
+ *  tool "must be a standalone page", not a tab that duplicates the other's
+ *  below-fold). Combined pricing shows on both; the SST-specific clinician
+ *  loopback only on the SST page. */
+export function SstSuiteLanding({ tool = 'sst' }: { tool?: TabId }) {
+  const HREF: Record<TabId, string> = { sst: '/clinical-suite', baseline: '/clinical-suite/baseline' }
   return (
     <div className="pt-[92px] md:pt-[110px]">
-      {/* prominent tool toggle — switches the whole landing */}
+      {/* prominent tool toggle — links to each tool's standalone page */}
       <div className="mx-auto mb-4 flex max-w-[1180px] flex-col items-center gap-2 px-6 md:px-8">
         <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-400">The Clinical Testing suite — pick a tool</p>
         <div className="inline-flex w-full max-w-[560px] rounded-[18px] border border-slate-200 bg-white p-2 shadow-[0_10px_30px_-18px_rgba(22,36,63,.4)]">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className="flex-1 rounded-[13px] px-6 py-4 text-center transition-colors"
-              style={{ background: tab === t.id ? NAVY : 'transparent', color: tab === t.id ? '#fff' : '#475569' }}
-            >
-              <span className="block text-[19px] font-extrabold leading-none tracking-[-0.01em]">{t.label}</span>
-              <span className="mt-1.5 block text-[12.5px] font-medium opacity-70">{t.sub}</span>
-            </button>
-          ))}
+          {TABS.map((t) => {
+            const active = tool === t.id
+            return (
+              <Link
+                key={t.id}
+                href={HREF[t.id]}
+                className="flex-1 rounded-[13px] px-6 py-4 text-center transition-colors"
+                style={{ background: active ? NAVY : 'transparent', color: active ? '#fff' : '#475569' }}
+              >
+                <span className="block text-[19px] font-extrabold leading-none tracking-[-0.01em]">{t.label}</span>
+                <span className="mt-1.5 block text-[12.5px] font-medium opacity-70">{t.sub}</span>
+              </Link>
+            )
+          })}
         </div>
       </div>
 
-      {tab === 'sst' ? <SstTab /> : <BaselineTab />}
-      <ClinicianLoopback />
-      <FoundingBenefits />
+      {tool === 'sst' ? (
+        <>
+          <SstTab />
+          <ClinicianLoopback />
+        </>
+      ) : (
+        <BaselineTab />
+      )}
       <SharedPricing />
     </div>
   )
