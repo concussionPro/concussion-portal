@@ -159,6 +159,9 @@ export default function GuidedTest({
   const [tappedSymptoms, setTappedSymptoms] = useState<Set<string>>(new Set())
   /** >40 bpm jump from last stage — needs an explicit confirm before logging */
   const [confirmJump, setConfirmJump] = useState<number | null>(null)
+  /** guards the auto-logger so a stage logs at most once at its rollover */
+  const autoLoggedRef = useRef(false)
+  const [justLogged, setJustLogged] = useState<number | null>(null)
 
   // ── 60-second stage timer (Date.now()-based; immune to throttling) ─────────
   // 0 = not started; stamped on ramp start and on every stage rollover.
@@ -220,7 +223,6 @@ export default function GuidedTest({
   // Log opens at stage end — but a symptom spike or maximal effort may always
   // be logged immediately (never make someone wait out the minute while
   // symptoms climb or at their limit).
-  const canLog = hrValid && (stageDone || reachesThreshold || nearMaxEffort)
 
   const toggleSymptom = (id: string) => {
     setTappedSymptoms((prev) => {
@@ -267,6 +269,7 @@ export default function GuidedTest({
     if (reachesThreshold) return finish('symptom-limited', stages)
     if (opts.finalStage || minute >= MAX_STAGES) return finish('exhaustion-limited', stages)
     setRecordedStages(stages)
+    setJustLogged(minute)
     setMinute((m) => m + 1)
     // fresh entry for every stage — no HR / symptom carry-over from the last
     // minute (RPE carries: effort only ramps up)
@@ -277,7 +280,23 @@ export default function GuidedTest({
     stageStartRef.current = Date.now()
     setStageElapsed(0)
     cuedRef.current = false
+    autoLoggedRef.current = false
   }
+
+  // Auto-log each minute (owner: "stats should log each minute automatically,
+  // not manual"). At the minute's end, once a valid HR is on screen (a live
+  // feed, or a typed reading in manual mode), record the stage and step up —
+  // no button tap. Threshold spikes and maximal effort still resolve through
+  // their own paths below; manual mode with no reading yet simply waits.
+  useEffect(() => {
+    if (phase !== 'ramp') return
+    if (!stageDone || !hrValid || confirmJump !== null) return
+    if (reachesThreshold || nearMaxEffort) return
+    if (autoLoggedRef.current) return
+    autoLoggedRef.current = true
+    logMinute({})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageDone, hrValid, confirmJump, phase])
 
   // Threshold crossed → the test ends itself. Setting a ≥3-point rise IS the
   // report — never ask for a confirming tap while someone's symptoms climb.
@@ -427,20 +446,27 @@ export default function GuidedTest({
         </div>
       </div>
 
-      {/* per-stage effort instruction */}
-      <div className="rounded-[14px] border border-[#cfe0e2] bg-[#eef6f6] px-3.5 py-3">
-        <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#3c7681]">
-          This minute
-        </span>
-        <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#16282b]">
-          {effortInstruction(modality as TestModality, minute)}
-        </p>
-      </div>
+      {/* per-stage effort instruction — the step-up cue. Shown only at the
+          START of each minute (owner: no instructions panel while the program
+          is actually running); it clears once they're pedalling so the running
+          view is just timer + HR + how-you-feel. */}
+      {stageElapsed < 12 && !stageDone && (
+        <div className="rounded-[14px] border border-[#cfe0e2] bg-[#eef6f6] px-3.5 py-3">
+          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#3c7681]">
+            {minute === 1 ? 'Start' : `Minute ${minute} — step up`}
+          </span>
+          <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#16282b]">
+            {effortInstruction(modality as TestModality, minute)}
+          </p>
+        </div>
+      )}
 
       {/* RPE — Borg 6–20 as a plain slider */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs font-semibold text-[#3b4f52]">How hard does this feel?</span>
+          <span className="text-xs font-semibold text-[#3b4f52]">
+            How hard does this feel? <span className="font-normal text-[#9bafb0]">· Borg RPE</span>
+          </span>
           <span className={`text-[16px] text-[#5b9aa6] ${numFont}`}>
             {rpe}
             <span className="text-[11px] text-[#9bafb0]">/20</span>
@@ -498,7 +524,7 @@ export default function GuidedTest({
       {/* symptom level — label row above the bars so the strip shares the same
           left/right edges as every other block (the inline label pushed the
           bars past the container edge) */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2 pt-0.5">
         <div className="flex items-baseline justify-between">
           <span className="text-xs font-semibold text-[#3b4f52]">Symptom level</span>
           <span className={`text-[15px] text-[#5b9aa6] ${numFont}`}>
@@ -536,21 +562,32 @@ export default function GuidedTest({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <button
-          type="button"
-          disabled={!canLog || confirmJump !== null}
-          onClick={() => logMinute({ finalStage: nearMaxEffort })}
-          className="w-full rounded-[15px] p-3.5 text-sm font-bold text-white shadow-[0_8px_18px_-8px_rgba(91,154,166,0.8)] transition active:scale-[0.98] disabled:opacity-40"
-          style={{ background: reachesThreshold ? '#3c7681' : nearMaxEffort ? '#a06a1c' : '#5b9aa6' }}
-        >
-          {reachesThreshold
-            ? 'Log — this reaches my threshold'
-            : nearMaxEffort
-              ? 'Log final stage — maximal effort'
-              : stageDone
-                ? `Log minute ${minute} & step up`
-                : `Log opens when the minute ends (0:${String(remaining).padStart(2, '0')})`}
-        </button>
+        {nearMaxEffort ? (
+          // Maximal effort ENDS the test — keep this an explicit action.
+          <button
+            type="button"
+            disabled={!hrValid || confirmJump !== null}
+            onClick={() => logMinute({ finalStage: true })}
+            className="w-full rounded-[15px] p-3.5 text-sm font-bold text-white shadow-[0_8px_18px_-8px_rgba(160,106,28,0.6)] transition active:scale-[0.98] disabled:opacity-40"
+            style={{ background: '#a06a1c' }}
+          >
+            Log final stage — maximal effort
+          </button>
+        ) : stageDone && !hrValid ? (
+          <div className="rounded-[14px] border-[1.5px] border-[#5b9aa6] bg-[#e7f2f3] px-3.5 py-3 text-center">
+            <p className="m-0 text-[12.5px] font-bold leading-snug text-[#3c7681]">
+              Minute {minute} is up — type this minute&rsquo;s heart rate and it logs automatically.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-[14px] bg-[#eef4f4] px-3.5 py-3 text-center">
+            <p className="m-0 text-[12px] font-semibold leading-snug text-[#5d7174]">
+              {justLogged
+                ? `Minute ${justLogged} logged ✓ — keep going, the next minute logs itself.`
+                : 'Each minute logs itself when it ends. Just keep the effort stepping up and your rating current.'}
+            </p>
+          </div>
+        )}
         <p className="m-0 text-center text-[10px] leading-tight text-[#9bafb0]">
           The test ends on its own at a {PROVOCATION_RISE}-point symptom rise (that sets your
           threshold), at maximal effort, or at minute {MAX_STAGES}. A symptom spike can be logged at
