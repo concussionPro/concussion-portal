@@ -48,7 +48,7 @@ function Shell() {
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setClinicCode(d && typeof d.code === 'string' ? d.code : null))
+      .then((d) => setClinicCode(d && typeof d.code === 'string' && d.code.trim() ? d.code : null))
       .catch(() => setClinicCode(null))
   }, [])
 
