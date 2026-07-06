@@ -31,7 +31,8 @@ export const metadata: Metadata = {
     'Prescribed exercise-rehab platform. Reads the patient’s heart-rate threshold, prescribes a safe sub-symptom training band, and steps it up as they recover — clinician-set and overseen.',
   robots: 'noindex, nofollow',
   // Installable PWA (see public/sst.webmanifest + public/sw.js). start_url is
-  // /demo/sst so an install lands authenticated. Gating stays in place.
+  // /sst-trainer?source=pwa (the patient entry / QR deep-link target). Gating
+  // stays in place.
   manifest: '/sst.webmanifest',
   appleWebApp: {
     capable: true,
