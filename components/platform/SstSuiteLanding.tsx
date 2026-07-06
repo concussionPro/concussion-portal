@@ -201,8 +201,8 @@ function ClinicianLoopback() {
         <p className="m-0 mb-7 max-w-[660px] text-[14.5px] leading-[1.55]" style={{ color: '#b9c6da' }}>
           Signing up gives you a login to the CEA portal. That&rsquo;s where the data lands — you don&rsquo;t
           chase the patient, you review what the app sends back between appointments. And because the tool
-          lives on your patient&rsquo;s own phone at home, treatment doesn&rsquo;t lapse the moment they leave the
-          clinic — it carries on until the episode is genuinely closed.
+          lives on your patient&rsquo;s own phone at home, they keep following the program <em>you</em>{' '}
+          prescribed between visits, instead of it stalling until the next appointment.
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((i) => (
@@ -216,8 +216,8 @@ function ClinicianLoopback() {
           <h3 className="m-0 mb-1.5 text-[15px] font-extrabold" style={{ color: '#7fd4c8' }}>Built for continuation, not one-off visits</h3>
           <p className="m-0 max-w-[720px] text-[13px] leading-[1.55]" style={{ color: '#cdd9e8' }}>
             Every scheduled re-test is a checkpoint — a reason the patient books back in rather than drifting
-            off after visit two. Patients who finish a structured program get better, and the ones who get
-            better are the ones who refer the next athlete, coach and teammate. The monthly licence is a
+            off after visit two. Patients who complete a structured program tend to stay engaged, and engaged
+            patients are the ones who refer the next athlete, coach and teammate. The monthly licence is a
             fraction of the value of a single completed episode of care.
           </p>
         </div>
@@ -261,7 +261,7 @@ function SharedPricing() {
       <Section className="pb-20">
         <div className="flex flex-col items-center gap-[13px] rounded-[22px] border p-9 text-center" style={{ background: 'linear-gradient(135deg, #effbfa, #e6f6f3)', borderColor: '#c5ebe4' }}>
           <h2 className="m-0 font-extrabold tracking-[-0.02em]" style={{ fontSize: 'clamp(22px,2.6vw,30px)', lineHeight: 1.1 }}>Be one of our first 20 founding clinics.</h2>
-          <p className="m-0 max-w-[560px] text-[14.5px] leading-[1.55] text-slate-600">First-line concussion care, delivered — measured rehab and pre-season baselines on one licence. Free through the founding period, your first three patients free, and your rate locked for life.</p>
+          <p className="m-0 max-w-[560px] text-[14.5px] leading-[1.55] text-slate-600">The delivery layer for first-line concussion care — measured rehab and pre-season baselines you prescribe and oversee, on one licence. Free through the founding period, your first three patients free, and your rate locked for life.</p>
           <div className="mt-1 flex flex-wrap justify-center gap-[11px]"><Cta href="/clinical-suite/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
         </div>
       </Section>

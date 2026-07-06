@@ -175,6 +175,15 @@ export default function ResultPrescription({
           </SecondaryButton>
         </div>
       )}
+
+      {/* Not-a-diagnosis line on the non-physiologic branches too (the physiologic
+          band carries its own above) — every result surface must disclaim. */}
+      {!rx && (
+        <p className="m-0 text-[10.5px] leading-snug text-[#9bafb0]">
+          Not a diagnosis or return-to-play clearance. Share this with your clinician and follow their
+          guidance.
+        </p>
+      )}
     </section>
   )
 }

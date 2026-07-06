@@ -107,8 +107,9 @@ export default function FoundingClinicPage() {
             className="m-0 max-w-[440px] font-normal text-slate-600"
             style={{ fontSize: 'clamp(14.5px, 1.4vw, 16px)', lineHeight: 1.55 }}
           >
-            SST Trainer delivers first-line concussion care — the Buffalo-protocol graded test and
-            sub-symptom aerobic training (Amsterdam 2023), on the wearable your patients already own.
+            SST Trainer is the delivery layer for first-line concussion care — the Buffalo-protocol
+            graded test and sub-symptom aerobic training (Amsterdam 2023) that you prescribe and oversee,
+            on the wearable your patients already own.
             We&rsquo;re onboarding a small founding cohort now: lock A$49/month for life (half the
             A$99 standard), your first three patients free, and priority onboarding as we grow with
             you.

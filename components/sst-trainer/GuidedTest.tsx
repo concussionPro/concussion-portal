@@ -166,6 +166,8 @@ export default function GuidedTest({
   const [confirmJump, setConfirmJump] = useState<number | null>(null)
   /** guards the auto-logger so a stage logs at most once at its rollover */
   const autoLoggedRef = useRef(false)
+  /** guards the threshold finish so it fires exactly once */
+  const finishingRef = useRef(false)
   const [justLogged, setJustLogged] = useState<number | null>(null)
 
   // ── 60-second stage timer (Date.now()-based; immune to throttling) ─────────
@@ -267,6 +269,7 @@ export default function GuidedTest({
     const prev = recordedStages[recordedStages.length - 1]
     if (!opts.confirmed && prev && Math.abs((hrValue as number) - prev.heartRate) > HR_JUMP_CONFIRM) {
       setConfirmJump(Math.abs((hrValue as number) - prev.heartRate))
+      finishingRef.current = false // intercepted — let a resolved re-attempt fire
       return
     }
     setConfirmJump(null)
@@ -305,12 +308,18 @@ export default function GuidedTest({
 
   // Threshold crossed → the test ends itself. Setting a ≥3-point rise IS the
   // report — never ask for a confirming tap while someone's symptoms climb.
-  // The HR-jump confirm inside logMinute still intercepts implausible values,
-  // and with no valid HR the Log button remains as the manual path.
+  // Depends on hrValid too: in MANUAL mode the patient may cross the symptom
+  // threshold BEFORE typing the reading — the HRt must still capture the moment
+  // they enter it (previously this only fired on a symptomScore change, so a
+  // late-typed HR left the test frozen with no HRt recorded). One-shot guarded;
+  // the HR-jump confirm inside logMinute still intercepts implausible values.
   useEffect(() => {
-    if (reachesThreshold && hrValid && confirmJump === null) logMinute()
+    if (reachesThreshold && hrValid && confirmJump === null && !finishingRef.current) {
+      finishingRef.current = true
+      logMinute()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symptomScore])
+  }, [symptomScore, hrValid])
 
   /** Early termination (exhaustion / red-flag). */
   const endEarly = (termination: TestTermination) => {
@@ -567,7 +576,29 @@ export default function GuidedTest({
       )}
 
       <div className="flex flex-col gap-1.5">
-        {nearMaxEffort ? (
+        {reachesThreshold ? (
+          hrValid ? (
+            // Threshold reached WITH a reading — auto-logs via the effect above;
+            // this button is the explicit manual fallback.
+            <button
+              type="button"
+              disabled={confirmJump !== null}
+              onClick={() => logMinute()}
+              className="w-full rounded-[15px] p-3.5 text-sm font-bold text-white shadow-[0_8px_18px_-8px_rgba(60,118,129,0.7)] transition active:scale-[0.98] disabled:opacity-40"
+              style={{ background: '#3c7681' }}
+            >
+              Log — this reaches your threshold
+            </button>
+          ) : (
+            // Threshold reached but NO reading yet (manual mode) — the fix for
+            // the frozen-test bug: tell them to enter the HR, which then logs.
+            <div className="rounded-[14px] border-[1.5px] border-[#3c7681] bg-[#e7f2f3] px-3.5 py-3 text-center">
+              <p className="m-0 text-[12.5px] font-bold leading-snug text-[#3c7681]">
+                Your symptoms have reached your threshold — type your heart rate now to record it.
+              </p>
+            </div>
+          )
+        ) : nearMaxEffort ? (
           // Maximal effort ENDS the test — keep this an explicit action.
           <button
             type="button"

@@ -183,6 +183,11 @@ export default function HomeHub({
           Start over
         </button>
       )}
+
+      <p className="m-0 mt-1 text-center text-[10px] leading-snug text-[#9bafb0]">
+        A clinician-directed coaching tool — not a diagnosis or return-to-play clearance. Follow your
+        clinician&rsquo;s guidance.
+      </p>
     </section>
   )
 }

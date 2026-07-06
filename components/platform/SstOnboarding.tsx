@@ -523,23 +523,33 @@ export default function SstOnboarding({
         }}
       />
 
-      {/* De-identified data consent — opt-in, withdrawable. QA / service-quality
-          framing (NOT "research"): the stated purpose is monitoring + improving
-          this service, which keeps collection on the QA side of the HREC line.
-          Declining never affects care — results still go to the clinician. */}
-      <label className="flex items-start gap-2.5 rounded-xl border border-[#d7e3e4] bg-[#f3f8f8] px-3.5 py-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={dataConsent}
-          onChange={(e) => setDataConsent(e.target.checked)}
-          className="mt-0.5 h-4 w-4 flex-none accent-[#3c7681]"
-        />
-        <span className="text-[11.5px] leading-snug text-[#3c5658]">
-          {/* {' '} is load-bearing: the Turbopack prod build eats a plain
-              space after an inline element (rendered "de-identifiedsession") */}
-          I agree that my <strong>de-identified</strong>{' '}session data may be used to monitor and improve this service and the quality of care. No name or contact details are shared, and I can withdraw any time. Declining doesn&rsquo;t affect my care — my results still go to my own clinician.
-        </span>
-      </label>
+      {/* Accurate collection notice (APP 5) + opt-in for the SECONDARY use only.
+          Primary flow is stated as fact: name + results go to the patient's own
+          clinician (that IS the service, not a revocable consent). The checkbox
+          is the opt-in for CEA's de-identified service-improvement use, with an
+          honourable opt-out (ask us to delete). "Research" is deliberately NOT
+          claimed here — that requires separate HREC-gated consent. */}
+      <div className="rounded-xl border border-[#d7e3e4] bg-[#f3f8f8] px-3.5 py-3">
+        <p className="m-0 mb-2 text-[11.5px] leading-snug text-[#3c5658]">
+          Your name and results go to <strong>your own clinician</strong> so they can review and guide
+          your care.
+        </p>
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={dataConsent}
+            onChange={(e) => setDataConsent(e.target.checked)}
+            className="mt-0.5 h-4 w-4 flex-none accent-[#3c7681]"
+          />
+          <span className="text-[11.5px] leading-snug text-[#3c5658]">
+            {/* {' '} is load-bearing: the Turbopack prod build eats a plain
+                space after an inline element (rendered "removedto") */}
+            I also agree CEA may keep my session data, with my name{' '}<strong>removed</strong>, to check and
+            improve how the service works. You can ask us to delete it any time. This is optional —
+            declining doesn&rsquo;t affect your care.
+          </span>
+        </label>
+      </div>
 
       {trialBlocked && (
         <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">

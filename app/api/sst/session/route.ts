@@ -4,6 +4,7 @@ import { kv } from '@vercel/kv'
 import { sql } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
+import { getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
 
 /**
  * POST /api/sst/session
@@ -60,6 +61,28 @@ export async function POST(request: NextRequest) {
     const payload = body.payload && typeof body.payload === 'object' ? body.payload : {}
     if (JSON.stringify(payload).length > 20_000) {
       return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+    }
+
+    // Trial-cap ADMISSION gate (server-side — the UI gate in onboarding is a
+    // crafted-client bypass otherwise). A genuinely NEW patient can't be admitted
+    // past a full free trial; an ALREADY-COUNTED patient is NEVER blocked, so
+    // mid-treatment data always syncs (clinical-safety rule). DEMO + unnamed
+    // writes are exempt (can't attribute an unnamed session to a distinct patient).
+    if (clinicCode !== 'DEMO00' && patientLabel) {
+      const { rows: seen } = await sql<{ one: number }>`
+        SELECT 1 AS one FROM sst_clinic_sessions
+        WHERE upper(clinic_code) = ${clinicCode} AND trim(patient_label) = ${patientLabel}
+        LIMIT 1
+      `
+      if (seen.length === 0) {
+        const usage = await getClinicUsage(clinicCode)
+        if (!usage.canAddPatient) {
+          return NextResponse.json(
+            { error: 'trial-full', message: 'This clinic’s free trial is full — ask your clinician to add you.' },
+            { status: 402 },
+          )
+        }
+      }
     }
 
     await sql`
