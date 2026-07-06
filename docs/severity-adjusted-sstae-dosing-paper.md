@@ -3,10 +3,26 @@
 **Scoping document + literature review — working draft**
 Concussion Education Australia · drafted 2026-07-06 · lead: Zac Lewis (Osteopath)
 
-> Status: concept + lit review for internal review. Every dose parameter cited to
-> primary evidence; guesses are flagged as clinician-judgement, not evidence.
-> Thin/uncertain citations are marked ⚠ and must be verified against the primary
-> before submission.
+> ## ⛔ STRESS-TEST VERDICT (2026-07-06) — thesis does NOT hold; DO NOT pursue as framed
+> A skeptical current-state review (2019–2026) found the severity-adjusted
+> **duration/frequency** thesis is **weak and largely redundant**:
+> 1. Duration is already tolerance-titrated by the "20 min OR ≥2-pt rise,
+>    whichever first" stop rule (Leddy 2019); intensity is already
+>    severity-titrated by the %-HRt band. The idea re-approximates existing
+>    mechanisms.
+> 2. The RCTs **required** exercise intolerance to enrol (enriched for the severe
+>    stratum) and the fixed ~20-min dose still worked (~9% dropout). Chizuk 2022:
+>    the *more* intolerant patients **adhered better and recovered faster**.
+> 3. **No** published data show the fixed dose fails severe patients; nobody has
+>    published severity-stratified duration dosing 2019–2026.
+>
+> **Keep instead** (evidence-aligned): (a) the HRt<135 / low-ΔHR flag as
+> *prognosis / expectation-setting* only; (b) the 2-consecutive-flare rest trigger
+> as a conservative *safety* rail. **Pivot any paper** to the levers that actually
+> move outcomes — **adherence, earlier initiation, and measured-vs-estimated HRt
+> intensity accuracy** (the platform's real wedge; see [[sst_wedge_and_venue]]).
+> The literature review below remains useful; the *dosing-rule* aims (§3–4) are
+> retired. See `sst_prescription_evidence` memory for the stress-test sources.
 
 ---
 
