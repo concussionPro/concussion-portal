@@ -32,34 +32,38 @@ export function SstWatchAnimation() {
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
         {/* top strap */}
-        <div className="mx-auto h-8 w-[108px] rounded-t-[16px] bg-gradient-to-b from-[#2b3a57] to-[#1d2b47]" />
-        {/* case */}
-        <div className="relative -my-1 rounded-[46px] bg-gradient-to-b from-slate-500 via-slate-700 to-slate-900 p-[5px] shadow-[0_28px_60px_-20px_rgba(0,0,0,.8)]">
-          <span className="absolute -right-[7px] top-[56px] h-[27px] w-[9px] rounded-[3px] bg-gradient-to-b from-slate-300 via-slate-500 to-slate-600" />
-          <span className="absolute -right-[5px] top-[98px] h-[36px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
-          {/* screen viewport — real captures swipe inside */}
-          <div className="relative h-[250px] w-[210px] overflow-hidden rounded-[42px] bg-black">
-            <div
-              className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{ width: `${N * 100}%`, transform: `translateX(-${(i * 100) / N}%)` }}
-            >
-              {FRAMES.map((f) => (
-                <div key={f.src} style={{ width: `${100 / N}%` }} className="relative h-full">
-                  <Image
-                    src={f.src}
-                    alt={`SST Trainer — ${f.label}`}
-                    width={210}
-                    height={250}
-                    className="block h-full w-full object-cover"
-                    priority
-                  />
-                </div>
-              ))}
+        <div className="mx-auto h-8 w-[104px] rounded-t-[18px] bg-gradient-to-b from-[#2b3a57] to-[#1d2b47]" />
+        {/* metal case */}
+        <div className="relative -my-1 rounded-[50px] bg-gradient-to-b from-slate-400 via-slate-600 to-slate-900 p-[4px] shadow-[0_28px_60px_-20px_rgba(0,0,0,.8)]">
+          <span className="absolute -right-[6px] top-[60px] h-[28px] w-[8px] rounded-[3px] bg-gradient-to-b from-slate-300 via-slate-500 to-slate-600" />
+          <span className="absolute -right-[4px] top-[102px] h-[36px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
+          {/* black OLED bezel — the padding insets the capture so its content
+              never touches the rounded corners (this was the clipping bug) */}
+          <div className="rounded-[46px] bg-black p-[10px]">
+            {/* screen viewport, matched to the 416:496 capture aspect */}
+            <div className="relative h-[228px] w-[191px] overflow-hidden rounded-[32px] bg-black">
+              <div
+                className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{ width: `${N * 100}%`, transform: `translateX(-${(i * 100) / N}%)` }}
+              >
+                {FRAMES.map((f) => (
+                  <div key={f.src} style={{ width: `${100 / N}%` }} className="relative h-full">
+                    <Image
+                      src={f.src}
+                      alt={`SST Trainer — ${f.label}`}
+                      width={191}
+                      height={228}
+                      className="block h-full w-full object-contain"
+                      priority
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
         {/* bottom strap */}
-        <div className="mx-auto h-8 w-[108px] rounded-b-[16px] bg-gradient-to-t from-[#2b3a57] to-[#1d2b47]" />
+        <div className="mx-auto h-8 w-[104px] rounded-b-[18px] bg-gradient-to-t from-[#2b3a57] to-[#1d2b47]" />
       </div>
 
       {/* stage dots */}
