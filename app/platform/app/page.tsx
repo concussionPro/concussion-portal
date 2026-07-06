@@ -359,7 +359,9 @@ export default function PlatformAppPage({
   // can't ratchet the band down twice.
   useEffect(() => {
     if (!hydrated || !prescription || !decision) return
-    if (decision.decision !== 'regress' || decision.newCeilingBpm == null) return
+    // 'rest' (two flares in a row) eases the ceiling back too — apply it like a
+    // regress; the ProgressDashboard shows the rest-day + clinician-check prompt.
+    if ((decision.decision !== 'regress' && decision.decision !== 'rest') || decision.newCeilingBpm == null) return
     if (!decisionFresh) return
     setRegressUndo({ lowerBpm: prescription.lowerBpm, upperBpm: prescription.upperBpm })
     applyCeiling(decision.newCeilingBpm)

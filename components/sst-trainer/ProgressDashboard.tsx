@@ -17,6 +17,8 @@ const DECISION_META: Record<
   advance: { label: 'Advance', icon: '↑', color: '#3c7681', border: '#5b9aa6', bg: '#e7f2f3' },
   hold: { label: 'Hold steady', icon: '→', color: '#3b4f52', border: '#cdd9da', bg: '#eef4f4' },
   regress: { label: 'Eased back', icon: '↓', color: '#a06a1c', border: '#d79a3a', bg: '#fbf2e1' },
+  // Two flares in a row → rest day + clinician check-in (owner rail 2026-07-06).
+  rest: { label: 'Rest day — check in with your clinician', icon: '⏸', color: '#b1392e', border: '#d2463a', bg: '#fbeae8' },
   // At the HRt cap: the only safe way up is a fresh measurement.
   retest: { label: 'Time to re-test', icon: '◎', color: '#3c7681', border: '#5b9aa6', bg: '#e7f2f3' },
   // NOTE: progressionDecision() never emits `refer` today. This entry is a

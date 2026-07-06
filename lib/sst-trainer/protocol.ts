@@ -335,7 +335,7 @@ export function canRetest(
   return { allowed: true, reason: null }
 }
 
-export type ProgressionDecision = 'advance' | 'hold' | 'regress' | 'refer' | 'retest'
+export type ProgressionDecision = 'advance' | 'hold' | 'regress' | 'refer' | 'retest' | 'rest'
 
 export interface ProgressionResult {
   decision: ProgressionDecision
@@ -372,6 +372,25 @@ export function progressionDecision(
   // sessions so old, long-since-resolved flares can't ratchet the ceiling down
   // forever (a recovered patient with clean recent runs must not keep regressing).
   // Safety data always counts: this window includes manual/unverified sessions.
+  // REST TRIGGER (owner clinical rail 2026-07-06; fills the evidence gap on
+  // repeated day-over-day provocation — the RCTs cover the expected mild
+  // within-session bump but not multi-session flaring). TWO flare sessions IN A
+  // ROW → prescribe a rest day, ease the ceiling back, and push a clinician
+  // check-in. A single isolated flare still just holds/reduces and continues
+  // (that IS the evidence-based response — reduce, don't rest; Haider/Leddy 2021).
+  const lastTwo = recent.slice(-2)
+  if (lastTwo.length === 2 && lastTwo.every(isFlare)) {
+    return {
+      decision: 'rest',
+      newCeilingBpm: Math.max(rx.lowerBpm, rx.upperBpm - step),
+      message:
+        'Two sessions in a row provoked your symptoms. Take a rest day today, ease the ceiling back, and check in with your clinician before your next session — then resume gently. Repeated flaring means the current dose is too much, not that you should push through it.',
+    }
+  }
+
+  // Regress only on RECENT repeated provocation (not necessarily consecutive) —
+  // window to the last few sessions so old, long-since-resolved flares can't
+  // ratchet the ceiling down forever.
   const flareWindow = recent.slice(-Math.max(cleanNeeded, 3))
   const flares = flareWindow.filter(isFlare)
   if (flares.length >= 2) {
