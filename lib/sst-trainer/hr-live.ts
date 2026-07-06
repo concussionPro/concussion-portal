@@ -97,6 +97,7 @@ interface BleDevice {
 interface BluetoothApi {
   requestDevice(opts: {
     filters?: Array<{ services: string[] }>
+    acceptAllDevices?: boolean
     optionalServices?: string[]
   }): Promise<BleDevice>
 }
@@ -252,9 +253,14 @@ export async function connectBluetoothHr(): Promise<LiveHrConnection> {
   if (!bt) throw new Error('Web Bluetooth is not available in this browser.')
 
   // requestDevice MUST be the first thing — it consumes the user gesture.
+  // acceptAllDevices (not a heart_rate service FILTER): many watches in HR
+  // broadcast mode don't advertise the 0x180D service UUID in the ad packet,
+  // so a service filter shows an empty picker. acceptAllDevices guarantees the
+  // chooser opens with the watch listed; we still require the heart_rate
+  // service to connect (optionalServices), so non-HR picks simply fail to wire.
   const device = await bt.requestDevice({
-    filters: [{ services: ['heart_rate'] }],
-    optionalServices: ['battery_service'],
+    acceptAllDevices: true,
+    optionalServices: ['heart_rate', 'battery_service'],
   })
 
   const listeners = new Set<(bpm: number) => void>()

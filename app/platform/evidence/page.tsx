@@ -276,19 +276,21 @@ export default function EvidencePage() {
           <h2 className="text-[30px] font-extrabold tracking-[-0.02em] text-[#16243f] sm:text-[34px]">
             Put the evidence on the wrist.
           </h2>
-          <p className="mx-auto mt-4 max-w-[460px] text-[16px] leading-relaxed text-slate-600">
-            The protocol your clinic already trusts, delivered to the wearable your patient already owns.
+          <p className="mx-auto mt-4 max-w-[520px] text-[16px] leading-relaxed text-slate-600">
+            The protocol your clinic already trusts, delivered to the wearable your patient already owns —
+            with the structure and between-visit visibility that carries a patient through their whole
+            episode of care, re-test by re-test, rather than dropping off after the second visit.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/platform/clinicians"
+              href="/clinical-suite"
               className="rounded-full px-6 py-3 text-[15px] font-bold text-white transition-colors hover:opacity-90"
               style={{ backgroundColor: PLATFORM.navy }}
             >
               For clinicians
             </Link>
             <Link
-              href="/platform/pricing"
+              href="/clinical-suite/pricing"
               className="rounded-full px-6 py-3 text-[15px] font-bold text-white transition-colors hover:opacity-90"
               style={{ backgroundColor: PLATFORM.green }}
             >

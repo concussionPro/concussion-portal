@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { SstWatchAnimation } from '@/components/platform/SstWatchAnimation'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
+import { Lock, Zap, Compass, MapPin, Clock, Link2, FileText } from 'lucide-react'
 
 /**
  * /sst — the Clinical Testing landing with a top toggle between TWO FULL
@@ -24,11 +25,11 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id']
 
 const TIERS = [
-  { name: 'Single', who: 'One clinician', price: 'A$49', popular: false,
+  { name: 'Single', who: 'One clinician', price: 'A$49', full: 'A$98', popular: false,
     features: ['Both tools — SST Trainer + baseline', 'First 3 patients free', 'Measured trajectory, flare flags & auto GP report', 'Free through founding, then lock A$49 for life'] },
-  { name: 'Small clinic', who: 'Up to 5 clinicians', price: 'A$99', popular: true,
+  { name: 'Small clinic', who: 'Up to 5 clinicians', price: 'A$99', full: 'A$198', popular: true,
     features: ['Everything in Single, for your whole team', 'Up to 5 clinicians on one licence', 'Priority onboarding + direct line to our team', 'Free through founding, then lock A$99 for life'] },
-  { name: 'Enterprise', who: 'Up to 15 clinicians', price: 'A$149', popular: false,
+  { name: 'Enterprise', who: 'Up to 15 clinicians', price: 'A$149', full: 'A$298', popular: false,
     features: ['Everything in Small clinic, up to 15 clinicians', 'Founding-clinic referral-directory listing', 'Clubs, leagues & payers — talk to us', 'Free through founding, then lock A$149 for life'] },
 ]
 
@@ -56,7 +57,7 @@ function FreeBadge({ note }: { note: string }) {
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
         Free for your first 3 patients — no card, no time limit
       </span>
-      <span className="text-[12.5px] font-bold text-emerald-700">Founding clinics lock in half price for life — A$49 / A$99 / A$149.</span>
+      <span className="text-[12.5px] font-bold text-emerald-700">Founding clinics lock in half price for life — <s className="font-medium text-slate-400">A$98/198/298</s> A$49 / A$99 / A$149.</span>
       <span className="text-[12px] font-medium text-slate-400">{note}</span>
     </div>
   )
@@ -124,9 +125,9 @@ function SstTab() {
 
 /* ── Baseline Testing — full landing ────────────────────────────────────── */
 const BASE_COVERS = [
-  { icon: '5′', t: '~5 minutes per athlete', b: 'Self-administered SCAT6 sections on any computer — symptoms, orientation, memory, concentration, delayed recall.' },
-  { icon: '🔗', t: 'One club link', b: 'Send it to team managers; every athlete completes their own baseline. No app, no account for the athlete.' },
-  { icon: '📄', t: 'Reports to your inbox', b: 'A PDF baseline per athlete, stored against your clinic code — ready the day an injury comparison is needed.' },
+  { Icon: Clock, t: '~5 minutes per athlete', b: 'Self-administered SCAT6 sections on any computer — symptoms, orientation, memory, concentration, delayed recall.' },
+  { Icon: Link2, t: 'One club link', b: 'Send it to team managers; every athlete completes their own baseline. No app, no account for the athlete.' },
+  { Icon: FileText, t: 'Reports to your inbox', b: 'A PDF baseline per athlete, stored against your clinic code — ready the day an injury comparison is needed.' },
 ]
 const BASE_STEPS = [
   { n: '1', t: 'Register your clinic', b: 'Enter your clinic name and email, get your code and club link in seconds.' },
@@ -159,7 +160,7 @@ function BaselineTab() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
           {BASE_COVERS.map((c) => (
             <div key={c.t} className="rounded-[18px] border border-slate-200 bg-white p-6">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-[11px] text-[17px] font-bold" style={{ background: '#d5f5f0', color: '#0f766e' }}>{c.icon}</span>
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-[11px]" style={{ background: '#d5f5f0', color: '#0f766e' }}><c.Icon size={18} /></span>
               <h3 className="mb-1.5 mt-3 text-[16px] font-extrabold leading-[1.15]">{c.t}</h3>
               <p className="m-0 text-[13px] leading-[1.5] text-slate-500">{c.b}</p>
             </div>
@@ -218,10 +219,10 @@ function ClinicianLoopback() {
 /* ── What founding clinics get (visible benefits) ───────────────────────── */
 function FoundingBenefits() {
   const perks = [
-    { icon: '🔒', t: 'Your rate, locked for life', b: 'A$49 / A$99 / A$149 by team size — half what later clinics will pay. Locked for as long as you stay.' },
-    { icon: '⚡', t: 'Priority onboarding', b: 'Your clinic code, patient links and hub set up within the week, with a direct line to our clinical team.' },
-    { icon: '🧭', t: 'Shape the roadmap', b: 'Early access to every new tool and module, and real input into what we build next.' },
-    { icon: '📍', t: 'Referral-directory listing', b: 'A founding-clinic listing when our patient-facing referral directory launches — new patients find you.' },
+    { Icon: Lock, t: 'Your rate, locked for life', b: 'A$49 / A$99 / A$149 by team size — half what later clinics will pay. Locked for as long as you stay.' },
+    { Icon: Zap, t: 'Priority onboarding', b: 'Your clinic code, patient links and hub set up within the week, with a direct line to our clinical team.' },
+    { Icon: Compass, t: 'Shape the roadmap', b: 'Early access to every new tool and module, and real input into what we build next.' },
+    { Icon: MapPin, t: 'Referral-directory listing', b: 'A founding-clinic listing when our patient-facing referral directory launches — new patients find you.' },
   ]
   return (
     <Section className="pb-16">
@@ -233,7 +234,7 @@ function FoundingBenefits() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {perks.map((p) => (
           <div key={p.t} className="rounded-[16px] border border-slate-200 bg-white p-6">
-            <span className="text-[22px]">{p.icon}</span>
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[11px]" style={{ background: '#e6f3da', color: '#3c7a1f' }}><p.Icon size={19} /></span>
             <h3 className="mb-1.5 mt-2 text-[16px] font-extrabold leading-[1.15]">{p.t}</h3>
             <p className="m-0 text-[13px] leading-[1.5] text-slate-500">{p.b}</p>
           </div>
@@ -258,7 +259,8 @@ function SharedPricing() {
               {t.popular && <span className="absolute -top-3 left-6 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: ACCENT }}>Most clinics</span>}
               <p className="m-0 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t.name}</p>
               <p className="m-0 text-[13px] text-slate-500">{t.who}</p>
-              <p className="m-0 mt-3 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}<span className="text-[14px] font-semibold text-slate-400"> / month</span></p>
+              <p className="m-0 mt-3"><s className="text-[16px] font-semibold text-slate-300">{t.full}</s> <span className="ml-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">half price</span></p>
+              <p className="m-0 mt-0.5 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}<span className="text-[14px] font-semibold text-slate-400"> / month</span></p>
               <Link href="/clinical-suite/founding" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Start free</Link>
               <ul className="mt-5 flex flex-col gap-2.5 p-0">
                 {t.features.map((f) => (

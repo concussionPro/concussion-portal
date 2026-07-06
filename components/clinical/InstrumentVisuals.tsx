@@ -62,7 +62,7 @@ export function BaselineLaptopVisual() {
           </span>
         </div>
         <Image
-          src="/instruments/baseline-laptop-screen.png"
+          src="/instruments/baseline-flow/1.png"
           alt="Pre-season SCAT6 baseline — athlete self-completing step 1 of 6 on a laptop"
           width={560}
           height={200}
