@@ -146,6 +146,13 @@ concussion-branded clinics. Funnel math at doctrine reply-rates needs a
 4. **Worldwide** (post-AU proof): NZ/UK/CA/IE, then US with a claims-language
    pass. CCMI's public clinic map = pre-qualified target list.
 
+## 3b. CANONICAL PITCH URL (owner 2026-07-06): /platform/clinicians
+Cold outreach is CLINIC-FACING. Any pitch link (T2/T3 variants, review
+sends, founder content) points at /platform/clinicians — the clinician
+page ("You set the threshold. We hold them to it.", founding-clinic CTA),
+NOT /sst-trainer (that's the PATIENT app entry, reached via the clinic's
+invite/QR after they sign up). T1 itself stays link-free (doctrine).
+
 ## 4. Message architecture (approved voice: peer + partnership)
 - **Hook:** "what happens between reviews" — the visibility gap.
 - **Bridge:** "you already recommend this — we keep it on track."
