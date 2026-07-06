@@ -68,8 +68,13 @@ describe('progressionDecision', () => {
     expect(r.decision).toBe('advance')
     expect(r.newCeilingBpm).toBe(rx.upperBpm + 5)
   })
-  it('regresses after repeated flares', () => {
+  it('rests + eases the ceiling after two flares in a row', () => {
     const r = progressionDecision(rx, [flare, flare])
+    expect(r.decision).toBe('rest')
+    expect(r.newCeilingBpm).toBe(rx.upperBpm - 5)
+  })
+  it('regresses on non-consecutive repeated flares', () => {
+    const r = progressionDecision(rx, [flare, clean, flare])
     expect(r.decision).toBe('regress')
     expect(r.newCeilingBpm).toBe(rx.upperBpm - 5)
   })

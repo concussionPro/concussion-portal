@@ -78,17 +78,28 @@ describe('ceiling cap — a suggested advance never exceeds the measured HRt', (
 describe('regress is NEVER gated — safety data always counts', () => {
   const rx = computePrescription(150, 'concussion')
 
-  it('regresses on repeated flares from fully UNVERIFIED (manual) sessions', () => {
+  it('eases the ceiling on repeated flares from fully UNVERIFIED (manual) sessions (safety counts)', () => {
+    // Two consecutive flares now trigger the REST rail (rest day + eased
+    // ceiling); the point that unverified data still drives a down-adjustment
+    // holds — the ceiling drops regardless of verification.
     const flare = session({ hrVerified: false, verifiedReadingPct: 0, peakSymptom: 5, nextDayFlare: true })
     const r = progressionDecision(rx, [flare, flare])
-    expect(r.decision).toBe('regress')
+    expect(r.decision).toBe('rest')
     expect(r.newCeilingBpm).toBe(rx.upperBpm - 5)
   })
 
-  it('next-day flares (check-in "worse") regress even when in-session symptoms were clean', () => {
+  it('next-day flares (check-in "worse") ease the ceiling even when in-session symptoms were clean', () => {
     const nextDayFlare = session({ hrVerified: false, nextDayFlare: true })
     const r = progressionDecision(rx, [nextDayFlare, nextDayFlare])
+    expect(r.decision).toBe('rest')
+  })
+
+  it('non-consecutive unverified flares still REGRESS (safety data counts, not gated)', () => {
+    const flare = session({ hrVerified: false, verifiedReadingPct: 0, peakSymptom: 5, nextDayFlare: true })
+    const clean = session({ hrVerified: false, verifiedReadingPct: 0 })
+    const r = progressionDecision(rx, [flare, clean, flare])
     expect(r.decision).toBe('regress')
+    expect(r.newCeilingBpm).toBe(rx.upperBpm - 5)
   })
 
   it('a single recent flare blocks an advance (hold), even with verified clean history', () => {
@@ -188,5 +199,57 @@ describe('re-test spacing', () => {
 
   it('sanity: the readiness block threshold is 8/10', () => {
     expect(MAX_RESTING_TO_TEST).toBe(8)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Severity prognostic flag (Haider 2019) — prognosis, NOT a dose change.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('computePrescription — prolonged-recovery prognostic flag', () => {
+  it('HRt < 135 bpm flags prolonged-recovery risk with a clinician note', () => {
+    const rx = computePrescription(120, 'concussion')
+    expect(rx.prolongedRecoveryRisk).toBe(true)
+    expect(rx.clinicianNote).not.toBeNull()
+  })
+  it('HRt >= 135 bpm (no resting HR) does not flag', () => {
+    const rx = computePrescription(160, 'concussion')
+    expect(rx.prolongedRecoveryRisk).toBe(false)
+    expect(rx.clinicianNote).toBeNull()
+  })
+  it('ΔHR <= 50 bpm flags even when HRt >= 135', () => {
+    const rx = computePrescription(160, 'concussion', { restingHr: 115 }) // ΔHR 45
+    expect(rx.prolongedRecoveryRisk).toBe(true)
+  })
+  it('ΔHR > 50 and HRt >= 135 does not flag', () => {
+    const rx = computePrescription(160, 'concussion', { restingHr: 100 }) // ΔHR 60
+    expect(rx.prolongedRecoveryRisk).toBe(false)
+  })
+  it('dose stays evidence-fixed regardless of the flag (no guessed titration)', () => {
+    expect(computePrescription(120).sessionMinutes).toBe(20)
+    expect(computePrescription(160).sessionMinutes).toBe(20)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rest trigger — TWO consecutive flares → rest day + eased ceiling; a single or
+// non-consecutive flare must NOT rest (reduce/continue is the evidence position).
+// ─────────────────────────────────────────────────────────────────────────────
+describe('progressionDecision — rest on two consecutive flares', () => {
+  const rx = computePrescription(160) // lower 128, upper 144
+  const flare = () => session({ preSymptom: 2, peakSymptom: 5 }) // rise 3 >= stop
+  const clean = () => session({ preSymptom: 2, peakSymptom: 2 })
+
+  it('two flares in a row → rest, ceiling eased back', () => {
+    const d = progressionDecision(rx, [flare(), flare()])
+    expect(d.decision).toBe('rest')
+    expect(d.newCeilingBpm).toBe(139) // 144 - 5
+  })
+  it('a single recent flare → hold, never rest', () => {
+    const d = progressionDecision(rx, [clean(), flare()])
+    expect(d.decision).toBe('hold')
+  })
+  it('non-consecutive flares → regress, not rest', () => {
+    const d = progressionDecision(rx, [flare(), clean(), flare()])
+    expect(d.decision).toBe('regress')
   })
 })
