@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/resend-client'
 import {
   createSstClinic,
   getSstClinicByEmail,
+  getClinicUsage,
   type SstClinic,
 } from '@/lib/sst-trainer/clinic-registry'
 import { buildWelcomeEmail } from '@/lib/sst-trainer/clinic-welcome-email'
@@ -50,7 +51,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Clinic service not configured' }, { status: 503 })
   }
   const clinic = await getSstClinicByEmail(session.email)
-  return NextResponse.json({ clinic: clinic ? serialise(clinic) : null })
+  if (!clinic) return NextResponse.json({ clinic: null })
+  const usage = await getClinicUsage(clinic.code)
+  return NextResponse.json({ clinic: serialise(clinic), usage })
 }
 
 export async function POST(req: NextRequest) {

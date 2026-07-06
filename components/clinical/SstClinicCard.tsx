@@ -26,6 +26,13 @@ interface Clinic {
   viewKey: string
 }
 
+interface Usage {
+  plan: 'trial' | 'active'
+  patientCount: number
+  cap: number | null
+  canAddPatient: boolean
+}
+
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false)
   return (
@@ -47,6 +54,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 
 export function SstClinicCard() {
   const [clinic, setClinic] = useState<Clinic | null>(null)
+  const [usage, setUsage] = useState<Usage | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [clinicName, setClinicName] = useState('')
   const [creating, setCreating] = useState(false)
@@ -61,7 +69,10 @@ export function SstClinicCard() {
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setClinic(d?.clinic ?? null))
+      .then((d) => {
+        setClinic(d?.clinic ?? null)
+        setUsage(d?.usage ?? null)
+      })
       .catch(() => {})
       .finally(() => setLoaded(true))
   }, [])
@@ -100,6 +111,8 @@ export function SstClinicCard() {
       if (!res.ok) throw new Error(data?.error || 'Send failed.')
       setInviteState('sent')
       setPatientEmail('')
+      // trial usage moves after admitting a patient — reflect it
+      if (data?.usage) setUsage(data.usage)
       setTimeout(() => setInviteState('idle'), 2500)
     } catch (e) {
       setInviteError(e instanceof Error ? e.message : 'Send failed.')
@@ -177,6 +190,12 @@ export function SstClinicCard() {
           <p className="mt-1 font-mono text-[34px] font-extrabold tracking-[0.3em] text-accent leading-none">
             {clinic.code}
           </p>
+          {usage?.plan === 'trial' && usage.cap != null && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+              Free trial · {usage.patientCount} of {usage.cap} patients used
+              {!usage.canAddPatient && <span className="font-bold"> — subscribe to add more</span>}
+            </p>
+          )}
         </div>
         <div className="flex flex-none flex-wrap gap-2">
           <Link

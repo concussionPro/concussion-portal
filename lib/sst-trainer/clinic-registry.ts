@@ -40,6 +40,75 @@ export interface ClinicRecord {
   createdAt?: string
   viewKey?: string
   product?: string
+  /** 'trial' until the clinic subscribes; 'active' once billing is live.
+   *  Absent on legacy/preseason records → treated as 'trial'. */
+  plan?: 'trial' | 'active'
+}
+
+/** Trial allowance: a clinic may run this many DISTINCT patients free before
+ *  it must subscribe. Usage-based, not time-based (owner 2026-07-06). */
+export const TRIAL_PATIENT_CAP = 3
+
+export interface ClinicUsage {
+  plan: 'trial' | 'active'
+  patientCount: number
+  cap: number | null // null = unlimited (active plan)
+  /** A NEW patient may be admitted. Existing patients are never blocked. */
+  canAddPatient: boolean
+}
+
+/**
+ * Count DISTINCT patients a clinic has run (one patient = ≥1 logged session
+ * under a non-empty patient_label) and derive the trial gate. The gate only
+ * ever restricts admitting a NEW patient — it must never block data sync for
+ * a patient already counted (clinical-safety rule). DEMO00 is unlimited.
+ */
+export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
+  const code = normaliseClinicCode(rawCode)
+  if (!code || code === DEMO_CLINIC_CODE) {
+    return { plan: 'active', patientCount: 0, cap: null, canAddPatient: true }
+  }
+  const clinic = await getClinic(code)
+  const plan: 'trial' | 'active' = clinic?.plan === 'active' ? 'active' : 'trial'
+  let patientCount = 0
+  try {
+    const { rows } = await sql<{ n: number }>`
+      SELECT COUNT(DISTINCT NULLIF(trim(coalesce(patient_label, '')), ''))::int AS n
+      FROM sst_clinic_sessions
+      WHERE upper(clinic_code) = ${code}
+    `
+    patientCount = rows[0]?.n ?? 0
+  } catch {
+    /* no sessions table yet → 0 */
+  }
+  if (plan === 'active') {
+    return { plan, patientCount, cap: null, canAddPatient: true }
+  }
+  return {
+    plan,
+    patientCount,
+    cap: TRIAL_PATIENT_CAP,
+    canAddPatient: patientCount < TRIAL_PATIENT_CAP,
+  }
+}
+
+/** Is this label an already-known patient at the clinic? Re-admitting an
+ *  existing patient (re-invite, re-onboard) never counts against the cap. */
+export async function isExistingPatient(rawCode: unknown, label: string): Promise<boolean> {
+  const code = normaliseClinicCode(rawCode)
+  const trimmed = label.trim()
+  if (!code || !trimmed) return false
+  try {
+    const { rows } = await sql<{ n: number }>`
+      SELECT COUNT(*)::int AS n FROM sst_clinic_sessions
+      WHERE upper(clinic_code) = ${code}
+        AND trim(coalesce(patient_label, '')) = ${trimmed}
+      LIMIT 1
+    `
+    return (rows[0]?.n ?? 0) > 0
+  } catch {
+    return false
+  }
 }
 
 /** Uppercase, trim; returns '' when the code can't possibly be valid. */

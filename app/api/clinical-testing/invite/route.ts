@@ -4,7 +4,7 @@ import { kv } from '@vercel/kv'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
-import { getSstClinicByEmail } from '@/lib/sst-trainer/clinic-registry'
+import { getSstClinicByEmail, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
 
 /**
  * POST /api/clinical-testing/invite — clinician sends a patient the app link.
@@ -44,6 +44,22 @@ export async function POST(req: NextRequest) {
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientEmail)) {
     return NextResponse.json({ error: 'Enter a valid patient email.' }, { status: 400 })
+  }
+
+  // Trial gate (owner 2026-07-06): a trial clinic gets TRIAL_PATIENT_CAP free
+  // patients. Inviting a NEW patient past the cap is refused with the
+  // subscribe prompt; the clinician can still re-send to existing patients.
+  // Enforcement is on admission only — patient data sync is never blocked.
+  const usage = await getClinicUsage(clinic.code)
+  if (!usage.canAddPatient) {
+    return NextResponse.json(
+      {
+        error: `Your free trial covers ${usage.cap} patients and you've used all of them. Subscribe to add more — your existing patients keep working.`,
+        code: 'trial-cap-reached',
+        usage,
+      },
+      { status: 402 },
+    )
   }
 
   // Rate limit per clinic per day.
