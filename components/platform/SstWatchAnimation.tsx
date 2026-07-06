@@ -160,8 +160,8 @@ export function SstWatchAnimation() {
   const [i, setI] = useState(0)
 
   useEffect(() => {
-    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    if (reduce) return
+    // Always autoplay (owner 2026-07-06) — the swipe is the demo; a static
+    // watch reads as a screenshot. Gentle 650ms slide every 2.8s.
     const t = setInterval(() => setI((p) => (p + 1) % N), HOLD_MS)
     return () => clearInterval(t)
   }, [])

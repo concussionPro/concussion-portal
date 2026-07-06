@@ -37,11 +37,11 @@ type Tier = {
 
 const TIERS: Tier[] = [
   {
-    name: 'Per-episode',
-    who: 'Occasional / very low volume · planned pricing',
-    price: 'A$18',
-    unit: '/ patient course · planned',
-    cta: 'Join free as a founding clinic',
+    name: 'Single',
+    who: 'One clinician',
+    price: 'A$49',
+    unit: '/ month · both tools',
+    cta: 'Start free',
     href: FOUNDING_HREF,
     popular: false,
     cardBg: '#fff',
@@ -57,17 +57,18 @@ const TIERS: Tier[] = [
     ctaBg: '#fff',
     ctaBorder: '1.5px solid #cbd5e1',
     features: [
-      'Planned pricing — founding clinics join free today',
-      'Pay only when you prescribe — no subscription',
-      'Switch to the flat clinic licence anytime',
+      'SST Trainer + baseline testing — both tools',
+      'First 3 patients free — no card, no time limit',
+      'Measured-HRt trajectory, flare flags & the auto GP report',
+      'Free through the founding period, then lock A$49 for life',
       'Patient app always free',
     ],
   },
   {
-    name: 'Clinic licence',
-    who: 'Whole clinic · unlimited clinicians',
-    price: 'Free',
-    unit: 'during the founding period',
+    name: 'Small clinic',
+    who: 'Up to 5 clinicians',
+    price: 'A$99',
+    unit: '/ month · both tools',
     cta: 'Start a founding clinic',
     href: FOUNDING_HREF,
     popular: true,
@@ -84,19 +85,18 @@ const TIERS: Tier[] = [
     ctaBg: '#16243f',
     ctaBorder: 'none',
     features: [
-      'Free during the founding period',
-      'When paid plans launch, founding clinics lock A$49/month — for life',
-      'One flat price — unlimited clinicians & patients',
-      'No per-seat fees as your team grows',
-      'Live in-session monitoring, measured-HRt trajectory, flare flags & review queue',
-      'Planned standard rate A$99/month after the founding period',
+      'Everything in Single, for your whole team',
+      'Up to 5 clinicians on one licence',
+      'Priority onboarding + a direct line to our clinical team',
+      'Free through the founding period, then lock A$99 for life',
+      'Patients only ever reach the app through your clinic code',
     ],
   },
   {
-    name: 'Club · School · Payer',
-    who: 'Sporting bodies · insurers · workers’ comp',
-    price: 'From A$900',
-    unit: '/ year · planned',
+    name: 'Enterprise',
+    who: 'Up to 15 clinicians',
+    price: 'A$149',
+    unit: '/ month · both tools',
     cta: 'Talk to us',
     href: FOUNDING_HREF,
     popular: false,
@@ -113,15 +113,13 @@ const TIERS: Tier[] = [
     ctaBg: '#bfe79a',
     ctaBorder: 'none',
     features: [
-      'Planned pricing — talk to us about a founding arrangement',
-      'Whole squad — baseline + in-season + rehab',
-      '≈ A$6 / athlete / yr at squad scale',
-      'Multi-site & league rates',
-      'Workers’ comp / insurer: per-episode funded',
+      'Everything in Small clinic, up to 15 clinicians',
+      'Founding-clinic listing when our referral directory launches',
+      'Clubs, leagues & payers — talk to us about squad rates',
+      'Free through the founding period, then lock A$149 for life',
     ],
   },
 ]
-
 const STEPS = [
   {
     n: '1',
@@ -136,7 +134,7 @@ const STEPS = [
   {
     n: '3',
     title: 'Keep your founding rate',
-    body: 'When paid plans launch, founding clinics lock A$99/month — for life. Everyone after joins on the standard plans.',
+    body: 'When paid plans launch, founding clinics lock their rate for life — from A$49/month. Everyone after joins on the standard plans.',
   },
 ]
 
@@ -147,7 +145,7 @@ const FAQS = [
   },
   {
     q: 'Who pays — clinic or patient?',
-    a: 'The clinic does, once paid plans launch — one flat clinic licence covering every clinician and patient, or per-episode. The patient app is always free to download and use, which is what keeps patients adherent.',
+    a: 'The clinic does, once paid plans launch — one licence covering both tools, priced by team size (A$49 / A$99 / A$149). The patient app is always free to download and use, which is what keeps patients adherent.',
   },
   {
     q: 'What does “founding period” actually mean?',

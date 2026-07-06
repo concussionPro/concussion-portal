@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
       { source: '/blog-1/:slug*', destination: '/blog', permanent: false },
       // Legacy trial page → SCAT Mastery (better UX: instant session vs magic link wall)
       { source: '/trial', destination: '/scat-mastery', permanent: true },
+      // SST marketing funnel lives at the PUBLIC /sst namespace (owner
+      // 2026-07-06) — the /platform variants were noindex. One canonical.
+      { source: '/platform/founding', destination: '/sst/founding', permanent: false },
+      { source: '/platform/pricing', destination: '/sst/pricing', permanent: false },
+      { source: '/platform/evidence', destination: '/sst/evidence', permanent: false },
+      { source: '/platform/clinicians', destination: '/sst', permanent: false },
     ]
   },
 
