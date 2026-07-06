@@ -147,6 +147,9 @@ export default function PlatformAppPage({
   const [redFlagClearedAt, setRedFlagClearedAt] = useState<number | null>(null)
   const [lastTestAt, setLastTestAt] = useState<number | null>(null)
   const [lastRegressAt, setLastRegressAt] = useState<number | null>(null)
+  // true when the last auto-applied down-adjustment was the REST rail (two
+  // flares in a row) vs a plain regress — drives the stronger Home message.
+  const [restPrescribed, setRestPrescribed] = useState(false)
 
   // transient UI
   const [retestNotice, setRetestNotice] = useState<string | null>(null)
@@ -373,6 +376,7 @@ export default function PlatformAppPage({
     if (!decisionFresh) return
     setRegressUndo({ lowerBpm: prescription.lowerBpm, upperBpm: prescription.upperBpm })
     applyCeiling(decision.newCeilingBpm)
+    setRestPrescribed(decision.decision === 'rest')
     setLastRegressAt(Date.now())
     setDecisionCheckpoint(sessions.length)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -413,11 +417,14 @@ export default function PlatformAppPage({
   const regressNotice = regressUndo && prescription && (
     <div className="rounded-[16px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
       <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
-        Your band was eased back to {prescription.lowerBpm}–{prescription.upperBpm} bpm.
+        {restPrescribed
+          ? 'Take a rest day today — check in with your clinician.'
+          : `Your band was eased back to ${prescription.lowerBpm}–${prescription.upperBpm} bpm.`}
       </p>
       <p className="mt-1 text-[11.5px] leading-snug text-[#8a6320]">
-        Recent sessions kept provoking symptoms, so the app lowered your ceiling for you. Train
-        there for now — it rebuilds.
+        {restPrescribed
+          ? `Two sessions in a row provoked your symptoms, so we eased your band back to ${prescription.lowerBpm}–${prescription.upperBpm} bpm. Rest today and speak with your clinician before your next session — repeated flaring means the dose is too much, not that you should push through it.`
+          : 'Recent sessions kept provoking symptoms, so the app lowered your ceiling for you. Train there for now — it rebuilds.'}
       </p>
       <button
         type="button"
