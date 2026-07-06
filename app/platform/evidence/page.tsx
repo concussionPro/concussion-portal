@@ -169,7 +169,10 @@ export default function EvidencePage() {
               leading commercial concussion-rehab app, Rhea, prescribes from age-predicted maximum heart
               rate: the published CARE protocol it delivers targeted 55–65% of a fixed 220 − age, with no
               graded test to individualise the dose. An age formula can miss a given patient&rsquo;s
-              measured threshold by 10 bpm or more.
+              measured threshold by 10 bpm or more. To our knowledge, no published digital
+              concussion-rehab programme prescribes from each patient&rsquo;s own measured threshold — the
+              dose is estimated. Measuring it, then holding the patient to it with verified live heart
+              rate, is the gap this design fills.
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
