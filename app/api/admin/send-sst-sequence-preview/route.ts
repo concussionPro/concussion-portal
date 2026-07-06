@@ -57,6 +57,28 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const to = (body.to as string | undefined) || 'z.lew87@gmail.com'
   const dryRun = body.dryRun === true
+  const mode = (body.mode as string | undefined) || 'full'
+
+  // 't1-live': the actual T1 a prospect would receive, plus the live pitch/
+  // landing link so the owner can walk the whole cold-pitch experience.
+  if (mode === 't1-live') {
+    const s = SST_SEQUENCE
+    const landing = 'https://portal.concussion-education-australia.com/sst-trainer'
+    const esc = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const html = `<div style="font-family:-apple-system,'Segoe UI',sans-serif;max-width:560px;color:#1e293b;line-height:1.6;font-size:14px">
+      <p style="font-size:11px;color:#64748b;margin:0 0 14px">PROSPECT VIEW · T1 as sent, plus the landing link (cold email itself carries NO link — this is for your review)</p>
+      <p><strong>Subject:</strong> ${esc(s.t1.subjects[0])}</p>
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:12px 0">
+      <div style="white-space:pre-wrap">${esc(s.t1.body.replace('{firstName}', 'Dr Chen'))}</div>
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0">
+      <p style="margin:0 0 6px"><strong>Walk the pitch page a prospect lands on:</strong></p>
+      <p style="margin:0 0 16px"><a href="${landing}" style="display:inline-block;background:#16243f;color:#fff;font-weight:700;padding:12px 22px;border-radius:10px;text-decoration:none">${landing}</a></p>
+      <p style="font-size:12px;color:#64748b">Check: value prop clear? animated demo present + working? does the clinic-code / trial flow make sense? would you enrol?</p>
+    </div>`
+    if (dryRun) return NextResponse.json({ ok: true, dryRun: true, to, mode, bytes: html.length })
+    const ok = await sendEmail({ to, subject: `[REVIEW] ${s.t1.subjects[0]} — with pitch-page link`, html })
+    return NextResponse.json({ ok, to, mode })
+  }
 
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const block = (title: string, subject: string, text: string, note?: string) => `
