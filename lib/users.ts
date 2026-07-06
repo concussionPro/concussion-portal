@@ -15,10 +15,11 @@ export interface User {
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
   progressEmailsOptedOut?: boolean
-  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist' | 'sst-clinic'
   convertedFrom?: string  // original signup source before upgrade
   isTest?: boolean
   referenceBookPurchasedAt?: string
+  sstEntitledAt?: string
 }
 
 /** Map a snake_case DB row to a camelCase User object */
@@ -43,6 +44,9 @@ function rowToUser(row: any): User {
     isTest: row.is_test || undefined,
     referenceBookPurchasedAt: row.reference_book_purchased_at
       ? (row.reference_book_purchased_at instanceof Date ? row.reference_book_purchased_at.toISOString() : row.reference_book_purchased_at)
+      : undefined,
+    sstEntitledAt: row.sst_entitled_at
+      ? (row.sst_entitled_at instanceof Date ? row.sst_entitled_at.toISOString() : row.sst_entitled_at)
       : undefined,
   }
 }
@@ -80,6 +84,11 @@ async function ensureColumns() {
     // aggregator count free-tool signups per prospect.
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS source_prospect_slug TEXT`
     await sql`CREATE INDEX IF NOT EXISTS users_source_prospect_slug_idx ON users (source_prospect_slug) WHERE source_prospect_slug IS NOT NULL`
+    // SST reverse funnel (2026-07-06): a clinic that signs up for the
+    // Clinical Testing suite gets a portal account with THIS set — it
+    // unlocks the tools while course content stays purchase-gated (their
+    // access_level stays 'preview'). Independent of course access.
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS sst_entitled_at TIMESTAMPTZ`
   } catch {
     // Column already exists or permissions differ — safe to continue
   }
@@ -111,6 +120,37 @@ export async function isBookOwner(email: string): Promise<boolean> {
   return rows.length > 0
 }
 
+/**
+ * Grant the SST (Clinical Testing) entitlement to a user, creating a
+ * preview-tier account if they don't exist yet (reverse funnel: the tool
+ * is the wedge, the course is the upsell). Idempotent on the timestamp.
+ * Returns the user id so the caller can mint a login link.
+ */
+export async function grantSstEntitlement(email: string, name: string): Promise<string> {
+  await ensureColumns()
+  await ensureEmailIndex()
+  const lower = email.toLowerCase()
+  const { rows } = await sql`
+    INSERT INTO users (id, email, name, access_level, created_at, signup_source, sst_entitled_at)
+    VALUES (${crypto.randomBytes(16).toString('hex')}, ${lower}, ${name}, 'preview', ${new Date().toISOString()}, 'sst-clinic', NOW())
+    ON CONFLICT (LOWER(email)) DO UPDATE
+      SET sst_entitled_at = COALESCE(users.sst_entitled_at, NOW()),
+          name = COALESCE(NULLIF(users.name, ''), EXCLUDED.name)
+    RETURNING id
+  `
+  return rows[0].id
+}
+
+export async function hasSstEntitlement(email: string): Promise<boolean> {
+  await ensureColumns()
+  const { rows } = await sql`
+    SELECT 1 FROM users
+    WHERE LOWER(email) = LOWER(${email}) AND sst_entitled_at IS NOT NULL
+    LIMIT 1
+  `
+  return rows.length > 0
+}
+
 // Create new user (or upgrade existing) — uses upsert to avoid race conditions
 export async function createUser(data: {
   email: string
@@ -120,7 +160,7 @@ export async function createUser(data: {
   stripeCustomerId?: string
   stripeSubscriptionId?: string
   workshopLocation?: string
-  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist' | 'sst-clinic'
   /** prospect_clinics.slug if this signup came from the cold sequence via ?prospect= param */
   sourceProspectSlug?: string
 }): Promise<string> {

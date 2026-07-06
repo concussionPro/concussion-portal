@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { hasClinicalAccess } from '@/lib/sst-trainer/access'
 import { sendEmail } from '@/lib/resend-client'
 import {
   createSstClinic,
@@ -28,11 +29,13 @@ import { buildWelcomeEmail } from '@/lib/sst-trainer/clinic-welcome-email'
 
 type SessionInfo = { email: string; name: string }
 
-function paidSession(req: NextRequest): SessionInfo | null {
+/** A logged-in session with Clinical Testing access (course buyer, SST-
+ *  entitled clinic, or owner). Async — entitlement is a DB check. */
+async function clinicalSession(req: NextRequest): Promise<SessionInfo | null> {
   const token = req.cookies.get('session')?.value
   const data = token ? verifySessionToken(token) : null
   if (!data) return null
-  if (data.accessLevel !== 'online-only' && data.accessLevel !== 'full-course') return null
+  if (!(await hasClinicalAccess({ email: data.email, accessLevel: data.accessLevel }))) return null
   return { email: data.email.toLowerCase(), name: data.name }
 }
 
@@ -45,7 +48,7 @@ function serialise(clinic: SstClinic) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = paidSession(req)
+  const session = await clinicalSession(req)
   if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   if (!process.env.KV_REST_API_URL) {
     return NextResponse.json({ error: 'Clinic service not configured' }, { status: 503 })
@@ -57,7 +60,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = paidSession(req)
+  const session = await clinicalSession(req)
   if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   if (!process.env.KV_REST_API_URL) {
     return NextResponse.json({ error: 'Clinic service not configured' }, { status: 503 })

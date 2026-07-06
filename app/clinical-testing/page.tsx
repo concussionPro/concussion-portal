@@ -8,7 +8,7 @@ import { SstClinicCard } from '@/components/clinical/SstClinicCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { Lock, ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-import { isOwnerEmail } from '@/lib/owner'
+import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
 
 /**
@@ -72,9 +72,10 @@ function InstrumentTile({
 
 function Shell() {
   const { user, isLoading } = useSession()
+  const access = useClinicalAccess()
   const isPreview = !user || user.accessLevel === 'preview'
 
-  if (isLoading) {
+  if (isLoading || access === 'loading') {
     return (
       <div className="flex min-h-screen dashboard-bg">
         <Sidebar />
@@ -87,11 +88,11 @@ function Shell() {
 
   // PRE-RELEASE (owner directive 2026-07-05): only the owner's test dash
   // sees the suite until the subscription launch — regardless of tier.
-  if (!isOwnerEmail(user?.email)) {
+  if (access === 'unreleased') {
     return <ClinicalTestingComingSoon />
   }
 
-  if (isPreview) {
+  if (access === 'locked') {
     return (
       <div className="flex min-h-screen dashboard-bg">
         <Sidebar />

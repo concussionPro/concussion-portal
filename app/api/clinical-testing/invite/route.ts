@@ -5,6 +5,7 @@ import { verifySessionToken } from '@/lib/jwt-session'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { getSstClinicByEmail, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
+import { hasClinicalAccess } from '@/lib/sst-trainer/access'
 
 /**
  * POST /api/clinical-testing/invite — clinician sends a patient the app link.
@@ -21,7 +22,7 @@ import { getSstClinicByEmail, getClinicUsage } from '@/lib/sst-trainer/clinic-re
 export async function POST(req: NextRequest) {
   const token = req.cookies.get('session')?.value
   const session = token ? verifySessionToken(token) : null
-  if (!session || (session.accessLevel !== 'online-only' && session.accessLevel !== 'full-course')) {
+  if (!session || !(await hasClinicalAccess({ email: session.email, accessLevel: session.accessLevel }))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   if (!process.env.KV_REST_API_URL) {
@@ -127,5 +128,5 @@ export async function POST(req: NextRequest) {
   if (!sent) {
     return NextResponse.json({ error: 'Send failed — try again.' }, { status: 502 })
   }
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, usage })
 }

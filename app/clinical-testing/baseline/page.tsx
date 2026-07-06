@@ -18,7 +18,7 @@ import {
   Share2,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-import { isOwnerEmail } from '@/lib/owner'
+import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
 import { BaselineLaptopVisual } from '@/components/clinical/InstrumentVisuals'
 
@@ -88,6 +88,7 @@ const STEPS = [
 
 function Shell() {
   const { user, isLoading } = useSession()
+  const access = useClinicalAccess()
   const isPreview = !user || user.accessLevel === 'preview'
   const [clinic, setClinic] = useState<Clinic | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -101,7 +102,7 @@ function Shell() {
       .finally(() => setLoaded(true))
   }, [isPreview])
 
-  if (isLoading) {
+  if (isLoading || access === 'loading') {
     return (
       <div className="flex min-h-screen dashboard-bg">
         <Sidebar />
@@ -114,11 +115,11 @@ function Shell() {
 
   // PRE-RELEASE (owner directive 2026-07-05): only the owner's test dash
   // sees the suite until the subscription launch — regardless of tier.
-  if (!isOwnerEmail(user?.email)) {
+  if (access === 'unreleased') {
     return <ClinicalTestingComingSoon />
   }
 
-  if (isPreview) {
+  if (access === 'locked') {
     return (
       <div className="flex min-h-screen dashboard-bg">
         <Sidebar />
