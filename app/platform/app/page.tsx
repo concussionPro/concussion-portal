@@ -94,6 +94,7 @@ function sessionDayLabel(at: number): string {
 
 export default function PlatformAppPage({
   publicSurface = false,
+  embeddedClinicCode = null,
 }: {
   /**
    * true when rendered on the PUBLIC /sst-trainer route: patients arrive with
@@ -102,6 +103,13 @@ export default function PlatformAppPage({
    * surface (paid/enrolled/admin), never on the public one.
    */
   publicSurface?: boolean
+  /**
+   * When rendered INSIDE the clinician portal (/clinical-testing/sst), the
+   * clinician's own clinic code is known — wire it in and skip the
+   * Self-guided/Clinic-code chooser entirely (patients never use this page;
+   * owner 2026-07-06). Pre-fills clinic-code mode with this code.
+   */
+  embeddedClinicCode?: string | null
 }) {
   const [step, setStep] = useState<AppStep>('welcome')
   const [hydrated, setHydrated] = useState(false)
@@ -465,10 +473,10 @@ export default function PlatformAppPage({
 
       {step === 'welcome' && hydrated && (
         <SstOnboarding
-          key={urlClinicCode ?? 'no-clinic-param'}
+          key={urlClinicCode ?? embeddedClinicCode ?? 'no-clinic-param'}
           device={device}
-          allowSelfGuided={!publicSurface}
-          initialClinicCode={urlClinicCode}
+          allowSelfGuided={!publicSurface && !embeddedClinicCode}
+          initialClinicCode={urlClinicCode ?? embeddedClinicCode ?? undefined}
           onPair={handlePair}
           onStart={(r: OnboardingResult) => {
             setWelcome(r.welcome)

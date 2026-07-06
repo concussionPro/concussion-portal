@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
@@ -35,6 +36,17 @@ function Shell() {
   const { user, isLoading } = useSession()
   const access = useClinicalAccess()
   const isPreview = !user || user.accessLevel === 'preview'
+
+  // The clinician's own clinic code — wire it straight into the embedded app so
+  // the in-portal flow skips the Self-guided/Clinic-code chooser (patients never
+  // use this page). Same GET the clinic panel uses.
+  const [clinicCode, setClinicCode] = useState<string | null>(null)
+  useEffect(() => {
+    void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d && typeof d.code === 'string') setClinicCode(d.code) })
+      .catch(() => {})
+  }, [])
 
   if (isLoading || access === 'loading') {
     return (
@@ -111,7 +123,7 @@ function Shell() {
           <div className="mx-auto grid h-full max-w-[1120px] grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(380px,450px)_minmax(0,1fr)]">
             {/* the app, in a device frame that scrolls internally */}
             <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
-              <PlatformApp />
+              <PlatformApp embeddedClinicCode={clinicCode} />
             </div>
             {/* clinician rail: clinic panel + chair-side runbook */}
             <div className="hidden h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain pb-2 pr-1 lg:flex">
