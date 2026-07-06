@@ -31,16 +31,16 @@ export function PlatformLogo({ stroke = PLATFORM.navy, size = 30 }: { stroke?: s
 }
 
 const NAV_LINKS = [
-  { href: '/platform', label: 'Home' },
-  { href: '/platform/clinicians', label: 'For clinicians' },
-  { href: '/platform/evidence', label: 'Evidence' },
-  { href: '/platform/pricing', label: 'Pricing' },
+  { href: '/clinical-suite', label: 'Home' },
+  { href: '/clinical-suite', label: 'The suite' },
+  { href: '/clinical-suite/evidence', label: 'Evidence' },
+  { href: '/clinical-suite/pricing', label: 'Pricing' },
 ]
 
 export function PlatformNav({ active }: { active?: string }) {
   return (
     <nav className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-4 px-6 py-5">
-      <Link href="/platform" className="flex items-center gap-[11px]">
+      <Link href="/clinical-suite" className="flex items-center gap-[11px]">
         <PlatformLogo />
         <span className="flex flex-col leading-[1.05]">
           <span className="text-[15px] font-extrabold tracking-[-0.01em] text-[#16243f]">Concussion Education</span>

@@ -12,12 +12,16 @@ export function buildWelcomeEmail(args: {
   clinicName: string
   code: string
   viewKey: string
+  /** Magic-link login into the CEA portal (Clinical Testing unlocked). When
+   *  present, this is the PRIMARY CTA — the clinic works inside the portal,
+   *  not a standalone keyed hub. */
+  loginUrl?: string | null
 }): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
   const firstName = escapeHtml(args.contactName.split(' ')[0])
   const clinicName = escapeHtml(args.clinicName)
   const code = escapeHtml(args.code)
-  const hubUrl = `${baseUrl}/clinical-hub?clinic=${encodeURIComponent(args.code)}&k=${encodeURIComponent(args.viewKey)}`
+  const loginUrl = args.loginUrl ? escapeHtml(args.loginUrl) : null
   const patientUrl = `${baseUrl}/sst-trainer?clinic=${encodeURIComponent(args.code)}`
 
   return `<!DOCTYPE html>
@@ -64,11 +68,10 @@ export function buildWelcomeEmail(args: {
           <p style="margin: 4px 0 0; font-size: 12.5px; color: #64748b;">Patients enter this code in the app — it links their sessions to your clinic.</p>
         </div>
 
-        <div class="link-block private">
-          <p class="label">Your Clinical Hub</p>
-          <a href="${hubUrl}">${hubUrl}</a>
-          <p class="note">Keep this link private — it's your clinic's key. Anyone with it can view your patients' session data. Bookmark it; don't hand it to patients.</p>
-        </div>
+        ${loginUrl ? `<div style="text-align:center;margin:24px 0">
+          <a href="${loginUrl}" style="display:inline-block;background:#0d9488;color:#fff;font-weight:700;font-size:15px;padding:14px 30px;border-radius:12px;text-decoration:none">Log in to your portal</a>
+          <p style="margin:10px 0 0;font-size:12.5px;color:#64748b">Your Clinical Testing suite — patient list, live sessions, and one-click reports — lives in your CEA portal. This link signs you in (valid 7 days). Everything else in the portal stays locked unless you enrol in the course.</p>
+        </div>` : ''}
 
         <div class="link-block">
           <p class="label">Patient app link</p>

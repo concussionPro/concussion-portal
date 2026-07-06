@@ -39,9 +39,10 @@ export function SstWatchAnimation() {
           <span className="absolute -right-[4px] top-[102px] h-[36px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
           {/* black OLED bezel — the padding insets the capture so its content
               never touches the rounded corners (this was the clipping bug) */}
-          <div className="rounded-[46px] bg-black p-[10px]">
-            {/* screen viewport, matched to the 416:496 capture aspect */}
-            <div className="relative h-[228px] w-[191px] overflow-hidden rounded-[32px] bg-black">
+          <div className="rounded-[48px] bg-black p-[9px]">
+            {/* Taller than the 416:496 capture so it letterboxes with black
+                top/bottom (the OLED bezel) — nothing gets cut by the corners. */}
+            <div className="relative flex h-[280px] w-[208px] items-center overflow-hidden rounded-[38px] bg-black">
               <div
                 className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
                 style={{ width: `${N * 100}%`, transform: `translateX(-${(i * 100) / N}%)` }}

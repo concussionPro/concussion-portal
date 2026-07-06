@@ -9,6 +9,8 @@ import {
   type SstClinic,
 } from '@/lib/sst-trainer/clinic-registry'
 import { buildWelcomeEmail } from '@/lib/sst-trainer/clinic-welcome-email'
+import { grantSstEntitlement } from '@/lib/users'
+import { createMagicToken } from '@/lib/magic-link-jwt'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/platform/founding
@@ -130,6 +132,7 @@ export async function POST(request: NextRequest) {
     // outage must not lose the lead, so failures fall through to the manual
     // path (Zac gets the notification either way).
     let clinic: SstClinic | null = null
+    let loginUrl: string | null = null
     if (process.env.KV_REST_API_URL) {
       try {
         clinic =
@@ -139,6 +142,14 @@ export async function POST(request: NextRequest) {
             contactName: cleanClinician,
             email: cleanEmail,
           }))
+        // Reverse funnel: give them a CEA PORTAL account with the SST
+        // entitlement (Clinical Testing unlocked, everything else purchase-
+        // gated) and a magic-link login. NOT a standalone hub — the same
+        // CEA suite, locked down to the tools. (owner 2026-07-06)
+        const userId = await grantSstEntitlement(cleanEmail, cleanClinician)
+        const token = createMagicToken(userId, cleanEmail, cleanClinician, 'preview', 7 * 24 * 60 * 60 * 1000)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
+        loginUrl = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent('/clinical-testing')}`
       } catch (provisionErr) {
         console.error('Founding clinic provisioning failed (lead is saved):', provisionErr)
       }
@@ -177,12 +188,13 @@ export async function POST(request: NextRequest) {
       try {
         welcomeSent = await sendEmail({
           to: cleanEmail,
-          subject: `Your SST Trainer clinic code: ${clinic.code} — ${cleanClinic} is set up`,
+          subject: `${cleanClinic} is set up — log in to your Clinical Testing suite`,
           html: buildWelcomeEmail({
             contactName: cleanClinician,
             clinicName: cleanClinic,
             code: clinic.code,
             viewKey: clinic.viewKey,
+            loginUrl,
           }),
           tags: [
             { name: 'type', value: 'sst-clinic-welcome' },
@@ -203,7 +215,7 @@ export async function POST(request: NextRequest) {
       success: true,
       ...(clinic ? { code: clinic.code } : {}),
       message: clinic && welcomeSent
-        ? `Thanks ${firstName} — ${cleanClinic} is set up. Your clinic code and Clinical Hub link are on their way to ${cleanEmail}.`
+        ? `Thanks ${firstName} — ${cleanClinic} is set up. Your clinic code and portal login are on their way to ${cleanEmail}.`
         : `Thanks ${firstName} — you're on the founding list. Zac will be in touch shortly to set up ${cleanClinic}.`,
     })
   } catch (error) {

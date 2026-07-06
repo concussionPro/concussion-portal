@@ -23,12 +23,16 @@ export async function resolveClinicalAccess(session: {
   accessLevel: string
 }): Promise<ClinicalAccess> {
   if (isOwnerEmail(session.email)) return 'owner'
-  // LAUNCH FLAG: until SST_CLINICAL_LIVE=true the suite is owner-only
-  // (unreleased until the subscription launch). Flip the env to open it to
-  // course buyers + SST-entitled clinics in one move.
+  // An SST-entitled clinic ALWAYS gets the tools — the entitlement is a
+  // deliberate grant (founding signup / admin), so it's never gated by the
+  // launch flag. This is the reverse funnel: they log into the SAME CEA
+  // portal, Clinical Testing unlocked, everything else purchase-gated.
+  if (await hasSstEntitlement(session.email)) return 'sst'
+  // LAUNCH FLAG: until SST_CLINICAL_LIVE=true, COURSE buyers and the public
+  // don't yet see the suite (pre-general-launch). Flip to open it to course
+  // buyers; entitled clinics above are already in.
   if (process.env.SST_CLINICAL_LIVE !== 'true') return 'unreleased'
   if (session.accessLevel === 'online-only' || session.accessLevel === 'full-course') return 'course'
-  if (await hasSstEntitlement(session.email)) return 'sst'
   return 'locked'
 }
 
