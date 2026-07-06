@@ -59,7 +59,66 @@ final class SSTFlow: ObservableObject {
         } else {
             step = (loaded.consentedAt == nil) ? .consent : .onboarding
         }
+        #if targetEnvironment(simulator)
+        if let shot = ProcessInfo.processInfo.environment["SST_SHOT"] {
+            configureForScreenshot(shot)
+        }
+        #endif
     }
+
+    #if targetEnvironment(simulator)
+    /// DEBUG-only: jump straight to a named screen with demo data so every
+    /// screen can be captured for the marketing site (owner: "make the
+    /// screenshots yourself"). Never compiled into device builds.
+    private func configureForScreenshot(_ shot: String) {
+        var s = SSTState.fresh()
+        s.clinicCode = "NC4X2A"
+        s.clinicName = "Northcote Sports Med"
+        s.patientName = "Alex"
+        s.consentedAt = Date(timeIntervalSinceReferenceDate: 773_300_000)
+        let rx = Prescription(hrt: 142, bandLow: 114, bandHigh: 128, minutes: 20)
+        let curve: [ThresholdRecord] = [
+            .init(date: Date(timeIntervalSinceReferenceDate: 771_000_000), hrt: 118, interpretation: .physiologic, verified: true),
+            .init(date: Date(timeIntervalSinceReferenceDate: 771_600_000), hrt: 132, interpretation: .physiologic, verified: true),
+            .init(date: Date(timeIntervalSinceReferenceDate: 772_200_000), hrt: 148, interpretation: .physiologic, verified: true),
+            .init(date: Date(timeIntervalSinceReferenceDate: 772_800_000), hrt: 165, interpretation: .noIntolerance, verified: true),
+        ]
+        switch shot {
+        case "consent":
+            step = .consent
+        case "onboarding":
+            state = s; step = .onboarding
+        case "symptoms":
+            state = s; step = .symptomProfile
+        case "readiness":
+            state = s; step = .readiness
+        case "test":
+            state = s; restingSymptom = 1
+            selectedSymptoms = ["headache", "pressure"]
+            Task { try? await workout.start() }
+            step = .gradedTest
+        case "result":
+            s.prescription = rx; state = s
+            lastResult = ThresholdResult(interpretation: .physiologic, hrt: 142, bandLow: 114, bandHigh: 128)
+            step = .result
+        case "home", "band":
+            s.prescription = rx; state = s; step = .home
+        case "program":
+            s.prescription = rx; state = s; step = .program
+        case "training":
+            s.prescription = rx; state = s
+            Task { try? await workout.start() }
+            step = .training
+        case "progress":
+            s.prescription = rx; s.thresholds = curve; s.verifiedSessionCount = 12; state = s
+            step = .progress
+        case "blocked":
+            s.prescription = rx; state = s; step = .blocked("Red-flag symptom reported")
+        default:
+            break
+        }
+    }
+    #endif
 
     // MARK: - Launch
 
