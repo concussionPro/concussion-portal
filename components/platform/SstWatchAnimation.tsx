@@ -34,15 +34,15 @@ export function SstWatchAnimation() {
         {/* top strap */}
         <div className="mx-auto h-8 w-[104px] rounded-t-[18px] bg-gradient-to-b from-[#2b3a57] to-[#1d2b47]" />
         {/* metal case */}
-        <div className="relative -my-1 rounded-[50px] bg-gradient-to-b from-slate-400 via-slate-600 to-slate-900 p-[4px] shadow-[0_28px_60px_-20px_rgba(0,0,0,.8)]">
+        <div className="relative -my-1 rounded-[40px] bg-gradient-to-b from-slate-400 via-slate-600 to-slate-900 p-[5px] shadow-[0_28px_60px_-20px_rgba(0,0,0,.8)]">
           <span className="absolute -right-[6px] top-[60px] h-[28px] w-[8px] rounded-[3px] bg-gradient-to-b from-slate-300 via-slate-500 to-slate-600" />
           <span className="absolute -right-[4px] top-[102px] h-[36px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
           {/* Screen. Captures are pre-padded with black top/bottom margins
               (416×604), so the viewport just matches that aspect (200×290)
               with object-cover — the content sits centered with a comfortable
               black bezel and the rounded corners only ever clip black. */}
-          <div className="rounded-[46px] bg-black p-[7px]">
-            <div className="relative h-[290px] w-[200px] overflow-hidden rounded-[26px] bg-black">
+          <div className="rounded-[34px] bg-black p-[6px]">
+            <div className="relative h-[300px] w-[200px] overflow-hidden rounded-[22px] bg-black">
               <div
                 className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
                 style={{ transform: `translateX(-${i * 200}px)` }}
@@ -53,7 +53,7 @@ export function SstWatchAnimation() {
                       src={f.src}
                       alt={`SST Trainer — ${f.label}`}
                       width={200}
-                      height={290}
+                      height={300}
                       className="block h-full w-full object-cover"
                       priority
                     />
