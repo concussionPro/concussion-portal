@@ -179,8 +179,8 @@ export function SstWatchAnimation() {
           <span className="absolute -right-[5px] top-[92px] h-[34px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
           {/* screen viewport */}
           <div className="relative h-[216px] w-[176px] overflow-hidden rounded-[38px] bg-black">
-            {/* DEMO pill */}
-            <span className="absolute left-2 top-2 z-20 rounded-full bg-red-500/90 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wide text-white">
+            {/* DEMO pill — top-right so it never overlaps a screen title */}
+            <span className="pointer-events-none absolute right-2 top-2 z-20 rounded-full bg-red-500/90 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wide text-white">
               ● Demo
             </span>
             {/* swiping track */}
