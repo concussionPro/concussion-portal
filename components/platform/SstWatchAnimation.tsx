@@ -32,13 +32,13 @@ export function SstWatchAnimation() {
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
         {/* top strap */}
-        <div className="mx-auto h-8 w-[100px] rounded-t-[16px] bg-gradient-to-b from-[#2b3a57] to-[#1d2b47]" />
+        <div className="mx-auto h-8 w-[108px] rounded-t-[16px] bg-gradient-to-b from-[#2b3a57] to-[#1d2b47]" />
         {/* case */}
         <div className="relative -my-1 rounded-[46px] bg-gradient-to-b from-slate-500 via-slate-700 to-slate-900 p-[5px] shadow-[0_28px_60px_-20px_rgba(0,0,0,.8)]">
           <span className="absolute -right-[7px] top-[56px] h-[27px] w-[9px] rounded-[3px] bg-gradient-to-b from-slate-300 via-slate-500 to-slate-600" />
           <span className="absolute -right-[5px] top-[98px] h-[36px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
           {/* screen viewport — real captures swipe inside */}
-          <div className="relative h-[228px] w-[192px] overflow-hidden rounded-[42px] bg-black">
+          <div className="relative h-[250px] w-[210px] overflow-hidden rounded-[42px] bg-black">
             <div
               className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
               style={{ width: `${N * 100}%`, transform: `translateX(-${(i * 100) / N}%)` }}
@@ -48,8 +48,8 @@ export function SstWatchAnimation() {
                   <Image
                     src={f.src}
                     alt={`SST Trainer — ${f.label}`}
-                    width={192}
-                    height={228}
+                    width={210}
+                    height={250}
                     className="block h-full w-full object-cover"
                     priority
                   />
@@ -59,7 +59,7 @@ export function SstWatchAnimation() {
           </div>
         </div>
         {/* bottom strap */}
-        <div className="mx-auto h-8 w-[100px] rounded-b-[16px] bg-gradient-to-t from-[#2b3a57] to-[#1d2b47]" />
+        <div className="mx-auto h-8 w-[108px] rounded-b-[16px] bg-gradient-to-t from-[#2b3a57] to-[#1d2b47]" />
       </div>
 
       {/* stage dots */}

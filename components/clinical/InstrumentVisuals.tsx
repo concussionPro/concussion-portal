@@ -46,7 +46,7 @@ export function SstWatchVisual() {
 
 export function BaselineLaptopVisual() {
   return (
-    <div className="relative flex h-full min-h-[250px] flex-col items-center justify-end overflow-hidden rounded-xl bg-gradient-to-b from-[#eef4f4] to-[#dde8e8] pt-9">
+    <div className="relative flex h-full min-h-[290px] flex-col items-center justify-end overflow-hidden rounded-xl bg-gradient-to-b from-[#eef4f4] to-[#dde8e8] pt-9">
       <span className="absolute right-3 top-2.5 z-20 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
         The real test — any computer · ~5 min
       </span>
@@ -66,7 +66,7 @@ export function BaselineLaptopVisual() {
           alt="Pre-season SCAT6 baseline — athlete self-completing step 1 of 6 on a laptop"
           width={560}
           height={200}
-          className="block h-[190px] w-full object-cover object-top"
+          className="block h-[228px] w-full object-cover object-top"
         />
       </div>
       {/* deck */}
