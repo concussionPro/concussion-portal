@@ -37,12 +37,12 @@ export function SstWatchAnimation() {
         <div className="relative -my-1 rounded-[50px] bg-gradient-to-b from-slate-400 via-slate-600 to-slate-900 p-[4px] shadow-[0_28px_60px_-20px_rgba(0,0,0,.8)]">
           <span className="absolute -right-[6px] top-[60px] h-[28px] w-[8px] rounded-[3px] bg-gradient-to-b from-slate-300 via-slate-500 to-slate-600" />
           <span className="absolute -right-[4px] top-[102px] h-[36px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
-          {/* black OLED bezel — the padding insets the capture so its content
-              never touches the rounded corners (this was the clipping bug) */}
-          <div className="rounded-[48px] bg-black p-[9px]">
-            {/* Taller than the 416:496 capture so it letterboxes with black
-                top/bottom (the OLED bezel) — nothing gets cut by the corners. */}
-            <div className="relative flex h-[280px] w-[208px] items-center overflow-hidden rounded-[38px] bg-black">
+          {/* Screen. Captures are pre-padded with black top/bottom margins
+              (416×604), so the viewport just matches that aspect (200×290)
+              with object-cover — the content sits centered with a comfortable
+              black bezel and the rounded corners only ever clip black. */}
+          <div className="rounded-[46px] bg-black p-[7px]">
+            <div className="relative h-[290px] w-[200px] overflow-hidden rounded-[26px] bg-black">
               <div
                 className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
                 style={{ width: `${N * 100}%`, transform: `translateX(-${(i * 100) / N}%)` }}
@@ -52,9 +52,9 @@ export function SstWatchAnimation() {
                     <Image
                       src={f.src}
                       alt={`SST Trainer — ${f.label}`}
-                      width={191}
-                      height={228}
-                      className="block h-full w-full object-contain"
+                      width={200}
+                      height={290}
+                      className="block h-full w-full object-cover"
                       priority
                     />
                   </div>
