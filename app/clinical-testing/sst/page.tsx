@@ -40,12 +40,16 @@ function Shell() {
   // The clinician's own clinic code — wire it straight into the embedded app so
   // the in-portal flow skips the Self-guided/Clinic-code chooser (patients never
   // use this page). Same GET the clinic panel uses.
-  const [clinicCode, setClinicCode] = useState<string | null>(null)
+  // undefined = still loading; null = no clinic provisioned yet; string = code.
+  // We must NOT render the app until this resolves, or it briefly (or, on a
+  // fetch failure, permanently) runs in self-guided mode with no clinic code —
+  // and nothing the clinician runs would sync to their own hub.
+  const [clinicCode, setClinicCode] = useState<string | null | undefined>(undefined)
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d && typeof d.code === 'string') setClinicCode(d.code) })
-      .catch(() => {})
+      .then((d) => setClinicCode(d && typeof d.code === 'string' ? d.code : null))
+      .catch(() => setClinicCode(null))
   }, [])
 
   if (isLoading || access === 'loading') {
@@ -123,7 +127,21 @@ function Shell() {
           <div className="mx-auto grid h-full max-w-[1120px] grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(380px,450px)_minmax(0,1fr)]">
             {/* the app, in a device frame that scrolls internally */}
             <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
-              <PlatformApp embeddedClinicCode={clinicCode} />
+              {clinicCode === undefined ? (
+                <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
+                  Loading your clinic…
+                </div>
+              ) : clinicCode === null ? (
+                <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
+                  <p className="text-sm font-semibold text-foreground">Set up your clinic code first</p>
+                  <p className="max-w-[280px] text-xs text-muted-foreground">
+                    Provision your clinic code in the panel on the right, then the trainer runs here with
+                    every session syncing to your hub.
+                  </p>
+                </div>
+              ) : (
+                <PlatformApp embeddedClinicCode={clinicCode} />
+              )}
             </div>
             {/* clinician rail: clinic panel + chair-side runbook */}
             <div className="hidden h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain pb-2 pr-1 lg:flex">

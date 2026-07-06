@@ -26,9 +26,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
   }
   const usage = await getClinicUsage(code)
+  // Code-only callers (patients) get ONLY what the app needs to show a
+  // trial-full message — never the clinic's roster size or billing plan (that's
+  // business info; disclosing it to every code holder is an unnecessary leak).
   return NextResponse.json({
-    plan: usage.plan,
-    patientCount: usage.patientCount,
     cap: usage.cap,
     canAddPatient: usage.canAddPatient,
   })

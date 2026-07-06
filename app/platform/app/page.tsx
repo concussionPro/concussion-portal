@@ -563,6 +563,10 @@ export default function PlatformAppPage({
                 termination: input.termination,
                 hrVerified: ver.hrVerified,
                 verifiedReadingPct: ver.verifiedReadingPct,
+                // Prognostic flag (Haider 2019) — carried to the clinician so
+                // the hub/GP report can surface the low-threshold caution + note.
+                prolongedRecoveryRisk: suggested?.prolongedRecoveryRisk ?? false,
+                clinicianNote: suggested?.clinicianNote ?? null,
               },
             })
             if (result.interpretation === 'red-flag') {
