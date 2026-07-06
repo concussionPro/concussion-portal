@@ -45,10 +45,10 @@ export function SstWatchAnimation() {
             <div className="relative h-[290px] w-[200px] overflow-hidden rounded-[26px] bg-black">
               <div
                 className="flex h-full transition-transform duration-[620ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ width: `${N * 100}%`, transform: `translateX(-${(i * 100) / N}%)` }}
+                style={{ transform: `translateX(-${i * 200}px)` }}
               >
                 {FRAMES.map((f) => (
-                  <div key={f.src} style={{ width: `${100 / N}%` }} className="relative h-full">
+                  <div key={f.src} className="h-full w-[200px] flex-none">
                     <Image
                       src={f.src}
                       alt={`SST Trainer — ${f.label}`}

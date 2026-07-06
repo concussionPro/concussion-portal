@@ -56,7 +56,8 @@ function FreeBadge({ note }: { note: string }) {
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
         Free for your first 3 patients — no card, no time limit
       </span>
-      <span className="text-[12.5px] font-medium text-slate-400">Then your founding rate. {note}</span>
+      <span className="text-[12.5px] font-bold text-emerald-700">Founding clinics lock in half price for life — A$49 / A$99 / A$149.</span>
+      <span className="text-[12px] font-medium text-slate-400">{note}</span>
     </div>
   )
 }
