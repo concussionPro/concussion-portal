@@ -12,15 +12,7 @@ import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/Pla
 // Palette: navy #16243f, green #3c7a1f.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'] as const
 
-const VOLUMES: { value: string; label: string }[] = [
-  { value: '1-3', label: '1–3 patients / month' },
-  { value: '4-10', label: '4–10 patients / month' },
-  { value: '11-25', label: '11–25 patients / month' },
-  { value: '25+', label: '25+ patients / month' },
-  { value: 'unsure', label: 'Not sure yet' },
-]
 
 const PERKS = [
   'Your first 3 patients free — no card, no time limit',
@@ -39,9 +31,6 @@ export default function FoundingClinicPage() {
     clinicianName: '',
     clinicName: '',
     email: '',
-    state: '',
-    patientVolume: '',
-    message: '',
   })
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [feedback, setFeedback] = useState('')
@@ -227,70 +216,6 @@ export default function FoundingClinicPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-[15px] sm:grid-cols-2">
-                <div>
-                  <label htmlFor="state" className={labelCls}>
-                    State
-                  </label>
-                  <select
-                    id="state"
-                    name="state"
-                    required
-                    value={form.state}
-                    onChange={update('state')}
-                    className={fieldCls}
-                    style={{ color: form.state ? '#16243f' : '#94a3b8' }}
-                  >
-                    <option value="" disabled>
-                      Select…
-                    </option>
-                    {STATES.map((s) => (
-                      <option key={s} value={s} style={{ color: '#16243f' }}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="patientVolume" className={labelCls}>
-                    Concussion / rehab patients / mo
-                  </label>
-                  <select
-                    id="patientVolume"
-                    name="patientVolume"
-                    required
-                    value={form.patientVolume}
-                    onChange={update('patientVolume')}
-                    className={fieldCls}
-                    style={{ color: form.patientVolume ? '#16243f' : '#94a3b8' }}
-                  >
-                    <option value="" disabled>
-                      Select…
-                    </option>
-                    {VOLUMES.map((v) => (
-                      <option key={v.value} value={v.value} style={{ color: '#16243f' }}>
-                        {v.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="message" className={labelCls}>
-                  Anything else? <span className="font-normal text-slate-400">(optional)</span>
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={3}
-                  value={form.message}
-                  onChange={update('message')}
-                  className={`${fieldCls} resize-y`}
-                  placeholder="What you're hoping the SST Trainer helps with…"
-                />
-              </div>
 
               {status === 'error' && feedback && (
                 <p

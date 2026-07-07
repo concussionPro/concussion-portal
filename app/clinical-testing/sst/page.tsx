@@ -51,7 +51,12 @@ function Shell() {
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setClinicCode(d && typeof d.code === 'string' && d.code.trim() ? d.code : null))
+      // Response shape is { clinic: { code, ... }, usage } — read d.clinic.code,
+      // NOT d.code (the earlier bug: always fell through to "set up your code").
+      .then((d) => {
+        const c = d?.clinic?.code
+        setClinicCode(typeof c === 'string' && c.trim() ? c : null)
+      })
       .catch(() => setClinicCode(null))
   }, [])
 
