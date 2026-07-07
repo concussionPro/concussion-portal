@@ -295,6 +295,19 @@ export function SstClinicCard() {
         </p>
       </div>
 
+      {/* Clinician-facing data transparency — you are the custodian of your
+          patients' data; this is what the tool collects and where it goes. */}
+      <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-[11.5px] leading-relaxed text-slate-600">
+        <summary className="cursor-pointer font-semibold text-slate-700">How patient data is handled</summary>
+        <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-4">
+          <li><strong>What&rsquo;s collected:</strong> the patient&rsquo;s name (so you can identify them), their heart rate during sessions, symptom ratings, and the graded-test / training results.</li>
+          <li><strong>Where it goes:</strong> straight to your clinic, keyed to your code. It&rsquo;s stored in an Australian-region database and appears only in <em>your</em> hub — reachable only with your private view key, never by other clinics or by patients.</li>
+          <li><strong>Your patients&rsquo; consent:</strong> at sign-up each patient is told their name and results go to their clinician, and is offered a separate, optional opt-in for CEA to use their data — with the name removed — to improve the service. Declining doesn&rsquo;t affect their care.</li>
+          <li><strong>Your role:</strong> you are the treating clinician and the custodian of your patients&rsquo; records. The tool is decision-support you oversee — not a diagnosis or clearance.</li>
+        </ul>
+        <p className="mt-2 m-0">Full patient privacy policy: <a href="/sst-privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-700 underline">/sst-privacy</a>.</p>
+      </details>
+
       {showQr && (
         <SstPatientQrCard
           clinicName={clinic.clinicName}
