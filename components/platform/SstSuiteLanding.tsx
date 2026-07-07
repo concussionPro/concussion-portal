@@ -87,7 +87,7 @@ function SstTab() {
             patient trains in it between appointments. SST Trainer is the delivery layer: you prescribe
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/clinical-suite/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence →</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/clinical-suite/founding">Start your free trial</Cta><Cta variant="ghost" href="/sst-trainer">Try it live →</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
