@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { constructWebhookEvent, getStripe } from '@/lib/stripe'
-import { upsertSstSubscription, type SstPlan } from '@/lib/sst-subscription'
+import { upsertSstSubscription } from '@/lib/sst-subscription'
 
 /**
  * POST /api/webhooks/stripe-sst
@@ -15,11 +15,6 @@ import { upsertSstSubscription, type SstPlan } from '@/lib/sst-subscription'
  */
 
 export const runtime = 'nodejs'
-
-function planFromMetadata(meta: Stripe.Metadata | null | undefined): SstPlan | undefined {
-  const p = meta?.plan
-  return p === 'monthly' || p === 'annual' ? p : undefined
-}
 
 async function syncSubscription(subscriptionId: string, fallbackEmail?: string) {
   const sub = await getStripe().subscriptions.retrieve(subscriptionId)
@@ -44,8 +39,12 @@ async function syncSubscription(subscriptionId: string, fallbackEmail?: string) 
     email,
     stripeCustomerId: (sub.customer as string) || undefined,
     stripeSubscriptionId: sub.id,
-    plan: planFromMetadata(sub.metadata) ||
-      (item?.plan?.interval === 'year' ? 'annual' : item?.plan?.interval === 'month' ? 'monthly' : undefined),
+    // `plan` here is the billing INTERVAL (monthly/annual), derived from the
+    // Stripe item. The purchased TIER (single/clinic/enterprise) lives in
+    // sub.metadata.plan but is NOT recorded in this table — wire it in only when
+    // suite access is gated on the paid subscription (today it's the founding
+    // grant, sst_entitled_at, which billing never revokes — an OWNER decision).
+    plan: item?.plan?.interval === 'year' ? 'annual' : item?.plan?.interval === 'month' ? 'monthly' : undefined,
     status: sub.status,
     currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
     cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,

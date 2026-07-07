@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { SstClinicCard } from '@/components/clinical/SstClinicCard'
 import PlatformApp from '@/app/platform/app/page'
+import { clearState } from '@/lib/sst-trainer/store'
 import Link from 'next/link'
 import { Lock, ArrowRight, ChevronLeft } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -45,6 +46,8 @@ function Shell() {
   // fetch failure, permanently) runs in self-guided mode with no clinic code —
   // and nothing the clinician runs would sync to their own hub.
   const [clinicCode, setClinicCode] = useState<string | null | undefined>(undefined)
+  // bump to force-remount the embedded app for a fresh patient (see "New patient")
+  const [resetSeq, setResetSeq] = useState(0)
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
@@ -118,6 +121,23 @@ function Shell() {
           </Link>
           <span className="text-slate-300">/</span>
           <h1 className="text-sm font-bold tracking-tight text-foreground">SST Trainer</h1>
+          {clinicCode && (
+            <button
+              type="button"
+              onClick={() => {
+                // This device persists ONE patient's state (sst:v1). When a
+                // clinician runs a second patient on the same browser, clear it
+                // first so patient B never inherits patient A's band/history.
+                if (window.confirm('Start a fresh patient? This clears the current patient’s in-progress data on THIS device.')) {
+                  clearState()
+                  setResetSeq((n) => n + 1)
+                }
+              }}
+              className="ml-auto inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              + New patient
+            </button>
+          )}
         </div>
 
         {/* landscape workspace. grid-rows-[minmax(0,1fr)] is LOAD-BEARING:
@@ -140,7 +160,7 @@ function Shell() {
                   </p>
                 </div>
               ) : (
-                <PlatformApp embeddedClinicCode={clinicCode} />
+                <PlatformApp key={resetSeq} embeddedClinicCode={clinicCode} />
               )}
             </div>
             {/* clinician rail: clinic panel + chair-side runbook */}

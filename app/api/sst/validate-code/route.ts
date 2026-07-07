@@ -23,6 +23,14 @@ export async function GET(request: NextRequest) {
   if (!rl.ok) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
+  // GLOBAL backstop: the per-IP limit is defeatable by spoofing the client-IP
+  // header, so cap TOTAL validation attempts too. The ceiling is far above real
+  // onboarding load (one check per patient) but throttles brute-force code
+  // enumeration even from a rotating-IP attacker.
+  const globalRl = await rateLimit({ key: 'sst-validate:global', limit: 2000, windowSec: 60 })
+  if (!globalRl.ok) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
 
   const code = normaliseClinicCode(request.nextUrl.searchParams.get('code'))
   if (!code) {

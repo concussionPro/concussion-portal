@@ -973,6 +973,11 @@ export default function ClinicalHubPage() {
               <div className="glass-premium rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-2"><HeartPulse className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">HR threshold</p></div>
                 <p className="stat-value">{p.hrt ? <>{p.hrt}<span className="text-base font-medium text-muted-foreground"> bpm</span></> : <span className="text-base text-muted-foreground">Not set</span>}</p>
+                {p.hrt != null && p.hrt < 135 && (
+                  <p className="mt-1 text-[11px] font-semibold leading-snug text-amber-700" title="Haider et al. 2019">
+                    Low threshold (&lt;135 bpm) — associated with slower recovery; oversee dosing, re-assess more often.
+                  </p>
+                )}
               </div>
               <div className="glass-premium rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-2"><Activity className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Training band</p></div>

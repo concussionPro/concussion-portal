@@ -120,6 +120,16 @@ export async function buildGpReportHtml(code: string, patientLabel: string): Pro
         heading: 'Recommendation: extension of the treatment plan',
         body: `${esc(patientLabel)}'s most recent graded test continued to provoke symptoms below age-expected exercise capacity (unresolved exercise intolerance). The measured threshold trajectory above documents progress to date. We recommend an extension of the current treatment plan to continue supervised sub-symptom threshold training, with re-testing to objective resolution before clearance is considered.`,
       }
+  // Prognostic note (Haider 2019): a measured HRt < 135 bpm (or the engine's
+  // prolonged-recovery flag) predicts a slower recovery. Decision-support only —
+  // it does NOT change the prescription; the clinician interprets it.
+  const lowThreshold = thresholds.some(
+    (t) => t.payload?.prolongedRecoveryRisk === true || (typeof t.hrt_bpm === 'number' && t.hrt_bpm < 135),
+  )
+  const prognosticNote = lowThreshold
+    ? `<div class="prog"><h2>Prognostic note</h2><p>A measured heart-rate threshold below 135&nbsp;bpm was recorded during this episode. In the published cohort (Haider et&nbsp;al., 2019) a low heart-rate threshold — and a low resting-to-threshold reserve — is associated with a longer recovery. Decision-support only: interpret alongside your clinical assessment. It does not alter the sub-symptom training prescription.</p></div>`
+    : ''
+
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>SST episode report — ${esc(patientLabel)}</title>
 <style>
@@ -131,6 +141,9 @@ export async function buildGpReportHtml(code: string, patientLabel: string): Pro
   th { background: #f8fafc; font-weight: 600; }
   .rec { border: 2px solid ${clearanceReady ? '#0d7377' : '#b45309'}; border-radius: 8px; padding: 12px 16px; margin-top: 18px; }
   .rec h2 { margin-top: 0; color: ${clearanceReady ? '#0d7377' : '#b45309'}; }
+  .prog { border: 1px solid #d97706; background: #fffbeb; border-radius: 8px; padding: 10px 16px; margin-top: 14px; }
+  .prog h2 { margin-top: 0; color: #b45309; font-size: 13px; }
+  .prog p { margin: 4px 0 0; font-size: 12.5px; }
   .legend { color: #64748b; font-size: 11px; }
   .foot { margin-top: 26px; color: #64748b; font-size: 11px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
   .sig { margin-top: 30px; } .sig span { display: inline-block; border-top: 1px solid #94a3b8; min-width: 260px; padding-top: 4px; color: #475569; font-size: 12px; }
@@ -157,6 +170,7 @@ ${trajectorySvg(trajPoints) || '<p class="legend">Fewer than two measured thresh
 <tr><th>Symptom flares during training</th><td>${flares}</td></tr>
 </table>
 
+${prognosticNote}
 <div class="rec"><h2>${recommendation.heading}</h2><p>${recommendation.body}</p></div>
 
 <div class="sig"><span>Supervising clinician — name, signature, date</span></div>
