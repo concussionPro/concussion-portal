@@ -17,8 +17,9 @@ env / regulator / hardware) · **[TODO]** code/content work still open.
   unlock the **iOS verified (BLE) tier**. Android already builds; iOS needs Xcode.
   Not required for Launch A — patients use the PWA + manual/Android-verified today.
 
-Critical path to Launch A: **Stripe live (§2) → TGA opinion (§4) → flip
-`SST_CLINICAL_LIVE` (§2) → outreach on (§6).**
+Critical path to Launch A: **Stripe live (§2) → flip `SST_CLINICAL_LIVE` (§2) →
+outreach on (§6).** (TGA is **not** on this path — it only bites for public
+self-guided use, which stays off; see §4.)
 
 ---
 
@@ -99,13 +100,20 @@ the valid public `/sst-trainer` start_url.
 
 ---
 
-## 4. Regulatory — **[OWNER]** (gates public self-guided)
+## 4. Regulatory — **NOT a Launch A blocker**
 
-- [ ] **TGA / SaMD scoping opinion** (`docs/sst-publications/12-…OPEN`). The
-  provocative graded test is the question. Code posture is correct (clinician-gated,
-  disclaimers everywhere, noindex), but the opinion gates any **public self-guided**
-  use. The clinician-supervised suite (Launch A) is the defensible posture; keep
-  `NEXT_PUBLIC_SST_SELF_GUIDED=false` until the opinion is in.
+- **Launch A is clinician-gated → clinical-decision-support / clinician-in-the-loop.**
+  The clinician prescribes, supervises, and can independently review the basis for
+  every output (the measured HRt + transparent band math). That posture sits in the
+  CDSS territory the TGA carves out, not "SaMD that diagnoses/treats." Combined with
+  the disclaimers on every surface and noindex, the supervised suite is defensible
+  to launch **without** a formal TGA opinion. **[OWNER, optional]** a brief
+  regulatory sanity-check is prudent but not a gate.
+- **The TGA/SaMD opinion only matters for PUBLIC SELF-GUIDED use** (a patient running
+  the provocative graded test with no clinician). That path is deliberately OFF
+  (`NEXT_PUBLIC_SST_SELF_GUIDED=false`) — do NOT flip it until the opinion is in
+  (`docs/sst-publications/12-…OPEN`). So TGA gates a *future* self-guided expansion,
+  not this launch.
 - Compliance copy pass done this session (delivery-layer wording, disclaimers,
   consent). A `cea-compliance-review` on the final consent + store label before
   Launch B is worth it.
@@ -148,7 +156,8 @@ Cold B2B outreach is the primary channel (no paid ads).
 ## 7. Go-live order (Launch A)
 
 1. [ ] Stripe: confirm 3 price IDs + **both** webhooks + run one live sub test (§2).
-2. [ ] TGA opinion in hand (or launch clinician-supervised only, self-guided OFF) (§4).
+2. [ ] Confirm `NEXT_PUBLIC_SST_SELF_GUIDED=false` (clinician-gated only — keeps TGA
+   out of scope; §4). No TGA opinion needed for this launch.
 3. [ ] Flip **`SST_CLINICAL_LIVE=true`** (opens the suite to course-buyers + entitled).
 4. [ ] Founding cohort: confirm the founding signup → portal magic-link flow live
    (owner can already reach `/clinical-testing`).
@@ -156,4 +165,5 @@ Cold B2B outreach is the primary channel (no paid ads).
 6. [ ] (Parallel) medRxiv the clinical review; iOS build for the verified tier.
 
 **Bottom line:** the code is done and verified. Launch A is gated only by the
-Stripe verification, the TGA opinion, and flipping one env flag — all owner actions.
+Stripe verification and flipping one env flag — both owner actions. TGA is not a
+gate (clinician-gated); it only applies if you later open self-guided use.
