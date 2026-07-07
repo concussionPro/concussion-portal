@@ -12,6 +12,7 @@ import {
   Loader2,
   LayoutDashboard,
   Users,
+  FileText,
 } from 'lucide-react'
 
 /**
@@ -222,6 +223,13 @@ export function SstClinicCard() {
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
             Live hub
+          </Link>
+          <Link
+            href="/clinical-testing/documents"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Documents
           </Link>
         </div>
       </div>
