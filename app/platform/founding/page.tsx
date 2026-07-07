@@ -23,8 +23,8 @@ const VOLUMES: { value: string; label: string }[] = [
 ]
 
 const PERKS = [
-  'Founding rate locked for life — A$49/month, half the A$99 standard rate',
   'Your first 3 patients free — no card, no time limit',
+  'Founding rate locked for life — A$49/month, half the A$99 standard rate',
   'Priority onboarding: your clinic code, patient links and hub set up within the week',
   'A direct line to our clinical team, and early access to every new tool and module',
   'A founding-clinic listing when our referral directory launches',
@@ -45,6 +45,7 @@ export default function FoundingClinicPage() {
   })
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [feedback, setFeedback] = useState('')
+  const [code, setCode] = useState('')
 
   const update = (key: keyof typeof form) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -63,7 +64,8 @@ export default function FoundingClinicPage() {
       const data = await res.json()
       if (res.ok && data.success) {
         setStatus('success')
-        setFeedback(data.message || "You're on the founding list.")
+        setCode(data.code || '')
+        setFeedback(data.message || 'Your clinic is set up. Check your email for your portal login and patient links.')
       } else {
         setStatus('error')
         setFeedback(data.error || 'Something went wrong. Please try again.')
@@ -146,24 +148,31 @@ export default function FoundingClinicPage() {
               >
                 ✓
               </span>
-              <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">You&apos;re on the list.</h2>
-              <p className="m-0 max-w-[360px] text-[14px] font-normal text-slate-600" style={{ lineHeight: 1.55 }}>
-                {feedback}
+              <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">Your clinic is set up.</h2>
+              {code && (
+                <div className="rounded-xl border-2 border-[#0d9488] bg-[#f0fdfa] px-5 py-3 text-center">
+                  <p className="m-0 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Your clinic code</p>
+                  <p className="m-0 mt-1 font-mono text-[26px] font-extrabold tracking-[6px] text-[#0d9488]">{code}</p>
+                </div>
+              )}
+              <p className="m-0 max-w-[380px] text-[14px] font-normal text-slate-600" style={{ lineHeight: 1.55 }}>
+                {feedback} We&rsquo;ve emailed your one-click portal login and your patient app + baseline links.
               </p>
               <Link
-                href="/platform/pricing"
+                href="/login"
                 className="mt-2 rounded-[12px] px-[22px] py-[13px] text-[14px] font-bold text-white transition-opacity hover:opacity-90"
                 style={{ background: PLATFORM.navy }}
               >
-                Back to pricing
+                Log in to your portal
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-[15px]" noValidate>
               <div>
-                <h2 className="m-0 text-[18px] font-extrabold tracking-[-0.01em]">Apply to the founding program</h2>
+                <h2 className="m-0 text-[18px] font-extrabold tracking-[-0.01em]">Start your free trial</h2>
                 <p className="m-0 mt-1 text-[13px] font-normal text-slate-500" style={{ lineHeight: 1.45 }}>
-                  Takes under a minute. No card, no commitment.
+                  Set up your clinic in under a minute — first 3 patients free, no card. You&rsquo;ll get your
+                  clinic code and portal login straight away.
                 </p>
               </div>
 
@@ -299,7 +308,7 @@ export default function FoundingClinicPage() {
                 className="mt-1 rounded-[13px] py-[14px] text-[15px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ background: PLATFORM.navy }}
               >
-                {status === 'submitting' ? 'Sending…' : 'Apply to the founding program'}
+                {status === 'submitting' ? 'Setting up your clinic…' : 'Start free — set up my clinic'}
               </button>
 
               <p className="m-0 text-center text-[12px] font-normal text-slate-400" style={{ lineHeight: 1.45 }}>

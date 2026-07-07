@@ -12,11 +12,11 @@ import Image from 'next/image'
  */
 
 const FRAMES = [
-  { src: '/instruments/watch4/1-band.png', label: 'Your band' },
-  { src: '/instruments/watch4/2-safety.png', label: 'Safety check' },
-  { src: '/instruments/watch4/3-test.png', label: 'Graded test' },
-  { src: '/instruments/watch4/4-training.png', label: 'Train live' },
-  { src: '/instruments/watch4/5-progress.png', label: 'Recovery' },
+  { src: '/instruments/watch5/1-band.png', label: 'Your band' },
+  { src: '/instruments/watch5/2-safety.png', label: 'Safety check' },
+  { src: '/instruments/watch5/3-test.png', label: 'Graded test' },
+  { src: '/instruments/watch5/4-training.png', label: 'Train live' },
+  { src: '/instruments/watch5/5-progress.png', label: 'Recovery' },
 ]
 const N = FRAMES.length
 const HOLD_MS = 2600
