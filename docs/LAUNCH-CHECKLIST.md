@@ -34,6 +34,16 @@ UX). Production build green, 394 tests pass, fixes adversarially verified.
   + daily band, accurate consent copy — fixed.
 - No remaining P0/P1 code blockers.
 
+**Data governance (owner stance 2026-07-08 — no HREC now, collect-for-care):**
+- Primary data flow is CARE (clinician treats their own patient) — appropriate, no
+  consent gate needed. Sessions table has **no auto-delete** → data is retained.
+- ANY secondary use goes through **`sst_sessions_research`** ONLY (SQL view:
+  consent-filtered + de-identified). Never query the raw table for QA/research.
+- The in-app consent stays **QA/service-improvement, NOT research** (do not add
+  research wording). A future HREC can approve a *retrospective* study on the
+  retained, de-identified, consented data under a waiver — so "collect now, ethics
+  later" is clean. Run `scripts/sql/sst-sessions-research-view.sql` (set a real salt).
+
 **Residual code items (non-blocking, your call):**
 - [ ] **[OWNER-DECISION]** Should cancelling the paid subscription revoke *suite*
   access? Today suite = founding grant (`sst_entitled_at`), never revoked by
@@ -121,6 +131,12 @@ the valid public `/sst-trainer` start_url.
 ---
 
 ## 5. Papers (parallel authority track — NOT a launch blocker)
+
+**Ship single-author, ASAP — no co-author, no HREC, no data needed.** All three are
+review/tools/protocol: single-author is fine (medRxiv/protocols.io/JMIR all accept
+it), and none touches patient data or ethics. The co-author + HREC were only ever
+for the *future* outcome/validity papers (deferred). Do not let their absence hold
+these three.
 
 Three real, submission-grade drafts in `docs/sst-publications/`. `/publications`
 page is hidden until DOIs land. Ranked by closeness:
