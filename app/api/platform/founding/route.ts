@@ -99,12 +99,15 @@ export async function POST(request: NextRequest) {
     if (!clinicName || clinicName.trim().length < 2 || clinicName.trim().length > 120) {
       return NextResponse.json({ error: 'Clinic name is required.' }, { status: 400 })
     }
-    if (!state || !(VALID_STATES as readonly string[]).includes(state)) {
-      return NextResponse.json({ error: 'Please select your state.' }, { status: 400 })
-    }
-    if (!patientVolume || !(VALID_VOLUMES as readonly string[]).includes(patientVolume)) {
-      return NextResponse.json({ error: 'Please select an approximate patient volume.' }, { status: 400 })
-    }
+    // state + patientVolume are OPTIONAL now (low-friction form = name/clinic/email).
+    // Accept them if a valid value is sent, else store ''. The DB columns are NOT
+    // NULL, so coerce to '' — never null.
+    const cleanState =
+      typeof state === 'string' && (VALID_STATES as readonly string[]).includes(state) ? state : ''
+    const cleanVolume =
+      typeof patientVolume === 'string' && (VALID_VOLUMES as readonly string[]).includes(patientVolume)
+        ? patientVolume
+        : ''
 
     const cleanEmail = email.trim().toLowerCase()
     const cleanClinician = clinicianName.trim().slice(0, 100)
@@ -118,7 +121,7 @@ export async function POST(request: NextRequest) {
       INSERT INTO founding_clinic_interest
         (clinician_name, clinic_name, email, state, patient_volume, message)
       VALUES
-        (${cleanClinician}, ${cleanClinic}, ${cleanEmail}, ${state}, ${patientVolume}, ${cleanMessage})
+        (${cleanClinician}, ${cleanClinic}, ${cleanEmail}, ${cleanState}, ${cleanVolume}, ${cleanMessage})
       ON CONFLICT (email) DO UPDATE SET
         clinician_name = EXCLUDED.clinician_name,
         clinic_name = EXCLUDED.clinic_name,
@@ -155,18 +158,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const volumeLabel = VOLUME_LABELS[patientVolume] || patientVolume
+    const volumeLabel = cleanVolume ? VOLUME_LABELS[cleanVolume] || cleanVolume : '—'
+    const stateLabel = cleanState || '—'
 
     // Notify Zac (best effort — lead already persisted above).
     try {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
-        subject: `New founding clinic: ${cleanClinic} (${state}) — ${cleanClinician}`,
+        subject: `New founding clinic: ${cleanClinic} (${stateLabel}) — ${cleanClinician}`,
         html: buildNotificationEmail({
           clinician: cleanClinician,
           clinic: cleanClinic,
           email: cleanEmail,
-          state,
+          state: stateLabel,
           volumeLabel,
           message: cleanMessage,
           isUpdate: rowCount === 0,
@@ -175,7 +179,7 @@ export async function POST(request: NextRequest) {
         tags: [
           { name: 'type', value: 'founding-clinic-notification' },
           { name: 'sequence', value: 'founding-clinic' },
-          { name: 'state', value: state },
+          { name: 'state', value: stateLabel },
         ],
       })
     } catch (emailErr) {
@@ -207,7 +211,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(
-      `Founding clinic registered: ${cleanEmail.slice(0, 3)}*** — ${cleanClinic} (${state})${clinic ? ` — provisioned ${clinic.code}` : ' — provisioning deferred'}`
+      `Founding clinic registered: ${cleanEmail.slice(0, 3)}*** — ${cleanClinic} (${stateLabel})${clinic ? ` — provisioned ${clinic.code}` : ' — provisioning deferred'}`
     )
 
     const firstName = cleanClinician.split(' ')[0]
