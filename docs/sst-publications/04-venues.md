@@ -1,5 +1,14 @@
 # Target venues and publication strategy for the SST Trainer package
 
+> ## ⛔ CORRECTION 2026-07-08 — Paper 1 does NOT go to medRxiv
+> medRxiv's submission scope **explicitly excludes "Narrative reviews"** ("declined
+> immediately; all decisions are final"). Paper 1 (the clinical review) is a
+> narrative review → **submit it DIRECTLY to _Journal of Concussion_** (SAGE, OA;
+> accepts narrative reviews), fallback _Frontiers_. For a fast citable preprint
+> DOI use **OSF Preprints or Preprints.org** (they accept narrative reviews) —
+> never medRxiv/bioRxiv. The "medRxiv first" step below is superseded for Paper 1.
+> Papers 2 (JMIR mHealth) and 3 (protocols.io → JMIR Res Protoc) are unaffected.
+
 Concussion Education Australia (CEA)
 Draft v1.0 · 2026
 
