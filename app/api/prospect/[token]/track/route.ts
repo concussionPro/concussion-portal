@@ -23,6 +23,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 import { accessKeyMatches } from '@/lib/prospect/access-key'
+import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { CONFIG } from '@/lib/config'
 
 const ALLOWED_INTERACTION_TYPES = new Set([
   'view',
@@ -104,6 +106,60 @@ export async function POST(
   } catch (err) {
     console.error('[prospect-track] Insert failed:', err)
     return NextResponse.json({ error: 'Insert failed' }, { status: 500 })
+  }
+
+  // ── Real-time intent escalation ──────────────────────────────────────────
+  // Buying signals must not sit in the cold drip. A CTA click OR reaching the
+  // pricing section pulls the clinic OUT of the cold cadence into the 'engaged'
+  // lane (halts cold sends; picked up by daily-outreach-report + nurture). A CTA
+  // click also alerts Zac in real time on the FIRST hand-raise per clinic — so a
+  // hot lead (like On The Mend clicking book-a-call) is never missed again.
+  const isCta = interactionType === 'cta_click'
+  const isPricing = interactionType === 'section_view' && section === 'pricing'
+  if (isCta || isPricing) {
+    try {
+      await sql`
+        UPDATE prospect_clinics
+        SET status = 'engaged', scheduled_send_at = NULL, updated_at = NOW()
+        WHERE id = ${clinic.id}
+          AND status IN ('approved', 'sent', 'opened', 'researching', 'queued', 'scheduled')
+      `
+    } catch (err) {
+      console.error('[prospect-track] intent flip failed:', err)
+    }
+  }
+  if (isCta) {
+    try {
+      // Throttle to the clinic's FIRST cta_click (this row is already persisted,
+      // so count === 1 means first) → exactly one hot-lead alert per clinic.
+      const { rows: cnt } = await sql`
+        SELECT COUNT(*)::int AS n FROM prospect_portal_views
+        WHERE clinic_id = ${clinic.id} AND interaction_type = 'cta_click'
+      `
+      if (cnt[0]?.n === 1) {
+        const { rows: c } = await sql<{ name: string; contact_full_name: string | null; contact_email: string | null; city: string | null; state: string | null; status: string }>`
+          SELECT name, contact_full_name, contact_email, city, state, status
+          FROM prospect_clinics WHERE id = ${clinic.id}
+        `
+        const d = c[0]
+        // Don't alert on our own tours / dead deals. A cold clinic was just
+        // flipped to 'engaged' above (→ alert); archived/lost/won were never
+        // flipped, so their original status still excludes them here.
+        if (d && !['archived', 'lost', 'won', 'engaged-elsewhere'].includes(d.status)) {
+          const origin = req.nextUrl.origin
+          await sendEmail({
+            to: CONFIG.CONTACT_EMAIL,
+            subject: `🔥 Buying signal: ${d.name} clicked "${target || 'a CTA'}"`,
+            html: `<p><strong>${escapeHtml(d.name)}</strong> just clicked <strong>${escapeHtml(target || 'a CTA')}</strong> on their portal.</p>
+              <p>${escapeHtml(d.contact_full_name || '—')}${d.contact_email ? ` · <a href="mailto:${escapeHtml(d.contact_email)}">${escapeHtml(d.contact_email)}</a>` : ''}<br>${escapeHtml([d.city, d.state].filter(Boolean).join(', ') || '')}</p>
+              <p>They've been moved to <strong>engaged</strong> (cold drip stopped). <a href="${origin}/p/${escapeHtml(token)}">Open their portal →</a></p>
+              <p style="color:#64748b;font-size:13px">Reach out personally — this is a hand-raise, not a cold contact.</p>`,
+          }).catch(() => {})
+        }
+      }
+    } catch (err) {
+      console.error('[prospect-track] intent alert failed:', err)
+    }
   }
 
   return new NextResponse(null, { status: 204 })
