@@ -82,10 +82,11 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               {eyebrow}
             </p>
             <h2 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.02] mb-2 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
-              {clinic.shortName} Dashboard
+              {subhead}
             </h2>
             <p className="text-base sm:text-lg text-foreground/80 font-semibold max-w-2xl mb-4">
-              {subhead}
+              A ready-to-run concussion program for {clinic.shortName} — SCAT6/SCOAT6 tools,
+              GP &amp; school referral pathways, and Osteopathy Australia-endorsed CPD for your whole team.
             </p>
             {/* Catchment opportunity strip — surfaces the regional volume the
                 program is built to handle, so the prospect sees scale before
