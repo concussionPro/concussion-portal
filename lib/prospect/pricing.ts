@@ -104,7 +104,10 @@ const TRAVEL_SURCHARGE: Record<TravelBand, number> = {
   'flight-far': 2500,
 }
 
-const TIER2_BASE = 7500
+// On-site day base fee. Matches the Essential (8-clinician) cohort minimum
+// below so "on-site from A$8,000" is one consistent number everywhere
+// (reconciled 2026-07-08 — the old $7,500 teaser contradicted the $8,000 tier).
+const TIER2_BASE = 8000
 const PUBLIC_RETAIL_RATE = 1400
 
 /**

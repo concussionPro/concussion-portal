@@ -251,7 +251,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                   On-site Practical Skills · your team trained on your own cases
                 </h3>
                 <p className="text-sm text-white/85 leading-relaxed">
-                  Full practical day in-clinic · <span className="font-bold text-white">from A$7,500</span>. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
+                  Full practical day in-clinic · <span className="font-bold text-white">from A$8,000</span>. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-300 text-slate-900 px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">

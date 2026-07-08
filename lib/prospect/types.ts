@@ -141,7 +141,7 @@ export interface PricingBreakdown {
   tier1SubtotalBeforeDiscount: number
   tier1VolumeDiscountPct: number
   tier1VolumeDiscountAud: number
-  tier2OnsiteBase: number     // 7500
+  tier2OnsiteBase: number     // 8000
   tier2Travel: number         // from band
   tier2Total: number          // base + travel
   combinedTotal: number
