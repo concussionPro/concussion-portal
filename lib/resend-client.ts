@@ -339,6 +339,62 @@ export async function sendPostPurchaseLoginEmail(opts: {
 }
 
 /**
+ * Hub Pack owner welcome — login link PLUS the forwardable team access KEY.
+ * The buyer forwards the key (or the redeem link) to their team; the key is
+ * seat-capped server-side so it can't grant access beyond the paid team.
+ */
+export async function sendHubOwnerWelcomeEmail(opts: {
+  email: string
+  token: string
+  firstName: string
+  hubKey: string
+  clinicianSeats: number
+  adminSeats: number
+  amount: number
+  currency: string
+  redeemUrl: string
+  origin?: string
+  attachments?: Array<{ filename: string; content: Buffer | string }>
+}): Promise<boolean> {
+  const baseUrl = opts.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+  const loginUrl = `${baseUrl}/api/auth/verify?token=${opts.token}`
+  const firstName = opts.firstName ? escapeHtml(opts.firstName.split(' ')[0]) : 'there'
+  const key = escapeHtml(opts.hubKey)
+  const redeemUrl = escapeHtml(opts.redeemUrl)
+  return sendEmail({
+    to: opts.email,
+    subject: 'Your clinic access is live — your team key inside',
+    tags: [{ name: 'sequence', value: 'hub-welcome' }],
+    ...(opts.attachments ? { attachments: opts.attachments } : {}),
+    html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;line-height:1.6;color:#1e293b;background:#f8fafc;margin:0;padding:0">
+      <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,.1)">
+        <div style="background:#16243f;padding:28px 32px;color:#fff">
+          <h1 style="margin:0;font-size:20px">Your clinic access is live</h1>
+          <p style="margin:6px 0 0;color:#cbd5e1;font-size:13px">Concussion Clinical Mastery — full clinic team access</p>
+        </div>
+        <div style="padding:32px">
+          <p>Hi ${firstName},</p>
+          <p>Thanks for setting up full clinic access. Your own login is one click away:</p>
+          <p style="text-align:center;margin:22px 0">
+            <a href="${loginUrl}" style="display:inline-block;background:#16243f;color:#fff;font-weight:700;padding:13px 30px;border-radius:10px;text-decoration:none">Open my course</a>
+          </p>
+          <div style="border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;background:#f8fafc;margin:24px 0">
+            <p style="margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#64748b;font-weight:700">Your team access key</p>
+            <p style="margin:0 0 10px;font-size:22px;font-weight:800;font-family:monospace;letter-spacing:1px;color:#16243f">${key}</p>
+            <p style="margin:0;font-size:13px;color:#475569">Forward this to your team, or send them this one-click link:</p>
+            <p style="margin:8px 0 0"><a href="${redeemUrl}" style="color:#0f766e;font-weight:700;word-break:break-all">${redeemUrl}</a></p>
+          </div>
+          <p style="font-size:13px;color:#475569">This key covers <strong>${opts.clinicianSeats} clinician${opts.clinicianSeats === 1 ? '' : 's'} + ${opts.adminSeats} front-desk seats</strong>. Each teammate redeems it once for their own login. It stops working once your seats are used — so it's safe to share inside your clinic, but it won't grant access beyond your team.</p>
+          <p style="font-size:13px;color:#94a3b8;margin-top:20px">Your GST tax invoice is attached. Questions? Just reply to this email.</p>
+          <p style="font-size:13px;margin-top:16px">— Zac Lewis, Concussion Education Australia</p>
+        </div>
+      </div>
+    </body></html>`,
+  })
+}
+
+/**
  * Send magic link login email
  */
 export async function sendMagicLinkEmail(email: string, token: string, origin?: string): Promise<boolean> {

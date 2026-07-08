@@ -42,10 +42,12 @@ export const CONFIG = {
     // economics work — Zac's online delivery cost is ~$0 per seat but the
     // perceived value tracks team size.
     PRICE_CLINIC_HUB_EXTRA_SEAT: 497,
-    // Per-clinician workshop upgrade for Hub Pack customers. Below the
-    // standalone workshop-upgrade price because the clinic already paid
-    // for the bundle — this is the marginal in-person cost only.
-    PRICE_CLINIC_WORKSHOP_UPGRADE: 497,
+    // Per-clinician workshop upgrade for Hub Pack customers: a hub member
+    // joins a PUBLIC workshop date for this price. Set at $600 = ~50% of the
+    // $1,190 solo complete-course price — the clinic already paid for the
+    // online bundle, so this is the marginal in-person seat only, at roughly
+    // half what a solo clinician pays to attend (owner 2026-07-08).
+    PRICE_CLINIC_WORKSHOP_UPGRADE: 600,
     SCAT_MASTERY_CPD_POINTS: 1,
     SCAT_MASTERY_MODULES: 3,
     PROMO_CODE: 'SCAT6',

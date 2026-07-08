@@ -4,7 +4,8 @@ import { setSstClinicPlan } from '@/lib/sst-trainer/clinic-registry'
 
 export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
-import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail } from '@/lib/resend-client'
+import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail } from '@/lib/resend-client'
+import { createCourseHub, redeemHubSeat, clampClinicianSeats, HUB_ADMIN_SEATS } from '@/lib/course-hub'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
@@ -20,6 +21,7 @@ function labelForCourse(courseType: string, accessLevel: string): string {
     case 'full-course': return 'Complete Course (online + workshop)'
     case 'online-only': return 'Online Course'
     case 'workshop-upgrade': return 'Workshop Upgrade'
+    case 'clinic-hub-pack': return 'Concussion Hub Pack — full clinic team access'
     case 'international-online': return 'Online Course (International)'
     default: return accessLevel === 'full-course' ? 'Complete Course' : 'Online Course'
   }
@@ -247,6 +249,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // welcome email. Returns early — does NOT fall through to CCM provisioning.
   if (session.metadata?.productType === 'short-course') {
     await handleShortCoursePurchase(session, customerEmail, customerName)
+    return
+  }
+
+  // Hub Pack (full clinic team access). Creates a seat-capped access KEY the
+  // buyer forwards to their team, provisions the buyer at full-course, and sends
+  // the welcome + key + GST invoice. Returns early — does NOT fall through to the
+  // single-account CCM path (which was the pre-2026-07-08 leak: only the buyer
+  // got in).
+  if (session.metadata?.courseType === 'clinic-hub-pack' || session.metadata?.productType === 'clinic-hub-pack') {
+    await handleHubPackPurchase(session, customerEmail, customerName)
     return
   }
 
@@ -627,6 +639,98 @@ async function handleShortCoursePurchase(
   }
 
   console.log(`[short-course] Provisioned ${redact(customerEmail)} for ${courseSlug} — $${amountAud} ${currency}`)
+}
+
+/**
+ * Hub Pack — full clinic team access. Creates a seat-capped access key, registers
+ * the buyer as the first clinician seat, provisions the buyer at full-course, and
+ * emails the welcome + key (forwardable) + GST invoice. The key's cap is the
+ * clinician headcount the buyer declared at checkout, enforced atomically in
+ * `redeemHubSeat` — access cannot leak past the paid team.
+ */
+async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerEmail: string, customerName: string) {
+  const currency = (session.currency || 'aud').toUpperCase()
+  const amount = (session.amount_total || 0) / 100
+  const clinicianSeats = clampClinicianSeats(Number(session.metadata?.clinicianCount) || 5)
+  const clinicName = session.metadata?.clinicName || null
+
+  // Create the hub + claim the owner's own clinician seat.
+  const code = await createCourseHub({ ownerEmail: customerEmail, clinicName, clinicianSeats, stripeSessionId: session.id })
+  await redeemHubSeat(code, customerEmail, customerName, 'clinician')
+
+  // Provision the buyer at real full-course access (the exact existing suite).
+  const userId = await createUser({
+    email: customerEmail,
+    name: customerName,
+    accessLevel: 'full-course',
+    stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
+    signupSource: 'purchase',
+  })
+
+  try {
+    await sql`UPDATE abandoned_checkouts SET recovered = true WHERE email = ${customerEmail.toLowerCase()} AND recovered = false`
+  } catch (err) {
+    console.error('[hub-pack] abandoned-checkout recover failed:', err)
+  }
+
+  // Welcome + key + GST invoice.
+  try {
+    const token = createMagicToken(userId, customerEmail, customerName, 'full-course')
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    let invoiceAttachment: { filename: string; content: Buffer } | undefined
+    try {
+      const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
+      const issueDate = new Date()
+      const invNumber = invoiceNumberFromSession(session.id, issueDate)
+      const pdf = generateTaxInvoicePdf({
+        invoiceNumber: invNumber,
+        issueDate,
+        buyer: { name: customerName, email: customerEmail },
+        lineItems: [{
+          description: 'Concussion Hub Pack — full clinic team access',
+          quantity: 1,
+          unitPriceCents: session.amount_total || 0,
+          totalCents: session.amount_total || 0,
+        }],
+        totalCents: session.amount_total || 0,
+        currency,
+        paidAt: issueDate,
+        paymentReference: session.id,
+      })
+      invoiceAttachment = { filename: `${invNumber}.pdf`, content: pdf }
+    } catch (invErr) {
+      console.error(`[hub-pack][invoice] PDF generation failed for ${redact(customerEmail)}:`, invErr)
+    }
+
+    await sendHubOwnerWelcomeEmail({
+      email: customerEmail,
+      token,
+      firstName: customerName,
+      hubKey: code,
+      clinicianSeats,
+      adminSeats: HUB_ADMIN_SEATS,
+      amount,
+      currency,
+      redeemUrl: `${baseUrl}/join-clinic?key=${code}`,
+      origin: baseUrl,
+      ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
+    })
+  } catch (emailErr) {
+    console.error(`[hub-pack] Welcome email failed for ${redact(customerEmail)}:`, emailErr)
+  }
+
+  // Admin ping.
+  try {
+    await sendEmail({
+      to: CONFIG.CONTACT_EMAIL,
+      subject: `New sale: Concussion Hub Pack (${clinicianSeats} clinicians) — ${currency} $${amount.toFixed(2)}`,
+      html: `<p>Hub Pack purchased.</p><p><strong>Buyer:</strong> ${escapeHtml(customerEmail)}<br><strong>Clinic:</strong> ${escapeHtml(clinicName || '—')}<br><strong>Seats:</strong> ${clinicianSeats} clinicians + ${HUB_ADMIN_SEATS} admin<br><strong>Key:</strong> ${escapeHtml(code)}</p>`,
+    })
+  } catch (alertErr) {
+    console.error('[hub-pack] admin ping failed:', alertErr)
+  }
+
+  console.log(`[hub-pack] Provisioned clinic hub for ${redact(customerEmail)} — key ${code}, ${clinicianSeats} clinician seats — $${amount} ${currency}`)
 }
 
 /**

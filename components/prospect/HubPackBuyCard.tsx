@@ -12,14 +12,16 @@ import { Users, Check, Loader2, ArrowRight, Plane, ShieldCheck } from 'lucide-re
  * the right product. Hub Pack is online + no travel, so it CAN check out cold.
  * POSTs courseType:'clinic-hub-pack' → /api/create-checkout → Stripe.
  */
+const HUB_MAX = 12
+
 export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: string }) {
   const [loading, setLoading] = useState(false)
   const price = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
-  const seats = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
-  // Value-math hook: the team pack is cheaper than buying everyone a single
-  // online seat (true once clinical ≥ 4). Flips the decision from "is it worth
-  // it" to "this is the cheaper way to train the team".
-  const individualCost = clinical * CONFIG.COURSE.PRICE_ONLINE
+  const baseSeats = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
+  // Buyer declares their clinician headcount — this becomes the access key's
+  // hard seat cap. Default to the clinic's known size (min the base 5, max 12).
+  const [count, setCount] = useState<number>(Math.min(HUB_MAX, Math.max(baseSeats, clinical || 0)))
+  const individualCost = count * CONFIG.COURSE.PRICE_ONLINE
   const cheaperThanIndividual = individualCost > price
 
   async function buy() {
@@ -31,6 +33,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseType: 'clinic-hub-pack',
+          clinicianCount: count,
           utm: { utm_source: 'portal', utm_medium: 'hub_pack_card', utm_campaign: slug },
         }),
       })
@@ -43,10 +46,10 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
   }
 
   const includes = [
-    `${seats} clinician online seats — 8 modules, 8 CPD hours each, OA-endorsed`,
-    'Lifetime access — your whole team trains on their own schedule',
-    'Branded clinical docs (GP letters, NDIS, school-sport intake, RTP tracking)',
-    'Admin/billing pack + 90-day launch playbook + 30-min strategy call',
+    `${count} clinician seats + your front-desk / admin team — 8 modules, 8 CPD hours each, OA-endorsed`,
+    'Each teammate gets their own login & CPD certificate — you forward one access key',
+    'Clinical docs (GP, NDIS, school/sport, RTP) — enter your clinic details once, they fill across every document',
+    'Front-desk / admin micro-course + a 30-minute onboarding call',
   ]
 
   return (
@@ -75,7 +78,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold text-accent leading-none">A${price.toLocaleString()}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">one-off · up to {seats} seats included</p>
+            <p className="text-[11px] text-muted-foreground mt-1">one-off · covers {count} clinicians + admin</p>
           </div>
         </div>
 
@@ -88,9 +91,23 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           ))}
         </ul>
 
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/20 bg-white/50 px-4 py-3 mb-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">How many clinicians?</p>
+            <p className="text-[11px] text-muted-foreground leading-snug">Sets your team access key. Front-desk / admin staff are included on top.</p>
+          </div>
+          <div className="flex items-center gap-2 flex-none">
+            <button type="button" aria-label="Fewer" onClick={() => setCount((c) => Math.max(1, c - 1))}
+              className="w-8 h-8 rounded-lg border border-slate-300 text-lg font-bold text-slate-600 hover:bg-slate-50">−</button>
+            <span className="w-7 text-center text-lg font-extrabold text-foreground">{count}</span>
+            <button type="button" aria-label="More" onClick={() => setCount((c) => Math.min(HUB_MAX, c + 1))}
+              className="w-8 h-8 rounded-lg border border-slate-300 text-lg font-bold text-slate-600 hover:bg-slate-50">+</button>
+          </div>
+        </div>
+
         {cheaperThanIndividual && (
           <p className="text-xs font-semibold text-emerald-700 mb-4 -mt-1">
-            That&apos;s less than {clinical} individual seats (A${individualCost.toLocaleString()}) — and the branded toolkit&apos;s included.
+            That&apos;s less than {count} individual online seats (A${individualCost.toLocaleString()}) — and the whole team is credentialled, not just one.
           </p>
         )}
 
@@ -105,9 +122,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           {!loading && <ArrowRight className="w-4 h-4" />}
         </button>
         <p className="text-[11px] text-muted-foreground mt-3">
-          {clinical > seats
-            ? `You have ${clinical} clinicians — the base covers ${seats}; add extra seats at checkout or on the call.`
-            : 'Secure checkout · instant access · GST invoice emailed.'}
+          Secure checkout · instant access · GST invoice emailed. Your access key covers {count} clinicians + your front-desk team — forward it once and each teammate gets their own login.
         </p>
         <p className="text-[11px] text-emerald-700 font-medium mt-2 inline-flex items-center gap-1">
           <ShieldCheck className="w-3.5 h-3.5" /> 7-day money-back guarantee — full refund before 2 modules are completed.

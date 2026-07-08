@@ -48,6 +48,9 @@ export const createCheckoutSchema = z
     preferredCity: locationSchema.optional(),
     promoCode: z.string().max(50).optional(),
     utm: utmSchema,
+    // Hub Pack only: buyer-declared clinician headcount → the access key's seat cap.
+    clinicianCount: z.number().int().min(1).max(12).optional(),
+    clinicName: z.string().max(120).optional(),
   })
   .superRefine((val, ctx) => {
     const needsLocation = val.courseType === 'full-course' || val.courseType === 'workshop-upgrade'

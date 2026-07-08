@@ -117,10 +117,15 @@ export async function createCourseCheckoutSession({
   promoCode,
   utm,
   bundleDiscountAud = 0,
+  clinicianCount,
+  clinicName,
 }: {
   courseType: CourseType
   location?: string
   preferredCity?: string
+  /** Hub Pack only: buyer-declared clinician headcount → the key's seat cap. */
+  clinicianCount?: number
+  clinicName?: string
   customerEmail?: string
   successUrl: string
   cancelUrl: string
@@ -294,6 +299,8 @@ export async function createCourseCheckoutSession({
       source: 'portal',
       timestamp: new Date().toISOString(),
       bundleDiscountAppliedCents: String(bundleDiscountApplied),
+      ...(clinicianCount ? { clinicianCount: String(clinicianCount) } : {}),
+      ...(clinicName ? { clinicName: clinicName.slice(0, 120) } : {}),
       ...(utm?.utm_source ? { utm_source: utm.utm_source } : {}),
       ...(utm?.utm_medium ? { utm_medium: utm.utm_medium } : {}),
       ...(utm?.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
