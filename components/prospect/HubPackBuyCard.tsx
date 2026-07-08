@@ -101,7 +101,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl bg-accent text-white hover:opacity-90 transition disabled:opacity-60"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-          Enrol the clinic — A${price.toLocaleString()}
+          Full clinic access — A${price.toLocaleString()}
           {!loading && <ArrowRight className="w-4 h-4" />}
         </button>
         <p className="text-[11px] text-muted-foreground mt-3">

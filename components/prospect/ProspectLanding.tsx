@@ -30,6 +30,7 @@ import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, clinicalCount, isTeamVerified } from '@/lib/prospect/pricing'
 import { IndividualInterestCard } from './IndividualInterestCard'
 import { HubPackBuyCard } from './HubPackBuyCard'
+import { InvestmentLadder } from './InvestmentLadder'
 import { DualStreamTabs } from './DualStreamTabs'
 import { getModulesMeta } from '@/data/module-meta'
 import { getEpModulesMeta } from '@/data/ep-modules'
@@ -280,6 +281,16 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             )}
           </div>
 
+          {/* All-options ladder — surfaces the in-person upgrade + on-site day to
+              smaller clinics too (the on-site HERO stays gated to 8+, but a Hub-
+              tier clinic asking for in-person, e.g. Instinct, must be able to see
+              and ask for it). */}
+          {!(teamVerified && clinical >= 8) && (
+            <div data-track-section="investment-ladder" className="mt-4">
+              <InvestmentLadder />
+            </div>
+          )}
+
           {/* Individual enrolment — the DIY tier, kept beside Hub/on-site so the
               single → hub → on-site ladder reads together: do it yourself and
               come to a course, or provide it for your team. Hidden when the
@@ -301,7 +312,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           </div>
 
           {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site only) */}
-          <div data-track-section="next-step">
+          <div id="next-step" data-track-section="next-step" className="scroll-mt-20">
             <NextStepCTA clinic={clinic} />
           </div>
 
