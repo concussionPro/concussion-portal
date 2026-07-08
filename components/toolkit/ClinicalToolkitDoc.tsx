@@ -22,10 +22,14 @@ export function ClinicalToolkitDoc({
   previewSectionLimit,
   unlockHref = '/pricing',
   defaultValues,
+  storageKey = 'clinical-toolkit',
 }: {
   templates: DischargeTemplate[]
   principles: Principles
   previewedSlugs?: string[]
+  /** localStorage namespace for saved fills. Override per-context (e.g.
+   *  per-patient) so one fill never bleeds into another. */
+  storageKey?: string
   /** When set, visible templates render only this many body sections then
    *  show a "rest unlocks with Hub Program" card. Prevents the prospect
    *  from extracting a complete usable document. */
@@ -42,7 +46,7 @@ export function ClinicalToolkitDoc({
   // Default to 0 sections in preview unless an explicit limit is given.
   const effectiveSectionLimit = isPreviewMode ? (previewSectionLimit ?? 0) : previewSectionLimit
   return (
-    <FillableDoc storageKey="clinical-toolkit" defaultValues={defaultValues} previewMode={isPreviewMode}>
+    <FillableDoc storageKey={storageKey} defaultValues={defaultValues} previewMode={isPreviewMode}>
       <Cover isPreviewMode={isPreviewMode} />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>

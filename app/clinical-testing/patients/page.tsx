@@ -132,15 +132,25 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
 
           {/* Referring-practitioner report (owner 2026-07-06): auto-built from
               the episode — clearance referral or extend-plan recommendation. */}
-          <a
-            href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patient.name)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            <FileText className="h-3.5 w-3.5" />
-            {patient.clearanceReady ? 'GP report — clearance referral' : 'GP report — episode summary'}
-          </a>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patient.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              {patient.clearanceReady ? 'GP report — clearance referral' : 'GP report — episode summary'}
+            </a>
+            {/* Full document suite, pre-filled from this patient's measured SST data */}
+            <Link
+              href={`/clinical-testing/documents?patient=${encodeURIComponent(patient.name)}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Documents — WorkCover / NDIS / school…
+            </Link>
+          </div>
 
           {recent.length > 0 && (
             <div className="mt-4">

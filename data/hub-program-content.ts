@@ -102,7 +102,7 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
     audience: 'Patient\'s general practitioner',
     purpose: 'Communicate the concussion assessment, working diagnosis, current management, and recommended follow-up to the patient\'s GP.',
     estimatedReadMinutes: 5,
-    mergeFields: ['patient_name', 'patient_dob', 'gp_name', 'gp_practice', 'date_of_injury', 'mechanism', 'date_of_assessment', 'scat6_symptom_severity', 'voms_findings', 'bess_score', 'cervical_findings', 'current_stage', 'red_flags_present', 'clinician_name', 'ahpra_number', 'clinic_name', 'review_date'],
+    mergeFields: ['patient_name', 'patient_dob', 'gp_name', 'gp_practice', 'date_of_injury', 'mechanism', 'date_of_assessment', 'scat6_symptom_severity', 'voms_findings', 'bess_score', 'cervical_findings', 'current_stage', 'red_flags_present', 'clinician_name', 'ahpra_number', 'clinic_name', 'review_date', 'sst_initial_hrt', 'sst_latest_hrt', 'sst_band', 'sst_sessions', 'sst_duration', 'sst_recovery_statement'],
     sections: [
       {
         heading: 'Re: {patient_name}, DOB {patient_dob}',
@@ -125,6 +125,15 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
           'Modified Balance Error Scoring System (BESS): {bess_score} errors.',
           'Cervical spine assessment: {cervical_findings}',
           'Red flag screen: {red_flags_present}',
+        ],
+      },
+      {
+        heading: 'Objective exercise-tolerance measures (SST Trainer)',
+        body: [
+          'Graded exertion testing (Buffalo Concussion Treadmill/Bike Test protocol) was used to measure the heart-rate threshold (HRt) at which symptoms are provoked, and to prescribe a sub-symptom aerobic training band per the 2023 Amsterdam consensus.',
+          'Initial measured HRt: {sst_initial_hrt}. Most recent measured HRt: {sst_latest_hrt}. Prescribed sub-symptom training band: {sst_band}.',
+          'Clinician-supervised training sessions completed: {sst_sessions}, over {sst_duration}.',
+          '{sst_recovery_statement}',
         ],
       },
       {
@@ -387,7 +396,7 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
     audience: 'WorkCover / insurer / employer return-to-work coordinator',
     purpose: 'Structured report for workers\' compensation claims involving concussion, supporting return-to-work decisions.',
     estimatedReadMinutes: 6,
-    mergeFields: ['patient_name', 'dob', 'employer_name', 'occupation', 'date_of_injury', 'mechanism', 'claim_number', 'date_of_assessment', 'scat6_total', 'voms_findings', 'bess_score', 'current_capacity', 'restrictions', 'review_date', 'clinician_name', 'ahpra_number', 'clinic_name', 'date'],
+    mergeFields: ['patient_name', 'dob', 'employer_name', 'occupation', 'date_of_injury', 'mechanism', 'claim_number', 'date_of_assessment', 'scat6_total', 'voms_findings', 'bess_score', 'current_capacity', 'restrictions', 'review_date', 'clinician_name', 'ahpra_number', 'clinic_name', 'date', 'sst_initial_hrt', 'sst_latest_hrt', 'sst_band', 'sst_sessions', 'sst_duration', 'sst_recovery_statement'],
     sections: [
       {
         heading: 'WorkCover concussion report',
@@ -414,6 +423,15 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
           'Modified BESS: {bess_score} errors.',
           'Cervical spine examination findings: documented in chart.',
           'Standard neuroimaging not clinically indicated. No red flags identified.',
+        ],
+      },
+      {
+        heading: 'Objective exercise-tolerance measures (SST Trainer)',
+        body: [
+          'Graded exertion testing on the Buffalo Concussion Treadmill/Bike Test protocol was used to measure the heart rate at which symptoms are provoked (the heart-rate threshold, HRt) and to prescribe a sub-symptom aerobic training band.',
+          'Initial measured HRt: {sst_initial_hrt}. Most recent measured HRt: {sst_latest_hrt}. Prescribed sub-symptom training band: {sst_band}.',
+          'Clinician-supervised training sessions completed: {sst_sessions}, over {sst_duration}.',
+          '{sst_recovery_statement}',
         ],
       },
       {
@@ -475,7 +493,7 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
     audience: 'NDIS planner / Local Area Coordinator / Support Coordinator',
     purpose: 'Structured allied health report for NDIS participants where concussion is a contributing factor to functional capacity.',
     estimatedReadMinutes: 7,
-    mergeFields: ['participant_name', 'ndis_number', 'dob', 'plan_review_date', 'date_of_injury', 'date_of_assessment', 'presenting_concerns', 'functional_impact', 'goals', 'recommended_supports', 'clinician_name', 'ahpra_number', 'clinic_name', 'date'],
+    mergeFields: ['participant_name', 'ndis_number', 'dob', 'plan_review_date', 'date_of_injury', 'date_of_assessment', 'presenting_concerns', 'functional_impact', 'goals', 'recommended_supports', 'clinician_name', 'ahpra_number', 'clinic_name', 'date', 'sst_initial_hrt', 'sst_latest_hrt', 'sst_band', 'sst_sessions', 'sst_duration', 'sst_recovery_statement'],
     sections: [
       {
         heading: 'NDIS Allied Health Report — Concussion / Acquired Brain Injury Contribution',
@@ -505,6 +523,15 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
         body: [
           'Comprehensive concussion assessment conducted at {clinic_name} on {date_of_assessment}, including symptom severity, vestibular/ocular motor function, balance, cervical contribution, and functional impact screening.',
           'Specific findings are documented in the clinical record and available to the NDIS on request.',
+        ],
+      },
+      {
+        heading: 'Objective exercise-tolerance measures (SST Trainer)',
+        body: [
+          'Graded exertion testing (Buffalo Concussion Treadmill/Bike Test protocol) measures the heart rate at which symptoms are provoked (the heart-rate threshold, HRt) — an objective marker of exercise tolerance that is tracked over the rehabilitation episode.',
+          'Initial measured HRt: {sst_initial_hrt}. Most recent measured HRt: {sst_latest_hrt}. Prescribed sub-symptom training band: {sst_band}.',
+          'Clinician-supervised training sessions completed: {sst_sessions}, over {sst_duration}.',
+          '{sst_recovery_statement}',
         ],
       },
       {

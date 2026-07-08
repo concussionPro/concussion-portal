@@ -51,6 +51,10 @@ function Shell() {
   const access = useClinicalAccess()
   const [clinic, setClinic] = useState<Clinic | null | undefined>(undefined)
   const [plan, setPlan] = useState<'trial' | 'active' | null>(null)
+  // ?patient=<label> (from the patient list) → pre-fill the docs from their
+  // measured SST episode. Read off the URL to avoid a Suspense boundary.
+  const [patientLabel, setPatientLabel] = useState<string | null>(null)
+  const [sstFields, setSstFields] = useState<Record<string, string>>({})
 
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
@@ -60,7 +64,21 @@ function Shell() {
         setPlan(d?.usage?.plan ?? null)
       })
       .catch(() => setClinic(null))
+    const p = new URLSearchParams(window.location.search).get('patient')
+    setPatientLabel(p && p.trim() ? p.trim() : null)
   }, [])
+
+  // Fetch the patient's objective SST summary → autofill the WorkCover/NDIS/GP
+  // merge fields (measured HRt, band, sessions, trajectory).
+  useEffect(() => {
+    if (!patientLabel || !clinic?.code || !clinic?.viewKey) return
+    void fetch(
+      `/api/sst/patient-summary?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patientLabel)}`,
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.mergeFields) setSstFields(d.mergeFields) })
+      .catch(() => {})
+  }, [patientLabel, clinic])
 
   if (isLoading || access === 'loading') {
     return <Frame><p className="text-sm text-muted-foreground">Loading…</p></Frame>
@@ -98,8 +116,18 @@ function Shell() {
           <DocumentsPaywall clinicName={clinic?.clinicName ?? null} />
         ) : (
           <>
+            {patientLabel && (
+              <div className="mb-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-2.5 text-[13px] text-teal-800">
+                Pre-filled from <strong>{patientLabel}</strong>&rsquo;s SST episode
+                {Object.keys(sstFields).length === 0 && ' — loading measured data…'}
+              </div>
+            )}
             <SstReportCallout clinic={clinic} />
             <ClinicalToolkitDoc
+              // Remount when the patient changes OR the async SST fields arrive,
+              // so the autofill takes effect (buyer mode doesn't re-sync in place).
+              key={`${patientLabel ?? 'none'}:${Object.keys(sstFields).length > 0 ? 'sst' : 'base'}`}
+              storageKey={`sst-docs:${patientLabel ?? 'clinic'}`}
               templates={DISCHARGE_TEMPLATES}
               principles={DOCUMENTATION_PRINCIPLES}
               unlockHref="/clinical-testing/subscribe"
@@ -109,6 +137,8 @@ function Shell() {
                 date_of_assessment: today(),
                 date: today(),
                 review_date: '',
+                ...(patientLabel ? { patient_name: patientLabel, participant_name: patientLabel } : {}),
+                ...sstFields,
               }}
             />
           </>
