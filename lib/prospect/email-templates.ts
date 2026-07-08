@@ -143,16 +143,27 @@ const SOLO_PLURAL: Record<Discipline, string> = {
 const REGULATORY_LINE =
   'Community sport now carries a mandatory 21-day stand-down under the AIS/SMA concussion guidelines, and physios and GPs are named clearance providers.'
 
-// Season-aware opener prefix (Zac 2026-06-16, data-backed: timeliness lifts
-// cold reply rates — the first line is what gets read). AU contact-sport
-// (AFL/NRL/rugby/football) runs ~Apr-Sep, when concussion presentations peak;
-// Feb-Mar is pre-season ramp. Off-season we don't force a seasonal claim.
-// `now` injectable for tests. Returns '' or a short lead-in clause.
-function seasonalPrefix(now: Date = new Date()): string {
-  const m = now.getMonth() // 0=Jan
-  if (m >= 3 && m <= 8) return 'With winter sport season underway, ' // Apr-Sep
-  if (m === 1 || m === 2) return 'With footy season about to start, ' // Feb-Mar
-  return ''
+/** Month 0–11 in Australia/Melbourne, NOT UTC. The season claim must reflect the
+ *  AU sporting calendar at the clinic's local time — evaluating `getMonth()` on
+ *  Vercel's UTC clock lags ~10–11h and can emit the previous month's hook near a
+ *  month boundary (a Melbourne-evening admin preview on 31 Mar would say "about
+ *  to start" into April). Mirrors the partner lane's AEST date math. */
+export function melbourneMonth(now: Date = new Date()): number {
+  return parseInt(now.toLocaleString('en-US', { timeZone: 'Australia/Melbourne', month: 'numeric' }), 10) - 1
+}
+
+// Season-aware opener prefix (Zac 2026-06-16, data-backed: timeliness lifts cold
+// reply rates — the first line is what gets read). AU contact-sport (AFL/NRL/
+// rugby/football): Feb–Mar pre-season ramp, Apr–Aug in season, Sep finals (the
+// concussion peak), Oct–Jan off-season (no forced claim). Evaluated in AEST +
+// unit-tested (tests/sst... prospect) so a boundary edit can't silently ship
+// wrong-season copy. `now` injectable for tests.
+export function seasonalPrefix(now: Date = new Date()): string {
+  const m = melbourneMonth(now)
+  if (m === 1 || m === 2) return 'With footy season about to start, ' // Feb–Mar
+  if (m >= 3 && m <= 7) return 'With winter sport season underway, ' // Apr–Aug
+  if (m === 8) return 'With finals season here, ' // Sep — concussion presentations peak
+  return '' // Oct–Jan off-season — no forced seasonal claim
 }
 
 // The pitch IS the custom portal (Zac 2026-06-10). Every prospect has a
