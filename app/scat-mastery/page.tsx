@@ -41,6 +41,58 @@ const courseSchema = createCourseSchema({
   priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
 })
 
+// Second Course node: the FREE course this page actually signs users up for.
+// Hand-rolled (not createCourseSchema) because that helper asserts paid-course
+// facts — CPD-hour credential and isAccessibleForFree: false — that are wrong
+// here. The free course awards a certificate of completion, not CPD hours.
+const freeCourseSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: 'SCAT6 & SCOAT6 Mastery (Free Course)',
+  description:
+    'Free ~1-hour online course for healthcare professionals on administering, scoring and interpreting the SCAT6 and SCOAT6 concussion assessment tools, including red-flag recognition and documentation. Certificate on completion. No credit card required.',
+  inLanguage: 'en-AU',
+  provider: {
+    '@type': 'Organization',
+    name: 'Concussion Education Australia',
+    url: 'https://concussion-education-australia.com',
+  },
+  isAccessibleForFree: true,
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'AUD',
+    availability: 'https://schema.org/InStock',
+    url: `${CONFIG.SEO.SITE_URL}/scat-mastery`,
+  },
+  hasCourseInstance: [
+    {
+      '@type': 'CourseInstance',
+      courseMode: 'online',
+      inLanguage: 'en-AU',
+    },
+  ],
+  educationalCredentialAwarded: {
+    '@type': 'EducationalOccupationalCredential',
+    name: 'Certificate of Completion',
+    credentialCategory: 'Certificate',
+  },
+  about: { '@type': 'MedicalCondition', name: 'Sport-Related Concussion' },
+  educationalLevel: 'Professional Development',
+  audience: {
+    '@type': 'EducationalAudience',
+    audienceType: 'Healthcare Professionals',
+    educationalRole: ['Medical Doctor', 'Physiotherapist', 'Osteopath', 'Sports Trainer'],
+  },
+  teaches: [
+    'SCAT-6 Assessment Protocol',
+    'SCOAT-6 Office Assessment',
+    'Concussion Red Flags Recognition',
+    'Concussion Assessment Documentation',
+  ],
+  timeRequired: 'PT1H',
+}
+
 /**
  * Fire the free-signup Google Ads conversion exactly once, navigating from
  * gtag's event_callback so the hit is dispatched before the page unloads.
@@ -175,6 +227,10 @@ export default function SCATMasteryPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(freeCourseSchema) }}
       />
       {/* Ambient gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-teal-50/40" />

@@ -16,6 +16,24 @@ import {
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
+import { createCourseSchema } from '@/lib/schema-markup'
+
+// Flagship Course structured data. CPD truth: 8 hours online; 14 CPD hours
+// ONLY as online + in-person practical day combined — which is what this
+// Complete Course page sells. Price always via CONFIG, never hardcoded.
+const courseSchema = createCourseSchema({
+  name: 'Concussion Clinical Mastery — Complete Course',
+  description:
+    'Hybrid concussion assessment and management training for Australian healthcare professionals — 8 online modules (8 CPD hours) plus a full-day in-person practical workshop (14 CPD hours combined) covering SCAT6, SCOAT6, VOMS, BESS and return-to-play protocols. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.',
+  cpdHours: 14,
+  priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
+  instances: [
+    {
+      courseMode: 'blended',
+      priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
+    },
+  ],
+})
 
 const locations = Object.values(CONFIG.LOCATIONS)
   .map(loc => ({
@@ -40,6 +58,10 @@ const included = [
 export default function CoursePage() {
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
+      />
       <SiteNav />
 
       {/* Hero */}

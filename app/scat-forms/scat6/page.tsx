@@ -20,9 +20,44 @@ export const metadata: Metadata = {
   },
 }
 
+// Visible Q&A content — rendered below the form AND mirrored 1:1 in the
+// FAQPage JSON-LD (Google requires exact parity between schema and page).
+const faqs = [
+  {
+    question: 'When should clinicians use the SCAT6 vs the SCOAT6?',
+    answer:
+      'Use the SCAT6 for acute assessment — on the sideline or in the clinic within the first 72 hours of injury, and up to 7 days. From 72 hours onwards, use the SCOAT6 (Sport Concussion Office Assessment Tool), which is built for structured clinic follow-up and repeat visits through the sub-acute period, typically Day 3 to Day 30.',
+  },
+  {
+    question: 'Who can administer the SCAT6?',
+    answer:
+      'The SCAT6 is designed for use by licensed healthcare professionals — doctors, physiotherapists, osteopaths and other clinicians trained in concussion assessment. It supports, but does not replace, clinical judgement. Concussion Education Australia offers a free ~1-hour online course covering SCAT6 and SCOAT6 administration, with a certificate on completion.',
+  },
+  {
+    question: 'What age group is the SCAT6 intended for?',
+    answer:
+      'The SCAT6 is intended for athletes aged 13 and over. Children aged 8–12 should be assessed with the Child SCAT6, which pairs a child self-report with a parent/guardian symptom report and adjusts the cognitive and balance components for age.',
+  },
+  {
+    question: 'Is this digital SCAT6 form free to use?',
+    answer:
+      'Yes. This fillable SCAT6 is free for clinical use — scores calculate automatically as you complete each section, drafts save in your browser, and the finished assessment exports as a PDF for the medical record. A free fillable PDF version is also available to download and print.',
+  },
+]
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
+    {
+      '@type': 'FAQPage',
+      '@id': `${PAGE_URL}#faq`,
+      inLanguage: 'en-AU',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    },
     {
       '@type': 'WebApplication',
       '@id': `${PAGE_URL}#webapp`,
@@ -73,35 +108,50 @@ export default function SCAT6Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Crawlable intro */}
+      {/* Crawlable definition block */}
       <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 mb-3">
-          SCAT6 Online Form — Free Fillable SCAT6 Calculator
-        </h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-3">What is the SCAT6?</h2>
         <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
           <p>
-            This is a free, web-based fillable version of the SCAT6 (Sport Concussion Assessment
-            Tool, 6th Edition) — the standardised concussion assessment instrument from the
-            Amsterdam 2022 International Consensus on Concussion in Sport, published in the
-            British Journal of Sports Medicine in 2023. Symptom, cognitive and balance scores are
-            calculated automatically as you complete each section, and the finished assessment can
-            be exported as a PDF for the medical record.
+            The SCAT6 (Sport Concussion Assessment Tool, 6th Edition) is the standardised tool
+            for the acute assessment of sport-related concussion in athletes aged 13 and over. It
+            was developed through the 2022 Amsterdam International Consensus on Concussion in
+            Sport and published in the British Journal of Sports Medicine in 2023, replacing the
+            SCAT5. The SCAT6 combines immediate on-field screening — red flags, observable signs
+            and the Maddocks questions — with an off-field assessment covering symptom
+            evaluation, cognitive screening, neurological examination and balance testing.
           </p>
           <p>
-            The SCAT6 is intended for the acute assessment of athletes aged 13 and over — ideally
-            within the first 72 hours post-injury and up to 7 days. Beyond that window, the SCOAT6
-            office assessment is the more appropriate tool; for children aged 8–12, use the Child
-            SCAT6.
-          </p>
-          <p>
-            Drafts save automatically to your browser, so an interrupted assessment can be resumed
-            on the same device. This tool is intended for use by trained healthcare professionals
-            and does not replace clinical judgement.
+            It is designed for use by licensed healthcare professionals and performs best within
+            the first 72 hours after injury, remaining useful up to 7 days post-injury. Beyond
+            that window, the SCOAT6 office assessment is the more appropriate tool, and children
+            aged 8–12 should be assessed with the Child SCAT6. This page provides a free,
+            fillable digital SCAT6 that calculates scores automatically and exports the completed
+            assessment as a PDF for the medical record.
           </p>
         </div>
+        <p className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500">
+          Reviewed by Zac Lewis — Osteopath (AHPRA), B.Clin.Sci, M.Ost.Med · Updated July 2026
+        </p>
       </section>
 
       <SCAT6Client />
+
+      {/* Crawlable Q&A — mirrored exactly in the FAQPage JSON-LD above */}
+      <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-6">
+        <div className="space-y-6">
+          {faqs.map((f) => (
+            <div key={f.question}>
+              <h2 className="text-lg font-bold text-slate-900 mb-2">{f.question}</h2>
+              <p className="text-sm text-slate-600 leading-relaxed">{f.answer}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-500">
+          Drafts save automatically to your browser, so an interrupted assessment can be resumed
+          on the same device. This tool supports, and does not replace, clinical judgement.
+        </p>
+      </section>
     </>
   )
 }

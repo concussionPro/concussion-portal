@@ -9,7 +9,10 @@ const DESCRIPTION = "Zac Lewis is an AHPRA-registered Osteopath (B.Clin.Sci., M.
 const URL = 'https://portal.concussion-education-australia.com/about/zac-lewis'
 
 export const metadata: Metadata = {
-  title: TITLE,
+  // No brand in the <title> — the root layout's title template appends
+  // "| Concussion Education Australia" (was double-branded before).
+  // og:title keeps the full TITLE (templates don't apply to openGraph).
+  title: 'Zac Lewis — Founder + Lead Educator',
   description: DESCRIPTION,
   keywords: 'zac lewis osteopath, zac lewis concussion, zac lewis ahpra, founder concussion education australia, ahpra registered osteopath author, australian concussion educator',
   openGraph: { title: TITLE, description: DESCRIPTION, type: 'profile', url: URL },

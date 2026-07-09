@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     description: 'Master SCAT6 & SCOAT6 concussion assessment. FREE ~1-hour course with fillable PDFs and training modules.',
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/scat-mastery',
+    images: ['/og-image.jpg'],
   },
   twitter: {
     card: 'summary_large_image',

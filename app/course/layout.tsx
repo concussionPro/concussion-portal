@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     description: '8 online modules + full-day workshop. AHPRA aligned, endorsed by Osteopathy Australia. For physiotherapists, osteopaths, and GPs.',
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/course',
+    images: ['/og-image.jpg'],
   },
   alternates: {
     canonical: 'https://portal.concussion-education-australia.com/course',

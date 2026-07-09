@@ -9,7 +9,8 @@ import { ClinicianMockDashboard } from '@/components/ai-course/ClinicianMockDash
 import { Library, FileQuestion, Award, ArrowRight, Wrench, BookMarked, PlayCircle, Clock, BookOpen, GraduationCap, Check } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'AI in Clinical Practice — CPD Course for Australian Clinicians | CEA',
+  // No "| CEA" suffix — the root layout's title template appends the brand.
+  title: 'AI in Clinical Practice — CPD Course for Australian Clinicians',
   description:
     'AHPRA-aligned AI compliance course for Australian clinicians — scribes, Privacy Act, documentation, indemnity positions. 2 CPD hours, A$99, certificate on completion.',
   alternates: { canonical: '/courses/ai-in-clinical-practice' },

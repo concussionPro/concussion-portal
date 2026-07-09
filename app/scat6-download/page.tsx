@@ -26,6 +26,67 @@ declare global {
   }
 }
 
+const PAGE_URL = 'https://portal.concussion-education-australia.com/scat6-download'
+
+// Visible Q&A content — rendered below the download form AND mirrored 1:1 in
+// the FAQPage JSON-LD (Google requires exact parity between schema and page).
+const faqs = [
+  {
+    question: 'What is included in the free SCAT6 download?',
+    answer:
+      'You can download fillable PDF versions of the SCAT6 (the acute/sideline assessment) and the SCOAT6 (the office assessment for follow-up from 72 hours post-injury). Each PDF can be typed into directly or printed and completed by hand, and you can print as many copies as you need.',
+  },
+  {
+    question: 'Who can use the SCAT6 and SCOAT6?',
+    answer:
+      'The SCAT6 and SCOAT6 are designed for licensed healthcare professionals trained in concussion assessment — doctors, physiotherapists, osteopaths and other clinicians. They support, but do not replace, clinical judgement.',
+  },
+  {
+    question: 'Is there a version of the SCAT6 I can complete online?',
+    answer:
+      'Yes. Concussion Education Australia also provides free web-based SCAT6, SCOAT6 and Child SCAT6 forms that calculate scores automatically as you complete each section and export the finished assessment as a PDF for the medical record.',
+  },
+  {
+    question: 'Is there free training on how to administer the SCAT6?',
+    answer:
+      'Yes. The free SCAT6 & SCOAT6 Mastery course is a ~1-hour online course covering administration, scoring and interpretation of both tools, plus red-flag recognition and documentation. It is free, self-paced, and includes a certificate on completion.',
+  },
+]
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'MedicalWebPage',
+      '@id': `${PAGE_URL}#webpage`,
+      name: 'Free SCAT6 & SCOAT6 Fillable PDF Download',
+      url: PAGE_URL,
+      inLanguage: 'en-AU',
+      description:
+        'Free fillable SCAT6 and SCOAT6 PDF forms (Amsterdam 2022 consensus, BJSM 2023) for download by healthcare professionals.',
+      about: {
+        '@type': 'MedicalCondition',
+        name: 'Concussion',
+        alternateName: 'Sport-related concussion',
+      },
+      audience: {
+        '@type': 'MedicalAudience',
+        audienceType: 'Healthcare professionals',
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${PAGE_URL}#faq`,
+      inLanguage: 'en-AU',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    },
+  ],
+}
+
 export default function SCAT6DownloadPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -113,6 +174,10 @@ export default function SCAT6DownloadPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Ambient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-teal-50/40" />
       <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-gradient-to-bl from-teal-100/40 to-transparent blur-3xl pointer-events-none" />
@@ -413,6 +478,45 @@ export default function SCAT6DownloadPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* ── Crawlable definition block ── */}
+        <div className="mt-14 bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-7 shadow-lg shadow-slate-200/40">
+          <h2 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">What is the SCAT6?</h2>
+          <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
+            <p>
+              The SCAT6 (Sport Concussion Assessment Tool, 6th Edition) is the standardised tool
+              for assessing sport-related concussion in athletes aged 13 and over, developed
+              through the 2022 Amsterdam International Consensus on Concussion in Sport and
+              published in the British Journal of Sports Medicine in 2023. It is an acute
+              assessment — ideally used within the first 72 hours after injury — covering red
+              flags, observable signs, symptom evaluation, cognitive screening and balance
+              testing.
+            </p>
+            <p>
+              Its companion tool, the SCOAT6 (Sport Concussion Office Assessment Tool), is the
+              structured office assessment for follow-up from 72 hours post-injury onwards,
+              typically Day 3 to Day 30. Both tools are intended for use by licensed healthcare
+              professionals and are the expected standard for concussion assessment across
+              Australian sport. The fillable PDF versions on this page are free to download, type
+              into directly or print for clinic use.
+            </p>
+          </div>
+          <p className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500">
+            Reviewed by Zac Lewis — Osteopath (AHPRA), B.Clin.Sci, M.Ost.Med · Updated July 2026
+          </p>
+        </div>
+
+        {/* ── Crawlable Q&A — mirrored exactly in the FAQPage JSON-LD ── */}
+        <div className="mt-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-7 shadow-lg shadow-slate-200/40">
+          <div className="space-y-6">
+            {faqs.map((f) => (
+              <div key={f.question}>
+                <h2 className="text-lg font-bold text-slate-900 mb-2 tracking-tight">{f.question}</h2>
+                <p className="text-sm text-slate-600 leading-relaxed">{f.answer}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

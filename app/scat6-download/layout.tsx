@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     description: 'Free fillable SCAT6 and SCOAT6 PDF forms — instant download after entering your email. 2026 updated.',
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/scat6-download',
+    images: ['/og-image.jpg'],
   },
   twitter: {
     card: 'summary_large_image',

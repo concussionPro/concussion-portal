@@ -9,6 +9,9 @@ export const metadata = {
   title: 'Custom Concussion Portal for Sports Organisations & Health Systems | CEA',
   description:
     'A custom-branded concussion portal for your organisation — pre-season SCAT6/SCOAT6 baselines, serial testing against each athlete or patient’s own baseline, heart-rate-paced return-to-sport, and your team trained and CPD-credentialed.',
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/partners',
+  },
 }
 
 const CAL = 'https://cal.com/zac-lewis-so8zjs/30min?utm_source=partners&utm_medium=cta&utm_campaign=custom-portal'

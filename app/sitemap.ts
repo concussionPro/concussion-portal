@@ -182,6 +182,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.85,
     },
     {
+      url: `${baseUrl}/partners`,
+      lastModified: new Date('2026-07-10'),
+      changeFrequency: 'monthly',
+      priority: 0.85,
+    },
+    {
       url: `${baseUrl}/courses`,
       lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',

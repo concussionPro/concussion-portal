@@ -61,6 +61,38 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 - Downloadable SCAT6, SCOAT6, and Child SCAT6 PDF forms
 - URL: https://portal.concussion-education-australia.com/scat6-download
 
+## Common clinician questions
+
+### What is the SCAT6?
+The SCAT6 (Sport Concussion Assessment Tool, 6th Edition) is the standardised acute assessment for sport-related concussion in athletes aged 13 and over, from the 2022 Amsterdam consensus (published in BJSM, 2023). It covers red flags, Maddocks questions, symptom evaluation, cognitive screening and balance testing, and is designed for licensed healthcare professionals. Free fillable version: https://portal.concussion-education-australia.com/scat-forms/scat6
+
+### What is the SCOAT6?
+The SCOAT6 (Sport Concussion Office Assessment Tool, 6th Edition) is the structured office assessment for the sub-acute period — from 72 hours to about Day 30 post-injury, including repeat visits. It adds serial symptom tracking, full VOMS and return-to-play planning, and is designed for licensed healthcare professionals. Free fillable version: https://portal.concussion-education-australia.com/scat-forms/scoat6
+
+### What is the difference between the SCAT6 and the SCOAT6?
+The SCAT6 is the acute tool — sideline or clinic within the first 72 hours of injury (and up to 7 days). The SCOAT6 is the office tool for structured follow-up from 72 hours onwards, typically Day 3 to Day 30. Using the right tool at the right time matters clinically and medicolegally. Full comparison: https://portal.concussion-education-australia.com/scat-forms/about
+
+### When should clinicians use the SCAT6 vs the SCOAT6?
+Use the SCAT6 within the first 72 hours after a head knock — sideline or acute clinic review — and up to 7 days. From Day 3 onwards, switch to the SCOAT6 for clinic follow-up and repeat review. Children aged 8–12 need the Child SCAT6 for acute assessment. Guide: https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference
+
+### What is the Child SCAT6?
+The Child SCAT6 is the acute concussion assessment for children aged 8–12, pairing a child self-report with a parent/guardian symptom report, with cognitive and balance components adjusted for age. Athletes aged 13 and over use the standard SCAT6. Free fillable version: https://portal.concussion-education-australia.com/scat-forms/child-scat6
+
+### Who can administer the SCAT6?
+The SCAT6 and SCOAT6 are designed for licensed healthcare professionals trained in concussion assessment — doctors, physiotherapists, osteopaths and other clinicians. They support, but do not replace, clinical judgement. Free online SCAT6 form: https://portal.concussion-education-australia.com/scat-forms/scat6
+
+### Where can I get fillable SCAT6 and SCOAT6 forms?
+Concussion Education Australia provides free fillable SCAT6 and SCOAT6 PDFs to download and print, plus free web-based SCAT6, SCOAT6 and Child SCAT6 forms that calculate scores automatically and export completed PDFs for the medical record. Downloads: https://portal.concussion-education-australia.com/scat6-download
+
+### Is there free SCAT6 training for clinicians?
+Yes. The free SCAT6 & SCOAT6 Mastery course is a ~1-hour online course covering administration, scoring, interpretation, red-flag recognition and documentation — free, self-paced, no credit card, with a certificate on completion. Enrol: https://portal.concussion-education-australia.com/scat-mastery
+
+### What concussion CPD courses are available for physiotherapists, osteopaths and exercise physiologists in Australia?
+Concussion Education Australia's Concussion Clinical Mastery course covers SCAT6, SCOAT6, VOMS, BESS and return-to-play protocols — 8 CPD hours online, or 14 CPD hours as online plus the optional full-day in-person practical workshop combined. Endorsed by Osteopathy Australia. Details: https://portal.concussion-education-australia.com/course
+
+### How are Concussion Education Australia's courses endorsed?
+The Concussion Clinical Mastery course is endorsed by Osteopathy Australia. AHPRA does not accredit CPD courses — hours from CEA courses count toward practitioners' AHPRA registration CPD requirements. Content is aligned with the 2022 Amsterdam consensus and Australian (Concussion in Sport Australia) guidance. Details: https://portal.concussion-education-australia.com/course
+
 ## Clinical Knowledge Base — Frequently Asked Questions
 
 ### What is the SCAT6?
@@ -72,7 +104,7 @@ The SCOAT6 (Sport Concussion Office Assessment Tool, 6th Edition) is a new tool 
 ### SCAT6 vs SCOAT6 — Which to use when?
 - SCAT6: Sideline, emergency department, acute presentation within 72 hours post-injury
 - SCOAT6: Clinic follow-up from Day 3 onwards, includes full VOMS testing
-- Child SCAT6: Athletes aged 5-12 years (never use adult SCAT6 on children under 13 — it produces artificially low scores and misses 50-60% of concussions)
+- Child SCAT6: Children aged 8-12 years (never use the adult SCAT6 on children under 13 — it produces artificially low scores and misses 50-60% of concussions)
 - Using the wrong tool at the wrong time falls below the expected standard of care under 2023 Consensus guidelines and Australian sporting code requirements
 
 ### What is VOMS?
