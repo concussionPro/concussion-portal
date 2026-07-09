@@ -478,7 +478,7 @@ export const module2: Module = {
     'Bey, T., & Ostick, B. (2009). Second impact syndrome. Western Journal of Emergency Medicine, 10(1), 6–10. https://doi.org/10.5811/westjem.2009.1.637',
     'Schneider, K. J., Leddy, J. J., Guskiewicz, K. M., et al. (2017). Rest and treatment/rehabilitation following sport-related concussion: a systematic review. British Journal of Sports Medicine, 51(12), 930–934. https://doi.org/10.1136/bjsports-2016-097475',
     'Quatman-Yates, C. C., Hunter-Giordano, A., Shimamura, K. K., et al. (2020). Physical therapy evaluation and treatment after concussion/mild traumatic brain injury: clinical practice guidelines. Journal of Orthopaedic & Sports Physical Therapy, 50(4), CPG1–CPG73. https://doi.org/10.2519/jospt.2020.0301',
-    'Haider, M. N., Leddy, J. J., Pavlesen, S., et al. (2018). A systematic review of criteria used to define recovery from sport-related concussion in youth athletes. British Journal of Sports Medicine, 52(18), 1179–1190. https://doi.org/10.1136/bjsports-2018-099423',
+    'Haider, M. N., Leddy, J. J., Pavlesen, S., et al. (2018). A systematic review of criteria used to define recovery from sport-related concussion in youth athletes. British Journal of Sports Medicine, 52(18), 1179–1190. https://doi.org/10.1136/bjsports-2016-096551',
   ],
   parts: [
     {
