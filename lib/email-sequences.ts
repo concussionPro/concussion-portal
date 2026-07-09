@@ -317,7 +317,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
   {
     daysBefore: 7,
     subject: 'Your workshop is one week away — here\'s how to prepare',
-    template: (name: string, workshopCity: string, workshopDate: string) => emailShell(`
+    template: (name: string, workshopCity: string, workshopDate: string, loginLink?: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>Your hands-on concussion workshop in <strong>${workshopCity}</strong> is one week away (<strong>${workshopDate}</strong>).</p>
       <p><strong>To get the most from the day, please complete:</strong></p>
@@ -332,7 +332,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
         &#8226; A pen and your favourite clinical notebook
       </div>
       <p>Final venue directions and parking entrance details are in your day-before reminder email.</p>
-      <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_7d', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
+      <center><a href="${utm(loginLink || 'https://portal.concussion-education-australia.com/login', 'workshop_7d', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -340,7 +340,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
   {
     daysBefore: 1,
     subject: 'Tomorrow\'s workshop — everything you need to know',
-    template: (name: string, workshopCity: string, workshopDate: string) => emailShell(`
+    template: (name: string, workshopCity: string, workshopDate: string, _loginLink?: string) => emailShell(`
       <h2>See you tomorrow, ${escapeHtml(name.split(' ')[0])}!</h2>
       <p>Your concussion workshop in <strong>${workshopCity}</strong> is tomorrow (<strong>${workshopDate}</strong>).</p>
       <div class="callout">
@@ -628,7 +628,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 7,
     subject: (city: string, count: number, remaining: number) =>
       `${city}: ${count} registered — ${remaining} more to confirm your date`,
-    template: (name: string, city: string, count: number, threshold: number) => {
+    template: (name: string, city: string, count: number, threshold: number, _loginLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
@@ -647,7 +647,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 14,
     subject: (city: string, count: number, remaining: number) =>
       `${city}: ${count} registered — ${remaining} more to confirm your date`,
-    template: (name: string, city: string, count: number, threshold: number) => {
+    template: (name: string, city: string, count: number, threshold: number, loginLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
@@ -656,7 +656,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
           <strong>${city}:</strong> ${count} of ${threshold} spots filled — ${remaining > 0 ? `${remaining} more needed` : 'threshold reached!'}<br>
         </div>
         <p>Have you started the online modules? Clinicians who complete them before the workshop report the highest confidence gains in their practice.</p>
-        <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_momentum_d14', 'continue')}" class="cta-btn">Continue Your Modules</a></center>
+        <center><a href="${utm(loginLink || 'https://portal.concussion-education-australia.com/login', 'workshop_momentum_d14', 'continue')}" class="cta-btn">Continue Your Modules</a></center>
         <div class="sig">Zac</div>
       `)
     },
@@ -665,7 +665,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 21,
     subject: (city: string, _count?: number, _remaining?: number) =>
       `Your ${city} concussion workshop — building the next date`,
-    template: (name: string, city: string, _count?: number, _threshold?: number) => {
+    template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string) => {
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
         <p>Just a note that you're on the list for the next ${city} hands-on concussion workshop — we run these as demand opens up in each city and you'll get plenty of notice once the date's confirmed.</p>
@@ -679,7 +679,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 28,
     subject: (city: string, _count?: number, _remaining?: number) =>
       `${city} concussion workshop — still on your radar?`,
-    template: (name: string, city: string, _count?: number, _threshold?: number) => {
+    template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string) => {
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
         <p>Month check-in — you're still on the list for the next ${city} hands-on concussion workshop. We confirm dates as demand opens up in each city, and you'll get plenty of notice when yours lands.</p>
@@ -693,7 +693,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 58,
     subject: (city: string, count: number, remaining: number) =>
       `Final check-in — ${city} needs ${remaining} more to lock in a date`,
-    template: (name: string, city: string, count: number, threshold: number) => {
+    template: (name: string, city: string, count: number, threshold: number, _loginLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
@@ -712,7 +712,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
  */
 export const WORKSHOP_CONFIRMED_EMAIL = {
   subject: 'Your workshop date is confirmed!',
-  template: (name: string, city: string, date: string) => emailShell(`
+  template: (name: string, city: string, date: string, loginLink?: string) => emailShell(`
     <h2>Great news, ${escapeHtml(name.split(' ')[0])}!</h2>
     <p>Your workshop date has been confirmed:</p>
     <div class="callout">
@@ -722,7 +722,7 @@ export const WORKSHOP_CONFIRMED_EMAIL = {
       Venue details will follow in a separate email.
     </div>
     <p>Make sure you've completed your online modules before the workshop — they're the foundation for everything we'll practise hands-on.</p>
-    <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_confirmed', 'complete_modules')}" class="cta-btn">Complete Your Modules</a></center>
+    <center><a href="${utm(loginLink || 'https://portal.concussion-education-australia.com/login', 'workshop_confirmed', 'complete_modules')}" class="cta-btn">Complete Your Modules</a></center>
     <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
   `),
 }
@@ -751,7 +751,7 @@ function rydgesBenefitsBlock(city: string): string {
 export const WORKSHOP_LOGISTICS_EMAIL = {
   daysBefore: 42,
   subject: 'Your workshop is 6 weeks away — what to know',
-  template: (name: string, city: string, date: string, venue?: string) => emailShell(`
+  template: (name: string, city: string, date: string, venue?: string, loginLink?: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
     <p>Your concussion workshop in <strong>${city}</strong> is 6 weeks away (<strong>${date}</strong>).</p>
     <div class="callout">
@@ -767,7 +767,7 @@ export const WORKSHOP_LOGISTICS_EMAIL = {
       <li>All 8 online modules (the workshop builds directly on this content)</li>
       <li>Review the SCAT6 and SCOAT6 forms — you'll be administering them in person</li>
     </ol>
-    <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_logistics_6w', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
+    <center><a href="${utm(loginLink || 'https://portal.concussion-education-australia.com/login', 'workshop_logistics_6w', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
     <div class="sig">Zac</div>
   `),
 }

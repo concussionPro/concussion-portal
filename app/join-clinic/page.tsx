@@ -45,6 +45,10 @@ function JoinClinic() {
         return
       }
       setStatus('done')
+      // The redeem response sets the session cookie — go straight in. Hard
+      // navigation (not router.push) so the Set-Cookie commit can't race the
+      // App Router's RSC navigation and bounce us back to /login.
+      window.location.href = '/dashboard'
     } catch {
       setError('Network error. Please try again.')
       setStatus('idle')
@@ -58,10 +62,13 @@ function JoinClinic() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-2xl">✓</div>
           <h1 className="text-xl font-bold text-slate-900">You&rsquo;re in</h1>
           <p className="mt-2 text-sm text-slate-600">
-            We&rsquo;ve emailed <strong>{email}</strong> a one-click login link. Open it to start —
-            your full course access, clinical toolkit and forms are all ready.
+            Taking you to your dashboard &mdash; your full course access, clinical toolkit and
+            forms are all ready.
           </p>
-          <p className="mt-3 text-xs text-slate-400">No email in a minute? Check spam, or contact your clinic.</p>
+          <p className="mt-3 text-xs text-slate-400">
+            Not redirected? <a href="/dashboard" className="font-semibold text-teal-600 underline">Open your dashboard</a>.
+            We&rsquo;ve also emailed <strong>{email}</strong> a backup login link.
+          </p>
         </div>
       </Wrap>
     )
@@ -72,7 +79,7 @@ function JoinClinic() {
       <h1 className="text-xl font-bold text-slate-900">Join your clinic&rsquo;s CEA access</h1>
       <p className="mt-1.5 text-sm text-slate-600">
         Your clinic has full access to the Concussion Clinical Mastery course + toolkit. Redeem your
-        seat below and we&rsquo;ll email you a login.
+        seat below and you&rsquo;ll be taken straight to your course.
       </p>
       <form onSubmit={submit} className="mt-5 space-y-3">
         <Field label="Clinic access key">

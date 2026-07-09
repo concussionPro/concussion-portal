@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { verifyMagicTokenJWT } from '@/lib/magic-link-jwt'
 import { updateLastLogin } from '@/lib/users'
-import { createJWTSession } from '@/lib/jwt-session'
+import { createJWTSession, verifySessionToken, type SessionData } from '@/lib/jwt-session'
 import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
 import { sql } from '@/lib/db'
 
@@ -24,6 +24,28 @@ function hashToken(token: string): string {
 /** Only allow same-origin relative redirect paths (no open redirect). */
 function isValidRedirect(path: string): boolean {
   return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !path.includes('\n')
+}
+
+/**
+ * A dead magic link (expired / already used) must NOT dead-end a browser
+ * that already holds a valid session — the classic case is a second click
+ * on the same email link. Returns the session data if the `session` cookie
+ * verifies, otherwise null.
+ */
+function existingValidSession(request: NextRequest): SessionData | null {
+  const cookie = request.cookies.get('session')?.value
+  if (!cookie) return null
+  return verifySessionToken(cookie)
+}
+
+/** Where an already-logged-in user should land (same rules as fresh login). */
+function sessionRedirectTarget(session: SessionData, redirect: string | null): string {
+  let target = session.accessLevel === 'preview' ? '/modules/101' : '/dashboard'
+  if (redirect && isValidRedirect(redirect) &&
+      (session.accessLevel !== 'preview' || redirect.startsWith('/modules/'))) {
+    target = redirect
+  }
+  return target
 }
 
 function escapeHtml(s: string): string {
@@ -107,6 +129,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
+    const redirect = searchParams.get('redirect')
 
     if (!token) {
       return new NextResponse(errorHtml('Invalid Link', 'No login token was provided.'), {
@@ -118,6 +141,11 @@ export async function GET(request: NextRequest) {
     // Validate signature + expiry only — does NOT mark the token used
     const tokenData = verifyMagicTokenJWT(token)
     if (!tokenData) {
+      // Dead link but the browser is already logged in? Send them through.
+      const session = existingValidSession(request)
+      if (session) {
+        return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+      }
       await logAuthFailure({
         endpoint: '/api/auth/verify',
         reason: 'Invalid or expired magic link token (GET preview)',
@@ -133,13 +161,18 @@ export async function GET(request: NextRequest) {
     const tokenHash = hashToken(token)
     const { rows: existing } = await sql`SELECT 1 FROM used_magic_tokens WHERE token_hash = ${tokenHash} LIMIT 1`
     if (existing.length > 0) {
+      // Second click on an already-used link — if the first click set a
+      // still-valid session, just take them where they were headed.
+      const session = existingValidSession(request)
+      if (session) {
+        return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+      }
       return new NextResponse(
         errorHtml('Link Already Used', 'This login link has already been used. Please request a new one.'),
         { status: 401, headers: HTML_HEADERS }
       )
     }
 
-    const redirect = searchParams.get('redirect')
     return new NextResponse(interstitialHtml(token, redirect), { status: 200, headers: HTML_HEADERS })
   } catch (error) {
     console.error('Verification error:', error)
@@ -192,6 +225,26 @@ export async function POST(request: NextRequest) {
     const tokenData = verifyMagicTokenJWT(token)
 
     if (!tokenData) {
+      // Dead link but the browser already holds a valid session — don't
+      // dead-end, the user is logged in. Form posts navigate; fetch callers
+      // get the same success JSON shape a fresh verify returns.
+      const session = existingValidSession(request)
+      if (session) {
+        if (isFormPost) {
+          return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+        }
+        return NextResponse.json({
+          success: true,
+          alreadyLoggedIn: true,
+          user: {
+            id: session.userId,
+            email: session.email,
+            name: session.name,
+            accessLevel: session.accessLevel,
+          },
+        })
+      }
+
       // Log failed verification attempts
       await logAuthFailure({
         endpoint: '/api/auth/verify',
@@ -215,6 +268,25 @@ export async function POST(request: NextRequest) {
     const tokenHash = hashToken(token)
     const { rows: existing } = await sql`SELECT 1 FROM used_magic_tokens WHERE token_hash = ${tokenHash} LIMIT 1`
     if (existing.length > 0) {
+      // Second click on an already-used link — if the first click set a
+      // still-valid session, complete the journey instead of erroring.
+      const session = existingValidSession(request)
+      if (session) {
+        if (isFormPost) {
+          return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+        }
+        return NextResponse.json({
+          success: true,
+          alreadyLoggedIn: true,
+          user: {
+            id: session.userId,
+            email: session.email,
+            name: session.name,
+            accessLevel: session.accessLevel,
+          },
+        })
+      }
+
       await logAuthFailure({
         endpoint: '/api/auth/verify',
         reason: 'Magic link already used (replay attempt)',

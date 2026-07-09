@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { createUser } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
+import { createJWTSession } from '@/lib/jwt-session'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { redeemHubSeat, type HubRole } from '@/lib/course-hub'
 
@@ -56,14 +57,34 @@ export async function POST(request: NextRequest) {
   }
 
   // result is 'ok' (new seat) or 'already' (idempotent) — both grant access.
+  let userId: string
   try {
-    const userId = await createUser({ email, name, accessLevel: 'full-course', signupSource: 'purchase' })
+    userId = await createUser({ email, name, accessLevel: 'full-course', signupSource: 'purchase' })
+  } catch (err) {
+    console.error('Hub redeem provisioning failed:', err)
+    return NextResponse.json({ error: 'We saved your seat but hit a snag setting up your login. Contact support@concussion-education-australia.com.' }, { status: 500 })
+  }
+
+  // Backup magic-link email — but a failure here must NOT fail the redeem:
+  // the seat is already consumed and the response below carries a live
+  // session cookie, so the user can go straight to /dashboard regardless.
+  try {
     const token = createMagicToken(userId, email, name, 'full-course')
     await sendMagicLinkEmail(email, token, request.nextUrl.origin)
   } catch (err) {
-    console.error('Hub redeem provisioning failed:', err)
-    return NextResponse.json({ error: 'We saved your seat but hit a snag emailing your login. Contact support@concussion-education-australia.com.' }, { status: 500 })
+    console.error('Hub redeem login email failed (non-fatal, session cookie set):', err)
   }
 
-  return NextResponse.json({ ok: true, alreadyMember: result === 'already' })
+  // Log them in immediately — same cookie the free-signup flow sets — so the
+  // client can navigate straight to /dashboard without an email round trip.
+  const sessionToken = createJWTSession(userId, email, name, 'full-course', true)
+  const response = NextResponse.json({ ok: true, alreadyMember: result === 'already' })
+  response.cookies.set('session', sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 365 * 24 * 60 * 60, // 1 year — stay logged in
+    path: '/',
+  })
+  return response
 }

@@ -6,7 +6,7 @@ export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
 import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail } from '@/lib/resend-client'
 import { createCourseHub, redeemHubSeat, clampClinicianSeats, HUB_ADMIN_SEATS } from '@/lib/course-hub'
-import { createMagicToken } from '@/lib/magic-link-jwt'
+import { createMagicToken, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
@@ -398,7 +398,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const freshUser = await findUserByEmail(customerEmail)
     const finalAccess = (freshUser?.accessLevel || accessLevel) as 'preview' | 'online-only' | 'full-course'
     const userName = freshUser?.name || customerName
-    const token = createMagicToken(freshUser?.id || userId, customerEmail, userName, finalAccess)
+    // 7-day TTL (not the 24h transactional default) — purchasers don't always
+    // open the welcome email same-day, and an expired link dead-ends them.
+    const token = createMagicToken(freshUser?.id || userId, customerEmail, userName, finalAccess, NURTURE_TTL_MS)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     const melConfirmed = workshopCity === 'melbourne' && CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'

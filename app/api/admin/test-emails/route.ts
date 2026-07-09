@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
     // 9-10. Pre-Workshop (2 emails)
     ...PRE_WORKSHOP_SEQUENCE.map((e, i) => ({
       subject: `[TEST ${9 + i}/18] Workshop -${e.daysBefore}d: ${e.subject}`,
-      html: e.template(name, 'Byron Bay', 'March 28, 2026'),
+      html: e.template(name, 'Byron Bay', 'March 28, 2026', loginLink),
     })),
     // 11-16. SCAT6 Mastery Sequence (6 emails)
     ...SCAT_MASTERY_SEQUENCE.map((e, i) => ({

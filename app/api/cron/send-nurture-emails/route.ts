@@ -507,6 +507,7 @@ export async function GET(request: Request) {
 
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+      const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
 
       // Check for logistics email (6 weeks = 42 days before). Catch-up
       // window: a missed cron day must not silently drop the email — match
@@ -519,7 +520,7 @@ export async function GET(request: Request) {
         const { rowCount: logisticsInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${logisticsAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (logisticsInserted === 0) continue // Already sent
 
-        const html = WORKSHOP_LOGISTICS_EMAIL.template(user.name, locationEntry.city, locationEntry.date)
+        const html = WORKSHOP_LOGISTICS_EMAIL.template(user.name, locationEntry.city, locationEntry.date, undefined, loginLink)
           .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
         const sent = await sendOrRollbackAudit({
@@ -556,7 +557,7 @@ export async function GET(request: Request) {
       const { rowCount: prepInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${prepAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
       if (prepInserted === 0) continue // Already sent
 
-      const html = prepEmail.template(user.name, locationEntry.city, locationEntry.date)
+      const html = prepEmail.template(user.name, locationEntry.city, locationEntry.date, loginLink)
         .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
       const sent = await sendOrRollbackAudit({
@@ -612,8 +613,9 @@ export async function GET(request: Request) {
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
+      const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
       const subject = momentumEmail.subject(locationConfig.city, count, remaining)
-      const html = momentumEmail.template(user.name, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD)
+      const html = momentumEmail.template(user.name, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD, loginLink)
         .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
       const sent = await sendOrRollbackAudit({

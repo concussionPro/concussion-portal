@@ -34,7 +34,7 @@ const TRANSACTIONAL_TTL_MS = 24 * 60 * 60 * 1000
 // 7 days because subscribers don't always check email same-day, and a
 // 24h-expired link was the dominant failure mode (74% of imported preview
 // users never logged in — most landed too late).
-const NURTURE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+export const NURTURE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 // Create a signed token. ttlMs default = 24h for transactional links.
 export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview', ttlMs?: number): string {

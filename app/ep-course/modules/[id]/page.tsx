@@ -65,6 +65,16 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: Ap
               <ArrowRight className="w-5 h-5" />
             </a>
 
+            <p className="text-slate-300 text-sm mt-2">
+              Already enrolled?{' '}
+              <Link
+                href={`/login?redirect=${encodeURIComponent(`/ep-course/modules/${moduleId}`)}`}
+                className="text-amber-400 hover:text-amber-300 underline font-semibold"
+              >
+                Log in
+              </Link>
+            </p>
+
             <div className="mt-6 pt-6 border-t border-white/20">
               <p className="text-slate-300 text-sm mb-4">
                 Looking for free training?
