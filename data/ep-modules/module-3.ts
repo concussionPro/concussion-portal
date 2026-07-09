@@ -219,7 +219,7 @@ export const module3: Module = {
       id: 'threshold-to-prescription',
       title: 'From HRt to Prescription: The 80–90% Rule',
       content: [
-        'This is the moment the assessment becomes treatment. The HRt you have just recorded converts directly and immediately into the client\'s daily aerobic exercise prescription (Leddy et al., 2021) — no separate assessment session, no waiting period.',
+        'This is the moment the assessment becomes treatment. The HRt you have just recorded converts directly and immediately into the client\'s daily aerobic exercise prescription (Bezherano et al., 2021) — no separate assessment session, no waiting period.',
         '[INFOGRAPHIC: hrt-to-prescription]',
         '### The Conversion',
         '   - Calculate the TARGET HEART RATE ZONE as 80–90% of HRt.',
@@ -549,7 +549,7 @@ export const module3: Module = {
   clinicalReferences: [
     'Leddy, J. J., Haider, M. N., Chizuk, H. M., et al. (2026). Cardiovascular and respiratory responses during graded exercise in adolescents after sport-related concussion. Sports Medicine, 56(1), 271-282.',
     'Chapel, L. L., & Valovich McLeod, T. C. (2026). Prescribed aerobic exercise and sport-related concussion recovery: a validation case series. Clinical Practice in Athletic Training, 9(1), Article 1.',
-    'Leddy, J. J., Haider, M. N., Hinds, A. L., Darling, S., & Willer, B. S. (2021). Practical management: prescribing sub-symptom threshold aerobic exercise for sport-related concussion in the outpatient setting. Clinical Journal of Sport Medicine, 31(2), e89-e94. https://doi.org/10.1097/JSM.0000000000000731',
+    'Bezherano, I., Haider, M. N., Willer, B. S., & Leddy, J. J. (2021). Practical management: prescribing subsymptom threshold aerobic exercise for sport-related concussion in the outpatient setting. Clinical Journal of Sport Medicine, 31(5), 465-468. https://doi.org/10.1097/JSM.0000000000000809',
     'Leddy, J. J., Kozlowski, K., Donnelly, J. P., Pendergast, D. R., Epstein, L. H., & Willer, B. (2010). A preliminary study of subsymptom threshold exercise training for refractory post-concussion syndrome. Clinical Journal of Sport Medicine, 20(1), 21–27. https://doi.org/10.1097/JSM.0b013e3181c6c22c',
     'Leddy, J. J., Baker, J. G., Kozlowski, K., Bisson, L., & Willer, B. (2011). Reliability of a graded exercise test for assessing recovery from concussion. Clinical Journal of Sport Medicine, 21(2), 89–94. https://doi.org/10.1097/JSM.0b013e3181fdc721',
     'Leddy, J. J., & Willer, B. (2013). Use of graded exercise testing in concussion and return-to-activity management. Current Sports Medicine Reports, 12(6), 370–376. https://doi.org/10.1249/JSR.0000000000000008',
