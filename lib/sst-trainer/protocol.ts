@@ -7,8 +7,9 @@
  *
  * EVIDENCE BASE (referenced inline; full citations in the EP course + brief):
  *  - Buffalo Concussion Treadmill Test (BCTT) — modified Balke protocol:
- *    start 3.6 mph (>5'5") or 3.2 mph (<=5'5"), 0deg incline for minute 1, then
- *    +1deg incline EVERY MINUTE for 15 stages; after 15deg, +0.2 mph/min.
+ *    start 3.2 mph (up to 5'10") or 3.6 mph (5'10" and above), 0deg incline for
+ *    minute 1, then +1deg incline EVERY MINUTE for 15 stages; after 15deg,
+ *    +0.4 mph/min in lieu of incline.
  *    HR, RPE and symptom severity (0-10 VAS) recorded EVERY MINUTE (each stage).
  *    Symptom threshold = a rise of >=3 points above resting VAS -> HR at that
  *    minute = HRt. Voluntary exhaustion = RPE > 17 without symptom provocation.
@@ -16,8 +17,8 @@
  *    J Sport Med suppl.) -> this is why the app prompts PER MINUTE, not per 10bpm.
  *  - Sub-symptom-threshold aerobic exercise (SSTAE): train at 80-90% of HRt,
  *    ~20 min, most days; within-session stop if symptoms rise >=2 points; re-test
- *    and advance the ceiling as tolerance recovers (Leddy 2019 JAMA Peds; Leddy
- *    "Practical Management: Prescribing SSTAE" 2020).
+ *    and advance the ceiling as tolerance recovers (Leddy 2019 JAMA Peds;
+ *    Bezherano et al. "Practical Management: Prescribing SSTAE" 2021, CJSM).
  *
  * SCOPE: condition-parameterised so the same engine serves concussion/mTBI today
  * and the broader neurorehab / TBI expansion (graded, autonomically-paced
