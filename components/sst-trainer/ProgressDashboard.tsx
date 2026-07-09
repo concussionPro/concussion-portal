@@ -176,7 +176,7 @@ export default function ProgressDashboard({
       <div className="rounded-[18px] border border-[#dde7e7] bg-white p-3.5">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs font-bold text-[#3b4f52]">Peak HR vs ceiling</span>
-          <span className="flex items-center gap-1.5 text-[10px] font-medium text-[#9bafb0]">
+          <span className="flex items-center gap-1.5 text-[10px] font-medium text-[#5d7174]">
             <span className="inline-block h-0 w-3.5 border-t-2 border-dashed border-[#d2463a]" />
             ceiling
           </span>
@@ -187,7 +187,7 @@ export default function ProgressDashboard({
       <div className="flex flex-col gap-2.5">
         <span className="text-xs font-bold text-[#3b4f52]">Sessions</span>
         {sessions.length === 0 && (
-          <p className="m-0 text-xs leading-snug text-[#9bafb0]">
+          <p className="m-0 text-xs leading-snug text-[#5d7174]">
             No sessions yet. Log your first to see progress.
           </p>
         )}
@@ -220,7 +220,7 @@ export default function ProgressDashboard({
                 />
               </div>
               <div
-                className={`flex justify-between text-[10px] text-[#9bafb0] ${numFont}`}
+                className={`flex justify-between text-[10px] text-[#5d7174] ${numFont}`}
               >
                 <span>
                   avg {s.avgHeartRate} · peak {s.peakHeartRate} bpm

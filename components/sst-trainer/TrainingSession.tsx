@@ -8,8 +8,15 @@ import {
   type Prescription,
   type SessionLog,
 } from '@/lib/sst-trainer/protocol'
+import {
+  clearHeartbeat,
+  loadHeartbeat,
+  saveHeartbeat,
+  SESSION_HEARTBEAT_KEY,
+} from '@/lib/sst-trainer/heartbeat'
 import type { HrConnectKind } from './hr-source'
 import { PrimaryButton, SecondaryButton, SegmentBars, numFont } from './shell'
+import { useWakeLock } from './use-wake-lock'
 
 // ── gauge geometry (ported from the design's trainGaugeEl) ──────────────────
 const pt = (cx: number, cy: number, r: number, deg: number): [number, number] => {
@@ -80,7 +87,29 @@ function TrainGauge({
 }
 
 type Zone = 'none' | 'below' | 'in' | 'over' | 'limit'
-type Phase = 'active' | 'stopped' | 'summary'
+type Phase = 'pre' | 'active' | 'stopped' | 'summary'
+
+/** Pre-session symptoms at/above this get the soft rest-day warning (proceed allowed). */
+const HIGH_PRE_SYMPTOM = 7
+
+/**
+ * Everything an interrupted session needs to resume honestly: only data the
+ * patient actually entered / the sampler actually recorded — never synthesised.
+ */
+interface SessionHeartbeat {
+  startedAt: number
+  /** prescription fingerprint — a re-test between interruption and resume discards */
+  rxHrt: number
+  phase: 'active' | 'stopped'
+  preSymptom: number
+  currentSymptom: number
+  peakSymptom: number
+  manualLogs: number
+  overrideUsed: boolean
+  overrideAtScore: number
+  readings: Array<{ bpm: number; verified: boolean }>
+  zoneSeconds: { below: number; in: number; above: number }
+}
 
 /** Everything the page needs to sync an abandoned (cancelled) session. */
 export interface AbandonInfo {
@@ -98,11 +127,14 @@ export default function TrainingSession({
   hrSourceLabel,
   hrStatus = 'manual',
   hrConnect = 'manual',
+  initialPreSymptom,
 }: {
   rx: Prescription
   onComplete: (log: SessionLog) => void
   /** leave WITHOUT a session log — the page syncs this as an abandoned session */
   onCancel: (info: AbandonInfo) => void
+  /** last-known resting/baseline symptom score — seeds the pre-session check-in */
+  initialPreSymptom?: number
   /** live bpm from a paired Bluetooth stream (null = manual entry) */
   liveHr?: number | null
   /** paired source name, e.g. "Polar H10" */
@@ -112,10 +144,15 @@ export default function TrainingSession({
   /** how the HR source connects — only 'bluetooth' can ever verify a session */
   hrConnect?: HrConnectKind
 }) {
-  const [phase, setPhase] = useState<Phase>('active')
-  const [preSymptom, setPreSymptom] = useState(0)
-  const [currentSymptom, setCurrentSymptom] = useState(0)
-  const [peakSymptom, setPeakSymptom] = useState(0)
+  // The session opens on the PRE check-in: preSymptom is the patient's OWN
+  // stated baseline, seeded from the last-known resting score. Starting at a
+  // hardcoded 0 falsely tripped the >=SESSION_STOP_RISE stop rule for anyone
+  // resting above 0/10 and synced preSymptom:0 as fabricated flare data.
+  const [phase, setPhase] = useState<Phase>('pre')
+  const seedSymptom = Math.min(10, Math.max(0, Math.round(initialPreSymptom ?? 0)))
+  const [preSymptom, setPreSymptom] = useState(seedSymptom)
+  const [currentSymptom, setCurrentSymptom] = useState(seedSymptom)
+  const [peakSymptom, setPeakSymptom] = useState(seedSymptom)
   const [heartRate, setHeartRate] = useState('')
   const [manualLogs, setManualLogs] = useState(0)
   const [confirmCancel, setConfirmCancel] = useState(false)
@@ -131,6 +168,7 @@ export default function TrainingSession({
   const totalMs = rx.sessionMinutes * 60_000
   const [clock, setClock] = useState<{ start: number; now: number } | null>(null)
   useEffect(() => {
+    if (phase === 'pre') return // the clock must not start until 'active' begins
     if (phase === 'summary') return // freeze the clock on the summary screen
     const iv = setInterval(() => {
       setClock((c) => {
@@ -144,34 +182,23 @@ export default function TrainingSession({
   const remainingMs = clock ? Math.max(0, totalMs - (clock.now - clock.start)) : totalMs
 
   // ── wake lock: keep the screen alive mid-session; graceful no-op elsewhere ──
+  // Only from 'active' onwards — the pre-session check-in doesn't hold the screen.
+  useWakeLock(phase !== 'pre')
+
+  // ── interruption recovery: 5s heartbeat + resume-on-remount ────────────────
+  // A phone call 15 minutes into a 20-minute session must not lose everything.
+  const [resume, setResume] = useState<SessionHeartbeat | null>(null)
   useEffect(() => {
-    let sentinel: WakeLockSentinel | null = null
-    let cancelled = false
-    const acquire = async () => {
-      try {
-        const wl = (navigator as Navigator & { wakeLock?: WakeLock }).wakeLock
-        if (!wl) return
-        const s = await wl.request('screen')
-        if (cancelled) void s.release().catch(() => {})
-        else sentinel = s
-      } catch {
-        /* unsupported / denied — the screen may sleep, everything still works */
-      }
+    const hb = loadHeartbeat<SessionHeartbeat>(SESSION_HEARTBEAT_KEY)
+    if (!hb) return
+    // A re-test between interruption and remount changed the band — the old
+    // partial session no longer belongs to this prescription. Discard.
+    if (hb.data.rxHrt !== rx.hrt || typeof hb.data.startedAt !== 'number') {
+      clearHeartbeat(SESSION_HEARTBEAT_KEY)
+      return
     }
-    void acquire()
-    const onVis = () => {
-      if (document.visibilityState === 'visible') void acquire()
-    }
-    document.addEventListener('visibilitychange', onVis)
-    return () => {
-      cancelled = true
-      document.removeEventListener('visibilitychange', onVis)
-      try {
-        void sentinel?.release().catch(() => {})
-      } catch {
-        /* already released */
-      }
-    }
+    setResume(hb.data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Live source drives the gauge; a manual override must stick (not be wiped by
@@ -251,7 +278,7 @@ export default function TrainingSession({
     latestRef.current = { hrValue, hrValid, liveHr, hrStatus, zone }
   })
   useEffect(() => {
-    if (phase === 'summary') return
+    if (phase === 'pre' || phase === 'summary') return
     const iv = setInterval(() => {
       const d = latestRef.current
       if (!d.hrValid || d.hrValue === null) return
@@ -271,6 +298,59 @@ export default function TrainingSession({
   // One "I feel okay, continue" override is allowed ONCE; any further rise after
   // the override re-stops with no second chance.
   const [override, setOverride] = useState<{ used: boolean; atScore: number }>({ used: false, atScore: 0 })
+
+  // Heartbeat writer: snapshot the latest values each render (refs stay live),
+  // persist every ~5s while the session is running. Cleared on finish/abort.
+  const hbRef = useRef<SessionHeartbeat | null>(null)
+  useEffect(() => {
+    hbRef.current =
+      clock && (phase === 'active' || phase === 'stopped')
+        ? {
+            startedAt: clock.start,
+            rxHrt: rx.hrt,
+            phase,
+            preSymptom,
+            currentSymptom,
+            peakSymptom,
+            manualLogs,
+            overrideUsed: override.used,
+            overrideAtScore: override.atScore,
+            readings: readingsRef.current,
+            zoneSeconds: { ...zoneSecondsRef.current },
+          }
+        : null
+  })
+  useEffect(() => {
+    if (phase !== 'active' && phase !== 'stopped') return
+    const iv = setInterval(() => {
+      if (hbRef.current) saveHeartbeat(SESSION_HEARTBEAT_KEY, hbRef.current)
+    }, 5000)
+    return () => clearInterval(iv)
+  }, [phase])
+
+  /** Restore an interrupted session — only what was really recorded/entered. */
+  const applyResume = () => {
+    if (!resume) return
+    readingsRef.current = Array.isArray(resume.readings) ? resume.readings : []
+    zoneSecondsRef.current = {
+      below: resume.zoneSeconds?.below ?? 0,
+      in: resume.zoneSeconds?.in ?? 0,
+      above: resume.zoneSeconds?.above ?? 0,
+    }
+    setPreSymptom(resume.preSymptom)
+    setCurrentSymptom(resume.currentSymptom)
+    setPeakSymptom(resume.peakSymptom)
+    setManualLogs(resume.manualLogs)
+    setOverride({ used: resume.overrideUsed, atScore: resume.overrideAtScore })
+    // Real wall-clock start — elapsed time keeps counting honestly across the
+    // interruption; if the prescribed time ran out meanwhile, it auto-finishes.
+    setClock({ start: resume.startedAt, now: Date.now() })
+    setResume(null)
+    // Re-enter 'active'; if the stop rule was tripped pre-interruption the
+    // symptom-rise effect immediately re-stops it.
+    setPhase('active')
+  }
+
   const symptomRise = currentSymptom - preSymptom
   useEffect(() => {
     if (phase !== 'active') return
@@ -306,6 +386,7 @@ export default function TrainingSession({
     zones: { below: number; in: number; above: number }
   } | null>(null)
   const finishSession = (symptomLimited: boolean) => {
+    clearHeartbeat(SESSION_HEARTBEAT_KEY) // the session is over — nothing to resume
     const all = readingsRef.current
     const { hrVerified, verifiedReadingPct } = sessionVerification(all, hrConnect)
     setSummary({
@@ -349,6 +430,98 @@ export default function TrainingSession({
 
   const mm = String(Math.floor(remainingMs / 60000)).padStart(2, '0')
   const ss = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0')
+
+  // ── PRE: symptom baseline check-in (one strip, one button) ──────────────────
+  if (phase === 'pre') {
+    // Interrupted session found — offer Resume / Discard before anything else.
+    if (resume) {
+      const startedLabel = new Date(resume.startedAt).toLocaleTimeString('en-AU', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+      return (
+        <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
+          <div className="rounded-[18px] border-[1.5px] border-[#5b9aa6] bg-[#e7f2f3] px-4 py-4">
+            <p className="m-0 text-[16px] font-extrabold leading-snug text-[#16282b]">
+              You have a session in progress from {startedLabel}
+            </p>
+            <p className="mt-1.5 text-[12.5px] leading-snug text-[#3b4f52]">
+              Pick up where you left off — your time and readings so far are safe.
+            </p>
+          </div>
+          <PrimaryButton onClick={applyResume} className="rounded-[18px] py-[17px] text-base">
+            Resume
+          </PrimaryButton>
+          <SecondaryButton
+            onClick={() => {
+              clearHeartbeat(SESSION_HEARTBEAT_KEY)
+              setResume(null)
+            }}
+            className="p-3"
+          >
+            Discard
+          </SecondaryButton>
+        </section>
+      )
+    }
+    return (
+      <section className="flex flex-col gap-4 pt-1.5">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-[#16282b]">
+            Before you start
+          </h1>
+          <p className="m-0 text-[12.5px] leading-snug text-[#5d7174]">
+            How are your symptoms right now?
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs font-semibold text-[#3b4f52]">Symptoms right now</span>
+            <span className={`text-[18px] text-[#5b9aa6] ${numFont}`}>
+              {preSymptom}
+              <span className="text-xs text-[#5d7174]">/10</span>
+            </span>
+          </div>
+          <SegmentBars
+            value={preSymptom}
+            onChange={setPreSymptom}
+            variant="ramp"
+            ariaLabel="Symptoms right now, 0 to 10"
+          />
+          <p className="m-0 text-[11px] leading-snug text-[#5d7174]">
+            Your session compares against this, so be honest — starting mid-flare may mean today
+            should be a rest day.
+          </p>
+        </div>
+
+        {/* High baseline — soft warning, never a hard block (clinician may have advised it) */}
+        {preSymptom >= HIGH_PRE_SYMPTOM && (
+          <div className="rounded-[16px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] p-3.5">
+            <p className="m-0 text-sm font-bold text-[#a06a1c]">
+              Your symptoms are high right now.
+            </p>
+            <p className="mt-1.5 text-[12.5px] leading-snug text-[#8a6320]">
+              At {preSymptom}/10, resting today and checking in with your clinician may be the
+              better call. Only continue if they&rsquo;ve advised training through this.
+            </p>
+          </div>
+        )}
+
+        <PrimaryButton
+          onClick={() => {
+            // the session's symptom trackers start AT the confirmed baseline
+            setCurrentSymptom(preSymptom)
+            setPeakSymptom(preSymptom)
+            setPhase('active')
+          }}
+          className="rounded-[18px] py-[17px] text-base"
+        >
+          Start session
+        </PrimaryButton>
+      </section>
+    )
+  }
 
   // ── STOPPED: the symptom-rise stop screen ───────────────────────────────────
   if (phase === 'stopped') {
@@ -458,15 +631,15 @@ export default function TrainingSession({
 
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3 py-2.5">
-            <span className="text-[10px] font-medium text-[#849c9c]">Avg HR</span>
+            <span className="text-[10px] font-medium text-[#5d7174]">Avg HR</span>
             <div className={`mt-0.5 text-[17px] text-[#16282b] ${numFont}`}>{avg ?? '—'}</div>
           </div>
           <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3 py-2.5">
-            <span className="text-[10px] font-medium text-[#849c9c]">Peak HR</span>
+            <span className="text-[10px] font-medium text-[#5d7174]">Peak HR</span>
             <div className={`mt-0.5 text-[17px] text-[#16282b] ${numFont}`}>{peak ?? '—'}</div>
           </div>
           <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3 py-2.5">
-            <span className="text-[10px] font-medium text-[#849c9c]">Symptoms</span>
+            <span className="text-[10px] font-medium text-[#5d7174]">Symptoms</span>
             <div className={`mt-0.5 text-[17px] text-[#16282b] ${numFont}`}>
               {preSymptom}→{Math.max(peakSymptom, currentSymptom)}
             </div>
@@ -524,7 +697,7 @@ export default function TrainingSession({
         <h1 className="m-0 text-[18px] font-extrabold leading-none tracking-[-0.02em]">Session</h1>
         <span className={`text-[15px] font-bold text-[#3c7681] ${numFont}`}>
           {mm}:{ss}
-          <span className="ml-1 text-[10px] font-semibold text-[#9bafb0]">left</span>
+          <span className="ml-1 text-[10px] font-semibold text-[#5d7174]">left</span>
         </span>
       </div>
 
@@ -577,7 +750,7 @@ export default function TrainingSession({
           >
             {hrValid ? hrValue : '—'}
           </span>
-          <span className="-mt-0.5 text-[11px] font-semibold tracking-[0.14em] text-[#9bafb0]">
+          <span className="-mt-0.5 text-[11px] font-semibold tracking-[0.14em] text-[#5d7174]">
             BPM
           </span>
           <span
@@ -620,7 +793,7 @@ export default function TrainingSession({
             style={{ color: symptomRise >= SESSION_STOP_RISE ? '#d79a3a' : '#5b9aa6' }}
           >
             {currentSymptom}
-            <span className="text-[11px] text-[#9bafb0]">/10</span>
+            <span className="text-[11px] text-[#5d7174]">/10</span>
           </span>
         </div>
         <SegmentBars
@@ -631,7 +804,7 @@ export default function TrainingSession({
           ariaLabel="Current symptom level, 0 to 10"
         />
         <div className="flex items-center justify-between">
-          <p className="m-0 text-[10.5px] leading-snug text-[#9bafb0]">
+          <p className="m-0 text-[10.5px] leading-snug text-[#5d7174]">
             Before you started: {preSymptom}/10
           </p>
           <button
@@ -665,14 +838,15 @@ export default function TrainingSession({
             </SecondaryButton>
             <button
               type="button"
-              onClick={() =>
+              onClick={() => {
+                clearHeartbeat(SESSION_HEARTBEAT_KEY) // abort — nothing to resume
                 onCancel({
                   elapsedSec: Math.round(elapsedMs / 1000),
                   readingCount: readingsRef.current.length,
                   preSymptom,
                   currentSymptom,
                 })
-              }
+              }}
               className="flex-1 rounded-2xl bg-[#d2463a] p-2.5 text-[12.5px] font-bold text-white transition active:scale-[0.98]"
             >
               Leave

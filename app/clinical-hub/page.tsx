@@ -7,7 +7,7 @@ import { SESSION_STOP_RISE } from '@/lib/sst-trainer/protocol'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
   AlertTriangle, AlertOctagon, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock,
-  NotebookPen, ShieldCheck, QrCode, KeyRound,
+  NotebookPen, ShieldCheck, QrCode, KeyRound, FileText,
 } from 'lucide-react'
 
 /* ───────────────────────────────────────────────────────────────────
@@ -874,9 +874,24 @@ export default function ClinicalHubPage() {
                     )}
                   </div>
                 </div>
-                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
-                  Stage {p.stage.n} — {p.stage.label}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
+                    Stage {p.stage.n} — {p.stage.label}
+                  </span>
+                  {/* GP / referrer episode report — the API (gp-report) authorises via
+                      the same code+viewKey this hub link carries. Real synced patients
+                      only: fixture roster entries have no episode data behind them. */}
+                  {clinicCode !== '' && viewKey && p.id.startsWith('real-') && (
+                    <a
+                      href={`/api/sst/gp-report?code=${encodeURIComponent(clinicCode)}&k=${encodeURIComponent(viewKey)}&patient=${encodeURIComponent(p.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> GP report <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
               </div>
 
               {/* URGENT — red-flag test event */}

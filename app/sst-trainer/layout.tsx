@@ -39,6 +39,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#16243f',
+  // iOS standalone (black-translucent status bar) lays content under the
+  // notch/status bar; cover + the existing safe-area padding in SstAppShell
+  // keeps the app chrome out from underneath it.
+  viewportFit: 'cover',
 }
 
 export default function SstTrainerLayout({ children }: { children: React.ReactNode }) {

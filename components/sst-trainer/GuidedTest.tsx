@@ -15,7 +15,14 @@ import {
   type ThresholdResult,
 } from '@/lib/sst-trainer/protocol'
 import { CONCUSSION_SYMPTOMS } from '@/lib/sst-trainer/symptoms'
+import {
+  clearHeartbeat,
+  loadHeartbeat,
+  saveHeartbeat,
+  TEST_HEARTBEAT_KEY,
+} from '@/lib/sst-trainer/heartbeat'
 import { PrimaryButton, SecondaryButton, SegmentBars, numFont } from './shell'
+import { useWakeLock } from './use-wake-lock'
 
 // BCTT max test duration (modified Balke ~15 incline stages + speed ramp; the
 // test runs well under ~20 min). Reaching this without a >=3-pt rise ends the
@@ -96,6 +103,24 @@ function stageEndCue() {
   } catch {
     /* unsupported */
   }
+}
+
+/**
+ * Everything an interrupted graded test needs to resume honestly: only stages
+ * the patient actually logged — never synthesised readings. The interrupted
+ * minute itself re-runs from scratch (HR recovers during an interruption, so
+ * logging a post-interruption reading against pre-interruption effort would
+ * fabricate the stage).
+ */
+interface TestHeartbeat {
+  startedAt: number
+  phase: 'ramp'
+  modality: TestModality
+  minute: number
+  stageStartAt: number
+  stages: TestStage[]
+  restingSymptomScore: number
+  rpe: number
 }
 
 /** Stage ring: fills over the 60-second stage; centre shows the countdown. */
@@ -191,6 +216,77 @@ export default function GuidedTest({
 
   const stageDone = stageElapsed >= STAGE_SECONDS
 
+  // ── wake lock: the graded test is an exertion screen too ───────────────────
+  useWakeLock(phase === 'ramp')
+
+  // ── interruption recovery: 5s heartbeat + resume-on-remount ────────────────
+  // A dropped call / accidental close mid-ramp must not discard logged stages.
+  const testStartRef = useRef<number>(0)
+  const [resume, setResume] = useState<TestHeartbeat | null>(null)
+  useEffect(() => {
+    const hb = loadHeartbeat<TestHeartbeat>(TEST_HEARTBEAT_KEY)
+    if (!hb) return
+    // The readiness baseline was re-taken with a different score since the
+    // interruption — the old stages' threshold math no longer applies. Discard.
+    if (
+      hb.data.restingSymptomScore !== restingSymptomScore ||
+      !hb.data.modality ||
+      typeof hb.data.startedAt !== 'number'
+    ) {
+      clearHeartbeat(TEST_HEARTBEAT_KEY)
+      return
+    }
+    setResume(hb.data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const hbRef = useRef<TestHeartbeat | null>(null)
+  useEffect(() => {
+    hbRef.current =
+      phase === 'ramp' && modality
+        ? {
+            startedAt: testStartRef.current || Date.now(),
+            phase: 'ramp',
+            modality,
+            minute,
+            stageStartAt: stageStartRef.current,
+            stages: recordedStages,
+            restingSymptomScore,
+            rpe,
+          }
+        : null
+  })
+  useEffect(() => {
+    if (phase !== 'ramp') return
+    const iv = setInterval(() => {
+      if (hbRef.current) saveHeartbeat(TEST_HEARTBEAT_KEY, hbRef.current)
+    }, 5000)
+    return () => clearInterval(iv)
+  }, [phase])
+
+  /** Restore an interrupted ramp: logged stages return; the broken minute re-runs. */
+  const applyResume = () => {
+    if (!resume) return
+    setModality(resume.modality)
+    setRecordedStages(Array.isArray(resume.stages) ? resume.stages : [])
+    setMinute(resume.minute)
+    setRpe(resume.rpe)
+    setSymptomScore(restingSymptomScore)
+    setHeartRate('')
+    lastLiveRef.current = ''
+    setTappedSymptoms(new Set())
+    testStartRef.current = resume.startedAt
+    // Restart the interrupted minute from zero — HR drops during a pause, so a
+    // post-interruption reading must not be logged against pre-pause effort.
+    stageStartRef.current = Date.now()
+    setStageElapsed(0)
+    cuedRef.current = false
+    autoLoggedRef.current = false
+    finishingRef.current = false
+    setResume(null)
+    setPhase('ramp')
+  }
+
   // When a live source is streaming, the paired device drives the HR field — but
   // a MANUAL override must stick (a typed correction shouldn't be wiped within a
   // second). We only auto-fill when the field is empty or still showing the last
@@ -251,6 +347,7 @@ export default function GuidedTest({
   })
 
   const finish = (termination: TestTermination, stages: TestStage[]) => {
+    clearHeartbeat(TEST_HEARTBEAT_KEY) // the test is over — nothing to resume
     const input: TestInput = {
       restingSymptomScore,
       stages,
@@ -334,6 +431,39 @@ export default function GuidedTest({
 
   // ── setup: how are you doing this test? ─────────────────────────────────────
   if (phase === 'setup') {
+    // Interrupted test found — offer Resume / Discard before a fresh setup.
+    if (resume) {
+      const startedLabel = new Date(resume.startedAt).toLocaleTimeString('en-AU', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+      return (
+        <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
+          <div className="rounded-[18px] border-[1.5px] border-[#5b9aa6] bg-[#e7f2f3] px-4 py-4">
+            <p className="m-0 text-[16px] font-extrabold leading-snug text-[#16282b]">
+              You have a test in progress from {startedLabel}
+            </p>
+            <p className="mt-1.5 text-[12.5px] leading-snug text-[#3b4f52]">
+              {resume.stages.length > 0
+                ? `${resume.stages.length} logged minute${resume.stages.length === 1 ? '' : 's'} are safe — minute ${resume.minute} restarts from zero.`
+                : 'Pick up where you left off — the interrupted minute restarts from zero.'}
+            </p>
+          </div>
+          <PrimaryButton onClick={applyResume} className="rounded-[18px] py-[17px] text-base">
+            Resume
+          </PrimaryButton>
+          <SecondaryButton
+            onClick={() => {
+              clearHeartbeat(TEST_HEARTBEAT_KEY)
+              setResume(null)
+            }}
+            className="p-3"
+          >
+            Discard
+          </SecondaryButton>
+        </section>
+      )
+    }
     return (
       <section className="flex flex-col gap-4 pt-1">
         <button
@@ -377,6 +507,7 @@ export default function GuidedTest({
         <PrimaryButton
           disabled={modality === null}
           onClick={() => {
+            testStartRef.current = Date.now()
             stageStartRef.current = Date.now()
             setStageElapsed(0)
             cuedRef.current = false
@@ -396,7 +527,10 @@ export default function GuidedTest({
       {/* abort / back — never a dead end (and never a silent discard) */}
       <button
         type="button"
-        onClick={() => onAbort({ started: true, stages: recordedStages })}
+        onClick={() => {
+          clearHeartbeat(TEST_HEARTBEAT_KEY) // explicit abort — nothing to resume
+          onAbort({ started: true, stages: recordedStages })
+        }}
         className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-[#7d9092] transition active:scale-[0.98]"
       >
         ← End test without a result
@@ -407,7 +541,7 @@ export default function GuidedTest({
         <div className="relative h-[114px] w-[114px] flex-none">
           <StageRing elapsedSec={stageElapsed} />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[9px] font-bold tracking-[0.14em] text-[#849c9c]">
+            <span className="text-[9px] font-bold tracking-[0.14em] text-[#5d7174]">
               MIN {minute}
             </span>
             <span
@@ -421,7 +555,7 @@ export default function GuidedTest({
         <div className="flex flex-col gap-0.5">
           <label
             htmlFor="hr"
-            className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#849c9c]"
+            className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#5d7174]"
           >
             Heart rate
           </label>
@@ -441,7 +575,7 @@ export default function GuidedTest({
               placeholder="—"
               className={`w-[88px] border-none bg-transparent p-0 text-[46px] leading-[0.92] text-[#5b9aa6] outline-none placeholder:text-[#bcd0d2] ${numFont}`}
             />
-            <span className="text-[11px] font-semibold text-[#9bafb0]">BPM</span>
+            <span className="text-[11px] font-semibold text-[#5d7174]">BPM</span>
           </div>
           {hrStatus === 'streaming' ? (
             <span className="flex items-center gap-1.5 text-[11px] font-semibold leading-tight text-[#3c7a1f]">
@@ -453,7 +587,7 @@ export default function GuidedTest({
               Signal dropped — re-connecting {hrSourceLabel ?? 'your device'}…
             </span>
           ) : (
-            <span className="text-[11px] leading-tight text-[#9bafb0]">
+            <span className="text-[11px] leading-tight text-[#5d7174]">
               rested {restingSymptomScore}/10 · type it from your monitor
             </span>
           )}
@@ -479,11 +613,11 @@ export default function GuidedTest({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between">
           <span className="text-xs font-semibold text-[#3b4f52]">
-            How hard does this feel? <span className="font-normal text-[#9bafb0]">· Borg RPE</span>
+            How hard does this feel? <span className="font-normal text-[#5d7174]">· Borg RPE</span>
           </span>
           <span className={`text-[16px] text-[#5b9aa6] ${numFont}`}>
             {rpe}
-            <span className="text-[11px] text-[#9bafb0]">/20</span>
+            <span className="text-[11px] text-[#5d7174]">/20</span>
           </span>
         </div>
         <input
@@ -496,7 +630,7 @@ export default function GuidedTest({
           aria-label="How hard this feels, 6 easy to 20 maximal"
           className="w-full accent-[#5b9aa6]"
         />
-        <div className="flex justify-between text-[10px] font-medium text-[#9bafb0]">
+        <div className="flex justify-between text-[10px] font-medium text-[#5d7174]">
           <span>6 · easy</span>
           <span>20 · maximal</span>
         </div>
@@ -543,7 +677,7 @@ export default function GuidedTest({
           <span className="text-xs font-semibold text-[#3b4f52]">Symptom level</span>
           <span className={`text-[15px] text-[#5b9aa6] ${numFont}`}>
             {symptomScore}
-            <span className="text-[10px] text-[#9bafb0]">/10</span>
+            <span className="text-[10px] text-[#5d7174]">/10</span>
           </span>
         </div>
         <SegmentBars
@@ -624,7 +758,7 @@ export default function GuidedTest({
             </p>
           </div>
         )}
-        <p className="m-0 text-center text-[10px] leading-tight text-[#9bafb0]">
+        <p className="m-0 text-center text-[10px] leading-tight text-[#5d7174]">
           The test ends on its own at a {PROVOCATION_RISE}-point symptom rise (that sets your
           threshold), at maximal effort, or at minute {MAX_STAGES}. A symptom spike can be logged at
           any time — you never have to wait out the minute.
@@ -632,7 +766,7 @@ export default function GuidedTest({
       </div>
 
       <div className="flex flex-col gap-2 border-t border-[#dde7e7] pt-3">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#849c9c]">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#5d7174]">
           End the test early
         </span>
         <button

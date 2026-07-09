@@ -224,7 +224,7 @@ export function SstHomepageDemo() {
           </span>
           <span className="text-[13px] font-semibold leading-none text-[#3b4f52]">SST Trainer · product tour</span>
         </div>
-        <span className="text-[12px] leading-none text-[#849c9c] tabular-nums" style={{ fontFamily: SPACE }}>
+        <span className="text-[12px] leading-none text-[#5d7174] tabular-nums" style={{ fontFamily: SPACE }}>
           {timeLabel}
         </span>
       </div>
@@ -338,23 +338,23 @@ export function SstHomepageDemo() {
                     <div className="relative flex-none" style={{ width: 96, height: 96 }}>
                       <RingEl frac={0.72} />
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[8px] font-bold leading-none tracking-[0.12em] text-[#849c9c]">MIN</span>
+                        <span className="text-[8px] font-bold leading-none tracking-[0.12em] text-[#5d7174]">MIN</span>
                         <span className="text-[34px] text-[#16282b] font-semibold" style={{ lineHeight: 0.9, fontFamily: SPACE }}>
                           7
                         </span>
                       </div>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[9px] font-semibold uppercase leading-none tracking-[0.05em] text-[#849c9c]">
+                      <span className="text-[9px] font-semibold uppercase leading-none tracking-[0.05em] text-[#5d7174]">
                         Live heart rate
                       </span>
                       <span className="flex items-baseline gap-[4px]">
                         <span className="text-[40px] text-[#5b9aa6] font-semibold" style={{ lineHeight: 0.9, fontFamily: SPACE }}>
                           139
                         </span>
-                        <span className="text-[10px] font-semibold leading-none text-[#9bafb0]">BPM</span>
+                        <span className="text-[10px] font-semibold leading-none text-[#5d7174]">BPM</span>
                       </span>
-                      <span className="text-[10px] leading-[1.3] text-[#9bafb0]">rested 1/10 · from watch</span>
+                      <span className="text-[10px] leading-[1.3] text-[#5d7174]">rested 1/10 · from watch</span>
                     </div>
                   </div>
                   <span className="text-[11px] font-semibold leading-none text-[#3b4f52]">Any of your symptoms now?</span>
@@ -390,16 +390,16 @@ export function SstHomepageDemo() {
                   <span className="text-[18px] font-extrabold leading-[1.05] tracking-[-0.02em]">Your result</span>
                   <div className="flex items-center justify-between bg-[#eef4f4]" style={{ borderRadius: 14, padding: '11px 14px' }}>
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-semibold uppercase leading-[1.2] tracking-[0.06em] text-[#849c9c]">
+                      <span className="text-[9px] font-semibold uppercase leading-[1.2] tracking-[0.06em] text-[#5d7174]">
                         Heart-rate threshold
                       </span>
-                      <span className="text-[9px] leading-[1.2] text-[#9bafb0]">reached at minute 7</span>
+                      <span className="text-[9px] leading-[1.2] text-[#5d7174]">reached at minute 7</span>
                     </div>
                     <span className="flex items-baseline gap-[3px]">
                       <span className="text-[26px] leading-none font-semibold" style={{ fontFamily: SPACE }}>
                         155
                       </span>
-                      <span className="text-[10px] font-semibold leading-none text-[#9bafb0]">BPM</span>
+                      <span className="text-[10px] font-semibold leading-none text-[#5d7174]">BPM</span>
                     </span>
                   </div>
                   <div style={{ border: '2px solid #5b9aa6', background: 'linear-gradient(180deg,#eef6f6,#e3f0f1)', borderRadius: 18, padding: 14 }}>
@@ -443,7 +443,7 @@ export function SstHomepageDemo() {
                       <span className="text-[52px] text-[#5b9aa6] font-semibold" style={{ lineHeight: 0.9, fontFamily: SPACE }}>
                         131
                       </span>
-                      <span className="text-[10px] font-semibold leading-none tracking-[0.14em] text-[#9bafb0]" style={{ marginTop: -1 }}>
+                      <span className="text-[10px] font-semibold leading-none tracking-[0.14em] text-[#5d7174]" style={{ marginTop: -1 }}>
                         BPM
                       </span>
                       <span className="mt-[6px] rounded-full bg-[#e7f2f3] px-3 py-[5px] text-[10px] font-bold leading-none text-[#3c7681]">
@@ -501,7 +501,7 @@ export function SstHomepageDemo() {
         <div className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-[#e2ecec]">
           <div className="h-full rounded-[3px] bg-[#5b9aa6]" style={{ width: progressPct }} />
         </div>
-        <span className="whitespace-nowrap text-[11px] leading-none text-[#849c9c] tabular-nums" style={{ fontFamily: SPACE }}>
+        <span className="whitespace-nowrap text-[11px] leading-none text-[#5d7174] tabular-nums" style={{ fontFamily: SPACE }}>
           {timeLabel}
         </span>
       </div>
@@ -516,7 +516,7 @@ export function SstHomepageDemo() {
             className="flex flex-1 cursor-pointer flex-col gap-[5px] border-none bg-transparent p-0"
           >
             <span className="h-[3px] rounded-[2px] transition-colors" style={{ background: i <= fi ? '#5b9aa6' : '#dde7e7' }} />
-            <span className="text-left text-[9px] font-semibold leading-[1.1] transition-colors" style={{ color: i === fi ? '#16282b' : '#9bafb0' }}>
+            <span className="text-left text-[9px] font-semibold leading-[1.1] transition-colors" style={{ color: i === fi ? '#16282b' : '#5d7174' }}>
               {label}
             </span>
           </button>

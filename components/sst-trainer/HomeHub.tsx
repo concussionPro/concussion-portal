@@ -120,7 +120,7 @@ export default function HomeHub({
       <div className="flex items-center justify-between rounded-[16px] border border-[#dde7e7] bg-white px-4 py-3">
         <div className="flex flex-col gap-0.5">
           <span className="text-[12.5px] font-bold text-[#16282b]">Sessions logged</span>
-          <span className="text-[11px] text-[#849c9c]">
+          <span className="text-[11px] text-[#5d7174]">
             {done} of {target} toward your weekly goal
           </span>
         </div>
@@ -178,13 +178,13 @@ export default function HomeHub({
         <button
           type="button"
           onClick={onStartOver}
-          className="mx-auto mt-1 rounded-[10px] px-2 py-1 text-[11px] font-semibold text-[#9bafb0] transition hover:text-[#b5462f]"
+          className="mx-auto mt-1 rounded-[10px] px-2 py-1 text-[11px] font-semibold text-[#5d7174] transition hover:text-[#b5462f]"
         >
           Start over
         </button>
       )}
 
-      <p className="m-0 mt-1 text-center text-[10px] leading-snug text-[#9bafb0]">
+      <p className="m-0 mt-1 text-center text-[10px] leading-snug text-[#5d7174]">
         A clinician-directed coaching tool — not a diagnosis or return-to-play clearance. Follow your
         clinician&rsquo;s guidance.
       </p>

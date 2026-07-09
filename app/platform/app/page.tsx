@@ -656,6 +656,7 @@ export default function PlatformAppPage({
       {step === 'training' && prescription && (
         <TrainingSession
           rx={prescription}
+          initialPreSymptom={restingSymptomScore}
           liveHr={sessionFeed.bpm}
           hrSourceLabel={connection?.label ?? device.name}
           hrStatus={sessionFeed.status}

@@ -137,12 +137,15 @@ export function SegmentBars({
   ariaLabel?: string
 }) {
   const col = danger ? '#d79a3a' : '#5b9aa6'
+  // Each segment button is a FULL-HEIGHT transparent hit area (>=44px touch
+  // target); the slim visual bar is the inner span, so the control still reads
+  // exactly as before. Flat strips centre the bar; ramp bars bottom-align.
   return (
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={`flex w-full gap-1 ${variant === 'ramp' ? 'items-end' : 'items-center'}`}
-      style={{ height: variant === 'ramp' ? 48 : 18 }}
+      className="flex w-full gap-1"
+      style={{ height: variant === 'ramp' ? 48 : 44 }}
     >
       {Array.from({ length: 11 }, (_, i) => (
         <button
@@ -152,12 +155,19 @@ export function SegmentBars({
           aria-checked={i === value}
           aria-label={`${i}`}
           onClick={() => onChange(i)}
-          className="min-w-0 flex-1 basis-0 cursor-pointer rounded-[4px] border-none p-0 transition-[height,background] duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16282b] focus-visible:ring-offset-1"
-          style={{
-            height: variant === 'ramp' ? 13 + i * 2.6 : 18,
-            background: i <= value ? col : '#d8e4e4',
-          }}
-        />
+          className={`group flex h-full min-w-0 flex-1 basis-0 cursor-pointer border-none bg-transparent p-0 focus-visible:outline-none ${
+            variant === 'ramp' ? 'items-end' : 'items-center'
+          }`}
+        >
+          <span
+            aria-hidden
+            className="w-full rounded-[4px] transition-[height,background] duration-100 group-focus-visible:ring-2 group-focus-visible:ring-[#16282b] group-focus-visible:ring-offset-1"
+            style={{
+              height: variant === 'ramp' ? 13 + i * 2.6 : 18,
+              background: i <= value ? col : '#d8e4e4',
+            }}
+          />
+        </button>
       ))}
     </div>
   )

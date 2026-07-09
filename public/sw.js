@@ -21,7 +21,7 @@
  *
  * Bump CACHE on any strategy change so old caches are dropped at activate.
  */
-const CACHE = 'sst-v2'
+const CACHE = 'sst-v3'
 const APP_SHELL = '/sst-trainer'
 // Cache sentinel + in-memory flag marking this a native (Capacitor) shell.
 const NATIVE_FLAG = '/__sst_native_shell__'
@@ -81,6 +81,28 @@ self.addEventListener('fetch', (event) => {
     caches.open(CACHE).then((cache) => cache.put(NATIVE_FLAG, new Response('1'))).catch(() => {})
   }
   if (nativeShell) return // default browser handling — no caching, no interception
+
+  // Build assets (/_next/static/*): CACHE-FIRST at runtime. These URLs are
+  // content-hashed and immutable, so a hit is always correct — and without
+  // this, the cached shell references chunk URLs that 404 after the next
+  // deploy, blank-screening the installed PWA offline. A miss populates the
+  // cache from the network so the assets of the shell we cached stay servable.
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.match(req).then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            if (res && res.ok) {
+              const copy = res.clone()
+              caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {})
+            }
+            return res
+          }),
+      ),
+    )
+    return
+  }
 
   // Navigations into the app: network-first (always prefer the live build),
   // falling back to the cached shell when offline.

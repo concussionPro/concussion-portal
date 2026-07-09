@@ -87,7 +87,7 @@ export default function Readiness({
               </span>
               <span className={`text-[18px] text-[#5b9aa6] ${numFont}`}>
                 {restingScore}
-                <span className="text-xs text-[#9bafb0]">/10</span>
+                <span className="text-xs text-[#5d7174]">/10</span>
               </span>
             </div>
             <SegmentBars
@@ -96,7 +96,7 @@ export default function Readiness({
               variant="ramp"
               ariaLabel="Resting symptom score, 0 to 10"
             />
-            <div className="flex justify-between text-[10px] font-medium text-[#9bafb0]">
+            <div className="flex justify-between text-[10px] font-medium text-[#5d7174]">
               <span>0 · none</span>
               <span>10 · severe</span>
             </div>

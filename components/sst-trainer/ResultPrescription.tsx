@@ -75,16 +75,16 @@ export default function ResultPrescription({
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between rounded-[16px] bg-[#eef4f4] px-4 py-3">
             <div className="flex flex-col">
-              <span className="text-[10.5px] font-semibold uppercase leading-tight tracking-[0.06em] text-[#849c9c]">
+              <span className="text-[10.5px] font-semibold uppercase leading-tight tracking-[0.06em] text-[#5d7174]">
                 Heart-rate threshold
               </span>
-              <span className="text-[11px] leading-tight text-[#9bafb0]">
+              <span className="text-[11px] leading-tight text-[#5d7174]">
                 reached at minute {result.thresholdStage}
               </span>
             </div>
             <span className="flex items-baseline gap-1">
               <span className={`text-[30px] text-[#16282b] ${numFont}`}>{rx.hrt}</span>
-              <span className="text-[11px] font-semibold text-[#9bafb0]">BPM</span>
+              <span className="text-[11px] font-semibold text-[#5d7174]">BPM</span>
             </span>
           </div>
 
@@ -113,17 +113,17 @@ export default function ResultPrescription({
 
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3.5 py-3">
-              <span className="text-[11px] font-medium text-[#849c9c]">Session length</span>
+              <span className="text-[11px] font-medium text-[#5d7174]">Session length</span>
               <div className={`mt-1 text-[18px] text-[#16282b] ${numFont}`}>
                 {rx.sessionMinutes}
-                <span className="text-[11px] text-[#9bafb0]"> min</span>
+                <span className="text-[11px] text-[#5d7174]"> min</span>
               </div>
             </div>
             <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3.5 py-3">
-              <span className="text-[11px] font-medium text-[#849c9c]">Frequency</span>
+              <span className="text-[11px] font-medium text-[#5d7174]">Frequency</span>
               <div className={`mt-1 text-[18px] text-[#16282b] ${numFont}`}>
                 {rx.daysPerWeek}
-                <span className="text-[11px] text-[#9bafb0]"> days/wk</span>
+                <span className="text-[11px] text-[#5d7174]"> days/wk</span>
               </div>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function ResultPrescription({
           <p className="m-0 rounded-[14px] bg-[#eef4f4] px-3.5 py-3 text-xs leading-relaxed text-[#3b4f52]">
             {rx.summary}
           </p>
-          <p className="m-0 text-[10.5px] leading-snug text-[#9bafb0]">
+          <p className="m-0 text-[10.5px] leading-snug text-[#5d7174]">
             Not a diagnosis or return-to-play clearance. Share with your clinician and follow their
             guidance.
           </p>
@@ -179,7 +179,7 @@ export default function ResultPrescription({
       {/* Not-a-diagnosis line on the non-physiologic branches too (the physiologic
           band carries its own above) — every result surface must disclaim. */}
       {!rx && (
-        <p className="m-0 text-[10.5px] leading-snug text-[#9bafb0]">
+        <p className="m-0 text-[10.5px] leading-snug text-[#5d7174]">
           Not a diagnosis or return-to-play clearance. Share this with your clinician and follow their
           guidance.
         </p>
