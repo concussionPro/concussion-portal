@@ -143,6 +143,7 @@ export const module3: Module = {
         'PHASE 2 — SPEED RAMP (only if incline ceiling reached without threshold):',
         '   - Once incline reaches its ceiling, hold incline fixed.',
         '   - Increase speed by 0.4 mph (≈0.6 km/h) per minute until test termination.',
+        '   - On test termination, reduce the belt to 2.0 mph at 0° incline for a 2-minute cool-down, then rest the client until symptoms settle toward their pre-test baseline.',
         'The combined effect of both phases produces a near-linear ramp in cardiovascular demand — approximately 0.5–1 MET per minute — controlled enough to identify the heart rate at symptom threshold with precision, typically within ±5–10 bpm of the true physiological ceiling.',
         '[CALLOUT: key | The speed is set by the EP and held constant through the incline phase — the client does NOT control the speed. Allowing the client to self-select or reduce the belt speed introduces a confound that makes the HRt less reproducible and the prescription less precise. The EP sets and holds the pace.]',
         '### Step 3 — Continuous Per-Minute Monitoring',
