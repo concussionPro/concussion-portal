@@ -501,7 +501,7 @@ export const scatModules: SCATModule[] = [
           '• Under-19 athletes: additional AIS 2024 requirements apply (see next section).',
           '',
           'BUFFALO CONCUSSION TREADMILL TEST (BCTT):',
-          'Evidence-based exertion testing. Start at 3.6 km/h, 0% incline. Increase speed by 0.9 km/h every minute. Stop when symptoms increase 3+ points. Record the heart rate at symptom provocation — this becomes the training ceiling.',
+          'Evidence-based exertion testing. Start at a brisk walking speed (3.2–3.6 mph / ~5.1–5.8 km/h), 0° incline, speed held constant. Increase incline by 1° each minute (to a 15° maximum, then increase speed). Stop when symptoms increase 3+ points from baseline. Record the heart rate at symptom provocation — this becomes the training ceiling.',
           '',
           'WITHOUT A TREADMILL: Start walking, progress to brisk walking → slow jog → moderate jog. Self-monitor symptoms 0–10. If symptoms remain at 0 for 24 hours at a given intensity → progress. If symptoms exceed 2/10 → drop back.',
         ],
