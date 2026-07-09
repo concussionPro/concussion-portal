@@ -465,7 +465,7 @@ export default function CrmPricingContent() {
                 energy-starved, autonomically-dysregulated injury that responds to precisely-dosed exertion.
                 Zac has over a decade of clinical experience in neurological health and concussion management,
                 including work with national and professional ice hockey across New Zealand and Canada, and is
-                the author of peer-reviewed concussion research (Lewis &amp; Baker). The course is grounded in the
+                a co-author of concussion research currently under external review (Lewis &amp; Baker). The course is grounded in the
                 Leddy / Buffalo evidence base and the Amsterdam 2023 consensus, translated specifically for the
                 exercise-physiology scope of practice.
               </p>

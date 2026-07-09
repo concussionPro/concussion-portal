@@ -5,7 +5,7 @@ import { createAuthorSchema, organizationSchema } from '@/lib/schema-markup'
 import { GraduationCap, ShieldCheck, BookOpen, Activity, Stethoscope, Users } from 'lucide-react'
 
 const TITLE = 'Zac Lewis — Founder + Lead Educator, Concussion Education Australia'
-const DESCRIPTION = "Zac Lewis is an AHPRA-registered Osteopath (B.Clin.Sci., M.Ost.Med, PhD Candidate Neuroscience), founder and lead clinical educator of Concussion Education Australia. AU concussion + AI in clinical practice training."
+const DESCRIPTION = "Zac Lewis is an AHPRA-registered Osteopath (B.Clin.Sci., M.Ost.Med), founder and lead clinical educator of Concussion Education Australia. AU concussion + AI in clinical practice training."
 const URL = 'https://portal.concussion-education-australia.com/about/zac-lewis'
 
 export const metadata: Metadata = {
@@ -50,11 +50,6 @@ export default function ZacLewisAboutPage() {
                 '@type': 'EducationalOccupationalCredential',
                 credentialCategory: 'Undergraduate degree',
                 name: 'Bachelor of Clinical Science (B.Clin.Sci.)',
-              },
-              {
-                '@type': 'EducationalOccupationalCredential',
-                credentialCategory: 'In Progress',
-                name: 'PhD Candidate (Neuroscience)',
               },
             ],
             memberOf: {
@@ -107,7 +102,7 @@ export default function ZacLewisAboutPage() {
               Founder &amp; Lead Educator, Concussion Education Australia
             </p>
             <p className="text-sm text-emerald-100">
-              B.Clin.Sci., M.Ost.Med, PhD Candidate (Neuroscience) · AHPRA-registered Osteopath
+              B.Clin.Sci., M.Ost.Med · AHPRA-registered Osteopath
             </p>
           </div>
         </section>
@@ -160,8 +155,8 @@ export default function ZacLewisAboutPage() {
                 <li className="flex items-start gap-3">
                   <BookOpen className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-slate-900">PhD Candidate (Neuroscience)</p>
-                    <p className="text-xs text-slate-600">Research focus on visual/vestibular processing in concussion.</p>
+                    <p className="font-semibold text-slate-900">Concussion research (co-author)</p>
+                    <p className="text-xs text-slate-600">Co-author of a concussion study currently under external review (Lewis &amp; Baker); not yet published.</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">

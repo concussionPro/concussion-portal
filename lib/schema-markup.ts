@@ -19,7 +19,7 @@ export const AUTHORS = {
   'Zac Lewis': {
     name: 'Zac Lewis',
     jobTitle: 'Founder & Lead Educator, Concussion Education Australia',
-    hasCredential: 'Registered Osteopath (AHPRA), B.Clin.Sci., M.Ost.Med, PhD Candidate (Neuroscience)',
+    hasCredential: 'Registered Osteopath (AHPRA), B.Clin.Sci., M.Ost.Med',
     knowsAbout: [
       'Sport-Related Concussion',
       'SCAT-6 Assessment',
