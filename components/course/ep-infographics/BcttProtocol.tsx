@@ -23,7 +23,7 @@ export function BcttProtocol() {
     <InfographicFrame
       eyebrow="Module 3 · The test that is the treatment"
       title="The Buffalo Concussion Treadmill Test (BCTT)"
-      ariaLabel="Staged ramp diagram. Walking at about 5.4 km/h, the treadmill incline rises 1 percent each minute (then speed rises once incline maxes out), shown as bars of increasing workload across minutes 1 to 7. Every minute the clinician logs heart rate, rating of perceived exertion, and a 0 to 10 symptom score. The test stops when symptoms rise 3 or more points above baseline; the heart rate at that moment is captured as HRt, the symptom threshold — here illustrated at 148 beats per minute."
+      ariaLabel="Staged ramp diagram. Walking at about 5.4 km/h, the treadmill incline rises 1 degree each minute (then speed rises once incline maxes out), shown as bars of increasing workload across minutes 1 to 7. Every minute the clinician logs heart rate, rating of perceived exertion, and a 0 to 10 symptom score. The test stops when symptoms rise 3 or more points above baseline; the heart rate at that moment is captured as HRt, the symptom threshold — here illustrated at 148 beats per minute."
       caption="A controlled, near-linear ramp with monitoring every minute — the ≥3-point symptom rise pinpoints HRt, the single number that becomes the prescription."
     >
       <svg viewBox="0 0 760 430" className="h-auto w-full" preserveAspectRatio="xMidYMid meet">
@@ -59,7 +59,7 @@ export function BcttProtocol() {
             <g key={i}>
               <rect x={x} y={baseline - bh} width={bw} height={bh} rx="6" fill={isFlag ? '#f0e6d9' : 'url(#bctt-bar)'} stroke={isFlag ? AMBER : 'none'} strokeWidth={isFlag ? 1.5 : 0} />
               <text x={x + bw / 2} y={baseline + 18} textAnchor="middle" fontSize="12" fontWeight="700" fill={INK}>{i + 1}</text>
-              <text x={x + bw / 2} y={baseline + 32} textAnchor="middle" fontSize="9.5" fill={SUB}>+{i + 1}%</text>
+              <text x={x + bw / 2} y={baseline + 32} textAnchor="middle" fontSize="9.5" fill={SUB}>+{i + 1}°</text>
             </g>
           )
         })}

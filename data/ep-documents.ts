@@ -119,11 +119,11 @@ export const EP_DOCUMENTS: EpDocument[] = [
       { type: 'section', title: '3. Graded protocol — per-minute log' },
       {
         type: 'note',
-        text: 'Treadmill ~5.0–5.8 km/h; 0% incline for minute 1, then +1% incline each minute to ~15%; thereafter hold incline and +~0.4 km/h each minute. Capture HR, RPE and symptom score at the end of every minute without stopping the belt.',
+        text: 'Treadmill ~5.0–5.8 km/h; 0° incline for minute 1, then +1° (one degree) incline each minute to a 15° maximum; thereafter hold incline and +0.4 mph each minute. Capture HR, RPE and symptom score at the end of every minute without stopping the belt.',
       },
       {
         type: 'grid',
-        columns: ['Min', 'Speed (km/h)', 'Incline %', 'HR (bpm)', 'RPE 6–20', 'Symptom 0–10', 'Symptom(s) provoked'],
+        columns: ['Min', 'Speed (km/h)', 'Incline (°)', 'HR (bpm)', 'RPE 6–20', 'Symptom 0–10', 'Symptom(s) provoked'],
         rows: 16,
       },
       { type: 'section', title: '4. Termination & HRt' },
@@ -132,7 +132,7 @@ export const EP_DOCUMENTS: EpDocument[] = [
         title: 'Endpoint reached (tick one)',
         items: [
           'SYMPTOM THRESHOLD — symptom score rose ≥ 3 points vs baseline (primary, concussion-specific endpoint; stop the belt)',
-          'VOLUNTARY EXHAUSTION / physical max — RPE 19–20 or volitional fatigue WITHOUT a ≥ 3-point symptom rise (normal / negative test)',
+          'VOLUNTARY EXHAUSTION / physical max — RPE > 17 or volitional fatigue WITHOUT a ≥ 3-point symptom rise (normal / negative test)',
           'RED FLAG — ataxia, marked pallor, syncope / near-syncope, chest pain, or rapidly escalating symptom (stop immediately)',
         ],
       },
