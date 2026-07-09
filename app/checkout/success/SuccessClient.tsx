@@ -260,7 +260,7 @@ function CheckoutSuccessContent() {
         {/* Refund guarantee — reduces post-purchase anxiety */}
         <div className="glass rounded-xl p-4 mb-8 border border-emerald-200/50 bg-emerald-50/30">
           <p className="text-sm text-muted-foreground">
-            <strong className="text-emerald-700">7-day satisfaction guarantee.</strong> If the course isn&apos;t right for you, email us within 7 days for a full refund — no questions asked.
+            <strong className="text-emerald-700">7-day satisfaction guarantee.</strong> If the course isn&apos;t right for you, email us within 7 days (with less than 25% of the course completed) for a full refund.
           </p>
         </div>
 

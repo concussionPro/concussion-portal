@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Calendar, ArrowRight, CheckCircle2, Utensils, Clock, BookOpen, FileText, Infinity, BedDouble, Car, Plane } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
@@ -84,9 +84,9 @@ export default function MelbournePage() {
                 <a
                   href={`${CONFIG.SHOP_URL}?location=melbourne`}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label={`Enrol in Melbourne session for $${CONFIG.COURSE.PRICE_REGULAR}`}
+                  aria-label={`Enrol in Melbourne session for $${workshopPriceFor('melbourne').toLocaleString()}`}
                 >
-                  Enrol Now — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                  Enrol Now — ${workshopPriceFor('melbourne').toLocaleString()}
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
 
@@ -225,7 +225,7 @@ export default function MelbournePage() {
               {isConfirmed
                 ? `Join Melbourne clinicians mastering evidence-based concussion management. Workshop date confirmed — limited spots for optimal hands-on practice.`
                 : isClosed
-                ? `These workshops run regularly and fill fast. Register your interest and you'll get the next Melbourne date before it's public — plus you can start the online modules today.`
+                ? `Register your interest and you'll get the next Melbourne date before it's public — plus you can start the online modules today.`
                 : `Join Melbourne clinicians mastering evidence-based concussion management. We run workshops as demand opens up — register and you'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice when the next date is confirmed.`}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

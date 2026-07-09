@@ -29,6 +29,8 @@ export const CONFIG = {
     // that is never charged. Use isEarlyBirdForLocation()/workshopPriceFor().
     PRICE_REGULAR: 1400,
     PRICE_EARLY_BIRD: 1190,
+    // SCAT6 completion code — dollar amount must match the Stripe coupon.
+    SCAT_DISCOUNT_AUD: 50,
     PRICE_INTERNATIONAL: 197,
     SAVINGS: 210,
     // Concussion Hub Pack — clinic-tier offer for cold outreach.

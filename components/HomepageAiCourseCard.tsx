@@ -149,7 +149,7 @@ export function HomepageAiCourseCard() {
             </p>
           )}
           <p className="text-[10px] text-slate-500 italic">
-            Launch-week A$99 (50% off A$197). Code emailed 1 June. No spam.
+            A$99 &middot; 2 CPD hours &middot; certificate on completion. No spam.
           </p>
         </form>
       )}

@@ -39,7 +39,7 @@ function aiCoursePricing(): { priceLine: string; ctaLabel: string } {
     }
   }
   return {
-    priceLine: `<strong>A$${current}</strong> &mdash; 3 CPD hours, fully online, certificate on completion.`,
+    priceLine: `<strong>A$${current}</strong> &mdash; 2 CPD hours, fully online, certificate on completion.`,
     ctaLabel: `See the course (A$${current})`,
   }
 }
@@ -442,7 +442,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <strong>Expires: ${expiryDate || 'in 72 hours'}</strong>
       </div>
       <p>The full course picks up where SCAT6 Mastery leaves off &mdash; 8 modules covering concussion pathophysiology, VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. Plus the option to add a hands-on workshop day.</p>
-      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day10', 'promo_code')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - 50} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
+      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day10', 'promo_code')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
       <div class="sig">
         Zac Lewis<br>
         Concussion Education Australia
@@ -510,7 +510,7 @@ export const SCAT_MASTERY_SEQUENCE = [
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</td>
         </tr>
       </table>
-      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - 50} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
+      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
       ${nextWorkshopCallout()}
       <p class="ps">P.S. You can start with the online course and upgrade to include the workshop later &mdash; you'll only pay the difference.</p>
       <div class="sig">Zac</div>

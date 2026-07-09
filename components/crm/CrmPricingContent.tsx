@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { CONFIG } from '@/lib/config'
 import Image from 'next/image'
 import {
   Check,
@@ -237,7 +238,7 @@ export default function CrmPricingContent() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">$497</span>
+                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
                     <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
                   </div>
                   <p className="text-[10px] text-[var(--muted-foreground)]">one-time</p>
@@ -289,7 +290,7 @@ export default function CrmPricingContent() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">$1,400</span>
+                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
                     <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
                   </div>
                   <p className="text-[10px] text-[var(--muted-foreground)]">one-time</p>

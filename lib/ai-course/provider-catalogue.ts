@@ -205,10 +205,11 @@ export const COURSES: CourseCatalogueEntry[] = [
     providerId: 'cea',
     cpdHours: 14,
     cpdRecognition: ['Osteopathy Australia–endorsed', 'AHPRA-aligned', 'MedCPD Career Health accredited'],
-    description: '8 online modules + full-day workshop. SCAT6, VOMS, BESS, return-to-sport/learn/work protocols. Workshop confirmed for Melbourne 13 June 2026.',
+    description: '8 online modules + full-day workshop. SCAT6, VOMS, BESS, return-to-sport/learn/work protocols. Workshop dates launch per city as clinicians nominate — online access starts immediately.',
     route: '/pricing',
-    // Regular price — early bird ($1,190) ended 31 May 2026.
-    priceAUD: 1400,
+    // Standing early-bird under the nomination model ($1,400 sticker applies
+    // only in the final 14 days before a scheduled workshop).
+    priceAUD: 1190,
     // Display-only here: CCM checkout lives at /pricing (full-course flow).
     purchasableViaCheckout: false,
     status: 'live',

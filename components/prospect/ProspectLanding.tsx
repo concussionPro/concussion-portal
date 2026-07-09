@@ -8,6 +8,7 @@
  * is the design reference; this is the dynamic generator).
  */
 import Link from 'next/link'
+import { CONFIG } from '@/lib/config'
 import Image from 'next/image'
 import {
   Brain,
@@ -569,8 +570,8 @@ function IndividualPricingCard({ slug }: { slug: string }) {
             </span>
           </div>
           <div className="flex items-baseline gap-1.5 mb-3">
-            <p className="text-3xl font-bold text-foreground leading-none">A$497</p>
-            <p className="text-[11px] text-muted-foreground">one-off · GST incl.</p>
+            <p className="text-3xl font-bold text-foreground leading-none">A${CONFIG.COURSE.PRICE_ONLINE}</p>
+            <p className="text-[11px] text-muted-foreground">one-off</p>
           </div>
           <ul className="space-y-1.5 text-[12.5px] text-foreground/85 leading-snug mb-4">
             <li>8 modules · 8 CPD hours online</li>
@@ -596,9 +597,9 @@ function IndividualPricingCard({ slug }: { slug: string }) {
             </span>
           </div>
           <div className="flex items-baseline gap-1.5 mb-3">
-            <p className="text-3xl font-bold text-accent leading-none">A$1,190</p>
+            <p className="text-3xl font-bold text-accent leading-none">A${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</p>
             <p className="text-[11px] text-muted-foreground">
-              <span className="line-through">A$1,400</span> · GST incl.
+              <span className="line-through">A${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span> · one-off
             </p>
           </div>
           <ul className="space-y-1.5 text-[12.5px] text-foreground/85 leading-snug mb-4">

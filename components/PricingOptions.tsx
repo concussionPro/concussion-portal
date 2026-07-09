@@ -558,8 +558,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </span>
             <div className="text-center">
               <p className="text-sm font-semibold text-emerald-900 leading-tight">
-                <span className="font-bold">$50 off applied</span> &middot; Online Course is{' '}
-                <span className="font-bold">A${(CONFIG.COURSE.PRICE_ONLINE - 50).toLocaleString()}</span>
+                <span className="font-bold">${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off applied</span> &middot; Online Course is{' '}
+                <span className="font-bold">A${(CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD).toLocaleString()}</span>
                 <span className="text-emerald-700/80 font-normal"> (was <s>A${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}</s>)</span>
               </p>
               <p className="text-xs text-emerald-800/80 mt-0.5">

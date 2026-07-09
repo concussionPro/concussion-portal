@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
@@ -58,9 +58,9 @@ export default function SydneyPage() {
                 <a
                   href={`${CONFIG.SHOP_URL}?location=sydney`}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label={`Enrol in Sydney session for $${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}`}
+                  aria-label={`Enrol in Sydney session for $${workshopPriceFor('sydney').toLocaleString()}`}
                 >
-                  Enrol Now - ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                  Enrol Now - ${workshopPriceFor('sydney').toLocaleString()}
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
 

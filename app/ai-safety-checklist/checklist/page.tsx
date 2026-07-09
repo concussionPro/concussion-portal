@@ -119,7 +119,7 @@ export default function AiSafetyChecklistPage() {
           <p><strong>Author:</strong> Zac Lewis, B.Clin.Sci., M.Ost.Med. — AHPRA-registered Osteopath, Concussion Education Australia.</p>
           <p><strong>Built for:</strong> Australian allied health professionals using AI in patient care.</p>
           <p><strong>Updates:</strong> This is v1. Reply to the welcome email with feedback or specific use cases I should cover in v2.</p>
-          <p className="pt-2"><strong>Want the full framework?</strong> The AI in Clinical Practice short course (3 CPD hours, A$99 launch week, A$197 thereafter) walks through every item on this checklist with worked examples for physio, osteo, GP, and naturopathy.</p>
+          <p className="pt-2"><strong>Want the full framework?</strong> The AI in Clinical Practice short course (2 CPD hours, A$99) walks through every item on this checklist with worked examples for physio, osteo, GP, and naturopathy.</p>
           <p className="text-[10px] text-slate-400 pt-2 italic">Not legal advice. Verify with your indemnity insurer + AHPRA board before changing your scope of practice.</p>
         </footer>
       </main>
