@@ -1,4 +1,12 @@
 # robots.txt for Concussion Education Australia
+#
+# NOTE: do NOT add per-bot "Allow: /" groups for AI crawlers. Under the
+# Robots Exclusion Protocol a crawler obeys ONLY its most-specific matching
+# group, so a named group containing just "Allow: /" cancels every Disallow
+# below for that bot (this exposed /p/ prospect pages to AI crawlers until
+# 2026-07-10). AI search/citation bots (GPTBot, OAI-SearchBot, ClaudeBot,
+# PerplexityBot, Applebot, DuckAssistBot, Google-Extended, ChatGPT-User,
+# anthropic-ai, cohere-ai) are welcome and governed by the * group.
 
 User-agent: *
 Allow: /
@@ -8,8 +16,8 @@ Allow: /
 Disallow: /api/
 Disallow: /dashboard
 Disallow: /admin
-Disallow: /dev-login/
-Disallow: /direct-access/
+Disallow: /dev-login
+Disallow: /direct-access
 Disallow: /auth/
 Disallow: /login
 Disallow: /settings
@@ -20,39 +28,37 @@ Disallow: /pay/
 # Custom per-prospect pitch pages + partner pages — private, never index
 Disallow: /p/
 Disallow: /partners/
+Disallow: /preseason/b/
+Disallow: /proposals/
 # Pre-launch gated app surfaces (SST Trainer platform + demo entry links)
 Disallow: /platform
 Disallow: /demo/
+Disallow: /sst-trainer
+Disallow: /clinical-testing
+Disallow: /clinical-hub
+Disallow: /join-clinic
+# Private review / ops surfaces
+Disallow: /ep-course
+Disallow: /outreach-kit
+Disallow: /talk
+Disallow: /admin-workflow
+Disallow: /courses/poll
+Disallow: /s/
+Disallow: /upgrade
+Disallow: /verify
 # Pre-launch hidden tools suite (Screen Comfort + future on-device eye tools)
 Disallow: /tools/
 Disallow: /screen-comfort
 # Research & publications — hidden until the first DOIs land
 Disallow: /publications
 
-# AI Crawlers — explicitly allowed
-User-agent: GPTBot
-Allow: /
+# Training-only crawlers with no search/citation value for AU clinicians —
+# blocked (Bytespider was 60% of AI traffic; pure content extraction).
+User-agent: Bytespider
+Disallow: /
 
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Applebot-Extended
-Allow: /
-
-User-agent: cohere-ai
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
+User-agent: CCBot
+Disallow: /
 
 # Sitemap location
 Sitemap: https://portal.concussion-education-australia.com/sitemap.xml
