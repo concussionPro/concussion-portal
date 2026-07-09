@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { SST_PRICING } from '@/lib/config'
 import { rateLimit } from '@/lib/rate-limit'
 import { isRegisteredClinic, verifyViewKey, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
 import { buildGpReportHtml } from '@/lib/sst-trainer/gp-report-html'
@@ -30,7 +31,7 @@ a.btn{display:inline-block;margin-top:18px;background:#16243f;color:#fff;font-we
 <li>Parent / patient symptom &amp; recovery plan</li>
 </ul>
 <a class="btn" href="${origin}/clinical-testing/subscribe">Unlock documents — subscribe</a>
-<p class="sub">Founding clinics lock A$49/month for life. Your first 3 patients are free.</p>
+<p class="sub">Founding clinics lock A$${SST_PRICING.FOUNDING_FROM}/month for life. Your first 3 patients are free.</p>
 </div></body></html>`
 }
 

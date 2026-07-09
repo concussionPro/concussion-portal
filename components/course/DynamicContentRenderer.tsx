@@ -702,6 +702,13 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     }
   }
 
+  // Generic DSL leak guard: any `[TOKEN: …]`-shaped line that reached this
+  // point failed every token handler above (typo'd type, missing pipe, bad
+  // id). Render nothing rather than leaking raw markup to the page — the
+  // content-DSL test (tests/ep-content-tokens.test.ts) catches the typo at
+  // build time so the content itself gets fixed too.
+  if (/^\[[A-Z]+:/.test(text)) return null
+
   // Standard paragraph with safe bold rendering
   return (
     <p key={key} className="text-[15px] text-slate-700 leading-relaxed">

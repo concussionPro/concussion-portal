@@ -197,6 +197,16 @@ export function upgradePriceFor(locationSlug?: string | null): number {
   return workshopPriceFor(locationSlug) - CONFIG.COURSE.PRICE_ONLINE
 }
 
+/**
+ * SST Trainer clinic pricing (A$/month) — single source for every surface
+ * (founding page, pricing page, gp-report paywall, clinic welcome email).
+ * Founding clinics lock their tier rate for life; solo tier from A$49.
+ */
+export const SST_PRICING = {
+  FOUNDING_FROM: 49, // solo-tier founding lock (for life)
+  STANDARD_SOLO: 99, // standard solo-tier rate after the founding period
+} as const
+
 /** Calculate Afterpay/Klarna instalment amount (price / 4, rounded up to cents) */
 export function afterpayInstalment(price: number): string {
   return (Math.ceil(price / 4 * 100) / 100).toFixed(2)

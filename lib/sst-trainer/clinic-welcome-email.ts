@@ -1,4 +1,5 @@
 import { CONFIG } from '@/lib/config'
+import { SST_PRICING } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,7 +99,7 @@ export function buildWelcomeEmail(args: {
         <p style="font-size: 14px; color: #475569;">The graded test is clinician-distributed — patients can only reach it through a registered clinic code like yours, so you stay in control of who runs it and when.</p>
 
         <div class="founding">
-          <p style="margin: 0;"><strong>Founding clinic terms:</strong> Free during the founding period. When paid plans launch, founding clinics lock A$99/month for life.</p>
+          <p style="margin: 0;"><strong>Founding clinic terms:</strong> Free during the founding period. When paid plans launch, founding clinics lock their rate for life — from A$${SST_PRICING.FOUNDING_FROM}/month (standard plans from A$${SST_PRICING.STANDARD_SOLO}).</p>
         </div>
 
         <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions, or want a hand onboarding your first patient? Just hit reply — I read every message.</p>
