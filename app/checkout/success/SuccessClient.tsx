@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackPurchaseConversion, trackEvent } from '@/lib/analytics'
 
 declare global {
@@ -347,9 +347,11 @@ function CheckoutSuccessContent() {
 
         {/* Workshop upsell for online-only buyers */}
         {sessionData?.courseType === 'online-only' && (() => {
-          // Early bird is over — the server charges the regular upgrade
+          // Standing early-bird: the server charges upgradePriceFor(), so the
+          // display must come from the same helper (was PRICE_REGULAR-based,
+          // overstating the upgrade by $210 at the hottest moment).
           // delta ($903), so the displayed price must match.
-          const upgradePrice = CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+          const upgradePrice = upgradePriceFor(null)
           return (
             <div className="mt-8 glass rounded-2xl p-6 border-2 border-orange-200/60">
               <div className="flex items-start gap-3 mb-3">
