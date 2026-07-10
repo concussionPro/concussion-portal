@@ -766,7 +766,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Full-day workshop',
               'SCAT6, VOMS, BESS',
               '1:1 expert feedback',
-              '14 CPD (8 online + 6)',
+              '14 CPD (8 online + 6 in-person)',
               'AU locations',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">

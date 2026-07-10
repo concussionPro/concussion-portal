@@ -534,7 +534,7 @@ function PricingContent() {
                     ['Full-day hands-on workshop', false, true],
                     ['Expert coaching & 1:1 feedback', false, true],
                     ['Supervised clinical practice', false, true],
-                    ['Workshop CPD certificate', false, '6 pts'],
+                    ['Workshop CPD certificate', false, '+6 pts in-person'],
                     ['Total CPD hours', '8', '14'],
                     ['Afterpay / Klarna available', true, true],
                   ] as [string, boolean | string, boolean | string][]).map(([feature, online, workshop], i) => (
