@@ -492,7 +492,7 @@ function PricingContent() {
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg mx-auto mt-2">
               Buy the Complete Course any time — you nominate your city at checkout, and the
-              date launches once your city hits its threshold. At least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
+              date launches once your city hits its threshold. At least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}{' '}weeks&apos; notice.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
