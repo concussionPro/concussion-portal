@@ -188,21 +188,21 @@ export default function SstConnectWizard({
 
   if (!open) return null
 
-  const card = 'rounded-[14px] border-[1.5px] border-[#d4e0e1] bg-white px-3.5 py-3'
-  const h = 'm-0 text-[15px] font-extrabold leading-tight text-[#16243f]'
-  const body = 'm-0 text-[12px] leading-snug text-[#3c5658]'
+  const card = 'rounded-[14px] border-[1.5px] border-(--sst-line) bg-(--sst-card) px-3.5 py-3'
+  const h = 'm-0 text-[15px] font-extrabold leading-tight text-(--sst-navy)'
+  const body = 'm-0 text-[12px] leading-snug text-(--sst-ink-3)'
   const primaryBtn =
-    'w-full rounded-[14px] bg-[#16243f] px-4 py-3 text-center text-[14px] font-bold text-white active:scale-[0.99] disabled:opacity-50'
-  const quietBtn = 'w-full rounded-[14px] border-[1.5px] border-[#d4e0e1] bg-white px-4 py-2.5 text-center text-[13px] font-semibold text-[#3b4f52]'
+    'w-full rounded-[14px] bg-(--sst-navy) px-4 py-3 text-center text-[14px] font-bold text-(--sst-bg) active:scale-[0.99] disabled:opacity-50'
+  const quietBtn = 'w-full rounded-[14px] border-[1.5px] border-(--sst-line) bg-(--sst-card) px-4 py-2.5 text-center text-[13px] font-semibold text-(--sst-ink-2)'
 
   const selectedBrand = BRANDS.find((b) => b.id === brand) ?? null
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#16243f]/45 p-3 sm:items-center" role="dialog" aria-modal="true">
-      <div className="flex max-h-[92vh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-[18px] bg-[#f6fafa] p-4">
+      <div className="flex max-h-[92vh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-[18px] bg-(--sst-bg) p-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className={h}>Connect your watch or strap</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="flex-none text-[18px] leading-none text-[#849c9c]">
+          <button type="button" onClick={onClose} aria-label="Close" className="flex-none text-[18px] leading-none text-(--sst-faint-2)">
             ✕
           </button>
         </div>
@@ -210,7 +210,7 @@ export default function SstConnectWizard({
         {step === 'env' && (
           <>
             {isBrave && (
-              <div className={card} style={{ borderColor: '#f59e0b', background: '#fffbeb' }}>
+              <div className={card} style={{ borderColor: 'var(--sst-warn)', background: 'var(--sst-warn-soft)' }}>
                 <p className={body}>
                   <strong>Brave blocks Web Bluetooth by default</strong> — that&rsquo;s why the picker doesn&rsquo;t open
                   (the Privacy &amp; Security toggle doesn&rsquo;t control it). Two ways through:
@@ -277,7 +277,7 @@ export default function SstConnectWizard({
                     aria-pressed={on}
                     onClick={() => setBrand(on ? null : b.id)}
                     className={`rounded-[14px] border-[1.5px] px-3.5 py-2.5 text-left text-[13px] font-semibold transition ${
-                      on ? 'border-[#5b9aa6] bg-[#e7f2f3] text-[#16243f]' : 'border-[#d4e0e1] bg-white text-[#3b4f52]'
+                      on ? 'border-(--sst-accent) bg-(--sst-accent-soft) text-(--sst-navy)' : 'border-(--sst-line) bg-(--sst-card) text-(--sst-ink-2)'
                     }`}
                   >
                     {b.label}
@@ -288,7 +288,7 @@ export default function SstConnectWizard({
             {selectedBrand && !selectedBrand.manualOnly && (
               <div className={card}>
                 <p className={body}>{selectedBrand.how}</p>
-                <p className={`${body} mt-1.5 text-[#7d5a1f]`}>
+                <p className={`${body} mt-1.5 text-(--sst-warn-ink-2)`}>
                   If the watch is paired to its phone app, turn your phone’s Bluetooth off while pairing here — the phone
                   hogs the connection.
                 </p>
@@ -350,7 +350,7 @@ export default function SstConnectWizard({
             <div className={`${card} text-center`}>
               {bpm != null ? (
                 <>
-                  <p className="m-0 text-[34px] font-extrabold leading-none text-[#3c7a1f]">{bpm}</p>
+                  <p className="m-0 text-[34px] font-extrabold leading-none text-(--sst-good)">{bpm}</p>
                   <p className={`${body} mt-1`}>bpm — live from {connRef.current?.label ?? 'your device'}. That’s a real signal.</p>
                 </>
               ) : silent ? (
