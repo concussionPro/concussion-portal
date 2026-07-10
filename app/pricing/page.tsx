@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ExternalLink,
   Check,
+  BookOpen,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -432,6 +433,24 @@ function PricingContent() {
             Training a team? See team pricing
             <span aria-hidden="true">↓</span>
           </a>
+        </div>
+
+        {/* Try-before-you-buy — owner 2026-07-10: pricing must link through to a
+            test module. /preview = real Module 1 content, no signup. */}
+        <div className="max-w-3xl mx-auto mb-4">
+          <Link
+            href="/preview"
+            className="group flex items-center justify-between gap-3 p-4 rounded-xl bg-white border border-[rgba(13,115,119,0.25)] hover:border-[rgba(13,115,119,0.45)] hover:shadow-md transition-all"
+          >
+            <div className="flex items-start gap-3">
+              <BookOpen className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Not sure yet? Test-drive Module 1 free</p>
+                <p className="text-xs text-muted-foreground mt-1">Real course content — myths to injury mechanisms — no signup, no card. See exactly what you&apos;re buying.</p>
+              </div>
+            </div>
+            <span className="text-sm font-semibold text-accent whitespace-nowrap group-hover:translate-x-0.5 transition-transform">Preview →</span>
+          </Link>
         </div>
 
         {/* Employer-reimbursement callout — universal (was variant-gated, but
