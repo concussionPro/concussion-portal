@@ -32,16 +32,22 @@ export default function HomeClient() {
 
 
         {/* ── Hero ─────────────────────────────────────────── */}
-        <section className="pt-[140px] md:pt-[160px] pb-12 md:pb-16 px-5 md:px-8 relative z-10">
+        <section className="pt-[120px] md:pt-[136px] pb-10 md:pb-12 px-5 md:px-8 relative z-10">
           <div className="max-w-[1200px] mx-auto">
             <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] gap-10 lg:gap-14 items-start animate-fade-in">
 
               {/* ── LEFT: Copy + CTAs ─────────────────────── */}
               <div className="min-w-0 max-w-[620px]">
 
-                {/* Badge */}
-                <div className="badge mb-6">
-                  {CONFIG.COURSE.CPD_BADGE_TEXT}
+                {/* Badge row — CPD + the OA endorsement (authority) up top */}
+                <div className="mb-6 flex flex-wrap items-center gap-2.5">
+                  <div className="badge mb-0">
+                    {CONFIG.COURSE.CPD_BADGE_TEXT}
+                  </div>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(13,115,119,0.25)] bg-white px-3 py-1.5 shadow-sm">
+                    <Image src="/osteopathy-australia-endorsed.png" alt="" width={26} height={24} className="h-6 w-auto" aria-hidden="true" />
+                    <span className="text-xs font-semibold text-[var(--foreground)]">Endorsed by Osteopathy Australia</span>
+                  </span>
                 </div>
 
                 {/* Headline */}
@@ -101,6 +107,10 @@ export default function HomeClient() {
                 <p className="text-sm text-slate-500 mt-1">
                   Complete Course (online + workshop in your city) — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
                 </p>
+                <a href="#locations" className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:underline">
+                  <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                  Workshops: Melbourne · Sydney · Byron Bay — or nominate your city
+                </a>
 
                 {/* Social proof strip */}
                 {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
@@ -108,11 +118,7 @@ export default function HomeClient() {
                     <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
                       <span className="font-semibold text-[var(--foreground)]">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded by Australian clinicians
                     </span>
-                    <span className="text-xs text-[var(--muted-foreground)]">·</span>
-                    <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
-                      <Image src="/osteopathy-australia-endorsed.png" alt="" width={22} height={20} className="h-5 w-auto" aria-hidden="true" />
-                      <span>Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
-                    </span>
+
                   </div>
                 )}
               </div>
@@ -199,13 +205,6 @@ export default function HomeClient() {
                     </Link>
                   )}
 
-                  {/* Register interest for other cities */}
-                  <OtherCityInterest />
-
-                  {/* AI in Clinical Practice — coming-soon card with early-access email signup
-                      (replaces the never-sold Reference + Toolkit standalone SKU) */}
-                  <HomepageAiCourseCard />
-
                 </div>
               </div>
 
@@ -214,7 +213,7 @@ export default function HomeClient() {
         </section>
 
         {/* ── Workshop locations ───────────────────────────── */}
-        <section className="section-padding relative z-10">
+        <section id="locations" className="section-padding relative z-10">
           <div className="max-w-[960px] mx-auto">
             <div className="text-center mb-8 md:mb-10">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
@@ -242,6 +241,12 @@ export default function HomeClient() {
               Somewhere else? The Complete Course is buyable any time — you nominate your city at
               checkout, and the date launches once your city hits its threshold.
             </p>
+
+            {/* Register interest — moved out of the hero (owner 2026-07-10: locations
+                + authority belong high; the hero stays slim) */}
+            <div className="mt-6 max-w-[480px] mx-auto">
+              <OtherCityInterest />
+            </div>
           </div>
         </section>
 
@@ -388,6 +393,13 @@ export default function HomeClient() {
           </div>
         </section>
 
+
+        {/* ── AI in Clinical Practice — early-access capture (moved from hero) ── */}
+        <section className="px-5 md:px-8 pb-4 relative z-10">
+          <div className="max-w-[480px] mx-auto">
+            <HomepageAiCourseCard />
+          </div>
+        </section>
 
         {/* ── What clinicians miss ─────────────────────────── */}
         <section className="section-padding relative z-10">
