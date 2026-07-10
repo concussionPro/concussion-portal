@@ -15,12 +15,14 @@ import {
   ExternalLink,
   Check,
   BookOpen,
+  MapPin,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
 import { CONFIG } from '@/lib/config'
+import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { trackEvent } from '@/lib/analytics'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -436,21 +438,28 @@ function PricingContent() {
         </div>
 
         {/* Try-before-you-buy — owner 2026-07-10: pricing must link through to a
-            test module. /preview = real Module 1 content, no signup. */}
-        <div className="max-w-3xl mx-auto mb-4">
-          <Link
-            href="/preview"
-            className="group flex items-center justify-between gap-3 p-4 rounded-xl bg-white border border-[rgba(13,115,119,0.25)] hover:border-[rgba(13,115,119,0.45)] hover:shadow-md transition-all"
-          >
-            <div className="flex items-start gap-3">
-              <BookOpen className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Not sure yet? Test-drive Module 1 free</p>
-                <p className="text-xs text-muted-foreground mt-1">Real course content — myths to injury mechanisms — no signup, no card. See exactly what you&apos;re buying.</p>
+            test module, PROMINENTLY. /preview = real Module 1 content, no signup. */}
+        <div className="max-w-3xl mx-auto mb-5">
+          <div className="rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-[rgba(13,115,119,0.08)] via-white to-white border-2 border-[rgba(13,115,119,0.35)] shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+              <div className="flex-1">
+                <p className="text-[11px] uppercase tracking-[0.16em] font-bold text-accent mb-1.5">Try it before you buy it</p>
+                <h2 className="text-lg sm:text-xl font-bold text-foreground leading-tight mb-1.5">
+                  Test-drive Module 1 — free, right now
+                </h2>
+                <p className="text-[13px] text-muted-foreground leading-snug">
+                  Real course content, not a demo reel. No signup, no card — open it and judge the teaching for yourself.
+                </p>
               </div>
+              <Link
+                href="/preview"
+                className="btn-primary px-7 py-3.5 rounded-xl text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg whitespace-nowrap flex-shrink-0"
+              >
+                <BookOpen className="w-4.5 h-4.5" aria-hidden="true" />
+                Open Module 1 free
+              </Link>
             </div>
-            <span className="text-sm font-semibold text-accent whitespace-nowrap group-hover:translate-x-0.5 transition-transform">Preview →</span>
-          </Link>
+          </div>
         </div>
 
         {/* Employer-reimbursement callout — universal (was variant-gated, but
@@ -524,6 +533,33 @@ function PricingContent() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {testimonials.slice(0, 3).map(t => (
               <TestimonialCard key={`pricing-${t.name}`} t={t} />
+            ))}
+          </div>
+        </div>
+
+        {/* Workshop locations — owner 2026-07-10: city blocks belong on the
+            pricing page too (Complete-course buyers ask "when's my city?"). */}
+        <div id="workshop-locations" className="max-w-4xl mx-auto mt-10 mb-4">
+          <div className="text-center mb-6">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent mb-2">
+              <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+              Hands-on workshops across Australia
+            </span>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
+              Where the practical day runs
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto mt-2">
+              Buy the Complete Course any time — you nominate your city at checkout, and the
+              date launches once your city hits its threshold. At least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {([
+              { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
+              { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
+              { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
+            ] as const).map((loc) => (
+              <LocationInterestCard key={loc.city} {...loc} />
             ))}
           </div>
         </div>
