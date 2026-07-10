@@ -479,6 +479,34 @@ function PricingContent() {
           <PricingOptions variant="full" />
         </div>
 
+        {/* Workshop locations — owner 2026-07-10: city blocks belong on the
+            pricing page too (Complete-course buyers ask "when's my city?"). */}
+        <div id="workshop-locations" className="max-w-4xl mx-auto mt-8 mb-2">
+          <div className="text-center mb-6">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent mb-2">
+              <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+              Hands-on workshops across Australia
+            </span>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
+              Where the practical day runs
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto mt-2">
+              Buy the Complete Course any time — you nominate your city at checkout, and the
+              date launches once your city hits its threshold. At least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {([
+              { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
+              { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
+              { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
+            ] as const).map((loc) => (
+              <LocationInterestCard key={loc.city} {...loc} />
+            ))}
+          </div>
+        </div>
+
+
         {/* Compare Plans — analytical decision support IMMEDIATELY after
             pricing cards (NNG/Baymard research: comparison tables next to
             tier cards lift conversion 8-15% in healthcare CPD because
@@ -533,33 +561,6 @@ function PricingContent() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {testimonials.slice(0, 3).map(t => (
               <TestimonialCard key={`pricing-${t.name}`} t={t} />
-            ))}
-          </div>
-        </div>
-
-        {/* Workshop locations — owner 2026-07-10: city blocks belong on the
-            pricing page too (Complete-course buyers ask "when's my city?"). */}
-        <div id="workshop-locations" className="max-w-4xl mx-auto mt-10 mb-4">
-          <div className="text-center mb-6">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent mb-2">
-              <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
-              Hands-on workshops across Australia
-            </span>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
-              Where the practical day runs
-            </h2>
-            <p className="text-sm text-muted-foreground max-w-lg mx-auto mt-2">
-              Buy the Complete Course any time — you nominate your city at checkout, and the
-              date launches once your city hits its threshold. At least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {([
-              { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
-              { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
-              { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
-            ] as const).map((loc) => (
-              <LocationInterestCard key={loc.city} {...loc} />
             ))}
           </div>
         </div>

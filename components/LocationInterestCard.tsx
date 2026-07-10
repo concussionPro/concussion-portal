@@ -102,56 +102,59 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] transition-shadow hover:shadow-[0_14px_40px_-8px_rgba(15,23,42,0.22)]">
-      <div className="relative aspect-[4/3] bg-slate-900">
-        <Image
-          src={img}
-          alt={`${city} — Concussion Clinical Mastery workshop location`}
-          fill
-          sizes="(min-width: 640px) 300px, 100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-transparent" aria-hidden="true" />
-        <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
-          <span className={`inline-flex h-1.5 w-1.5 rounded-full ${dotClass}`} aria-hidden="true" />
-          <span className={`text-[10px] font-bold uppercase tracking-wide ${statusTextClass}`}>{status}</span>
-        </div>
-        <div className="absolute inset-x-0 bottom-0 p-4">
-          <h3 className="text-white text-xl md:text-2xl font-bold tracking-tight leading-none [text-shadow:0_1px_8px_rgba(0,0,0,0.45)]">
-            {city}
-          </h3>
-        </div>
+    <div className="group relative rounded-2xl overflow-hidden bg-slate-950 shadow-[0_10px_36px_-10px_rgba(15,23,42,0.35)] transition-all duration-300 hover:shadow-[0_20px_56px_-12px_rgba(15,23,42,0.5)] hover:-translate-y-0.5">
+      {/* Full-bleed city photograph */}
+      <Image
+        src={img}
+        alt={`${city} — Concussion Clinical Mastery workshop location`}
+        fill
+        sizes="(min-width: 640px) 340px, 100vw"
+        className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+      />
+      {/* Cinematic scrim — readable overlay content, photo stays the hero */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-slate-950/10" aria-hidden="true" />
+
+      {/* Status pill */}
+      <div className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
+        <span className={`inline-flex h-1.5 w-1.5 rounded-full ${dotClass}`} aria-hidden="true" />
+        <span className={`text-[10px] font-bold uppercase tracking-wide ${statusTextClass}`}>{status}</span>
       </div>
 
-      <div className="p-4">
-        {/* Primary action: enrol (tier-neutral — /pricing shows the online
-            $497 → workshop-upgrade ladder for this city). Email capture below
-            is the secondary action. */}
-        <Link
-          href={`/pricing?location=${citySlug}`}
-          className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--foreground)]/90"
-        >
-          Enrol from ${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked
-          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-        </Link>
+      {/* Overlay content */}
+      <div className="relative flex flex-col justify-end min-h-[430px] p-4 pt-40">
+        <h3 className="text-white text-2xl md:text-[1.75rem] font-bold tracking-tight leading-none [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
+          {city}
+        </h3>
+        <p className="mt-1.5 text-[12.5px] text-white/75 leading-snug">{caption}</p>
+
         {showMomentum && progress && (
-          <div className="mb-2 flex">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
-              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
-              <span className="text-[11px] font-semibold text-emerald-800 leading-snug">
-                {progress.enrolled} of {progress.threshold} enrolled in {city} — the date launches at {progress.threshold}.
+          <div className="mt-2.5 flex">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 border border-emerald-300/30 backdrop-blur px-2.5 py-1">
+              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+              <span className="text-[11px] font-semibold text-emerald-100 leading-snug">
+                {progress.enrolled} of {progress.threshold} enrolled — date launches at {progress.threshold}
               </span>
             </span>
           </div>
         )}
+
+        {/* Primary action: enrol (tier-neutral — /pricing shows the online
+            $497 → workshop-upgrade ladder for this city). */}
+        <Link
+          href={`/pricing?location=${citySlug}`}
+          className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--accent)] px-3 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-[#0b6165]"
+        >
+          Enrol from ${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked
+          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+        </Link>
+
         {done ? (
-          <div className="flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3">
-            <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-[13px] text-emerald-900 leading-snug">{message}</p>
+          <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-emerald-400/15 border border-emerald-300/30 backdrop-blur p-3">
+            <Check className="w-4 h-4 text-emerald-300 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-[13px] text-emerald-50 leading-snug">{message}</p>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-2">
-            <p className="text-[12px] text-slate-600 leading-snug">{caption}</p>
+          <form onSubmit={submit} className="mt-2.5">
             <div className="flex gap-2">
               <label htmlFor={`loc-email-${citySlug}`} className="sr-only">Email for {city} workshop updates</label>
               <input
@@ -162,19 +165,19 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
                 required
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (error) setError('') }}
-                placeholder="Your email"
-                className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]"
+                placeholder="Email me the date"
+                className="flex-1 min-w-0 rounded-xl border border-white/25 bg-white/10 backdrop-blur px-3 py-2 text-sm text-white placeholder:text-white/55 focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-white/50"
               />
               <button
                 type="submit"
                 disabled={loading}
                 aria-label={`Notify me about the ${city} workshop`}
-                className="inline-flex items-center justify-center gap-1 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0b6165] disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-1 rounded-xl bg-white/95 px-3 py-2 text-sm font-bold text-slate-900 shadow-sm transition-colors hover:bg-white disabled:opacity-60"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <>Notify me <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" /></>}
               </button>
             </div>
-            {error && <p className="text-[12px] text-red-600 leading-snug">{error}</p>}
+            {error && <p className="mt-1.5 text-[12px] text-red-300 leading-snug">{error}</p>}
           </form>
         )}
       </div>
