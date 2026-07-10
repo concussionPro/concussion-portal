@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback, useRef, type ComponentType } f
 import Link from 'next/link'
 import { CheckCircle2, Award, AlertCircle, ArrowRight, Clock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { trackEvent, ANALYTICS_EVENTS, trackFreeCourseCompletion } from '@/lib/analytics'
+import { trackEvent, ANALYTICS_EVENTS, trackFreeCourseCompletion, trackModuleProgress } from '@/lib/analytics'
 import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
 import { DownloadableResources } from '@/components/course/DownloadableResources'
 import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
@@ -546,6 +546,17 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
   // SCAT modules only), the progress flush and checkpoint cleanup. (A previous
   // regression had the auto-complete path call markModuleComplete directly,
   // silently skipping all of this.)
+  // Analytics: module_start once per mount when content is loaded (real users
+  // only — demo/review viewers are excluded). This event powers the
+  // signup->start activation funnel; it was previously never fired anywhere.
+  const startTrackedRef = useRef(false)
+  useEffect(() => {
+    if (!module || isDemoViewer || startTrackedRef.current) return
+    startTrackedRef.current = true
+    trackModuleProgress(String(moduleId), 'start', { course: descriptor.course })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [module, isDemoViewer])
+
   const completionRanRef = useRef(false)
   const runModuleCompletion = useCallback(async () => {
     if (!module) return
@@ -554,6 +565,9 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
     completionRanRef.current = true
 
     markModuleComplete(progressId)
+    if (!isDemoViewer) {
+      trackModuleProgress(String(moduleId), 'complete', { course: descriptor.course })
+    }
 
     // Check if all 3 SCAT modules (101-103) are now complete — flagship only
     if (hasScatModules && moduleId >= 101 && moduleId <= 103) {

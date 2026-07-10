@@ -272,7 +272,7 @@ export default function SCAT6DownloadPage() {
                     Downloading now
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Your form{wantScat6 && wantScoat6 ? 's are' : ' is'} downloading. We've also created a free account for you — check your email for access.
+                    Your form{wantScat6 && wantScoat6 ? 's are' : ' is'} downloading — and you're already logged in to your free account.
                   </p>
                 </div>
 
@@ -306,16 +306,16 @@ export default function SCAT6DownloadPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-900 mb-0.5">
-                        Want to master SCAT6 administration?
+                        Now learn to score what you just downloaded
                       </p>
                       <p className="text-xs text-slate-600 mb-3 leading-snug">
-                        Try our free ~1-hour course — instant access, no credit card.
+                        Your free ~1-hour SCAT6 Mastery course is unlocked — you're logged in, start right now.
                       </p>
                       <a
-                        href="/scat-mastery"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5b9aa6] hover:text-[#4a8a96] transition-colors"
+                        href="/modules/101"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#5b9aa6] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#4a8a96]"
                       >
-                        Get the free course
+                        Start Module 1 now
                         <ChevronRight className="w-4 h-4" />
                       </a>
                     </div>
