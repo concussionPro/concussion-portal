@@ -135,12 +135,12 @@ function StageRing({ elapsedSec }: { elapsedSec: number }) {
   const large = frac > 0.5 ? 1 : 0
   return (
     <svg viewBox="0 0 240 240" className="block h-full w-full">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#dde7e7" strokeWidth={9} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--sst-line-soft)" strokeWidth={9} />
       {frac > 0 && (
         <path
           d={`M ${cx} ${cy - r} A ${r} ${r} 0 ${large} 1 ${x} ${y}`}
           fill="none"
-          stroke={elapsedSec >= STAGE_SECONDS ? '#3c7a1f' : '#5b9aa6'}
+          stroke={elapsedSec >= STAGE_SECONDS ? 'var(--sst-good)' : 'var(--sst-accent)'}
           strokeWidth={9}
           strokeLinecap="round"
         />
@@ -439,11 +439,11 @@ export default function GuidedTest({
       })
       return (
         <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
-          <div className="rounded-[18px] border-[1.5px] border-[#5b9aa6] bg-[#e7f2f3] px-4 py-4">
-            <p className="m-0 text-[16px] font-extrabold leading-snug text-[#16282b]">
+          <div className="rounded-[18px] border-[1.5px] border-(--sst-accent) bg-(--sst-accent-soft) px-4 py-4">
+            <p className="m-0 text-[16px] font-extrabold leading-snug text-(--sst-ink)">
               You have a test in progress from {startedLabel}
             </p>
-            <p className="mt-1.5 text-[12.5px] leading-snug text-[#3b4f52]">
+            <p className="mt-1.5 text-[12.5px] leading-snug text-(--sst-ink-2)">
               {resume.stages.length > 0
                 ? `${resume.stages.length} logged minute${resume.stages.length === 1 ? '' : 's'} are safe — minute ${resume.minute} restarts from zero.`
                 : 'Pick up where you left off — the interrupted minute restarts from zero.'}
@@ -469,16 +469,16 @@ export default function GuidedTest({
         <button
           type="button"
           onClick={() => onAbort({ started: false, stages: [] })}
-          className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-[#7d9092] transition active:scale-[0.98]"
+          className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-(--sst-faint) transition active:scale-[0.98]"
         >
           ← Back
         </button>
 
         <div className="flex flex-col gap-1.5">
-          <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-[#16282b]">
+          <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
             How will you do this test?
           </h1>
-          <p className="m-0 text-[12.5px] leading-snug text-[#5d7174]">
+          <p className="m-0 text-[12.5px] leading-snug text-(--sst-muted)">
             You&rsquo;ll step the effort up a little every minute while we watch your symptoms. Your
             clinician sees which one you used.
           </p>
@@ -494,11 +494,11 @@ export default function GuidedTest({
                 aria-pressed={on}
                 onClick={() => setModality(m.id)}
                 className={`flex flex-col gap-0.5 rounded-[16px] border-[1.5px] px-4 py-3.5 text-left transition active:scale-[0.99] ${
-                  on ? 'border-[#5b9aa6] bg-[#e7f2f3]' : 'border-[#d4e0e1] bg-white'
+                  on ? 'border-(--sst-accent) bg-(--sst-accent-soft)' : 'border-(--sst-line) bg-(--sst-card)'
                 }`}
               >
-                <span className="text-[15px] font-bold leading-tight text-[#16282b]">{m.label}</span>
-                <span className="text-[11.5px] leading-snug text-[#7d9092]">{m.sub}</span>
+                <span className="text-[15px] font-bold leading-tight text-(--sst-ink)">{m.label}</span>
+                <span className="text-[11.5px] leading-snug text-(--sst-faint)">{m.sub}</span>
               </button>
             )
           })}
@@ -531,7 +531,7 @@ export default function GuidedTest({
           clearHeartbeat(TEST_HEARTBEAT_KEY) // explicit abort — nothing to resume
           onAbort({ started: true, stages: recordedStages })
         }}
-        className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-[#7d9092] transition active:scale-[0.98]"
+        className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-(--sst-faint) transition active:scale-[0.98]"
       >
         ← End test without a result
       </button>
@@ -541,12 +541,12 @@ export default function GuidedTest({
         <div className="relative h-[114px] w-[114px] flex-none">
           <StageRing elapsedSec={stageElapsed} />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[9px] font-bold tracking-[0.14em] text-[#5d7174]">
+            <span className="text-[9px] font-bold tracking-[0.14em] text-(--sst-muted)">
               MIN {minute}
             </span>
             <span
               className={`text-[34px] leading-[0.9] ${numFont}`}
-              style={{ color: stageDone ? '#3c7a1f' : '#16282b' }}
+              style={{ color: stageDone ? 'var(--sst-good)' : 'var(--sst-ink)' }}
             >
               {stageDone ? '✓' : `0:${String(remaining).padStart(2, '0')}`}
             </span>
@@ -555,7 +555,7 @@ export default function GuidedTest({
         <div className="flex flex-col gap-0.5">
           <label
             htmlFor="hr"
-            className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#5d7174]"
+            className="text-[10px] font-semibold uppercase tracking-[0.05em] text-(--sst-muted)"
           >
             Heart rate
           </label>
@@ -573,21 +573,21 @@ export default function GuidedTest({
                 setConfirmJump(null)
               }}
               placeholder="—"
-              className={`w-[88px] border-none bg-transparent p-0 text-[46px] leading-[0.92] text-[#5b9aa6] outline-none placeholder:text-[#bcd0d2] ${numFont}`}
+              className={`w-[88px] border-none bg-transparent p-0 text-[46px] leading-[0.92] text-(--sst-accent) outline-none placeholder:text-(--sst-placeholder) ${numFont}`}
             />
-            <span className="text-[11px] font-semibold text-[#5d7174]">BPM</span>
+            <span className="text-[11px] font-semibold text-(--sst-muted)">BPM</span>
           </div>
           {hrStatus === 'streaming' ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold leading-tight text-[#3c7a1f]">
-              <span className="inline-block h-[7px] w-[7px] animate-pulse rounded-full bg-[#3c7a1f]" />
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold leading-tight text-(--sst-good)">
+              <span className="inline-block h-[7px] w-[7px] animate-pulse rounded-full bg-(--sst-good)" />
               {hrSourceLabel ?? 'Watch'} · live
             </span>
           ) : hrStatus === 'connecting' ? (
-            <span className="text-[11px] leading-tight text-[#b58a32]">
+            <span className="text-[11px] leading-tight text-(--sst-warn-dim)">
               Signal dropped — re-connecting {hrSourceLabel ?? 'your device'}…
             </span>
           ) : (
-            <span className="text-[11px] leading-tight text-[#5d7174]">
+            <span className="text-[11px] leading-tight text-(--sst-muted)">
               rested {restingSymptomScore}/10 · type it from your monitor
             </span>
           )}
@@ -599,11 +599,11 @@ export default function GuidedTest({
           is actually running); it clears once they're pedalling so the running
           view is just timer + HR + how-you-feel. */}
       {stageElapsed < 12 && !stageDone && (
-        <div className="rounded-[14px] border border-[#cfe0e2] bg-[#eef6f6] px-3.5 py-3">
-          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#3c7681]">
+        <div className="rounded-[14px] border border-(--sst-line) bg-(--sst-tint-a) px-3.5 py-3">
+          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-(--sst-accent-ink)">
             {minute === 1 ? 'Start' : `Minute ${minute} — step up`}
           </span>
-          <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#16282b]">
+          <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-(--sst-ink)">
             {effortInstruction(modality as TestModality, minute)}
           </p>
         </div>
@@ -612,12 +612,12 @@ export default function GuidedTest({
       {/* RPE — Borg 6–20 as a plain slider */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs font-semibold text-[#3b4f52]">
-            How hard does this feel? <span className="font-normal text-[#5d7174]">· Borg RPE</span>
+          <span className="text-xs font-semibold text-(--sst-ink-2)">
+            How hard does this feel? <span className="font-normal text-(--sst-muted)">· Borg RPE</span>
           </span>
-          <span className={`text-[16px] text-[#5b9aa6] ${numFont}`}>
+          <span className={`text-[16px] text-(--sst-accent) ${numFont}`}>
             {rpe}
-            <span className="text-[11px] text-[#5d7174]">/20</span>
+            <span className="text-[11px] text-(--sst-muted)">/20</span>
           </span>
         </div>
         <input
@@ -628,17 +628,17 @@ export default function GuidedTest({
           value={rpe}
           onChange={(e) => setRpe(Number(e.target.value))}
           aria-label="How hard this feels, 6 easy to 20 maximal"
-          className="w-full accent-[#5b9aa6]"
+          className="w-full accent-(--sst-accent)"
         />
-        <div className="flex justify-between text-[10px] font-medium text-[#5d7174]">
+        <div className="flex justify-between text-[10px] font-medium text-(--sst-muted)">
           <span>6 · easy</span>
           <span>20 · maximal</span>
         </div>
       </div>
 
       {nearMaxEffort && (
-        <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
-          <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
+        <div className="rounded-[14px] border-[1.5px] border-(--sst-warn) bg-(--sst-warn-soft) px-3.5 py-3">
+          <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-warn-ink)">
             That&rsquo;s maximal effort — log this as your final stage.
           </p>
         </div>
@@ -646,7 +646,7 @@ export default function GuidedTest({
 
       {/* symptom chips */}
       <div className="flex flex-col gap-[7px]">
-        <span className="text-xs font-semibold text-[#3b4f52]">Any of your symptoms now?</span>
+        <span className="text-xs font-semibold text-(--sst-ink-2)">Any of your symptoms now?</span>
         <div className="flex flex-wrap gap-[7px]">
           {userSymptoms.map((s) => {
             const on = tappedSymptoms.has(s.id)
@@ -658,8 +658,8 @@ export default function GuidedTest({
                 aria-pressed={on}
                 className={`rounded-full border-[1.5px] px-3 py-2 text-xs font-semibold transition ${
                   on
-                    ? 'border-[#5b9aa6] bg-[#5b9aa6] text-white'
-                    : 'border-[#d4e0e1] bg-white text-[#3b4f52]'
+                    ? 'border-(--sst-accent) bg-(--sst-accent) text-(--sst-on-accent)'
+                    : 'border-(--sst-line) bg-(--sst-card) text-(--sst-ink-2)'
                 }`}
               >
                 {s.label}
@@ -674,10 +674,10 @@ export default function GuidedTest({
           bars past the container edge) */}
       <div className="flex flex-col gap-2 pt-0.5">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs font-semibold text-[#3b4f52]">Symptom level</span>
-          <span className={`text-[15px] text-[#5b9aa6] ${numFont}`}>
+          <span className="text-xs font-semibold text-(--sst-ink-2)">Symptom level</span>
+          <span className={`text-[15px] text-(--sst-accent) ${numFont}`}>
             {symptomScore}
-            <span className="text-[10px] text-[#5d7174]">/10</span>
+            <span className="text-[10px] text-(--sst-muted)">/10</span>
           </span>
         </div>
         <SegmentBars
@@ -690,8 +690,8 @@ export default function GuidedTest({
 
       {/* HR-jump confirm — never silently mint an HRt from a typo */}
       {confirmJump !== null && (
-        <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
-          <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
+        <div className="rounded-[14px] border-[1.5px] border-(--sst-warn) bg-(--sst-warn-soft) px-3.5 py-3">
+          <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-warn-ink)">
             That&rsquo;s a jump of {confirmJump} bpm since last minute. Is {hrValue} right?
           </p>
           <div className="mt-2.5 flex gap-2">
@@ -701,7 +701,7 @@ export default function GuidedTest({
             <button
               type="button"
               onClick={() => logMinute({ confirmed: true, finalStage: nearMaxEffort })}
-              className="flex-1 rounded-2xl bg-[#d79a3a] p-2.5 text-[12.5px] font-bold text-white transition active:scale-[0.98]"
+              className="flex-1 rounded-2xl bg-(--sst-warn) p-2.5 text-[12.5px] font-bold text-(--sst-on-accent) transition active:scale-[0.98]"
             >
               Yes — log it
             </button>
@@ -718,16 +718,16 @@ export default function GuidedTest({
               type="button"
               disabled={confirmJump !== null}
               onClick={() => logMinute()}
-              className="w-full rounded-[15px] p-3.5 text-sm font-bold text-white shadow-[0_8px_18px_-8px_rgba(60,118,129,0.7)] transition active:scale-[0.98] disabled:opacity-40"
-              style={{ background: '#3c7681' }}
+              className="w-full rounded-[15px] p-3.5 text-sm font-bold text-(--sst-on-accent) shadow-[0_8px_18px_-8px_rgba(60,118,129,0.7)] transition active:scale-[0.98] disabled:opacity-40"
+              style={{ background: 'var(--sst-accent-ink)' }}
             >
               Log — this reaches your threshold
             </button>
           ) : (
             // Threshold reached but NO reading yet (manual mode) — the fix for
             // the frozen-test bug: tell them to enter the HR, which then logs.
-            <div className="rounded-[14px] border-[1.5px] border-[#3c7681] bg-[#e7f2f3] px-3.5 py-3 text-center">
-              <p className="m-0 text-[12.5px] font-bold leading-snug text-[#3c7681]">
+            <div className="rounded-[14px] border-[1.5px] border-(--sst-accent-ink) bg-(--sst-accent-soft) px-3.5 py-3 text-center">
+              <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-accent-ink)">
                 Your symptoms have reached your threshold — type your heart rate now to record it.
               </p>
             </div>
@@ -738,48 +738,48 @@ export default function GuidedTest({
             type="button"
             disabled={!hrValid || confirmJump !== null}
             onClick={() => logMinute({ finalStage: true })}
-            className="w-full rounded-[15px] p-3.5 text-sm font-bold text-white shadow-[0_8px_18px_-8px_rgba(160,106,28,0.6)] transition active:scale-[0.98] disabled:opacity-40"
-            style={{ background: '#a06a1c' }}
+            className="w-full rounded-[15px] p-3.5 text-sm font-bold text-(--sst-on-accent) shadow-[0_8px_18px_-8px_rgba(160,106,28,0.6)] transition active:scale-[0.98] disabled:opacity-40"
+            style={{ background: 'var(--sst-warn-ink)' }}
           >
             Log final stage — maximal effort
           </button>
         ) : stageDone && !hrValid ? (
-          <div className="rounded-[14px] border-[1.5px] border-[#5b9aa6] bg-[#e7f2f3] px-3.5 py-3 text-center">
-            <p className="m-0 text-[12.5px] font-bold leading-snug text-[#3c7681]">
+          <div className="rounded-[14px] border-[1.5px] border-(--sst-accent) bg-(--sst-accent-soft) px-3.5 py-3 text-center">
+            <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-accent-ink)">
               Minute {minute} is up — type this minute&rsquo;s heart rate and it logs automatically.
             </p>
           </div>
         ) : (
-          <div className="rounded-[14px] bg-[#eef4f4] px-3.5 py-3 text-center">
-            <p className="m-0 text-[12px] font-semibold leading-snug text-[#5d7174]">
+          <div className="rounded-[14px] bg-(--sst-surface-2) px-3.5 py-3 text-center">
+            <p className="m-0 text-[12px] font-semibold leading-snug text-(--sst-muted)">
               {justLogged
                 ? `Minute ${justLogged} logged ✓ — keep going, the next minute logs itself.`
                 : 'Each minute logs itself when it ends. Just keep the effort stepping up and your rating current.'}
             </p>
           </div>
         )}
-        <p className="m-0 text-center text-[10px] leading-tight text-[#5d7174]">
+        <p className="m-0 text-center text-[10px] leading-tight text-(--sst-muted)">
           The test ends on its own at a {PROVOCATION_RISE}-point symptom rise (that sets your
           threshold), at maximal effort, or at minute {MAX_STAGES}. A symptom spike can be logged at
           any time — you never have to wait out the minute.
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-[#dde7e7] pt-3">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#5d7174]">
+      <div className="flex flex-col gap-2 border-t border-(--sst-line-soft) pt-3">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-(--sst-muted)">
           End the test early
         </span>
         <button
           type="button"
           onClick={() => endEarly('exhaustion-limited')}
-          className="rounded-[14px] border-[1.5px] border-[#cdd9da] bg-white p-3 text-[13.5px] font-semibold text-[#5d7174] transition active:scale-[0.98]"
+          className="rounded-[14px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) p-3 text-[13.5px] font-semibold text-(--sst-muted) transition active:scale-[0.98]"
         >
           Stop — exhausted, no symptoms
         </button>
         <button
           type="button"
           onClick={() => endEarly('red-flag')}
-          className="rounded-[14px] bg-[#d2463a] p-3 text-[13.5px] font-bold text-white shadow-[0_8px_18px_-9px_rgba(210,70,58,0.85)] transition active:scale-[0.98]"
+          className="rounded-[14px] bg-(--sst-danger) p-3 text-[13.5px] font-bold text-(--sst-on-accent) shadow-[0_8px_18px_-9px_rgba(210,70,58,0.85)] transition active:scale-[0.98]"
         >
           ⚑ Warning sign — stop now
         </button>
@@ -787,7 +787,7 @@ export default function GuidedTest({
 
       {recordedStages.length > 0 && (
         <div
-          className={`rounded-[12px] bg-[#eef4f4] px-3 py-2.5 text-[10.5px] leading-relaxed text-[#5d7174] ${numFont}`}
+          className={`rounded-[12px] bg-(--sst-surface-2) px-3 py-2.5 text-[10.5px] leading-relaxed text-(--sst-muted) ${numFont}`}
         >
           {recordedStages
             .map((s) => `${s.minute}m · ${s.heartRate}bpm · sx${s.symptomScore}`)

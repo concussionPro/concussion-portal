@@ -1178,3 +1178,158 @@ input[type="reset"] {
     animation: none !important;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   SST Trainer — patient-app design tokens.
+
+   The patient app (components/sst-trainer/* + SstAppShell/SstOnboarding)
+   routes every colour through these variables. Light values live on :root so
+   any component embedded OUTSIDE the app shell (marketing demos, RTP athlete
+   app) renders exactly as before. The dark palette applies ONLY inside the
+   `.sst-app` scope (SstAppShell) under prefers-color-scheme: dark — a deep,
+   calm near-black for a light-sensitive concussed population: reduced
+   luminance, the same teal accent slightly desaturated, all text ≥4.5:1.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* surfaces */
+  --sst-bg: #f7fafa;
+  --sst-card: #ffffff;
+  --sst-surface-2: #eef4f4;
+  --sst-surface-3: #e7eeee;
+  --sst-surface-4: #f3f8f8;
+  --sst-tint-a: #eef6f6;
+  --sst-tint-b: #e3f0f1;
+  --sst-accent-soft: #e7f2f3;
+  /* ink */
+  --sst-ink: #16282b;
+  --sst-navy: #16243f;
+  --sst-ink-2: #3b4f52;
+  --sst-ink-3: #3c5658;
+  --sst-muted: #5d7174;
+  --sst-faint: #7d9092;
+  --sst-faint-2: #849c9c;
+  --sst-ghost: #9bafb0;
+  --sst-ghost-2: #aebcbc;
+  /* accent */
+  --sst-accent: #5b9aa6;
+  --sst-accent-ink: #3c7681;
+  --sst-on-accent: #ffffff;
+  /* semantic */
+  --sst-good: #3c7a1f;
+  --sst-good-soft: #e7f2e4;
+  --sst-warn: #d79a3a;
+  --sst-warn-ink: #a06a1c;
+  --sst-warn-ink-2: #8a6320;
+  --sst-warn-dim: #b58a32;
+  --sst-warn-soft: #fbf2e1;
+  --sst-danger: #d2463a;
+  --sst-danger-ink: #b1392e;
+  --sst-danger-ink-2: #8a4036;
+  --sst-danger-alt: #b5462f;
+  --sst-danger-soft: #fbeae8;
+  --sst-flag-ink: #b06a52;
+  /* lines / tracks */
+  --sst-line: #d4e0e1;
+  --sst-line-strong: #cdd9da;
+  --sst-line-soft: #dde7e7;
+  --sst-line-faint: #e4eded;
+  --sst-hairline: #e2ecec;
+  --sst-track: #dfeaea;
+  --sst-track-2: #d4e3e3;
+  --sst-seg-off: #d8e4e4;
+  --sst-check-border: #b9c9ca;
+  --sst-underline: #a7c7cc;
+  --sst-placeholder: #bcd0d2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sst-app {
+    /* surfaces — deep calm near-black with the app's teal cast (never #000) */
+    --sst-bg: #0f1719;
+    --sst-card: #172123;
+    --sst-surface-2: #1b2729;
+    --sst-surface-3: #202e30;
+    --sst-surface-4: #182527;
+    --sst-tint-a: #14333c;
+    --sst-tint-b: #112a32;
+    --sst-accent-soft: #143036;
+    /* ink — soft off-whites, ≥4.5:1 on every surface above */
+    --sst-ink: #e9f1f1;
+    --sst-navy: #e7edf6;
+    --sst-ink-2: #c5d4d5;
+    --sst-ink-3: #b7c9ca;
+    --sst-muted: #9db0b1;
+    --sst-faint: #8ea1a2;
+    --sst-faint-2: #869a9b;
+    --sst-ghost: #7d9192;
+    --sst-ghost-2: #5f7274;
+    /* accent — the SAME teal, slightly desaturated + lifted for dark */
+    --sst-accent: #6da9b4;
+    --sst-accent-ink: #93c6ce;
+    --sst-on-accent: #0c1a1d;
+    /* semantic */
+    --sst-good: #7cc35e;
+    --sst-good-soft: #1c2d16;
+    --sst-warn: #d9a44e;
+    --sst-warn-ink: #e3b269;
+    --sst-warn-ink-2: #d0a763;
+    --sst-warn-dim: #cfa04c;
+    --sst-warn-soft: #2d2413;
+    --sst-danger: #e0655a;
+    --sst-danger-ink: #ef9187;
+    --sst-danger-ink-2: #e0a79e;
+    --sst-danger-alt: #ef8f7a;
+    --sst-danger-soft: #321a16;
+    --sst-flag-ink: #d99e88;
+    /* lines / tracks */
+    --sst-line: #2e4346;
+    --sst-line-strong: #3a5054;
+    --sst-line-soft: #283c3f;
+    --sst-line-faint: #263a3d;
+    --sst-hairline: #223539;
+    --sst-track: #24383b;
+    --sst-track-2: #2a3f43;
+    --sst-seg-off: #2a3f43;
+    --sst-check-border: #46595b;
+    --sst-underline: #4f6d73;
+    --sst-placeholder: #4d6366;
+  }
+  /* kill the white overscroll flash behind the app in dark */
+  body:has(.sst-app) {
+    background: #0f1719;
+  }
+}
+
+/* ── SST celebration + trajectory motion (tasteful, no confetti) ─────────── */
+@keyframes sst-rise-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes sst-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes sst-halo {
+  from { box-shadow: 0 0 0 0 rgba(91, 154, 166, 0.35); }
+  to   { box-shadow: 0 0 0 22px rgba(91, 154, 166, 0); }
+}
+.sst-celebrate {
+  animation: sst-rise-in 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.sst-celebrate-halo {
+  animation: sst-halo 1.3s ease-out 0.4s 2;
+}
+.sst-draw {
+  stroke-dasharray: var(--sst-dash, 200);
+  stroke-dashoffset: var(--sst-dash, 200);
+  animation: sst-draw 0.9s cubic-bezier(0.3, 0, 0.2, 1) 0.25s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sst-celebrate,
+  .sst-celebrate-halo {
+    animation: none;
+  }
+  .sst-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

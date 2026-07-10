@@ -8,27 +8,29 @@ import {
   type ProgressionResult,
   type SessionLog,
 } from '@/lib/sst-trainer/protocol'
+import type { PersistedTest } from '@/lib/sst-trainer/store'
+import PatientTrajectory, { type RetestInfo } from './PatientTrajectory'
 import { PrimaryButton, ScreenHeading, SecondaryButton, numFont } from './shell'
 
 const DECISION_META: Record<
   ProgressionDecision,
   { label: string; icon: string; color: string; border: string; bg: string }
 > = {
-  advance: { label: 'Advance', icon: '↑', color: '#3c7681', border: '#5b9aa6', bg: '#e7f2f3' },
-  hold: { label: 'Hold steady', icon: '→', color: '#3b4f52', border: '#cdd9da', bg: '#eef4f4' },
-  regress: { label: 'Eased back', icon: '↓', color: '#a06a1c', border: '#d79a3a', bg: '#fbf2e1' },
+  advance: { label: 'Advance', icon: '↑', color: 'var(--sst-accent-ink)', border: 'var(--sst-accent)', bg: 'var(--sst-accent-soft)' },
+  hold: { label: 'Hold steady', icon: '→', color: 'var(--sst-ink-2)', border: 'var(--sst-line-strong)', bg: 'var(--sst-surface-2)' },
+  regress: { label: 'Eased back', icon: '↓', color: 'var(--sst-warn-ink)', border: 'var(--sst-warn)', bg: 'var(--sst-warn-soft)' },
   // Two flares in a row → rest day + clinician check-in (owner rail 2026-07-06).
-  rest: { label: 'Rest day — check in with your clinician', icon: '⏸', color: '#b1392e', border: '#d2463a', bg: '#fbeae8' },
+  rest: { label: 'Rest day — check in with your clinician', icon: '⏸', color: 'var(--sst-danger-ink)', border: 'var(--sst-danger)', bg: 'var(--sst-danger-soft)' },
   // At the HRt cap: the only safe way up is a fresh measurement.
-  retest: { label: 'Time to re-test', icon: '◎', color: '#3c7681', border: '#5b9aa6', bg: '#e7f2f3' },
+  retest: { label: 'Time to re-test', icon: '◎', color: 'var(--sst-accent-ink)', border: 'var(--sst-accent)', bg: 'var(--sst-accent-soft)' },
   // NOTE: progressionDecision() never emits `refer` today. This entry is a
   // harmless fallback kept in case the engine adds a referral decision later.
   refer: {
     label: 'Check in with your clinician',
     icon: '!',
-    color: '#b1392e',
-    border: '#d2463a',
-    bg: '#fbeae8',
+    color: 'var(--sst-danger-ink)',
+    border: 'var(--sst-danger)',
+    bg: 'var(--sst-danger-soft)',
   },
 }
 
@@ -52,13 +54,13 @@ function Trend({ rx, sessions }: { rx: Prescription; sessions: SessionLog[] }) {
   const yl = Y(lo)
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="block w-full">
-      <rect x={0} y={yc} width={W} height={Math.max(0, yl - yc)} fill="#5b9aa6" opacity={0.09} />
-      <line x1={0} y1={yc} x2={W} y2={yc} stroke="#d2463a" strokeWidth={1.5} strokeDasharray="4 4" opacity={0.7} />
+      <rect x={0} y={yc} width={W} height={Math.max(0, yl - yc)} fill="var(--sst-accent)" opacity={0.09} />
+      <line x1={0} y1={yc} x2={W} y2={yc} stroke="var(--sst-danger)" strokeWidth={1.5} strokeDasharray="4 4" opacity={0.7} />
       {peaks.length > 1 && (
         <path
           d={sessions.map((s, i) => `${i ? 'L' : 'M'} ${X(i)} ${Y(s.peakHeartRate)}`).join(' ')}
           fill="none"
-          stroke="#5b9aa6"
+          stroke="var(--sst-accent)"
           strokeWidth={2.5}
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -72,8 +74,8 @@ function Trend({ rx, sessions }: { rx: Prescription; sessions: SessionLog[] }) {
             cx={X(i)}
             cy={Y(s.peakHeartRate)}
             r={4.5}
-            fill={flare ? '#d79a3a' : '#5b9aa6'}
-            stroke="#fff"
+            fill={flare ? 'var(--sst-warn)' : 'var(--sst-accent)'}
+            stroke="var(--sst-card)"
             strokeWidth={2}
           />
         )
@@ -92,6 +94,8 @@ export default function ProgressDashboard({
   onRetest,
   canApply = true,
   notice,
+  history,
+  retest,
 }: {
   rx: Prescription
   sessions: SessionLog[]
@@ -114,6 +118,10 @@ export default function ProgressDashboard({
   canApply?: boolean
   /** page-level banner (e.g. "we eased your band back" with undo) */
   notice?: ReactNode
+  /** persisted threshold-test history — draws the patient recovery curve */
+  history?: PersistedTest[]
+  /** re-test timing for the curve's cadence line */
+  retest?: RetestInfo
 }) {
   const dm = DECISION_META[decision.decision]
   const maxHr = Math.max(rx.upperBpm, ...sessions.map((s) => s.peakHeartRate), 1)
@@ -138,7 +146,7 @@ export default function ProgressDashboard({
             {dm.icon} {dm.label}
           </span>
         </div>
-        <p className="mt-2 text-[12.5px] leading-relaxed text-[#3b4f52]">{decision.message}</p>
+        <p className="mt-2 text-[12.5px] leading-relaxed text-(--sst-ink-2)">{decision.message}</p>
         {decision.decision === 'advance' && decision.newCeilingBpm !== undefined && (
           <p className="mt-2.5 text-[12.5px] font-semibold leading-snug" style={{ color: dm.color }}>
             Suggested new ceiling: {decision.newCeilingBpm} bpm
@@ -150,14 +158,14 @@ export default function ProgressDashboard({
           <button
             type="button"
             onClick={() => onApplyCeiling(decision.newCeilingBpm as number)}
-            className="mt-3 w-full rounded-[14px] p-3 text-[13.5px] font-bold text-white transition active:scale-[0.98]"
+            className="mt-3 w-full rounded-[14px] p-3 text-[13.5px] font-bold text-(--sst-on-accent) transition active:scale-[0.98]"
             style={{ background: dm.color }}
           >
             Apply new ceiling — {decision.newCeilingBpm} bpm
           </button>
         )}
         {decision.decision === 'advance' && decision.newCeilingBpm !== undefined && onApplyCeiling && !canApply && (
-          <p className="mt-3 text-[12px] font-medium leading-snug text-[#5d7174]">
+          <p className="mt-3 text-[12px] font-medium leading-snug text-(--sst-muted)">
             Log a new session before adjusting your ceiling again.
           </p>
         )}
@@ -165,7 +173,7 @@ export default function ProgressDashboard({
           <button
             type="button"
             onClick={onRetest}
-            className="mt-3 w-full rounded-[14px] p-3 text-[13.5px] font-bold text-white transition active:scale-[0.98]"
+            className="mt-3 w-full rounded-[14px] p-3 text-[13.5px] font-bold text-(--sst-on-accent) transition active:scale-[0.98]"
             style={{ background: dm.color }}
           >
             Re-test my threshold
@@ -173,11 +181,14 @@ export default function ProgressDashboard({
         )}
       </div>
 
-      <div className="rounded-[18px] border border-[#dde7e7] bg-white p-3.5">
+      {/* the hero metric: the patient's own measured HRt rising over time */}
+      {history && history.length > 0 && <PatientTrajectory tests={history} retest={retest} />}
+
+      <div className="rounded-[18px] border border-(--sst-line-soft) bg-(--sst-card) p-3.5">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-bold text-[#3b4f52]">Peak HR vs ceiling</span>
-          <span className="flex items-center gap-1.5 text-[10px] font-medium text-[#5d7174]">
-            <span className="inline-block h-0 w-3.5 border-t-2 border-dashed border-[#d2463a]" />
+          <span className="text-xs font-bold text-(--sst-ink-2)">Peak HR vs ceiling</span>
+          <span className="flex items-center gap-1.5 text-[10px] font-medium text-(--sst-muted)">
+            <span className="inline-block h-0 w-3.5 border-t-2 border-dashed border-(--sst-danger)" />
             ceiling
           </span>
         </div>
@@ -185,23 +196,23 @@ export default function ProgressDashboard({
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <span className="text-xs font-bold text-[#3b4f52]">Sessions</span>
+        <span className="text-xs font-bold text-(--sst-ink-2)">Sessions</span>
         {sessions.length === 0 && (
-          <p className="m-0 text-xs leading-snug text-[#5d7174]">
+          <p className="m-0 text-xs leading-snug text-(--sst-muted)">
             No sessions yet. Log your first to see progress.
           </p>
         )}
         {sessions.map((s, i) => {
           const flare = s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
-          const tagColor = flare ? '#d79a3a' : '#5b9aa6'
+          const tagColor = flare ? 'var(--sst-warn)' : 'var(--sst-accent)'
           const barW = Math.min(100, (s.peakHeartRate / maxHr) * 100)
           return (
             <div
               key={`${s.date}-${i}`}
-              className="flex flex-col gap-1.5 rounded-[13px] border border-[#e4eded] px-3 py-2.5"
+              className="flex flex-col gap-1.5 rounded-[13px] border border-(--sst-line-faint) px-3 py-2.5"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#16282b]">{s.date}</span>
+                <span className="text-xs font-semibold text-(--sst-ink)">{s.date}</span>
                 <span
                   className="inline-flex items-center gap-1.5 text-[10px] font-semibold"
                   style={{ color: tagColor }}
@@ -213,14 +224,14 @@ export default function ProgressDashboard({
                   {flare ? 'flare' : 'clean'}
                 </span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-[5px] bg-[#eef4f4]">
+              <div className="h-2 w-full overflow-hidden rounded-[5px] bg-(--sst-surface-2)">
                 <div
                   className="h-full rounded-[5px]"
                   style={{ width: `${barW}%`, background: tagColor }}
                 />
               </div>
               <div
-                className={`flex justify-between text-[10px] text-[#5d7174] ${numFont}`}
+                className={`flex justify-between text-[10px] text-(--sst-muted) ${numFont}`}
               >
                 <span>
                   avg {s.avgHeartRate} · peak {s.peakHeartRate} bpm

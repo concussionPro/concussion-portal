@@ -38,7 +38,13 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#16243f',
+  // Matches the app surface per scheme: brand navy in light, the dark palette's
+  // near-black (--sst-bg dark value in globals.css) when the patient app runs
+  // in dim mode.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#16243f' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f1719' },
+  ],
   // iOS standalone (black-translucent status bar) lays content under the
   // notch/status bar; cover + the existing safe-area padding in SstAppShell
   // keeps the app chrome out from underneath it.

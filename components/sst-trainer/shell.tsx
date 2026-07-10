@@ -4,8 +4,11 @@ import type { ReactNode } from 'react'
 
 /**
  * Shared design-system primitives for the Sub-Symptom-Threshold Trainer.
- * Reproduces the "SST Trainer" visual language: warm bg (#f4f8f8), teal accent
- * (#5b9aa6), Hanken Grotesk UI type + Space Grotesk for instrument numerals.
+ * Reproduces the "SST Trainer" visual language: warm bg / teal accent, Hanken
+ * Grotesk UI type + Space Grotesk for instrument numerals. Every colour is a
+ * --sst-* token (app/globals.css): light values live on :root (identical to
+ * the original hex palette), and a deep near-black dark set applies ONLY
+ * inside the `.sst-app` scope under prefers-color-scheme: dark.
  *
  * (The old card-style AppShell + status-bar clock lived here until July 2026 —
  * dead code once /platform/app moved to SstAppShell; verified unmounted and
@@ -32,10 +35,10 @@ export const numFont = 'font-[family-name:var(--font-space)] [font-variant-numer
 export function ScreenHeading({ title, sub }: { title: ReactNode; sub?: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-[#16282b]">
+      <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
         {title}
       </h1>
-      {sub && <p className="m-0 text-[12.5px] leading-snug text-[#5d7174]">{sub}</p>}
+      {sub && <p className="m-0 text-[12.5px] leading-snug text-(--sst-muted)">{sub}</p>}
     </div>
   )
 }
@@ -57,7 +60,7 @@ export function PrimaryButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-2xl bg-[#5b9aa6] p-4 text-[15px] font-bold text-white shadow-[0_8px_18px_-8px_rgba(91,154,166,0.8)] transition active:scale-[0.98] disabled:opacity-40 ${className}`}
+      className={`rounded-2xl bg-(--sst-accent) p-4 text-[15px] font-bold text-(--sst-on-accent) shadow-[0_8px_18px_-8px_rgba(91,154,166,0.8)] transition active:scale-[0.98] disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
@@ -81,7 +84,7 @@ export function SecondaryButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-2xl border-[1.5px] border-[#cdd9da] bg-white p-3.5 text-sm font-semibold text-[#3b4f52] transition active:scale-[0.98] disabled:opacity-40 ${className}`}
+      className={`rounded-2xl border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) p-3.5 text-sm font-semibold text-(--sst-ink-2) transition active:scale-[0.98] disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
@@ -102,16 +105,16 @@ export function BandBar({ hrt, lower, upper }: { hrt: number; lower: number; upp
   const bh = 11
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" style={{ overflow: 'visible' }}>
-      <rect x={0} y={y} width={W} height={bh} rx={5.5} fill="#d4e3e3" />
-      <rect x={X(lower)} y={y} width={X(upper) - X(lower)} height={bh} rx={5.5} fill="#5b9aa6" />
-      <line x1={X(hrt)} y1={6} x2={X(hrt)} y2={y + bh + 4} stroke="#16282b" strokeWidth={2} />
-      <text x={X(hrt)} y={H - 1} fill="#16282b" fontSize={9} fontWeight={700} textAnchor="middle">
+      <rect x={0} y={y} width={W} height={bh} rx={5.5} fill="var(--sst-track-2)" />
+      <rect x={X(lower)} y={y} width={X(upper) - X(lower)} height={bh} rx={5.5} fill="var(--sst-accent)" />
+      <line x1={X(hrt)} y1={6} x2={X(hrt)} y2={y + bh + 4} stroke="var(--sst-ink)" strokeWidth={2} />
+      <text x={X(hrt)} y={H - 1} fill="var(--sst-ink)" fontSize={9} fontWeight={700} textAnchor="middle">
         {`HRt ${hrt}`}
       </text>
-      <text x={X(lower)} y={14} fill="#3c7681" fontSize={9} fontWeight={600} textAnchor="middle">
+      <text x={X(lower)} y={14} fill="var(--sst-accent-ink)" fontSize={9} fontWeight={600} textAnchor="middle">
         {lower}
       </text>
-      <text x={X(upper)} y={14} fill="#3c7681" fontSize={9} fontWeight={600} textAnchor="middle">
+      <text x={X(upper)} y={14} fill="var(--sst-accent-ink)" fontSize={9} fontWeight={600} textAnchor="middle">
         {upper}
       </text>
     </svg>
@@ -136,7 +139,7 @@ export function SegmentBars({
   danger?: boolean
   ariaLabel?: string
 }) {
-  const col = danger ? '#d79a3a' : '#5b9aa6'
+  const col = danger ? 'var(--sst-warn)' : 'var(--sst-accent)'
   // Each segment button is a FULL-HEIGHT transparent hit area (>=44px touch
   // target); the slim visual bar is the inner span, so the control still reads
   // exactly as before. Flat strips centre the bar; ramp bars bottom-align.
@@ -161,10 +164,10 @@ export function SegmentBars({
         >
           <span
             aria-hidden
-            className="w-full rounded-[4px] transition-[height,background] duration-100 group-focus-visible:ring-2 group-focus-visible:ring-[#16282b] group-focus-visible:ring-offset-1"
+            className="w-full rounded-[4px] transition-[height,background] duration-100 group-focus-visible:ring-2 group-focus-visible:ring-(--sst-ink) group-focus-visible:ring-offset-1"
             style={{
               height: variant === 'ramp' ? 13 + i * 2.6 : 18,
-              background: i <= value ? col : '#d8e4e4',
+              background: i <= value ? col : 'var(--sst-seg-off)',
             }}
           />
         </button>

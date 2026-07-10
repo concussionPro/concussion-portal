@@ -90,6 +90,13 @@ export interface PersistedState {
   redFlagClearedAt: number | null
   lastTestAt: number | null
   lastRegressAt: number | null
+  /**
+   * Next-day check-in "Skip for now" marker — the calendar day
+   * (Date.toDateString()) the patient last skipped. A skip holds for the rest
+   * of that day so reopening the app doesn't re-ambush them; the check-in
+   * returns tomorrow (the session's nextDayCheckin stays unanswered).
+   */
+  checkinSkippedOn: string | null
   pendingSyncs: QueuedSync[]
 }
 
@@ -129,6 +136,7 @@ export function defaultState(): PersistedState {
     redFlagClearedAt: null,
     lastTestAt: null,
     lastRegressAt: null,
+    checkinSkippedOn: null,
     pendingSyncs: [],
   }
 }

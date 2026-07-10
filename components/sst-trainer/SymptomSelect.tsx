@@ -41,17 +41,17 @@ export default function SymptomSelect({
               onClick={() => toggle(s.id)}
               aria-pressed={on}
               className={`flex w-full items-center gap-3 rounded-[14px] border-[1.5px] px-3 py-3 text-left transition ${
-                on ? 'border-[#5b9aa6] bg-[#e7f2f3]' : 'border-[#d4e0e1] bg-white'
+                on ? 'border-(--sst-accent) bg-(--sst-accent-soft)' : 'border-(--sst-line) bg-(--sst-card)'
               }`}
             >
               <span
-                className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[7px] border-[1.5px] text-xs font-bold text-white ${
-                  on ? 'border-[#5b9aa6] bg-[#5b9aa6]' : 'border-[#b9c9ca] bg-white'
+                className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[7px] border-[1.5px] text-xs font-bold text-(--sst-on-accent) ${
+                  on ? 'border-(--sst-accent) bg-(--sst-accent)' : 'border-(--sst-check-border) bg-(--sst-card)'
                 }`}
               >
                 {on ? '✓' : ''}
               </span>
-              <span className="text-sm leading-snug text-[#16282b]">{s.label}</span>
+              <span className="text-sm leading-snug text-(--sst-ink)">{s.label}</span>
             </button>
           )
         })}

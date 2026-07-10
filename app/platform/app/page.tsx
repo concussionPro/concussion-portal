@@ -6,6 +6,7 @@ import {
   computePrescription,
   progressionDecision,
   sessionVerification,
+  RETEST_MIN_HOURS,
   type Condition,
   type Prescription,
   type TestInput,
@@ -82,6 +83,11 @@ const STEP_CAPTION: Record<AppStep, string> = {
 const WEEK_MS = 604_800_000
 const CHECKIN_AFTER_MS = 12 * 3_600_000
 
+/** Calendar-day key for the check-in skip marker ("skip holds for today"). */
+function todayKey(): string {
+  return new Date().toDateString()
+}
+
 /** "Tuesday's session" / "yesterday's session" for the next-day check-in. */
 function sessionDayLabel(at: number): string {
   const d = new Date(at)
@@ -157,6 +163,9 @@ export default function PlatformAppPage({
   const [confirmStartOver, setConfirmStartOver] = useState(false)
   const [confirmCleared, setConfirmCleared] = useState(false)
   const [checkinIdx, setCheckinIdx] = useState<number | null>(null)
+  // "Skip for now" persists for the rest of the day — the check-in must never
+  // re-ambush on every open, and must never gate 'Start today's session'.
+  const [checkinSkippedOn, setCheckinSkippedOn] = useState<string | null>(null)
 
   const installIdRef = useRef<string>('')
   const condition: Condition = welcome?.condition ?? 'concussion'
@@ -193,14 +202,20 @@ export default function PlatformAppPage({
       setRedFlagClearedAt(s.redFlagClearedAt)
       setLastTestAt(s.lastTestAt)
       setLastRegressAt(s.lastRegressAt)
+      setCheckinSkippedOn(s.checkinSkippedOn)
 
       if (s.redFlagLocked) {
         setStep('locked')
       } else if (s.prescription) {
-        // Next-day check-in: on an open >=12h after a session with no answer yet.
-        const idx = s.sessions.findIndex(
-          (sess) => !sess.nextDayCheckin && Date.now() - sess.at >= CHECKIN_AFTER_MS,
-        )
+        // Next-day check-in: on an open >=12h after a session with no answer
+        // yet — UNLESS the patient already skipped it today (the skip persists
+        // for the day; the check-in returns tomorrow).
+        const skippedToday = s.checkinSkippedOn === todayKey()
+        const idx = skippedToday
+          ? -1
+          : s.sessions.findIndex(
+              (sess) => !sess.nextDayCheckin && Date.now() - sess.at >= CHECKIN_AFTER_MS,
+            )
         if (idx >= 0) {
           setCheckinIdx(idx)
           setStep('checkin')
@@ -251,12 +266,13 @@ export default function PlatformAppPage({
       redFlagClearedAt,
       lastTestAt,
       lastRegressAt,
+      checkinSkippedOn,
     })
   }, [
     hydrated, welcome, clinicName, goal, goalLabel, selectedSymptomIds, restingSymptomScore,
     prescription, thresholdHistory, sessions, archivedSessions, verifiedSessions,
     progressionCheckpoint, decisionCheckpoint, lastRedFlagAt, redFlagLocked, redFlagClearedAt,
-    lastTestAt, lastRegressAt,
+    lastTestAt, lastRegressAt, checkinSkippedOn,
   ])
 
   // Per-clinic QR deep link (/sst-trainer?clinic=CODE) → pre-fill the clinic code
@@ -350,6 +366,25 @@ export default function PlatformAppPage({
   )
   const decisionFresh = sessions.length > decisionCheckpoint
 
+  // ── recovery curve + celebration derivations ────────────────────────────────
+  // Previous MEASURED test: at the result step the just-finished test is
+  // already the last measured entry in thresholdHistory, so its predecessor is
+  // the second-last. Null until a second measured test exists.
+  const previousMeasured = useMemo(() => {
+    const measured = thresholdHistory.filter((t) => t.hrt != null)
+    return measured.length >= 2 ? measured[measured.length - 2] : null
+  }, [thresholdHistory])
+  // Verified sessions genuinely banked between the two test dates (at the
+  // result step `sessions` still holds the previous band's sessions — they
+  // archive on Continue). Only hrVerified === true counts; 0 hides the subline.
+  const verifiedSinceLastTest = useMemo(() => {
+    if (!previousMeasured) return 0
+    const upper = lastTestAt ?? Date.now()
+    return sessions.filter(
+      (s) => s.hrVerified === true && s.at > previousMeasured.at && s.at <= upper,
+    ).length
+  }, [sessions, previousMeasured, lastTestAt])
+
   const applyCeiling = (newCeilingBpm: number) => {
     setPrescription((prev) => {
       if (!prev) return prev
@@ -415,13 +450,13 @@ export default function PlatformAppPage({
   const checkinSession = checkinIdx !== null ? sessions[checkinIdx] : undefined
 
   const regressNotice = regressUndo && prescription && (
-    <div className="rounded-[16px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
-      <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
+    <div className="rounded-[16px] border-[1.5px] border-(--sst-warn) bg-(--sst-warn-soft) px-3.5 py-3">
+      <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-warn-ink)">
         {restPrescribed
           ? 'Take a rest day today — check in with your clinician.'
           : `Your band was eased back to ${prescription.lowerBpm}–${prescription.upperBpm} bpm.`}
       </p>
-      <p className="mt-1 text-[11.5px] leading-snug text-[#8a6320]">
+      <p className="mt-1 text-[11.5px] leading-snug text-(--sst-warn-ink-2)">
         {restPrescribed
           ? `Two sessions in a row provoked your symptoms, so we eased your band back to ${prescription.lowerBpm}–${prescription.upperBpm} bpm. Rest today and speak with your clinician before your next session — repeated flaring means the dose is too much, not that you should push through it.`
           : 'Recent sessions kept provoking symptoms, so the app lowered your ceiling for you. Train there for now — it rebuilds.'}
@@ -432,7 +467,7 @@ export default function PlatformAppPage({
           applyCeiling(regressUndo.upperBpm)
           setRegressUndo(null)
         }}
-        className="mt-2 rounded-[10px] px-2 py-1 text-[11.5px] font-bold text-[#a06a1c] underline decoration-[#d79a3a] underline-offset-2"
+        className="mt-2 rounded-[10px] px-2 py-1 text-[11.5px] font-bold text-(--sst-warn-ink) underline decoration-(--sst-warn) underline-offset-2"
       >
         Undo — keep my old band
       </button>
@@ -456,9 +491,9 @@ export default function PlatformAppPage({
       {/* start-over confirm — clearing a prescription is never one accidental tap */}
       {confirmStartOver && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#16243f]/45 px-6">
-          <div className="w-full max-w-[340px] rounded-[20px] bg-white p-5 shadow-[0_24px_48px_-16px_rgba(20,36,63,0.5)]">
-            <p className="m-0 text-[15px] font-extrabold text-[#16243f]">Start over?</p>
-            <p className="mt-1.5 text-[12.5px] leading-snug text-[#5d7174]">
+          <div className="w-full max-w-[340px] rounded-[20px] bg-(--sst-card) p-5 shadow-[0_24px_48px_-16px_rgba(20,36,63,0.5)]">
+            <p className="m-0 text-[15px] font-extrabold text-(--sst-navy)">Start over?</p>
+            <p className="mt-1.5 text-[12.5px] leading-snug text-(--sst-muted)">
               This clears your band, sessions and test history from this phone. Anything already
               sent to your clinician stays with them.
             </p>
@@ -469,7 +504,7 @@ export default function PlatformAppPage({
               <button
                 type="button"
                 onClick={startOver}
-                className="flex-1 rounded-2xl bg-[#d2463a] p-3 text-sm font-bold text-white transition active:scale-[0.98]"
+                className="flex-1 rounded-2xl bg-(--sst-danger) p-3 text-sm font-bold text-(--sst-on-accent) transition active:scale-[0.98]"
               >
                 Clear everything
               </button>
@@ -623,6 +658,8 @@ export default function PlatformAppPage({
           onRetest={tryRetest}
           onExit={() => setStep(redFlagLocked ? 'locked' : prescription ? 'home' : 'welcome')}
           onKeepBand={() => setStep('home')}
+          previousHrt={previousMeasured?.hrt ?? null}
+          verifiedSessionsSince={verifiedSinceLastTest}
         />
       )}
 
@@ -640,6 +677,7 @@ export default function PlatformAppPage({
             welcomeBack={welcomeBack}
             goalLabel={goalLabel ?? undefined}
             deviceName={device.name}
+            history={thresholdHistory}
             sessionsThisWeek={sessionsThisWeek}
             onStartSession={() => {
               setWelcomeBack(false)
@@ -696,6 +734,11 @@ export default function PlatformAppPage({
           rx={prescription}
           sessions={sessions}
           decision={decision}
+          history={thresholdHistory}
+          retest={{
+            nextRetestAt: lastTestAt != null ? lastTestAt + RETEST_MIN_HOURS * 3_600_000 : null,
+            redFlagLocked,
+          }}
           notice={regressNotice}
           onHome={() => setStep('home')}
           onNewSession={() => setStep('training')}
@@ -715,10 +758,10 @@ export default function PlatformAppPage({
       {step === 'checkin' && checkinSession && (
         <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
           <div className="flex flex-col gap-1.5">
-            <h1 className="m-0 text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-[#16282b]">
+            <h1 className="m-0 text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
               Quick check-in
             </h1>
-            <p className="m-0 text-[13.5px] leading-snug text-[#5d7174]">
+            <p className="m-0 text-[13.5px] leading-snug text-(--sst-muted)">
               How did you pull up after {sessionDayLabel(checkinSession.at)} session?
             </p>
           </div>
@@ -742,7 +785,7 @@ export default function PlatformAppPage({
                   setCheckinIdx(null)
                   setStep('home')
                 }}
-                className="rounded-[16px] border-[1.5px] border-[#d4e0e1] bg-white px-4 py-4 text-left text-[16px] font-bold text-[#16243f] transition active:scale-[0.99]"
+                className="rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) px-4 py-4 text-left text-[16px] font-bold text-(--sst-navy) transition active:scale-[0.99]"
               >
                 {label}
               </button>
@@ -751,10 +794,13 @@ export default function PlatformAppPage({
           <button
             type="button"
             onClick={() => {
+              // persist the skip for the rest of today — reopening the app must
+              // not re-ambush; the check-in comes back tomorrow.
+              setCheckinSkippedOn(todayKey())
               setCheckinIdx(null)
               setStep('home')
             }}
-            className="self-center rounded-[10px] px-2 py-1 text-[12px] font-semibold text-[#9bafb0]"
+            className="self-center rounded-[10px] px-2 py-1 text-[12px] font-semibold text-(--sst-ghost)"
           >
             Skip for now
           </button>
@@ -764,11 +810,11 @@ export default function PlatformAppPage({
       {/* ── red-flag lock: test + training paused until clinical clearance ───── */}
       {step === 'locked' && (
         <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
-          <div className="rounded-[18px] border-2 border-[#d2463a] bg-[#fbeae8] px-4 py-4">
-            <p className="m-0 text-[17px] font-extrabold leading-snug text-[#b1392e]">
+          <div className="rounded-[18px] border-2 border-(--sst-danger) bg-(--sst-danger-soft) px-4 py-4">
+            <p className="m-0 text-[17px] font-extrabold leading-snug text-(--sst-danger-ink)">
               Seek medical review
             </p>
-            <p className="mt-2 text-[13px] leading-relaxed text-[#8a4036]">
+            <p className="mt-2 text-[13px] leading-relaxed text-(--sst-danger-ink-2)">
               You stopped for a warning sign
               {lastRedFlagAt
                 ? ` on ${new Date(lastRedFlagAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}`
@@ -778,7 +824,7 @@ export default function PlatformAppPage({
             </p>
           </div>
           {retestNotice && (
-            <p className="m-0 rounded-[12px] bg-[#eef4f4] px-3.5 py-2.5 text-[11.5px] leading-snug text-[#5d7174]">
+            <p className="m-0 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 text-[11.5px] leading-snug text-(--sst-muted)">
               {retestNotice}
             </p>
           )}
@@ -787,8 +833,8 @@ export default function PlatformAppPage({
               My clinician has cleared me
             </SecondaryButton>
           ) : (
-            <div className="rounded-[16px] border-[1.5px] border-[#cdd9da] bg-white px-3.5 py-3">
-              <p className="m-0 text-[12.5px] leading-snug text-[#3b4f52]">
+            <div className="rounded-[16px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-3.5 py-3">
+              <p className="m-0 text-[12.5px] leading-snug text-(--sst-ink-2)">
                 Confirm: a clinician has reviewed you and said you can resume. This is recorded for
                 your clinician to see.
               </p>

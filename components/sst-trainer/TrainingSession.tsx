@@ -59,13 +59,13 @@ function TrainGauge({
   const [lx, ly] = pt(cx, cy, R + 27, A(limit))
   return (
     <svg viewBox="0 0 236 226" className="block h-full w-full">
-      <path d={arc(cx, cy, R, -135, 135)} fill="none" stroke="#dde7e7" strokeWidth={11} strokeLinecap="round" />
-      <path d={arc(cx, cy, R, A(lo), A(up))} fill="none" stroke="#5b9aa6" strokeWidth={13} strokeLinecap="round" />
+      <path d={arc(cx, cy, R, -135, 135)} fill="none" stroke="var(--sst-line-soft)" strokeWidth={11} strokeLinecap="round" />
+      <path d={arc(cx, cy, R, A(lo), A(up))} fill="none" stroke="var(--sst-accent)" strokeWidth={13} strokeLinecap="round" />
       {hr !== null && hr > up && (
-        <path d={arc(cx, cy, R, A(up), A(hr))} fill="none" stroke={hr >= limit ? '#d2463a' : '#d79a3a'} strokeWidth={13} strokeLinecap="round" />
+        <path d={arc(cx, cy, R, A(up), A(hr))} fill="none" stroke={hr >= limit ? 'var(--sst-danger)' : 'var(--sst-warn)'} strokeWidth={13} strokeLinecap="round" />
       )}
-      <line x1={mx1} y1={my1} x2={mx2} y2={my2} stroke="#d2463a" strokeWidth={2.5} strokeLinecap="round" />
-      <text x={lx} y={ly + 3} fill="#d2463a" fontSize={9} fontWeight={700} textAnchor="middle">
+      <line x1={mx1} y1={my1} x2={mx2} y2={my2} stroke="var(--sst-danger)" strokeWidth={2.5} strokeLinecap="round" />
+      <text x={lx} y={ly + 3} fill="var(--sst-danger)" fontSize={9} fontWeight={700} textAnchor="middle">
         LIMIT
       </text>
       {hr !== null && (
@@ -79,7 +79,7 @@ function TrainGauge({
             strokeWidth={3}
             strokeLinecap="round"
           />
-          <circle cx={pt(cx, cy, R, A(hr))[0]} cy={pt(cx, cy, R, A(hr))[1]} r={8} fill="#fff" stroke={color} strokeWidth={4} />
+          <circle cx={pt(cx, cy, R, A(hr))[0]} cy={pt(cx, cy, R, A(hr))[1]} r={8} fill="var(--sst-card)" stroke={color} strokeWidth={4} />
         </>
       )}
     </svg>
@@ -237,11 +237,11 @@ export default function TrainingSession({
           ? 'below'
           : 'in'
   const zoneMeta = {
-    none: { color: '#7d9092', bg: '#eef4f4', label: hrStatus === 'connecting' ? 'Signal dropped — reconnecting' : 'Enter your heart rate', icon: '●' },
-    in: { color: '#5b9aa6', bg: '#e7f2f3', label: 'In your band', icon: '●' },
-    over: { color: '#d79a3a', bg: '#fbf2e1', label: 'Ease off', icon: '▲' },
-    limit: { color: '#d2463a', bg: '#fbeae8', label: 'Stop — over your limit', icon: '▲' },
-    below: { color: '#7d9092', bg: '#eef4f4', label: 'Below band — lift a little', icon: '▼' },
+    none: { color: 'var(--sst-faint)', bg: 'var(--sst-surface-2)', label: hrStatus === 'connecting' ? 'Signal dropped — reconnecting' : 'Enter your heart rate', icon: '●' },
+    in: { color: 'var(--sst-accent)', bg: 'var(--sst-accent-soft)', label: 'In your band', icon: '●' },
+    over: { color: 'var(--sst-warn)', bg: 'var(--sst-warn-soft)', label: 'Ease off', icon: '▲' },
+    limit: { color: 'var(--sst-danger)', bg: 'var(--sst-danger-soft)', label: 'Stop — over your limit', icon: '▲' },
+    below: { color: 'var(--sst-faint)', bg: 'var(--sst-surface-2)', label: 'Below band — lift a little', icon: '▼' },
   }[zone]
 
   // ── zone alerts: haptic + visual on band exit AND re-entry ─────────────────
@@ -441,11 +441,11 @@ export default function TrainingSession({
       })
       return (
         <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
-          <div className="rounded-[18px] border-[1.5px] border-[#5b9aa6] bg-[#e7f2f3] px-4 py-4">
-            <p className="m-0 text-[16px] font-extrabold leading-snug text-[#16282b]">
+          <div className="rounded-[18px] border-[1.5px] border-(--sst-accent) bg-(--sst-accent-soft) px-4 py-4">
+            <p className="m-0 text-[16px] font-extrabold leading-snug text-(--sst-ink)">
               You have a session in progress from {startedLabel}
             </p>
-            <p className="mt-1.5 text-[12.5px] leading-snug text-[#3b4f52]">
+            <p className="mt-1.5 text-[12.5px] leading-snug text-(--sst-ink-2)">
               Pick up where you left off — your time and readings so far are safe.
             </p>
           </div>
@@ -467,20 +467,20 @@ export default function TrainingSession({
     return (
       <section className="flex flex-col gap-4 pt-1.5">
         <div className="flex flex-col gap-1.5">
-          <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-[#16282b]">
+          <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
             Before you start
           </h1>
-          <p className="m-0 text-[12.5px] leading-snug text-[#5d7174]">
+          <p className="m-0 text-[12.5px] leading-snug text-(--sst-muted)">
             How are your symptoms right now?
           </p>
         </div>
 
         <div className="flex flex-col gap-2.5">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-semibold text-[#3b4f52]">Symptoms right now</span>
-            <span className={`text-[18px] text-[#5b9aa6] ${numFont}`}>
+            <span className="text-xs font-semibold text-(--sst-ink-2)">Symptoms right now</span>
+            <span className={`text-[18px] text-(--sst-accent) ${numFont}`}>
               {preSymptom}
-              <span className="text-xs text-[#5d7174]">/10</span>
+              <span className="text-xs text-(--sst-muted)">/10</span>
             </span>
           </div>
           <SegmentBars
@@ -489,7 +489,7 @@ export default function TrainingSession({
             variant="ramp"
             ariaLabel="Symptoms right now, 0 to 10"
           />
-          <p className="m-0 text-[11px] leading-snug text-[#5d7174]">
+          <p className="m-0 text-[11px] leading-snug text-(--sst-muted)">
             Your session compares against this, so be honest — starting mid-flare may mean today
             should be a rest day.
           </p>
@@ -497,11 +497,11 @@ export default function TrainingSession({
 
         {/* High baseline — soft warning, never a hard block (clinician may have advised it) */}
         {preSymptom >= HIGH_PRE_SYMPTOM && (
-          <div className="rounded-[16px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] p-3.5">
-            <p className="m-0 text-sm font-bold text-[#a06a1c]">
+          <div className="rounded-[16px] border-[1.5px] border-(--sst-warn) bg-(--sst-warn-soft) p-3.5">
+            <p className="m-0 text-sm font-bold text-(--sst-warn-ink)">
               Your symptoms are high right now.
             </p>
-            <p className="mt-1.5 text-[12.5px] leading-snug text-[#8a6320]">
+            <p className="mt-1.5 text-[12.5px] leading-snug text-(--sst-warn-ink-2)">
               At {preSymptom}/10, resting today and checking in with your clinician may be the
               better call. Only continue if they&rsquo;ve advised training through this.
             </p>
@@ -528,11 +528,11 @@ export default function TrainingSession({
     const canOverride = !override.used
     return (
       <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
-        <div className="rounded-[18px] border-2 border-[#d79a3a] bg-[#fbf2e1] px-4 py-4">
-          <p className="m-0 text-[17px] font-extrabold leading-snug text-[#a06a1c]">
+        <div className="rounded-[18px] border-2 border-(--sst-warn) bg-(--sst-warn-soft) px-4 py-4">
+          <p className="m-0 text-[17px] font-extrabold leading-snug text-(--sst-warn-ink)">
             Your symptoms rose {symptomRise} points.
           </p>
-          <p className="mt-2 text-[13px] leading-relaxed text-[#8a6320]">
+          <p className="mt-2 text-[13px] leading-relaxed text-(--sst-warn-ink-2)">
             That&rsquo;s the stop signal. Finish the session here and rest — this still counts, and
             your clinician will see why it ended.
           </p>
@@ -546,14 +546,14 @@ export default function TrainingSession({
           <button
             type="button"
             onClick={() => setConfirmContinue(true)}
-            className="rounded-[14px] p-2.5 text-[13px] font-semibold text-[#7d9092] transition active:scale-[0.98]"
+            className="rounded-[14px] p-2.5 text-[13px] font-semibold text-(--sst-faint) transition active:scale-[0.98]"
           >
             I feel okay — continue
           </button>
         )}
         {canOverride && confirmContinue && (
-          <div className="rounded-[16px] border-[1.5px] border-[#cdd9da] bg-white px-3.5 py-3">
-            <p className="m-0 text-[12.5px] leading-snug text-[#3b4f52]">
+          <div className="rounded-[16px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-3.5 py-3">
+            <p className="m-0 text-[12.5px] leading-snug text-(--sst-ink-2)">
               Continue for the rest of the session? This is a one-time choice — if your symptoms
               rise again, the session ends. Your clinician will see that you continued.
             </p>
@@ -568,7 +568,7 @@ export default function TrainingSession({
                   setConfirmContinue(false)
                   setPhase('active')
                 }}
-                className="flex-1 rounded-2xl bg-[#d79a3a] p-2.5 text-[12.5px] font-bold text-white transition active:scale-[0.98]"
+                className="flex-1 rounded-2xl bg-(--sst-warn) p-2.5 text-[12.5px] font-bold text-(--sst-on-accent) transition active:scale-[0.98]"
               >
                 Yes — continue
               </button>
@@ -591,10 +591,10 @@ export default function TrainingSession({
     return (
       <section className="flex flex-col gap-4 pt-1.5">
         <div className="flex flex-col gap-1">
-          <h1 className="m-0 text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-[#16282b]">
+          <h1 className="m-0 text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
             Session done
           </h1>
-          <p className="m-0 text-[13px] leading-snug text-[#5d7174]">
+          <p className="m-0 text-[13px] leading-snug text-(--sst-muted)">
             {symptomLimited
               ? 'Ended on the symptom stop rule — the right call. Rest now.'
               : `${minutes} minute${minutes === 1 ? '' : 's'} in the bank.`}
@@ -603,44 +603,44 @@ export default function TrainingSession({
 
         <div className="flex flex-wrap items-center gap-1.5">
           {hrVerified && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e7f2e4] px-3 py-1.5 text-[11px] font-bold text-[#3c7a1f]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-(--sst-good-soft) px-3 py-1.5 text-[11px] font-bold text-(--sst-good)">
               ✓ Verified — live heart rate tracked
             </span>
           )}
           {symptomLimited && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fbf2e1] px-3 py-1.5 text-[11px] font-bold text-[#a06a1c]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-(--sst-warn-soft) px-3 py-1.5 text-[11px] font-bold text-(--sst-warn-ink)">
               Symptom-limited
             </span>
           )}
         </div>
 
         {/* time-in-band bar */}
-        <div className="rounded-[16px] border border-[#dde7e7] bg-white px-4 py-3.5">
-          <span className="text-xs font-bold text-[#3b4f52]">Time in band</span>
-          <div className="mt-2.5 flex h-3.5 w-full overflow-hidden rounded-full bg-[#eef4f4]">
-            <div style={{ width: `${(z.below / zTotal) * 100}%`, background: '#cdd9da' }} />
-            <div style={{ width: `${(z.in / zTotal) * 100}%`, background: '#5b9aa6' }} />
-            <div style={{ width: `${(z.above / zTotal) * 100}%`, background: '#d79a3a' }} />
+        <div className="rounded-[16px] border border-(--sst-line-soft) bg-(--sst-card) px-4 py-3.5">
+          <span className="text-xs font-bold text-(--sst-ink-2)">Time in band</span>
+          <div className="mt-2.5 flex h-3.5 w-full overflow-hidden rounded-full bg-(--sst-surface-2)">
+            <div style={{ width: `${(z.below / zTotal) * 100}%`, background: 'var(--sst-line-strong)' }} />
+            <div style={{ width: `${(z.in / zTotal) * 100}%`, background: 'var(--sst-accent)' }} />
+            <div style={{ width: `${(z.above / zTotal) * 100}%`, background: 'var(--sst-warn)' }} />
           </div>
-          <div className={`mt-2 flex justify-between text-[10.5px] text-[#7d9092] ${numFont}`}>
+          <div className={`mt-2 flex justify-between text-[10.5px] text-(--sst-faint) ${numFont}`}>
             <span>below {Math.round(z.below / 60)}m</span>
-            <span className="font-bold text-[#3c7681]">in band {Math.round(z.in / 60)}m</span>
+            <span className="font-bold text-(--sst-accent-ink)">in band {Math.round(z.in / 60)}m</span>
             <span>above {Math.round(z.above / 60)}m</span>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3 py-2.5">
-            <span className="text-[10px] font-medium text-[#5d7174]">Avg HR</span>
-            <div className={`mt-0.5 text-[17px] text-[#16282b] ${numFont}`}>{avg ?? '—'}</div>
+          <div className="rounded-[14px] border border-(--sst-line-soft) bg-(--sst-card) px-3 py-2.5">
+            <span className="text-[10px] font-medium text-(--sst-muted)">Avg HR</span>
+            <div className={`mt-0.5 text-[17px] text-(--sst-ink) ${numFont}`}>{avg ?? '—'}</div>
           </div>
-          <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3 py-2.5">
-            <span className="text-[10px] font-medium text-[#5d7174]">Peak HR</span>
-            <div className={`mt-0.5 text-[17px] text-[#16282b] ${numFont}`}>{peak ?? '—'}</div>
+          <div className="rounded-[14px] border border-(--sst-line-soft) bg-(--sst-card) px-3 py-2.5">
+            <span className="text-[10px] font-medium text-(--sst-muted)">Peak HR</span>
+            <div className={`mt-0.5 text-[17px] text-(--sst-ink) ${numFont}`}>{peak ?? '—'}</div>
           </div>
-          <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3 py-2.5">
-            <span className="text-[10px] font-medium text-[#5d7174]">Symptoms</span>
-            <div className={`mt-0.5 text-[17px] text-[#16282b] ${numFont}`}>
+          <div className="rounded-[14px] border border-(--sst-line-soft) bg-(--sst-card) px-3 py-2.5">
+            <span className="text-[10px] font-medium text-(--sst-muted)">Symptoms</span>
+            <div className={`mt-0.5 text-[17px] text-(--sst-ink) ${numFont}`}>
               {preSymptom}→{Math.max(peakSymptom, currentSymptom)}
             </div>
           </div>
@@ -648,7 +648,7 @@ export default function TrainingSession({
 
         {/* end-of-session self-report — one tap, inline */}
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold text-[#3b4f52]">
+          <span className="text-xs font-semibold text-(--sst-ink-2)">
             Compared to before the session, how do you feel?
           </span>
           <div className="grid grid-cols-3 gap-2">
@@ -668,8 +668,8 @@ export default function TrainingSession({
                   onClick={() => setEndFeel(id)}
                   className={`rounded-[14px] border-[1.5px] px-3 py-3.5 text-[14px] font-bold transition active:scale-[0.98] ${
                     on
-                      ? 'border-[#5b9aa6] bg-[#e7f2f3] text-[#16243f]'
-                      : 'border-[#d4e0e1] bg-white text-[#3b4f52]'
+                      ? 'border-(--sst-accent) bg-(--sst-accent-soft) text-(--sst-navy)'
+                      : 'border-(--sst-line) bg-(--sst-card) text-(--sst-ink-2)'
                   }`}
                 >
                   {label}
@@ -695,48 +695,48 @@ export default function TrainingSession({
     <section className="flex flex-col gap-3.5 pt-1">
       <div className="flex items-center justify-between">
         <h1 className="m-0 text-[18px] font-extrabold leading-none tracking-[-0.02em]">Session</h1>
-        <span className={`text-[15px] font-bold text-[#3c7681] ${numFont}`}>
+        <span className={`text-[15px] font-bold text-(--sst-accent-ink) ${numFont}`}>
           {mm}:{ss}
-          <span className="ml-1 text-[10px] font-semibold text-[#5d7174]">left</span>
+          <span className="ml-1 text-[10px] font-semibold text-(--sst-muted)">left</span>
         </span>
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 rounded-full bg-[#eef4f4] px-3 py-2 text-[11.5px] font-semibold text-[#3c7681]">
-        <span className="h-[7px] w-[7px] rounded-full bg-[#5b9aa6]" />
+      <div className="flex items-center justify-center gap-1.5 rounded-full bg-(--sst-surface-2) px-3 py-2 text-[11.5px] font-semibold text-(--sst-accent-ink)">
+        <span className="h-[7px] w-[7px] rounded-full bg-(--sst-accent)" />
         Target {rx.lowerBpm}–{rx.upperBpm} bpm · {rx.sessionMinutes} min
       </div>
 
       {hrStatus === 'streaming' ? (
-        <div className="-mt-1 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#3c7a1f]">
-          <span className="inline-block h-[7px] w-[7px] animate-pulse rounded-full bg-[#3c7a1f]" />
+        <div className="-mt-1 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-(--sst-good)">
+          <span className="inline-block h-[7px] w-[7px] animate-pulse rounded-full bg-(--sst-good)" />
           {hrSourceLabel ?? 'Watch'} · streaming live
         </div>
       ) : hrStatus === 'connecting' ? (
-        <div className="-mt-1 text-center text-[11px] font-semibold text-[#b58a32]">
+        <div className="-mt-1 text-center text-[11px] font-semibold text-(--sst-warn-dim)">
           Signal dropped — reconnecting {hrSourceLabel ?? 'your device'}…
         </div>
       ) : null}
 
       {/* persistent red banner at/over the do-not-exceed line */}
       {zone === 'limit' && (
-        <div className="rounded-[14px] border-2 border-[#d2463a] bg-[#fbeae8] px-3.5 py-3 text-center">
-          <p className="m-0 text-[14px] font-extrabold leading-snug text-[#b1392e]">
+        <div className="rounded-[14px] border-2 border-(--sst-danger) bg-(--sst-danger-soft) px-3.5 py-3 text-center">
+          <p className="m-0 text-[14px] font-extrabold leading-snug text-(--sst-danger-ink)">
             Stop — over your limit
           </p>
-          <p className="m-0 mt-0.5 text-[11.5px] leading-snug text-[#8a4036]">
+          <p className="m-0 mt-0.5 text-[11.5px] leading-snug text-(--sst-danger-ink-2)">
             Slow right down until you&rsquo;re back under {rx.upperBpm} bpm.
           </p>
         </div>
       )}
       {/* transient band-exit / re-entry cues */}
       {zone !== 'limit' && zoneToast === 'ease-off' && (
-        <div className="animate-pulse rounded-[14px] border-2 border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-2.5 text-center">
-          <p className="m-0 text-[13px] font-extrabold text-[#a06a1c]">Ease off</p>
+        <div className="animate-pulse rounded-[14px] border-2 border-(--sst-warn) bg-(--sst-warn-soft) px-3.5 py-2.5 text-center">
+          <p className="m-0 text-[13px] font-extrabold text-(--sst-warn-ink)">Ease off</p>
         </div>
       )}
       {zoneToast === 'back-in' && (
-        <div className="rounded-[14px] border border-[#5b9aa6] bg-[#e7f2f3] px-3.5 py-2.5 text-center">
-          <p className="m-0 text-[13px] font-bold text-[#3c7681]">Back in band</p>
+        <div className="rounded-[14px] border border-(--sst-accent) bg-(--sst-accent-soft) px-3.5 py-2.5 text-center">
+          <p className="m-0 text-[13px] font-bold text-(--sst-accent-ink)">Back in band</p>
         </div>
       )}
 
@@ -750,7 +750,7 @@ export default function TrainingSession({
           >
             {hrValid ? hrValue : '—'}
           </span>
-          <span className="-mt-0.5 text-[11px] font-semibold tracking-[0.14em] text-[#5d7174]">
+          <span className="-mt-0.5 text-[11px] font-semibold tracking-[0.14em] text-(--sst-muted)">
             BPM
           </span>
           <span
@@ -773,7 +773,7 @@ export default function TrainingSession({
             value={heartRate}
             onChange={(e) => setHeartRate(e.target.value)}
             placeholder="Heart rate (bpm)"
-            className={`min-w-0 flex-1 rounded-[14px] border-[1.5px] border-[#cdd9da] bg-white px-3.5 py-3 text-base text-[#16282b] outline-none focus:border-[#5b9aa6] ${numFont}`}
+            className={`min-w-0 flex-1 rounded-[14px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-3.5 py-3 text-base text-(--sst-ink) outline-none focus:border-(--sst-accent) ${numFont}`}
           />
           <SecondaryButton onClick={logReading} disabled={!hrValid} className="whitespace-nowrap px-4 py-3">
             Log{manualLogs > 0 ? ` (${manualLogs})` : ''}
@@ -785,15 +785,15 @@ export default function TrainingSession({
           then one flat strip sharing the container edges. The baseline strip is
           collapsed behind "adjust" — two stacked full-width bar rows read as a
           broken layout and the baseline is rarely touched mid-session. */}
-      <div className="flex flex-col gap-2.5 border-t border-[#dde7e7] pt-3">
+      <div className="flex flex-col gap-2.5 border-t border-(--sst-line-soft) pt-3">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs font-semibold text-[#3b4f52]">Symptom check now</span>
+          <span className="text-xs font-semibold text-(--sst-ink-2)">Symptom check now</span>
           <span
             className={`text-[16px] ${numFont}`}
-            style={{ color: symptomRise >= SESSION_STOP_RISE ? '#d79a3a' : '#5b9aa6' }}
+            style={{ color: symptomRise >= SESSION_STOP_RISE ? 'var(--sst-warn)' : 'var(--sst-accent)' }}
           >
             {currentSymptom}
-            <span className="text-[11px] text-[#5d7174]">/10</span>
+            <span className="text-[11px] text-(--sst-muted)">/10</span>
           </span>
         </div>
         <SegmentBars
@@ -804,14 +804,14 @@ export default function TrainingSession({
           ariaLabel="Current symptom level, 0 to 10"
         />
         <div className="flex items-center justify-between">
-          <p className="m-0 text-[10.5px] leading-snug text-[#5d7174]">
+          <p className="m-0 text-[10.5px] leading-snug text-(--sst-muted)">
             Before you started: {preSymptom}/10
           </p>
           <button
             type="button"
             onClick={() => setAdjustBaseline((v) => !v)}
             aria-expanded={adjustBaseline}
-            className="text-[10.5px] font-semibold text-[#3c7681] underline decoration-[#a7c7cc] underline-offset-2"
+            className="text-[10.5px] font-semibold text-(--sst-accent-ink) underline decoration-(--sst-underline) underline-offset-2"
           >
             {adjustBaseline ? 'done' : 'adjust'}
           </button>
@@ -828,8 +828,8 @@ export default function TrainingSession({
 
       {/* cancel confirm — leaving is never a silent discard */}
       {confirmCancel && (
-        <div className="rounded-[16px] border-[1.5px] border-[#cdd9da] bg-white px-3.5 py-3">
-          <p className="m-0 text-[12.5px] leading-snug text-[#3b4f52]">
+        <div className="rounded-[16px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-3.5 py-3">
+          <p className="m-0 text-[12.5px] leading-snug text-(--sst-ink-2)">
             Leave without saving? Your clinician will see the session was cut short.
           </p>
           <div className="mt-2.5 flex gap-2">
@@ -847,7 +847,7 @@ export default function TrainingSession({
                   currentSymptom,
                 })
               }}
-              className="flex-1 rounded-2xl bg-[#d2463a] p-2.5 text-[12.5px] font-bold text-white transition active:scale-[0.98]"
+              className="flex-1 rounded-2xl bg-(--sst-danger) p-2.5 text-[12.5px] font-bold text-(--sst-on-accent) transition active:scale-[0.98]"
             >
               Leave
             </button>

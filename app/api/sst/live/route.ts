@@ -26,6 +26,9 @@ const SET_TTL = 90 // seconds — the per-clinic active index
 
 interface LiveTick {
   patientLabel: string
+  /** install UUID from the patient app — the stable per-device identity.
+   *  Null only for old app builds that predate the field. */
+  patientRef: string | null
   bpm: number | null
   bandLow: number | null
   bandHigh: number | null
@@ -61,6 +64,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
   }
   const patientLabel = clean(body.patientLabel, 60) || 'Unidentified'
+  // Install UUID — every current app build sends it on each tick. Two patients
+  // with the same display name must not overwrite each other's live slot, so
+  // when present it keys the KV entry (label stays the display string).
+  const patientRef = clean(body.patientRef, 64) || null
 
   const bpmRaw = Number(body.bpm)
   const bpm = Number.isFinite(bpmRaw) && bpmRaw > 30 && bpmRaw < 240 ? Math.round(bpmRaw) : null
@@ -73,11 +80,14 @@ export async function POST(request: Request) {
   const elapsedSec = Number.isFinite(Number(body.elapsedSec)) ? Math.round(Number(body.elapsedSec)) : null
   const phase = body.phase ? clean(body.phase, 32) : null
 
-  const tick: LiveTick = { patientLabel, bpm, bandLow, bandHigh, zone, elapsedSec, phase, updatedAt: Date.now() }
+  const tick: LiveTick = { patientLabel, patientRef, bpm, bandLow, bandHigh, zone, elapsedSec, phase, updatedAt: Date.now() }
 
+  // Key by the install UUID when the tick carries one (fallback: label, for old
+  // builds). Ephemeral store (15–90s TTL) — no migration concern.
+  const identity = patientRef ?? patientLabel
   try {
-    await kv.set(keyFor(code, patientLabel), tick, { ex: TICK_TTL })
-    await kv.sadd(setKey(code), patientLabel)
+    await kv.set(keyFor(code, identity), tick, { ex: TICK_TTL })
+    await kv.sadd(setKey(code), identity)
     await kv.expire(setKey(code), SET_TTL)
   } catch (err) {
     console.error('[sst-live] write failed:', err)

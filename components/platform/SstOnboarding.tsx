@@ -72,8 +72,8 @@ type CodeStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'error'
 
 function TargetIcon() {
   return (
-    <span className="relative h-[34px] w-[34px] flex-none rounded-full border-[2.5px] border-[#5b9aa6]">
-      <span className="absolute left-1/2 top-1/2 h-[11px] w-[11px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5b9aa6]" />
+    <span className="relative h-[34px] w-[34px] flex-none rounded-full border-[2.5px] border-(--sst-accent)">
+      <span className="absolute left-1/2 top-1/2 h-[11px] w-[11px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--sst-accent)" />
     </span>
   )
 }
@@ -236,7 +236,7 @@ export default function SstOnboarding({
         : nameMissing
           ? 'Add your name to continue'
           : trialBlocked
-            ? 'This clinic’s free trial is full'
+            ? 'Ask your clinic to activate your spot'
             : 'Continue'
 
   const condition: Condition = 'concussion'
@@ -247,13 +247,13 @@ export default function SstOnboarding({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2.5">
           <TargetIcon />
-          <h1 className="m-0 text-[21px] font-extrabold leading-[1.05] tracking-[-0.02em] text-[#16243f]">
+          <h1 className="m-0 text-[21px] font-extrabold leading-[1.05] tracking-[-0.02em] text-(--sst-navy)">
             Sub-Symptom
             <br />
             Threshold Trainer
           </h1>
         </div>
-        <p className="m-0 text-[13px] leading-snug text-[#5d7174]">
+        <p className="m-0 text-[13px] leading-snug text-(--sst-muted)">
           Symptom-guided exercise rehab. We find the heart rate your symptoms allow, then build a
           training plan that grows as you recover — overseen by your clinician.
         </p>
@@ -262,10 +262,10 @@ export default function SstOnboarding({
       {/* mode segmented control — paid surface only (public entry is clinic-code) */}
       {selfGuidedEnabled && (
         <div className="flex flex-col gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
             How are you using this?
           </span>
-          <div className="flex gap-1 rounded-[14px] bg-[#e7eeee] p-1">
+          <div className="flex gap-1 rounded-[14px] bg-(--sst-surface-3) p-1">
             {(
               [
                 ['self-guided', 'Self-guided'],
@@ -280,8 +280,8 @@ export default function SstOnboarding({
                   onClick={() => setMode(m)}
                   className={`flex-1 rounded-[10px] p-2.5 text-[13px] font-semibold transition ${
                     on
-                      ? 'bg-white text-[#16243f] shadow-[0_1px_2px_rgba(20,36,63,0.14)]'
-                      : 'bg-transparent text-[#7d9092]'
+                      ? 'bg-(--sst-card) text-(--sst-navy) shadow-[0_1px_2px_rgba(20,36,63,0.14)]'
+                      : 'bg-transparent text-(--sst-faint)'
                   }`}
                 >
                   {label}
@@ -294,7 +294,7 @@ export default function SstOnboarding({
 
       {mode === 'clinic-code' && (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="clinic-code" className="text-xs font-semibold text-[#3b4f52]">
+          <label htmlFor="clinic-code" className="text-xs font-semibold text-(--sst-ink-2)">
             Clinic code
           </label>
           <input
@@ -312,22 +312,22 @@ export default function SstOnboarding({
             placeholder="e.g. CEA-4827"
             autoCapitalize="characters"
             aria-describedby="clinic-code-status"
-            className={`w-full rounded-[14px] border-[1.5px] bg-white px-3.5 py-3 text-base tracking-[0.06em] text-[#16243f] outline-none font-[family-name:var(--font-space)] focus:border-[#5b9aa6] ${
-              codeStatus === 'invalid' ? 'border-[#d2463a]' : codeStatus === 'valid' ? 'border-[#3c7a1f]' : 'border-[#cfdbdc]'
+            className={`w-full rounded-[14px] border-[1.5px] bg-(--sst-card) px-3.5 py-3 text-base tracking-[0.06em] text-(--sst-navy) outline-none font-[family-name:var(--font-space)] focus:border-(--sst-accent) ${
+              codeStatus === 'invalid' ? 'border-(--sst-danger)' : codeStatus === 'valid' ? 'border-(--sst-good)' : 'border-(--sst-line-strong)'
             }`}
           />
           <span id="clinic-code-status" aria-live="polite" className="min-h-[16px] text-[11.5px] leading-tight">
-            {codeStatus === 'checking' && <span className="text-[#9bafb0]">Checking your code…</span>}
+            {codeStatus === 'checking' && <span className="text-(--sst-ghost)">Checking your code…</span>}
             {codeStatus === 'valid' && (
-              <span className="font-semibold text-[#3c7a1f]">✓ {clinicName ?? 'Code confirmed'}</span>
+              <span className="font-semibold text-(--sst-good)">✓ {clinicName ?? 'Code confirmed'}</span>
             )}
             {codeStatus === 'invalid' && (
-              <span className="font-semibold text-[#b5462f]">
+              <span className="font-semibold text-(--sst-danger-alt)">
                 That code isn&rsquo;t recognised — check it against your clinic card.
               </span>
             )}
             {codeStatus === 'error' && (
-              <span className="text-[#b5462f]">
+              <span className="text-(--sst-danger-alt)">
                 Couldn&rsquo;t check the code just now.{' '}
                 <button
                   type="button"
@@ -340,7 +340,7 @@ export default function SstOnboarding({
             )}
           </span>
 
-          <label htmlFor="patient-name" className="mt-1.5 text-xs font-semibold text-[#3b4f52]">
+          <label htmlFor="patient-name" className="mt-1.5 text-xs font-semibold text-(--sst-ink-2)">
             Your name
           </label>
           <input
@@ -350,9 +350,9 @@ export default function SstOnboarding({
             onChange={(e) => setPatientName(e.target.value)}
             placeholder="First and last name"
             autoCapitalize="words"
-            className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base text-[#16243f] outline-none focus:border-[#5b9aa6]"
+            className="w-full rounded-[14px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-3.5 py-3 text-base text-(--sst-navy) outline-none focus:border-(--sst-accent)"
           />
-          <span className="text-[10.5px] leading-tight text-[#9bafb0]">
+          <span className="text-[10.5px] leading-tight text-(--sst-ghost)">
             So your clinician knows it&rsquo;s you.
           </span>
         </div>
@@ -360,7 +360,7 @@ export default function SstOnboarding({
 
       {/* goal chip grid */}
       <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
           What are you working back to?
         </span>
         <div className="grid grid-cols-2 gap-2">
@@ -374,8 +374,8 @@ export default function SstOnboarding({
                 onClick={() => setGoal(on ? null : g.id)}
                 className={`rounded-[14px] border-[1.5px] px-3.5 py-3 text-left text-[13px] font-semibold transition ${
                   on
-                    ? 'border-[#5b9aa6] bg-[#e7f2f3] text-[#16243f]'
-                    : 'border-[#d4e0e1] bg-white text-[#3b4f52]'
+                    ? 'border-(--sst-accent) bg-(--sst-accent-soft) text-(--sst-navy)'
+                    : 'border-(--sst-line) bg-(--sst-card) text-(--sst-ink-2)'
                 }`}
               >
                 {g.label}
@@ -387,10 +387,10 @@ export default function SstOnboarding({
 
       {/* heart-rate source — verified tier first (watch broadcast / strap) */}
       <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
           Heart-rate source
         </span>
-        <p className="m-0 -mt-0.5 text-[11px] leading-snug text-[#7d9092]">
+        <p className="m-0 -mt-0.5 text-[11px] leading-snug text-(--sst-faint)">
           Use the watch you already own — turn on its heart-rate broadcast mode and pair in one tap.
           Chest straps work too. No watch on hand? You can type each reading in.
         </p>
@@ -409,7 +409,7 @@ export default function SstOnboarding({
                 onClick={() => pair(s)}
                 disabled={disabled}
                 className={`flex items-center gap-3 rounded-[14px] border-[1.5px] px-3 py-3 text-left transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${
-                  selected ? 'border-[#5b9aa6] bg-[#e7f2f3]' : 'border-[#d4e0e1] bg-white'
+                  selected ? 'border-(--sst-accent) bg-(--sst-accent-soft)' : 'border-(--sst-line) bg-(--sst-card)'
                 }`}
               >
                 <span
@@ -419,41 +419,41 @@ export default function SstOnboarding({
                   {s.glyph}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-[13px] font-bold leading-tight text-[#16243f]">{s.name}</span>
-                  <span className="text-[10.5px] leading-snug text-[#7d9092]">{subtitle}</span>
+                  <span className="text-[13px] font-bold leading-tight text-(--sst-navy)">{s.name}</span>
+                  <span className="text-[10.5px] leading-snug text-(--sst-faint)">{subtitle}</span>
                 </span>
                 <span className="flex-none text-right">
                   {pendingId === s.id ? (
-                    <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#9bafb0]">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--sst-ghost)">
                       Connecting…
                     </span>
                   ) : disabled ? (
-                    <span className="text-[9px] font-bold uppercase tracking-[0.04em] text-[#9bafb0]">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.04em] text-(--sst-ghost)">
                       Unavailable
                     </span>
                   ) : selected ? (
                     s.connect === 'manual' ? (
-                      <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#3c7681]">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--sst-accent-ink)">
                         ✓ Selected
                       </span>
                     ) : pairStatus === 'connecting' ? (
-                      <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#9bafb0]">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--sst-ghost)">
                         Connecting…
                       </span>
                     ) : pairStatus === 'connected' ? (
-                      <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.04em] text-[#3c7a1f]">
-                        <span className="inline-block h-[6px] w-[6px] rounded-full bg-[#3c7a1f]" />
+                      <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.04em] text-(--sst-good)">
+                        <span className="inline-block h-[6px] w-[6px] rounded-full bg-(--sst-good)" />
                         Live
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#d2463a]">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--sst-danger)">
                         Tap to retry
                       </span>
                     )
                   ) : (
                     <span
                       className="text-[9px] font-bold uppercase tracking-[0.04em]"
-                      style={{ color: s.live ? '#3c7a1f' : '#3c7681' }}
+                      style={{ color: s.live ? 'var(--sst-good)' : 'var(--sst-accent-ink)' }}
                     >
                       {s.tag}
                     </span>
@@ -469,27 +469,27 @@ export default function SstOnboarding({
           type="button"
           onClick={() => setShowBroadcastHelp((v) => !v)}
           aria-expanded={showBroadcastHelp}
-          className="self-start text-[11px] font-semibold text-[#3c7681] underline decoration-[#a7c7cc] underline-offset-2"
+          className="self-start text-[11px] font-semibold text-(--sst-accent-ink) underline decoration-(--sst-underline) underline-offset-2"
         >
           How do I turn on my watch&rsquo;s broadcast?
         </button>
         {showBroadcastHelp && (
-          <ul className="m-0 flex list-none flex-col gap-1 rounded-[12px] bg-[#eef4f4] px-3.5 py-2.5 pl-3.5">
+          <ul className="m-0 flex list-none flex-col gap-1 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 pl-3.5">
             {BROADCAST_HOW_TO.map((b) => (
-              <li key={b.brand} className="text-[11px] leading-snug text-[#3c5658]">
+              <li key={b.brand} className="text-[11px] leading-snug text-(--sst-ink-3)">
                 <strong>{b.brand}:</strong> {b.how}
               </li>
             ))}
-            <li className="text-[11px] leading-snug text-[#7d9092]">
+            <li className="text-[11px] leading-snug text-(--sst-faint)">
               Apple Watch and Fitbit can&rsquo;t broadcast this way — type your heart rate in instead.
             </li>
           </ul>
         )}
 
         {pairError ? (
-          <span className="text-[10.5px] leading-snug text-[#b5462f]">{pairError}</span>
+          <span className="text-[10.5px] leading-snug text-(--sst-danger-alt)">{pairError}</span>
         ) : (
-          <span className="text-[10.5px] leading-snug text-[#9bafb0]">
+          <span className="text-[10.5px] leading-snug text-(--sst-ghost)">
             {device.connect === 'camera'
               ? 'Good for a resting pulse check before and after a session (cover the rear lens with a fingertip). During exercise, use your watch broadcast or type your heart rate in.'
               : device.connect === 'bluetooth'
@@ -498,7 +498,7 @@ export default function SstOnboarding({
           </span>
         )}
         {native ? (
-          <span className="text-[10px] leading-snug text-[#9bafb0]">
+          <span className="text-[10px] leading-snug text-(--sst-ghost)">
             You&rsquo;re in the app — your watch or strap pairs directly over Bluetooth (iPhone
             included). Turn on its heart-rate broadcast, tap the top option and pick your device.
           </span>
@@ -529,8 +529,8 @@ export default function SstOnboarding({
           is the opt-in for CEA's de-identified service-improvement use, with an
           honourable opt-out (ask us to delete). "Research" is deliberately NOT
           claimed here — that requires separate HREC-gated consent. */}
-      <div className="rounded-xl border border-[#d7e3e4] bg-[#f3f8f8] px-3.5 py-3">
-        <p className="m-0 mb-2 text-[11.5px] leading-snug text-[#3c5658]">
+      <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-3">
+        <p className="m-0 mb-2 text-[11.5px] leading-snug text-(--sst-ink-3)">
           Your name and results go to <strong>your own clinician</strong> so they can review and guide
           your care.
         </p>
@@ -539,9 +539,9 @@ export default function SstOnboarding({
             type="checkbox"
             checked={dataConsent}
             onChange={(e) => setDataConsent(e.target.checked)}
-            className="mt-0.5 h-4 w-4 flex-none accent-[#3c7681]"
+            className="mt-0.5 h-4 w-4 flex-none accent-(--sst-accent-ink)"
           />
-          <span className="text-[11.5px] leading-snug text-[#3c5658]">
+          <span className="text-[11.5px] leading-snug text-(--sst-ink-3)">
             {/* {' '} is load-bearing: the Turbopack prod build eats a plain
                 space after an inline element (rendered "removedto") */}
             I also agree CEA may keep my session data, with my name{' '}<strong>removed</strong>, to check and
@@ -551,14 +551,16 @@ export default function SstOnboarding({
         </label>
       </div>
 
+      {/* Patient-neutral wall: the trial cap is the CLINIC's billing state and
+          never the patient's problem — no trial/payment framing here. */}
       {trialBlocked && (
-        <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
-          <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
-            This clinic&rsquo;s free trial is full
+        <div className="rounded-[14px] border-[1.5px] border-(--sst-warn) bg-(--sst-warn-soft) px-3.5 py-3">
+          <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-warn-ink)">
+            One more step — your clinic needs to activate your spot
           </p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-[#8a6a2c]">
-            {clinicName ?? 'Your clinic'} has used all three free-trial patients. Ask them to add you —
-            once they&rsquo;re on a plan you can start straight away.
+          <p className="mt-1 text-[11.5px] leading-relaxed text-(--sst-warn-ink-2)">
+            Ask {clinicName ?? 'your clinic'} to activate your spot — it takes them under a minute.
+            As soon as they do, come back here and you can start straight away.
           </p>
         </div>
       )}
@@ -585,7 +587,7 @@ export default function SstOnboarding({
 
       <a
         href="/preseason"
-        className="group -mt-0.5 flex items-center justify-center gap-1.5 px-1 py-1 text-[12px] font-semibold text-[#5d7174] no-underline transition hover:text-[#3c7681]"
+        className="group -mt-0.5 flex items-center justify-center gap-1.5 px-1 py-1 text-[12px] font-semibold text-(--sst-muted) no-underline transition hover:text-(--sst-accent-ink)"
       >
         <svg
           viewBox="0 0 24 24"

@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react'
  */
 interface LivePatient {
   patientLabel: string
+  /** install UUID (stable per device) — null only from pre-field app builds */
+  patientRef?: string | null
   bpm: number | null
   bandLow: number | null
   bandHigh: number | null
@@ -105,7 +107,7 @@ export function SstLivePanel({ code, viewKey }: { code: string; viewKey?: string
           {active.map((p) => {
             const z = p.zone ? ZONE[p.zone] : null
             return (
-              <div key={p.patientLabel} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div key={p.patientRef ?? p.patientLabel} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900 truncate">{p.patientLabel}</p>
                   <p className="text-[11px] text-slate-500">

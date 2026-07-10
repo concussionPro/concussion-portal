@@ -2,7 +2,8 @@
 
 import { useSyncExternalStore } from 'react'
 import type { Condition, Prescription } from '@/lib/sst-trainer/protocol'
-import type { TrainerMode } from '@/lib/sst-trainer/store'
+import type { PersistedTest, TrainerMode } from '@/lib/sst-trainer/store'
+import { TrajectoryCompact } from './PatientTrajectory'
 import { BandBar, PrimaryButton, SecondaryButton, numFont } from './shell'
 
 function greetingForHour(h: number) {
@@ -39,6 +40,7 @@ export default function HomeHub({
   onStartOver,
   goalLabel,
   deviceName,
+  history,
 }: {
   rx: Prescription
   condition: Condition
@@ -62,6 +64,8 @@ export default function HomeHub({
   goalLabel?: string
   /** paired heart-rate source name, from onboarding (e.g. "Polar H10") */
   deviceName?: string
+  /** persisted threshold-test history — the compact recovery-curve entry */
+  history?: PersistedTest[]
 }) {
   // Client-only greeting without an effect: useSyncExternalStore returns the
   // server snapshot ('Welcome back') during SSR/hydration, then the client
@@ -86,29 +90,29 @@ export default function HomeHub({
   return (
     <section className="flex flex-col gap-[15px] pt-2">
       <div className="flex flex-col gap-0.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#5b9aa6]">
+        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-(--sst-accent)">
           {badge}
         </span>
-        <h1 className="m-0 text-[25px] font-extrabold leading-[1.05] tracking-[-0.025em] text-[#16282b]">
+        <h1 className="m-0 text-[25px] font-extrabold leading-[1.05] tracking-[-0.025em] text-(--sst-ink)">
           {greeting}
         </h1>
-        <p className="m-0 text-[13.5px] leading-snug text-[#5d7174]">
+        <p className="m-0 text-[13.5px] leading-snug text-(--sst-muted)">
           {goalLabel ? `Working back to ${goalLabel.toLowerCase()} — no rush.` : 'Ready when you are — no rush.'}
         </p>
       </div>
 
       <div
-        className="rounded-[20px] border-2 border-[#5b9aa6] px-4 pb-3.5 pt-3.5"
-        style={{ background: 'linear-gradient(180deg,#eef6f6,#e3f0f1)' }}
+        className="rounded-[20px] border-2 border-(--sst-accent) px-4 pb-3.5 pt-3.5"
+        style={{ background: 'linear-gradient(180deg,var(--sst-tint-a),var(--sst-tint-b))' }}
       >
-        <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#3c7681]">
+        <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-(--sst-accent-ink)">
           Today&apos;s band
         </span>
         <div className="mb-3 mt-1.5 flex items-baseline gap-1.5">
-          <span className={`text-[36px] text-[#16282b] ${numFont}`}>
+          <span className={`text-[36px] text-(--sst-ink) ${numFont}`}>
             {rx.lowerBpm}–{rx.upperBpm}
           </span>
-          <span className="text-[13px] font-semibold text-[#5d7174]">bpm</span>
+          <span className="text-[13px] font-semibold text-(--sst-muted)">bpm</span>
         </div>
         <BandBar hrt={rx.hrt} lower={rx.lowerBpm} upper={rx.upperBpm} />
       </div>
@@ -117,10 +121,10 @@ export default function HomeHub({
         Start today&apos;s session
       </PrimaryButton>
 
-      <div className="flex items-center justify-between rounded-[16px] border border-[#dde7e7] bg-white px-4 py-3">
+      <div className="flex items-center justify-between rounded-[16px] border border-(--sst-line-soft) bg-(--sst-card) px-4 py-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[12.5px] font-bold text-[#16282b]">Sessions logged</span>
-          <span className="text-[11px] text-[#5d7174]">
+          <span className="text-[12.5px] font-bold text-(--sst-ink)">Sessions logged</span>
+          <span className="text-[11px] text-(--sst-muted)">
             {done} of {target} toward your weekly goal
           </span>
         </div>
@@ -130,13 +134,19 @@ export default function HomeHub({
               key={i}
               className="h-[13px] w-[13px] rounded-full border-[1.5px]"
               style={{
-                background: i < done ? '#5b9aa6' : '#ffffff',
-                borderColor: i < done ? '#5b9aa6' : '#cdd9da',
+                background: i < done ? 'var(--sst-accent)' : 'var(--sst-card)',
+                borderColor: i < done ? 'var(--sst-accent)' : 'var(--sst-line-strong)',
               }}
             />
           ))}
         </div>
       </div>
+
+      {/* the adherence lever: their own measured threshold rising — taps
+          through to the full curve on Progress */}
+      {history && history.some((t) => t.hrt != null) && (
+        <TrajectoryCompact tests={history} onOpen={onProgress} />
+      )}
 
       <div className="flex gap-2.5">
         <SecondaryButton onClick={onProgress} className="flex-1 p-3">
@@ -148,7 +158,7 @@ export default function HomeHub({
       </div>
 
       {retestBlockedReason && (
-        <p className="m-0 -mt-1 rounded-[12px] bg-[#eef4f4] px-3.5 py-2.5 text-[11.5px] leading-snug text-[#5d7174]">
+        <p className="m-0 -mt-1 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 text-[11.5px] leading-snug text-(--sst-muted)">
           {retestBlockedReason}
         </p>
       )}
@@ -156,7 +166,7 @@ export default function HomeHub({
       {/* Quiet link across to the SCAT6 baseline & serial-testing instrument. */}
       <a
         href="/preseason"
-        className="group -mt-0.5 flex items-center justify-center gap-1.5 px-1 py-1 text-[12px] font-semibold text-[#5d7174] no-underline transition hover:text-[#3c7681]"
+        className="group -mt-0.5 flex items-center justify-center gap-1.5 px-1 py-1 text-[12px] font-semibold text-(--sst-muted) no-underline transition hover:text-(--sst-accent-ink)"
       >
         <svg
           viewBox="0 0 24 24"
@@ -178,13 +188,13 @@ export default function HomeHub({
         <button
           type="button"
           onClick={onStartOver}
-          className="mx-auto mt-1 rounded-[10px] px-2 py-1 text-[11px] font-semibold text-[#5d7174] transition hover:text-[#b5462f]"
+          className="mx-auto mt-1 rounded-[10px] px-2 py-1 text-[11px] font-semibold text-(--sst-muted) transition hover:text-(--sst-danger-alt)"
         >
           Start over
         </button>
       )}
 
-      <p className="m-0 mt-1 text-center text-[10px] leading-snug text-[#5d7174]">
+      <p className="m-0 mt-1 text-center text-[10px] leading-snug text-(--sst-muted)">
         A clinician-directed coaching tool — not a diagnosis or return-to-play clearance. Follow your
         clinician&rsquo;s guidance.
       </p>
