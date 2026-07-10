@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
+import { HubSeatsCard } from '@/components/dashboard/HubSeatsCard'
 import { isOwnerEmail } from '@/lib/owner'
 import Link from 'next/link'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
@@ -217,6 +218,10 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
           </div>
         </div>
       </Card>
+
+      {/* ── Hub Pack owner seat visibility — renders null for non-owners
+            (fetch gated inside the component, no layout shift) ── */}
+      <HubSeatsCard />
 
       {/* ── 2. CPD Hours ───────────────────────────── */}
       <Card href="/learning">

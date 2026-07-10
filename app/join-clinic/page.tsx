@@ -22,6 +22,9 @@ function JoinClinic() {
   const [role, setRole] = useState<'clinician' | 'admin'>('clinician')
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done'>('idle')
   const [error, setError] = useState<string | null>(null)
+  // Seat-exhausted (409 seats-full): not a dead end — we know who can add
+  // seats, so route the redeemer to the clinic owner instead of an error blob.
+  const [seatsFull, setSeatsFull] = useState<{ clinicName: string | null; ownerEmail: string | null } | null>(null)
 
   useEffect(() => {
     const k = new URLSearchParams(window.location.search).get('key')
@@ -40,6 +43,11 @@ function JoinClinic() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
+        if (res.status === 409 && data?.reason === 'seats-full') {
+          setSeatsFull({ clinicName: data.clinicName ?? null, ownerEmail: data.ownerEmail ?? null })
+          setStatus('idle')
+          return
+        }
         setError(data?.error || 'Something went wrong. Please try again.')
         setStatus('idle')
         return
@@ -53,6 +61,47 @@ function JoinClinic() {
       setError('Network error. Please try again.')
       setStatus('idle')
     }
+  }
+
+  if (seatsFull) {
+    const who = seatsFull.clinicName || 'your clinic'
+    const owner = seatsFull.ownerEmail
+    const mailto = owner
+      ? `mailto:${owner}?subject=${encodeURIComponent('Course seat for me — can you add one?')}&body=${encodeURIComponent(
+          `Hi,\n\nI tried to redeem a seat on ${who}'s Concussion Education Australia access key (${key}) but all the seats are taken. Could you add a seat for me?\n\nThanks,\n${name || ''}`
+        )}`
+      : null
+    return (
+      <Wrap>
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-2xl">!</div>
+          <h1 className="text-xl font-bold text-slate-900">This clinic&rsquo;s seats are full</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Every seat on {seatsFull.clinicName ? <strong>{seatsFull.clinicName}</strong> : 'this clinic'}&rsquo;s
+            access key has been redeemed. Extra seats can be added &mdash; but only by whoever set up
+            your clinic&rsquo;s access{owner ? <> (<strong>{owner}</strong>)</> : null}.
+          </p>
+          {mailto ? (
+            <a
+              href={mailto}
+              className="mt-4 inline-block rounded-lg bg-[#16243f] px-4 py-2.5 text-sm font-bold text-white hover:opacity-90"
+            >
+              Ask {owner} to add a seat
+            </a>
+          ) : (
+            <p className="mt-3 text-sm text-slate-600">
+              Ask them to add a seat for you &mdash; they can do it from their CEA dashboard.
+            </p>
+          )}
+          <p className="mt-4 text-xs text-slate-400">
+            Entered the wrong key?{' '}
+            <button onClick={() => setSeatsFull(null)} className="font-semibold text-teal-600 underline">
+              Try a different key
+            </button>
+          </p>
+        </div>
+      </Wrap>
+    )
   }
 
   if (status === 'done') {

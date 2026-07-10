@@ -4,7 +4,7 @@ import { createUser } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { createJWTSession } from '@/lib/jwt-session'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
-import { redeemHubSeat, type HubRole } from '@/lib/course-hub'
+import { redeemHubSeat, getCourseHub, type HubRole } from '@/lib/course-hub'
 
 /**
  * POST /api/hub/redeem  { code, email, name, role }
@@ -50,8 +50,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'That access key was not recognised. Check it and try again.' }, { status: 404 })
   }
   if (result === 'full') {
+    // Not a dead end: tell the redeemer WHO can fix it. The owner adds seats
+    // by emailing CEA (no self-serve cap-increase flow exists yet — the extra
+    // -seat Stripe product doesn't bump the key). Sharing the owner's email
+    // here is safe-by-construction: reaching this branch requires the clinic's
+    // own secret key, which the owner forwarded to this person.
+    const hub = await getCourseHub(code)
     return NextResponse.json(
-      { error: "All of this clinic's seats are in use. Ask whoever set up your clinic access — they can't add more on this key." },
+      {
+        error: "All of this clinic's seats are in use.",
+        reason: 'seats-full',
+        clinicName: hub?.clinicName ?? null,
+        ownerEmail: hub?.ownerEmail ?? null,
+      },
       { status: 409 },
     )
   }

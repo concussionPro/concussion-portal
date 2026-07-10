@@ -1400,6 +1400,76 @@ export const AI_COURSE_LAUNCH_BLAST = {
   `),
 }
 
+/**
+ * Hub Pack seat-uptake reminders (owner-facing).
+ *
+ * A Hub Pack key dies silently when the buyer never forwards it — the clinic
+ * paid for N clinician seats and only the owner's own seat gets used. These
+ * two nudges (day 3 + day 10 after purchase, only while claimed < cap) put the
+ * forwardable key back in front of the owner. Sent by
+ * app/api/cron/hub-seat-reminders, deduped per (key, stage) via
+ * email_audit_log, gated on email_suppression (fail closed) like every lane.
+ *
+ * Copy rules: founder voice, plain, no "free", one job — forward the key.
+ */
+export const HUB_SEAT_REMINDER_STAGES = [
+  { stage: 'day3', minDays: 3 },
+  { stage: 'day10', minDays: 10 },
+] as const
+
+export type HubSeatReminderStage = (typeof HUB_SEAT_REMINDER_STAGES)[number]['stage']
+
+/**
+ * Stages a hub of `ageDays` is old enough for, in send order. The cron sends
+ * only the LATEST unsent one (a 12-day-old hub gets the day-10 email, never a
+ * stale day-3 catch-up) and marks earlier ones as consumed.
+ */
+export function eligibleHubReminderStages(ageDays: number): HubSeatReminderStage[] {
+  return HUB_SEAT_REMINDER_STAGES.filter((s) => ageDays >= s.minDays).map((s) => s.stage)
+}
+
+export const HUB_SEAT_REMINDER_EMAILS: Record<HubSeatReminderStage, {
+  subject: (claimed: number, cap: number) => string
+  template: (opts: { name: string; claimed: number; cap: number; hubKey: string; redeemUrl: string; clinicName?: string | null }) => string
+}> = {
+  day3: {
+    subject: (claimed, cap) => `Your team's course seats — ${claimed} of ${cap} redeemed`,
+    template: ({ name, claimed, cap, hubKey, redeemUrl, clinicName }) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>Quick status on ${clinicName ? `${escapeHtml(clinicName)}'s` : 'your clinic&rsquo;s'} course access: <strong>${claimed} of ${cap} clinician seats</strong> have been redeemed so far. ${cap - claimed} ${cap - claimed === 1 ? 'seat is' : 'seats are'} still sitting unused.</p>
+      <p>Each seat is a full login — all 8 modules, the clinical toolkit and the reference library. Your team redeems their own seat in under a minute:</p>
+      <div class="callout">
+        <strong>Your team access key:</strong> <span style="font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px;">${escapeHtml(hubKey)}</span><br><br>
+        They redeem it here: <a href="${redeemUrl}">${redeemUrl}</a>
+      </div>
+      <p><strong>Forward this email to your team</strong> — the key and link above are everything they need.</p>
+      <p>If anyone gets stuck redeeming a seat, just reply and I'll sort it directly.</p>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    `),
+  },
+  day10: {
+    subject: (claimed, cap) => `${cap - claimed} of your clinic's course seats ${cap - claimed === 1 ? 'is' : 'are'} still unclaimed`,
+    template: ({ name, claimed, cap, hubKey, redeemUrl, clinicName }) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>It's been about ten days since you set up ${clinicName ? `${escapeHtml(clinicName)}'s` : 'your clinic&rsquo;s'} team access, and <strong>${claimed} of ${cap} clinician seats</strong> have been redeemed. You've paid for the rest — they're just waiting on a forward.</p>
+      <p>The most common reason seats sit unused is simply that the key never made it past the inbox. Here it is again:</p>
+      <div class="callout">
+        <strong>Your team access key:</strong> <span style="font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px;">${escapeHtml(hubKey)}</span><br><br>
+        Each clinician redeems it once at: <a href="${redeemUrl}">${redeemUrl}</a>
+      </div>
+      <p><strong>Forward this to your team today</strong> — it takes them under a minute and their CPD hours start counting from Module&nbsp;1.</p>
+      <p>You can see exactly who has claimed a seat on your <a href="https://portal.concussion-education-australia.com/dashboard">dashboard</a>. If the team has changed since you bought, or you need a hand, reply here.</p>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    `),
+  },
+}
+
 export const ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`
