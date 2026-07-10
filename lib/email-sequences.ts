@@ -1492,3 +1492,112 @@ export const ALMOST_DONE_EMAIL = {
     </div>
   `),
 }
+
+// ─── EP (Exercise Physiologist) Lead Nurture — Concussion Rehabilitation Mastery ──
+//
+// Sent to leads captured from the ESSA member newsletter burst (signup_source
+// 'ep-course'). The capture form sends its own Day-0 confirmation; this
+// 4-touch sequence (Day 3 → Day 21) does the follow-up conversion. Fired by
+// app/api/cron/ep-nurture/route.ts. One CTA each → the EP landing
+// /concussion-rehab-mastery. Plain founder voice.
+//
+// TRUTH GATE: every ESSA claim reads CONFIG.FEATURES.ESSA_ACCREDITED at send
+// time via essaCpdLine(). When the flag is FALSE we say "designed to ESSA CPD
+// standards (accreditation pending)" and NEVER "ESSA-accredited". CPD is 8 CPD
+// for the online course; 14 hours only WITH the practical day — never 14 for
+// the online line.
+
+/**
+ * ESSA CPD credential line — the single branch point for every EP email.
+ * Reads the live feature flag so we never over-claim accreditation we don't
+ * yet hold. Flip CONFIG.FEATURES.ESSA_ACCREDITED to true only on real approval.
+ */
+function essaCpdLine(): string {
+  return CONFIG.FEATURES.ESSA_ACCREDITED
+    ? 'ESSA-accredited &middot; 8 ESSA CPD points'
+    : 'designed to ESSA CPD standards (accreditation pending)'
+}
+
+export const EP_NURTURE_SEQUENCE = [
+  // DAY 3 — Scope + guidelines. The hook: SSTAE is the first-line,
+  // guideline-endorsed concussion treatment, and it's an aerobic-exercise
+  // prescription — squarely in EP scope.
+  {
+    day: 3,
+    subject: "The one concussion treatment that's actually yours",
+    template: (name: string, courseLink: string) => emailShell(`
+      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>You had a look at the Concussion Rehabilitation Mastery course, so here's the part I think matters most to you as an EP.</p>
+      <p>Sub-symptom-threshold aerobic exercise (SSTAE) is now the <strong>first-line, guideline-endorsed treatment</strong> for concussion. Not rest. Not "wait and see." The Amsterdam 2023 international consensus put graded aerobic exercise at the front of the pathway.</p>
+      <p>Here's the part most clinicians miss: it's an <strong>aerobic-exercise prescription</strong>. Measured threshold, graded progression, load management. That's squarely in your scope &mdash; arguably more yours than anyone else's on the care team.</p>
+      <p>This is the one concussion intervention that's actually yours to lead. The course shows you exactly how to deliver it &mdash; ${essaCpdLine()}.</p>
+      <center><a href="${utm(courseLink, 'ep_nurture_day3', 'scope_guidelines')}" class="cta-btn">See the EP course</a></center>
+      <div class="sig">
+        Zac Lewis<br>
+        Osteopath &middot; Concussion Education Australia
+      </div>
+    `),
+  },
+
+  // DAY 7 — Turnkey / the tools. Answers the "but how do I actually do it in
+  // clinic" objection with the working instruments enrolment includes.
+  {
+    day: 7,
+    subject: 'Walk out and deliver concussion rehab on Monday',
+    template: (name: string, courseLink: string) => emailShell(`
+      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>The most common question I get from EPs about concussion rehab is the honest one: "I understand the theory &mdash; but how do I actually do it in clinic?"</p>
+      <p>That's the point of the course. Enrolment isn't just the modules &mdash; it's the working instruments you deliver with:</p>
+      <ul>
+        <li><strong>The BCTT calculator</strong> &mdash; run the Buffalo test, get a measured heart-rate threshold, and it converts straight into a prescription</li>
+        <li><strong>SSTAE session templates</strong> &mdash; graded and ready to hand to the patient</li>
+        <li><strong>The phenotype library</strong> &mdash; so you know which presentations are yours to treat and which to refer on</li>
+        <li><strong>The document pack</strong> &mdash; NDIS, WorkCover and GP referral/report templates, already written</li>
+      </ul>
+      <p>The idea is simple: finish the course and you can walk out and deliver concussion rehab the same week. ${essaCpdLine()}.</p>
+      <center><a href="${utm(courseLink, 'ep_nurture_day7', 'the_tools')}" class="cta-btn">Walk through the tools</a></center>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    `),
+  },
+
+  // DAY 14 — CPD + reimbursement. Removes the time + cost objections. Online
+  // line is 8 CPD — never 14 (14 hours only with the practical day).
+  {
+    day: 14,
+    subject: 'Half your annual CPD, on your own schedule',
+    template: (name: string, courseLink: string) => emailShell(`
+      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Two practical objections come up with any CPD: the time and the cost. Here's where the EP course lands on both.</p>
+      <p><strong>Time.</strong> 8 CPD points, fully online and self-paced &mdash; roughly half your annual ESSA Further-Education requirement in one course, done on your schedule rather than a fixed workshop date.</p>
+      <p><strong>Cost.</strong> At $${CONFIG.COURSE.PRICE_ONLINE} the online course is employer-reimbursable &mdash; you get a tax invoice and a certificate on completion, so it goes straight to your PD budget.</p>
+      <p>${essaCpdLine()}. If you later want the hands-on practical day as well, you can add it and take the total to 14 hours &mdash; but the online course on its own is 8 CPD.</p>
+      <center><a href="${utm(courseLink, 'ep_nurture_day14', 'cpd_reimbursement')}" class="cta-btn">See what's included</a></center>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    `),
+  },
+
+  // DAY 21 — Last touch / new service line. Concussion rehab as a
+  // referral-worthy service GPs and clinics need someone to deliver.
+  {
+    day: 21,
+    subject: 'The service line GPs are looking for someone to run',
+    template: (name: string, courseLink: string) => emailShell(`
+      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Last note from me on this.</p>
+      <p>Concussion rehab is quietly becoming a referral-worthy service line. GPs and clinics have patients who need graded aerobic rehab and often no one obvious to send them to. The EP who can confidently take that referral becomes the person they call.</p>
+      <p>That's the real opportunity here &mdash; not just the CPD, but a service you can offer that most practices can't. The course gives you the protocol, the tools and the documentation to be that EP. ${essaCpdLine()}.</p>
+      <p>No pressure, and no more emails from me on this after today. If the timing's right, everything's here:</p>
+      <center><a href="${utm(courseLink, 'ep_nurture_day21', 'service_line')}" class="cta-btn">Have a look</a></center>
+      <div class="sig">
+        Zac Lewis<br>
+        Osteopath &middot; Concussion Education Australia
+      </div>
+    `),
+  },
+]

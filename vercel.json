@@ -9,6 +9,10 @@
       "schedule": "30 22 * * *"
     },
     {
+      "path": "/api/cron/ep-nurture",
+      "schedule": "15 22 * * *"
+    },
+    {
       "path": "/api/cron/hub-seat-reminders",
       "schedule": "20 22 * * *"
     },
