@@ -156,6 +156,13 @@ export const CONFIG = {
     SHOW_COUNTDOWN: true,
     SHOW_SPOTS_REMAINING: true,
     SHOW_SOCIAL_PROOF: true,
+    // ESSA accreditation for the CRM (EP) stream. FALSE until the certificate
+    // is actually granted. Controls EVERY ESSA claim on the EP landing + hub +
+    // nurture: when false → "designed to ESSA CPD standards · accreditation
+    // pending" and NEVER "accredited"; when true → "ESSA-accredited · 8 ESSA
+    // CPD points". Flip to true ONLY on real approval. Bundled to the client
+    // (not secret). This is the one switch that takes the EP stream live.
+    ESSA_ACCREDITED: false,
   },
 }
 

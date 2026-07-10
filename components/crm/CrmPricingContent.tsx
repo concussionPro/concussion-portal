@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
+import EpLeadCapture from '@/components/crm/EpLeadCapture'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — pricing/landing content.
@@ -45,10 +46,12 @@ interface FaqItem {
   a: string
 }
 
-const FAQS: FaqItem[] = [
+const buildFaqs = (accredited: boolean): FaqItem[] => [
   {
     q: 'Is it ESSA accredited?',
-    a: 'ESSA CPD accreditation is pending — the course is in application and has been designed to ESSA CPD standards. We don’t claim accreditation we don’t yet hold; this page updates the moment it’s confirmed.',
+    a: accredited
+      ? 'Yes — the course is ESSA-accredited. The online modules carry 8 ESSA CPD points, and the complete package (with the practical day) totals 14 CPD hours.'
+      : 'ESSA CPD accreditation is pending — the course is in application and has been designed to ESSA CPD standards. We don’t claim accreditation we don’t yet hold; this page updates the moment it’s confirmed.',
   },
   {
     q: 'How many CPD points is it worth?',
@@ -73,6 +76,23 @@ const FAQS: FaqItem[] = [
 ]
 
 export default function CrmPricingContent() {
+  // ESSA accreditation is a FEATURE FLAG (currently false). Every ESSA claim on
+  // this page branches on it so the copy reads correctly in BOTH states:
+  //   flag FALSE → "built to ESSA CPD standards (accreditation pending)"
+  //   flag TRUE  → "ESSA-accredited · 8 ESSA CPD points"
+  // Never say "accredited" while the flag is false. Flip CONFIG.FEATURES
+  // .ESSA_ACCREDITED to true on real approval and this page updates itself.
+  const accredited = CONFIG.FEATURES.ESSA_ACCREDITED
+  const essaLabel = accredited
+    ? 'ESSA-accredited'
+    : 'built to ESSA CPD standards (accreditation pending)'
+  const essaBadgeLine = accredited
+    ? 'ESSA-accredited · 8 ESSA CPD points'
+    : 'Designed to ESSA CPD standards · accreditation pending'
+  const essaTrustChip = accredited ? 'ESSA-Accredited' : 'Designed to ESSA Standards'
+
+  const FAQS = buildFaqs(accredited)
+
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
   const toggleFaq = (i: number) => {
     setOpenFaqs((prev) => {
@@ -110,11 +130,14 @@ export default function CrmPricingContent() {
           </div>
 
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Concussion <span className="text-gradient">Rehab</span> Mastery
+            Concussion rehab is <span className="text-gradient">exercise medicine</span>.
+            <br className="hidden sm:block" /> Which makes it yours.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            The only concussion-rehabilitation course built for the exercise-physiology scope —
-            with the clinical tools to run it from day one.
+            Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed
+            treatment for concussion — a graded aerobic prescription, squarely in the EP scope.
+            This is the course that makes you the clinician who delivers it, with the working
+            tools to start Monday.
           </p>
 
           {/* Skill chips — the EP's actual clinical capabilities, scannable */}
@@ -160,6 +183,28 @@ export default function CrmPricingContent() {
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
             </div>
           </div>
+
+          {/* One-line "why EPs" strap under the stats */}
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
+            A new, referral-worthy service line — GPs, physios and clinics need someone to deliver
+            measured exercise rehab. 8 CPD points is roughly half your annual ESSA Further-Education
+            requirement, done online and self-paced.
+          </p>
+
+          {/* Primary hero CTA */}
+          <div className="mt-5 flex justify-center">
+            <a
+              href="#pricing-cards"
+              className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
+            >
+              See enrolment options
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+
+          {/* Email capture — the not-ready-to-buy majority. Secondary to the
+              enrol CTA above; the same magnet repeats near the page bottom. */}
+          <EpLeadCapture variant="hero" location="hero" />
         </div>
 
         {/* ESSA standards block — the EP trust signal (accreditation pending,
@@ -167,9 +212,17 @@ export default function CrmPricingContent() {
         <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
           <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
           <div className="text-left">
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Designed to</p>
-            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">ESSA CPD standards</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Accreditation pending · ESSA Code &amp; NASRHP aligned · up to 14 CPD hours</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">
+              {accredited ? 'Accredited' : 'Designed to'}
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">
+              {accredited ? 'ESSA CPD accredited' : 'ESSA CPD standards'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {accredited
+                ? '8 ESSA CPD points online · ESSA Code & NASRHP aligned · up to 14 CPD hours'
+                : 'Accreditation pending · ESSA Code & NASRHP aligned · up to 14 CPD hours'}
+            </p>
           </div>
         </div>
 
@@ -208,13 +261,15 @@ export default function CrmPricingContent() {
         <div className="text-center max-w-2xl mx-auto mb-2">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-3">Built for you</p>
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-            The training <span className="text-gradient">and</span> the tools to deliver it
+            Walk out and deliver it <span className="text-gradient">Monday</span>
           </h2>
           <p className="text-base text-muted-foreground">
-            You don&rsquo;t just learn the protocol. Every enrolment includes the working clinical
-            platform — the Preseason Baseline &amp; Serial Testing tool, the Sub-Symptom-Threshold
-            (SST) Trainer app, the BCTT calculator and the full Clinical Toolkit — all built around
-            the exercise-physiology scope of practice.
+            You don&rsquo;t just learn the protocol — you leave with the instruments to run it.
+            Every enrolment includes the working clinical platform: the Preseason Baseline &amp;
+            Serial Testing tool, the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator
+            (heart-rate threshold &rarr; prescription) and the full Clinical Toolkit with the
+            NDIS / WorkCover / GP document pack — all built around the exercise-physiology scope
+            of practice.
           </p>
         </div>
 
@@ -248,7 +303,8 @@ export default function CrmPricingContent() {
               <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM Online</h3>
               <p className="text-[12px] text-slate-500 mb-2 font-medium">The EP-scoped course — certify entirely online</p>
               <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-                8 modules at your own pace, plus the working clinical tools. Add the hands-on practical day anytime to upgrade.
+                8 modules at your own pace, plus the working clinical tools to open a new
+                referral-worthy service line. Add the hands-on practical day anytime to upgrade.
               </p>
 
               <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
@@ -332,7 +388,7 @@ export default function CrmPricingContent() {
 
           {/* Trust Signals */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-            {['7-Day Guarantee', 'Lifetime Access', 'Clinical Tools Included', 'Certificate Included', 'Designed to ESSA Standards'].map((item) => (
+            {['7-Day Guarantee', 'Lifetime Access', 'Clinical Tools Included', 'Certificate Included', essaTrustChip].map((item) => (
               <div key={item} className="flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
                 {item}
@@ -511,9 +567,17 @@ export default function CrmPricingContent() {
               <ArrowRight className="w-5 h-5" />
             </a>
             <p className="text-xs text-muted-foreground mt-4">
-              ESSA CPD accreditation pending · designed to ESSA CPD standards
+              {accredited
+                ? 'ESSA-accredited · 8 ESSA CPD points online · up to 14 CPD hours'
+                : 'ESSA CPD accreditation pending · designed to ESSA CPD standards'}
             </p>
           </div>
+        </div>
+
+        {/* Bottom email capture — one more chance to keep the not-ready-to-buy
+            majority (this is the ESSA-newsletter cohort's primary conversion). */}
+        <div className="max-w-2xl mx-auto mt-16">
+          <EpLeadCapture variant="full" location="footer" />
         </div>
 
       </div>

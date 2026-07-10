@@ -15,7 +15,7 @@ export interface User {
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
   progressEmailsOptedOut?: boolean
-  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist' | 'sst-clinic'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist' | 'sst-clinic' | 'ep-course'
   convertedFrom?: string  // original signup source before upgrade
   isTest?: boolean
   referenceBookPurchasedAt?: string
@@ -160,7 +160,7 @@ export async function createUser(data: {
   stripeCustomerId?: string
   stripeSubscriptionId?: string
   workshopLocation?: string
-  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist' | 'sst-clinic'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist' | 'sst-clinic' | 'ep-course'
   /** prospect_clinics.slug if this signup came from the cold sequence via ?prospect= param */
   sourceProspectSlug?: string
 }): Promise<string> {
