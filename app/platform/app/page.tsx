@@ -94,7 +94,7 @@ function sessionDayLabel(at: number): string {
   const today = new Date()
   const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
   const dayDiff = Math.round((startOf(today) - startOf(d)) / 86_400_000)
-  if (dayDiff <= 1) return 'yesterday'
+  if (dayDiff <= 1) return 'yesterday’s'
   return `${d.toLocaleDateString('en-AU', { weekday: 'long' })}’s`
 }
 
@@ -758,7 +758,8 @@ export default function PlatformAppPage({
 
       {/* ── next-day check-in: one question, one tap ─────────────────────────── */}
       {step === 'checkin' && checkinSession && (
-        <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
+        <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1 lg:min-h-full lg:items-center lg:justify-center lg:pt-0">
+          <div className="flex w-full flex-col gap-4 lg:max-w-[520px] lg:rounded-[24px] lg:border lg:border-(--sst-line-strong) lg:bg-(--sst-card) lg:p-8">
           <div className="flex flex-col gap-1.5">
             <h1 className="m-0 text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
               Quick check-in
@@ -787,7 +788,7 @@ export default function PlatformAppPage({
                   setCheckinIdx(null)
                   setStep('home')
                 }}
-                className="rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) px-4 py-4 text-left text-[16px] font-bold text-(--sst-navy) transition active:scale-[0.99]"
+                className="rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) px-4 py-4 text-left text-[16px] font-bold text-(--sst-navy) transition active:scale-[0.99] lg:bg-(--sst-surface-2) hover:lg:border-(--sst-accent)"
               >
                 {label}
               </button>
@@ -806,6 +807,7 @@ export default function PlatformAppPage({
           >
             Skip for now
           </button>
+          </div>
         </section>
       )}
 
