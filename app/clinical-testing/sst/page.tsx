@@ -48,6 +48,10 @@ function Shell() {
   const [clinicCode, setClinicCode] = useState<string | null | undefined>(undefined)
   // bump to force-remount the embedded app for a fresh patient (see "New patient")
   const [resetSeq, setResetSeq] = useState(0)
+  // The clinic code / sharing / runbook panel is SETUP reference — not a permanent
+  // half-screen fixture. Collapsed by default so the app owns the width; forced
+  // open until a clinic code exists (you need it to provision).
+  const [setupOpen, setSetupOpen] = useState(false)
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
@@ -127,54 +131,82 @@ function Shell() {
           <span className="text-slate-300">/</span>
           <h1 className="text-sm font-bold tracking-tight text-foreground">SST Trainer</h1>
           {clinicCode && (
-            <button
-              type="button"
-              onClick={() => {
-                // This device persists ONE patient's state (sst:v1). When a
-                // clinician runs a second patient on the same browser, clear it
-                // first so patient B never inherits patient A's band/history.
-                if (window.confirm('Start a fresh patient? This clears the current patient’s in-progress data on THIS device.')) {
-                  clearState()
-                  setResetSeq((n) => n + 1)
-                }
-              }}
-              className="ml-auto inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              + New patient
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSetupOpen((o) => !o)}
+                aria-pressed={setupOpen}
+                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  setupOpen
+                    ? 'border-accent/40 bg-accent/10 text-accent'
+                    : 'border-slate-200 text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {setupOpen ? 'Hide setup' : 'Clinic code & sharing'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // This device persists ONE patient's state (sst:v1). When a
+                  // clinician runs a second patient on the same browser, clear it
+                  // first so patient B never inherits patient A's band/history.
+                  if (window.confirm('Start a fresh patient? This clears the current patient’s in-progress data on THIS device.')) {
+                    clearState()
+                    setResetSeq((n) => n + 1)
+                  }
+                }}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+              >
+                + New patient
+              </button>
+            </div>
           )}
         </div>
 
         {/* landscape workspace. grid-rows-[minmax(0,1fr)] is LOAD-BEARING:
             without it the row grows to the app's full height and everything
             below the fold is clipped unreachable inside overflow-hidden. */}
-        <div className="min-h-0 flex-1 px-4 py-4 sm:px-6">
-          <div className="mx-auto grid h-full w-full max-w-[1600px] grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(400px,480px)_minmax(0,1fr)]">
-            {/* the app, in a device frame that scrolls internally */}
-            <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
-              {clinicCode === undefined ? (
-                <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
-                  Loading your clinic…
+        {/* landscape workspace. The APP is the primary, growing column; the setup
+            rail (code / sharing / runbook) is a fixed sidebar shown only when
+            opened — forced open until a clinic code is provisioned. */}
+        {(() => {
+          const railOpen = setupOpen || !clinicCode
+          return (
+            <div className="min-h-0 flex-1 px-4 py-4 sm:px-6">
+              <div
+                className={`mx-auto grid h-full w-full grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 ${
+                  railOpen ? 'max-w-[1600px] lg:grid-cols-[minmax(0,1fr)_360px]' : 'max-w-[1100px] lg:grid-cols-1'
+                }`}
+              >
+                {/* the app — the primary column; the embedded app uses the width */}
+                <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
+                  {clinicCode === undefined ? (
+                    <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
+                      Loading your clinic…
+                    </div>
+                  ) : clinicCode === null ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
+                      <p className="text-sm font-semibold text-foreground">Set up your clinic code first</p>
+                      <p className="max-w-[280px] text-xs text-muted-foreground">
+                        Provision your clinic code in the setup panel, then the trainer runs here with every
+                        session syncing to your hub.
+                      </p>
+                    </div>
+                  ) : (
+                    <PlatformApp key={resetSeq} embeddedClinicCode={clinicCode} />
+                  )}
                 </div>
-              ) : clinicCode === null ? (
-                <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
-                  <p className="text-sm font-semibold text-foreground">Set up your clinic code first</p>
-                  <p className="max-w-[280px] text-xs text-muted-foreground">
-                    Provision your clinic code in the panel on the right, then the trainer runs here with
-                    every session syncing to your hub.
-                  </p>
-                </div>
-              ) : (
-                <PlatformApp key={resetSeq} embeddedClinicCode={clinicCode} />
-              )}
+                {/* setup rail — code / sharing / runbook; only when open */}
+                {railOpen && (
+                  <div className="hidden h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain pb-2 pr-1 lg:flex">
+                    <SstClinicCard />
+                    <RunbookCard />
+                  </div>
+                )}
+              </div>
             </div>
-            {/* clinician rail: clinic panel + chair-side runbook */}
-            <div className="hidden h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain pb-2 pr-1 lg:flex">
-              <SstClinicCard />
-              <RunbookCard />
-            </div>
-          </div>
-        </div>
+          )
+        })()}
       </main>
     </div>
   )
