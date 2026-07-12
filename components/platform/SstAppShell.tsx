@@ -125,12 +125,12 @@ export function SstAppShell({
       // `sst-app` scopes the patient dark palette (see globals.css): under
       // prefers-color-scheme: dark every --sst-* token inside this subtree
       // swaps to the deep near-black set. Nothing outside the shell changes.
-      className="sst-app flex min-h-[100dvh] w-full flex-col font-[family-name:var(--font-hanken)] text-(--sst-navy)"
+      className="sst-app flex h-[100dvh] w-full flex-col overflow-hidden font-[family-name:var(--font-hanken)] text-(--sst-navy)"
       style={{ background: 'var(--sst-bg)' }}
     >
       {/* app header */}
       <header className="sticky top-0 z-30 border-b border-(--sst-hairline) bg-(--sst-bg)/95 backdrop-blur supports-[backdrop-filter]:bg-(--sst-bg)/80">
-        <div className="mx-auto flex w-full max-w-[480px] flex-col gap-2.5 px-5 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
+        <div className="mx-auto flex w-full max-w-[480px] lg:max-w-[900px] flex-col gap-2.5 px-5 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
               <BrandMark />
@@ -167,8 +167,9 @@ export function SstAppShell({
         </div>
       </header>
 
-      {/* app body */}
-      <div className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-[max(28px,env(safe-area-inset-bottom))] pt-3">
+      {/* app body — fills the viewport (no page scroll); wide on desktop so
+          screens can lay out in landscape/grid instead of a phone column */}
+      <div className="mx-auto flex w-full max-w-[480px] lg:max-w-[900px] min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-3">
         {children}
       </div>
     </main>

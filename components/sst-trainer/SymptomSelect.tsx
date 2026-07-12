@@ -31,7 +31,7 @@ export default function SymptomSelect({
         sub="Choose the ones you actually get — we'll only ask about those during the test."
       />
 
-      <div className="flex flex-col gap-[7px]">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
         {CONCUSSION_SYMPTOMS.map((s) => {
           const on = selected.has(s.id)
           return (
@@ -40,18 +40,18 @@ export default function SymptomSelect({
               type="button"
               onClick={() => toggle(s.id)}
               aria-pressed={on}
-              className={`flex w-full items-center gap-3 rounded-[14px] border-[1.5px] px-3 py-3 text-left transition ${
+              className={`flex w-full items-center gap-2.5 rounded-[12px] border-[1.5px] px-3 py-2.5 text-left transition ${
                 on ? 'border-(--sst-accent) bg-(--sst-accent-soft)' : 'border-(--sst-line) bg-(--sst-card)'
               }`}
             >
               <span
-                className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[7px] border-[1.5px] text-xs font-bold text-(--sst-on-accent) ${
+                className={`flex h-[20px] w-[20px] flex-none items-center justify-center rounded-[6px] border-[1.5px] text-[10px] font-bold text-(--sst-on-accent) ${
                   on ? 'border-(--sst-accent) bg-(--sst-accent)' : 'border-(--sst-check-border) bg-(--sst-card)'
                 }`}
               >
                 {on ? '✓' : ''}
               </span>
-              <span className="text-sm leading-snug text-(--sst-ink)">{s.label}</span>
+              <span className="text-[13px] leading-tight text-(--sst-ink)">{s.label}</span>
             </button>
           )
         })}
