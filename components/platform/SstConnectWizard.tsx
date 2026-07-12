@@ -119,7 +119,6 @@ export default function SstConnectWizard({
   // the same connect call, so "supported" covers both paths.
   useEffect(() => {
     if (!open) return
-    setStep('env')
     setBrand(null)
     setFailure(null)
     setBpm(null)
@@ -135,6 +134,11 @@ export default function SstConnectWizard({
     const native = !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()
     const supported = native || !!bt
     setBtSupported(supported)
+    // Straight to the picker when Bluetooth works — the env-confirmation and the
+    // brand-picker were extra taps before the real action. Broadcast help and the
+    // on-failure diagnosis still cover what actually goes wrong. Only an
+    // UNSUPPORTED browser needs the explanatory env step first.
+    setStep(supported ? 'scan' : 'env')
     if (bt?.getAvailability) {
       bt.getAvailability().then(setAdapterOn).catch(() => setAdapterOn(null))
     } else {
@@ -319,7 +323,8 @@ export default function SstConnectWizard({
         {step === 'scan' && (
           <>
             <p className={body}>
-              Your browser will open a small device picker. Your watch appears there — select it and hit Pair.
+              Turn on your watch&rsquo;s <strong>heart-rate broadcast</strong>, then open the picker — your watch
+              appears there, select it and hit Pair. (Chest straps broadcast automatically — nothing to turn on.)
             </p>
             <button type="button" className={primaryBtn} onClick={scan} disabled={scanning}>
               {scanning ? 'Opening the picker…' : 'Open the device picker'}
@@ -337,7 +342,7 @@ export default function SstConnectWizard({
               </div>
             )}
             <button type="button" className={quietBtn} onClick={() => setStep('broadcast')}>
-              Back — broadcast instructions
+              My watch isn’t showing up →
             </button>
             <button type="button" className={quietBtn} onClick={onManual}>
               Skip — I’ll type readings in

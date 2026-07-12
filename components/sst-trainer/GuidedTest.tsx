@@ -669,7 +669,7 @@ export default function GuidedTest({
         <span className="text-xs font-semibold text-(--sst-ink-2)">
           Symptom level <span className="font-normal text-(--sst-muted)">· 0 none → 10 worst</span>
         </span>
-        <div className="flex items-stretch gap-2.5">
+        <div className="flex max-w-[360px] items-stretch gap-2.5">
           <button
             type="button"
             onClick={() => setSymptomScore(Math.max(0, symptomScore - 1))}
