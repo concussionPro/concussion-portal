@@ -465,7 +465,8 @@ export default function TrainingSession({
       )
     }
     return (
-      <section className="flex flex-col gap-4 pt-1.5">
+      <section className="flex flex-col gap-4 pt-1.5 lg:h-full lg:items-center lg:justify-center lg:pt-0">
+        <div className="flex w-full flex-col gap-4 lg:max-w-[560px] lg:rounded-[24px] lg:border lg:border-(--sst-hairline) lg:bg-(--sst-surface-2) lg:p-8">
         <div className="flex flex-col gap-1.5">
           <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
             Before you start
@@ -519,6 +520,7 @@ export default function TrainingSession({
         >
           Start session
         </PrimaryButton>
+        </div>
       </section>
     )
   }
