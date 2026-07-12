@@ -665,7 +665,7 @@ export default function PlatformAppPage({
       )}
 
       {step === 'home' && prescription && welcome && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
           {hasCompletedSession && <SstInstallPrompt />}
           {regressNotice}
           <HomeHub

@@ -88,11 +88,12 @@ export default function HomeHub({
   const done = Math.min(sessionsThisWeek, target)
 
   return (
-    <section className="flex flex-col gap-[15px] pt-2">
-      {/* Phone: single vertical stack. Desktop (lg+): true landscape — a left
-          column (who + today's band + start) beside a right column (adherence,
-          recovery curve, secondary actions). NOT a phone strip. */}
-      <div className="flex flex-col gap-[15px] lg:grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-start lg:gap-x-7 lg:gap-y-4">
+    <section className="flex flex-col gap-[15px] pt-2 lg:flex-1 lg:justify-center lg:pt-0">
+      {/* Phone: single vertical stack (unchanged). Desktop (lg+): a centered,
+          width-constrained landscape — left column (who + today's band + start)
+          beside a right column (adherence, recovery curve, secondary actions),
+          vertically centred so it fills the frame, not a phone strip in a void. */}
+      <div className="flex flex-col gap-[15px] lg:mx-auto lg:w-full lg:max-w-[900px] lg:grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-start lg:gap-x-7 lg:gap-y-4">
         {/* LEFT — identity, the hero band, primary action */}
         <div className="flex flex-col gap-[15px]">
           <div className="flex flex-col gap-0.5">
