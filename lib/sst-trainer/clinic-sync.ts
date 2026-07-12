@@ -176,19 +176,56 @@ export interface ClinicValidation {
  * failed (offline / 429 / 5xx) — the caller shows "couldn't check" and offers a
  * retry, distinct from a genuinely invalid code.
  */
+const VALID_CODE_CACHE = 'sst:v1:validCodes'
+
+/** Remember a code that validated, so a returning patient (or an App Reviewer)
+ *  can get back in on a flaky/offline network instead of hitting a hard wall. */
+function rememberValidCode(code: string, clinicName: string | null) {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = window.localStorage.getItem(VALID_CODE_CACHE)
+    const map = raw ? (JSON.parse(raw) as Record<string, string>) : {}
+    map[code] = clinicName ?? ''
+    window.localStorage.setItem(VALID_CODE_CACHE, JSON.stringify(map))
+  } catch {
+    /* storage full / disabled — non-fatal */
+  }
+}
+
+function recallValidCode(code: string): ClinicValidation | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(VALID_CODE_CACHE)
+    if (!raw) return null
+    const map = JSON.parse(raw) as Record<string, string>
+    if (code in map) return { valid: true, clinicName: map[code] || null }
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
 export async function validateClinicCode(code: string): Promise<ClinicValidation | null> {
   const trimmed = code.trim()
   if (!trimmed) return { valid: false, clinicName: null }
+  // DEMO00 is the built-in shared demo clinic (server returns a synthetic record
+  // for it). Short-circuit it client-side so the App Review demo path never
+  // depends on a live network call.
+  if (trimmed.toUpperCase() === 'DEMO00') return { valid: true, clinicName: 'Demo Clinic' }
   try {
     const res = await fetch(`/api/sst/validate-code?code=${encodeURIComponent(trimmed)}`)
-    if (res.status === 429 || res.status >= 500) return null
+    if (res.status === 429 || res.status >= 500) return recallValidCode(trimmed.toUpperCase())
     const data = (await res.json().catch(() => null)) as { valid?: unknown; clinicName?: unknown } | null
-    if (!data) return res.ok ? { valid: false, clinicName: null } : null
-    return {
+    if (!data) return res.ok ? { valid: false, clinicName: null } : recallValidCode(trimmed.toUpperCase())
+    const result = {
       valid: data.valid === true,
       clinicName: typeof data.clinicName === 'string' && data.clinicName ? data.clinicName : null,
     }
+    if (result.valid) rememberValidCode(trimmed.toUpperCase(), result.clinicName)
+    return result
   } catch {
-    return null
+    // Offline / DNS / dropped request — fall back to a previously validated code
+    // so a network blip shows the patient a soft state, not a locked-out wall.
+    return recallValidCode(trimmed.toUpperCase())
   }
 }

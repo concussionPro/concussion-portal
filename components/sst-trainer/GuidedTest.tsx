@@ -786,12 +786,20 @@ export default function GuidedTest({
       </div>
 
       {recordedStages.length > 0 && (
-        <div
-          className={`rounded-[12px] bg-(--sst-surface-2) px-3 py-2.5 text-[10.5px] leading-relaxed text-(--sst-muted) ${numFont}`}
-        >
-          {recordedStages
-            .map((s) => `${s.minute}m · ${s.heartRate}bpm · sx${s.symptomScore}`)
-            .join('    ')}
+        <div className="rounded-[12px] bg-(--sst-surface-2) px-3 py-2.5">
+          <p className="m-0 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-(--sst-ghost)">
+            Logged this test
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {recordedStages.map((s) => (
+              <span
+                key={s.minute}
+                className={`rounded-full bg-(--sst-card) px-2 py-0.5 text-[10.5px] text-(--sst-muted) ${numFont}`}
+              >
+                {s.minute}m · {s.heartRate} bpm · sx {s.symptomScore}
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </section>

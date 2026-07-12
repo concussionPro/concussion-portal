@@ -476,11 +476,12 @@ export default function PlatformAppPage({
 
   return (
     <SstAppShell
-      deviceName={device.name}
+      deviceName={device.statusLabel}
       connected={connection !== null}
       stepIndex={stepIndex}
       totalSteps={STEP_ORDER.length}
       caption={STEP_CAPTION[step]}
+      showProgress={prescription === null && step !== 'locked' && step !== 'checkin'}
       bpm={feed.bpm}
       hrStatus={feed.status}
     >
@@ -676,7 +677,7 @@ export default function PlatformAppPage({
             patientName={welcome.patientName}
             welcomeBack={welcomeBack}
             goalLabel={goalLabel ?? undefined}
-            deviceName={device.name}
+            deviceName={device.statusLabel}
             history={thresholdHistory}
             sessionsThisWeek={sessionsThisWeek}
             onStartSession={() => {

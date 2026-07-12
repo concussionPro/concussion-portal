@@ -94,6 +94,7 @@ export function SstAppShell({
   stepIndex,
   totalSteps,
   caption,
+  showProgress = true,
   bpm = null,
   hrStatus = 'manual',
   children,
@@ -108,6 +109,10 @@ export function SstAppShell({
   totalSteps: number
   /** short label for the current step (shown in the progress header) */
   caption: string
+  /** show the slim step-progress header — only during first-run onboarding.
+   *  A returning patient on their daily band is NOT in an 8-step wizard, so we
+   *  hide the "Step X / N" chrome once a prescription exists (and on lock/checkin). */
+  showProgress?: boolean
   /** live bpm from the paired connection (shown glanceably when streaming) */
   bpm?: number | null
   /** feed state driving the live/connecting/manual indicator */
@@ -139,23 +144,26 @@ export function SstAppShell({
             </span>
           </div>
 
-          {/* slim step-progress header (not a tour) */}
-          <div className="flex flex-col gap-1.5">
-            <div className="h-[3px] w-full overflow-hidden rounded-full bg-(--sst-track)">
-              <div
-                className="h-full rounded-full bg-(--sst-accent) transition-[width] duration-300"
-                style={{ width: `${Math.max(6, pct)}%` }}
-              />
+          {/* slim step-progress header — first-run onboarding only (not a tour,
+              and never on the daily home/session/lock screens) */}
+          {showProgress && (
+            <div className="flex flex-col gap-1.5">
+              <div className="h-[3px] w-full overflow-hidden rounded-full bg-(--sst-track)">
+                <div
+                  className="h-full rounded-full bg-(--sst-accent) transition-[width] duration-300"
+                  style={{ width: `${Math.max(6, pct)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold tracking-[0.01em] text-(--sst-muted)">
+                  {caption}
+                </span>
+                <span className={`text-[10px] font-semibold text-(--sst-ghost) ${numFont}`}>
+                  Step {stepIndex + 1} / {totalSteps}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold tracking-[0.01em] text-(--sst-muted)">
-                {caption}
-              </span>
-              <span className={`text-[10px] font-semibold text-(--sst-ghost) ${numFont}`}>
-                Step {stepIndex + 1} / {totalSteps}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       </header>
 

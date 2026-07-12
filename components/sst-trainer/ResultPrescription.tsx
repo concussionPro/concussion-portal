@@ -210,12 +210,12 @@ export default function ResultPrescription({
           {rx.prolongedRecoveryRisk && (
             <div className="rounded-[14px] border-[1.5px] border-(--sst-warn) bg-(--sst-warn-soft) px-3.5 py-3">
               <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-warn-ink)">
-                Your threshold is on the low side
+                We&apos;ll start gently
               </p>
               <p className="mt-1 text-[11.5px] leading-relaxed text-(--sst-warn-ink-2)">
-                A heart-rate threshold this low (under 135 bpm) is linked to a slower recovery in the
-                research (Haider et&nbsp;al. 2019). Stay inside the band, and let your clinician guide how
-                long and how often you train — they may keep sessions shorter and check in more often.
+                Your starting threshold is on the lower side, which is common early on. Your clinician
+                may keep sessions shorter and check in more often. Staying inside your band is exactly
+                what helps — nothing to do differently today.
               </p>
             </div>
           )}
