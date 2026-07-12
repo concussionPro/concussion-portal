@@ -102,15 +102,29 @@ export class ClinikoAdapter implements PmsAdapter {
   async writeNote(patientId: string, note: PmsNote): Promise<PmsWriteResult> {
     if (!this.apiKey) return { ok: false, error: NOT_CONFIGURED }
     try {
-      // VERIFY: treatment notes are POSTed to /treatment_notes. The exact
-      // content structure is a `content.sections[]` tree in Cliniko; we send a
-      // single free-text section here and mark it for verification.
+      // Cliniko has no plain "note" object — the simplest documented text
+      // write-back is a treatment note (POST /treatment_notes). Only
+      // `patient_id` and `content` are required; `content` is a
+      // `sections[].questions[]` tree where each question carries a typed
+      // `answer`. A `type: "text"` question is the minimal free-text field.
+      // `treatment_note_template_id`/`booking_id`/`draft` are optional and
+      // omitted here. The note author is auto-set to the practitioner behind
+      // the API key. HTML (p/br/ul/li/b/i/u/a/…) is permitted in answers.
+      // There is NO documented occurred/date field on the create body — the
+      // record is timestamped by Cliniko (`created_at`), so `note.occurredAt`
+      // is folded into the section name for provenance instead of sent raw.
+      // Ref: redguava/cliniko-api sections/treatment_notes.md (Create a
+      // Treatment Note) — https://github.com/redguava/cliniko-api
       const body = {
         patient_id: patientId,
-        // VERIFY: title/date field names + sections schema against live API.
-        title: note.title,
-        occurred_at: note.occurredAt,
-        content: { sections: [{ name: note.title, description: note.body }] },
+        content: {
+          sections: [
+            {
+              name: note.title,
+              questions: [{ name: note.title, type: 'text', answer: note.body }],
+            },
+          ],
+        },
       }
       const res = await fetch(`${this.baseUrl}/treatment_notes`, {
         method: 'POST',
@@ -127,24 +141,72 @@ export class ClinikoAdapter implements PmsAdapter {
 
   async attachPdf(patientId: string, pdf: PmsPdf): Promise<PmsWriteResult> {
     if (!this.apiKey) return { ok: false, error: NOT_CONFIGURED }
+    // Cliniko attachments are a documented THREE-step S3 presigned-POST flow:
+    //   1. GET /patients/:id/attachment_presigned_post → { url, fields }
+    //   2. POST the bytes to `url` as multipart/form-data: every `fields`
+    //      entry FIRST (S3 requires the policy fields before the file), then a
+    //      `file` part; S3 substitutes the `${filename}` placeholder in the
+    //      `key` field from the file part's filename and returns 201 + an XML
+    //      body carrying the final <Key>.
+    //   3. POST /patient_attachments { patient_id, description, upload_url }
+    //      where upload_url = presign `url` + the S3 <Key>.
+    // Ref: redguava/cliniko-api guides/uploading_patient_attachments.md —
+    // https://github.com/redguava/cliniko-api/blob/main/guides/uploading_patient_attachments.md
     try {
-      // VERIFY: Cliniko patient_attachments uploads are a multi-step presigned
-      // S3 flow (request upload URL → PUT bytes → confirm), NOT a single POST.
-      // This stub performs the first step only and is marked incomplete; wire
-      // the presign→PUT→confirm sequence against the live API before use.
-      const res = await fetch(`${this.baseUrl}/patient_attachments`, {
+      // ── Step 1: request the presigned POST ──────────────────────────────
+      const presignRes = await fetch(
+        `${this.baseUrl}/patients/${encodeURIComponent(patientId)}/attachment_presigned_post`,
+        { headers: this.headers() },
+      )
+      if (!presignRes.ok) {
+        return { ok: false, error: `cliniko: presign HTTP ${presignRes.status}` }
+      }
+      const presign = (await presignRes.json()) as {
+        url?: string
+        fields?: Record<string, string>
+      }
+      if (!presign.url || !presign.fields) {
+        return { ok: false, error: 'cliniko: presign response missing url/fields' }
+      }
+
+      // ── Step 2: upload the bytes to S3 as multipart/form-data ────────────
+      const form = new FormData()
+      // Policy fields MUST precede the file part for S3 to accept the POST.
+      for (const [k, v] of Object.entries(presign.fields)) form.append(k, v)
+      form.append(
+        'file',
+        new Blob([pdf.bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' }),
+        pdf.filename,
+      )
+      // Plain fetch — NO Cliniko auth/JSON headers on the S3 request; fetch sets
+      // the multipart boundary itself.
+      const s3Res = await fetch(presign.url, { method: 'POST', body: form })
+      if (!s3Res.ok) {
+        return { ok: false, error: `cliniko: s3 upload HTTP ${s3Res.status}` }
+      }
+      const s3Xml = await s3Res.text()
+      const keyMatch = s3Xml.match(/<Key>([^<]+)<\/Key>/)
+      if (!keyMatch) {
+        return { ok: false, error: 'cliniko: s3 upload response missing <Key>' }
+      }
+      // upload_url = presign `url` (bucket root, trailing slash) + S3 Key.
+      const uploadUrl = `${presign.url.replace(/\/$/, '')}/${keyMatch[1]}`
+
+      // ── Step 3: create the patient_attachment record ─────────────────────
+      const createRes = await fetch(`${this.baseUrl}/patient_attachments`, {
         method: 'POST',
         headers: this.headers(),
         body: JSON.stringify({
           patient_id: patientId,
           description: pdf.filename,
-          // VERIFY: presigned-upload request payload shape.
+          upload_url: uploadUrl,
         }),
       })
-      if (!res.ok) return { ok: false, error: `cliniko: HTTP ${res.status}` }
-      // Bytes are intentionally not uploaded here — see the presign note above.
-      void pdf.bytes
-      return { ok: false, error: 'cliniko: attachment presign step only — upload not implemented (VERIFY)' }
+      if (!createRes.ok) {
+        return { ok: false, error: `cliniko: attachment create HTTP ${createRes.status}` }
+      }
+      const json = (await createRes.json()) as { id?: string | number }
+      return { ok: true, id: json.id != null ? String(json.id) : undefined }
     } catch (e) {
       return { ok: false, error: `cliniko: ${(e as Error).message}` }
     }

@@ -5,17 +5,29 @@
  * context SST reporting needs for the NZ jurisdiction (ACC45/claim number, the
  * S60.. read-code diagnosis, insurer=ACC funding, attendance for ACC885).
  *
- * BASE: `https://nzgpm.gensolve.com/api/` (NZ tenant). AUTH is an API key /
- * bearer token issued per practice; some deployments also require a practice id
- * in `creds`.
+ * CONFIRMED against Gensolve's public help centre (docs.gensolve.com, GPM API):
+ *  - BASE hosts are per-region tenants: `https://nzgpm.gensolve.com/api/` (NZ)
+ *    and `https://augpm.gensolve.com/api/` (AU). NZ is the ACC jurisdiction.
+ *  - AUTH: a per-practice Secret Key + an API User account are exchanged for an
+ *    authorization (bearer) token; the tenant must have API access enabled and
+ *    the caller's IP whitelisted. We carry the issued token as `apiKey`.
+ *  - Resources are grouped and expose GET/POST/PUT; a documented appointments
+ *    resource is `GET /appointments/by_date`.
  *
- * Endpoints used (documented surface only; shapes marked `// VERIFY:` are not
- * confirmed against a live tenant):
- *  - GET  /conditions   — ReadCodeList; filter insurer=ACC to pull the ACC claim
- *                          number + S60.. read code (the concussion diagnosis).
- *  - GET  /clients      — demographics incl. ethnicity (ACC equity reporting).
- *  - GET  /appointments — attendance; drives the ACC885 attended-sessions count.
- *  - POST/PUT (conditions/notes) — write-back of the SST outcome note.
+ * NOT PUBLICLY DOCUMENTED (the OpenAPI.json + per-resource schemas live behind
+ * the tenant-auth, IP-whitelisted `/api/` portal, so they can't be read here):
+ * the exact clients-search / conditions filter params, the clinical-note POST
+ * resource + payload, and the document-upload contract. Everything below marked
+ * `// VERIFY:` is a defensible best-effort that MUST be confirmed on a sandbox
+ * tenant before production use — it has NOT been smoke-tested against live GPM.
+ *
+ * Endpoints used:
+ *  - GET  /conditions        — ReadCodeList; filter insurer=ACC to pull the ACC
+ *                               claim number + S60.. read code (the diagnosis).
+ *  - GET  /clients           — demographics incl. ethnicity (ACC equity).
+ *  - GET  /appointments/by_date — attendance; drives ACC885 attended-sessions.
+ *  - POST /notes             — write-back of the SST outcome note (VERIFY).
+ *  - POST /documents         — file the report PDF (VERIFY; gated off).
  *
  * NO not-configured throws: without a key every method returns a clear error
  * (write methods) or an empty result (read methods).
@@ -46,6 +58,14 @@ export interface GensolveAccCondition {
 
 export class GensolveAdapter implements PmsAdapter {
   readonly name = 'gensolve'
+  /**
+   * Flip to true ONLY once the Gensolve documents-resource contract (path,
+   * multipart-vs-base64, field names) is confirmed against a sandbox tenant's
+   * OpenAPI.json. Until then attachPdf refuses rather than guessing a binary
+   * upload shape and pretending it works. Typed `boolean` (not the `false`
+   * literal) so the gated code path stays type-checked and reachable-in-type.
+   */
+  private static readonly UPLOAD_CONTRACT_CONFIRMED: boolean = false
   private readonly apiKey: string | null
   private readonly baseUrl: string
   private readonly practiceId: string | null
@@ -120,15 +140,36 @@ export class GensolveAdapter implements PmsAdapter {
   async writeNote(patientId: string, note: PmsNote): Promise<PmsWriteResult> {
     if (!this.apiKey) return { ok: false, error: NOT_CONFIGURED }
     try {
-      // VERIFY: write-back endpoint + payload. Gensolve notes attach to a
-      // condition, not the bare client — a real integration resolves the ACC
-      // conditionId first (readAccConditions) and POSTs the note there.
-      const body = {
+      // Gensolve clinical notes attach to a CONDITION, not the bare client. For
+      // the NZ/ACC jurisdiction the SST note belongs in the ACC claim context,
+      // so resolve the ACC condition FIRST and file the note against its
+      // conditionId when one exists; otherwise fall back to a client-level note.
+      // readAccConditions never throws (returns [] on any failure), but guard
+      // anyway so a note is still attempted if resolution is degraded.
+      let conditionId: string | null = null
+      try {
+        const conditions = await this.readAccConditions(patientId)
+        // Prefer a condition that actually carries an ACC45 claim number; else
+        // the first concussion/head-injury condition returned.
+        const acc = conditions.find((c) => c.accClaimNumber) ?? conditions[0]
+        conditionId = acc?.conditionId ?? null
+      } catch {
+        conditionId = null
+      }
+
+      // CONFIRMED: base host + bearer auth + resources exposing POST.
+      // VERIFY: the `/notes` resource path, and the payload field names below
+      // (incl. `conditionId` as the attach key) — best-effort until a sandbox
+      // tenant / OpenAPI.json confirms them. Note POST shape kept deliberately.
+      const body: Record<string, unknown> = {
         clientId: patientId,
         title: note.title,
         note: note.body,
         occurredAt: note.occurredAt,
       }
+      // When resolved, attach to the ACC condition; else it files client-level.
+      if (conditionId) body.conditionId = conditionId
+
       const res = await fetch(`${this.baseUrl}/notes`, {
         method: 'POST',
         headers: this.headers(),
@@ -144,19 +185,65 @@ export class GensolveAdapter implements PmsAdapter {
 
   async attachPdf(patientId: string, pdf: PmsPdf): Promise<PmsWriteResult> {
     if (!this.apiKey) return { ok: false, error: NOT_CONFIGURED }
-    // VERIFY: Gensolve document-upload endpoint + multipart contract unknown.
-    // Left as a clearly-marked stub rather than guessing a binary upload shape.
-    void patientId
-    void pdf
-    return { ok: false, error: 'gensolve: attachPdf not implemented (VERIFY upload contract)' }
+    // Gensolve DOES have a document store, but its upload contract (resource
+    // path, multipart-vs-base64, field names) is NOT in the public docs — it
+    // lives behind the tenant-auth `/api/` portal. We will not invent a binary
+    // upload shape and present it as done. A documented-shape best-effort is
+    // wired below (uploadDocument) but GATED OFF until UPLOAD_CONTRACT_CONFIRMED
+    // is verified on a sandbox tenant, so this method is ready to complete.
+    if (!GensolveAdapter.UPLOAD_CONTRACT_CONFIRMED) {
+      void patientId
+      void pdf
+      return {
+        ok: false,
+        error: 'gensolve: attachPdf requires sandbox-confirmed upload contract',
+      }
+    }
+    return this.uploadDocument(patientId, pdf)
+  }
+
+  /**
+   * Best-effort document upload, held behind the UPLOAD_CONTRACT_CONFIRMED gate
+   * in attachPdf. VERIFY (sandbox tenant): the documents resource path, whether
+   * GPM expects `multipart/form-data` (as attempted here) or base64-in-JSON, and
+   * the exact field names (`file` / `clientId` / `filename`). Do NOT enable in
+   * production until the documents-resource OpenAPI.json confirms this shape.
+   */
+  private async uploadDocument(patientId: string, pdf: PmsPdf): Promise<PmsWriteResult> {
+    try {
+      const form = new FormData()
+      // Copy into a fresh ArrayBuffer-backed Blob (pdf.bytes may be a subarray
+      // view over a larger buffer).
+      const blob = new Blob([new Uint8Array(pdf.bytes)], { type: 'application/pdf' })
+      form.append('file', blob, pdf.filename)
+      form.append('clientId', patientId)
+      form.append('filename', pdf.filename)
+      // Multipart: DON'T set Content-Type — the runtime sets the boundary.
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${this.apiKey}`,
+        Accept: 'application/json',
+      }
+      if (this.practiceId) headers['X-Practice-Id'] = this.practiceId
+      const res = await fetch(`${this.baseUrl}/documents`, {
+        method: 'POST',
+        headers,
+        body: form,
+      })
+      if (!res.ok) return { ok: false, error: `gensolve: HTTP ${res.status}` }
+      const json = (await res.json()) as { id?: string | number }
+      return { ok: true, id: json.id != null ? String(json.id) : undefined }
+    } catch (e) {
+      return { ok: false, error: `gensolve: ${(e as Error).message}` }
+    }
   }
 
   async pollAppointments(sinceISO: string): Promise<PmsAppointment[]> {
     if (!this.apiKey) return []
     try {
-      // GET /appointments — attendance feeds the ACC885 attended-sessions count.
-      // VERIFY: date filter param name (`from=` here) + attendance flag field.
-      const url = `${this.baseUrl}/appointments?from=${encodeURIComponent(sinceISO)}`
+      // GET /appointments/by_date — CONFIRMED documented resource; attendance
+      // feeds the ACC885 attended-sessions count.
+      // VERIFY: the date filter param name (`from=` here) + attendance field.
+      const url = `${this.baseUrl}/appointments/by_date?from=${encodeURIComponent(sinceISO)}`
       const res = await fetch(url, { headers: this.headers() })
       if (!res.ok) return []
       const json = (await res.json()) as { appointments?: GensolveAppointment[] } | GensolveAppointment[]

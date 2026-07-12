@@ -160,6 +160,56 @@ function trajectorySection(input: ReportInput): ReportSection {
   }
 }
 
+/**
+ * "Measures reviewed during delivery" — the ACC clause 5.4.7 evidence block.
+ *
+ * ACC's allied-health contract (cl. 5.4.7) requires evidence that outcome
+ * measures were REVIEWED DURING delivery of the Services, not just captured once.
+ * SST produces that evidence as a by-product: between-visit sessions are
+ * delivered against a measured HR band (connected-sensor adherence), and the
+ * measured threshold is formally re-reviewed at each graded re-test. This section
+ * surfaces those review points explicitly so the audit obligation is discharged
+ * on the face of the report. Facts only — no efficacy claim.
+ */
+function adherenceReviewSection(input: ReportInput): ReportSection {
+  const rx = input.prescription
+  const { verified, total } = verifiedShare(input.sessions)
+  // In-band adherence proxy: sessions whose average HR sat inside the prescribed
+  // band. Reported as a proxy, not a per-second time-in-zone figure (the store
+  // holds session-level averages, not the intra-session HR series).
+  const inBand =
+    rx != null
+      ? input.sessions.filter(
+          (s) => s.avgHeartRate >= rx.lowerBpm && s.avgHeartRate <= rx.upperBpm,
+        ).length
+      : 0
+  // Each graded re-test is a formal review point — list the dates.
+  const reviewDates = input.thresholdHistory
+    .filter((t) => typeof t.hrt === 'number')
+    .map((t) => fmtDate(t.at))
+  const reviewPoints = reviewDates.length
+
+  const fields: ReportField[] = [
+    { label: 'Sessions delivered (verified sensor / total)', value: `${verified} / ${total}` },
+    {
+      label: 'Sessions with average HR inside prescribed band',
+      value: rx != null ? `${inBand} / ${total}` : 'no active prescription',
+    },
+    {
+      label: 'Formal review points (graded re-tests)',
+      value: reviewPoints > 0 ? `${reviewPoints} — ${reviewDates.join(', ')}` : 'none on record',
+    },
+  ]
+  return {
+    heading: 'Outcome measures reviewed during delivery (ACC cl. 5.4.7)',
+    kind: 'audit',
+    body: [
+      'Sub-symptom-threshold sessions were delivered between clinic visits against a heart-rate band measured by graded testing; adherence was monitored from connected-sensor sessions (unverified manual/camera entries are excluded from the verified count). The measured threshold was formally re-reviewed at each graded re-test listed above — the evidence that outcome measures were reviewed during, not merely at the end of, service delivery.',
+    ],
+    fields,
+  }
+}
+
 /** Prescription + signal-quality block. */
 function prescriptionSection(input: ReportInput): ReportSection {
   const rx = input.prescription
@@ -185,6 +235,7 @@ export function gpReport(input: ReportInput): ReportContent {
       patientHeader(input),
       prescriptionSection(input),
       trajectorySection(input),
+      adherenceReviewSection(input),
       {
         heading: 'Summary',
         kind: 'narrative',
@@ -231,6 +282,7 @@ export function acc884(input: ReportInput): ReportContent {
       },
       prescriptionSection(input),
       trajectorySection(input),
+      adherenceReviewSection(input),
       {
         heading: 'Outcome status (cl. 5.13.2)',
         kind: 'outcome',
@@ -341,6 +393,7 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
       patientHeader(input),
       prescriptionSection(input),
       trajectorySection(input),
+      adherenceReviewSection(input),
       {
         heading: 'Decision audit trail (graded tests)',
         kind: 'audit',
