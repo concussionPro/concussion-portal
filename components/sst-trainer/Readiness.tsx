@@ -37,7 +37,7 @@ export default function Readiness({
     // Phone: vertical stack (unchanged). Desktop: a bounded, centred panel so the
     // controls don't stretch across the width and the screen fills the frame.
     <section className="flex flex-col gap-[15px] pt-1.5 lg:h-full lg:items-center lg:justify-center lg:pt-0">
-      <div className="flex w-full flex-col gap-[15px] lg:max-w-[560px] lg:rounded-[24px] lg:border lg:border-(--sst-hairline) lg:bg-(--sst-surface-2) lg:p-8">
+      <div className="flex w-full flex-col gap-[15px] lg:max-w-[560px] lg:rounded-[24px] lg:border lg:border-(--sst-line-strong) lg:bg-(--sst-card) lg:p-8">
       <ScreenHeading title="Before you start" sub="A quick safety check." />
 
       <div className="flex flex-col gap-2">

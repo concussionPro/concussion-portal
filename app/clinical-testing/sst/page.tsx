@@ -117,7 +117,7 @@ function Shell() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#eef3f3]">
+    <div className="flex h-screen overflow-hidden bg-[#dde7e8]">
       <Sidebar />
       <main className="ml-0 flex h-full min-w-0 flex-1 flex-col md:ml-64">
         {/* slim workspace header */}

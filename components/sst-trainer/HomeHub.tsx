@@ -95,7 +95,7 @@ export default function HomeHub({
     // columns of cards that fill it (modelled on the baseline tool). All desktop
     // rules are lg:-scoped, so phone + watch are untouched.
     <section className="flex flex-col gap-[15px] pt-2 lg:flex lg:h-full lg:items-center lg:justify-center lg:pt-0">
-      <div className="flex w-full flex-col gap-[15px] lg:max-w-[1020px] lg:gap-6 lg:rounded-[26px] lg:border lg:border-(--sst-hairline) lg:bg-(--sst-surface-2) lg:p-8 lg:shadow-[0_28px_70px_-34px_rgba(0,0,0,0.55)]">
+      <div className="flex w-full flex-col gap-[15px] lg:max-w-[1020px] lg:gap-6 lg:rounded-[26px] lg:border lg:border-(--sst-line-strong) lg:bg-(--sst-card) lg:p-8 lg:shadow-[0_22px_55px_-26px_rgba(20,36,63,0.32)]">
         {/* header — full width */}
         <div className="flex flex-col gap-0.5">
           <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-(--sst-accent)">
@@ -142,7 +142,7 @@ export default function HomeHub({
             <button
               type="button"
               onClick={onProgress}
-              className="hidden text-left lg:flex lg:flex-1 lg:flex-col lg:rounded-[18px] lg:border lg:border-(--sst-line-soft) lg:bg-(--sst-card) lg:px-5 lg:py-4 lg:transition hover:lg:border-(--sst-accent)"
+              className="hidden text-left lg:flex lg:flex-1 lg:flex-col lg:rounded-[18px] lg:border lg:border-(--sst-line) lg:bg-(--sst-surface-2) lg:px-5 lg:py-4 lg:transition hover:lg:border-(--sst-accent)"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-(--sst-accent)">
@@ -168,7 +168,7 @@ export default function HomeHub({
               </div>
             </button>
 
-            <div className="flex items-center justify-between rounded-[16px] border border-(--sst-line-soft) bg-(--sst-card) px-4 py-3">
+            <div className="flex items-center justify-between rounded-[16px] border border-(--sst-line-soft) bg-(--sst-card) px-4 py-3 lg:border-(--sst-line) lg:bg-(--sst-surface-2)">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[12.5px] font-bold text-(--sst-ink)">Sessions logged</span>
                 <span className="text-[11px] text-(--sst-muted)">
@@ -197,10 +197,10 @@ export default function HomeHub({
             )}
 
             <div className="flex gap-2.5">
-              <SecondaryButton onClick={onProgress} className="flex-1 p-3">
+              <SecondaryButton onClick={onProgress} className="flex-1 p-3 lg:border-(--sst-line) lg:bg-(--sst-surface-2)">
                 Progress
               </SecondaryButton>
-              <SecondaryButton onClick={onRetest} className="flex-1 p-3">
+              <SecondaryButton onClick={onRetest} className="flex-1 p-3 lg:border-(--sst-line) lg:bg-(--sst-surface-2)">
                 Re-test
               </SecondaryButton>
             </div>
