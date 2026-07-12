@@ -484,6 +484,7 @@ export default function PlatformAppPage({
       showProgress={prescription === null && step !== 'locked' && step !== 'checkin'}
       bpm={feed.bpm}
       hrStatus={feed.status}
+      forceLight={!!embeddedClinicCode}
     >
       {/* Register the service worker (app-shell cache → installed app opens
           offline to the last state; localStorage carries the data). */}

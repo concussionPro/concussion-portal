@@ -97,6 +97,7 @@ export function SstAppShell({
   showProgress = true,
   bpm = null,
   hrStatus = 'manual',
+  forceLight = false,
   children,
 }: {
   /** paired HR source shown in the header status pill */
@@ -117,6 +118,8 @@ export function SstAppShell({
   bpm?: number | null
   /** feed state driving the live/connecting/manual indicator */
   hrStatus?: HrStatus
+  /** force the light palette regardless of prefers-color-scheme (clinician desktop) */
+  forceLight?: boolean
   children: ReactNode
 }) {
   const pct = totalSteps > 1 ? (stepIndex / (totalSteps - 1)) * 100 : 0
@@ -125,7 +128,7 @@ export function SstAppShell({
       // `sst-app` scopes the patient dark palette (see globals.css): under
       // prefers-color-scheme: dark every --sst-* token inside this subtree
       // swaps to the deep near-black set. Nothing outside the shell changes.
-      className="sst-app flex h-[100dvh] w-full flex-col overflow-hidden font-[family-name:var(--font-hanken)] text-(--sst-navy)"
+      className={`sst-app${forceLight ? ' sst-light' : ''} flex h-[100dvh] w-full flex-col overflow-hidden font-[family-name:var(--font-hanken)] text-(--sst-navy)`}
       style={{ background: 'var(--sst-bg)' }}
     >
       {/* app header */}

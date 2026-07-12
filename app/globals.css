@@ -1243,7 +1243,10 @@ input[type="reset"] {
 }
 
 @media (prefers-color-scheme: dark) {
-  .sst-app {
+  /* `.sst-light` opts a subtree OUT of the dark palette — used to force the
+     clinician desktop dashboard to light while the patient's phone keeps the
+     photosensitive-friendly dark set. */
+  .sst-app:not(.sst-light) {
     /* surfaces — deep calm near-black with the app's teal cast (never #000) */
     --sst-bg: #0f1719;
     --sst-card: #172123;
@@ -1295,7 +1298,7 @@ input[type="reset"] {
     --sst-placeholder: #4d6366;
   }
   /* kill the white overscroll flash behind the app in dark */
-  body:has(.sst-app) {
+  body:has(.sst-app:not(.sst-light)) {
     background: #0f1719;
   }
 }
