@@ -149,7 +149,7 @@ function Shell() {
             without it the row grows to the app's full height and everything
             below the fold is clipped unreachable inside overflow-hidden. */}
         <div className="min-h-0 flex-1 px-4 py-4 sm:px-6">
-          <div className="mx-auto grid h-full max-w-[1120px] grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(380px,450px)_minmax(0,1fr)]">
+          <div className="mx-auto grid h-full w-full max-w-[1600px] grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(400px,480px)_minmax(0,1fr)]">
             {/* the app, in a device frame that scrolls internally */}
             <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
               {clinicCode === undefined ? (
