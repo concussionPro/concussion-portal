@@ -21,7 +21,7 @@ import {
   saveHeartbeat,
   TEST_HEARTBEAT_KEY,
 } from '@/lib/sst-trainer/heartbeat'
-import { PrimaryButton, SecondaryButton, SegmentBars, numFont } from './shell'
+import { PrimaryButton, SecondaryButton, numFont } from './shell'
 import { useWakeLock } from './use-wake-lock'
 
 // BCTT max test duration (modified Balke ~15 incline stages + speed ramp; the
@@ -613,32 +613,21 @@ export default function GuidedTest({
         </div>
       )}
 
-      {/* RPE — Borg 6–20 as a plain slider */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs font-semibold text-(--sst-ink-2)">
-            How hard does this feel? <span className="font-normal text-(--sst-muted)">· Borg RPE</span>
-          </span>
-          <span className={`text-[16px] text-(--sst-accent) ${numFont}`}>
-            {rpe}
-            <span className="text-[11px] text-(--sst-muted)">/20</span>
-          </span>
-        </div>
-        <input
-          type="range"
-          min={6}
-          max={20}
-          step={1}
-          value={rpe}
-          onChange={(e) => setRpe(Number(e.target.value))}
-          aria-label="How hard this feels, 6 easy to 20 maximal"
-          className="w-full accent-(--sst-accent)"
-        />
-        <div className="flex justify-between text-[10px] font-medium text-(--sst-muted)">
-          <span>6 · easy</span>
-          <span>20 · maximal</span>
-        </div>
-      </div>
+      {/* Effort: no per-minute Borg slider (you're exercising — you won't fiddle a
+          slider each minute). Symptom level below drives the threshold; this single
+          tap captures the other BCTT stop criterion — voluntary exhaustion (RPE >17). */}
+      <button
+        type="button"
+        onClick={() => setRpe((r) => (r >= EXHAUSTION_RPE ? 8 : EXHAUSTION_RPE))}
+        aria-pressed={rpe >= EXHAUSTION_RPE}
+        className={`flex items-center justify-center gap-2 rounded-[14px] border-[1.5px] px-3.5 py-3 text-[13.5px] font-semibold transition active:scale-[0.98] ${
+          rpe >= EXHAUSTION_RPE
+            ? 'border-(--sst-warn) bg-(--sst-warn-soft) text-(--sst-warn-ink)'
+            : 'border-(--sst-line) bg-(--sst-card) text-(--sst-ink-2)'
+        }`}
+      >
+        {rpe >= EXHAUSTION_RPE ? '✓ At my limit — logging as final stage' : 'I’ve reached my limit — can’t go harder'}
+      </button>
 
       {nearMaxEffort && (
         <div className="rounded-[14px] border-[1.5px] border-(--sst-warn) bg-(--sst-warn-soft) px-3.5 py-3">
@@ -677,19 +666,32 @@ export default function GuidedTest({
           left/right edges as every other block (the inline label pushed the
           bars past the container edge) */}
       <div className="flex flex-col gap-2 pt-0.5">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs font-semibold text-(--sst-ink-2)">Symptom level</span>
-          <span className={`text-[15px] text-(--sst-accent) ${numFont}`}>
+        <span className="text-xs font-semibold text-(--sst-ink-2)">
+          Symptom level <span className="font-normal text-(--sst-muted)">· 0 none → 10 worst</span>
+        </span>
+        <div className="flex items-stretch gap-2.5">
+          <button
+            type="button"
+            onClick={() => setSymptomScore(Math.max(0, symptomScore - 1))}
+            disabled={symptomScore <= 0}
+            aria-label="Lower symptom level"
+            className="flex h-[60px] flex-1 items-center justify-center rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) text-[30px] font-bold leading-none text-(--sst-ink) transition active:scale-[0.97] disabled:opacity-35"
+          >
+            −
+          </button>
+          <div className={`flex h-[60px] w-[76px] flex-none items-center justify-center rounded-[16px] bg-(--sst-accent-soft) text-[30px] font-bold text-(--sst-accent) ${numFont}`}>
             {symptomScore}
-            <span className="text-[10px] text-(--sst-muted)">/10</span>
-          </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSymptomScore(Math.min(10, symptomScore + 1))}
+            disabled={symptomScore >= 10}
+            aria-label="Raise symptom level"
+            className="flex h-[60px] flex-1 items-center justify-center rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) text-[30px] font-bold leading-none text-(--sst-ink) transition active:scale-[0.97] disabled:opacity-35"
+          >
+            +
+          </button>
         </div>
-        <SegmentBars
-          value={symptomScore}
-          onChange={setSymptomScore}
-          variant="flat"
-          ariaLabel="Current symptom level, 0 to 10"
-        />
       </div>
 
       {/* HR-jump confirm — never silently mint an HRt from a typo */}
