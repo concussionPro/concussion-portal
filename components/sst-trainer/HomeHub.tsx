@@ -89,99 +89,110 @@ export default function HomeHub({
 
   return (
     <section className="flex flex-col gap-[15px] pt-2">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-(--sst-accent)">
-          {badge}
-        </span>
-        <h1 className="m-0 text-[25px] font-extrabold leading-[1.05] tracking-[-0.025em] text-(--sst-ink)">
-          {greeting}
-        </h1>
-        <p className="m-0 text-[13.5px] leading-snug text-(--sst-muted)">
-          {goalLabel ? `Working back to ${goalLabel.toLowerCase()} — no rush.` : 'Ready when you are — no rush.'}
-        </p>
-      </div>
+      {/* Phone: single vertical stack. Desktop (lg+): true landscape — a left
+          column (who + today's band + start) beside a right column (adherence,
+          recovery curve, secondary actions). NOT a phone strip. */}
+      <div className="flex flex-col gap-[15px] lg:grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-start lg:gap-x-7 lg:gap-y-4">
+        {/* LEFT — identity, the hero band, primary action */}
+        <div className="flex flex-col gap-[15px]">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-(--sst-accent)">
+              {badge}
+            </span>
+            <h1 className="m-0 text-[25px] font-extrabold leading-[1.05] tracking-[-0.025em] text-(--sst-ink) lg:text-[30px]">
+              {greeting}
+            </h1>
+            <p className="m-0 text-[13.5px] leading-snug text-(--sst-muted)">
+              {goalLabel ? `Working back to ${goalLabel.toLowerCase()} — no rush.` : 'Ready when you are — no rush.'}
+            </p>
+          </div>
 
-      <div
-        className="rounded-[20px] border-2 border-(--sst-accent) px-4 pb-3.5 pt-3.5"
-        style={{ background: 'linear-gradient(180deg,var(--sst-tint-a),var(--sst-tint-b))' }}
-      >
-        <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-(--sst-accent-ink)">
-          Today&apos;s band
-        </span>
-        <div className="mb-3 mt-1.5 flex items-baseline gap-1.5">
-          <span className={`text-[36px] text-(--sst-ink) ${numFont}`}>
-            {rx.lowerBpm}–{rx.upperBpm}
-          </span>
-          <span className="text-[13px] font-semibold text-(--sst-muted)">bpm</span>
+          <div
+            className="rounded-[20px] border-2 border-(--sst-accent) px-4 pb-3.5 pt-3.5 lg:px-5 lg:pb-5 lg:pt-4"
+            style={{ background: 'linear-gradient(180deg,var(--sst-tint-a),var(--sst-tint-b))' }}
+          >
+            <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-(--sst-accent-ink)">
+              Today&apos;s band
+            </span>
+            <div className="mb-3 mt-1.5 flex items-baseline gap-1.5">
+              <span className={`text-[36px] text-(--sst-ink) lg:text-[46px] ${numFont}`}>
+                {rx.lowerBpm}–{rx.upperBpm}
+              </span>
+              <span className="text-[13px] font-semibold text-(--sst-muted)">bpm</span>
+            </div>
+            <BandBar hrt={rx.hrt} lower={rx.lowerBpm} upper={rx.upperBpm} />
+          </div>
+
+          <PrimaryButton onClick={onStartSession} className="rounded-[20px] py-[19px] text-base">
+            Start today&apos;s session
+          </PrimaryButton>
         </div>
-        <BandBar hrt={rx.hrt} lower={rx.lowerBpm} upper={rx.upperBpm} />
-      </div>
 
-      <PrimaryButton onClick={onStartSession} className="rounded-[20px] py-[19px] text-base">
-        Start today&apos;s session
-      </PrimaryButton>
+        {/* RIGHT — adherence, the recovery instrument, secondary actions */}
+        <div className="flex flex-col gap-[15px]">
+          <div className="flex items-center justify-between rounded-[16px] border border-(--sst-line-soft) bg-(--sst-card) px-4 py-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[12.5px] font-bold text-(--sst-ink)">Sessions logged</span>
+              <span className="text-[11px] text-(--sst-muted)">
+                {done} of {target} toward your weekly goal
+              </span>
+            </div>
+            <div className="flex gap-1.5">
+              {Array.from({ length: target }, (_, i) => (
+                <span
+                  key={i}
+                  className="h-[13px] w-[13px] rounded-full border-[1.5px]"
+                  style={{
+                    background: i < done ? 'var(--sst-accent)' : 'var(--sst-card)',
+                    borderColor: i < done ? 'var(--sst-accent)' : 'var(--sst-line-strong)',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
 
-      <div className="flex items-center justify-between rounded-[16px] border border-(--sst-line-soft) bg-(--sst-card) px-4 py-3">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[12.5px] font-bold text-(--sst-ink)">Sessions logged</span>
-          <span className="text-[11px] text-(--sst-muted)">
-            {done} of {target} toward your weekly goal
-          </span>
+          {/* the adherence lever: their own measured threshold rising — taps
+              through to the full curve on Progress */}
+          {history && history.some((t) => t.hrt != null) && (
+            <TrajectoryCompact tests={history} onOpen={onProgress} />
+          )}
+
+          <div className="flex gap-2.5">
+            <SecondaryButton onClick={onProgress} className="flex-1 p-3">
+              Progress
+            </SecondaryButton>
+            <SecondaryButton onClick={onRetest} className="flex-1 p-3">
+              Re-test
+            </SecondaryButton>
+          </div>
+
+          {retestBlockedReason && (
+            <p className="m-0 -mt-1 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 text-[11.5px] leading-snug text-(--sst-muted)">
+              {retestBlockedReason}
+            </p>
+          )}
+
+          {/* Quiet link across to the SCAT6 baseline & serial-testing instrument. */}
+          <a
+            href="/preseason"
+            className="group -mt-0.5 flex items-center justify-center gap-1.5 px-1 py-1 text-[12px] font-semibold text-(--sst-muted) no-underline transition hover:text-(--sst-accent-ink)"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[15px] w-[15px]"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 12h4l2 6 4-14 2 8h6" />
+            </svg>
+            Baseline &amp; serial testing
+          </a>
         </div>
-        <div className="flex gap-1.5">
-          {Array.from({ length: target }, (_, i) => (
-            <span
-              key={i}
-              className="h-[13px] w-[13px] rounded-full border-[1.5px]"
-              style={{
-                background: i < done ? 'var(--sst-accent)' : 'var(--sst-card)',
-                borderColor: i < done ? 'var(--sst-accent)' : 'var(--sst-line-strong)',
-              }}
-            />
-          ))}
-        </div>
       </div>
-
-      {/* the adherence lever: their own measured threshold rising — taps
-          through to the full curve on Progress */}
-      {history && history.some((t) => t.hrt != null) && (
-        <TrajectoryCompact tests={history} onOpen={onProgress} />
-      )}
-
-      <div className="flex gap-2.5">
-        <SecondaryButton onClick={onProgress} className="flex-1 p-3">
-          Progress
-        </SecondaryButton>
-        <SecondaryButton onClick={onRetest} className="flex-1 p-3">
-          Re-test
-        </SecondaryButton>
-      </div>
-
-      {retestBlockedReason && (
-        <p className="m-0 -mt-1 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 text-[11.5px] leading-snug text-(--sst-muted)">
-          {retestBlockedReason}
-        </p>
-      )}
-
-      {/* Quiet link across to the SCAT6 baseline & serial-testing instrument. */}
-      <a
-        href="/preseason"
-        className="group -mt-0.5 flex items-center justify-center gap-1.5 px-1 py-1 text-[12px] font-semibold text-(--sst-muted) no-underline transition hover:text-(--sst-accent-ink)"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          className="h-[15px] w-[15px]"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M3 12h4l2 6 4-14 2 8h6" />
-        </svg>
-        Baseline &amp; serial testing
-      </a>
 
       {/* Start-over escape — quiet, at the very bottom; the page confirms first. */}
       {onStartOver && (
