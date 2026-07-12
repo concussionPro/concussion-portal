@@ -72,7 +72,7 @@ export const BLOG_SCHEDULE: ScheduledBlogPost[] = [
     slug: 'cervicogenic-vs-migraine-vs-tension-headache-differential',
     title: 'Cervicogenic Headache vs Migraine vs Tension — Differential for Clinicians',
     publishAt: '2026-07-09T23:00:00Z', // Fri 10 Jul 2026
-    draftStatus: 'not-started',
+    draftStatus: 'live', // published 2026-07-12
     notes: 'Cervicogenic Dizziness validation begins — Course #3 (Q4 2026).',
   },
   {

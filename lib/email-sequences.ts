@@ -293,14 +293,19 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
   // Email 3 — 72 hours after abandonment (final)
   {
     hoursAfter: 72,
-    subject: 'Last note from me about the course',
+    subject: 'Concussion Clinical Mastery — the details, in one place',
     template: (name: string, recoveryUrl?: string) => emailShell(`
       <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
-      <p>This is the last email I'll send about this. I don't want to be pushy — but I also don't want you to miss out if the timing just wasn't right.</p>
-      <p>If cost is a factor: the <strong>online-only option at $${CONFIG.COURSE.PRICE_ONLINE}</strong> gives you the full 8-module course with 8 CPD hours. You can always add the workshop later.</p>
-      <p>If you have specific questions, just reply — I'm happy to chat.</p>
-      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'enrol_now')}" class="cta-btn">Enrol Now</a></center>
-      <p class="ps">P.S. If you decided this course isn't for you, no hard feelings. The SCAT6 Mastery course and SCAT6 forms are yours to keep.</p>
+      <p>You started enrolling but didn't finish. Here's the course, laid out plainly:</p>
+      <ul>
+        <li><strong>What it covers:</strong> recognition and red flags, VOMS and BESS, staged return-to-play, and rehab matched to the concussion phenotype.</li>
+        <li><strong>Format:</strong> 8 online modules, 8 CPD hours, endorsed by Osteopathy Australia. Lifetime access, self-paced.</li>
+        <li><strong>Cost:</strong> $${CONFIG.COURSE.PRICE_ONLINE} online. Add the hands-on workshop any time — you only pay the difference.</li>
+        <li><strong>Reimbursement:</strong> tax invoice + CPD certificate included; most clinicians pay $0 out of pocket.</li>
+        <li><strong>Guarantee:</strong> 7-day money-back, no questions.</li>
+      </ul>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'resume')}" class="cta-btn">Finish enrolling</a></center>
+      <p class="ps">P.S. The SCAT6 tools and free course are yours to keep regardless.</p>
       <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
     `),
   },
@@ -523,13 +528,12 @@ export const SCAT_MASTERY_SEQUENCE = [
     subject: 'Your concussion CPD options — final summary',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-      <p>This is the last email in this series. I hope the SCAT forms and course have been useful in your practice.</p>
-      <p>If you're still considering the full course, here's the summary:</p>
+      <p>Last email in this series — your options for the full course, in one place:</p>
       <ul>
-        <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access</li>
-        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}):</strong> Online + full-day workshop, 14 CPD hours</li>
+        <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access — the full workflow beyond the SCAT6: VOMS, BESS, staged return-to-play, phenotype-based rehab.</li>
+        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}):</strong> everything online, plus a hands-on full-day workshop — 14 CPD hours.</li>
       </ul>
-      <p>Both include the clinical toolkit, reference repository, and digital certificate.</p>
+      <p>Both include the clinical toolkit, reference repository, and CPD certificate. Tax invoice provided — most clinicians pay $0 out of pocket. 7-day money-back guarantee.</p>
       ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'scat_mastery_day42', 'choose_option')}" class="cta-btn">Compare online vs. workshop</a></center>
       <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions? Just reply &mdash; I read every message.</p>

@@ -12,6 +12,7 @@ const SEO_SWEEP_LAST_MODIFIED = new Date('2026-07-02')
 // Blog posts carry their own datePublished/dateModified in their schema
 // markup — sitemap lastModified mirrors each post's dateModified.
 const BLOG_POSTS: Array<{ slug: string; dateModified: string; priority: number }> = [
+  { slug: 'cervicogenic-vs-migraine-vs-tension-headache-differential', dateModified: '2026-07-12', priority: 0.9 },
   { slug: 'heidi-vs-lyrebird-ai-scribe-australian-clinicians', dateModified: '2026-05-27', priority: 0.9 },
   { slug: 'ahpra-ai-guidelines-explained-australian-clinicians', dateModified: '2026-05-27', priority: 0.9 },
   { slug: 'chatgpt-ndis-reports-allied-health-australia', dateModified: '2026-05-27', priority: 0.9 },

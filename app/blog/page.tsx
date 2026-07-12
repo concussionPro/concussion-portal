@@ -36,6 +36,14 @@ const blogPosts: Array<{
   category: Category
 }> = [
   {
+    title: "Cervicogenic vs Migraine vs Tension Headache — The Post-Concussion Differential [2026]",
+    description: 'Post-concussion headache is a timing category, not a diagnosis. Phenotype cervicogenic vs migraine vs tension-type after concussion — distinguishing features, a side-by-side comparison table, and why the phenotype drives management.',
+    date: 'Jul 12, 2026',
+    href: '/blog/cervicogenic-vs-migraine-vs-tension-headache-differential',
+    readTime: '8 min',
+    category: 'clinical-tools',
+  },
+  {
     title: "Persistent Post-Concussion Symptoms (PPCS): A Clinician's Workup [2026]",
     description: 'The 5-20% of concussion cases that don\'t resolve in standard timeframes. PPCS criteria, vestibulo-ocular + cervical workup, escalation pathways, active rehabilitation protocols.',
     date: 'May 27, 2026',
