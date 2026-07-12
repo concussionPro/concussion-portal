@@ -362,9 +362,13 @@ export default function GuidedTest({
   const logMinute = (opts: { confirmed?: boolean; finalStage?: boolean } = {}) => {
     if (!hrValid) return
     // HR sanity: an implausible jump from the last stage needs an explicit
-    // confirm — never silently mint an HRt from a typo.
+    // confirm — but ONLY for a typed reading. This guard exists to catch a
+    // manual-entry typo; on a LIVE stream the patient isn't typing, so a big
+    // delta is sensor variance, not a typo — a confirm modal there would fire
+    // falsely AND block the auto-logger (a stable live HR was showing a bogus
+    // "jump of N bpm" and freezing minute logging). Live feeds skip the guard.
     const prev = recordedStages[recordedStages.length - 1]
-    if (!opts.confirmed && prev && Math.abs((hrValue as number) - prev.heartRate) > HR_JUMP_CONFIRM) {
+    if (!opts.confirmed && prev && hrStatus !== 'streaming' && Math.abs((hrValue as number) - prev.heartRate) > HR_JUMP_CONFIRM) {
       setConfirmJump(Math.abs((hrValue as number) - prev.heartRate))
       finishingRef.current = false // intercepted — let a resolved re-attempt fire
       return
