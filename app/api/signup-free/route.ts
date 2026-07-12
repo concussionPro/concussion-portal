@@ -6,8 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail, updateLastLogin } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
-import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
-import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { generateMagicLinkJWT, createMagicToken } from '@/lib/magic-link-jwt'
+import { sendEmail, sendMagicLinkEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -61,6 +61,21 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await findUserByEmail(email)
+
+    // SECURITY (account-takeover fix, 2026-07-12): email-only auto-login must
+    // NEVER mint a session for an account with more than preview access. The
+    // /api/auth/session refresh upgrades any session to the account's real DB
+    // access level, so a 'preview' session minted for a known paid user's email
+    // would become full access with no magic link — anyone who knows a customer's
+    // email could take over their account. For those accounts, send a login link
+    // and set NO session. New leads + existing preview accounts (nothing to
+    // escalate to) keep instant access below.
+    if (existingUser && existingUser.accessLevel !== 'preview') {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+      const magicToken = createMagicToken(existingUser.id, existingUser.email, existingUser.name, existingUser.accessLevel)
+      await sendMagicLinkEmail(existingUser.email, magicToken, baseUrl)
+      return NextResponse.json({ success: true, requiresEmailLogin: true })
+    }
 
     let userId: string
     if (existingUser) {

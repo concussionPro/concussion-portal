@@ -7,7 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail, updateLastLogin } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
-import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { createMagicToken } from '@/lib/magic-link-jwt'
+import { sendEmail, sendMagicLinkEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -58,6 +59,17 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await findUserByEmail(normalizedEmail)
+
+    // SECURITY (account-takeover fix, 2026-07-12): see signup-free. Never mint a
+    // session for an account above preview from an email alone — /api/auth/session
+    // would upgrade it to the account's real paid access with no magic link. Send
+    // a login link instead; new + existing preview users keep instant access.
+    if (existingUser && existingUser.accessLevel !== 'preview') {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+      const magicToken = createMagicToken(existingUser.id, existingUser.email, existingUser.name, existingUser.accessLevel)
+      await sendMagicLinkEmail(existingUser.email, magicToken, baseUrl)
+      return NextResponse.json({ success: true, requiresEmailLogin: true })
+    }
 
     let userId: string
 
