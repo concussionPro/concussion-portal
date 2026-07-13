@@ -92,25 +92,13 @@ struct OnboardingView: View {
                     }
                     .disabled(code.trimmingCharacters(in: .whitespaces).isEmpty || checking)
 
-                    // Self-guided exists in DEBUG builds only. The STORE build
-                    // is clinician-gated (owner, 2026-07-05): a validated clinic
-                    // code is the activation key — public download, no code, no
-                    // program. Self-guided ships later, post-TGA, as an update.
-                    #if DEBUG
-                    Button {
-                        flow.completeOnboarding(code: nil, clinicName: nil, patientName: name.trimmingCharacters(in: .whitespaces))
-                    } label: {
-                        Label("Self-guided — no clinic", systemImage: "person.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(checking)
-                    #else
+                    // Clinic-gated per TGA (owner, 2026-07-05): a validated clinic
+                    // code is the activation key — public download, but no code
+                    // means no program. There is NO self-guided path in any build.
                     Text("Your clinician's code links your training to their review — ask your clinic for it.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                    #endif
                 }
 
                 if validated == true {

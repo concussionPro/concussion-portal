@@ -25,13 +25,12 @@ fi
 # 1. ensure the project + build exist
 command -v xcodegen >/dev/null || brew install xcodegen
 [ -d SSTWatch.xcodeproj ] || xcodegen generate
+# ALWAYS rebuild so source changes are picked up (the old cache-if-present guard
+# silently shipped stale builds after edits).
+xcodebuild -project SSTWatch.xcodeproj -scheme SSTWatch -sdk watchsimulator \
+  -configuration Debug -destination 'generic/platform=watchOS Simulator' \
+  build CODE_SIGNING_ALLOWED=NO
 APP=$(find ~/Library/Developer/Xcode/DerivedData -name "SSTWatch.app" -path "*watchsimulator*" 2>/dev/null | head -1)
-if [ -z "$APP" ]; then
-  xcodebuild -project SSTWatch.xcodeproj -scheme SSTWatch -sdk watchsimulator \
-    -configuration Debug -destination 'generic/platform=watchOS Simulator' \
-    build CODE_SIGNING_ALLOWED=NO
-  APP=$(find ~/Library/Developer/Xcode/DerivedData -name "SSTWatch.app" -path "*watchsimulator*" 2>/dev/null | head -1)
-fi
 echo "APP=$APP"
 
 # 2. reuse an existing "SST Watch" sim or create one
@@ -46,6 +45,9 @@ case "$SIM" in *nvalid*|*rror*|"") echo "CREATE_FAILED — runtime still unusabl
 xcrun simctl boot "$SIM" 2>/dev/null
 open -a Simulator
 sleep 14
+# Clean launch: wipe any prior (incl. demo-seeded) state so it starts fresh at
+# consent → clinic-code entry.
+xcrun simctl uninstall "$SIM" au.com.concussioneducation.sst.watchkitapp 2>/dev/null
 xcrun simctl install "$SIM" "$APP"
 xcrun simctl launch "$SIM" au.com.concussioneducation.sst.watchkitapp
-echo "LAUNCHED — SST onboarding should be on screen. Clinic code: DEMO00"
+echo "LAUNCHED — clean start: Your-data consent → clinic-code entry. Demo code: DEMO00"
