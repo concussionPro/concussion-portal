@@ -42,6 +42,32 @@ function safeJson(s: string): unknown {
   try { return JSON.parse(s) } catch { return s }
 }
 
+/**
+ * Derive the in-person workshop city a buyer would most likely attend, from the
+ * billing address Stripe collects at checkout (no extra checkout question — owner
+ * directive: "just use that and populate them into the appropriate location
+ * without asking"). AU state → nearest running workshop city slug; the exact
+ * city name wins if it maps directly. Returns null for non-AU / unknown.
+ */
+function nearestWorkshopSlug(addr?: { city?: string | null; state?: string | null; country?: string | null } | null): string | null {
+  if (!addr || (addr.country && addr.country.toUpperCase() !== 'AU')) return null
+  const city = (addr.city || '').toLowerCase()
+  if (city.includes('melbourne')) return 'melbourne'
+  if (city.includes('sydney')) return 'sydney'
+  if (city.includes('byron')) return 'byron-bay'
+  if (city.includes('adelaide')) return 'adelaide'
+  if (city.includes('perth')) return 'wa'
+  const st = (addr.state || '').toUpperCase()
+  const byState: Record<string, string> = {
+    VIC: 'melbourne', TAS: 'melbourne',
+    NSW: 'sydney', ACT: 'sydney',
+    QLD: 'byron-bay',
+    SA: 'adelaide', NT: 'adelaide',
+    WA: 'wa',
+  }
+  return byState[st] ?? null
+}
+
 async function logAnalyticsEvent(
   eventType: string,
   eventData: Record<string, unknown>,
@@ -379,6 +405,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // not a public surface. Redact only at log/console level (line above already
     // does that via console.log redact()).
     const md = session.metadata ?? {}
+    // Where would this buyer attend in person? Derived silently from the
+    // billing address Stripe already collects — no extra checkout question.
+    // Feeds the Ready-to-Train city-demand view; explicit workshop nominations
+    // (full-course `location`) still win when present.
+    const billing = session.customer_details?.address
+    const likelyWorkshopCity = workshopCity || nearestWorkshopSlug(billing)
     await logAnalyticsEvent(
       'purchase_complete',
       {
@@ -387,6 +419,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         currency,
         transactionId: session.id,
         accessLevel,
+        // In-person city demand: nominated city if they picked one, else the
+        // nearest workshop city inferred from their billing address.
+        likelyWorkshopCity: likelyWorkshopCity || null,
+        buyerCity: billing?.city || null,
+        buyerState: billing?.state || null,
+        buyerCountry: billing?.country || null,
         // Attribution stamped so the sale is self-describing, not inferred:
         firstReferrer: md.attr_first_ref || null,
         referrer: md.attr_ref || null,
