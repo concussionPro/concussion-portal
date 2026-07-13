@@ -48,10 +48,11 @@ function Shell() {
   const [clinicCode, setClinicCode] = useState<string | null | undefined>(undefined)
   // bump to force-remount the embedded app for a fresh patient (see "New patient")
   const [resetSeq, setResetSeq] = useState(0)
-  // The clinic code / sharing / runbook panel is SETUP reference — not a permanent
-  // half-screen fixture. Collapsed by default so the app owns the width; forced
-  // open until a clinic code exists (you need it to provision).
-  const [setupOpen, setSetupOpen] = useState(false)
+  // The clinic code / sharing / runbook panel is SETUP reference. SHOWN by
+  // default on load (you need the code / patient link to start a patient); the
+  // "Hide setup" toggle collapses it once you're running a patient so the app
+  // owns the width. Always open until a clinic code exists (you need it to provision).
+  const [setupOpen, setSetupOpen] = useState(true)
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
