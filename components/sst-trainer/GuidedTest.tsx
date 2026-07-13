@@ -527,7 +527,7 @@ export default function GuidedTest({
   const remaining = Math.max(0, STAGE_SECONDS - stageElapsed)
 
   return (
-    <section className="flex flex-col gap-3 pt-1">
+    <section className="flex flex-col gap-[9px] pt-1">
       {/* abort / back — never a dead end (and never a silent discard) */}
       <button
         type="button"
@@ -736,38 +736,34 @@ export default function GuidedTest({
             </p>
           </div>
         ) : (
-          <div className="rounded-[14px] bg-(--sst-surface-2) px-3.5 py-3 text-center">
-            <p className="m-0 text-[12px] font-semibold leading-snug text-(--sst-muted)">
-              {justLogged
-                ? `Minute ${justLogged} logged ✓ — keep going, the next minute logs itself.`
-                : 'Each minute logs itself when it ends. Just keep the effort stepping up and your rating current.'}
-            </p>
+          <div className="flex items-center justify-center gap-2 rounded-[14px] bg-(--sst-surface-2) px-3.5 py-2.5 text-center">
+            {justLogged ? (
+              <p className="m-0 text-[13px] font-bold leading-snug text-(--sst-good)">
+                Minute {justLogged} logged ✓
+              </p>
+            ) : (
+              <p className="m-0 text-[13px] font-semibold leading-snug text-(--sst-ink-2)">
+                Logs automatically at <span className={numFont}>0:00</span> — keep stepping the effort up.
+              </p>
+            )}
           </div>
         )}
-        <p className="m-0 text-center text-[10px] leading-tight text-(--sst-muted)">
-          The test ends on its own at a {PROVOCATION_RISE}-point symptom rise (that sets your
-          threshold), at maximal effort, or at minute {MAX_STAGES}. A symptom spike can be logged at
-          any time — you never have to wait out the minute.
-        </p>
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-(--sst-line-soft) pt-3">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-(--sst-muted)">
-          End the test early
-        </span>
+      <div className="flex gap-2 border-t border-(--sst-line-soft) pt-3">
         <button
           type="button"
           onClick={() => endEarly('exhaustion-limited')}
-          className="rounded-[14px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) p-3 text-[13.5px] font-semibold text-(--sst-muted) transition active:scale-[0.98]"
+          className="flex-1 rounded-[14px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) p-3 text-[13px] font-semibold text-(--sst-muted) transition active:scale-[0.98]"
         >
-          Stop — exhausted, no symptoms
+          Stop — exhausted
         </button>
         <button
           type="button"
           onClick={() => endEarly('red-flag')}
-          className="rounded-[14px] bg-(--sst-danger) p-3 text-[13.5px] font-bold text-(--sst-on-accent) shadow-[0_8px_18px_-9px_rgba(210,70,58,0.85)] transition active:scale-[0.98]"
+          className="flex-1 rounded-[14px] bg-(--sst-danger) p-3 text-[13px] font-bold text-(--sst-on-accent) shadow-[0_8px_18px_-9px_rgba(210,70,58,0.85)] transition active:scale-[0.98]"
         >
-          ⚑ Warning sign — stop now
+          ⚑ Warning sign
         </button>
       </div>
 
