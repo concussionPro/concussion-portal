@@ -133,7 +133,9 @@ export function SstAppShell({
       // NATURAL DOCUMENT SCROLL — the whole page grows and the browser/webview
       // scrolls it. Inner-container (overflow-y-auto) scroll is unreliable inside
       // a native WKWebView; document scroll always works.
-      className={`sst-app${forceLight ? ' sst-light' : ''} flex w-full flex-col font-[family-name:var(--font-hanken)] text-(--sst-navy) ${forceLight ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'}`}
+      // Always light (owner: "get rid of dark mode") — `sst-light` opts every
+      // --sst-* token out of the prefers-color-scheme:dark override.
+      className={`sst-app sst-light flex w-full flex-col font-[family-name:var(--font-hanken)] text-(--sst-navy) ${forceLight ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'}`}
       style={{ background: 'var(--sst-bg)' }}
     >
       {/* app header */}
