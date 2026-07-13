@@ -161,15 +161,16 @@ function trajectorySection(input: ReportInput): ReportSection {
 }
 
 /**
- * "Measures reviewed during delivery" — the ACC clause 5.4.7 evidence block.
+ * "Measures reviewed during delivery" — the outcome-review evidence block.
  *
- * ACC's allied-health contract (cl. 5.4.7) requires evidence that outcome
- * measures were REVIEWED DURING delivery of the Services, not just captured once.
- * SST produces that evidence as a by-product: between-visit sessions are
- * delivered against a measured HR band (connected-sensor adherence), and the
- * measured threshold is formally re-reviewed at each graded re-test. This section
- * surfaces those review points explicitly so the audit obligation is discharged
- * on the face of the report. Facts only — no efficacy claim.
+ * The ACC Concussion Services outcome reporting (the ACC884 Client Summary
+ * Report) expects the outlined outcome measures to have been reviewed across the
+ * service, not just captured once. SST produces that evidence as a by-product:
+ * between-visit sessions are delivered against a measured HR band (connected-
+ * sensor adherence), and the measured threshold is formally re-reviewed at each
+ * graded re-test. This section surfaces those review points explicitly. Facts
+ * only — no efficacy claim. (Not tied to a specific unverified clause number;
+ * the requirement is the ACC884 outcome-review deliverable.)
  */
 function adherenceReviewSection(input: ReportInput): ReportSection {
   const rx = input.prescription
@@ -201,10 +202,10 @@ function adherenceReviewSection(input: ReportInput): ReportSection {
     },
   ]
   return {
-    heading: 'Outcome measures reviewed during delivery (ACC cl. 5.4.7)',
+    heading: 'Outcome measures reviewed during delivery',
     kind: 'audit',
     body: [
-      'Sub-symptom-threshold sessions were delivered between clinic visits against a heart-rate band measured by graded testing; adherence was monitored from connected-sensor sessions (unverified manual/camera entries are excluded from the verified count). The measured threshold was formally re-reviewed at each graded re-test listed above — the evidence that outcome measures were reviewed during, not merely at the end of, service delivery.',
+      'Sub-symptom-threshold sessions were delivered between clinic visits against a heart-rate band measured by graded testing; adherence was monitored from connected-sensor sessions (unverified manual/camera entries are excluded from the verified count). The measured threshold was formally re-reviewed at each graded re-test listed above — evidence that outcome measures were reviewed across, not merely at the end of, service delivery, supporting the ACC884 Client Summary Report.',
     ],
     fields,
   }
@@ -249,47 +250,73 @@ export function gpReport(input: ReportInput): ReportContent {
 }
 
 /**
- * ACC884 — NZ ACC allied-health treatment plan / extension request.
- * Skeleton with the known ACC fields: SMART goals, requested additional service
- * (session) hours, and outcome status per the ACC Contract clause 5.13.2
- * reporting obligation. Field wording is a scaffold — VERIFY against the current
- * ACC884 form before production emission.
+ * ACC884 — NZ ACC Concussion Service **Client Summary Report**.
+ *
+ * Per the ACC Concussion Services Operational Guidelines, the ACC884 Client
+ * Summary Report is the end-of-service reporting deliverable submitted to ACC
+ * and the client's primary-care provider (within 5 business days of service
+ * exit, or when further services are identified). It summarises the SERVICE
+ * PROVIDED (the outlined treatment and hours), a RISK ASSESSMENT, the OUTCOMES,
+ * and any SERVICES STILL NEEDED. It is NOT a treatment-extension request — that
+ * is the ACC32 (Request for Prior Approval of Treatment).
+ *
+ * This renders the SST-derived CONTENT for those fields. The exact field ORDER
+ * and labels should be transcribed onto ACC's current fillable ACC884 form
+ * (available from the ACC provider portal) before submission — the form layout
+ * is authoritative, this supplies the measured data to populate it.
  */
 export function acc884(input: ReportInput): ReportContent {
   const goals = input.goals ?? []
+  const recovered = input.latestTest?.interpretation === 'no-intolerance'
   const goalFields: ReportField[] =
     goals.length > 0
       ? goals.map((g, i) => ({
-          label: `SMART goal ${i + 1}`,
+          label: `Goal ${i + 1}`,
           value: `${g.label}${g.status ? ` — ${g.status}` : ''}`,
         }))
-      : [{ label: 'SMART goals', value: 'No goals recorded.' }]
+      : [{ label: 'Goals', value: 'No goals recorded.' }]
 
   return {
-    title: `ACC884 treatment plan — ${fullName(input.patient)}`,
+    title: `ACC884 Client Summary Report — ${fullName(input.patient)}`,
     sections: [
       patientHeader(input),
-      { heading: 'SMART goals', kind: 'goals', fields: goalFields },
       {
-        heading: 'Requested service',
+        heading: 'Service provided',
         kind: 'summary',
-        // VERIFY: ACC884 requests additional treatment SESSIONS, not clinician
-        // hours; map dose → requested sessions once the current form is confirmed.
-        fields: [
-          { label: 'Requested additional sessions', value: 'TODO — clinician-entered' },
-          { label: 'Rationale', value: 'Ongoing symptom-limited exercise intolerance on graded testing.' },
+        body: [
+          'Clinician-supervised sub-symptom-threshold aerobic exercise (SSTAE), delivered against a heart-rate threshold measured by graded testing, with between-visit home sessions monitored on a connected sensor.',
         ],
       },
       prescriptionSection(input),
       trajectorySection(input),
       adherenceReviewSection(input),
+      { heading: 'Goals', kind: 'goals', fields: goalFields },
       {
-        heading: 'Outcome status (cl. 5.13.2)',
+        heading: 'Risk assessment',
+        kind: 'summary',
+        body: [
+          input.prescription?.prolongedRecoveryRisk
+            ? (input.prescription.clinicianNote ??
+              'Measured threshold sits below the validated prolonged-recovery cut-off — flagged for closer review.')
+            : 'No prolonged-recovery risk flag raised on the measured threshold.',
+        ],
+      },
+      {
+        heading: 'Outcome',
         kind: 'outcome',
         body: [
-          input.latestTest?.interpretation === 'no-intolerance'
+          recovered
             ? 'Most recent graded re-test provoked no symptom exacerbation to volitional exhaustion — objective exercise tolerance recovered.'
-            : 'Exercise tolerance remains symptom-limited on graded testing; treatment ongoing.',
+            : 'Exercise tolerance remains symptom-limited on graded testing at service exit.',
+        ],
+      },
+      {
+        heading: 'Services still needed',
+        kind: 'summary',
+        body: [
+          recovered
+            ? 'No further SSTAE indicated on the measured outcome; onward care at the treating clinician’s discretion.'
+            : 'Further clinician-supervised SSTAE may be indicated; any additional ACC-funded treatment is requested separately via ACC32 (Request for Prior Approval of Treatment).',
         ],
       },
     ],
@@ -411,42 +438,42 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
   }
 }
 
-// ── stubbed skins (TODO) ─────────────────────────────────────────────────────
+// ── attendance-driven ACC form ───────────────────────────────────────────────
 
 /**
- * ACC885 — NZ ACC progress report (attendance-driven).
- * TODO: build once the current ACC885 field set + the attendance feed
- * (GensolveAdapter.pollAppointments → attended-session count) are wired.
+ * ACC885 — NZ ACC Concussion Service **Did Not Attend (DNA) Report**.
+ *
+ * Per the ACC Concussion Services Operational Guidelines, the ACC885 notifies
+ * ACC (within 3 business days) when a client fails to attend a scheduled
+ * appointment without notice. It is NOT a progress/outcome report — outcome
+ * reporting is carried by the ACC884 Client Summary Report. This is fed by the
+ * attendance signal (GensolveAdapter.pollAppointments → did-not-arrive), and is
+ * a notification, so its content is minimal: who, which appointment, and that no
+ * notice was given. Transcribe onto ACC's current fillable ACC885 form.
  */
-export function acc885(input: ReportInput): ReportContent {
+export function acc885(
+  input: ReportInput,
+  missedAppointment?: { at?: string; note?: string },
+): ReportContent {
   return {
-    title: `ACC885 progress report — ${fullName(input.patient)}`,
+    title: `ACC885 Did Not Attend Report — ${fullName(input.patient)}`,
     sections: [
       patientHeader(input),
       {
-        heading: 'ACC885',
+        heading: 'Did Not Attend',
         kind: 'summary',
-        body: ['TODO — ACC885 progress/attendance report not yet implemented.'],
+        fields: [
+          { label: 'Scheduled appointment', value: fmtDate(missedAppointment?.at) },
+          { label: 'Client notified in advance', value: 'No' },
+        ],
+        body: [
+          missedAppointment?.note ??
+            'The client did not attend the scheduled appointment and did not provide prior notice. Notified to ACC per the Concussion Services attendance-reporting requirement.',
+        ],
       },
     ],
   }
 }
 
-/**
- * NZ ACC six-monthly review.
- * TODO: build once the six-monthly review template + long-episode trajectory
- * summarisation are confirmed.
- */
-export function sixMonthlyReview(input: ReportInput): ReportContent {
-  return {
-    title: `ACC six-monthly review — ${fullName(input.patient)}`,
-    sections: [
-      patientHeader(input),
-      {
-        heading: 'Six-monthly review',
-        kind: 'summary',
-        body: ['TODO — ACC six-monthly review not yet implemented.'],
-      },
-    ],
-  }
-}
+// (No ACC six-monthly-review skin: no such prescribed ACC concussion form was
+// verified. Outcome reporting is the ACC884 Client Summary Report.)

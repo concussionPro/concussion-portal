@@ -19,11 +19,12 @@
  * import; no build step or tsx needed.)
  *
  * SHIPPABLE skins emitted:
- *   - medicolegal record  → defensible clinical audit trail
- *   - gp-report           → referrer letter data attachment
- *   - acc884              → DRAFT ONLY (real ACC884 v2 field order is UNVERIFIED;
- *                           carries a visible "DRAFT — pending ACC884 v2 field
- *                           mapping" banner + watermark so it can never be sent as-is)
+ *   - medicolegal record  → defensible clinical audit trail (free-form; no standard form)
+ *   - gp-report           → referrer letter data (free-form; no standard form)
+ *   - acc884              → ACC884 Client Summary Report (the real NZ ACC end-of-
+ *                           service outcome form). Content is per the ACC Concussion
+ *                           Services Operational Guidelines; transcribe onto ACC's
+ *                           fillable ACC884 form (layout authoritative) before submission.
  */
 
 import { mkdirSync } from 'node:fs'
@@ -152,12 +153,11 @@ const reports = [
     opts: { clinicName: CLINIC },
   },
   {
-    slug: 'acc884-DRAFT',
+    slug: 'acc884-client-summary',
     content: acc884(baseInput('NZ')),
     opts: {
       clinicName: CLINIC,
-      draftBanner: 'DRAFT — pending ACC884 v2 field mapping. Field order & wording are UNVERIFIED against the current ACC884 form. Not for submission.',
-      footerNote: 'This ACC884 rendering is a DRAFT scaffold; verify every field against ACC’s current ACC884 v2 form before any use.',
+      footerNote: 'ACC884 = Client Summary Report (ACC Concussion Services). This supplies the measured content; transcribe onto ACC’s current fillable ACC884 form (the form layout is authoritative) before submission.',
     },
   },
 ]
@@ -191,7 +191,7 @@ async function main() {
     console.log(`  HTML  ${w.htmlPath}`)
     console.log(`  PDF   ${w.pdfPath}`)
   }
-  console.log('\nNote: acc884 output is a watermarked DRAFT — field mapping unverified.\n')
+  console.log('\nNote: acc884 = ACC884 Client Summary Report content — transcribe onto ACC’s fillable ACC884 form before submission.\n')
 }
 
 main().catch((err) => {
