@@ -19,7 +19,10 @@ struct GradedTestView: View {
     @ObservedObject var workout: SSTWorkout
 
     private let stageSeconds = 60
-    private let maxStages = 12
+    // Matches the web engine (MAX_STAGES = 20) and the BCTT protocol: +1° incline
+    // each minute for 15 stages, then +speed per minute — the test runs to
+    // provocation / exhaustion / ≥90% age-max, capped at 20 minutes.
+    private let maxStages = 20
 
     @State private var stages: [TestStage] = []
     @State private var remaining = 60
