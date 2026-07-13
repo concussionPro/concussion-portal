@@ -128,7 +128,12 @@ export function SstAppShell({
       // `sst-app` scopes the patient dark palette (see globals.css): under
       // prefers-color-scheme: dark every --sst-* token inside this subtree
       // swaps to the deep near-black set. Nothing outside the shell changes.
-      className={`sst-app${forceLight ? ' sst-light' : ''} flex h-[100dvh] w-full flex-col overflow-hidden font-[family-name:var(--font-hanken)] text-(--sst-navy)`}
+      // Embedded (clinician dashboard, forceLight): fixed viewport height with an
+      // inner scroll region. Standalone patient app (phone / native WKWebView):
+      // NATURAL DOCUMENT SCROLL — the whole page grows and the browser/webview
+      // scrolls it. Inner-container (overflow-y-auto) scroll is unreliable inside
+      // a native WKWebView; document scroll always works.
+      className={`sst-app${forceLight ? ' sst-light' : ''} flex w-full flex-col font-[family-name:var(--font-hanken)] text-(--sst-navy) ${forceLight ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'}`}
       style={{ background: 'var(--sst-bg)' }}
     >
       {/* app header */}
@@ -172,7 +177,7 @@ export function SstAppShell({
 
       {/* app body — fills the viewport (no page scroll); wide on desktop so
           screens can lay out in landscape/grid instead of a phone column */}
-      <div className="mx-auto flex w-full max-w-[480px] lg:max-w-[900px] min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-3">
+      <div className={`mx-auto flex w-full max-w-[480px] lg:max-w-[900px] flex-col px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-3 ${forceLight ? 'min-h-0 flex-1 overflow-y-auto' : ''}`}>
         {children}
       </div>
     </main>
