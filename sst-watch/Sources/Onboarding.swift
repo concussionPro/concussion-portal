@@ -154,6 +154,12 @@ struct SymptomProfileView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
+                Button { flow.goBack() } label: {
+                    Label("Back", systemImage: "chevron.left").font(.caption2)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 ScreenTitle(text: "Your symptoms", subtitle: "We'll ask about these")
 
                 ForEach(Self.options, id: \.self) { symptom in
@@ -209,6 +215,12 @@ struct ReadinessView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
+                Button { flow.goBack() } label: {
+                    Label("Back", systemImage: "chevron.left").font(.caption2)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 ScreenTitle(text: "Safety check", subtitle: "Before we start")
 
                 VStack(alignment: .leading, spacing: 6) {

@@ -140,6 +140,16 @@ final class SSTFlow: ObservableObject {
     // MARK: - Navigation helpers
 
     func goHome() { step = .home }
+
+    /// Step back through the first-run funnel (watchOS has no swipe-back on a
+    /// flow that isn't a NavigationStack, so this is an explicit control).
+    func goBack() {
+        switch step {
+        case .symptomProfile: step = .onboarding
+        case .readiness: step = .symptomProfile
+        default: break
+        }
+    }
     func goProgress() { step = .progress }
     func goProgram() { step = .program }
 
