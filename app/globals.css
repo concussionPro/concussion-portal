@@ -365,11 +365,14 @@ input[type="reset"] {
 }
 
 .glass-premium {
-  background: rgba(255, 255, 255, 0.85);
+  /* Near-solid white + firmer edge + real ambient shadow so cards lift cleanly
+     off the flat field (was 0.85 white / 0.08 border / faint shadow → cards
+     melted into the background). Subtle, not heavy. */
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(13, 115, 119, 0.08);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(13, 115, 119, 0.11);
+  box-shadow: 0 1px 2px rgba(10, 15, 20, 0.04), 0 6px 20px rgba(13, 115, 119, 0.06);
   transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -433,7 +436,10 @@ input[type="reset"] {
 }
 
 .dashboard-bg {
-  background: linear-gradient(175deg, rgba(13, 115, 119, 0.04) 0%, var(--background) 40%);
+  /* Flat field (brain watermark removed). Sits a touch below pure-white so the
+     brighter, defined cards lift off it — contrast comes from the cards, not a
+     busy background. */
+  background: #eceff1;
   min-height: 100vh;
 }
 
@@ -1071,113 +1077,6 @@ input[type="reset"] {
 }
 
 
-/* ═══════════════════════════════════════════════════════════════════════════════
-   FLOATING BRAIN ACCENTS
-   Pure CSS, GPU-composited (transform + opacity only). No layout triggers.
-   Usage: <div class="floating-brains" aria-hidden="true">
-            <span class="brain-accent-1"></span>
-            <span class="brain-accent-2"></span>
-          </div>
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-@keyframes float-brain-1 {
-  0%   { transform: translateY(0px) rotate(-3deg); }
-  33%  { transform: translateY(-22px) rotate(0deg); }
-  66%  { transform: translateY(-8px) rotate(3deg); }
-  100% { transform: translateY(0px) rotate(-3deg); }
-}
-
-@keyframes float-brain-2 {
-  0%   { transform: translateY(0px) rotate(4deg); }
-  40%  { transform: translateY(-30px) rotate(0deg); }
-  80%  { transform: translateY(-12px) rotate(-4deg); }
-  100% { transform: translateY(0px) rotate(4deg); }
-}
-
-@keyframes float-brain-3 {
-  0%   { transform: translateY(0px) rotate(-6deg); }
-  50%  { transform: translateY(-18px) rotate(2deg); }
-  100% { transform: translateY(0px) rotate(-6deg); }
-}
-
-@keyframes float-brain-4 {
-  0%   { transform: translateY(0px) rotate(2deg); }
-  45%  { transform: translateY(-25px) rotate(-3deg); }
-  100% { transform: translateY(0px) rotate(2deg); }
-}
-
-.floating-brains {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.floating-brains::before,
-.floating-brains::after,
-.floating-brains .brain-accent-1,
-.floating-brains .brain-accent-2 {
-  content: '';
-  display: block;
-  position: absolute;
-  background-repeat: no-repeat;
-  background-size: contain;
-  will-change: transform, opacity;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 200' fill='none'%3E%3Cg stroke='%230d7377' stroke-linecap='round' stroke-linejoin='round'%3E%3C!-- Outer brain silhouette - lateral view with proper lobes --%3E%3Cpath d='M120 170 C108 168 72 164 52 148 C38 136 28 120 24 102 C20 84 22 66 30 50 C38 36 52 24 70 18 C86 12 100 14 112 20 C118 16 126 14 134 16 C148 18 164 26 176 38 C188 50 196 66 198 84 C200 100 196 118 186 132 C176 146 160 158 144 164 C134 168 126 170 120 170Z' stroke-width='2'/%3E%3C!-- Longitudinal fissure (top midline) --%3E%3Cpath d='M120 18 C120 28 119 42 120 56' stroke-width='1.5' opacity='0.5'/%3E%3C!-- Frontal lobe sulci --%3E%3Cpath d='M58 72 C68 64 82 60 96 62 C104 64 110 68 114 74' stroke-width='1.2' opacity='0.45'/%3E%3Cpath d='M48 96 C62 86 78 82 92 86 C102 90 108 96 112 104' stroke-width='1.2' opacity='0.45'/%3E%3Cpath d='M66 44 C76 38 90 36 102 42 C108 46 112 52 114 58' stroke-width='1.2' opacity='0.4'/%3E%3C!-- Central sulcus (Rolandic fissure) --%3E%3Cpath d='M118 28 C122 48 126 72 124 96 C122 112 120 128 118 142' stroke-width='1.8' opacity='0.35'/%3E%3C!-- Parietal lobe sulci --%3E%3Cpath d='M132 40 C144 36 158 38 168 46 C174 52 178 60 178 68' stroke-width='1.2' opacity='0.45'/%3E%3Cpath d='M128 64 C140 58 156 56 168 62 C176 68 182 78 182 88' stroke-width='1.2' opacity='0.45'/%3E%3C!-- Lateral sulcus (Sylvian fissure) --%3E%3Cpath d='M56 118 C72 108 92 104 112 108 C128 112 142 118 156 126' stroke-width='1.6' opacity='0.4'/%3E%3C!-- Temporal lobe sulci --%3E%3Cpath d='M54 136 C68 130 84 128 100 132 C112 136 122 142 130 148' stroke-width='1.2' opacity='0.4'/%3E%3C!-- Occipital detail --%3E%3Cpath d='M168 86 C178 94 184 106 184 118 C182 128 176 138 168 144' stroke-width='1.2' opacity='0.4'/%3E%3Cpath d='M156 100 C166 108 172 118 172 130' stroke-width='1.2' opacity='0.35'/%3E%3C!-- Brainstem --%3E%3Cpath d='M108 162 C106 170 104 178 106 186 C108 192 114 194 120 194 C126 194 132 192 134 186 C136 178 134 170 132 162' stroke-width='2'/%3E%3C!-- Cerebellum --%3E%3Cpath d='M92 158 C86 164 82 172 84 180 C86 186 94 190 104 190' stroke-width='1.5' opacity='0.5'/%3E%3Cpath d='M148 158 C154 164 158 172 156 180 C154 186 146 190 136 190' stroke-width='1.5' opacity='0.5'/%3E%3Cpath d='M88 172 C96 168 104 170 108 176' stroke-width='1' opacity='0.35'/%3E%3Cpath d='M152 172 C144 168 136 170 132 176' stroke-width='1' opacity='0.35'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-/* Brain 1 — large, top-left, 30s float */
-.floating-brains::before {
-  width: 420px;
-  height: 336px;
-  top: -80px;
-  left: -60px;
-  opacity: 0.04;
-  animation: float-brain-1 30s ease-in-out infinite;
-}
-
-/* Brain 2 — medium, bottom-right, 38s float */
-.floating-brains::after {
-  width: 320px;
-  height: 256px;
-  bottom: -40px;
-  right: -20px;
-  opacity: 0.035;
-  animation: float-brain-2 38s ease-in-out infinite;
-  animation-delay: -14s;
-}
-
-/* Brain 3 — small, mid-right, 25s float */
-.floating-brains .brain-accent-1 {
-  width: 200px;
-  height: 160px;
-  top: 35%;
-  right: 5%;
-  opacity: 0.03;
-  animation: float-brain-3 25s ease-in-out infinite;
-  animation-delay: -8s;
-}
-
-/* Brain 4 — medium, lower-left, 34s float */
-.floating-brains .brain-accent-2 {
-  width: 280px;
-  height: 224px;
-  bottom: 20%;
-  left: 3%;
-  opacity: 0.04;
-  animation: float-brain-4 34s ease-in-out infinite;
-  animation-delay: -22s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .floating-brains::before,
-  .floating-brains::after,
-  .floating-brains .brain-accent-1,
-  .floating-brains .brain-accent-2 {
-    animation: none !important;
-  }
-}
 
 /* ═════════════════════════════════════════════════════════════════════════
    SST Trainer — patient-app design tokens.

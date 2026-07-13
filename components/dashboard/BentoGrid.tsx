@@ -23,15 +23,20 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import { HubSeatsCard } from '@/components/dashboard/HubSeatsCard'
 import { isOwnerEmail } from '@/lib/owner'
+import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import Link from 'next/link'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
-import { COURSES } from '@/lib/ai-course/provider-catalogue'
+import { COURSES, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
 
 /* Short-course cross-sell — sourced from the catalogue (single source of truth
-   for price + CPD hours) so dashboard copy can never drift from checkout. */
+   for price + CPD hours) so dashboard copy can never drift from checkout.
+   Only surface courses that are effectively LIVE and self-serve purchasable:
+   Vagus is 'pilot' / hidden until its funnel exists, so it must not appear here
+   (it re-appears automatically the moment its status flips to live). */
 const CROSS_SELL_COURSES = ['ai-in-clinical-practice', 'vagus-nerve']
   .map(id => COURSES.find(c => c.id === id))
-  .filter((c): c is NonNullable<typeof c> => !!c)
+  .filter((c): c is NonNullable<typeof c> =>
+    !!c && c.purchasableViaCheckout && getEffectiveStatus(c) === 'live')
 
 /* ──────────────── Micro Progress Ring ──────────────── */
 function MicroRing({ value, max, size = 40 }: { value: number; max: number; size?: number }) {
@@ -129,6 +134,13 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
 
   const accessLevel = user?.accessLevel || accessLevelProp || ''
   const isPreview = accessLevel === 'preview'
+
+  // SST Trainer + Clinical Testing must stay invisible to EVERYONE but the owner
+  // until the clinical suite launches — including paid users (owner directive).
+  // Same gate the sidebar uses: 'unreleased' for all non-owners while
+  // SST_CLINICAL_LIVE is off, so the whole Clinical Tools card is hidden.
+  const clinicalAccess = useClinicalAccess()
+  const showClinicalTools = ['owner', 'course', 'sst'].includes(clinicalAccess)
 
   // SST Trainer subscription — HIDDEN until launch. Flip
   // NEXT_PUBLIC_SST_SUBSCRIPTIONS_LIVE=true AND set the Stripe price IDs to
@@ -317,24 +329,13 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
         </p>
       </Card>
 
-      {/* ── Clinical Tools suite — the in-clinic instruments (paid only).
-            Baseline at initial exam + the SST Trainer for rehab. Unpaid users
-            see it locked; the tools are inaccessible to them from the dash. ── */}
-      {isPreview ? (
-        <Card>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
-              <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
-            </div>
-            <p className="stat-label mb-0">Clinical Tools</p>
-            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">Paid</span>
-          </div>
-          <p className="text-sm text-foreground font-semibold mb-1">Baseline testing + SST Trainer</p>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Apply pre-season baselines at the initial exam and run sub-symptom-threshold rehab — included with the course.
-          </p>
-        </Card>
-      ) : (
+      {/* ── Clinical Tools suite — the in-clinic instruments (SST Trainer +
+            pre-season baseline). PRE-RELEASE: owner-only until the clinical
+            suite launches. Hidden entirely (not teased) from every other user,
+            paid or preview, so the unfinished tools are invisible on the portal
+            (owner directive). Re-appears for paid users the moment clinical
+            access resolves to 'course'/'sst' (SST_CLINICAL_LIVE=true). ── */}
+      {showClinicalTools && (
         <Card span2 className="border border-emerald-200/40">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 flex items-center justify-center">
