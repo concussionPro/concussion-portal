@@ -175,3 +175,58 @@ export function SegmentBars({
     </div>
   )
 }
+
+/**
+ * Symptom severity stepper — the tap-minimal 0–10 input used across the whole
+ * trainer (graded test, readiness, training session) so the control is
+ * identical everywhere. Two big touch targets (−/+) around a value box; far
+ * easier than a slider mid-exercise. `compact` trims the height for inline use.
+ */
+export function SymptomStepper({
+  value,
+  onChange,
+  danger = false,
+  compact = false,
+  ariaLabel,
+}: {
+  value: number
+  onChange: (v: number) => void
+  danger?: boolean
+  compact?: boolean
+  ariaLabel?: string
+}) {
+  const col = danger ? 'var(--sst-warn)' : 'var(--sst-accent)'
+  const soft = danger ? 'var(--sst-warn-soft)' : 'var(--sst-accent-soft)'
+  const h = compact ? 48 : 60
+  const dim = compact ? 'text-[24px]' : 'text-[30px]'
+  return (
+    <div className="flex items-stretch gap-2.5" role="group" aria-label={ariaLabel}>
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, value - 1))}
+        disabled={value <= 0}
+        aria-label="Lower symptom level"
+        style={{ height: h }}
+        className={`flex flex-1 items-center justify-center rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) ${dim} font-bold leading-none text-(--sst-ink) transition active:scale-[0.97] disabled:opacity-35`}
+      >
+        −
+      </button>
+      <div
+        className={`flex flex-none items-center justify-center rounded-[16px] ${dim} font-bold ${numFont}`}
+        style={{ height: h, width: compact ? 64 : 76, background: soft, color: col }}
+      >
+        {value}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(10, value + 1))}
+        disabled={value >= 10}
+        aria-label="Raise symptom level"
+        style={{ height: h }}
+        className={`flex flex-1 items-center justify-center rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) ${dim} font-bold leading-none text-(--sst-ink) transition active:scale-[0.97] disabled:opacity-35`}
+      >
+        +
+      </button>
+    </div>
+  )
+}

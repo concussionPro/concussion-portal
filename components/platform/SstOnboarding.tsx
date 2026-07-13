@@ -242,8 +242,12 @@ export default function SstOnboarding({
   const condition: Condition = 'concussion'
 
   return (
-    <section className="flex flex-col gap-4 pt-1">
-      {/* product lockup */}
+    // Phone: single vertical column (unchanged). Desktop (lg): a bounded, centred
+    // panel with a two-column body so the whole onboarding fits the landscape
+    // frame without scrolling.
+    <section className="flex flex-col gap-4 pt-1 lg:h-full lg:items-center lg:justify-center lg:pt-0">
+      <div className="flex w-full flex-col gap-4 lg:max-w-[940px] lg:rounded-[24px] lg:border lg:border-(--sst-line-strong) lg:bg-(--sst-card) lg:p-7 lg:shadow-[0_22px_55px_-26px_rgba(20,36,63,0.32)]">
+      {/* product lockup — full width */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2.5">
           <TargetIcon />
@@ -259,6 +263,9 @@ export default function SstOnboarding({
         </p>
       </div>
 
+      {/* two-column body on desktop: setup on the left, HR + consent on the right */}
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+      <div className="flex flex-col gap-4">
       {/* mode segmented control — paid surface only (public entry is clinic-code) */}
       {selfGuidedEnabled && (
         <div className="flex flex-col gap-2">
@@ -384,7 +391,9 @@ export default function SstOnboarding({
           })}
         </div>
       </div>
+      </div>
 
+      <div className="flex flex-col gap-4">
       {/* heart-rate source — verified tier first (watch broadcast / strap) */}
       <div className="flex flex-col gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
@@ -550,6 +559,8 @@ export default function SstOnboarding({
           </span>
         </label>
       </div>
+      </div>
+      </div>
 
       {/* Patient-neutral wall: the trial cap is the CLINIC's billing state and
           never the patient's problem — no trial/payment framing here. */}
@@ -603,6 +614,7 @@ export default function SstOnboarding({
         </svg>
         Baseline &amp; serial testing
       </a>
+      </div>
     </section>
   )
 }

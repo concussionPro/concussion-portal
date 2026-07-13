@@ -15,7 +15,7 @@ import {
   SESSION_HEARTBEAT_KEY,
 } from '@/lib/sst-trainer/heartbeat'
 import type { HrConnectKind } from './hr-source'
-import { PrimaryButton, SecondaryButton, SegmentBars, numFont } from './shell'
+import { PrimaryButton, SecondaryButton, SymptomStepper, numFont } from './shell'
 import { useWakeLock } from './use-wake-lock'
 
 // ── gauge geometry (ported from the design's trainGaugeEl) ──────────────────
@@ -484,10 +484,9 @@ export default function TrainingSession({
               <span className="text-xs text-(--sst-muted)">/10</span>
             </span>
           </div>
-          <SegmentBars
+          <SymptomStepper
             value={preSymptom}
             onChange={setPreSymptom}
-            variant="ramp"
             ariaLabel="Symptoms right now, 0 to 10"
           />
           <p className="m-0 text-[11px] leading-snug text-(--sst-muted)">
@@ -798,11 +797,11 @@ export default function TrainingSession({
             <span className="text-[11px] text-(--sst-muted)">/10</span>
           </span>
         </div>
-        <SegmentBars
+        <SymptomStepper
           value={currentSymptom}
           onChange={updateSymptom}
-          variant="flat"
           danger={symptomRise >= SESSION_STOP_RISE}
+          compact
           ariaLabel="Current symptom level, 0 to 10"
         />
         <div className="flex items-center justify-between">
@@ -819,10 +818,10 @@ export default function TrainingSession({
           </button>
         </div>
         {adjustBaseline && (
-          <SegmentBars
+          <SymptomStepper
             value={preSymptom}
             onChange={setPreSymptom}
-            variant="flat"
+            compact
             ariaLabel="Symptom level before you started, 0 to 10"
           />
         )}

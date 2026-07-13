@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { MAX_RESTING_TO_TEST } from '@/lib/sst-trainer/protocol'
 import { RED_FLAGS } from '@/lib/sst-trainer/symptoms'
-import { PrimaryButton, ScreenHeading, SecondaryButton, SegmentBars, numFont } from './shell'
+import { PrimaryButton, ScreenHeading, SecondaryButton, SymptomStepper } from './shell'
 
 export interface ReadinessResult {
   restingSymptomScore: number
@@ -84,25 +84,15 @@ export default function Readiness({
       {!blocked && (
         <div className="flex flex-col gap-[18px]">
           <div className="flex flex-col gap-2.5">
-            <div className="flex items-baseline justify-between">
-              <span className="text-[12.5px] font-semibold leading-tight text-(--sst-ink-2)">
-                Symptoms at rest, right now
-              </span>
-              <span className={`text-[18px] text-(--sst-accent) ${numFont}`}>
-                {restingScore}
-                <span className="text-xs text-(--sst-muted)">/10</span>
-              </span>
-            </div>
-            <SegmentBars
+            <span className="text-[12.5px] font-semibold leading-tight text-(--sst-ink-2)">
+              Symptoms at rest, right now{' '}
+              <span className="font-normal text-(--sst-muted)">· 0 none → 10 worst</span>
+            </span>
+            <SymptomStepper
               value={restingScore}
               onChange={setRestingScore}
-              variant="ramp"
               ariaLabel="Resting symptom score, 0 to 10"
             />
-            <div className="flex justify-between text-[10px] font-medium text-(--sst-muted)">
-              <span>0 · none</span>
-              <span>10 · severe</span>
-            </div>
           </div>
 
           {/* Resting symptoms >=8: today is not a test day. A provocation test on

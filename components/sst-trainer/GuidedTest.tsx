@@ -21,7 +21,7 @@ import {
   saveHeartbeat,
   TEST_HEARTBEAT_KEY,
 } from '@/lib/sst-trainer/heartbeat'
-import { PrimaryButton, SecondaryButton, numFont } from './shell'
+import { PrimaryButton, SecondaryButton, SymptomStepper, numFont } from './shell'
 import { useWakeLock } from './use-wake-lock'
 
 // BCTT max test duration (modified Balke ~15 incline stages + speed ramp; the
@@ -669,28 +669,8 @@ export default function GuidedTest({
         <span className="text-xs font-semibold text-(--sst-ink-2)">
           Symptom level <span className="font-normal text-(--sst-muted)">· 0 none → 10 worst</span>
         </span>
-        <div className="flex max-w-[360px] items-stretch gap-2.5">
-          <button
-            type="button"
-            onClick={() => setSymptomScore(Math.max(0, symptomScore - 1))}
-            disabled={symptomScore <= 0}
-            aria-label="Lower symptom level"
-            className="flex h-[60px] flex-1 items-center justify-center rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) text-[30px] font-bold leading-none text-(--sst-ink) transition active:scale-[0.97] disabled:opacity-35"
-          >
-            −
-          </button>
-          <div className={`flex h-[60px] w-[76px] flex-none items-center justify-center rounded-[16px] bg-(--sst-accent-soft) text-[30px] font-bold text-(--sst-accent) ${numFont}`}>
-            {symptomScore}
-          </div>
-          <button
-            type="button"
-            onClick={() => setSymptomScore(Math.min(10, symptomScore + 1))}
-            disabled={symptomScore >= 10}
-            aria-label="Raise symptom level"
-            className="flex h-[60px] flex-1 items-center justify-center rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) text-[30px] font-bold leading-none text-(--sst-ink) transition active:scale-[0.97] disabled:opacity-35"
-          >
-            +
-          </button>
+        <div className="max-w-[360px]">
+          <SymptomStepper value={symptomScore} onChange={setSymptomScore} ariaLabel="Symptom level" />
         </div>
       </div>
 
