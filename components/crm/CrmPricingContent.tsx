@@ -75,7 +75,7 @@ const buildFaqs = (accredited: boolean): FaqItem[] => [
   },
 ]
 
-export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
+export default function CrmPricingContent() {
   // ESSA accreditation is a FEATURE FLAG (currently false). Every ESSA claim on
   // this page branches on it so the copy reads correctly in BOTH states:
   //   flag FALSE → "built to ESSA CPD standards (accreditation pending)"
@@ -118,7 +118,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
 
   return (
     <div className="min-h-screen bg-background">
-      {!hideNav && <SiteNav />}
+      <SiteNav />
 
       <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-12 md:pb-20">
 
