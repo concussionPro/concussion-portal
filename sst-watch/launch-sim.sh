@@ -46,8 +46,12 @@ xcrun simctl boot "$SIM" 2>/dev/null
 open -a Simulator
 sleep 14
 # Clean launch: wipe any prior (incl. demo-seeded) state so it starts fresh at
-# consent → clinic-code entry.
+# consent → clinic-code entry. NOTE: `simctl uninstall` does NOT clear watchOS-sim
+# UserDefaults (a sim quirk), so we ALSO delete the app's persisted defaults —
+# without this the app reloads stale demo state (e.g. "Welcome back, Alex").
+xcrun simctl terminate "$SIM" au.com.concussioneducation.sst.watchkitapp 2>/dev/null
 xcrun simctl uninstall "$SIM" au.com.concussioneducation.sst.watchkitapp 2>/dev/null
+xcrun simctl spawn "$SIM" defaults delete au.com.concussioneducation.sst.watchkitapp 2>/dev/null
 xcrun simctl install "$SIM" "$APP"
 xcrun simctl launch "$SIM" au.com.concussioneducation.sst.watchkitapp
 echo "LAUNCHED — clean start: Your-data consent → clinic-code entry. Demo code: DEMO00"
