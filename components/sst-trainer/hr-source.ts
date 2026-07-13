@@ -56,9 +56,9 @@ export interface HrSource {
  *    still count for safety — they just never advance the band.
  */
 export const HR_SOURCES: HrSource[] = [
-  { id: 'bluetooth-hr', name: 'Watch or heart-rate sensor (Bluetooth)', method: 'Use the watch you already own — turn on its heart-rate broadcast and pair in one tap. Chest straps work too.', tag: 'Live HR', statusLabel: 'Bluetooth HR', connect: 'bluetooth', live: true, glyph: '◍', tint: '#d2463a' },
-  { id: 'manual', name: 'Type it in yourself', method: 'Read each number from any monitor — also for Apple Watch and Fitbit', tag: 'Manual', statusLabel: 'Manual entry', connect: 'manual', live: false, glyph: '✎', tint: '#3c7681' },
-  { id: 'phone-camera', name: 'Phone camera — resting spot-check only', method: 'Checks your resting pulse before and after — not live session tracking', tag: 'Spot-check', statusLabel: 'Camera (resting)', connect: 'camera', live: true, camera: true, glyph: '◎', tint: '#5d7174' },
+  { id: 'bluetooth-hr', name: 'Watch or heart-rate sensor', method: 'Turn on your watch or strap broadcast, pair in one tap.', tag: 'Live HR', statusLabel: 'Bluetooth HR', connect: 'bluetooth', live: true, glyph: '◍', tint: '#d2463a' },
+  { id: 'manual', name: 'Type it in yourself', method: 'Type each reading — Apple Watch & Fitbit too.', tag: 'Manual', statusLabel: 'Manual entry', connect: 'manual', live: false, glyph: '✎', tint: '#3c7681' },
+  { id: 'phone-camera', name: 'Phone camera — resting only', method: 'Resting pulse before and after — not live tracking.', tag: 'Spot-check', statusLabel: 'Camera (resting)', connect: 'camera', live: true, camera: true, glyph: '◎', tint: '#5d7174' },
 ]
 
 // Default to the manual clinician path: it always works with no hardware, so the

@@ -242,13 +242,9 @@ export default function SstOnboarding({
   const condition: Condition = 'concussion'
 
   return (
-    // Phone: single vertical column (unchanged). Desktop (lg): a bounded, centred
-    // panel with a two-column body so the whole onboarding fits the landscape
-    // frame without scrolling.
-    <section className="flex flex-col gap-4 pt-1 lg:h-full lg:items-center lg:justify-center lg:pt-0">
-      <div className="flex w-full flex-col gap-4 lg:max-w-[940px] lg:rounded-[24px] lg:border lg:border-(--sst-line-strong) lg:bg-(--sst-card) lg:p-7 lg:shadow-[0_22px_55px_-26px_rgba(20,36,63,0.32)]">
-      {/* product lockup — full width */}
-      <div className="flex flex-col gap-1.5">
+    <section className="flex flex-col gap-3.5 pt-1">
+      {/* product lockup */}
+      <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2.5">
           <TargetIcon />
           <h1 className="m-0 text-[21px] font-extrabold leading-[1.05] tracking-[-0.02em] text-(--sst-navy)">
@@ -257,15 +253,11 @@ export default function SstOnboarding({
             Threshold Trainer
           </h1>
         </div>
-        <p className="m-0 text-[13px] leading-snug text-(--sst-muted)">
-          Symptom-guided exercise rehab. We find the heart rate your symptoms allow, then build a
-          training plan that grows as you recover — overseen by your clinician.
+        <p className="m-0 text-[12.5px] leading-snug text-(--sst-muted)">
+          Symptom-guided exercise rehab, overseen by your clinician.
         </p>
       </div>
 
-      {/* two-column body on desktop: setup on the left, HR + consent on the right */}
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
-      <div className="flex flex-col gap-4">
       {/* mode segmented control — paid surface only (public entry is clinic-code) */}
       {selfGuidedEnabled && (
         <div className="flex flex-col gap-2">
@@ -391,18 +383,12 @@ export default function SstOnboarding({
           })}
         </div>
       </div>
-      </div>
 
-      <div className="flex flex-col gap-4">
       {/* heart-rate source — verified tier first (watch broadcast / strap) */}
       <div className="flex flex-col gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
           Heart-rate source
         </span>
-        <p className="m-0 -mt-0.5 text-[11px] leading-snug text-(--sst-faint)">
-          Use the watch you already own — turn on its heart-rate broadcast mode and pair in one tap.
-          Chest straps work too. No watch on hand? You can type each reading in.
-        </p>
 
         <div className="flex flex-col gap-2">
           {HR_SOURCES.map((s) => {
@@ -500,10 +486,10 @@ export default function SstOnboarding({
         ) : (
           <span className="text-[10.5px] leading-snug text-(--sst-ghost)">
             {device.connect === 'camera'
-              ? 'Good for a resting pulse check before and after a session (cover the rear lens with a fingertip). During exercise, use your watch broadcast or type your heart rate in.'
+              ? 'Resting pulse before and after only — use a watch or type it during exercise.'
               : device.connect === 'bluetooth'
-                ? 'Your watch or strap streams live heart rate into every session. The browser will ask you to pick your device.'
-                : 'You’ll type the heart rate in each minute of the test and during sessions — every screen works this way too.'}
+                ? 'Streams live heart rate into every session.'
+                : 'You’ll type the heart rate each minute.'}
           </span>
         )}
         {native ? (
@@ -538,10 +524,9 @@ export default function SstOnboarding({
           is the opt-in for CEA's de-identified service-improvement use, with an
           honourable opt-out (ask us to delete). "Research" is deliberately NOT
           claimed here — that requires separate HREC-gated consent. */}
-      <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-3">
-        <p className="m-0 mb-2 text-[11.5px] leading-snug text-(--sst-ink-3)">
-          Your name and results go to <strong>your own clinician</strong> so they can review and guide
-          your care.
+      <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-2.5">
+        <p className="m-0 mb-2 text-[11px] leading-snug text-(--sst-ink-3)">
+          Your name and results go to <strong>your own clinician</strong> to guide your care.
         </p>
         <label className="flex items-start gap-2.5 cursor-pointer">
           <input
@@ -550,16 +535,11 @@ export default function SstOnboarding({
             onChange={(e) => setDataConsent(e.target.checked)}
             className="mt-0.5 h-4 w-4 flex-none accent-(--sst-accent-ink)"
           />
-          <span className="text-[11.5px] leading-snug text-(--sst-ink-3)">
-            {/* {' '} is load-bearing: the Turbopack prod build eats a plain
-                space after an inline element (rendered "removedto") */}
-            I also agree CEA may keep my session data, with my name{' '}<strong>removed</strong>, to check and
-            improve how the service works. You can ask us to delete it any time. This is optional —
-            declining doesn&rsquo;t affect your care.
+          <span className="text-[11px] leading-snug text-(--sst-ink-3)">
+            I agree CEA may keep my{' '}<strong>de-identified</strong> session data to improve the service —
+            optional, and deletable any time.
           </span>
         </label>
-      </div>
-      </div>
       </div>
 
       {/* Patient-neutral wall: the trial cap is the CLINIC's billing state and
@@ -614,7 +594,6 @@ export default function SstOnboarding({
         </svg>
         Baseline &amp; serial testing
       </a>
-      </div>
     </section>
   )
 }
