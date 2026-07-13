@@ -182,7 +182,13 @@ function hexStringToDataView(hex: string): DataView {
  */
 async function connectNativeBleHr(plugin: NativeBlePlugin): Promise<LiveHrConnection> {
   await plugin.initialize().catch(() => {})
-  const device = await plugin.requestDevice({ services: [HR_SERVICE_UUID] })
+  // Do NOT filter the scan by the HR service UUID. Many watches in broadcast
+  // mode (Garmin, Coros, Suunto, Amazfit…) advertise a heart-rate stream but do
+  // NOT list 0x180D in their advertising packet, so a `services` filter shows an
+  // empty picker and the watch "won't show up". Scan ALL devices (same reason
+  // the Web Bluetooth path uses acceptAllDevices) and declare the HR service as
+  // optional so we can still discover + subscribe to it once connected.
+  const device = await plugin.requestDevice({ optionalServices: [HR_SERVICE_UUID] })
   await plugin.connect({ deviceId: device.deviceId })
 
   const listeners = new Set<(bpm: number) => void>()
