@@ -82,12 +82,17 @@ struct GradedTestView: View {
                 .foregroundStyle(workout.bpm == nil ? .orange : .secondary)
                 .frame(maxWidth: .infinity)
 
+                // Always enabled: it must be a clean exit even with no HR / no
+                // stages (e.g. bailing early, or the sim with no sensor).
+                // stopForExhaustion() maps an empty test to `invalid` → the
+                // Result screen → Home, so the user is never trapped. Previously
+                // `.disabled(workout.bpm == nil && stages.isEmpty)` left the only
+                // enabled exit as "Warning sign — stop" (a false red-flag lock).
                 Button(role: .destructive) { stopForExhaustion() } label: {
-                    Label("Stop — exhausted", systemImage: "stop.circle")
+                    Label("Stop — end test", systemImage: "stop.circle")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(workout.bpm == nil && stages.isEmpty)
 
                 // Red-flag stop: severe/warning symptoms end the test as a
                 // red-flag termination — NEVER as exhaustion (which would sync
