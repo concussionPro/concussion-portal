@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { SstClinicCard } from '@/components/clinical/SstClinicCard'
+import { ClinicProfileCard } from '@/components/clinical/ClinicProfileCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { Lock, ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -74,6 +76,17 @@ function Shell() {
   const { user, isLoading } = useSession()
   const access = useClinicalAccess()
   const isPreview = !user || user.accessLevel === 'preview'
+  // The clinic code namespaces the clinic profile (unique per clinic).
+  const [clinicCode, setClinicCode] = useState<string | null>(null)
+  useEffect(() => {
+    void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const c = d?.clinic?.code
+        setClinicCode(typeof c === 'string' && c.trim() ? c : null)
+      })
+      .catch(() => setClinicCode(null))
+  }, [])
 
   if (isLoading || access === 'loading') {
     return (
@@ -193,6 +206,10 @@ function Shell() {
               visual={<BaselineLaptopVisual />}
               variant="light"
             />
+          </div>
+
+          <div className="mb-5">
+            <ClinicProfileCard clinicCode={clinicCode} />
           </div>
 
           <SstClinicCard />

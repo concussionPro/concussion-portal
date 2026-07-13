@@ -1,6 +1,6 @@
 'use client'
 
-import { FillableDoc, Fld } from './FillableDoc'
+import { FillableDoc, Fld, SignOffStamp } from './FillableDoc'
 import type { DischargeTemplate } from '@/data/hub-program-content'
 import { Lock, ArrowRight } from 'lucide-react'
 
@@ -23,6 +23,7 @@ export function ClinicalToolkitDoc({
   unlockHref = '/pricing',
   defaultValues,
   storageKey = 'clinical-toolkit',
+  requireSignoff = false,
 }: {
   templates: DischargeTemplate[]
   principles: Principles
@@ -37,6 +38,9 @@ export function ClinicalToolkitDoc({
   unlockHref?: string
   /** Pre-populated field values for prospect-branded previews. */
   defaultValues?: Record<string, string>
+  /** Gate export behind a clinician review + sign-off (compliance). Off in
+   *  prospect-preview mode (nothing exportable there anyway). */
+  requireSignoff?: boolean
 }) {
   const isPreviewMode = Array.isArray(previewedSlugs)
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
@@ -46,7 +50,7 @@ export function ClinicalToolkitDoc({
   // Default to 0 sections in preview unless an explicit limit is given.
   const effectiveSectionLimit = isPreviewMode ? (previewSectionLimit ?? 0) : previewSectionLimit
   return (
-    <FillableDoc storageKey={storageKey} defaultValues={defaultValues} previewMode={isPreviewMode}>
+    <FillableDoc storageKey={storageKey} defaultValues={defaultValues} previewMode={isPreviewMode} requireSignoff={requireSignoff && !isPreviewMode}>
       <Cover isPreviewMode={isPreviewMode} />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
@@ -400,7 +404,9 @@ function ParsedText({ text }: { text: string }) {
 
 function SignOffBlock() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.4fr_0.8fr] gap-6 mt-8 print:break-inside-avoid">
+    <div className="mt-8 print:break-inside-avoid">
+      <SignOffStamp />
+      <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.4fr_0.8fr] gap-6 mt-3">
       <div>
         <div className="h-9 border-b-2 border-foreground" />
         <p className="text-[9px] uppercase tracking-wider text-muted-foreground mt-1.5">
@@ -418,6 +424,7 @@ function SignOffBlock() {
         <p className="text-[9px] uppercase tracking-wider text-muted-foreground mt-1.5">
           Date
         </p>
+      </div>
       </div>
     </div>
   )

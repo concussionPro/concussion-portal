@@ -581,6 +581,185 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
       'Designer note: NDIA audits are sensitive to AI-template phrasing. The {presenting_concerns}, {functional_impact}, {goals}, and {recommended_supports} fields MUST be populated with participant-specific clinical content — do not leave generic.',
     ],
   },
+  {
+    slug: 'acc884-client-summary',
+    title: 'ACC884 Client Summary Report — Concussion Service',
+    audience: 'ACC + the client\'s primary-care provider (NZ ACC Concussion Service)',
+    purpose: 'Supply the measured end-of-service outcome content for the NZ ACC Concussion Service Client Summary Report (ACC884), for transcription onto ACC\'s current fillable form at service exit.',
+    estimatedReadMinutes: 6,
+    mergeFields: ['patient_name', 'dob', 'date_of_injury', 'date_of_assessment', 'clinic_name', 'clinician_name', 'ahpra_number', 'provider_number', 'clinic_address', 'clinic_phone', 'date', 'sst_initial_hrt', 'sst_latest_hrt', 'sst_band', 'sst_sessions', 'sst_duration', 'sst_recovery_statement'],
+    sections: [
+      {
+        heading: 'ACC884 Client Summary Report — Concussion Service',
+        body: [
+          'Client: {patient_name} (DOB {dob})',
+          'Date of injury: {date_of_injury} · Service commenced: {date_of_assessment}',
+          'Provider: {clinician_name} ({clinic_name}), Provider number {provider_number}',
+          'Report date: {date}',
+        ],
+      },
+      {
+        heading: 'Service provided',
+        body: [
+          'The client received clinician-supervised sub-symptom-threshold aerobic exercise (SSTAE) delivered against a measured heart-rate threshold (HRt) — the heart rate at which concussion symptoms are provoked on graded exertion testing (Buffalo Concussion Treadmill/Bike Test protocol).',
+          'A sub-symptom aerobic training band was prescribed below the measured HRt, and the client completed home training sessions on a connected heart-rate sensor, with the exercising heart rate logged against the prescribed band each session.',
+          'Sessions were reviewed by the treating clinician, who interpreted the trajectory and re-tested the threshold at graded review points.',
+        ],
+      },
+      {
+        heading: 'Measured outcomes',
+        body: [
+          'Initial measured HRt: {sst_initial_hrt}. Most recent measured HRt: {sst_latest_hrt}.',
+          'Prescribed sub-symptom training band: {sst_band}.',
+          'Clinician-supervised and home training sessions completed: {sst_sessions}, over {sst_duration}.',
+          '{sst_recovery_statement}',
+          'These are construct-level exercise-tolerance measures (the heart rate at which exertion provokes symptoms, and its change over the service). They describe exercise tolerance only and are not a diagnosis or a measure of treatment efficacy.',
+        ],
+      },
+      {
+        heading: 'Outcome measures reviewed during delivery',
+        body: [
+          'Each graded exertion re-test performed during the service is an outcome-review point: the measured HRt was recorded and compared with the prior value, and the training band was adjusted accordingly.',
+          'Review points across this episode: {sst_sessions} training sessions bracketed by re-tests over {sst_duration}, moving the measured HRt from {sst_initial_hrt} to {sst_latest_hrt}.',
+          'Progression was driven by the measured exercise-tolerance response, not by elapsed time alone.',
+        ],
+      },
+      {
+        heading: 'Goals',
+        body: [
+          'Restore the client\'s tolerance of aerobic exertion to a level consistent with their pre-injury daily, occupational and recreational activity, by progressively raising the heart rate at which exertion provokes symptoms.',
+          'Progress the client through the sub-symptom training band toward unrestricted exertion, guided by the measured HRt at each review.',
+          'Client-specific goals recorded at intake are documented in the clinical record and transcribed to the ACC884 goals section.',
+        ],
+      },
+      {
+        heading: 'Risk assessment',
+        body: [
+          'Graded exertion testing and SSTAE were delivered within a stop-rule framework: exertion was ceased on symptom provocation, and the session was paced below the measured threshold.',
+          'Where a session provoked symptoms or a flare occurred, the prescribed load was reduced (reduce, do not rest) and the threshold re-established at the next review, rather than the client being stood down from activity.',
+          'No adverse events outside the expected symptom-provocation response are recorded for this episode unless noted in the clinical record. Red-flag or deterioration presentations would have been referred for medical review.',
+        ],
+      },
+      {
+        heading: 'Outcome at service exit',
+        body: [
+          'At exit, the client\'s measured exercise tolerance had moved from an HRt of {sst_initial_hrt} to {sst_latest_hrt} over {sst_duration}.',
+          '{sst_recovery_statement}',
+          'The clinician\'s summary of the client\'s status at exit — including whether the exercise-tolerance goal was met and any residual limitation — is transcribed to the ACC884 outcome section per the client\'s presentation on the exit review date.',
+        ],
+      },
+      {
+        heading: 'Services still needed',
+        body: [
+          'Any recommendation for ongoing or further intervention beyond this service is recorded here for ACC\'s consideration.',
+          'Any further ACC-funded treatment is requested separately via an ACC32 (Request for Prior Approval of Treatment) — it is not authorised by this summary. This report records outcomes at exit; it does not itself request or approve further funding.',
+          'Where onward primary-care or specialist input is indicated, referral is facilitated separately by the treating clinician.',
+        ],
+      },
+      {
+        heading: 'Reporting clinician',
+        body: [
+          '{clinician_name}',
+          'AHPRA Registration: {ahpra_number} · Provider number: {provider_number}',
+          '{clinic_name} · {clinic_address} · {clinic_phone}',
+          'Date: {date}',
+        ],
+      },
+    ],
+    complianceFooter: [
+      'This document supplies the measured content only. Transcribe it onto ACC\'s current fillable ACC884 (Concussion Service Client Summary Report) form before submission — the ACC form layout is authoritative, and this template does not reproduce or substitute for it.',
+      'No ACC field numbers or codes are asserted here; use the field structure on ACC\'s current form. Do not infer codes from this template.',
+      'The measured outcomes are construct-level exercise-tolerance facts only (the heart rate at which exertion provokes symptoms, and its change over the service). This document makes no diagnosis and no claim of treatment efficacy.',
+      'Prepared with reasonable clinical care and skill. {clinician_name}, AHPRA Registration {ahpra_number}, reviews, edits and signs this content before it is transcribed and submitted, and retains professional responsibility for the clinical judgement recorded herein.',
+      'Client consent obtained for preparation of this summary and disclosure to ACC and the client\'s primary-care provider. Consent documented in the clinical record.',
+    ],
+    footnotes: [
+      'Designer note: this is the SST-measured content pack for the ACC884, NOT a facsimile of the form. Render it as a transcription source; the clinician copies fields onto ACC\'s current fillable ACC884. Never invent ACC field numbers or codes.',
+      'Designer note: {sst_*} fields auto-fill from the episode. The clinician must still populate client-specific goals and the exit-status narrative from the clinical record before signing.',
+    ],
+  },
+  {
+    slug: 'medicolegal-record',
+    title: 'Medicolegal Record — Concussion Management Audit Trail',
+    audience: 'Legal / insurer / clinician\'s own record',
+    purpose: 'Provide a defensible clinical audit record of the measured exercise-tolerance data and the clinician-directed decisions in a concussion management episode, for use if a management or return-to-play decision is later questioned.',
+    estimatedReadMinutes: 6,
+    mergeFields: ['patient_name', 'dob', 'date_of_injury', 'date_of_assessment', 'clinic_name', 'clinician_name', 'ahpra_number', 'provider_number', 'clinic_address', 'clinic_phone', 'date', 'sst_initial_hrt', 'sst_latest_hrt', 'sst_band', 'sst_sessions', 'sst_duration', 'sst_recovery_statement'],
+    sections: [
+      {
+        heading: 'Medicolegal record — concussion management audit trail',
+        body: [
+          'Patient: {patient_name} (DOB {dob})',
+          'Date of injury: {date_of_injury} · Episode commenced: {date_of_assessment}',
+          'Treating clinician: {clinician_name}, AHPRA Registration {ahpra_number}',
+          '{clinic_name} · {clinic_address} · {clinic_phone}',
+          'Record compiled: {date}',
+        ],
+      },
+      {
+        heading: 'Episode summary',
+        body: [
+          '{patient_name} was managed at {clinic_name} for a concussion sustained on {date_of_injury}, with the episode commencing on {date_of_assessment}.',
+          'Management included graded exertion testing to establish a measured heart-rate threshold (HRt) and clinician-supervised sub-symptom-threshold aerobic exercise (SSTAE) prescribed below that threshold.',
+          'Clinician-supervised and home training sessions completed: {sst_sessions}, over {sst_duration}. Full contemporaneous detail is held in the clinical record; this record summarises the measured data and the decisions taken.',
+        ],
+      },
+      {
+        heading: 'Measured heart-rate-threshold trajectory',
+        body: [
+          'Initial measured HRt: {sst_initial_hrt}. Most recent measured HRt: {sst_latest_hrt}, over {sst_duration}.',
+          'Prescribed sub-symptom training band: {sst_band}.',
+          '{sst_recovery_statement}',
+          'These are construct-level exercise-tolerance measures — the heart rate at which exertion provoked symptoms and its change over the episode. They describe exercise tolerance only; they are not a diagnosis and not a measure of treatment efficacy.',
+        ],
+      },
+      {
+        heading: 'Clinician-directed decisions',
+        body: [
+          'The following decisions were made by the treating clinician and are the treating clinician\'s alone. The tool presented the measured data and paced the protocol; it did not decide.',
+          'Threshold interpretation: the clinician interpreted each measured HRt in the context of the patient\'s presentation and history.',
+          'Band approval: the clinician set and approved the sub-symptom training band ({sst_band}) before it was used.',
+          'Progression: the clinician authorised each progression, driven by the measured exercise-tolerance response rather than elapsed time alone.',
+          'Clearance or extend: the clinician determined at each review whether to progress, hold, reduce, or extend management — clearance for return to activity, or a decision to extend, was the clinician\'s judgement recorded against the presentation on that date.',
+        ],
+      },
+      {
+        heading: 'Data provenance',
+        body: [
+          'Verified live-sensor readings and manually entered values are never conflated in this record: each measured HRt and each session heart rate is tagged in the underlying data as either a verified live-sensor reading or a manual clinician entry, and the two are reported distinctly.',
+          'Session count: {sst_sessions} over {sst_duration}. Where a value was entered manually rather than captured live, it is identifiable as such in the source data and is not presented as a sensor-verified measurement.',
+          'This provenance discipline is auditable: the origin of every figure in the trajectory can be traced to its source record.',
+        ],
+      },
+      {
+        heading: 'Stop-rule / safety events',
+        body: [
+          'Management operated under a defined stop rule: exertion was ceased on symptom provocation and paced below the measured threshold; on a flare, load was reduced (reduce, do not rest) and the threshold re-established at the next review.',
+          'Any stop-rule activation, symptom flare, or safety event during the episode is recorded here with its date and the clinician\'s response, cross-referenced to the clinical record.',
+          'Red-flag or deterioration presentations, had they occurred, would have triggered referral for medical review; any such event is documented in the clinical record.',
+        ],
+      },
+      {
+        heading: 'Compiling clinician',
+        body: [
+          '{clinician_name}',
+          'AHPRA Registration: {ahpra_number} · Provider number: {provider_number}',
+          '{clinic_name}',
+          'Date: {date}',
+        ],
+      },
+    ],
+    complianceFooter: [
+      'This is a clinician-directed tool. It presents the measured data and paces the protocol; it does not diagnose, treat, or clear the patient. Every clinical decision recorded herein — threshold interpretation, band approval, progression, and clearance-or-extend — is the treating clinician\'s.',
+      'The measured figures are construct-level exercise-tolerance facts only (the heart rate at which exertion provokes symptoms, and its change over the episode). No diagnosis and no claim of treatment efficacy is made or implied.',
+      'Verified live-sensor readings and manual entries are recorded distinctly and are never conflated. The provenance of every figure is auditable against the source record.',
+      'Prepared with reasonable clinical care and skill, consistent with AHPRA record-keeping standards. {clinician_name}, AHPRA Registration {ahpra_number}, retains professional responsibility for the clinical judgement recorded herein. This summary does not replace the full contemporaneous clinical record.',
+    ],
+    footnotes: [
+      'Designer note: this record is a defensible audit trail, not patient-facing. Populate stop-rule / safety events and any manual-vs-live-sensor distinctions from the source data before issue — do not leave the provenance section generic.',
+      'Designer note: keep the claim discipline exact — data + paces protocol, clinician owns every decision. Do not soften "does not diagnose/treat/clear" or introduce any efficacy language.',
+    ],
+  },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────

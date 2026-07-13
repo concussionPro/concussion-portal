@@ -22,6 +22,7 @@ import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
 import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
+import { loadClinicProfile, type ClinicProfile } from '@/components/clinical/ClinicProfileCard'
 import { DISCHARGE_TEMPLATES, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
 import { Lock, ArrowRight, FileText, ChevronLeft } from 'lucide-react'
 
@@ -55,6 +56,9 @@ function Shell() {
   // measured SST episode. Read off the URL to avoid a Suspense boundary.
   const [patientLabel, setPatientLabel] = useState<string | null>(null)
   const [sstFields, setSstFields] = useState<Record<string, string>>({})
+  // Clinic master profile — entered once on the Clinical Testing home, loaded
+  // here (keyed per clinic) to fill clinic/practitioner fields across every doc.
+  const [profile, setProfile] = useState<ClinicProfile>(() => loadClinicProfile())
 
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
@@ -79,6 +83,12 @@ function Shell() {
       .then((d) => { if (d?.mergeFields) setSstFields(d.mergeFields) })
       .catch(() => {})
   }, [patientLabel, clinic])
+
+  // Load the clinic's saved profile (entered on the Clinical Testing home),
+  // namespaced per clinic code, once the code resolves.
+  useEffect(() => {
+    if (clinic?.code) setProfile(loadClinicProfile(clinic.code))
+  }, [clinic])
 
   if (isLoading || access === 'loading') {
     return <Frame><p className="text-sm text-muted-foreground">Loading…</p></Frame>
@@ -116,6 +126,18 @@ function Shell() {
           <DocumentsPaywall clinicName={clinic?.clinicName ?? null} />
         ) : (
           <>
+            {profile.clinic_name || profile.ahpra_number ? (
+              <p className="mb-4 text-[12px] text-slate-500">
+                Letterhead &amp; provider details fill from your{' '}
+                <Link href="/clinical-testing" className="font-semibold text-teal-700 underline">clinic details</Link>.
+              </p>
+            ) : (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-[13px] text-amber-800">
+                Set your clinic details once on the{' '}
+                <Link href="/clinical-testing" className="font-semibold underline">Clinical Testing home</Link>{' '}
+                — they then fill every report here.
+              </div>
+            )}
             {patientLabel && (
               <div className="mb-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-2.5 text-[13px] text-teal-800">
                 Pre-filled from <strong>{patientLabel}</strong>&rsquo;s SST episode
@@ -124,16 +146,17 @@ function Shell() {
             )}
             <SstReportCallout clinic={clinic} />
             <ClinicalToolkitDoc
-              // Remount when the patient changes OR the async SST fields arrive,
-              // so the autofill takes effect (buyer mode doesn't re-sync in place).
-              key={`${patientLabel ?? 'none'}:${Object.keys(sstFields).length > 0 ? 'sst' : 'base'}`}
+              // Remount when the patient changes, the async SST fields arrive, OR
+              // the clinic profile changes, so the autofill takes effect (buyer
+              // mode doesn't re-sync in place).
+              key={`${patientLabel ?? 'none'}:${Object.keys(sstFields).length > 0 ? 'sst' : 'base'}:${Object.values(profile).join('|')}`}
               storageKey={`sst-docs:${patientLabel ?? 'clinic'}`}
               templates={DISCHARGE_TEMPLATES}
               principles={DOCUMENTATION_PRINCIPLES}
               unlockHref="/clinical-testing/subscribe"
+              requireSignoff
               defaultValues={{
-                clinic_name: clinic?.clinicName ?? '',
-                clinician_name: user?.name ?? '',
+                ...profile,
                 date_of_assessment: today(),
                 date: today(),
                 review_date: '',
