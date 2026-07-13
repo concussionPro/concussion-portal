@@ -2,9 +2,9 @@ import SwiftUI
 import Combine
 
 // The graded exertion test — the measurement instrument. 60-second stages,
-// live HR big and central, a per-stage symptom score (0–10). The first screen
-// is deliberately scroll-free: HR + symptom picker + log, nothing else — the
-// stop controls live below the fold.
+// live HR big and central, a per-stage symptom score (0–10) that SEEDS from the
+// resting score (it does not reset to 0). The minute logs ITSELF at 0:00 from
+// the live HR — no manual logging. The stop controls live below the fold.
 //
 // Crossing the ≥3-pt symptom rise ENDS THE TEST AUTOMATICALLY (that stage's HR
 // is the HRt by definition — asking for a confirming tap mid-symptom-spike is
@@ -67,12 +67,17 @@ struct GradedTestView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                PrimaryButton(
-                    title: remaining == 0 ? "Log minute \(minute)" : "Log at 0:00",
-                    systemImage: "square.and.pencil",
-                    tint: .blue
-                ) { logStage() }
-                .disabled(workout.bpm == nil || remaining > 0)
+                // The minute logs ITSELF at 0:00 from the live HR — no manual
+                // logging. This just shows what's happening so it's visible.
+                Label(
+                    workout.bpm == nil
+                        ? "Waiting for heart rate…"
+                        : (remaining == 0 ? "Logging minute \(minute)…" : "Logs automatically at 0:00"),
+                    systemImage: workout.bpm == nil ? "heart.slash" : "checkmark.circle"
+                )
+                .font(.caption2)
+                .foregroundStyle(workout.bpm == nil ? .orange : .secondary)
+                .frame(maxWidth: .infinity)
 
                 Button(role: .destructive) { stopForExhaustion() } label: {
                     Label("Stop — exhausted", systemImage: "stop.circle")
@@ -93,12 +98,23 @@ struct GradedTestView: View {
             }
             .padding(.horizontal, 4)
         }
-        .onAppear { stageStartedAt = Date() }
+        .onAppear {
+            stageStartedAt = Date()
+            // Seed the symptom picker from the resting score the patient entered
+            // at readiness — the base carries in, it does NOT reset to 0.
+            symptom = flow.restingSymptom
+        }
         .onReceive(ticker) { _ in
             let elapsed = Int(Date().timeIntervalSince(stageStartedAt))
             let next = max(0, stageSeconds - elapsed)
             if next == 0, remaining > 0 { Haptics.play(.stop) }   // stage end
             remaining = next
+            // Auto-log the completed minute the instant it ends AND a live HR is
+            // present — no manual tap. If HR isn't ready at 0:00, the next tick
+            // logs it. logStage() advances the stage, so this fires once per stage.
+            if next == 0, workout.bpm != nil {
+                logStage()
+            }
         }
         // Threshold crossed → auto-log the provoking stage and end the test.
         // The tap that moved the score IS the report; no confirming tap needed.
