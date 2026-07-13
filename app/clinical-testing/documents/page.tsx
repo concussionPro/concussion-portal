@@ -165,10 +165,12 @@ function SstReportCallout({ clinic }: { clinic: Clinic | null }) {
           <FileText className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="m-0 text-[15px] font-bold text-foreground">SST episode report (auto-generated)</h2>
+          <h2 className="m-0 text-[15px] font-bold text-foreground">SST episode report — generate at discharge</h2>
           <p className="m-0 mt-1 text-[13px] text-muted-foreground">
-            Built from each patient&rsquo;s measured-threshold trajectory, verified sessions and flare
-            history — GP/referrer episode summary or clearance referral. Open it per patient from your{' '}
+            The dashboard compiles each patient&rsquo;s data as it arrives. When you discharge them — or their
+            measured threshold has recovered — you generate the episode report on demand: the trajectory,
+            verified sessions, flare history and a clearance-or-extend recommendation, compiled to a
+            review-and-sign PDF. Generate it per patient from your{' '}
             <Link href="/clinical-testing/patients" className="font-semibold text-teal-700 underline">patient list</Link>.
           </p>
         </div>
