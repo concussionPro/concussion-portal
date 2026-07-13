@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/contexts/SessionContext'
+import { getAttribution } from '@/lib/analytics'
 import { CONFIG, isEarlyBirdForLocation, upgradePriceFor } from '@/lib/config'
 import { CheckCircle2, ArrowRight, Loader2, MapPin, AlertTriangle } from 'lucide-react'
 
@@ -66,6 +67,7 @@ function UpgradeContent() {
         body: JSON.stringify({
           courseType: 'workshop-upgrade',
           location: selectedLocation,
+          attribution: getAttribution(),
         }),
       })
       const data = await res.json()

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Lock, ArrowRight, Award, BookOpen, ShieldCheck, Star, Loader2 } from 'lucide-react'
 import { CONFIG, workshopPriceFor } from '@/lib/config'
-import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
@@ -41,6 +41,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
         body: JSON.stringify({
           courseType,
           ...(courseType === 'full-course' ? { location: city } : {}),
+          attribution: getAttribution(),
         }),
       })
       const data = await res.json().catch(() => ({}))

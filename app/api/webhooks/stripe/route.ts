@@ -37,22 +37,33 @@ function redact(email: string | null | undefined): string {
 // Persists user_email in its own column so JOIN-ing analytics_events to email_events
 // (for per-sequence revenue attribution) and to users (for high-intent retargeting)
 // is a single index lookup instead of a JSONB scan.
+/** Parse a JSON metadata string; fall back to the raw string on failure. */
+function safeJson(s: string): unknown {
+  try { return JSON.parse(s) } catch { return s }
+}
+
 async function logAnalyticsEvent(
   eventType: string,
   eventData: Record<string, unknown>,
   userEmail?: string | null,
+  // Client attribution carried through Stripe metadata. When present, the event
+  // uses the CLIENT session id (so a purchase JOINs to its browsing page views)
+  // and the first referrer — instead of a detached `server_…` id + null referrer.
+  attribution?: { sessionId?: string | null; referrer?: string | null },
 ) {
   try {
     const normalisedEmail = userEmail ? userEmail.toLowerCase().trim() : null
+    const sessionId = attribution?.sessionId?.trim() || 'server_' + Date.now()
+    const referrer = attribution?.referrer?.trim() || null
     await sql`
       INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country, user_email)
       VALUES (
         ${eventType},
         ${JSON.stringify(eventData)}::jsonb,
-        ${'server_' + Date.now()},
+        ${sessionId},
         ${Date.now()},
         ${'stripe-webhook'},
-        ${null},
+        ${referrer},
         ${'/api/webhooks/stripe'},
         ${null},
         ${'server'},
@@ -367,6 +378,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // PII consideration: this is an internal analytics table behind admin auth,
     // not a public surface. Redact only at log/console level (line above already
     // does that via console.log redact()).
+    const md = session.metadata ?? {}
     await logAnalyticsEvent(
       'purchase_complete',
       {
@@ -375,8 +387,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         currency,
         transactionId: session.id,
         accessLevel,
+        // Attribution stamped so the sale is self-describing, not inferred:
+        firstReferrer: md.attr_first_ref || null,
+        referrer: md.attr_ref || null,
+        firstUtm: md.attr_first_utm ? safeJson(md.attr_first_utm) : null,
+        utmSource: md.utm_source || null,
+        utmMedium: md.utm_medium || null,
+        utmCampaign: md.utm_campaign || null,
       },
       customerEmail,
+      // Client session id + first referrer → the purchase row JOINs to the
+      // browsing session and carries where they actually came from.
+      { sessionId: md.attr_session || null, referrer: md.attr_first_ref || md.attr_ref || null },
     )
   } catch (err) {
     console.error('Failed to log purchase analytics:', err)

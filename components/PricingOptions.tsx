@@ -14,7 +14,7 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 import { CONFIG, afterpayInstalment, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
-import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { HomepageAiCourseCard } from './HomepageAiCourseCard'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
@@ -315,6 +315,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
           ...(promoCode ? { promoCode } : {}),
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
+          attribution: getAttribution(),
         }),
       })
 

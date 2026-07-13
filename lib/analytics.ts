@@ -113,6 +113,32 @@ function getFirstUtm(): Record<string, string> {
 }
 
 /**
+ * Attribution bundle for high-intent conversions. Sent with the checkout request
+ * → carried through Stripe session metadata → the webhook stamps it onto the
+ * server-side `purchase_complete` event. Without this, a purchase event has a
+ * `server_…` session id and a null referrer, so attribution is only inferable by
+ * time window (fragile). With it, a purchase links to its full browsing session
+ * (session id joins to every page view), plus the first referrer + first UTM.
+ * Values are truncated to fit Stripe's 500-char metadata limit.
+ */
+export function getAttribution(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  const out: Record<string, string> = {}
+  try {
+    const sid = sessionStorage.getItem('cea_session_id')
+    if (sid) out.sessionId = sid
+    const fr = getFirstReferrer()
+    if (fr) out.firstReferrer = fr.slice(0, 480)
+    if (typeof document !== 'undefined' && document.referrer) out.referrer = document.referrer.slice(0, 480)
+    const fu = getFirstUtm()
+    if (Object.keys(fu).length) out.firstUtm = JSON.stringify(fu).slice(0, 480)
+  } catch {
+    /* best-effort */
+  }
+  return out
+}
+
+/**
  * Identity-stitching helpers. We persist the user's email in localStorage
  * once any high-intent surface knows it (logged-in users on /learning,
  * email-link click ?email=..., free-course signup confirmation, etc.).

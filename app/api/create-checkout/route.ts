@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    const { courseType, location, email, preferredCity, promoCode, utm, clinicianCount, clinicName } = parsed.data
+    const { courseType, location, email, preferredCity, promoCode, utm, attribution, clinicianCount, clinicName } = parsed.data
 
     // Defense in depth: schema covers enum already, but keep the guard so a schema
     // drift doesn't accidentally open up new course types without a code review.
@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
       cancelUrl,
       promoCode: typeof promoCode === 'string' ? promoCode : undefined,
       utm: utm && typeof utm === 'object' ? utm : undefined,
+      attribution: attribution && typeof attribution === 'object' ? attribution : undefined,
       bundleDiscountAud,
       clinicianCount: courseType === 'clinic-hub-pack' ? clinicianCount : undefined,
       clinicName: courseType === 'clinic-hub-pack' ? clinicName : undefined,

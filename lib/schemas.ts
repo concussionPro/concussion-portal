@@ -48,6 +48,9 @@ export const createCheckoutSchema = z
     preferredCity: locationSchema.optional(),
     promoCode: z.string().max(50).optional(),
     utm: utmSchema,
+    // Client attribution (session id, first referrer, first UTM) → Stripe metadata
+    // → the webhook stamps it onto the purchase event. Bounded to keep it small.
+    attribution: z.record(z.string().max(40), z.string().max(500)).optional(),
     // Hub Pack only: buyer-declared clinician headcount → the access key's seat cap.
     clinicianCount: z.number().int().min(1).max(12).optional(),
     clinicName: z.string().max(120).optional(),

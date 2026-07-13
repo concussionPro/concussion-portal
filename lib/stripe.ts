@@ -116,6 +116,7 @@ export async function createCourseCheckoutSession({
   cancelUrl,
   promoCode,
   utm,
+  attribution,
   bundleDiscountAud = 0,
   clinicianCount,
   clinicName,
@@ -131,6 +132,9 @@ export async function createCourseCheckoutSession({
   cancelUrl: string
   promoCode?: string
   utm?: Record<string, string>
+  /** Client attribution (session id, first referrer, first UTM) → the webhook
+   *  stamps it onto the purchase event so the sale links to its browsing session. */
+  attribution?: Record<string, string>
   /** AUD dollars (not cents) of discount to apply for Reference+Toolkit bundle owners. */
   bundleDiscountAud?: number
 }) {
@@ -305,6 +309,13 @@ export async function createCourseCheckoutSession({
       ...(utm?.utm_medium ? { utm_medium: utm.utm_medium } : {}),
       ...(utm?.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
       ...(utm?.gclid ? { gclid: utm.gclid } : {}),
+      // Attribution → the webhook stamps these onto the purchase_complete event
+      // so the sale links to its browsing session (session id joins page views)
+      // and carries the first referrer / first UTM. (Stripe metadata: ≤500 chars.)
+      ...(attribution?.sessionId ? { attr_session: attribution.sessionId.slice(0, 200) } : {}),
+      ...(attribution?.firstReferrer ? { attr_first_ref: attribution.firstReferrer.slice(0, 480) } : {}),
+      ...(attribution?.referrer ? { attr_ref: attribution.referrer.slice(0, 480) } : {}),
+      ...(attribution?.firstUtm ? { attr_first_utm: attribution.firstUtm.slice(0, 480) } : {}),
     },
     // Pass email to PaymentIntent so payment_failed handler can send recovery emails
     payment_intent_data: {

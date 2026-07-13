@@ -28,7 +28,7 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
-import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,7 +126,7 @@ function InternationalPricingContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ courseType: 'international-online', ...(sessionEmail ? { email: sessionEmail } : {}), ...(promoCode ? { promoCode } : {}), ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}) }),
+        body: JSON.stringify({ courseType: 'international-online', ...(sessionEmail ? { email: sessionEmail } : {}), ...(promoCode ? { promoCode } : {}), ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}), attribution: getAttribution() }),
       })
 
       if (!res.ok) {

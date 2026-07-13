@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { CONFIG } from '@/lib/config'
-import { trackEvent } from '@/lib/analytics'
+import { trackEvent, getAttribution } from '@/lib/analytics'
 import { Users, Check, Loader2, ArrowRight, Plane, ShieldCheck } from 'lucide-react'
 
 /**
@@ -35,6 +35,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           courseType: 'clinic-hub-pack',
           clinicianCount: count,
           utm: { utm_source: 'portal', utm_medium: 'hub_pack_card', utm_campaign: slug },
+          attribution: getAttribution(),
         }),
       })
       const data = await res.json().catch(() => ({}))
