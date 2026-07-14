@@ -57,19 +57,24 @@ function HrPill({
   connected,
   bpm,
   hrStatus,
+  onReconnect,
 }: {
   deviceName: string
   connected: boolean
   bpm: number | null
   hrStatus: HrStatus
+  /** when provided, the pill is tappable to (re)connect a device — shown on every
+   *  page where HR is monitored so a dropped watch/strap can always be re-paired,
+   *  and 'Manual entry' becomes a "link a device" action. */
+  onReconnect?: () => void
 }) {
   const streaming = hrStatus === 'streaming' && typeof bpm === 'number' && Number.isFinite(bpm)
   const connecting = hrStatus === 'connecting' || (connected && hrStatus !== 'streaming')
 
   const dot = streaming ? 'var(--sst-good)' : connecting ? 'var(--sst-warn-dim)' : 'var(--sst-ghost-2)'
 
-  return (
-    <span className="flex items-center gap-1.5 rounded-full bg-(--sst-card) px-2.5 py-1 shadow-[0_1px_2px_rgba(20,36,63,0.08)]">
+  const inner = (
+    <>
       <span
         className={`inline-block h-[7px] w-[7px] flex-none rounded-full ${streaming ? 'animate-pulse' : ''}`}
         style={{ background: dot }}
@@ -80,11 +85,40 @@ function HrPill({
           <span className="text-[9px] font-semibold leading-none text-(--sst-ghost)">BPM</span>
         </span>
       ) : (
-        <span className="max-w-[110px] truncate text-[11px] font-semibold leading-none text-(--sst-muted)">
+        <span className="max-w-[130px] truncate text-[11px] font-semibold leading-none text-(--sst-muted)">
           {connecting ? 'Connecting…' : deviceName}
         </span>
       )}
-    </span>
+      {/* tappable affordance: when not streaming and reconnect is available, show a
+          bluetooth glyph so it clearly reads as "tap to connect/reconnect" */}
+      {onReconnect && !streaming && (
+        <BluetoothGlyph />
+      )}
+    </>
+  )
+
+  const base = 'flex items-center gap-1.5 rounded-full bg-(--sst-card) px-2.5 py-1 shadow-[0_1px_2px_rgba(20,36,63,0.08)]'
+
+  if (onReconnect) {
+    return (
+      <button
+        type="button"
+        onClick={onReconnect}
+        aria-label={streaming ? 'Reconnect heart-rate device' : 'Connect a heart-rate device'}
+        className={`${base} border border-(--sst-hairline) transition active:scale-[0.97]`}
+      >
+        {inner}
+      </button>
+    )
+  }
+  return <span className={base}>{inner}</span>
+}
+
+function BluetoothGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3 w-3 flex-none text-(--sst-accent)" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m7 7 10 10-5 5V2l5 5L7 17" />
+    </svg>
   )
 }
 
@@ -97,6 +131,7 @@ export function SstAppShell({
   showProgress = true,
   bpm = null,
   hrStatus = 'manual',
+  onReconnect,
   forceLight = false,
   children,
 }: {
@@ -118,6 +153,9 @@ export function SstAppShell({
   bpm?: number | null
   /** feed state driving the live/connecting/manual indicator */
   hrStatus?: HrStatus
+  /** when set, the header HR pill is tappable to (re)connect a device — pass on
+   *  every screen where HR is monitored so a dropped device can always be re-paired */
+  onReconnect?: () => void
   /** force the light palette regardless of prefers-color-scheme (clinician desktop) */
   forceLight?: boolean
   children: ReactNode
@@ -150,7 +188,7 @@ export function SstAppShell({
             </span>
             <span className="flex items-center gap-2.5">
               <HeaderClock />
-              <HrPill deviceName={deviceName} connected={connected} bpm={bpm} hrStatus={hrStatus} />
+              <HrPill deviceName={deviceName} connected={connected} bpm={bpm} hrStatus={hrStatus} onReconnect={onReconnect} />
             </span>
           </div>
 

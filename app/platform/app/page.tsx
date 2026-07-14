@@ -22,7 +22,8 @@ import {
   type WelcomeSelection,
 } from '@/lib/sst-trainer/store'
 import { STEP_ORDER, PrimaryButton, SecondaryButton, type Step } from '@/components/sst-trainer/shell'
-import { DEFAULT_HR_SOURCE, useLiveHr, type HrSource } from '@/components/sst-trainer/hr-source'
+import { DEFAULT_HR_SOURCE, HR_SOURCES, hrSourceById, useLiveHr, type HrSource } from '@/components/sst-trainer/hr-source'
+import SstConnectWizard from '@/components/platform/SstConnectWizard'
 import type { LiveHrConnection } from '@/lib/sst-trainer/hr-live'
 import SymptomSelect from '@/components/sst-trainer/SymptomSelect'
 import Readiness, { type ReadinessResult } from '@/components/sst-trainer/Readiness'
@@ -335,6 +336,11 @@ export default function PlatformAppPage({
     setDevice(d)
   }
 
+  // Header reconnect — the HR pill on every monitored screen opens this so a
+  // dropped watch/strap can be re-paired mid-session (and 'Manual entry' becomes
+  // a "link a device" action). Reuses the same connect flow as onboarding.
+  const [reconnectOpen, setReconnectOpen] = useState(false)
+
   // ── sync helper: identity + consent ride on every clinical event ────────────
   const syncEvent = (input: {
     sessionType: 'threshold' | 'training'
@@ -484,11 +490,29 @@ export default function PlatformAppPage({
       showProgress={prescription === null && step !== 'locked' && step !== 'checkin'}
       bpm={feed.bpm}
       hrStatus={feed.status}
+      onReconnect={() => setReconnectOpen(true)}
       forceLight={!!embeddedClinicCode}
     >
       {/* Register the service worker (app-shell cache → installed app opens
           offline to the last state; localStorage carries the data). */}
       <SstPwaRegister />
+
+      {/* Reconnect wizard — opened from the header HR pill on any monitored
+          screen. On connect, swaps in the live BLE source; 'Type it in' keeps
+          the manual source. */}
+      <SstConnectWizard
+        open={reconnectOpen}
+        onClose={() => setReconnectOpen(false)}
+        onConnected={(conn) => {
+          handlePair(hrSourceById('bluetooth-hr') ?? HR_SOURCES[0], conn)
+          setReconnectOpen(false)
+        }}
+        onManual={() => {
+          const manual = HR_SOURCES.find((s) => s.connect === 'manual')
+          if (manual) handlePair(manual, null)
+          setReconnectOpen(false)
+        }}
+      />
 
       {/* start-over confirm — clearing a prescription is never one accidental tap */}
       {confirmStartOver && (
