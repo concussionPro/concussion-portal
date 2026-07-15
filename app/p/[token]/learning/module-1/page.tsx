@@ -28,6 +28,7 @@ import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
+import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
 
 // 7 sections + 4 quizzes ≈ 10 minutes — sweet spot per Zac. Cuts at
 // "TBI Classification: Severity, Imaging & Secondary Injury" and locks
@@ -298,9 +299,10 @@ function SectionBlock({
         </div>
         <h2 className="text-lg font-bold text-foreground">{title}</h2>
       </div>
-      <div className="prose prose-sm max-w-none">
-        {content.map((line, i) => <ContentLine key={i} line={line} />)}
-      </div>
+      {/* Use the REAL course renderer so the trial matches the paid course
+          (styled callouts, highlights, infographics, emoji→icon) — not the old
+          degraded text-block ContentLine parser. */}
+      <DynamicContentRenderer content={content} sectionIndex={sectionNumber} />
     </article>
   )
 }
