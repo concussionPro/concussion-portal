@@ -307,42 +307,6 @@ function SectionBlock({
   )
 }
 
-function ContentLine({ line }: { line: string }) {
-  const calloutMatch = line.match(/^\[CALLOUT:\s*(\w+)\s*\|\s*([\s\S]+)\]$/)
-  if (calloutMatch) {
-    return (
-      <div className="rounded-lg border-l-2 border-l-accent bg-accent/5 px-4 py-3 my-3">
-        <p className="text-[13px] text-foreground leading-relaxed">{calloutMatch[2]}</p>
-      </div>
-    )
-  }
-  if (line.startsWith('### ')) return <h3 className="text-base font-bold text-foreground mt-4 mb-2">{line.slice(4)}</h3>
-  if (line.startsWith('## ')) return <h3 className="text-base font-bold text-foreground mt-4 mb-2">{line.slice(3)}</h3>
-  if (/^\s*-\s+/.test(line)) {
-    return (
-      <li className="text-[13px] text-foreground leading-relaxed list-disc ml-5 mb-1">
-        {line.replace(/^\s*-\s+/, '')}
-      </li>
-    )
-  }
-  if (line.startsWith('⚠️')) {
-    return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 my-3">
-        <p className="text-[13px] text-amber-900 leading-relaxed">{line}</p>
-      </div>
-    )
-  }
-  const labelMatch = line.match(/^([A-Z][A-Z\s&-]+):\s+(.+)$/)
-  if (labelMatch) {
-    return (
-      <p className="text-[13px] text-foreground leading-relaxed my-2">
-        <span className="font-bold text-accent">{labelMatch[1]}:</span> {labelMatch[2]}
-      </p>
-    )
-  }
-  return <p className="text-[13px] text-foreground leading-relaxed my-2">{line}</p>
-}
-
 function EndOfTrialPitch({
   slug, kq, clinicShortName, clinicRegion, localClubCount, isCrm = false,
 }: {
