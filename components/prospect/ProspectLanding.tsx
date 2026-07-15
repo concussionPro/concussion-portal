@@ -253,7 +253,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                   On-site Practical Skills · your team trained on your own cases
                 </h3>
                 <p className="text-sm text-white/85 leading-relaxed">
-                  Full practical day in-clinic · <span className="font-bold text-white">from A$8,000</span>. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
+                  Full practical day in-clinic · <span className="font-bold text-white">from A$8,000 + GST</span>. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-300 text-slate-900 px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
@@ -491,7 +491,7 @@ function PricingTiers({ clinic, pricing }: { clinic: ProspectClinic; pricing: Pr
         <div className="flex items-baseline gap-1.5">
           <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-300">On-site cohort</span>
           <span className="text-base font-bold text-emerald-300">From A${Math.min(...pricing.cohortTiers.map((t) => t.perClinician))}</span>
-          <span className="text-[10px] text-white/80">/ clinician</span>
+          <span className="text-[10px] text-white/80">/ clinician + GST</span>
         </div>
         <span className="text-[11px] text-white/90 sm:ml-auto">
           Save up to A${pricing.publicRetailRate - Math.min(...pricing.cohortTiers.map((t) => t.perClinician))}/clinician · whole team trains on your own cases
@@ -674,12 +674,12 @@ function CohortCard({
       </div>
       <div className="flex items-baseline justify-between gap-2 pb-1.5 border-b border-accent/8">
         <span className="text-[11px] text-muted-foreground">Per clinician</span>
-        <span className="text-sm font-bold text-foreground">A${tier.perClinician.toLocaleString()}</span>
+        <span className="text-sm font-bold text-foreground">A${tier.perClinician.toLocaleString()} <span className="text-[10px] font-semibold text-muted-foreground">+ GST</span></span>
       </div>
       <div className="flex items-baseline justify-between gap-2 pt-1.5">
-        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Total (GST incl.)</span>
+        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Total</span>
         <span className={`text-base font-bold ${tier.recommended ? 'text-accent' : 'text-foreground'}`}>
-          A${tier.total.toLocaleString()}
+          A${tier.total.toLocaleString()} <span className="text-[10px] font-semibold text-muted-foreground">+ GST</span>
         </span>
       </div>
       <p className="text-[10px] text-emerald-700 font-semibold mt-1.5">
