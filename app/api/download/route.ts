@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       'Return-to-School Plan Template (DOCX).docx',
       'Employer _ School Letter Template.docx',
       'Email Template Pack.docx',
-      '"What to Expect After a Concussion".pdf',
+      'What to Expect After a Concussion.pdf',
       'RehabFlow.pdf',
       'RehabFlow.png',
       'CCM_Complete_Reference_2026.pdf',

@@ -34,7 +34,7 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
         title: 'Concussion Myth-Buster Sheet',
         description: 'Common misconceptions debunked with evidence-based corrections',
         fileSize: 'PDF',
-        downloadUrl: '/api/download?file=Concussion Myth-Buster Sheet .pdf',
+        downloadUrl: '/api/download?file=Concussion Myth-Buster Sheet.pdf',
         icon: 'checklist'
       }
     ],
@@ -66,7 +66,7 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
         title: '"What to Expect After a Concussion"',
         description: 'Patient education handout — plain-language guidance for the first weeks',
         fileSize: 'PDF',
-        downloadUrl: '/api/download?file="What to Expect After a Concussion" .pdf',
+        downloadUrl: '/api/download?file=What to Expect After a Concussion.pdf',
         icon: 'handout'
       }
     ],
