@@ -125,7 +125,7 @@ const toolkitResources: ToolkitResource[] = [
     fileSize: '83 KB',
     category: 'education',
     isFree: false,
-    fileName: '"What to Expect After a Concussion".pdf'
+    fileName: 'What to Expect After a Concussion.pdf'
   },
   {
     id: 'rehab-flow',
