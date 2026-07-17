@@ -137,7 +137,9 @@ export default function FoundingClinicPage() {
               >
                 ✓
               </span>
-              <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">Your clinic is set up.</h2>
+              <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+                {code ? 'Your clinic is set up.' : "You're on the founding list."}
+              </h2>
               {code && (
                 <div className="rounded-xl border-2 border-[#0d9488] bg-[#f0fdfa] px-5 py-3 text-center">
                   <p className="m-0 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Your clinic code</p>
@@ -145,15 +147,19 @@ export default function FoundingClinicPage() {
                 </div>
               )}
               <p className="m-0 max-w-[380px] text-[14px] font-normal text-slate-600" style={{ lineHeight: 1.55 }}>
-                {feedback} We&rsquo;ve emailed your one-click portal login and your patient app + baseline links.
+                {code
+                  ? `${feedback} We’ve emailed your one-click portal login and your patient app + baseline links.`
+                  : feedback}
               </p>
-              <Link
-                href="/login"
-                className="mt-2 rounded-[12px] px-[22px] py-[13px] text-[14px] font-bold text-white transition-opacity hover:opacity-90"
-                style={{ background: PLATFORM.navy }}
-              >
-                Log in to your portal
-              </Link>
+              {code && (
+                <Link
+                  href="/login"
+                  className="mt-2 rounded-[12px] px-[22px] py-[13px] text-[14px] font-bold text-white transition-opacity hover:opacity-90"
+                  style={{ background: PLATFORM.navy }}
+                >
+                  Log in to your portal
+                </Link>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-[15px]" noValidate>

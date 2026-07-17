@@ -189,26 +189,48 @@ async function connectNativeBleHr(plugin: NativeBlePlugin): Promise<LiveHrConnec
   // the Web Bluetooth path uses acceptAllDevices) and declare the HR service as
   // optional so we can still discover + subscribe to it once connected.
   const device = await plugin.requestDevice({ optionalServices: [HR_SERVICE_UUID] })
-  await plugin.connect({ deviceId: device.deviceId })
 
   const listeners = new Set<(bpm: number) => void>()
   // Event-name format is fixed by the plugin: `notification|<deviceId>|<service>|<characteristic>`
   // where service/characteristic are the LOWERCASED full 128-bit UUIDs (our
-  // constants already are). The listener must be registered BEFORE
-  // startNotifications so no early frame is missed.
+  // constants already are).
   const notifyEvent = `notification|${device.deviceId}|${HR_SERVICE_UUID}|${HR_MEASUREMENT_UUID}`
-  const handle = await plugin.addListener(notifyEvent, (result) => {
-    if (!result?.value) return
-    const bpm = parseHeartRate(hexStringToDataView(result.value))
-    if (bpm != null) listeners.forEach((cb) => cb(bpm))
-  })
-  await plugin.startNotifications({
-    deviceId: device.deviceId,
-    service: HR_SERVICE_UUID,
-    characteristic: HR_MEASUREMENT_UUID,
-  })
 
   let stopped = false
+  let notifyHandle: NativeBleListener | null = null
+  let disconnectHandle: NativeBleListener | null = null
+
+  // (Re)connect + subscribe. The notification listener is registered ONCE,
+  // before startNotifications, so no early frame is missed; on a reconnect the
+  // same listener (keyed on the stable deviceId) is reused and only the GATT
+  // connect + startNotifications are re-run.
+  const wireUp = async () => {
+    if (stopped) return
+    await plugin.connect({ deviceId: device.deviceId })
+    if (!notifyHandle) {
+      notifyHandle = await plugin.addListener(notifyEvent, (result) => {
+        if (!result?.value) return
+        const bpm = parseHeartRate(hexStringToDataView(result.value))
+        if (bpm != null) listeners.forEach((cb) => cb(bpm))
+      })
+    }
+    await plugin.startNotifications({
+      deviceId: device.deviceId,
+      service: HR_SERVICE_UUID,
+      characteristic: HR_MEASUREMENT_UUID,
+    })
+  }
+
+  // Auto-reconnect on an unexpected drop (strap moved, brief range loss) —
+  // mirrors the Web Bluetooth `gattserverdisconnected` path. Without this, a
+  // strap slip MID-EXERCISE silently ends the bpm stream and forces a full
+  // manual re-pair. The plugin emits `disconnected|<deviceId>` on every drop.
+  disconnectHandle = await plugin.addListener(`disconnected|${device.deviceId}`, () => {
+    if (!stopped) wireUp().catch(() => {})
+  })
+
+  await wireUp()
+
   return {
     label: device.name || 'Bluetooth HR',
     subscribe(cb) {
@@ -219,7 +241,8 @@ async function connectNativeBleHr(plugin: NativeBlePlugin): Promise<LiveHrConnec
       if (stopped) return
       stopped = true
       listeners.clear()
-      handle.remove().catch(() => {})
+      notifyHandle?.remove().catch(() => {})
+      disconnectHandle?.remove().catch(() => {})
       plugin
         .stopNotifications({ deviceId: device.deviceId, service: HR_SERVICE_UUID, characteristic: HR_MEASUREMENT_UUID })
         .catch(() => {})

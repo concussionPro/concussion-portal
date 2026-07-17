@@ -34,6 +34,9 @@ const MAX_STAGES = 20
  * NEXT_PUBLIC_SST_STAGE_SECONDS (e.g. 3); production is always 60.
  */
 const STAGE_SECONDS = (() => {
+  // Inert in production — the override is a test-only accelerator, so a stray
+  // prod env var can never shorten the clinical Buffalo stage below 60s.
+  if (process.env.NODE_ENV === 'production') return 60
   const raw = Number(process.env.NEXT_PUBLIC_SST_STAGE_SECONDS)
   return Number.isFinite(raw) && raw >= 1 && raw <= 60 ? raw : 60
 })()

@@ -41,7 +41,13 @@ import SstConnectWizard from '@/components/platform/SstConnectWizard'
  *  - web iOS Safari (no Web Bluetooth): honestly points to our app or manual.
  */
 
-const SELF_GUIDED_FORCED = process.env.NEXT_PUBLIC_SST_SELF_GUIDED === 'true'
+// DEV-ONLY preview toggle. In production, self-guided is governed SOLELY by the
+// route-level `allowSelfGuided` prop (false on the public clinic-code surface,
+// true on the paid-gated /platform/app). Honouring this env var in prod would
+// force-open self-guided on the PUBLIC surface and defeat the clinic-code gate —
+// so it is inert unless NODE_ENV !== 'production'.
+const SELF_GUIDED_FORCED =
+  process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_SST_SELF_GUIDED === 'true'
 
 const GOALS: { id: string; label: string }[] = [
   { id: 'sport', label: 'Sport' },

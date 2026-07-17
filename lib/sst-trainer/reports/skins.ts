@@ -107,10 +107,16 @@ function bandText(rx: Prescription | null): string {
   return rx ? `${rx.lowerBpm}–${rx.upperBpm} bpm` : '—'
 }
 
-/** Verified-session share — the core signal-quality metric on every report. */
+/** Verified-session share — the core signal-quality metric on every report.
+ *  STRICT `=== true` (bluetooth live-verified only), matching the DB-backed GP
+ *  reports and the report footer's promise that "manual or camera entries are
+ *  never presented as verified". Note this is deliberately stricter than the
+ *  PROGRESSION rule in protocol.ts (`!== false`, which grandfathers legacy
+ *  pre-verification logs as advance evidence) — a payer/ACC report must not
+ *  claim a legacy/unknown session as sensor-verified. */
 function verifiedShare(sessions: PersistedSession[]): { verified: number; total: number } {
   const total = sessions.length
-  const verified = sessions.filter((s) => s.hrVerified !== false).length
+  const verified = sessions.filter((s) => s.hrVerified === true).length
   return { verified, total }
 }
 

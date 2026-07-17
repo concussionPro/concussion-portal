@@ -235,6 +235,35 @@ export async function ensureSstClinicsTable(): Promise<void> {
   `
 }
 
+/**
+ * Ensure the clinical-session ingest table exists. Mirrors
+ * scripts/sql/sst-clinic-sessions.sql so a FRESH environment self-heals rather
+ * than 500-ing on the first patient session write (the ingest route inserts
+ * without its own ensure). Called at clinic creation — negligible overhead,
+ * and any clinic that can exist already has its session table.
+ */
+export async function ensureSstClinicSessionsTable(): Promise<void> {
+  await sql`
+    CREATE TABLE IF NOT EXISTS sst_clinic_sessions (
+      id             TEXT PRIMARY KEY,
+      clinic_code    TEXT NOT NULL,
+      clinic_name    TEXT,
+      patient_label  TEXT,
+      session_type   TEXT NOT NULL,
+      hrt_bpm        INTEGER,
+      band_low       INTEGER,
+      band_high      INTEGER,
+      condition      TEXT,
+      payload        JSONB NOT NULL,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_sst_clinic_sessions_code
+      ON sst_clinic_sessions (upper(clinic_code), created_at DESC)
+  `
+}
+
 export interface SstClinic {
   code: string
   clinicName: string
@@ -308,6 +337,7 @@ export async function createSstClinic(args: {
   // clinic, orphaning the first welcome email's key. Fail provisioning
   // loudly instead — the caller retries and idempotency holds.
   await ensureSstClinicsTable()
+  await ensureSstClinicSessionsTable()
   await sql`
     INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, created_at)
     VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${createdAt})
