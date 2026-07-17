@@ -346,7 +346,7 @@ export function rtpClearance(input: ReportInput): ReportContent {
         fields: [
           // VERIFY: stand-down minimums follow the current sport's protocol
           // (e.g. AFL/Concussion-in-Sport-Group graduated RTS) — clinician-set.
-          { label: 'Minimum stand-down met', value: 'TODO — clinician-confirmed' },
+          { label: 'Minimum stand-down met', value: 'Clinician to confirm' },
           {
             label: 'Objective exercise tolerance',
             value: recovered ? 'Recovered on graded re-test' : 'Still symptom-limited',
