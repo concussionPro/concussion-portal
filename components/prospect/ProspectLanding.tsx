@@ -223,6 +223,21 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             </div>
           )}
 
+          {/* Local hub — the positioning/ROI payoff ("own concussion in your
+              area"). Moved ABOVE pricing (Zac 2026-07-17): value and the reason-
+              to-act must land before the number, not after it. Research: redirect
+              price → value; demonstrate the return before the ask. */}
+          <div data-track-section="local-hub">
+            <LocalHubSection clinic={clinic} />
+          </div>
+
+          {/* Risk reversal — the guarantee de-risks the decision, so it belongs
+              BEFORE the price (removes the objection before it forms), not buried
+              beneath it. */}
+          <div data-track-section="risk-reversal">
+            <RiskReversal />
+          </div>
+
           {/* On-site offer — the high-ticket team option. Placed AFTER the trial
               + content (clinical + admin toolkit) + context sections (Zac
               2026-06-30): prospects sample the product before the on-site pitch,
@@ -283,6 +298,15 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             )}
           </div>
 
+          {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site
+              only). Welded DIRECTLY beneath pricing (Zac 2026-07-17): the close
+              must sit where intent peaks — at the number — not three sections
+              below it. The old layout pushed this to the very bottom, so the
+              action was separated from the decision by risk-reversal + local-hub. */}
+          <div id="next-step" data-track-section="next-step" className="scroll-mt-20 mt-4">
+            <NextStepCTA clinic={clinic} />
+          </div>
+
           {/* All-options ladder — surfaces the in-person upgrade + on-site day to
               smaller clinics too (the on-site HERO stays gated to 8+, but a Hub-
               tier clinic asking for in-person, e.g. Instinct, must be able to see
@@ -302,21 +326,6 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               <IndividualInterestCard slug={clinic.slug} />
             </div>
           )}
-
-          {/* Risk reversal */}
-          <div data-track-section="risk-reversal">
-            <RiskReversal />
-          </div>
-
-          {/* Local hub */}
-          <div data-track-section="local-hub">
-            <LocalHubSection clinic={clinic} />
-          </div>
-
-          {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site only) */}
-          <div id="next-step" data-track-section="next-step" className="scroll-mt-20">
-            <NextStepCTA clinic={clinic} />
-          </div>
 
           {/* Footer */}
           <div data-track-section="footer">
