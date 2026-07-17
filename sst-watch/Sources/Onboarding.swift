@@ -202,7 +202,8 @@ struct ReadinessView: View {
         "Weakness or numbness",
         "Slurred speech",
         "Seizure",
-        "Increasing confusion"
+        "Increasing confusion",
+        "Loss of consciousness"
     ]
 
     @State private var flagged: Set<String> = []

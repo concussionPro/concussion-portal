@@ -200,6 +200,7 @@ struct ProgressScreen: View {
             case .advance: return ("Progressing", "arrow.up.circle.fill", .green)
             case .hold:    return ("Holding steady", "equal.circle.fill", .blue)
             case .regress: return ("Band eased", "arrow.down.circle.fill", .orange)
+            case .rest:    return ("Rest day", "bed.double.circle.fill", .orange)
             case .retest:  return ("Re-test due", "arrow.clockwise.circle.fill", .blue)
             }
         }()

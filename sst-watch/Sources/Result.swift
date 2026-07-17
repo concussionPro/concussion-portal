@@ -71,6 +71,16 @@ struct ResultView: View {
                 Text("Keep your heart rate in this band. It stays safely under your threshold.")
                     .font(.caption2).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+
+                // Prolonged-recovery prognostic flag (Haider 2019) — surfaced when
+                // the measured HRt is below the validated cutoff.
+                if SSTProtocol.prolongedRecoveryRisk(forHRt: hrt) {
+                    Label("A lower threshold can mean a slower recovery — go steady and stay in close contact with your clinician.", systemImage: "info.circle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.leading)
+                        .padding(.top, 2)
+                }
             }
         }
     }

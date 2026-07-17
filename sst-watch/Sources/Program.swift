@@ -35,6 +35,18 @@ struct ProgramView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                    // Prolonged-recovery prognostic flag (Haider 2019). Clinician-
+                    // facing note carried on the prescription; shown when set.
+                    if p.hasProlongedRecoveryRisk {
+                        Label(p.clinicianNote ?? "Your threshold is on the lower side, which can mean a slower recovery. Keep sessions gentle and stay in close contact with your clinician.", systemImage: "stethoscope")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 8)
+                            .background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    }
+
                     PrimaryButton(title: "Start first session", systemImage: "play.fill") {
                         flow.beginTraining()
                     }

@@ -38,11 +38,25 @@ struct SSTState: Codable {
     // Clinical state.
     var prescription: Prescription?
     var sessions: [SessionLog]
+    /// Sessions logged under PRIOR prescriptions — display/history only; never fed
+    /// to `decide()`. Populated when a re-test adopts a new band. Optional so
+    /// states persisted before this field decode fine.
+    var archivedSessions: [SessionLog]?
     /// Serial graded-test record — the recovery-trajectory instrument.
     /// Optional so states persisted before this field decode fine.
     var thresholds: [ThresholdRecord]?
     var verifiedSessionCount: Int
+    /// Progression freshness checkpoints (mirror store.ts: "a change must be earned
+    /// by fresh sessions"). `decisionCheckpoint` = sessions.count at the last
+    /// applied band change (regress / rest / advance); `progressionCheckpoint` =
+    /// verifiedSessionCount at the last applied ADVANCE. Optional so states
+    /// persisted before these fields decode fine (nil treated as 0).
+    var decisionCheckpoint: Int?
+    var progressionCheckpoint: Int?
     var lastTestAt: Date?
+    /// When the band was last eased down (regress / rest). Drives the afterRegress
+    /// re-test bypass (mirrors lastRegressAt on the web). Optional for decode compat.
+    var lastRegressAt: Date?
     var lastRedFlagAt: Date?
     /// Patient confirmed a clinician has reviewed + cleared them since the last
     /// red flag. Optional so states persisted before this field decode fine.
@@ -61,9 +75,13 @@ struct SSTState: Codable {
             consentedAt: nil,
             prescription: nil,
             sessions: [],
+            archivedSessions: [],
             thresholds: [],
             verifiedSessionCount: 0,
+            decisionCheckpoint: 0,
+            progressionCheckpoint: 0,
             lastTestAt: nil,
+            lastRegressAt: nil,
             lastRedFlagAt: nil,
             redFlagClearedAt: nil,
             pendingSessions: []
@@ -92,6 +110,50 @@ struct SSTState: Codable {
     }
 
     mutating func setPrescription(_ p: Prescription?) {
+        prescription = p
+        save()
+    }
+
+    // Checkpoint accessors (nil-persisted state reads as 0).
+    var decisionCheckpointValue: Int { decisionCheckpoint ?? 0 }
+    var progressionCheckpointValue: Int { progressionCheckpoint ?? 0 }
+
+    /// Apply an eased band (regress / rest): update bounds, stamp the regress time
+    /// (for the afterRegress re-test bypass) and set the decision checkpoint so the
+    /// same flare data can't ease the band twice.
+    mutating func applyEasedBand(newLower: Int, newUpper: Int, at date: Date = Date()) {
+        if var p = prescription {
+            p.bandLow = newLower
+            p.bandHigh = newUpper
+            prescription = p
+        }
+        lastRegressAt = date
+        decisionCheckpoint = sessions.count
+        save()
+    }
+
+    /// Apply a confirmed advance: update bounds and set BOTH checkpoints so a fresh
+    /// clean run is required before the next step (mirrors onApplyCeiling on the web).
+    mutating func applyAdvancedBand(newLower: Int, newUpper: Int) {
+        if var p = prescription {
+            p.bandLow = newLower
+            p.bandHigh = newUpper
+            prescription = p
+        }
+        progressionCheckpoint = verifiedSessionCount
+        decisionCheckpoint = sessions.count
+        save()
+    }
+
+    /// Adopt a NEW band from a re-test: archive the prior band's sessions
+    /// (display/history only) and reset progression evidence + checkpoints so the
+    /// clean-run count restarts inside the new band (mirrors page.tsx onContinue).
+    mutating func adoptNewPrescription(_ p: Prescription) {
+        archivedSessions = (archivedSessions ?? []) + sessions
+        sessions = []
+        verifiedSessionCount = 0
+        decisionCheckpoint = 0
+        progressionCheckpoint = 0
         prescription = p
         save()
     }

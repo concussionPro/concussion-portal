@@ -229,7 +229,14 @@ final class SSTFlow: ObservableObject {
         if let r = lastResult,
            r.interpretation == .physiologic,
            let hrt = r.hrt, let lo = r.bandLow, let hi = r.bandHigh {
-            state.setPrescription(Prescription(hrt: hrt, bandLow: lo, bandHigh: hi))
+            let rx = Prescription.measured(hrt: hrt, bandLow: lo, bandHigh: hi)
+            // Re-test adopting a NEW band archives the prior band's sessions and
+            // resets progression evidence; the very first prescription just sets.
+            if state.prescription != nil {
+                state.adoptNewPrescription(rx)
+            } else {
+                state.setPrescription(rx)
+            }
             step = .program
             return
         }
@@ -244,10 +251,34 @@ final class SSTFlow: ObservableObject {
         return Date().timeIntervalSince(last) / 3600
     }
 
+    /// A regress/rest has eased the band since the last test → a fresh threshold is
+    /// clinically useful before the 48h window (mirrors canRetest's afterRegress in
+    /// protocol.ts / the afterRegress arg in page.tsx).
+    var afterRegress: Bool {
+        guard let reg = state.lastRegressAt else { return false }
+        guard let test = state.lastTestAt else { return true }
+        return reg > test
+    }
+
     var canRetest: Bool {
         guard !state.redFlagLocked else { return false }
         guard let h = hoursSinceLastTest else { return true }
-        return h >= Double(SSTProtocol.retestMinHours)
+        if h >= Double(SSTProtocol.retestMinHours) { return true }
+        // afterRegress bypasses the 48h spacing (clinician-directed bypass is a
+        // web-only path — no clinician-instruction control exists on the watch).
+        return afterRegress
+    }
+
+    // MARK: - Progression freshness (mirror decisionCheckpoint / progressionCheckpoint)
+
+    /// A band change must be earned by fresh sessions: at least one session logged
+    /// since the last applied change.
+    var decisionFresh: Bool { state.sessions.count > state.decisionCheckpointValue }
+
+    /// An advance additionally needs a fresh VERIFIED session beyond the last
+    /// applied advance (mirrors `canApply = decisionFresh && verifiedSessions > progressionCheckpoint`).
+    var canApplyAdvance: Bool {
+        decisionFresh && state.verifiedSessionCount > state.progressionCheckpointValue
     }
 
     var retestHoursRemaining: Int {
@@ -269,8 +300,9 @@ final class SSTFlow: ObservableObject {
     }
 
     /// Commit a finished training session: persist, sync, decide next step, and
-    /// auto-apply a regression (safety-critical, ungated). Advance / retest are
-    /// surfaced to the user to confirm, per protocol.
+    /// auto-apply an eased band (regress / rest — safety-critical), gated on
+    /// freshness so the same flare data can't ease the band twice. Advance /
+    /// retest are surfaced to the user to confirm, per protocol.
     func commitSession(_ log: SessionLog, feeling: Feeling, timeInBandPct: Int) {
         workout.stop()
         state.appendSession(log)
@@ -278,23 +310,27 @@ final class SSTFlow: ObservableObject {
         let decision = SSTProtocol.decide(current: current, sessions: state.sessions)
         lastDecision = decision
 
-        // Regression auto-applies immediately.
-        if case let .regress(lo, hi) = decision {
-            var p = current
-            p.bandLow = lo
-            p.bandHigh = hi
-            state.setPrescription(p)
+        // Eased-band decisions (regress AND rest) auto-apply immediately, but only
+        // when fresh — the same flare data must not ease the band twice. Applying
+        // stamps the regress time + decision checkpoint.
+        switch decision {
+        case let .regress(lo, hi), let .rest(lo, hi):
+            if decisionFresh {
+                state.applyEasedBand(newLower: lo, newUpper: hi)
+            }
+        default:
+            break
         }
 
         Task { await postTraining(log: log, feeling: feeling, timeInBandPct: timeInBandPct, decision: decision) }
     }
 
-    /// User confirms an advance from the summary card.
+    /// User confirms an advance from the summary card. Gated on freshness so a
+    /// re-shown card can't advance twice on the same evidence; applying sets both
+    /// checkpoints (mirrors onApplyCeiling on the web).
     func applyAdvance(newLower: Int, newUpper: Int) {
-        guard var p = state.prescription else { return }
-        p.bandLow = newLower
-        p.bandHigh = newUpper
-        state.setPrescription(p)
+        guard state.prescription != nil, canApplyAdvance else { return }
+        state.applyAdvancedBand(newLower: newLower, newUpper: newUpper)
     }
 
     // MARK: - Sync payloads
@@ -326,6 +362,13 @@ final class SSTFlow: ObservableObject {
         if let hrt = result.hrt { payload["hrtBpm"] = hrt }
         if let lo = result.bandLow { payload["bandLow"] = lo }
         if let hi = result.bandHigh { payload["bandHigh"] = hi }
+        // Prolonged-recovery prognostic flag (Haider 2019). Watch computes the
+        // hrt<135 arm only (no resting HR for the ΔHR≤50 arm).
+        if let hrt = result.hrt {
+            let risk = SSTProtocol.prolongedRecoveryRisk(forHRt: hrt)
+            payload["prolongedRecoveryRisk"] = risk
+            if let note = SSTProtocol.clinicianNote(forHRt: hrt) { payload["clinicianNote"] = note }
+        }
 
         _ = await SSTSync.postSession(
             clinicCode: state.clinicCode ?? "",
@@ -356,6 +399,8 @@ final class SSTFlow: ObservableObject {
             payload["bandLow"] = p.bandLow
             payload["bandHigh"] = p.bandHigh
             payload["hrtBpm"] = p.hrt
+            payload["prolongedRecoveryRisk"] = p.hasProlongedRecoveryRisk
+            if let note = p.clinicianNote { payload["clinicianNote"] = note }
         }
         _ = await SSTSync.postSession(
             clinicCode: state.clinicCode ?? "",
@@ -371,6 +416,7 @@ final class SSTFlow: ObservableObject {
         case .advance: return "advance"
         case .hold:    return "hold"
         case .regress: return "regress"
+        case .rest:    return "rest"
         case .retest:  return "retest"
         }
     }

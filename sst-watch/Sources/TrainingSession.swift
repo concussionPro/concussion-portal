@@ -296,6 +296,12 @@ struct TrainingSessionView: View {
                                 body: "We've lowered your band to settle recent flares. It's already updated.")
                     PrimaryButton(title: "Done", tint: .gray) { flow.goHome() }
 
+                case .rest:
+                    MessageCard(icon: "bed.double.circle.fill", iconColor: .orange,
+                                title: "Rest day",
+                                body: "Two sessions in a row provoked your symptoms. Take a rest day today — we've eased your band back. Check in with your clinician before your next session, then resume gently.")
+                    PrimaryButton(title: "Done", tint: .gray) { flow.goHome() }
+
                 case .retest:
                     MessageCard(icon: "arrow.clockwise.circle.fill", iconColor: .blue,
                                 title: "Time to re-test",

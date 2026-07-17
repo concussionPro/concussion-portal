@@ -32,6 +32,24 @@ enum SSTProtocol {
     static let hrMin = 30
     static let hrMax = 250
 
+    // Prolonged-recovery prognostic flag (Haider MN et al., Front Neurol 2019,
+    // PMC6492460): an absolute HRt below this cutoff predicts prolonged (>30-day)
+    // recovery. PROGNOSTIC only — NOT a dose modifier.
+    static let prolongedRecoveryHRtCutoff = 135
+
+    /// Prolonged-recovery risk from a measured HRt. NOTE: the web
+    /// (computePrescription) ALSO ORs ΔHR (threshold − resting) ≤ 50 bpm, but the
+    /// watch has NO resting HR, so ONLY the `hrt < 135` arm is evaluated here.
+    static func prolongedRecoveryRisk(forHRt hrt: Int) -> Bool { hrt < prolongedRecoveryHRtCutoff }
+
+    /// Clinician-facing note when the prognostic flag is set (else nil). Mirrors
+    /// the clinicianNote string in computePrescription, minus the ΔHR clause the
+    /// watch cannot compute.
+    static func clinicianNote(forHRt hrt: Int) -> String? {
+        guard prolongedRecoveryRisk(forHRt: hrt) else { return nil }
+        return "Threshold \(hrt) bpm is below the validated prolonged-recovery cutoff (HRt <135 bpm; Haider 2019). This predicts a slower recovery — oversee dosing directly, keep the band conservative, and re-assess more frequently. The evidence gives no severity-adjusted dose, so a shorter starting session is a clinical judgement, not an app default."
+    }
+
     /// Sub-symptom training band from a MEASURED HRt (bpm).
     static func band(fromHRt hrt: Int) -> (lower: Int, upper: Int) {
         (Int((Double(hrt) * bandLowerPct).rounded()),
@@ -78,14 +96,28 @@ enum SSTProtocol {
     /// Progression decision. Advance only on live-verified clean runs; NEVER
     /// exceed the measured HRt (→ retest at the cap). Regression is never gated.
     static func decide(current: Prescription, sessions: [SessionLog]) -> ProgressionDecision {
+        // REST TRIGGER (mirrors progressionDecision): the last TWO sessions BOTH
+        // flared → prescribe a rest day, ease the ceiling back one step (floored at
+        // the lower bound), and push a clinician check-in. Checked BEFORE regress.
+        let lastTwo = Array(sessions.suffix(2))
+        if lastTwo.count == 2 && lastTwo.allSatisfy({ $0.flare }) {
+            let newUpper = max(current.bandLow, current.bandHigh - advanceStepBpm)
+            let delta = newUpper - current.bandHigh
+            // Shift BOTH bounds by the same delta so band width stays constant
+            // (mirrors applyCeiling on the web).
+            return .rest(newLower: current.bandLow + delta, newUpper: newUpper)
+        }
+
         // Regression: a recent flare run lowers the band immediately (ungated).
         // Safety evidence counts from EVERY session, verified or not.
         let recent = Array(sessions.suffix(regressRecentWindow))
         let flares = recent.filter { $0.flare }.count
         if flares >= regressFlareCount {
             let newUpper = max(current.hrt / 2, current.bandHigh - advanceStepBpm)
-            let newLower = Int((Double(newUpper) * (bandLowerPct / bandUpperPct)).rounded())
-            return .regress(newLower: newLower, newUpper: newUpper)
+            // Shift BOTH bounds by the same delta so band width stays constant
+            // (mirrors applyCeiling on the web).
+            let delta = newUpper - current.bandHigh
+            return .regress(newLower: current.bandLow + delta, newUpper: newUpper)
         }
         // A single recent flare (any source) blocks an advance — hold and rebuild.
         if flares > 0 { return .hold }
@@ -103,8 +135,10 @@ enum SSTProtocol {
                 return .retest
             }
             let newUpper = min(current.bandHigh + advanceStepBpm, current.hrt)
-            let newLower = Int((Double(newUpper) * (bandLowerPct / bandUpperPct)).rounded())
-            return .advance(newLower: newLower, newUpper: newUpper)
+            // Shift BOTH bounds by the same delta so band width stays constant
+            // (mirrors applyCeiling on the web).
+            let delta = newUpper - current.bandHigh
+            return .advance(newLower: current.bandLow + delta, newUpper: newUpper)
         }
 
         return .hold
@@ -149,6 +183,31 @@ struct Prescription: Codable {
     var bandLow: Int
     var bandHigh: Int
     var minutes: Int = SSTProtocol.prescribedMinutes
+    /// Prolonged-recovery prognostic flag (Haider 2019). Watch-only note: computed
+    /// from `hrt < 135` alone — the web's ΔHR≤50 arm needs a resting HR the watch
+    /// doesn't have. Optional (nil ≙ false/unknown) so prescriptions persisted
+    /// before these fields decode fine — Swift's synthesized decoder does NOT fall
+    /// back to a default value for a missing non-optional key.
+    var prolongedRecoveryRisk: Bool? = nil
+    /// Clinician-facing note set when `prolongedRecoveryRisk` is true (else nil).
+    var clinicianNote: String? = nil
+
+    /// True iff the prognostic flag is set (nil-safe accessor for call sites).
+    var hasProlongedRecoveryRisk: Bool { prolongedRecoveryRisk == true }
+
+    /// Build a measured prescription from a graded-test HRt, computing the
+    /// prognostic flag. Use this (not the memberwise init) whenever a fresh HRt is
+    /// adopted so the flag is populated.
+    static func measured(hrt: Int, bandLow: Int, bandHigh: Int) -> Prescription {
+        Prescription(
+            hrt: hrt,
+            bandLow: bandLow,
+            bandHigh: bandHigh,
+            minutes: SSTProtocol.prescribedMinutes,
+            prolongedRecoveryRisk: SSTProtocol.prolongedRecoveryRisk(forHRt: hrt),
+            clinicianNote: SSTProtocol.clinicianNote(forHRt: hrt)
+        )
+    }
 }
 
 struct SessionLog: Codable {
@@ -167,5 +226,7 @@ enum ProgressionDecision: Equatable {
     case advance(newLower: Int, newUpper: Int)
     case hold
     case regress(newLower: Int, newUpper: Int)
+    /// Two flare sessions in a row → rest day + eased band + clinician check-in.
+    case rest(newLower: Int, newUpper: Int)
     case retest
 }
