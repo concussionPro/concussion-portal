@@ -71,6 +71,42 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
     (t) => t.type === 'sports-club' || t.type === 'surf-life-saving' || t.type === 'triathlon' || t.type === 'cycling',
   ).length
 
+  // ── Offer hook + sticky CTA (2026-07 CRO reorg) ──────────────────────────
+  // Behaviour data: of engaged clinics, only ~22% ever reached pricing and ~13%
+  // the close — they read the top-of-page content magnets (trial, toolkit, Zac)
+  // and left before the OFFER. So surface the tier-correct value prop + from-
+  // price + a primary CTA in the top third, and keep a persistent CTA on screen.
+  // Tier mirrors the pricing gate below (dealTypeForClinicalCount canon).
+  const dealTier = teamVerified && clinical >= 8 ? 'on-site' : teamVerified && clinical <= 1 ? 'individual' : 'hub-pack'
+  const calBookUrl = `https://cal.com/zac-lewis-so8zjs/30min?utm_source=portal&utm_medium=offer_hook&utm_campaign=${encodeURIComponent(clinic.slug)}`
+  const offer =
+    dealTier === 'on-site'
+      ? {
+          label: cityUnknown ? `On-site day · your team of ${clinical}, in your clinic` : `On-site day at ${clinic.city} · your team of ${clinical}`,
+          value: 'Your whole team assessing and managing concussion off one protocol — trained on your own cases.',
+          price: 'From A$8,000 + GST · 8 hrs online + 1 day on-site = 14 CPD hrs · OA-endorsed',
+          primaryLabel: 'Book a 15-min call',
+          primaryHref: calBookUrl,
+          primaryExternal: true,
+        }
+      : dealTier === 'individual'
+        ? {
+            label: 'Concussion Clinical Mastery · online',
+            value: 'Osteopathy Australia-endorsed concussion CPD — assess, manage and refer with confidence.',
+            price: `From A$${CONFIG.COURSE.PRICE_ONLINE} · 8 CPD hours · start today`,
+            primaryLabel: 'Enrol now',
+            primaryHref: '#pricing',
+            primaryExternal: false,
+          }
+        : {
+            label: 'Team Hub Pack · credential your whole clinic',
+            value: 'One code, every clinician — your whole team credentialled in concussion, not just one.',
+            price: `A$${CONFIG.COURSE.PRICE_CLINIC_HUB_PACK.toLocaleString()} · full clinic access · GST invoice · instant`,
+            primaryLabel: 'See the team plan',
+            primaryHref: '#pricing',
+            primaryExternal: false,
+          }
+
   return (
     <div className="flex min-h-screen dashboard-bg">
       <ProspectTracker token={clinic.slug} accessKey={clinic.accessKey} />
@@ -107,6 +143,38 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             )}
           </div>
 
+          {/* Offer hook — value prop + tier-correct from-price + primary CTA in the
+              top third, where the ~71% who see the hero are (vs the ~22% who ever
+              reached pricing). All three intent paths are one tap from here:
+              primary (deal/enrol), Try Module 1 (content/sign-up), See pricing. */}
+          {!isPurpose && (
+            <div data-track-section="offer-hook" className="mb-8 rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-white to-white p-5 sm:p-6 shadow-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 sm:gap-6 sm:items-center">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1.5">{offer.label}</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground leading-snug mb-1.5">{offer.value}</p>
+                  <p className="text-[13px] sm:text-sm text-foreground/70 font-semibold">{offer.price}</p>
+                </div>
+                <div className="flex flex-col gap-2.5 shrink-0">
+                  <a
+                    href={offer.primaryHref}
+                    data-track-cta="offer-hook-primary"
+                    target={offer.primaryExternal ? '_blank' : undefined}
+                    rel={offer.primaryExternal ? 'noopener noreferrer' : undefined}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent text-white font-bold px-5 py-3 text-sm shadow-md hover:opacity-95 transition active:scale-[0.98]"
+                  >
+                    {offer.primaryLabel} <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <div className="flex items-center gap-3 justify-center text-[12.5px] font-semibold">
+                    <a href="#trial" data-track-cta="offer-hook-trial" className="text-accent hover:underline">Preview the course</a>
+                    <span className="text-foreground/25">·</span>
+                    <a href="#pricing" data-track-cta="offer-hook-pricing" className="text-foreground/60 hover:text-accent hover:underline">See pricing</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Purpose: warm, named EP contact — lead with WHO delivers it before
               the two-stream product tour. The trial-first/proof-later CRO order
               is tuned for COLD traffic; for an engaged contact the credibility
@@ -137,10 +205,11 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               CCM-only "Start here" card just duplicates and confuses the flow. */}
           {!isPurpose && (
           <Link
+            id="trial"
             data-track-section="trial-cta"
             data-track-cta="trial-module1"
             href={`/p/${clinic.slug}/learning${kq}`}
-            className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg group hover:shadow-xl transition-shadow"
+            className="block scroll-mt-8 rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg group hover:shadow-xl transition-shadow"
           >
             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
             <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
@@ -331,8 +400,38 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           <div data-track-section="footer">
             <SocialProofFooter />
           </div>
+          {/* spacer so the fixed CTA bar never covers the footer */}
+          {!isPurpose && <div className="h-20 sm:h-16" aria-hidden />}
         </div>
       </main>
+
+      {/* Persistent CTA bar — the close is always on screen, so the ~87% who
+          never scroll to the bottom next-step can still act (deal / enrol),
+          and pricing is one tap from anywhere. Tier-correct via `offer`. */}
+      {!isPurpose && (
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 border-t border-black/10 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.18)]">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-[11.5px] font-bold text-foreground leading-tight truncate">{offer.price}</p>
+              <p className="text-[11px] text-foreground/60 truncate">{clinic.shortName}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
+              <a href="#pricing" data-track-cta="sticky-pricing" className="text-[13px] font-semibold text-accent px-3 py-2 rounded-lg hover:bg-accent/5 transition">
+                See pricing
+              </a>
+              <a
+                href={offer.primaryHref}
+                data-track-cta="sticky-primary"
+                target={offer.primaryExternal ? '_blank' : undefined}
+                rel={offer.primaryExternal ? 'noopener noreferrer' : undefined}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-accent text-white font-bold px-4 py-2.5 text-[13px] shadow-md hover:opacity-95 transition active:scale-[0.98]"
+              >
+                {offer.primaryLabel} <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
