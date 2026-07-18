@@ -37,7 +37,14 @@ const NAV_LINKS = [
   { href: '/clinical-suite/pricing', label: 'Pricing' },
 ]
 
+// Normalise a path to its route segment so the active check works whichever
+// prefix a caller passes — the pages historically pass `/platform/*` while the
+// canonical hrefs are `/clinical-suite/*` (the /platform funnel now redirects
+// here). Without this, `active === l.href` never matched and no item highlighted.
+const navSeg = (p?: string) => (p ?? '').replace(/^\/(platform|clinical-suite)/, '') || '/'
+
 export function PlatformNav({ active }: { active?: string }) {
+  const activeSeg = navSeg(active)
   return (
     <nav className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-4 px-6 py-5">
       <Link href="/clinical-suite" className="flex items-center gap-[11px]">
@@ -52,7 +59,7 @@ export function PlatformNav({ active }: { active?: string }) {
           <Link
             key={l.href}
             href={l.href}
-            className={`text-[14px] ${active === l.href ? 'font-bold text-[#16243f]' : 'font-semibold text-slate-700 hover:text-[#16243f]'}`}
+            className={`text-[14px] ${activeSeg === navSeg(l.href) ? 'font-bold text-[#16243f]' : 'font-semibold text-slate-700 hover:text-[#16243f]'}`}
           >
             {l.label}
           </Link>

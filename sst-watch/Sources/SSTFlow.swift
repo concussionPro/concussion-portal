@@ -341,11 +341,25 @@ final class SSTFlow: ObservableObject {
         // postSession, so use those exact names.
         let termination = redFlagStop ? "red-flag"
             : (result.interpretation == .physiologic ? "symptom-limited" : "exhaustion-limited")
+        // Granular eventType (mirror clinic-sync.ts SyncEventType) so the hub and
+        // GP reports read the SAME vocabulary from watch and web, not a coarse
+        // "threshold".
+        let eventType: String
+        switch result.interpretation {
+        case .physiologic:   eventType = "threshold-physiologic"
+        case .noIntolerance: eventType = "threshold-no-intolerance"
+        case .redFlag:       eventType = "threshold-red-flag"
+        default:             eventType = "test-aborted"   // .invalid
+        }
         var payload: [String: Any] = [
-            "eventType": "threshold",
+            "eventType": eventType,
             "interpretation": result.interpretation.rawValue,
             "termination": termination,
-            "restingSymptom": restingSymptom,
+            // Canonical key (matches web page.tsx + the server's reconciliation,
+            // which re-derives HRt/interpretation from these stages against this
+            // resting baseline). Was "restingSymptom" — a mismatch that made the
+            // server read the baseline as 0.
+            "restingSymptomScore": restingSymptom,
             "hrSource": workout.simulated ? "simulated" : HRSource.liveWatch.rawValue,
             "hrVerified": !workout.simulated,
             "stages": stages.map { s -> [String: Any] in
@@ -381,7 +395,8 @@ final class SSTFlow: ObservableObject {
 
     private func postTraining(log: SessionLog, feeling: Feeling, timeInBandPct: Int, decision: ProgressionDecision) async {
         var payload: [String: Any] = [
-            "eventType": "training",
+            // symptom-limited stop vs a clean session (mirror clinic-sync.ts).
+            "eventType": log.flare ? "session-symptom-stopped" : "training",
             "avgHeartRate": log.avgHeartRate,
             "peakHeartRate": log.peakHeartRate,
             "minutesPct": log.minutesPct,

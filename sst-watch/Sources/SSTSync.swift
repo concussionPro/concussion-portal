@@ -26,29 +26,58 @@ struct SSTSync {
     // MARK: - Clinic-code validation (onboarding)
 
     /// GET /api/sst/validate-code?code=X → { valid: bool, clinicName?: string }.
-    /// On a check-level failure (offline / 429 / 5xx) returns (false, nil) —
-    /// the same "couldn't confirm" outcome as an unknown code.
+    /// Mirrors validateClinicCode in clinic-sync.ts: DEMO00 short-circuits without
+    /// a network round-trip, a validated code is remembered so it re-enters when
+    /// offline, and an UNKNOWN code still fails closed (no bypass) — a new device
+    /// with no cached validation cannot get in while offline.
     static func validateCode(_ code: String) async -> (valid: Bool, clinicName: String?) {
         let trimmed = code.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-              var comps = URLComponents(string: baseURL + "/api/sst/validate-code")
+        guard !trimmed.isEmpty else { return (false, nil) }
+
+        // DEMO00 short-circuit — the shared demo code is always valid, no network.
+        // Critical for an App Reviewer on a flaky connection. Case-insensitive to
+        // match the server (which uppercases the code).
+        if trimmed.uppercased() == "DEMO00" { return (true, "Demo Clinic") }
+
+        guard var comps = URLComponents(string: baseURL + "/api/sst/validate-code")
         else { return (false, nil) }
         comps.queryItems = [URLQueryItem(name: "code", value: trimmed)]
         guard let url = comps.url else { return (false, nil) }
 
         do {
             let (data, resp) = try await URLSession.shared.data(from: url)
-            guard let http = resp as? HTTPURLResponse else { return (false, nil) }
-            // Rate-limited / server error = couldn't check, not "invalid".
-            if http.statusCode == 429 || http.statusCode >= 500 { return (false, nil) }
+            guard let http = resp as? HTTPURLResponse else { return cachedFallback(trimmed) }
+            // Rate-limited / server error = couldn't check → recall a prior validation.
+            if http.statusCode == 429 || http.statusCode >= 500 { return cachedFallback(trimmed) }
             guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
             else { return (false, nil) }
             let valid = (obj["valid"] as? Bool) == true
             let name = (obj["clinicName"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            if valid { cacheValidated(trimmed, name: name) }
             return (valid, name)
         } catch {
-            return (false, nil)
+            // Offline: recall a code that WAS validated on THIS device before.
+            // Never a bypass for an unknown code — a new device fails closed.
+            return cachedFallback(trimmed)
         }
+    }
+
+    private static let validatedCodesKey = "sst.validatedCodes"
+
+    /// Remember a server-confirmed code (+ clinic name) for offline re-entry.
+    private static func cacheValidated(_ code: String, name: String?) {
+        var map = (UserDefaults.standard.dictionary(forKey: validatedCodesKey) as? [String: String]) ?? [:]
+        map[code.uppercased()] = name ?? ""
+        UserDefaults.standard.set(map, forKey: validatedCodesKey)
+    }
+
+    /// Return a prior validation for this code if one exists, else fail closed.
+    private static func cachedFallback(_ code: String) -> (valid: Bool, clinicName: String?) {
+        let map = (UserDefaults.standard.dictionary(forKey: validatedCodesKey) as? [String: String]) ?? [:]
+        if let name = map[code.uppercased()] {
+            return (true, name.isEmpty ? nil : name)
+        }
+        return (false, nil)
     }
 
     // MARK: - Durable session sync
