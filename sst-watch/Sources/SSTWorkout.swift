@@ -85,6 +85,9 @@ final class SSTWorkout: NSObject, ObservableObject {
         lastSampleAt = nil
         startStaleTimer()
         startSimulatedFeed()
+        // Marketing screenshot: seed an in-band reading so the live gauge shows a
+        // real in-band HR immediately instead of the 80 bpm warm-up ramp.
+        if ProcessInfo.processInfo.environment["SST_SHOT"] != nil { ingest(bpm: 122) }
         return
         #else
         guard HKHealthStore.isHealthDataAvailable() else {

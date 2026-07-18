@@ -53,6 +53,19 @@ struct TrainingSessionView: View {
             }
         }
         .onReceive(ticker) { _ in if phase == .live { tick() } }
+        .onAppear {
+            #if targetEnvironment(simulator)
+            // Marketing screenshot: jump straight to the live gauge (the baseline
+            // step can't be tapped through headless). Sim-only; never on device.
+            if ProcessInfo.processInfo.environment["SST_SHOT"] == "training" {
+                preSymptom = 1; peakSymptom = 1; symptomNow = 1
+                total = (flow.state.prescription?.minutes ?? SSTProtocol.prescribedMinutes) * 60
+                remaining = total
+                sessionStartedAt = Date()
+                phase = .live
+            }
+            #endif
+        }
     }
 
     // MARK: - Pre-session symptom baseline
@@ -90,15 +103,19 @@ struct TrainingSessionView: View {
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                     .monospacedDigit()
 
-                HRReadout(bpm: workout.bpm, tint: (currentZone ?? .inBand).color)
-
-                Text("Band \(band.low)–\(band.high) bpm")
-                    .font(.caption2).foregroundStyle(.secondary)
+                BandRing(low: band.low, high: band.high, ceiling: band.hrt,
+                         centerBig: workout.bpm.map(String.init) ?? "– –",
+                         centerSmall: "bpm",
+                         bigColor: (currentZone ?? .inBand).color,
+                         size: 116)
 
                 if let z = currentZone {
                     Text(z.label)
-                        .font(.footnote).fontWeight(.semibold)
+                        .font(.footnote).fontWeight(.bold)
                         .foregroundStyle(z.color)
+                } else {
+                    Text("Band \(band.low)–\(band.high) bpm")
+                        .font(.caption2).foregroundStyle(.secondary)
                 }
                 HRSourceStatus(workout: workout)
 
