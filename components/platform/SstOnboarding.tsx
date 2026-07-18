@@ -345,6 +345,12 @@ export default function SstOnboarding({
             )}
           </span>
 
+          {codeStatus === 'idle' && (
+            <span className="text-[10.5px] leading-snug text-(--sst-ghost)">
+              Your clinic gives you this code — ask your practitioner if you don&rsquo;t have it yet.
+            </span>
+          )}
+
           <label htmlFor="patient-name" className="mt-1.5 text-xs font-semibold text-(--sst-ink-2)">
             Your name
           </label>

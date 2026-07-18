@@ -68,6 +68,9 @@ function BandBar({ pos }: { pos: number }) {
 
 export function SstTrainerDemo() {
   const [t, setT] = useState(0)
+  // A manual chapter selection overrides the reduced-motion freeze so the tabs
+  // are functional for reduced-motion users (who otherwise see a fixed frame).
+  const [manual, setManual] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
   const prefersReduced = useSyncExternalStore(
@@ -109,7 +112,10 @@ export function SstTrainerDemo() {
   }, [prefersReduced])
 
   const total = PER * N
-  const tt = (prefersReduced ? 4 * PER + 1500 : t) % total
+  // Reduced motion freezes on a representative frame — unless the user has
+  // manually picked a chapter, in which case honour their selection (still no
+  // auto-animation: the timer effect stays disabled under reduced motion).
+  const tt = (prefersReduced && !manual ? 4 * PER + 1500 : t) % total
   const fi = Math.floor(tt / PER)
   const tif = tt % PER
   const prev = (fi - 1 + N) % N
@@ -382,7 +388,10 @@ export function SstTrainerDemo() {
             <button
               key={label}
               type="button"
-              onClick={() => setT(i * PER + 520)}
+              onClick={() => {
+                setT(i * PER + 520)
+                setManual(true)
+              }}
               className="flex flex-1 cursor-pointer flex-col gap-[5px] border-none bg-transparent p-0"
             >
               <span className="h-[3px] rounded-[2px] transition-colors" style={{ background: i <= fi ? ACCENT : '#e2e8f0' }} />

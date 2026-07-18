@@ -1,25 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
 import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
 
 // Same landing treatment as /preseason (fonts, mesh background, hero + Loom
 // demo, how-it-works, stats band, cross-sell), retargeted to the SST Trainer.
+// Fonts (--font-hanken / --font-space) are provided by the enclosing
+// app/sst-trainer/layout.tsx — this component only ever renders under it — so
+// they are inherited here, not re-loaded.
 // Claim discipline: methods/provenance only — the protocol literature carries
 // the clinical claims, never the app.
-const hanken = Hanken_Grotesk({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-hanken',
-  display: 'swap',
-})
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-space',
-  display: 'swap',
-})
 
 const ACCENT = '#0d7377'
 
@@ -53,8 +43,9 @@ const COVERS = [
 export default function SstLanding({ onStart }: { onStart: () => void }) {
   return (
     <div
-      className={`${hanken.className} ${spaceGrotesk.variable} min-h-screen w-full text-slate-900`}
+      className="min-h-screen w-full text-slate-900"
       style={{
+        fontFamily: 'var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif',
         background: 'radial-gradient(120% 75% at 82% -8%, #effbfa 0%, #f8fafc 46%, #f1f5f9 100%)',
       }}
     >
