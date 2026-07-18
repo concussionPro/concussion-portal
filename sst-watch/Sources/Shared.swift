@@ -64,6 +64,70 @@ struct HRReadout: View {
     }
 }
 
+// MARK: - Band ring — premium HR-zone gauge (Activity-ring language)
+//
+// A 270° arc (gap at the bottom) that reads like a native watchOS ring: a muted
+// warm-up zone, the bright training BAND as the hero, and an amber run-up to the
+// ceiling. Big centred value. Used on Home (the band) and Result (the threshold).
+
+struct BandRing: View {
+    let low: Int
+    let high: Int
+    let ceiling: Int
+    var centerBig: String
+    var centerSmall: String
+    var bigColor: Color = .green
+    var lineWidth: CGFloat = 12
+    var size: CGFloat = 130
+
+    // Scale the arc to (bandLow − 12) … ceiling so the band is prominent, not a
+    // sliver lost against a wide resting-to-ceiling range.
+    private var floorHR: Double { Double(low) - 12 }
+    private let arc = 0.75          // 270°
+    private let rot = 135.0         // gap centred at the bottom
+    private func frac(_ v: Int) -> Double {
+        let span = Double(ceiling) - floorHR
+        guard span > 0 else { return 0 }
+        return min(1, max(0, (Double(v) - floorHR) / span))
+    }
+
+    var body: some View {
+        ZStack {
+            Circle().trim(from: 0, to: arc)
+                .stroke(Color.white.opacity(0.10), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(rot))
+            Circle().trim(from: 0, to: frac(low) * arc)
+                .stroke(Color.blue.opacity(0.40), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(rot))
+            Circle().trim(from: frac(high) * arc, to: arc)
+                .stroke(Color.orange.opacity(0.55), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(rot))
+            Circle().trim(from: frac(low) * arc, to: frac(high) * arc)
+                .stroke(
+                    LinearGradient(colors: [Color(red: 0.16, green: 0.78, blue: 0.42),
+                                            Color(red: 0.46, green: 0.94, blue: 0.58)],
+                                   startPoint: .leading, endPoint: .trailing),
+                    style: StrokeStyle(lineWidth: lineWidth + 1.5, lineCap: .round)
+                )
+                .rotationEffect(.degrees(rot))
+            VStack(spacing: -1) {
+                Text(centerBig)
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(bigColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(maxWidth: size - lineWidth * 3.4)
+                Text(centerSmall)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
 // MARK: - 0–10 (and any small integer range) score picker
 //
 // Deliberately NOT crown-driven: a focusable digitalCrownRotation inside a

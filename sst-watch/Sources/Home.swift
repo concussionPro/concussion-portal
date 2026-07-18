@@ -61,18 +61,25 @@ struct HomeView: View {
     }
 
     private func bandCard(_ p: Prescription) -> some View {
-        VStack(spacing: 2) {
-            Text("Today's band").font(.caption).foregroundStyle(.secondary)
-            Text("\(p.bandLow)–\(p.bandHigh)")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.green)
-            Text("bpm · \(p.minutes) min · ceiling \(p.hrt)")
-                .font(.caption2).foregroundStyle(.secondary)
+        VStack(spacing: 6) {
+            Text("TODAY'S BAND")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.4)
+                .foregroundStyle(.secondary)
+            BandRing(low: p.bandLow, high: p.bandHigh, ceiling: p.hrt,
+                     centerBig: "\(p.bandLow)–\(p.bandHigh)", centerSmall: "bpm",
+                     bigColor: Color(red: 0.46, green: 0.94, blue: 0.58))
+            Text("Ceiling \(p.hrt) bpm · \(p.minutes) min/day")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .background(.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.vertical, 10)
+        .background(
+            LinearGradient(colors: [Color.green.opacity(0.10), Color.green.opacity(0.03)],
+                           startPoint: .top, endPoint: .bottom),
+            in: RoundedRectangle(cornerRadius: 16)
+        )
     }
 
     /// Red-flag lock: testing and training stay blocked until the patient

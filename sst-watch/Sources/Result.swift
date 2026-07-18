@@ -48,14 +48,12 @@ struct ResultView: View {
     private var physiologic: some View {
         if let r = flow.lastResult, let hrt = r.hrt, let lo = r.bandLow, let hi = r.bandHigh {
             VStack(spacing: 10) {
-                ScreenTitle(text: "Your threshold")
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("\(hrt)")
-                        .font(.system(size: 46, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.red)
-                    Text("bpm").font(.caption).foregroundStyle(.secondary)
-                }
+                Text("YOUR THRESHOLD")
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(1.4)
+                    .foregroundStyle(.secondary)
+                BandRing(low: lo, high: hi, ceiling: hrt,
+                         centerBig: "\(hrt)", centerSmall: "bpm", bigColor: .red)
                 Text("This is where your symptoms started to rise.")
                     .font(.caption2).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -65,9 +63,9 @@ struct ResultView: View {
                 Text("Train at")
                     .font(.footnote).foregroundStyle(.secondary)
                 Text("\(lo)–\(hi) bpm")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Color(red: 0.46, green: 0.94, blue: 0.58))
                 Text("Keep your heart rate in this band. It stays safely under your threshold.")
                     .font(.caption2).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
