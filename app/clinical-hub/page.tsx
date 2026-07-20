@@ -72,64 +72,126 @@ type Patient = {
   notes?: string
 }
 
+/* ── Demo fixture helpers ───────────────────────────────────────────────────
+   Dates are computed RELATIVE TO TODAY so the demo never goes stale — a pitch
+   recipient opening this in six months still sees a live-looking caseload, not
+   an abandoned one. Bands are DERIVED from HRt (80–90%, the prescribed range)
+   so a hand-typed band can never contradict the threshold it came from — that
+   bug shipped once (a 171 bpm HRt paired with a 154–162 band). */
+const dayMs = 86_400_000
+/** ISO date N days before today. */
+const iso = (daysAgo: number) => new Date(Date.now() - daysAgo * dayMs).toISOString().slice(0, 10)
+/** Short display date N days before today ("14 Jul"), or "Today". */
+const short = (daysAgo: number) =>
+  daysAgo === 0
+    ? 'Today'
+    : new Date(Date.now() - daysAgo * dayMs).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+/** Prescribed sub-symptom band: 80–90% of the measured threshold. */
+const band = (hrt: number) => ({ bandLow: Math.round(hrt * 0.8), bandHigh: Math.round(hrt * 0.9) })
+
+/* The demo caseload walks the WHOLE pathway, intake → ACC884-ready discharge,
+   so a clinical or contract lead can see what managing a real cohort looks
+   like rather than one patient in isolation. Each patient is a different
+   moment in the protocol, and between them they exercise every decision rule:
+   the prognostic HRt<135 flag, reduce-don't-rest after a flare, the
+   verified-only progression gate, the ceiling cap forcing a re-test, and the
+   no-intolerance re-test that surfaces clearance review. */
 const PATIENTS: Patient[] = [
   {
-    id: 'p1', name: 'Liam Carter', age: 17, sport: 'Rugby union', code: 'CEA-4827',
-    injuryDate: '2 Jun 2026', daysPost: 22, stage: { n: 4, label: 'Sub-symptom aerobic' },
-    hrt: 148, bandLow: 118, bandHigh: 133, restSymptoms: 2, baseline: 'captured', baselineDate: '14 Mar 2026',
-    trend: [38, 31, 22, 14, 9, 5],
-    hrtPoints: [
-      { date: '2026-06-04', hrt: 128, source: 'bluetooth', verified: true, gated: true },
-      { date: '2026-06-11', hrt: 135, source: 'camera', verified: true, gated: true },
-      { date: '2026-06-18', hrt: 142, source: 'bluetooth', verified: true, gated: true },
-      { date: '2026-06-21', hrt: 139, source: 'manual', verified: false, gated: true },
-      { date: '2026-06-24', hrt: 148, source: 'bluetooth', verified: true, gated: true },
-    ],
-    sessions: [
-      { date: 'Today', avgHr: 126, peakHr: 134, mins: 18, symptomDelta: 0, status: 'clean' },
-      { date: '22 Jun', avgHr: 124, peakHr: 131, mins: 18, symptomDelta: 1, status: 'clean' },
-      { date: '20 Jun', avgHr: 121, peakHr: 129, mins: 16, symptomDelta: 0, status: 'clean' },
-      { date: '18 Jun', avgHr: 118, peakHr: 142, mins: 9, symptomDelta: 3, status: 'flare' },
-    ],
+    id: 'p0', name: 'Priya Raman', age: 29, sport: 'Football (soccer)', code: 'CEA-7104',
+    injuryDate: short(3), daysPost: 3, stage: { n: 1, label: 'Intake — symptom-limited' },
+    hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 7, baseline: 'due',
+    trend: [46, 43],
+    sessions: [],
+    lastActivity: iso(1),
+    flag: 'Referred 3 days post-injury. Symptom-limited at rest (7/10) — screen and schedule the graded test.',
   },
   {
     id: 'p2', name: 'Ava Nguyen', age: 24, sport: 'Netball', code: 'CEA-5193',
-    injuryDate: '17 Jun 2026', daysPost: 7, stage: { n: 2, label: 'Threshold test pending' },
+    injuryDate: short(9), daysPost: 9, stage: { n: 2, label: 'Threshold test pending' },
     hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 6, baseline: 'due',
-    trend: [44, 41],
+    trend: [44, 41, 38],
     sessions: [],
+    lastActivity: iso(2),
     flag: 'No threshold test yet — symptoms still elevated at rest (6/10).',
   },
   {
-    id: 'p3', name: 'Marcus Webb', age: 31, sport: 'Cycling', code: 'CEA-3340',
-    injuryDate: '9 May 2026', daysPost: 46, stage: { n: 6, label: 'Return-to-sport progression' },
-    hrt: 171, bandLow: 154, bandHigh: 162, restSymptoms: 0, baseline: 'captured', baselineDate: '2 Feb 2026',
-    trend: [29, 20, 12, 6, 2, 0, 0],
+    id: 'p4', name: 'Sophie Reid', age: 14, sport: 'AFL', code: 'CEA-6011',
+    injuryDate: short(16), daysPost: 16, stage: { n: 3, label: 'Sub-symptom aerobic (light)' },
+    hrt: 128, ...band(128), restSymptoms: 3, baseline: 'none',
+    trend: [40, 33, 27],
+    lastActivity: iso(0),
     hrtPoints: [
-      { date: '2026-05-12', hrt: 142, source: 'bluetooth', verified: true, gated: true },
-      { date: '2026-05-26', hrt: 156, source: 'bluetooth', verified: true, gated: true },
-      { date: '2026-06-09', hrt: 164, source: 'bluetooth', verified: true, gated: true },
-      { date: '2026-06-23', hrt: 171, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(11), hrt: 118, source: 'camera', verified: true, gated: true },
+      { date: iso(4), hrt: 128, source: 'bluetooth', verified: true, gated: true },
     ],
     sessions: [
-      { date: 'Today', avgHr: 158, peakHr: 168, mins: 30, symptomDelta: 0, status: 'clean' },
-      { date: '23 Jun', avgHr: 156, peakHr: 165, mins: 28, symptomDelta: 0, status: 'clean' },
-      { date: '21 Jun', avgHr: 152, peakHr: 163, mins: 26, symptomDelta: 0, status: 'clean' },
+      { date: short(0), avgHr: 106, peakHr: 114, mins: 14, symptomDelta: 1, status: 'clean' },
+      { date: short(2), avgHr: 104, peakHr: 112, mins: 12, symptomDelta: 2, status: 'flare' },
+      { date: short(3), avgHr: 102, peakHr: 110, mins: 20, symptomDelta: 0, status: 'clean' },
     ],
+    flag: 'Measured HRt 128 bpm is below the 135 bpm prognostic cut-off — associated with slower recovery. Oversee dosing and re-assess more often.',
   },
   {
-    id: 'p4', name: 'Sophie Reid', age: 14, sport: 'AFL', code: 'CEA-6011',
-    injuryDate: '13 Jun 2026', daysPost: 11, stage: { n: 3, label: 'Sub-symptom aerobic' },
-    hrt: 139, bandLow: 111, bandHigh: 125, restSymptoms: 3, baseline: 'none',
-    trend: [40, 33, 27],
+    id: 'p1', name: 'Liam Carter', age: 17, sport: 'Rugby union', code: 'CEA-4827',
+    injuryDate: short(28), daysPost: 28, stage: { n: 4, label: 'Sub-symptom aerobic (moderate)' },
+    hrt: 148, ...band(148), restSymptoms: 2, baseline: 'captured', baselineDate: short(128),
+    trend: [38, 31, 22, 14, 9, 5],
+    lastActivity: iso(0),
     hrtPoints: [
-      { date: '2026-06-16', hrt: 124, source: 'camera', verified: true, gated: true },
-      { date: '2026-06-23', hrt: 139, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(26), hrt: 128, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(19), hrt: 135, source: 'camera', verified: true, gated: true },
+      { date: iso(12), hrt: 142, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(9), hrt: 139, source: 'manual', verified: false, gated: true },
+      { date: iso(5), hrt: 148, source: 'bluetooth', verified: true, gated: true },
     ],
     sessions: [
-      { date: 'Today', avgHr: 117, peakHr: 126, mins: 14, symptomDelta: 1, status: 'clean' },
-      { date: '22 Jun', avgHr: 114, peakHr: 122, mins: 12, symptomDelta: 2, status: 'flare' },
+      { date: short(0), avgHr: 126, peakHr: 134, mins: 20, symptomDelta: 0, status: 'clean' },
+      { date: short(2), avgHr: 124, peakHr: 131, mins: 20, symptomDelta: 1, status: 'clean' },
+      { date: short(4), avgHr: 121, peakHr: 129, mins: 18, symptomDelta: 0, status: 'clean' },
+      { date: short(6), avgHr: 118, peakHr: 142, mins: 9, symptomDelta: 3, status: 'flare' },
     ],
+    notes: 'Flare six days ago at 9 min — ceiling reduced, daily sessions continued at the lower intensity. Three clean verified sessions since; band advanced.',
+  },
+  {
+    id: 'p3', name: 'Marcus Webb', age: 31, sport: 'Cycling', code: 'CEA-3340',
+    injuryDate: short(52), daysPost: 52, stage: { n: 6, label: 'Return-to-sport progression' },
+    hrt: 171, ...band(171), restSymptoms: 0, baseline: 'captured', baselineDate: short(168),
+    trend: [29, 20, 12, 6, 2, 0, 0],
+    lastActivity: iso(0),
+    hrtPoints: [
+      { date: iso(46), hrt: 142, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(32), hrt: 156, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(18), hrt: 164, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(4), hrt: 171, source: 'bluetooth', verified: true, gated: true },
+    ],
+    sessions: [
+      { date: short(0), avgHr: 148, peakHr: 153, mins: 20, symptomDelta: 0, status: 'clean' },
+      { date: short(1), avgHr: 146, peakHr: 152, mins: 20, symptomDelta: 0, status: 'clean' },
+      { date: short(3), avgHr: 144, peakHr: 151, mins: 20, symptomDelta: 0, status: 'clean' },
+    ],
+    notes: 'Band has reached the measured threshold — a further advance would exceed it, so the next step is a re-test rather than a higher ceiling.',
+  },
+  {
+    id: 'p5', name: 'Daniel Okafor', age: 22, sport: 'Basketball', code: 'CEA-2286',
+    injuryDate: short(63), daysPost: 63, stage: { n: 7, label: 'Cleared — refer to MD' },
+    hrt: 178, ...band(178), restSymptoms: 0, baseline: 'captured', baselineDate: short(201),
+    trend: [34, 26, 17, 9, 3, 0, 0, 0],
+    lastActivity: iso(2),
+    clearanceReady: true,
+    hrtPoints: [
+      { date: iso(56), hrt: 131, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(42), hrt: 149, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(28), hrt: 163, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(14), hrt: 172, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(2), hrt: 178, source: 'bluetooth', verified: true, gated: true },
+    ],
+    sessions: [
+      { date: short(2), avgHr: 156, peakHr: 164, mins: 20, symptomDelta: 0, status: 'clean' },
+      { date: short(4), avgHr: 154, peakHr: 161, mins: 20, symptomDelta: 0, status: 'clean' },
+      { date: short(6), avgHr: 152, peakHr: 159, mins: 20, symptomDelta: 0, status: 'clean' },
+    ],
+    notes: 'Latest re-test terminated at voluntary exhaustion (RPE >17) with no symptom provocation — no-intolerance. Episode outcome ready to compile; clearance for contact remains the treating doctor’s decision.',
   },
 ]
 
@@ -141,6 +203,19 @@ type Domain = { name: string; unit?: string; baseline: number | null; latest: nu
 type Baseline = { tool: 'SCAT6' | 'SCOAT6'; status: 'captured' | 'due' | 'none'; capturedDate?: string; lastTest?: string; domains: Domain[] }
 
 const BASELINES: Record<string, Baseline> = {
+  // Discharge-ready: every domain back at or better than the pre-season baseline
+  // — the picture that supports an episode outcome of "recovered".
+  p5: {
+    tool: 'SCAT6', status: 'captured', capturedDate: short(201), lastTest: short(2),
+    domains: [
+      { name: 'Symptom severity', unit: '/132', baseline: 3, latest: 1, better: 'lower' },
+      { name: 'Immediate memory', unit: '/30', baseline: 28, latest: 29, better: 'higher' },
+      { name: 'Concentration', unit: '/5', baseline: 5, latest: 5, better: 'higher' },
+      { name: 'Delayed recall', unit: '/10', baseline: 9, latest: 10, better: 'higher' },
+      { name: 'mBESS errors', unit: '/30', baseline: 3, latest: 2, better: 'lower' },
+      { name: 'VOMS provocation', unit: 'pts', baseline: 0, latest: 0, better: 'lower' },
+    ],
+  },
   p1: {
     tool: 'SCAT6', status: 'captured', capturedDate: '14 Mar 2026', lastTest: 'Today',
     domains: [
@@ -638,13 +713,14 @@ export default function ClinicalHubPage() {
         const data = (await r.json()) as { patients?: ApiPatient[]; clinicName?: string }
         if (typeof data?.clinicName === 'string' && data.clinicName.trim()) setClinicName(data.clinicName.trim())
         const mapped = groupApiPatients(data?.patients ?? []).map((pp) => mapRealPatient(pp, code))
-        if (isDemoCode) {
-          if (mapped.length) {
-            setRoster(mapped)
-            setSelectedId(mapped[0].id)
-          }
-          return
-        }
+        // DEMO00 ALWAYS keeps the curated fixture roster. It used to adopt live
+        // DEMO00 rows whenever any existed — which meant every e2e/manual test
+        // session became the public demo: rows like "E2E Garmin 997834" and a
+        // half-finished episode showing an 81 bpm "threshold" with a 65–73 bpm
+        // band (physiologically impossible; it was a resting HR). This URL is
+        // linked from /acc as a pitch demo, so it must be deterministic and
+        // clinically coherent, never whatever was last tested against prod.
+        if (isDemoCode) return
         setRoster(mapped)
         setSelectedId(mapped[0]?.id ?? '')
         setRealState('ready')
