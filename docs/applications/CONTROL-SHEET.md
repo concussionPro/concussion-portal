@@ -7,13 +7,24 @@ These few inputs recur across every pack. Fill them once and I'll drop them into
 
 | # | Input | Where it's needed | Status |
 |---|---|---|---|
-| 1 | **AHPRA registration number** (format OST00000000000) | ACSM, CEP-UK, CASES, CIMSPA, CSEP, South Africa — every course application | **NEEDED** |
-| 2 | **GBP price** for CCM/CRM (UK market) | CEP-UK, CASES, CIMSPA | **NEEDED** |
-| 3 | **CAD price** for CRM | CSEP | **NEEDED** |
-| 4 | **NZD price** for CRM/CCM | SESNZ, and the NZ association channel | **NEEDED** |
-| 5 | **ZAR price** for CRM | South Africa | **NEEDED** — decide before paying the non-refundable accreditation fee |
-| 6 | **Live course URLs** — CCM, CRM, and the free course | listing + outreach packs | **NEEDED** |
-| 7 | USD price | ACSM | **DONE** ($347, on the /acsm page) |
+| 1 | **AHPRA registration: OST0001852866** | all course applications | **DONE — filled into every pack** |
+| 2 | **Pricing (off the $497 AUD base, per market)** | all | **DONE — filled, see table below** |
+| 3 | **Live course URLs** — CCM, CRM, free course | listing + outreach packs | **STILL NEEDED** — the one input left |
+
+### Prices set (course + tools, per market)
+
+| Market | Course | Renewal/yr | Basis |
+|---|---|---|---|
+| AUD (home) | $497 | — | base, online-only |
+| USD (ACSM) | **$347** | $99 | live on /acsm |
+| GBP (CEP-UK, CASES, CIMSPA) | **£295** | £85 | premium over £258 convert; UK CPD bears it |
+| CAD (CSEP) | **$475** | $130 | near straight convert |
+| NZD (SESNZ, NZ assoc.) | **$549** | $150 | near straight convert |
+| ZAR (South Africa) | **R2,200** | R600 | deep PPP cut from R5,960 convert — R5,960 is unsellable against BioCPD + the R1,380 accreditation fee |
+
+Medicare provider **473492BF** is on file but is AU-billing only — it does NOT go in any overseas application.
+
+**Honesty note on "price to the funding ceiling":** the only funding cap we found — the CEP-UK £650 — is a competitive grant (4 people/yr), not a per-person pot. There is no verified government reimbursement ceiling to price against in these markets, so the above is market + PPP optimised. If you know real reimbursement mechanisms, say so and I'll reprice to them.
 
 Everything else marked `[ZAC:]` in the packs is one of three things, none of which needs you to trawl:
 

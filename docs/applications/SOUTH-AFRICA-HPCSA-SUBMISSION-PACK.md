@@ -130,7 +130,7 @@ I have a complete submission ready — learning outcomes, assessment specificati
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Registered Osteopath (AHPRA registration OST0001852866) · B.Clin.Sci, M.Ost.Med
 Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
 2 Wordsworth St, Byron Bay NSW 2481, Australia
 zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
@@ -165,7 +165,7 @@ The full submission is ready to send.
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Registered Osteopath (AHPRA registration OST0001852866) · B.Clin.Sci, M.Ost.Med
 Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
 2 Wordsworth St, Byron Bay NSW 2481, Australia
 zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
@@ -191,7 +191,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 | **Additional relevance** | Physiotherapy, and any HPCSA-registered practitioner with exercise-based rehabilitation within scope |
 | **Stand-alone** | Yes — no prerequisite purchase, no required follow-on |
 | **Commencement for South African practitioners** | Not before the accreditation number is issued |
-| **Fee to attendee** | [ZAC: confirm ZAR price] |
+| **Fee to attendee** | R2,200 |
 
 ## 2. Provider
 
@@ -417,7 +417,7 @@ Zac is the sole author of Concussion Rehab Mastery. Stated plainly for the asses
 
 ## 14. Commercial disclosure
 
-The activity is sold by Concussion Education Australia at [ZAC: confirm ZAR price]. **There is no commercial sponsorship of the content, no pharmaceutical or device-industry funding, and no product promotion within the activity.** CEA has no financial relationship with any manufacturer of exercise-testing or monitoring equipment. The Buffalo Concussion Treadmill Test and Buffalo Concussion Bike Test are taught as published, validated protocols; CEA has no commercial interest in either and receives no consideration in connection with them. [ZAC: confirm this remains true — if any affiliate or equipment relationship exists, it must be disclosed here.]
+The activity is sold by Concussion Education Australia at R2,200. **There is no commercial sponsorship of the content, no pharmaceutical or device-industry funding, and no product promotion within the activity.** CEA has no financial relationship with any manufacturer of exercise-testing or monitoring equipment. The Buffalo Concussion Treadmill Test and Buffalo Concussion Bike Test are taught as published, validated protocols; CEA has no commercial interest in either and receives no consideration in connection with them. [ZAC: confirm this remains true — if any affiliate or equipment relationship exists, it must be disclosed here.]
 
 ## 15. Content maintenance
 
@@ -461,8 +461,8 @@ So the position is: **topic gap real, channel occupied.** Both halves matter.
 - **[ZAC: current UCT CPD accreditation office contact address]** — for Email 1B.
 - **[ZAC: has any South African practitioner already enrolled in CRM?]** — determine before submitting; disclose honestly if so.
 - **[ZAC: ZA enrolment block]** — geo-gate or otherwise prevent South African enrolment until the accreditation number issues. Must be live before submission.
-- **[ZAC: AHPRA registration number]** — both email signatures.
-- **[ZAC: ZAR price point]** — §1 and §14.
+- **OST0001852866** — both email signatures.
+- **R2,200** — §1 and §14.
 - **[ZAC: confirm the accreditor's actual fee]** before paying — the R1,380 / R2,750 figures are the published UCT benchmark, not a quote.
 - **[ZAC: confirm the accreditation validity period]** and diarise renewal — a lapsed number cannot be repaired retrospectively.
 - **[ZAC: confirm the HPCSA record-keeping booklet reference]** cited in §9.

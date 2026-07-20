@@ -159,14 +159,14 @@ Full bibliography available on request.
 
 **Author.** **Zac Lewis** — Registered Osteopath (AHPRA-registered), B.Clin.Sci, M.Ost.Med. More than a decade in neurological health and concussion, treating and rehabilitating concussed patients across community, sporting and complex persistent-symptom presentations. Played ice hockey nationally and professionally in New Zealand and Canada, which is why the material treats return-to-play pressure and symptom under-reporting as operational problems rather than footnotes. Zac is the sole author. Stated plainly: **no exercise physiologist authored the course**, and CEA does not claim exercise-physiologist authorship or clinical validation — it was written by a registered osteopath, referenced to the primary literature, and put through the independent ESSA-appointed review described above.
 
-**Price:** [ZAC: confirm NZD price] · **Course page:** concussion-education-australia.com [ZAC: exact CRM course URL for the listing]
+**Price:** NZ$549 · **Course page:** concussion-education-australia.com [ZAC: exact CRM course URL for the listing]
 
 ---
 
 ## STILL REQUIRED BEFORE SENDING
 
 - **[ZAC: CEPNZ contact address]** — the CC address; confirm the correct current CEPNZ contact before sending.
-- **[ZAC: NZD price]** — SESNZ will likely want it on the listing.
+- **NZ$549** — SESNZ will likely want it on the listing.
 - **[ZAC: exact CRM course URL]** — the page the listing links to; must be live before you send.
 - **Entity details are final** and are recorded in the pack header (Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · 2 Wordsworth St, Byron Bay NSW 2481 · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579). A listing request usually doesn't need them, so don't volunteer them in the email — supply on request only.
 - **NZ annex** — offered in the email; have it ready in case they say yes, but don't attach it unsolicited.

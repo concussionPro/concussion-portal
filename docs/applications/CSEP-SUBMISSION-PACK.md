@@ -95,7 +95,7 @@ Please find our **Route 2 accreditation request** for **Concussion Rehab Mastery
 **Duration:** 480 minutes of assessed instructional content
 **PDCs sought:** 8 (one credit per assessed instructional hour)
 **Assessment:** 87 questions delivered per module, 80% pass mark
-**Price:** [ZAC: confirm CAD price for the Canadian market]
+**Price:** CAD $475
 **Fee:** [ZAC: fee confirmed by CSEP] paid [ZAC: method, date, reference] — or, if no fee applies, delete this line
 
 The case for accreditation is a change in the evidence that has moved concussion treatment into CSEP members' hands.
@@ -115,7 +115,7 @@ I would welcome the opportunity to answer reviewer questions and to make any ame
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Registered Osteopath (AHPRA registration OST0001852866) · B.Clin.Sci, M.Ost.Med
 Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
 2 Wordsworth St, Byron Bay NSW 2481, Australia
 zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
@@ -328,7 +328,7 @@ Zac is the sole author of Concussion Rehab Mastery. Stated plainly for the revie
 - **Certificate:** states module titles, assessed instructional hours and credits — formatted for direct entry into the CSEP PDC Tracker.
 - **Verification:** CEA can verify completion for any individual on CSEP request.
 - **Brand files:** CEA will display the CSEP accreditation mark on the course page, certificate and course marketing only, per CSEP brand guidelines, and will withdraw it immediately on lapse or non-renewal.
-- **Pricing for Canada:** [ZAC: confirm CAD price]
+- **Pricing for Canada:** CAD $475
 - **Group purchasing:** available for teams, clinics and university programmes.
 - **Content maintenance:** reviewed against the prevailing international consensus statement and updated within CEA's normal revision cycle; material protocol changes notified to CSEP at renewal.
 
@@ -336,8 +336,8 @@ Zac is the sole author of Concussion Rehab Mastery. Stated plainly for the revie
 
 ## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: AHPRA registration number]** — author credentials.
-- **[ZAC: CAD price point]** — decide the Canadian price before Email 2.
+- **OST0001852866** — author credentials.
+- **CAD $475** — decide the Canadian price before Email 2.
 - **[ZAC: fee confirmed by CSEP]**, **[ZAC: payment method, date, reference]** — only after CSEP's reply to Email 1. If Route 2 carries no fee, delete that line from Email 2.
 - **Canadian annex** — must exist as a document before Email 2 goes out; it is offered to reviewers as part of the submission.
 - **Sequencing decision:** if ESSA endorsement lands before you send, update sections 11 and 8 to state it as granted — it is the single highest-leverage addition to this application.

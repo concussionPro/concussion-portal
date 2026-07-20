@@ -201,7 +201,7 @@ He is the sole author of Concussion Rehab Mastery. He designed the module struct
 **Qualifications**
 - Master of Osteopathic Medicine (M.Ost.Med)
 - Bachelor of Clinical Science (B.Clin.Sci)
-- Registered Osteopath, Australian Health Practitioner Regulation Agency (AHPRA) — registration number `[ZAC: AHPRA registration number]`
+- Registered Osteopath, Australian Health Practitioner Regulation Agency (AHPRA) — registration number `OST0001852866`
 
 **Clinical experience**
 - 10+ years in clinical practice, with a practice focus in neurological health and concussion assessment and rehabilitation.
@@ -387,7 +387,7 @@ Paste these values into the corresponding Formstack fields.
 ## STILL REQUIRED BEFORE SUBMITTING
 
 1. **AHPRA registration number** — inserted at the marked position in A5 (CV summary, Qualifications).
-   `[ZAC: AHPRA registration number, format OST00000000000]`
+   `OST0001852866`
 
 2. **Application fee** — not published; revealed inside the Formstack form. Record the amount and the payment reference on submission, and diarise the annual renewal date.
    `[ZAC: fee amount + payment reference + renewal date]`

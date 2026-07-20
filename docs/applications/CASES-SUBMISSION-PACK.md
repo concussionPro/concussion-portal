@@ -83,7 +83,7 @@ Please find our application for **CPD Endorsement** of **Concussion Rehab Master
 **Format:** online, asynchronous, self-paced — 8 modules
 **Assessment:** 87 questions delivered per module, 80% pass mark
 **Stand-alone:** yes — no prerequisite, no required follow-on, complete in itself
-**Price:** [ZAC: confirm GBP price for the UK market]
+**Price:** GBP 295
 
 The application fee of [ZAC: fee confirmed by CASES] has been paid by [ZAC: method] on [ZAC: date], reference [ZAC: reference].
 
@@ -102,7 +102,7 @@ I would be glad to answer any question from the reviewers and to make amendments
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Registered Osteopath (AHPRA registration OST0001852866) · B.Clin.Sci, M.Ost.Med
 Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
 2 Wordsworth St, Byron Bay NSW 2481, Australia
 zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
@@ -325,8 +325,8 @@ Endorsement is understood to be annual. CEA will submit for renewal on schedule.
 
 ## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: AHPRA registration number]** — author credentials.
-- **[ZAC: GBP price point]** — decide the UK price before submitting.
+- **OST0001852866** — author credentials.
+- **GBP 295** — decide the UK price before submitting.
 - **[ZAC: fee confirmed by CASES]**, **[ZAC: payment method, date, reference]** — populate in Email 2 only after CASES confirms the actual CPD fee in reply to Email 1. Do not pay against the £1,800+VAT CUES figure.
 - **UK annex** — the UK-context annex described in section 9 must exist as a document before Email 2 goes out; it is offered to reviewers as part of the submission.
 - **Do not send the "Positioning spine" section.** It is internal framing. The submitted material is Email 1, Email 2 and sections 1–13 only.

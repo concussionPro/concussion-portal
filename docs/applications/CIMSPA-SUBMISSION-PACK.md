@@ -107,7 +107,7 @@ Further to your confirmation of the [ZAC: window month] submission window, pleas
 **Format:** online, asynchronous, self-paced — 8 modules
 **Duration:** 480 minutes of assessed instructional content = **8.0 CPD points**
 **Assessment:** 87 questions delivered per module, 80% pass mark
-**Price:** [ZAC: confirm GBP price point for the UK market]
+**Price:** GBP 295
 
 The £140+VAT administration fee has been transferred by bank transfer on [ZAC: date] under reference [ZAC: payment reference]. I have not submitted any secondary product; our in-person clinical programme will follow in a later window as per your process.
 
@@ -122,7 +122,7 @@ I look forward to the panel's review and will respond to any amendment request p
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Registered Osteopath (AHPRA registration OST0001852866) · B.Clin.Sci, M.Ost.Med
 Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
 2 Wordsworth St, Byron Bay NSW 2481, Australia
 zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
@@ -335,7 +335,7 @@ Zac is the sole author of Concussion Rehab Mastery. To state the position precis
 ## 13. Commercial and licensing information
 
 - **Delivery:** CEA's own platform; individual learner accounts.
-- **Pricing:** [ZAC: confirm GBP price for UK market]
+- **Pricing:** GBP 295
 - **Group/employer purchasing:** available; CEA supports multi-seat purchase for employer partners.
 - **Endorsement mark usage:** CEA will apply the CIMSPA endorsement mark to the product page, the certificate and the product's marketing collateral only, in accordance with CIMSPA brand guidelines, and will withdraw it immediately on lapse or non-renewal.
 - **Review cycle:** content is reviewed against the current international consensus statement and updated within CEA's normal revision cycle; CEA will resubmit for re-endorsement at the interval CIMSPA requires.
@@ -344,8 +344,8 @@ Zac is the sole author of Concussion Rehab Mastery. To state the position precis
 
 ## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: AHPRA registration number]** — for the author-credentials section.
-- **[ZAC: GBP price point]** — decide the UK price before submission; CIMSPA asks for it and it appears on the directory listing.
+- **OST0001852866** — for the author-credentials section.
+- **GBP 295** — decide the UK price before submission; CIMSPA asks for it and it appears on the directory listing.
 - **[ZAC: window month]**, **[ZAC: payment date]**, **[ZAC: payment reference]** — populate in Email 2 only after CIMSPA confirms the window and the £140+VAT transfer clears.
 - **Confirm from CIMSPA's reply, do not assume:** the re-endorsement rate in year two, whether an overseas provider faces additional requirements, and the preferred standards-mapping template.
 - **Do not send the "INTERNAL" or "POSITIONING SPINE" sections.** Both are CEA-internal. The submitted material is Email 1, Email 2 and the application content sections only.
