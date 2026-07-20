@@ -81,11 +81,27 @@ export async function GET(request: NextRequest) {
     const clinicName = (await getClinic(code))?.clinicName ?? undefined
     // ACC forms are transcribed onto ACC's own fillable form — say so, don't
     // stamp a scary DRAFT (the CONTENT is verified against the ACC884 spec).
-    const footerNote =
+    const transcribeNote =
       skin === 'acc884' || skin === 'acc885'
         ? 'Transcribe onto ACC’s current fillable ' + skin.toUpperCase() + ' form.'
         : undefined
-    const html = renderReportContentToHtml(content, { clinicName, footerNote })
+    // DEMO00 renders a fabricated fixture episode (see reports/load.ts). This
+    // report is linked publicly from the /acc pitch and is printable, so the
+    // disclosure has to live IN THE DOCUMENT — a caption on the pitch page
+    // doesn't travel when someone saves or forwards the PDF. Banner + DEMO
+    // watermark, not 'DRAFT': a draft implies a real record awaiting sign-off.
+    const isDemo = code === 'DEMO00'
+    const html = renderReportContentToHtml(content, {
+      clinicName,
+      footerNote: transcribeNote,
+      ...(isDemo
+        ? {
+            draftBanner:
+              'DEMONSTRATION ONLY — fabricated example data. This is not a real client, not a real health record, and must not be filed with ACC.',
+            watermarkText: 'DEMO',
+          }
+        : {}),
+    })
     return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   } catch (err) {
     console.error('SST report error:', err)

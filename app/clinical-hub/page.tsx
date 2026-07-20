@@ -798,17 +798,23 @@ export default function ClinicalHubPage() {
   // clinic-sessions returns clinicName; the `?? code` is a defensive fallback
   // for the pre-load tick (and any legacy record without a name).
   const clinicTitle = isDemo
-    ? 'Carter Sports & Spinal (demo)'
+    ? 'Example Clinic (fabricated demonstration data)'
     : clinicName ?? `${clinicCode} · Your clinic`
 
   const showLive = clinicCode !== '' && (clinicCode === 'DEMO00' || !!viewKey)
 
   return (
     <div className="min-h-screen dashboard-bg">
-      {/* Preview banner — demo mode only. A real clinic sees its real data, unbannered. */}
+      {/* Preview banner — demo mode only. A real clinic sees its real data,
+          unbannered. This page is linked publicly from the /acc supplier pitch,
+          so the banner must state plainly that the patients are INVENTED. Names
+          like "Liam Carter" read as real people to a clinician, and a viewer
+          must never be left to wonder whether they are looking at someone's
+          actual health record. */}
       {isDemo && (
-        <div className="bg-[var(--accent)] text-white text-center text-xs py-1.5 px-4 font-medium">
-          Clinical Hub — pre-launch preview · demo data · not visible to enrolled users
+        <div className="bg-[var(--accent)] text-white text-center text-xs py-2 px-4 font-medium">
+          <strong>Demonstration only — every patient below is fabricated.</strong>{' '}
+          Illustrative example cases, not real people and not real health data.
         </div>
       )}
 
@@ -825,7 +831,7 @@ export default function ClinicalHubPage() {
             <div>
               <h1 className="text-xl font-bold text-foreground tracking-tight leading-none">Clinical Hub</h1>
               <p className="text-xs text-muted-foreground mt-1">
-                {clinicTitle}{realState === 'ready' || isDemo ? <> · {roster.length} active patient{roster.length === 1 ? '' : 's'}</> : null}
+                {clinicTitle}{realState === 'ready' || isDemo ? <> · {roster.length} {isDemo ? 'example' : 'active'} patient{roster.length === 1 ? '' : 's'}</> : null}
               </p>
             </div>
           </div>
@@ -933,7 +939,16 @@ export default function ClinicalHubPage() {
                     {initials(p.name)}
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-foreground leading-tight">{p.name}</h2>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-lg font-bold text-foreground leading-tight">{p.name}</h2>
+                      {/* Sits beside the NAME, the one element most likely to be
+                          read as a real person. */}
+                      {isDemo && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                          Fabricated example
+                        </span>
+                      )}
+                    </div>
                     {/* Render only what we actually know — no zeroed placeholders */}
                     <p className="text-sm text-muted-foreground">
                       {[p.age != null ? `${p.age} yrs` : null, p.sport ?? null].filter(Boolean).join(' · ')}

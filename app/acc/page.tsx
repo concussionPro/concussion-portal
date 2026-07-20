@@ -90,7 +90,7 @@ export default function AccSupplierPage() {
             </Link>
           </div>
           <p className="m-0 text-[12.5px] font-medium text-slate-500">
-            Live demos, sample data, no sign-in — a full caseload from intake to discharge.
+            Live demos, no sign-in. Every patient and episode shown is fabricated for illustration — a full example caseload from intake to discharge.
           </p>
         </div>
         <div className="flex min-w-0 flex-1 basis-[520px] justify-center">
@@ -137,7 +137,7 @@ export default function AccSupplierPage() {
               This is the actual output
             </h2>
             <p className="m-0 mt-2 max-w-[660px] text-[14.5px] leading-[1.55] text-slate-600">
-              Rendered live from a sample episode. Your clinician reviews and transcribes onto
+              Rendered live from a fabricated example episode — not a real client. Your clinician reviews and transcribes onto
               ACC&rsquo;s fillable form — it compiles the content, it doesn&rsquo;t file anything.
             </p>
           </div>
@@ -157,12 +157,12 @@ export default function AccSupplierPage() {
             <span className="h-[9px] w-[9px] rounded-full bg-slate-300" />
             <span className="h-[9px] w-[9px] rounded-full bg-slate-300" />
             <span className="ml-3 truncate rounded-md bg-white px-3 py-1 text-[11.5px] font-medium text-slate-400">
-              ACC884 Client Summary Report — sample episode
+              ACC884 Client Summary Report — fabricated example
             </span>
           </div>
           <iframe
             src={REPORT_URL}
-            title="Sample ACC884 Client Summary Report, rendered live from a sample episode"
+            title="Example ACC884 Client Summary Report, rendered live from fabricated demonstration data"
             className="block h-[560px] w-full border-0"
             loading="lazy"
             sandbox="allow-same-origin"

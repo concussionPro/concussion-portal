@@ -25,6 +25,13 @@ export interface RenderReportOptions {
    * not yet verified against the authority's current form (e.g. ACC884 v2).
    */
   draftBanner?: string
+  /**
+   * Text for the diagonal watermark that accompanies `draftBanner`.
+   * Defaults to 'DRAFT'. Set to 'DEMO' for fabricated demonstration reports —
+   * the disclosure must survive printing and forwarding, and calling example
+   * data a "draft" would imply it is a real record awaiting sign-off.
+   */
+  watermarkText?: string
   /** Supervising clinic / provider line shown under the title. */
   clinicName?: string
   /** Extra note appended to the standard decision-support footer line. */
@@ -96,7 +103,9 @@ export function renderReportContentToHtml(
   const draft = opts.draftBanner
     ? `<div class="draft-banner">${esc(opts.draftBanner)}</div>`
     : ''
-  const watermark = opts.draftBanner ? `<div class="watermark" aria-hidden="true">DRAFT</div>` : ''
+  const watermark = opts.draftBanner
+    ? `<div class="watermark" aria-hidden="true">${esc(opts.watermarkText ?? 'DRAFT')}</div>`
+    : ''
   const clinicLine = opts.clinicName
     ? `<span class="clinic">${esc(opts.clinicName)}</span> &middot; `
     : ''
