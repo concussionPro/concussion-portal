@@ -104,7 +104,7 @@ HRt is the heart rate at the first stage at which the symptom score rises **3 po
 
 Terminate on any of:
 
-- a **VAS rise of 3 points or more** (symptom-limited -> HRt obtained)
+- a **VAS rise of 3 points or more** (symptom-limited, so HRt is obtained)
 - **voluntary exhaustion (RPE above 17)** without symptom provocation
 - reaching **90% or more of age-predicted maximum heart rate** (220 minus age)
 - rapid clinical deterioration
@@ -114,9 +114,9 @@ Terminate on any of:
 
 Three terminations carry three distinct meanings:
 
-- **Symptom-limited** -> HRt obtained; interpretation **physiologic** (exercise intolerance present). Proceed to prescription.
-- **Voluntary exhaustion without provocation** (RPE above 17, no rise of 3 points or more) -> interpretation **no-intolerance**: symptoms unlikely to be exercise-driven. Redirect the workup (cervicogenic / vestibular / mood). On a *re-test*, this is the recovery/clearance signal.
-- **Red flag** -> halt and refer. No HRt is produced from an unsafe stop.
+- **Symptom-limited**: HRt obtained; interpretation **physiologic** (exercise intolerance present). Proceed to prescription.
+- **Voluntary exhaustion without provocation** (RPE above 17, no rise of 3 points or more): interpretation **no-intolerance** — symptoms unlikely to be exercise-driven. Redirect the workup (cervicogenic / vestibular / mood). On a *re-test*, this is the recovery/clearance signal.
+- **Red flag**: halt and refer. No HRt is produced from an unsafe stop.
 
 **Role:** clinician interprets the termination.
 
@@ -200,7 +200,7 @@ Apply a recency window to regression so that an old, resolved flare does not rat
 Re-test the HRt on a graded test **weekly** in the randomised controlled trials; **1-2 weekly** clinically.
 
 **Role:** patient executes; clinician monitors and approves progression.
-**Stopping criteria:** red flag at any point; repeated provocation -> regress or refer.
+**Stopping criteria:** red flag at any point; repeated provocation, regress or refer.
 
 ---
 
