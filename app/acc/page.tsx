@@ -10,10 +10,16 @@ import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
  * clinical director or contract lead. The product sold is THE REPORT and
  * DOCUMENTED TEAM COMPETENCY. Rehabilitation is the mechanism, never the pitch.
  *
- * DESIGN RULE (owner, twice): show, don't describe. This page earns its length
- * only through things the reader can look at — the running patient app, the
- * live-rendered ACC884, the demo caseload. Prose earns nothing. If a paragraph
- * can become a demo link or be deleted, do that instead of writing it.
+ * DESIGN RULE (owner, three times: "text mess"): this page is STRUCTURE, not
+ * prose. Every block is a table, a strip, a card row or a live artifact. The
+ * only paragraphs that survive are the evidence footnote and the legal
+ * disclosure, which must read as prose. New content that wants to be a
+ * paragraph belongs in the supplier pack, not here.
+ *
+ * CLAIM DISCIPLINE: CEA has NO outcome data. Never state or imply this software
+ * shortens recovery. The trial result is cited ONCE, in the footnote, with its
+ * population limit stated — an ACC caseload (39.5% falls, 20% MVA, 8.9%
+ * assault) is not the adolescent sport-concussion population that was studied.
  *
  * ARGUMENT: the contract's own tension — Cl. 5.2.1 mandates five disciplines,
  * none trained at entry in exercise testing; Cl. 5.8.2.1.2 obliges exercise
@@ -37,10 +43,25 @@ const MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
   'Hi Zac — I hold (or support) an ACC Concussion Services contract and would like 20 minutes to look at the ACC884 output and the competency component.\n\nOrganisation:\nRole:\nBest time:',
 )}`
 
+/** ACC's own performance measures -> what an episode record can evidence. */
+const MEASURES_TBL: { measure: string; source: string; record: string }[] = [
+  { measure: 'Client outcomes', source: 'Recovery duration, from ACC claims data', record: 'Serial measured threshold — a physiological trajectory, not a symptom score' },
+  { measure: 'Quality', source: 'Service delivery against the schedule', record: 'Every home session recorded against the prescribed band; dose and adherence observed' },
+  { measure: 'Timeliness', source: 'Return-to-work metrics; reporting deadlines', record: 'ACC884 content accumulates during delivery, not at the deadline' },
+]
+
+/** The admin reality, before and after. */
+const SHIFT: { step: string; before: string; after: string }[] = [
+  { step: 'During the episode', before: 'Appointment notes, written for clinical use', after: 'Structured record: threshold, band, minutes, symptom deltas' },
+  { step: 'At service exit', before: 'Reconstruct the episode from notes', after: 'Review the compiled ACC884 content' },
+  { step: 'Six-monthly return', before: 'Assemble by hand from files', after: 'Aggregate what is already structured' },
+]
+
 const CLAUSES = [
   { ref: 'Cl. 5.2.1', text: 'Mandates the team: medical, neuropsychology, psychology, OT, physiotherapy — none trained at entry to practice in graded exercise testing.' },
   { ref: 'Cl. 5.8.2.1.2', text: 'Obliges you to deliver “assessment of exercise tolerance and/or functional capacity”.' },
-  { ref: 'Cl. 1.2.2', text: 'Makes the one-year extension conditional on ACC being satisfied with performance.' },
+  { ref: 'Cl. 13.4', text: 'Your performance is shared, non-anonymised, with every other contracted supplier.' },
+  { ref: 'Cl. 1.2.2', text: 'The one-year extension is conditional on ACC being satisfied with performance.' },
 ] as const
 
 const MEASURES = [
@@ -99,28 +120,22 @@ export default function AccSupplierPage() {
         </div>
       </header>
 
-      {/* ── WHAT ACC MEASURES ─────────────────────────────────────────────── */}
+      {/* ── THE SHIFT — before/after strip ─────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
-        <h2 className="mb-2 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
-          Measured from ACC&rsquo;s data, not your write-ups
-        </h2>
-        <p className="mb-6 max-w-[720px] text-[14.5px] leading-[1.55] text-slate-600">
-          Recovery duration and return-to-work, benchmarked at &ldquo;National Average or one
-          deviation higher&rdquo; — computed by ACC from its own claims data, not from your
-          reports. Under Cl.&nbsp;13.4 you have consented to ACC sharing that performance,
-          non-anonymised, with every other contracted supplier, and the Cl.&nbsp;1.2.2 extension
-          turns on ACC being satisfied with it. No renewal is pending (the term runs to 30 June
-          2027) — which is the point: the record being written now is the record those decisions
-          will rest on.
-        </p>
-        <dl className="m-0 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-3">
-          {MEASURES.map((m) => (
-            <div key={m.k}>
-              <dt className="text-[15px] font-bold" style={{ color: ACCENT }}>{m.k}</dt>
-              <dd className="m-0 mt-1.5 text-[13.5px] leading-[1.55] text-slate-600">{m.body}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
+          <div className="grid grid-cols-[1fr] sm:grid-cols-[minmax(140px,0.8fr)_1fr_1fr]">
+            <div className="hidden bg-slate-50 px-5 py-3 sm:block" />
+            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 sm:block">Today</div>
+            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] sm:block" style={{ color: ACCENT }}>With SST Trainer</div>
+            {SHIFT.map((r) => (
+              <div key={r.step} className="contents">
+                <div className="border-t border-slate-100 px-5 pb-1 pt-4 text-[13px] font-bold text-slate-900 sm:py-4">{r.step}</div>
+                <div className="px-5 pb-1 text-[13.5px] leading-[1.5] text-slate-500 sm:border-t sm:border-slate-100 sm:py-4">{r.before}</div>
+                <div className="px-5 pb-4 text-[13.5px] font-medium leading-[1.5] text-slate-800 sm:border-t sm:border-slate-100 sm:py-4">{r.after}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── THE ARTIFACT — the page's centre of gravity ────────────────────── */}
@@ -169,6 +184,32 @@ export default function AccSupplierPage() {
         </p>
       </section>
 
+      {/* ── WHAT ACC MEASURES — table ──────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
+        <h2 className="mb-4 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
+          Scored from ACC&rsquo;s data, not your write-ups
+        </h2>
+        <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
+          <div className="grid grid-cols-[1fr] sm:grid-cols-[minmax(130px,0.7fr)_1fr_1.2fr]">
+            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 sm:block">Measure</div>
+            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 sm:block">How ACC scores it</div>
+            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] sm:block" style={{ color: ACCENT }}>What your record evidences</div>
+            {MEASURES_TBL.map((m) => (
+              <div key={m.measure} className="contents">
+                <div className="border-t border-slate-100 px-5 pb-1 pt-4 text-[13px] font-bold text-slate-900 sm:py-4">{m.measure}</div>
+                <div className="px-5 pb-1 text-[13.5px] leading-[1.5] text-slate-500 sm:border-t sm:border-slate-100 sm:py-4">{m.source}</div>
+                <div className="px-5 pb-4 text-[13.5px] font-medium leading-[1.5] text-slate-800 sm:border-t sm:border-slate-100 sm:py-4">{m.record}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="mt-3 text-[12.5px] leading-[1.5] text-slate-500">
+          Benchmarked at &ldquo;National Average or one deviation higher&rdquo;. No renewal is pending
+          — the term runs to 30 June 2027 — which is the point: the record written now is the record
+          the Cl.&nbsp;1.2.2 extension decision rests on.
+        </p>
+      </section>
+
       {/* ── THE GAP ────────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
         <div
@@ -178,7 +219,7 @@ export default function AccSupplierPage() {
           <h2 className="mb-5 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
             And your contract already asks for it
           </h2>
-          <dl className="m-0 grid grid-cols-1 gap-x-8 gap-y-3.5 md:grid-cols-3">
+          <dl className="m-0 grid grid-cols-1 gap-x-8 gap-y-3.5 sm:grid-cols-2 lg:grid-cols-4">
             {CLAUSES.map((c) => (
               <div key={c.ref}>
                 <dt
