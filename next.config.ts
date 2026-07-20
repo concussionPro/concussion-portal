@@ -125,8 +125,41 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // everything EXCEPT /tools/* and /sst-trainer gets the strict, locked-down headers
-        source: '/((?!tools/|sst-trainer).*)',
+        // Jurisdiction report HTML (/api/sst/report): the /acc pitch page embeds
+        // the live sample ACC884 in a same-origin iframe as its proof artifact.
+        // The global policy below is DENY / frame-ancestors 'none', which blocks
+        // that embed — this narrow carve-out relaxes ONLY framing, only to self.
+        // The route's own auth (clinic code + view key; DEMO00 keyless) is
+        // unchanged; a report never renders cross-origin.
+        source: '/api/sst/report',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data:",
+              "font-src 'self' data:",
+              "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "upgrade-insecure-requests"
+            ].join('; ')
+          }
+        ],
+      },
+      {
+        // everything EXCEPT /tools/*, /sst-trainer and /api/sst/report gets the
+        // strict, locked-down headers (each excluded route has its own scoped
+        // block above — without the exclusion BOTH X-Frame-Options values would
+        // be sent and browsers take the stricter DENY, breaking the /acc embed)
+        source: '/((?!tools/|sst-trainer|api/sst/report).*)',
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
