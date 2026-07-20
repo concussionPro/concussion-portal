@@ -75,6 +75,7 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 - **Always push after committing.** Zac expects deploys to follow commits.
 - **Kill `next dev` before starting a new one.** Dev server eats 200%+ CPU on a 16 GB Mac.
 - **Don't enable Turbopack FS cache** in `next.config.ts` — `turbopackFileSystemCacheForDev: false` (Next 16+ default-on causes 230 MB/sec disk writes).
+- **`vercel.json` `"regions": ["syd1"]` is a compliance setting, not a preference.** The Neon DB is ap-southeast-2 (Sydney); AU function execution + AU data together satisfy ACC Service Schedule cl.14.1.2 (client PI stored in NZ and/or Australia), which flows down to CEA in NZ supplier deals. Don't add non-AU regions without checking that clause. Also: `vercel.json` rejects unknown keys — an invalid key fails the whole deployment BEFORE the build, with empty build logs (bitten 2026-07-20: three silent ERROR deploys from a `_regions_note` comment key).
 - **Don't touch `neurovision/`** — separate project living at the root, has its own lifecycle.
 - **Read code before proposing changes.** No speculative refactors.
 - **Run a CLEAN typecheck before pushing engine changes:** `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`. Incremental tsc caches unchanged regions and gave false-green locally while Vercel's clean build FAILED on a real type error (2026-07-01). Also: `git add <file>` stages the WHOLE file — don't sweep uncommitted WIP into an unrelated commit (that's how a consumer shipped without its type-acceptor and broke the build).
