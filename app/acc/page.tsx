@@ -66,14 +66,14 @@ export default function AccSupplierPage() {
             For ACC Concussion Services suppliers
           </span>
           <h1 className="m-0 text-[clamp(32px,4.2vw,52px)] font-extrabold leading-[1.04] tracking-[-0.03em]">
-            Your recovery numbers come from ACC&rsquo;s data.{' '}
-            <span style={{ color: ACCENT }}>Only faster recovery moves them.</span>
+            Your ACC884s, written{' '}
+            <span style={{ color: ACCENT }}>as the care happens.</span>
           </h1>
           <p className="m-0 max-w-[520px] text-[clamp(15px,1.4vw,17.5px)] leading-[1.55] text-slate-600">
-            The consensus first-line treatment — aerobic exercise prescribed from a{' '}
-            <strong>measured</strong> heart-rate threshold — is worth roughly 4.6 days
-            per episode. This is the instrument that delivers it, and it compiles your{' '}
-            <strong>ACC884</strong> as care happens instead of at the deadline.
+            The instrument for delivering the consensus first-line treatment — aerobic
+            exercise prescribed from a <strong>measured</strong> heart-rate threshold —
+            which records the objective outcome as it goes. Your six-monthly becomes
+            review-and-transcribe instead of reconstruct-from-notes.
           </p>
           <div className="flex flex-wrap gap-3">
             <a
@@ -105,12 +105,13 @@ export default function AccSupplierPage() {
           Measured from ACC&rsquo;s data, not your write-ups
         </h2>
         <p className="mb-6 max-w-[720px] text-[14.5px] leading-[1.55] text-slate-600">
-          Benchmarked at &ldquo;National Average or one deviation higher&rdquo; from ACC&rsquo;s own
-          claims data — so the number moves on recovery, not documentation. Under Cl.&nbsp;13.4 you
-          have consented to ACC sharing that performance, non-anonymised, with every other
-          contracted supplier; and the Cl.&nbsp;1.2.2 extension turns on ACC being satisfied with
-          it. No renewal is pending (the term runs to 30 June 2027) — which is exactly the point:
-          the record being written across every episode now is the record those decisions rest on.
+          Recovery duration and return-to-work, benchmarked at &ldquo;National Average or one
+          deviation higher&rdquo; — computed by ACC from its own claims data, not from your
+          reports. Under Cl.&nbsp;13.4 you have consented to ACC sharing that performance,
+          non-anonymised, with every other contracted supplier, and the Cl.&nbsp;1.2.2 extension
+          turns on ACC being satisfied with it. No renewal is pending (the term runs to 30 June
+          2027) — which is the point: the record being written now is the record those decisions
+          will rest on.
         </p>
         <dl className="m-0 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-3">
           {MEASURES.map((m) => (
@@ -191,14 +192,21 @@ export default function AccSupplierPage() {
             ))}
           </dl>
           <p className="mb-0 mt-6 max-w-[820px] text-[15px] leading-[1.6] text-slate-700">
-            This is not a criticism of any team — suppliers deliver exercise programmes every
-            day. What changed at Amsterdam 2022 is the <em>method</em>: the assessment
-            Cl.&nbsp;5.8.2.1.2 asks for now <em>generates</em> the first-line treatment, from an
-            individually measured threshold rather than estimation — and none of the five mandated
-            disciplines is trained in that at entry to practice. Closing it is an upgrade to the
-            service you already run, not a new service line.
+            Not a criticism of any team — suppliers deliver exercise programmes daily. What
+            changed at Amsterdam 2022 is the <em>method</em>: the assessment Cl.&nbsp;5.8.2.1.2
+            asks for now <em>generates</em> the treatment, from a measured threshold rather than
+            estimation. An upgrade to the service you already run, not a new service line.
           </p>
         </div>
+        <p className="mt-3 max-w-[820px] text-[12.5px] leading-[1.55] text-slate-400">
+          Evidence base: in the pivotal randomised trial, adolescent athletes prescribed
+          individualised sub-symptom-threshold aerobic exercise recovered in a median of 13 days
+          versus 17 on placebo-like stretching (Leddy et al., <em>JAMA Pediatrics</em> 2019; n=103,
+          ages 13&ndash;18, P=.009). That population is sport-related concussion in adolescents —
+          narrower than an ACC caseload. CEA makes no efficacy claim for its own software and
+          holds no outcome data of its own; the tool delivers the published protocol and records
+          what happened.
+        </p>
       </section>
 
       {/* ── THE TWO COMPONENTS ────────────────────────────────────────────── */}

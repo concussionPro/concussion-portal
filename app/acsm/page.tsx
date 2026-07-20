@@ -67,10 +67,11 @@ export default function AcsmLandingPage() {
             The 6th International Consensus (Amsterdam 2022) moved concussion from a{' '}
             <strong>rest condition</strong> to an{' '}
             <strong>exercise-prescription condition</strong> — gated on exercise
-            testing and an individually derived heart-rate threshold. Prescribed
-            individualised aerobic exercise improves recovery by roughly{' '}
-            <strong>4.6 days</strong> on average and reduces the incidence of
-            persisting symptoms.
+            testing and an individually derived heart-rate threshold. In the pivotal
+            randomised trial, adolescent athletes prescribed individualised
+            sub-symptom-threshold exercise recovered in a median of{' '}
+            <strong>13 days versus 17</strong> on placebo-like stretching (Leddy et al.,
+            <em> JAMA Pediatrics</em> 2019; n=103, ages 13&ndash;18).
           </p>
           <p className="mt-3 text-[15px] leading-relaxed text-slate-700">
             Deriving an individualised HR threshold from a graded exercise test, then

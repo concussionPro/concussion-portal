@@ -41,7 +41,7 @@ Expect this to be free. Ask anyway.
 
 One idea governs every line of the email below, and it must not be misstated.
 
-Amsterdam 2022 moved concussion from a **rest** condition to an **exercise-prescription** condition. Treatment is now gated on exercise testing and on an individually derived heart-rate threshold. Prescribed individualised exercise improves recovery by roughly **4.6 days on average** and reduces the incidence of persisting symptoms.
+Amsterdam 2022 moved concussion from a **rest** condition to an **exercise-prescription** condition. Treatment is now gated on exercise testing and on an individually derived heart-rate threshold. Prescribed individualised exercise shortened median recovery from 17 days to 13 days in the pivotal randomised trial (Leddy et al., *JAMA Pediatrics* 2019; n=103 adolescent athletes aged 13-18, P=.009), and reduces the incidence of persisting symptoms.
 
 Every relevant profession completed its concussion training **before** that shift. The evidence for that is not anecdotal: a survey of **1,272 physiotherapists** found that **70% already held concussion training** and scored an average of **13 out of 15** on concussion knowledge — with the specific gaps sitting in return-to-play confidence and in knowing **when graded exertional training is indicated**. High knowledge, current-to-the-old-model. That is the shape of the problem.
 
