@@ -4,7 +4,7 @@
 
 ¹ Concussion Education Australia Pty Ltd, Australia. ORCID: [0009-0002-4267-0451](https://orcid.org/0009-0002-4267-0451)
 
-**Corresponding author:** Zac Lewis, Concussion Education Australia Pty Ltd, Australia. Email: z.lew87@gmail.com
+**Corresponding author:** Zac Lewis, Concussion Education Australia Pty Ltd, Australia. Email: zac@concussion-education-australia.com
 
 **Article type:** Protocol / delivery-framework paper (a described clinical workflow; *not* a trial protocol, and *not* an effectiveness study)
 
