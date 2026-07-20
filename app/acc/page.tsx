@@ -324,8 +324,10 @@ export default function AccSupplierPage() {
               Team competency you can put in the contract file
             </p>
             <p className="m-0 mt-2 text-[13.5px] leading-[1.5] text-slate-500">
-              Turns &ldquo;our physios are experienced in concussion&rdquo; from an assertion into a
-              dated, named, auditable record.
+              Cl.&nbsp;15.2 requires quality systems that monitor competency and training needs, and
+              ACC may request verification — including &ldquo;documentation of any additional
+              certifications or specialised training completed&rdquo;. This produces exactly that
+              record.
             </p>
             <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
               {[
