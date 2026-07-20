@@ -1,3 +1,35 @@
+# ⚠️ CORRECTION — 2026-07-20. READ THIS BEFORE ANYTHING BELOW.
+
+**The percentage-of-their-revenue model in this document is withdrawn. Do not quote it.**
+
+Two failures, both caught by the owner:
+
+**1. The volumes are invented.** Active+ at "730 episodes / NZ$705,910 of exercise-related billing" is not researched. It was produced by taking a modelled national pool (~4,000 episodes — itself a 15–25% referral-rate assumption applied to ~21,000 claims) and dividing it across 25 suppliers weighted by size. **No supplier's actual concussion volume is known.** Presenting a price as "3.1% of their billing" gave invented inputs the appearance of arithmetic. A procurement lead who knows their own numbers would have found the error in the first meeting.
+
+**2. NZ$22,000 is not a realistic price for this product.** It is a monitoring tool that produces a report, sold by a vendor with no New Zealand accreditation, no outcome data and no reference customer. Percentage-of-customer-revenue pricing requires (a) that you can verify the revenue and (b) that you can demonstrate you caused it. Neither is true here.
+
+## What replaces it
+
+**NZ$49 per actively-delivering clinician, per month.** A six-clinician team is NZ$3,528/yr; a twenty-clinician service is NZ$11,760/yr.
+
+Priced against **what comparable clinical software costs per clinician** — the practice-management and rehab-prescription tools these clinicians already pay for — because that is the comparison a practice manager actually makes, and it is checkable. It is not priced against ACC billing.
+
+Counted on clinicians **delivering the service**, not organisational headcount. This matters at scale: Active+ has 1,400+ clinicians but only a small number would touch concussion exercise rehab. Per-total-headcount pricing would produce an absurd number and end the conversation.
+
+**Seats** (CCM competency, one-off per clinician): NZ$895 → $425 at 40+. Unchanged; this one was justified on cost structure, not on customer revenue.
+
+**Pilot: free for the first two organisations.** The reference is worth more than the fee.
+
+## What we do not know, and must ask rather than model
+
+- **Actual concussion episode volume** per supplier. Ask it in the first meeting; do not model it.
+- Whether the tool is funded from supplier margin or is recoverable within the funded service.
+- What each supplier currently spends per clinician on software.
+
+**The episode economics below (item codes, rates, blended episode value) remain useful for understanding the customer's world and for the "what does this cost you per episode" conversation. The pricing conclusions drawn from them are withdrawn.**
+
+---
+
 # NZ ACC Concussion Services — Pricing Model
 
 ---

@@ -353,49 +353,31 @@ export default function AccSupplierPage() {
           trained clinicians who still can&rsquo;t see the treatment.
         </p>
 
-        {/* Pricing — a flat annual number, stated. Vagueness reads as "we don't
-            know", and a procurement lead does this arithmetic anyway, so show
-            the working. NOT per-episode: that would need volume reporting, can't
-            be budgeted, and a fee scaling with ACC payments weakens the
-            "software is an input, not subcontracting" reading of cl.16.1. */}
-        <div className="mt-6 overflow-hidden rounded-[18px] border border-slate-200 bg-white">
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto]">
-            <div className="bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400">
-              Annual licence · NZD excl GST
-            </div>
-            <div className="hidden bg-slate-50 px-5 py-3 text-right text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 sm:block">
-              Per year
-            </div>
-            <div className="hidden bg-slate-50 px-5 py-3 text-right text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 sm:block">
-              Of exercise-related ACC billing
-            </div>
-            {[
-              { band: 'Multi-region · 500+ episodes a year', price: '$22,000', pct: '~3.1%' },
-              { band: 'Regional · 150–499 episodes', price: '$9,000', pct: '~3.1%' },
-              { band: 'Single clinic · under 150', price: '$2,400', pct: '~3.3%' },
-            ].map((r) => (
-              <div key={r.band} className="contents">
-                <div className="border-t border-slate-100 px-5 pb-1 pt-4 text-[13.5px] font-medium text-slate-800 sm:py-4">
-                  {r.band}
-                </div>
-                <div className="px-5 text-[15px] font-extrabold text-slate-900 sm:border-t sm:border-slate-100 sm:py-4 sm:text-right">
-                  {r.price}
-                </div>
-                <div className="px-5 pb-4 text-[13px] text-slate-500 sm:border-t sm:border-slate-100 sm:py-4 sm:text-right">
-                  {r.pct}
-                </div>
-              </div>
-            ))}
+        {/* Pricing — deliberately NOT a % of their ACC revenue. We cannot
+            verify any supplier's concussion volume, so any percentage would be
+            invented precision. Priced instead on what comparable clinical
+            software costs per clinician, which is checkable and is the number a
+            practice manager already has a feel for. */}
+        <div className="mt-6 rounded-[18px] border border-slate-200 bg-white p-[26px]">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[32px] font-extrabold leading-none tracking-tight text-slate-900">
+              NZ$49
+            </span>
+            <span className="text-[14px] font-semibold text-slate-500">
+              per clinician, per month
+            </span>
           </div>
+          <p className="m-0 mt-3 max-w-[620px] text-[13.5px] leading-[1.55] text-slate-600">
+            Counted on the clinicians actually delivering the service, not your headcount — a team
+            of six is NZ$3,528 a year. It sits in the same range as the practice software your
+            clinicians already use, which is the comparison a practice manager will make.
+          </p>
+          <p className="m-0 mt-3 max-w-[620px] text-[13px] leading-[1.55] text-slate-500">
+            Competency training is a separate one-off per clinician — NZ$895, falling to $425 at
+            volume. The pilot is free for the first two organisations we work with: one clinician, a
+            few real episodes, end to end.
+          </p>
         </div>
-        <p className="mt-3 max-w-[820px] text-[12.5px] leading-[1.55] text-slate-500">
-          Flat — it doesn&rsquo;t move with your caseload, and there is nothing to report to us to be
-          billed correctly. The percentage is shown because you&rsquo;ll work it out anyway: a
-          concussion episode bills roughly NZ$967 against TBI22 and TBI26 at $155.27/hr, and this is
-          about three percent of that. Competency seats are a separate one-off — NZ$895, falling to
-          $425 at volume. A pilot (one clinician, a few real episodes) is fully creditable against
-          the first year.
-        </p>
       </section>
 
       {/* ── CLOSE ─────────────────────────────────────────────────────────── */}
