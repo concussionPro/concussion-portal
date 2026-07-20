@@ -210,43 +210,80 @@ export default function AccSupplierPage() {
         </p>
       </section>
 
-      {/* ── THE GAP ────────────────────────────────────────────────────────── */}
+      {/* ── THE CONTRACT — bento, not a text block ────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
-        <div
-          className="rounded-[22px] border p-[30px] md:p-[38px]"
-          style={{ background: 'linear-gradient(135deg,#fff,#f8fafc)', borderColor: '#e2e8f0' }}
-        >
-          <h2 className="mb-5 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
-            And your contract already asks for it
-          </h2>
-          <dl className="m-0 grid grid-cols-1 gap-x-8 gap-y-3.5 sm:grid-cols-2 lg:grid-cols-4">
-            {CLAUSES.map((c) => (
-              <div key={c.ref}>
-                <dt
-                  className="text-[12px] font-bold text-teal-700"
-                  style={{ fontFamily: 'var(--font-space), sans-serif' }}
-                >
-                  {c.ref}
-                </dt>
-                <dd className="m-0 mt-1.5 text-[13.5px] leading-[1.55] text-slate-600">{c.text}</dd>
+        <h2 className="mb-1 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
+          And your contract already asks for it
+        </h2>
+        <p className="mb-5 max-w-[680px] text-[14px] leading-[1.5] text-slate-600">
+          Amsterdam 2022 changed the <em>method</em>, not the service — an upgrade to what you
+          already run.
+        </p>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {/* the obligation — hero tile */}
+          <div className="rounded-[18px] border-2 p-6 md:col-span-2" style={{ borderColor: ACCENT, background: '#f0fdfa' }}>
+            <span className="text-[11.5px] font-bold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>
+              What you must deliver
+            </span>
+            <p className="m-0 mt-2 text-[19px] font-extrabold leading-[1.3] text-slate-900">
+              &ldquo;Assessment of exercise tolerance and/or functional capacity&rdquo;
+            </p>
+            <p className="m-0 mt-2 text-[13px] font-bold" style={{ fontFamily: 'var(--font-space), sans-serif', color: ACCENT }}>
+              Cl. 5.8.2.1.2
+            </p>
+          </div>
+
+          {/* the team */}
+          <div className="rounded-[18px] border border-slate-200 bg-white p-6">
+            <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
+              Who you have
+            </span>
+            <p className="m-0 mt-2 text-[14.5px] font-semibold leading-[1.45] text-slate-800">
+              Medical · Neuropsychology · Psychology · OT · Physiotherapy
+            </p>
+            <p className="m-0 mt-2 text-[13px] leading-[1.45] text-slate-500">
+              None trained at entry to practice in graded exercise testing.
+            </p>
+            <p className="m-0 mt-2 text-[12px] font-bold text-slate-400" style={{ fontFamily: 'var(--font-space), sans-serif' }}>
+              Cl. 5.2.1
+            </p>
+          </div>
+
+          {/* the stakes — dark, full width */}
+          <div className="rounded-[18px] bg-slate-900 p-6 md:col-span-3">
+            <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
+              And who sees the result
+            </span>
+            <div className="mt-3 grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-2">
+              <div>
+                <p className="m-0 text-[15px] font-semibold leading-[1.45] text-white">
+                  Your performance is shared <strong style={{ color: '#5eead4' }}>non-anonymised</strong> with
+                  every other contracted supplier.
+                </p>
+                <p className="m-0 mt-1.5 text-[12px] font-bold text-slate-500" style={{ fontFamily: 'var(--font-space), sans-serif' }}>
+                  Cl. 13.4
+                </p>
               </div>
-            ))}
-          </dl>
-          <p className="mb-0 mt-6 max-w-[820px] text-[15px] leading-[1.6] text-slate-700">
-            Not a criticism of any team — suppliers deliver exercise programmes daily. What
-            changed at Amsterdam 2022 is the <em>method</em>: the assessment Cl.&nbsp;5.8.2.1.2
-            asks for now <em>generates</em> the treatment, from a measured threshold rather than
-            estimation. An upgrade to the service you already run, not a new service line.
-          </p>
+              <div>
+                <p className="m-0 text-[15px] font-semibold leading-[1.45] text-white">
+                  The one-year extension is conditional on ACC being satisfied with it.
+                </p>
+                <p className="m-0 mt-1.5 text-[12px] font-bold text-slate-500" style={{ fontFamily: 'var(--font-space), sans-serif' }}>
+                  Cl. 1.2.2
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="mt-3 max-w-[820px] text-[12.5px] leading-[1.55] text-slate-400">
+
+        <p className="mt-5 max-w-[860px] text-[12.5px] leading-[1.55] text-slate-400">
           Evidence base: in the pivotal randomised trial, adolescent athletes prescribed
           individualised sub-symptom-threshold aerobic exercise recovered in a median of 13 days
           versus 17 on placebo-like stretching (Leddy et al., <em>JAMA Pediatrics</em> 2019; n=103,
-          ages 13&ndash;18, P=.009). That population is sport-related concussion in adolescents —
-          narrower than an ACC caseload. CEA makes no efficacy claim for its own software and
-          holds no outcome data of its own; the tool delivers the published protocol and records
-          what happened.
+          ages 13&ndash;18, P=.009). That population is narrower than an ACC caseload. CEA holds no
+          outcome data of its own and makes no efficacy claim for its software: the tool delivers
+          the published protocol and records what happened.
         </p>
       </section>
 
