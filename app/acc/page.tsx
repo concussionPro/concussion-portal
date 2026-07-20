@@ -287,27 +287,26 @@ export default function AccSupplierPage() {
         </p>
       </section>
 
-      {/* ── THE TWO COMPONENTS ────────────────────────────────────────────── */}
+      {/* ── WHAT YOU GET — value first, product name second ────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
-        <h2 className="mb-2 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
-          Two components, sold together
+        <h2 className="mb-5 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
+          What you actually get
         </h2>
-        <p className="mb-6 max-w-[720px] text-[14.5px] leading-[1.55] text-slate-600">
-          The licence without competency produces reports a clinician can&rsquo;t defend; competency
-          without the instrument produces trained clinicians who still can&rsquo;t see the treatment.
-        </p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="rounded-[16px] border border-slate-200 bg-white p-[24px]">
-            <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
-              Per-organisation licence
-            </span>
-            <h3 className="mb-3 mt-1.5 text-[18px] font-extrabold leading-[1.15]">SST Trainer</h3>
-            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-white p-[26px]">
+            <p className="m-0 text-[20px] font-extrabold leading-[1.25] text-slate-900">
+              An ACC884 your clinician can defend, built from measured data
+            </p>
+            <p className="m-0 mt-2 text-[13.5px] leading-[1.5] text-slate-500">
+              Not a symptom score written up at exit — a physiological record captured as care was
+              delivered.
+            </p>
+            <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
               {[
-                'A measured threshold from a guided graded test — never age-estimated.',
-                'Home sessions observed on the client’s own wearable: time-in-band, duration, stop-rule events.',
-                'Only live-wearable sessions advance the prescription; manual entries never raise the ceiling.',
-                'Serial re-testing is the outcome measure, and each re-test a documented review point.',
+                'Threshold measured by guided graded test — never age-estimated',
+                'Home sessions observed on the client’s own wearable',
+                'Only live-wearable sessions advance the prescription',
+                'Serial re-testing is the outcome measure',
               ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-[13.5px] leading-[1.5] text-slate-600">
                   <span className="mt-[7px] h-[5px] w-[5px] flex-none rounded-full" style={{ background: ACCENT }} />
@@ -315,32 +314,41 @@ export default function AccSupplierPage() {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="rounded-[16px] border border-slate-200 bg-white p-[24px]">
-            <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
-              Per-seat competency
-            </span>
-            <h3 className="mb-3 mt-1.5 text-[18px] font-extrabold leading-[1.15]">
-              Concussion Clinical Mastery
-            </h3>
-            <p className="m-0 text-[13.5px] leading-[1.55] text-slate-600">
-              For the physiotherapists and OTs already on your team: graded exertion testing,
-              deriving the threshold, prescribing against it, progression by re-test, and the scope
-              boundary. Endorsed by Osteopathy Australia.
+            <p className="m-0 mt-auto pt-4 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
+              SST Trainer · per-organisation licence
             </p>
-            <p
-              className="mb-0 mt-3 rounded-[12px] p-3.5 text-[13.5px] leading-[1.55]"
-              style={{ background: '#f0fdfa', color: '#134e4a' }}
-            >
-              Certificated per clinician, dated and named — turning &ldquo;our physios are
-              experienced in concussion&rdquo; from an assertion into an auditable record.
+          </div>
+
+          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-white p-[26px]">
+            <p className="m-0 text-[20px] font-extrabold leading-[1.25] text-slate-900">
+              Team competency you can put in the contract file
+            </p>
+            <p className="m-0 mt-2 text-[13.5px] leading-[1.5] text-slate-500">
+              Turns &ldquo;our physios are experienced in concussion&rdquo; from an assertion into a
+              dated, named, auditable record.
+            </p>
+            <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
+              {[
+                'Written for the physiotherapists and OTs already on your team',
+                'Graded exertion testing, threshold derivation, prescription, progression',
+                'Certificated per clinician — dated and named',
+                'Endorsed by Osteopathy Australia',
+              ].map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-[13.5px] leading-[1.5] text-slate-600">
+                  <span className="mt-[7px] h-[5px] w-[5px] flex-none rounded-full" style={{ background: ACCENT }} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <p className="m-0 mt-auto pt-4 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
+              Concussion Clinical Mastery · per-seat
             </p>
           </div>
         </div>
-        <p className="mb-0 mt-4 max-w-[820px] text-[13px] leading-[1.55] text-slate-500">
-          No price here deliberately. It&rsquo;s a per-organisation licence plus per-seat training,
-          and the licence figure turns on one question we&rsquo;d rather ask than assume: whether a
-          tool like this is funded from supplier margin or is recoverable within the funded service.
+        <p className="mt-4 max-w-[820px] text-[13px] leading-[1.55] text-slate-500">
+          <strong className="text-slate-700">Sold together.</strong> The licence without competency
+          produces reports a clinician can&rsquo;t defend; competency without the instrument produces
+          trained clinicians who still can&rsquo;t see the treatment.
         </p>
       </section>
 
