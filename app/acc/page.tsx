@@ -308,7 +308,8 @@ export default function AccSupplierPage() {
             An ESSA professional-development endorsement of CEA&rsquo;s separate
             exercise-physiology product has been independently reviewed but is{' '}
             <strong>pending, and is not claimed</strong>. The director&rsquo;s
-            mTBI manuscript is <strong>under peer review and unpublished</strong>.
+            mTBI manuscript is <strong>prepared for submission — not submitted, not
+            peer reviewed and unpublished</strong>.
             CEA holds no New Zealand accreditation and does not represent that it
             does.
           </p>

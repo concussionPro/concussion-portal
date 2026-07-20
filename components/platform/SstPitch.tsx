@@ -12,9 +12,14 @@ import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
  * it. Matches the SstLanding design language (fonts, mesh, teal, bounded cards).
  *
  * CLAIM DISCIPLINE (same as the outreach + papers): OA endorsement is real;
- * ESSA is "designed to ESSA standards" (pending, never "accredited"); PMS
- * integration is "built for … completing certification" (never a live-production
- * claim); no efficacy/diagnostic claim; papers are NOT referenced (not submitted).
+ * ESSA is "designed to ESSA standards" (pending, never "accredited"); no
+ * efficacy/diagnostic claim; papers are NOT referenced (not submitted).
+ *
+ * NO PMS WRITE-BACK CLAIM, in any form. This previously said Cliniko/Gensolve
+ * filing was "in certification" — it is not. The adapter is gated off
+ * (PMS_WRITEBACK_ENABLED), carries unvalidated field shapes, and has never run
+ * against a live tenant, so there is no certification in progress to describe.
+ * /acc states the same rule. Do not reintroduce it in either place.
  */
 
 const hanken = Hanken_Grotesk({
@@ -83,9 +88,9 @@ const CONFIG: Record<SstPitchVariant, VariantConfig> = {
       { icon: '❤', title: 'A measured threshold, not an age formula', body: 'A guided graded test sets the individual heart-rate threshold. The 80–90% training band is prescribed from that measured value — not 220-minus-age.' },
       { icon: '⤴', title: 'Every home session on your dashboard', body: 'The patient enters your clinic code once; each session streams back live — objective HR, time-in-band, adherence, and any stop-rule flare.' },
       { icon: '✓', title: 'Only verified sessions progress the band', body: 'Live-wearable sessions advance the band; typed numbers count for safety, never progression. The band is capped at the measured threshold.' },
-      { icon: '📄', title: 'The GP report writes itself', body: 'At episode end the report generates — trajectory, adherence, clearance-or-extend recommendation — as a single-page PDF you review and sign. Direct filing into Cliniko is in certification.' },
+      { icon: '📄', title: 'The GP report writes itself', body: 'At episode end the report generates — trajectory, adherence, clearance-or-extend recommendation — as a single-page PDF you review and sign.' },
     ],
-    proof: ['Osteopathy Australia–endorsed concussion CPD sits alongside the tool', 'Clinician-directed: the tool presents data and paces the protocol; you decide', 'A review-and-sign PDF report today; Cliniko filing in certification'],
+    proof: ['Osteopathy Australia–endorsed concussion CPD sits alongside the tool', 'Clinician-directed: the tool presents data and paces the protocol; you decide', 'A review-and-sign PDF report you attach to the patient file'],
     closingTitle: 'Put every patient’s trajectory on your dashboard.',
     closingBody: 'Fifteen minutes and I’ll show you the between-visit view for a single patient, and the report it generates at episode end.',
   },
@@ -95,7 +100,7 @@ const CONFIG: Record<SstPitchVariant, VariantConfig> = {
     headlineAccent: 'generated as you deliver.',
     subhead:
       'A measured sub-threshold aerobic programme where every home session is a functional outcome — so the ACC884 Client Summary Report ACC expects at service exit compiles itself from the data you already captured.',
-    heroChips: ['Functional measure — not symptom logging', 'ACC884 outcome content, compiled for you', 'Designed to write into Gensolve — in certification'],
+    heroChips: ['Functional measure — not symptom logging', 'ACC884 outcome content, compiled for you', 'Print-ready for transcription onto ACC’s form'],
     ctaLabel: 'Show a clinical lead',
     ctaHref: MAILTO('SST Trainer — ACC concussion reporting', 'Hi Zac — I’d like a 15-minute look at the ACC884 Client Summary Report and the outcome view for our service.'),
     secondaryLabel: 'See how the trainer works →',
@@ -107,11 +112,11 @@ const CONFIG: Record<SstPitchVariant, VariantConfig> = {
     solutionsTitle: 'One workflow closes both gaps',
     solutions: [
       { icon: '📈', title: 'A functional outcome, measured', body: 'Serial measured heart-rate threshold and objective home-session data are functional outcomes — the measure the sector evaluation said was missing.' },
-      { icon: '🗂', title: 'The ACC884, compiled for you', body: 'The measured trajectory, adherence and outcome populate the ACC884 Client Summary Report content, carrying the ACC45 claim reference — you review it, transcribe onto ACC’s form and file. Automatic filing into Gensolve is in certification.' },
+      { icon: '🗂', title: 'The ACC884, compiled for you', body: 'The measured trajectory, adherence and outcome populate the ACC884 Client Summary Report content, carrying the ACC45 claim reference — you review it, transcribe onto ACC’s form and file.' },
       { icon: '✔', title: 'Outcomes reviewed across delivery', body: 'Every graded re-test is a review point; the report shows outcome measures were reviewed across the service, not reconstructed at discharge.' },
       { icon: '⤴', title: 'Reviewed between visits, on your dashboard', body: 'Home sessions stream to the clinician via a service code, so the review is continuous and visible — not reconstructed at discharge.' },
     ],
-    proof: ['Designed to ESSA standards', 'ACC884 content today; Gensolve auto-filing in certification', 'Send to a clinical or service lead — this is a workflow, not a referral'],
+    proof: ['Designed to ESSA standards', 'ACC884 content compiled from delivery data, ready to transcribe', 'Send to a clinical or service lead — this is a workflow, not a referral'],
     closingTitle: 'The functional measure your evaluation said was missing.',
     closingBody: 'Fifteen minutes with a clinical lead and I’ll walk the ACC884 Client Summary Report and the outcome-review evidence on a sample episode.',
   },
