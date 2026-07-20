@@ -31,7 +31,12 @@ export const CONFIG = {
     PRICE_EARLY_BIRD: 1190,
     // SCAT6 completion code — dollar amount must match the Stripe coupon.
     SCAT_DISCOUNT_AUD: 50,
-    PRICE_INTERNATIONAL: 197,
+    // International (USD) — CRM course + first year on the platform, with the
+    // annual renewal covering the concussion-update module + platform access.
+    // Consumed by lib/stripe.ts (international-online checkout) and the
+    // /acsm + /pricing-international offer cards — keep them in lockstep.
+    PRICE_INTERNATIONAL: 347,
+    RENEWAL_INTERNATIONAL: 99,
     SAVINGS: 210,
     // Concussion Hub Pack — clinic-tier offer for cold outreach.
     // 5 online seats + branded clinical docs + admin pack + 30min consult.

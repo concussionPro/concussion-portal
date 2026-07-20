@@ -9,7 +9,7 @@
 
 > **How to use this document.** Every section below is final copy. Paste each asset into the corresponding Formstack field. Nothing here requires drafting except the bracketed `[ZAC: ...]` fields listed in the final section.
 
-> **Standing accuracy constraints observed in this pack.** No ACSM CEC award is claimed or implied. No ESSA endorsement is claimed as granted. No exercise physiologist is claimed as an author. The author's mild traumatic brain injury manuscript is described only as under peer review. ACSM's published positions are cited as public statements of the field's needs; no ACSM endorsement of this course is stated or implied.
+> **Standing accuracy constraints observed in this pack.** No ACSM CEC award is claimed or implied. No ESSA endorsement is claimed as granted. No exercise physiologist is claimed as an author. The author's mild traumatic brain injury manuscript is described only as prepared for submission — never as under review or published. ACSM's published positions are cited as public statements of the field's needs; no ACSM endorsement of this course is stated or implied.
 
 ---
 
@@ -214,7 +214,7 @@ He is the sole author of Concussion Rehab Mastery. He designed the module struct
 - Founder of Concussion Education Australia, which delivers concussion continuing education to allied health professionals in both online and in-person formats.
 
 **Scholarly activity**
-- Author of a mild traumatic brain injury manuscript (Lewis & Baker) currently **under peer review**. It is not published, is not cited in the course, and is not offered here as a credential — it is disclosed only for completeness of the presenter record.
+- Author of a mild traumatic brain injury manuscript (Lewis & Baker) **prepared for submission — not yet submitted to any journal**. It is not published, is not cited in the course, and is not offered here as a credential — it is disclosed only for completeness of the presenter record.
 
 ### Independent review of the course
 
@@ -396,6 +396,6 @@ Paste these values into the corresponding Formstack fields.
 - `[ZAC: confirm]` No CEC figure appears on any public page, sales page, or marketing asset. The 8.0 figure in A8 is a request only.
 - `[ZAC: confirm]` No ESSA endorsement is claimed anywhere in the submission or on any linked page. The two ESSA-appointed reviewers are described as an independent review of the course, not as endorsement.
 - `[ZAC: confirm]` No page linked from this application implies ACSM endorsement. If the application links to a landing page, that page must cite ACSM's published Hot Topic position only as a public statement of the field's needs.
-- `[ZAC: confirm]` The mTBI manuscript (Lewis & Baker) is described as under peer review only — not as published — in every asset submitted or linked.
+- `[ZAC: confirm]` The mTBI manuscript (Lewis & Baker) is described as prepared for submission only — never as under review or published — in every asset submitted or linked.
 - `[ZAC: confirm]` The "Positioning spine" section is internal framing only. Nothing from it has been pasted into a Formstack field. Only assets A1–A9 are submitted.
 - `[ZAC: confirm]` No submitted asset characterises ACSM-certified professionals as deficient, undertrained or unsafe. The framing is service-line expansion using an existing competency.

@@ -301,13 +301,16 @@ function toAccCondition(c: GensolveCondition): GensolveAccCondition {
 }
 
 function toPmsAppointment(a: GensolveAppointment): PmsAppointment {
-  // Prefer an explicit boolean; else derive from the status string.
+  // Prefer an explicit boolean; else derive from the status string. When BOTH
+  // are absent, default to NOT attended — this feeds DNA/ACC885 reporting, and
+  // marking an unknown as attended would silently suppress a DNA that ACC
+  // requires. Fail toward the report that gets human review, never away.
   const attended =
     typeof a.attended === 'boolean'
       ? a.attended
       : a.status
         ? a.status.toLowerCase() === 'attended'
-        : true
+        : false
   return {
     id: String(a.id),
     patientId: a.clientId != null ? String(a.clientId) : '',

@@ -20,7 +20,10 @@
  * Robots noindex/nofollow and the full claim-discipline list live in layout.tsx.
  */
 
-const CONTACT_EMAIL = 'zac@concussion-education-australia.com'
+import Link from 'next/link'
+import { CONFIG } from '@/lib/config'
+
+const CONTACT_EMAIL = CONFIG.CONTACT_EMAIL
 
 const MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
   'ACC Concussion Services — exercise tolerance assessment and ACC884 reporting',
@@ -92,12 +95,29 @@ export default function AccSupplierPage() {
             content, and certificated per-clinician competency that goes in the
             contract file as documentation rather than as an assertion.
           </p>
-          <a
-            href={MAILTO}
-            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white font-bold px-6 py-3.5 text-sm shadow-md hover:bg-slate-800 transition"
-          >
-            Start a conversation
-          </a>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <a
+              href={MAILTO}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white font-bold px-6 py-3.5 text-sm shadow-md hover:bg-slate-800 transition"
+            >
+              Start a conversation
+            </a>
+            <Link
+              href="/demo/acc"
+              className="inline-flex items-center gap-2 rounded-xl border-[1.5px] border-slate-300 bg-white text-slate-900 font-bold px-6 py-3.5 text-sm hover:border-slate-400 transition"
+            >
+              See a sample ACC884 →
+            </Link>
+            <Link
+              href="/clinical-hub?clinic=DEMO00"
+              className="inline-flex items-center gap-2 rounded-xl border-[1.5px] border-slate-300 bg-white text-slate-900 font-bold px-6 py-3.5 text-sm hover:border-slate-400 transition"
+            >
+              Explore the demo dashboard →
+            </Link>
+          </div>
+          <p className="mt-2.5 text-[12.5px] text-slate-500">
+            Both demos are self-serve on a synthetic sample episode — no sign-in, no real client data.
+          </p>
         </section>
 
         {/* ── The spine. ACC's words, not ours ───────────────────────────── */}

@@ -45,7 +45,7 @@ export default function EpLeadCapture({
       const res = await fetch('/api/ep-lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, name: name.trim() || undefined }),
+        body: JSON.stringify({ email: cleanEmail, name: name.trim() || undefined, location }),
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.success) {

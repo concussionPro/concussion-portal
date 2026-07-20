@@ -49,7 +49,19 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
-    const { email, name } = body as { email?: string; name?: string }
+    const { email, name, location } = body as {
+      email?: string
+      name?: string
+      location?: string
+    }
+
+    // Lead attribution — which surface hosted the capture form (e.g. 'acsm',
+    // 'international', 'ep-course'). Whitelist-ish sanitise: short slug chars
+    // only, never trusted beyond analytics.
+    const captureLocation =
+      typeof location === 'string'
+        ? location.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40) || null
+        : null
 
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -87,7 +99,7 @@ export async function POST(request: NextRequest) {
         INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
         VALUES (
           'ep_lead_capture',
-          ${JSON.stringify({ name: userName, isExisting: !!existingUser })}::jsonb,
+          ${JSON.stringify({ name: userName, isExisting: !!existingUser, location: captureLocation })}::jsonb,
           ${'server_' + Date.now()},
           ${Date.now()},
           ${request.headers.get('user-agent') || 'unknown'},

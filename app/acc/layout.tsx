@@ -16,8 +16,7 @@ import { Metadata } from 'next'
 //   • SST Trainer COMPILES report content for transcription onto ACC's own
 //     current fillable form. It does not auto-file. Never soften that.
 //   • NO PMS write-back claim (Cliniko/Gensolve adapter is gated off and has
-//     never been validated against a live tenant). The older /sst/acc page
-//     says "designed to write into Gensolve" — do not repeat that here.
+//     never been validated against a live tenant).
 //   • NO price. The licence-vs-margin funding question is unresolved; quoting
 //     a number against the wrong assumption burns the buyer.
 //   • NO renewal hook. The executed Service Schedule runs to 30 June 2027.

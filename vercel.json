@@ -1,4 +1,6 @@
 {
+  "regions": ["syd1"],
+  "_regions_note": "AU function execution. The Neon DB is already ap-southeast-2 (Sydney). Together this satisfies ACC Service Schedule cl.14.1.2 (client personal information stored in NZ and/or Australia) — a contractual flow-down for NZ supplier deals, and it puts compute next to the DB. Do not add non-AU regions without checking that clause.",
   "crons": [
     {
       "path": "/api/cron/send-nurture-emails",

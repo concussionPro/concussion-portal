@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
+import { CONFIG } from '@/lib/config'
 
 /**
  * /acsm — the ACSM listing landing page (asset A10).
@@ -14,8 +15,8 @@ import EpLeadCapture from '@/components/crm/EpLeadCapture'
  * only, same as /pricing-international.
  */
 
-const PRICE_USD = 347
-const RENEWAL_USD = 99
+const PRICE_USD = CONFIG.COURSE.PRICE_INTERNATIONAL
+const RENEWAL_USD = CONFIG.COURSE.RENEWAL_INTERNATIONAL
 
 /** Real, verifiable module structure — 480 min = 8.0 instructional hours. */
 const MODULES: { n: string; title: string; mins: number }[] = [
@@ -144,6 +145,15 @@ export default function AcsmLandingPage() {
             <strong className="text-slate-700">Always sold as one.</strong> The
             platform is never available without the training that teaches you to run
             it safely.
+          </p>
+
+          <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[13px] font-semibold">
+            <Link href="/sst-trainer?clinic=DEMO00" className="text-teal-700 hover:underline">
+              See the SST Trainer walkthrough →
+            </Link>
+            <Link href="/preseason/b/DEMO00" className="text-teal-700 hover:underline">
+              Try the baseline flow →
+            </Link>
           </p>
         </section>
 

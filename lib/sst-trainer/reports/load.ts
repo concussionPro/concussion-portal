@@ -13,7 +13,7 @@
  * (and the ACC45 claim number) when transcribing onto ACC's fillable form.
  */
 import { sql } from '@/lib/db'
-import { getClinic } from '../clinic-registry'
+import { DEMO_CLINIC_CODE, getClinic } from '../clinic-registry'
 import { computePrescription } from '../protocol'
 import type { Condition, ThresholdResult, TestModality } from '../protocol'
 import type { PersistedTest, PersistedSession } from '../store'
@@ -51,9 +51,115 @@ export interface LoadReportOptions {
   goals?: ReportGoal[]
 }
 
+// ── FIXTURE — demo clinic only ───────────────────────────────────────────────
+// DEMO00 is the shared public demo clinic: keyless by design (verifyViewKey
+// passes DEMO00 without a viewKey) and NEVER holds real patient data. Pitch
+// recipients self-serve report demos via /demo/acc-style links, so instead of
+// querying `sst_clinic_sessions` (empty for DEMO00) the loader synthesises one
+// clinically-realistic ~4-week episode: serial graded tests with the measured
+// HRt progressing 128 → 142 → 155 bpm (physiologic → recovering), a final
+// exhaustion-limited re-test with no symptom provocation (no-intolerance), and
+// sensor-verified home sessions inside the prescribed band with symptom scores
+// trending down. Identity/opts merge exactly as on the real path, so demo URLs
+// can carry names, claim refs and clinicians. Timestamps are offsets from
+// "now" so the episode always looks recent.
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function demoReportInput(
+  patientLabel: string,
+  jurisdiction: Jurisdiction,
+  opts: LoadReportOptions,
+): ReportInput {
+  const anchor = Date.now()
+  const at = (daysAgo: number) => anchor - daysAgo * DAY_MS
+  const iso = (daysAgo: number) => new Date(at(daysAgo)).toISOString()
+
+  // Serial graded tests — the HRt trajectory IS the demo's clinical story.
+  const thresholdHistory: PersistedTest[] = [
+    { at: at(27), interpretation: 'physiologic', hrt: 128, thresholdStage: 5, modality: 'treadmill', restingSymptomScore: 5 },
+    { at: at(18), interpretation: 'physiologic', hrt: 142, thresholdStage: 7, modality: 'treadmill', restingSymptomScore: 3 },
+    { at: at(9), interpretation: 'physiologic', hrt: 155, thresholdStage: 9, modality: 'treadmill', restingSymptomScore: 1 },
+    // Final re-test: exhaustion-limited, no provocation → no HRt to record.
+    { at: at(1), interpretation: 'no-intolerance', hrt: null, thresholdStage: null, modality: 'treadmill', restingSymptomScore: 0 },
+  ]
+
+  // Home sessions between tests — avg/peak inside the band prescribed from the
+  // then-current HRt (128→102-115, 142→114-128, 155→124-140), ~20 min, symptoms
+  // trending down. One early stop-rule flare (day 25) for realism.
+  const mk = (
+    daysAgo: number, avg: number, peak: number, pre: number, peakSym: number,
+    mins: number, nextDayFlare = false,
+  ): PersistedSession => ({
+    date: iso(daysAgo), at: at(daysAgo), avgHeartRate: avg, peakHeartRate: peak,
+    preSymptom: pre, peakSymptom: peakSym, completedMinutes: mins,
+    hrVerified: true, nextDayFlare,
+  })
+  const sessions: PersistedSession[] = [
+    // Week 1 — band 102–115 bpm (HRt 128)
+    mk(26, 106, 113, 5, 6, 18),
+    mk(25, 110, 115, 4, 7, 12, true), // stopped on the ≥2-pt rise; flared next day
+    mk(23, 104, 111, 5, 6, 20),
+    mk(21, 107, 114, 4, 5, 20),
+    mk(19, 109, 114, 3, 4, 20),
+    // Week 2–3 — band 114–128 bpm (HRt 142)
+    mk(17, 118, 126, 3, 4, 20),
+    mk(15, 121, 127, 3, 3, 20),
+    mk(13, 120, 126, 2, 3, 20),
+    mk(11, 123, 128, 2, 2, 20),
+    mk(10, 122, 127, 1, 2, 20),
+    // Week 4 — band 124–140 bpm (HRt 155)
+    mk(8, 129, 137, 1, 2, 20),
+    mk(6, 132, 139, 1, 1, 20),
+    mk(4, 134, 140, 0, 1, 20),
+    mk(2, 133, 139, 0, 0, 20),
+  ]
+
+  // Prescription via the REAL engine, from the last MEASURED threshold (the
+  // final re-test found no intolerance, so 155 bpm is the band that was in
+  // play at exit). Resting HR 62 → ΔHR 93: no prolonged-recovery flag.
+  const prescription = computePrescription(155, 'concussion', { restingHr: 62 })
+
+  const latestTest: ThresholdResult = {
+    hrtFound: false,
+    hrt: null,
+    thresholdStage: null,
+    interpretation: 'no-intolerance',
+    message: '',
+  }
+
+  // Identity merging mirrors the real path — demo URLs carry names/claim refs.
+  const patient: ReportPatient = {
+    firstName: opts.patient?.firstName ?? patientLabel,
+    lastName: opts.patient?.lastName ?? '',
+    dob: opts.patient?.dob,
+    ethnicity: opts.patient?.ethnicity,
+    claimRef: opts.patient?.claimRef,
+    diagnosis: opts.patient?.diagnosis,
+  }
+
+  return {
+    jurisdiction,
+    patient,
+    clinician: opts.clinician,
+    prescription,
+    latestTest,
+    thresholdHistory,
+    sessions,
+    // Obviously-demo goals so the goal sections render populated.
+    goals: opts.goals ?? [
+      { id: 'demo-goal-1', label: 'Return to full-time work without symptom flare', status: 'achieved' },
+      { id: 'demo-goal-2', label: 'Return to recreational running', status: 'in-progress' },
+    ],
+    episode: { startedAt: iso(27), reportedAt: new Date(anchor).toISOString() },
+  }
+}
+
 /**
  * Assemble a `ReportInput` for one clinic + patient label, or null when there is
  * no episode data. Same query + verification rules as the live GP report.
+ *
+ * DEMO00 short-circuits to a synthetic fixture episode (above) — never the DB.
  */
 export async function loadReportInput(
   code: string,
@@ -61,6 +167,9 @@ export async function loadReportInput(
   jurisdiction: Jurisdiction,
   opts: LoadReportOptions = {},
 ): Promise<ReportInput | null> {
+  if (code.trim().toUpperCase() === DEMO_CLINIC_CODE) {
+    return demoReportInput(patientLabel, jurisdiction, opts)
+  }
   const { rows } = await sql<Row>`
     SELECT patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
     FROM sst_clinic_sessions

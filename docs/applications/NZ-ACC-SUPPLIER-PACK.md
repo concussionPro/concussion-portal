@@ -224,7 +224,7 @@ CCM covers, as it bears on this contract:
 - CEA's separate exercise-physiology CPD product has been through independent review under ESSA's professional development endorsement process. **That endorsement is pending — the decision has not issued — and CEA does not claim it.**
 - CEA holds no New Zealand accreditation, and this pack does not represent CCM as carrying one. If a New Zealand professional-body recognition is material to your decision, say so and CEA will pursue it. [ZAC: confirm whether Physiotherapy New Zealand or the Physiotherapy Board require or offer any recognition pathway relevant here before the first supplier meeting — do not speculate in the room.]
 - **The programme is authored by a registered osteopath.** No exercise physiologist authored or co-authored it. CEA does not claim exercise-physiologist authorship. It is referenced to the primary peer-reviewed literature and independently reviewed as described above.
-- The author has an mTBI manuscript **under peer review.** It is not published, and it is not cited as though it were.
+- The author has an mTBI manuscript **prepared for submission — not yet submitted to any journal.** It is not published, and it is not cited as though it were.
 
 ## 3.5 Implementation
 
@@ -409,7 +409,7 @@ Director: **Zac Lewis**, Registered Osteopath (AHPRA-registered), B.Clin.Sci, M.
 
 CEA is a specialist concussion education and clinical-tools provider. It publishes to depth in a single condition rather than breadth across many. Concussion Clinical Mastery is endorsed by Osteopathy Australia.
 
-Stated for the record, so nothing is discovered later: CEA is a small vendor. Its clinical programmes are authored by a registered osteopath and **no exercise physiologist authored or co-authored them**. An ESSA professional-development endorsement of CEA's separate exercise-physiology product has been independently reviewed but is **pending and is not claimed**. The director's mTBI manuscript is **under peer review and unpublished**. CEA holds no New Zealand accreditation and does not represent that it does.
+Stated for the record, so nothing is discovered later: CEA is a small vendor. Its clinical programmes are authored by a registered osteopath and **no exercise physiologist authored or co-authored them**. An ESSA professional-development endorsement of CEA's separate exercise-physiology product has been independently reviewed but is **pending and is not claimed**. The director's mTBI manuscript is **prepared for submission — not submitted, not peer reviewed and unpublished**. CEA holds no New Zealand accreditation and does not represent that it does.
 
 ### H. Commercial structure
 
@@ -440,7 +440,7 @@ The licence figure depends on one question CEA would rather ask than assume: **w
 
 *Implication for the pitch:* a demo is fine (you construct the URL), and a design-partner pilot is fine (you generate it for them). **A self-serve rollout across 1,400 clinicians is not fine.** Do not sell Active+ on a workflow that does not exist yet. Either build the button before the Active+ conversation gets serious, or scope the first engagement as design-partner work where CEA generates the report. Do not let the demo imply a UI that is not there.
 
-**2. PMS write-back (Cliniko / Gensolve) is built but gated off and unvalidated.** The adapter exists (`lib/sst-trainer/pms/`), and it is env-flag-gated — `PMS_WRITEBACK_ENABLED` defaults off, and it cannot return a live adapter without both the flag on *and* a real API key. **It has never been validated against a live tenant.** Nothing in this pack claims PMS integration, and nothing should. Note that the existing `/sst/acc` web pitch page says "Designed to write into Gensolve — in certification" — that is softer than a shipping claim, but it is more than this pack says, and it should not be repeated verbally in a room. If a supplier asks about PMS integration, the answer is: "an adapter is built, it is not enabled, and it has not been validated against a live tenant — I am not selling you that."
+**2. PMS write-back (Cliniko / Gensolve) is built but gated off and unvalidated.** The adapter exists (`lib/sst-trainer/pms/`), and it is env-flag-gated — `PMS_WRITEBACK_ENABLED` defaults off, and it cannot return a live adapter without both the flag on *and* a real API key. **It has never been validated against a live tenant.** Nothing in this pack claims PMS integration, and nothing should. Note that the older SstPitch "in certification" Gensolve claim was REMOVED from the live component on 2026-07-20 — do not reintroduce it.
 
 **3. ACC884 output is transcription, not filing, and that is a real cost.** The clinician still retypes onto ACC's form. The value is the compilation, not the submission. If a supplier's actual pain turns out to be *submission* rather than *compilation*, the product is a weaker fit than this pack implies and you should hear that in the scoping call rather than discover it at pilot review.
 
@@ -489,7 +489,7 @@ The licence figure depends on one question CEA would rather ask than assume: **w
 - **Compiles content; does not file.** No auto-filing language, ever.
 - **CCM holds the Osteopathy Australia endorsement.** ESSA is **pending**, belongs to the other product, and is not claimed.
 - **No exercise physiologist authored the courses.** Say it before you are asked.
-- **The mTBI manuscript is under peer review, not published.** Do not cite it as a publication.
+- **The mTBI manuscript is prepared for submission — not submitted, not under review, not published.** Do not cite it as a publication, and do not describe it as "under review".
 - **No diagnostic, prognostic or clearance claim.** Clinician-directed throughout.
 - **No PMS integration claim.**
 

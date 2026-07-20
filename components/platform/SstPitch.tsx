@@ -54,6 +54,8 @@ interface VariantConfig {
   ctaHref: string
   secondaryLabel: string
   secondaryHref: string
+  /** Self-serve demo links (DEMO00 fixture data — keyless, no sign-in). */
+  demoLinks?: { label: string; href: string }[]
   showDemo: boolean
   painTitle: string
   painBody: string
@@ -79,6 +81,7 @@ const CONFIG: Record<SstPitchVariant, VariantConfig> = {
     ctaHref: MAILTO('SST Trainer — clinician dashboard', 'Hi Zac — I’d like a 15-minute look at the SST Trainer dashboard for our clinic.'),
     secondaryLabel: 'Try the patient app →',
     secondaryHref: '/sst-trainer',
+    demoLinks: [{ label: 'Explore the demo dashboard →', href: '/clinical-hub?clinic=DEMO00' }],
     showDemo: true,
     painTitle: 'Between visits, you’re working blind.',
     painBody:
@@ -105,6 +108,10 @@ const CONFIG: Record<SstPitchVariant, VariantConfig> = {
     ctaHref: MAILTO('SST Trainer — ACC concussion reporting', 'Hi Zac — I’d like a 15-minute look at the ACC884 Client Summary Report and the outcome view for our service.'),
     secondaryLabel: 'See how the trainer works →',
     secondaryHref: '/sst-trainer',
+    demoLinks: [
+      { label: 'See a sample ACC884 →', href: '/demo/acc' },
+      { label: 'Explore the demo dashboard →', href: '/clinical-hub?clinic=DEMO00' },
+    ],
     showDemo: true,
     painTitle: 'The ACC884 Client Summary Report — compiled by hand.',
     painBody:
@@ -192,6 +199,23 @@ export default function SstPitch({ variant }: { variant: SstPitchVariant }) {
               {c.secondaryLabel}
             </Link>
           </div>
+          {c.demoLinks && c.demoLinks.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+              {c.demoLinks.map((d) => (
+                <Link
+                  key={d.href}
+                  href={d.href}
+                  className="text-[13.5px] font-bold hover:underline"
+                  style={{ color: ACCENT }}
+                >
+                  {d.label}
+                </Link>
+              ))}
+              <span className="text-[12px] font-semibold text-slate-400">
+                Self-serve, sample data — no sign-in
+              </span>
+            </div>
+          )}
           <div className="mt-1 flex flex-wrap items-center gap-[18px]">
             {c.heroChips.map((chip, i) => (
               <span key={chip} className="flex items-center gap-[18px]">

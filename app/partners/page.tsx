@@ -16,7 +16,13 @@ export const metadata = {
 
 const CAL = 'https://cal.com/zac-lewis-so8zjs/30min?utm_source=partners&utm_medium=cta&utm_campaign=custom-portal'
 
-const PILLARS = [
+const PILLARS: {
+  icon: typeof Building2
+  title: string
+  body: string
+  /** Self-serve demo on the shared DEMO00 clinic — sample data, no sign-in. */
+  demo?: { label: string; href: string }
+}[] = [
   {
     icon: Building2,
     title: 'Your own custom portal',
@@ -26,6 +32,7 @@ const PILLARS = [
     icon: ShieldCheck,
     title: 'Pre-season baselines',
     body: 'SCAT6 and SCOAT6 baselines captured for every athlete or patient and held against their profile — so a later test means something.',
+    demo: { label: 'Try the baseline flow', href: '/preseason/b/DEMO00' },
   },
   {
     icon: Activity,
@@ -111,6 +118,14 @@ export default function PartnersPage() {
               </div>
               <h3 className="text-base font-bold text-foreground mb-1.5">{p.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
+              {p.demo && (
+                <Link
+                  href={p.demo.href}
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:underline"
+                >
+                  {p.demo.label} <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
             </div>
           ))}
         </div>

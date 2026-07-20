@@ -118,6 +118,15 @@ export function SstProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                 >
                   Book a 15-min dashboard demo <ArrowRight className="w-4 h-4" />
                 </a>
+                <a
+                  href="/clinical-hub?clinic=DEMO00"
+                  data-track-cta="sst-hook-demo-dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-accent text-accent font-bold px-5 py-2.5 text-[13px] hover:bg-accent/5 transition"
+                >
+                  Explore the demo dashboard <ArrowRight className="w-3.5 h-3.5" />
+                </a>
                 <a href="#pains" data-track-cta="sst-hook-pains" className="text-center text-[12.5px] font-semibold text-accent hover:underline">
                   See where it fits ↓
                 </a>
