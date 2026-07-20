@@ -1,430 +1,265 @@
 # New Zealand — ACC Concussion Services
-## Organisational Sales Pack — SST Trainer + Documented Team Competency
+## Supplier Pack — Documented Competency Evidence, and the Instrument Behind It
 
 **Vendor:** Concussion Education Australia Pty Ltd (CEA)
 **Buyer:** an organisation holding an ACC Concussion Services contract
-**What is sold:** a per-organisation software licence (SST Trainer, including the ACC884 Client Summary Report output) plus per-seat clinical competency training (Concussion Clinical Mastery)
-**Timing:** the executed Service Schedule runs **1 July 2025 → 30 June 2027**, with **one 1-year extension** available at ACC's discretion (Cl. 1.2.2). There is no renewal decision this month. The live hooks are the **six-monthly report just filed**, the **performance condition on the extension**, and **peer visibility of performance data** (Cl. 13.4).
+**What is sold:** per-seat clinical competency training (Concussion Clinical Mastery) plus a per-clinician software licence (SST Trainer, including ACC884 Client Summary Report content generation)
+**Contract position:** the current Concussion Services Service Schedule runs **1 July 2025 → 30 June 2026**, extendable by **two further one-year terms**. It is at a decision point now.
 
 ---
 
-## READ THIS FIRST — what this pack is, and what it is not
+## READ THIS FIRST — what changed, and why this pack now leads differently
 
-**This is not a CPD pitch.** The buyer is not an individual clinician looking for professional development points. The buyer is an organisation that holds a government-funded service contract, is measured against contractual performance obligations, and has to renew that contract.
+Earlier versions of this pack led with a reporting-admin argument (ACC884 compilation) and with a tension between two clauses of the Service Schedule (Cl. 5.2.1's mandated team composition versus Cl. 5.8.2.1.2's exercise-tolerance obligation). Both of those are real and both are still in this document. Neither is the strongest thing CEA has.
 
-That organisation buys three things and only three things:
+**The strongest thing CEA has is that ACC's live contract already compels the supplier to buy concussion-specific professional development, already prices the alternative at an expensive fortnightly supervision regime, and names no course, no curriculum and no accreditor to satisfy it.**
 
-1. **Evidence it can put in front of ACC** — outcomes, quality, timeliness.
-2. **A documented answer to a capability question** it cannot currently answer well.
-3. **Reduced administrative load on the reporting obligations it is already carrying.**
+That is not a nice-to-have argument about better care. It is a line item the supplier is already carrying, on a clause the supplier already signed, with a fallback cost that can be arithmetic'd against ACC's own published hourly rate. It is the lead.
 
-Every sentence in the pitch below serves one of those three. The clinical rehabilitation content is the mechanism, not the product. The product is **the report and the documented competency of the team producing it.**
+The rest of the pack sits behind it in strict order of commercial force:
 
-**The timing hooks are real, and there are three of them. None is a renewal.**
+1. **The competency gate and its cost** — the clause chain, the arithmetic, and what CCM provides against it.
+2. **The method problem** — ACC funds "assessment of exercise tolerance" and specifies no method. SST is how it is done and evidenced.
+3. **The reporting benefit** — ACC884 content compiled during delivery rather than reconstructed at exit.
 
-Be precise about this, because getting it wrong is fatal on first contact. The executed Service Schedule runs **1 July 2025 to 30 June 2027**. There is **no renewal decision this month and none this year.** A supplier who is told they are "at their year-one renewal point" knows immediately that the sender has not read the contract, and there is no recovering from that in a market of a few dozen buyers.
-
-The real hooks are sharper than the false one:
-
-1. **The reporting cycle is live this week.** The six-monthly report covering January–June 2026 was due within **10 business days of 30 June**. Reporting burden is not an abstraction to this buyer right now — they have just done it, by hand, and it is fresh.
-2. **The extension is performance-conditional (Cl. 1.2.2).** One 1-year extension is available, and it is expressly conditional on ACC being satisfied with the supplier's performance. The decision is further out than a renewal would be, but the evidence it turns on is **the performance being filed now**. That reframes the sale: this is not about surviving an imminent review, it is about what the file looks like when the review comes.
-3. **Performance data is visible to competitors (Cl. 13.4).** Suppliers consent to ACC sharing their **non-anonymised** performance data with all other contracted suppliers. Their numbers are not private — they are seen, by name, by every other organisation in the scheme. This is the strongest single lever in the pack and it should be used carefully rather than loudly.
-
-**And the gap argument is now in ACC's own words.** Cl. 5.2.1 mandates the team composition — medical, neuropsychology, psychology, occupational therapy, physiotherapy. Cl. 5.8.2.1.2 obliges the supplier to deliver *"assessment of exercise tolerance and/or functional capacity."* The contract requires a capability that the contract's own mandated team composition does not supply. That is not CEA's opinion about a guideline gap; it is an internal tension in the document the supplier signed.
-
-**Market shape, stated plainly:** approximately 21,000 new ACC concussion claims per year, of which roughly 15–25% convert to a funded service episode — call it 3,000 to 5,000 episodes annually — delivered by a few dozen supplier organisations nationally. This is a small, concentrated, high-value market. It is won by landing a handful of organisations, not by volume outreach. [ZAC: these figures are working estimates for internal sizing — do not quote a specific claim or referral-rate number to a supplier as if it were an ACC-published figure unless you have the source in hand.]
+One discipline runs through all of it, and it is not optional. **ACC has named no course and no accreditor, so no provider on earth can claim ACC recognition — including CEA.** What CCM produces is *evidence a supplier can put forward*. ACC decides whether it satisfies the requirement. Any sentence that drifts from that gets the vendor removed from a market of a few dozen buyers who all talk to each other.
 
 ---
 
-## THE SPINE — the gap the whole pitch turns on
+# §1 — THE COMPETENCY GATE AND ITS COST
 
-**Cl. 5.2.1** of the Service Schedule specifies the multidisciplinary team: **medical, neuropsychology, psychology, occupational therapy and physiotherapy.**
+## 1.1 The clause chain
 
-That team composition was designed for a model of concussion care built on rest, symptom management, and psychological and functional support. It is a good team for that model.
+The Concussion Services Service Schedule (July 2025) contains a workforce-eligibility gate. It runs as follows.
 
-**Then the treatment changed.**
+**Part B, Table 2 — the eligibility requirement.** For every **registered nurse, physiotherapist, occupational therapist, speech language therapist and social worker** delivering the service, the schedule requires current registration and a current practising certificate, a minimum of two years' recent postgraduate clinical practice experience, and — regarding mild to moderate brain injury — that the provider must:
 
-The 6th International Conference on Concussion in Sport (Amsterdam, October 2022; Patricios et al., *British Journal of Sports Medicine*, 57(11), 695–711) concluded that **sub-symptom-threshold aerobic exercise, prescribed from an individually derived heart-rate threshold, is first-line treatment for concussion** — not a fallback once rest has failed. That threshold is not estimated from age. It is *measured*, by a symptom-limited graded exercise test — the Buffalo Concussion Treadmill Test, developed and validated over fifteen years by Leddy, Willer and colleagues at the University at Buffalo, whose randomised trials in *JAMA Pediatrics* (2019) and *Lancet Child & Adolescent Health* (2021) established that early prescribed aerobic exercise shortens recovery.
+> "demonstrate competency in the following areas **(and be able to support this with evidence)**"
 
-Read the two facts together and the problem states itself:
+**Cl. 6.2.2 — the consequence of not meeting it.** Where a service provider "does not meet the required competency criteria… **the Supplier must ensure** the Service provider successfully completes the Concussion Services Supervision requirements."
 
-> **The first-line treatment for concussion is now a graded exercise test and a heart-rate-threshold prescription. Not one of the five disciplines Cl. 5.2.1 mandates on the team is trained, at entry to practice, in exercise testing.**
+**Cl. 6.2.3 — the hard edge.** Providers who do not meet the **experience** criteria "**are not permitted to provide Services**."
 
-**And the contract already knows it needs that capability.** Cl. 5.8.2.1.2 obliges the supplier to deliver *"assessment of exercise tolerance and/or functional capacity."* So the same document mandates a team composition in one clause and requires, in another, a competency that composition does not supply. The supplier is not failing at anything — they are carrying an unresolved tension in the contract they signed, and until now there has been no clean way to close it.
+**Cl. 6.3.1.1 — supervision itself compels development.** A supervised provider:
 
-Physiotherapists come closest — exercise prescription is core physiotherapy practice — but the specific competency is *symptom-limited graded exertion testing to derive a physiological ceiling, and prescription against that measured ceiling*. Surveyed physiotherapists bear this out: a survey of 1,272 physiotherapists found 70% already held concussion training and the cohort averaged 13 out of 15 on a concussion knowledge measure — yet the two specific deficits identified were **confidence in return-to-play decision-making** and **knowing when graded exertional training is actually indicated.** These are not under-trained clinicians. They are well-trained clinicians holding a coherent framework that international consensus superseded in October 2022, and the two things they are least sure of are the two things the current model turns on.
+> "must **engage in further professional development with specific relevance to working with people who have had a mild to moderate brain injury**, until the Service provider has gained the required experience and demonstrated competency."
 
-**So the supplier organisation is contractually obliged to deliver contemporary best-practice concussion care, with a mandated team that was not trained for the treatment that is now first-line.** That is not a criticism of the supplier or of ACC. It is a timing problem created by a guideline change, and it is the gap this pack sells into.
+**Cl. 6.3.1.2 — what supervision actually costs to staff.** For every supervised clinician the schedule requires:
 
-Two things close it, and they are sold together because neither works alone:
+- a supervisor with **five or more years' experience within the previous seven** in assessing, treating and rehabilitating mild to moderate brain injury, **and at least one year** as a service provider on an ACC Concussion Services or Neuropsychological Assessment contract;
+- **fortnightly one-on-one supervision**;
+- a maintained **supervision log** of every case discussed;
+- supplier responsibility that **every case** is reviewed with the supervisor.
 
-- **The competency** — the clinicians on the team trained to derive and prescribe against a measured heart-rate threshold, with the training documented for the contract file.
-- **The instrument** — a tool that delivers the prescription between visits, measures what actually happened, and compiles the outcome evidence into the report ACC expects.
+**The Operational Guidelines add the paperwork.** The Supplier must provide ACC with a summary letter or other document outlining how the above requirements will be met over the provisional period.
 
----
+## 1.2 Read the chain from the supplier's side
 
-# PART 1 — COVER EMAIL
+Four things fall out of it, and they are all the supplier's problem rather than ACC's.
 
-**Send to:** the supplier's clinical lead or contract manager. Not the reception inbox, not a generic info@ address. If only one name is reachable, the clinical lead is the better target — they feel the capability gap; the contract manager feels the reporting load.
+**ACC mandates the professional development. The supplier must ensure it happens. The supplier pays for it.** No ACC service item code funds clinician training time. Every code in the schedule funds client-facing clinical activity — including the "education" codes, which fund education *of the client*, not of the clinician.
 
-**Subject:** Your ACC recovery numbers — and the one lever that actually moves them
+**ACC specifies nothing about the content.** No course, no curriculum, no hours, no accreditor, no awarding body. The supplier chooses the provider. This is unusual and it is the whole commercial opening: the requirement is real and the market to satisfy it is entirely open.
 
-Dear [name],
+**The fallback is not a formality — it is a scarce senior clinician's diary, fortnightly, indefinitely.** A supervisor must hold five years of mild-to-moderate brain injury experience in the last seven *and* a year on an ACC concussion or neuropsych contract. That is a small pool. Whoever in the organisation fits it is almost certainly also the person the organisation least wants doing recurring administrative supervision.
 
-You will have filed your six-monthly report a few days ago, so this is probably fresher in your mind than usual — which is partly why I am writing now.
+**And the requirement is worded as an evidence requirement, not a belief requirement.** "Must demonstrate competency… and be able to support this with evidence." A supplier can hold an entirely reasonable view that its senior physiotherapists already meet the competency bullets. The clause does not ask what the supplier believes. It asks what the supplier can produce.
 
-Your Concussion Services performance is scored by ACC from its own claims data — recovery duration and return-to-work, benchmarked against the national average — not from how you write your reports. Under Cl. 13.4 those numbers are visible, non-anonymised, to every other supplier in the scheme, and under Cl. 1.2.2 your extension turns on ACC being satisfied with them. The only lever that moves that score is faster actual recovery.
+## 1.3 The arithmetic
 
-There is one place a supplier can find that gain, and it sits in a tension in the Service Schedule that I think most of the scheme is carrying quietly.
+Costing a contractual obligation is worth doing properly, because a number the reader can check is worth more than an adjective.
 
-**Cl. 5.2.1** specifies the team: medical, neuropsychology, psychology, occupational therapy, physiotherapy. **Cl. 5.8.2.1.2** obliges you to deliver "assessment of exercise tolerance and/or functional capacity." None of the five mandated disciplines is trained at entry to practice in graded exercise testing. The contract requires the capability in one clause and specifies a team composition that does not supply it in another.
+**The benchmark rate is ACC's own.** The Service Schedule funds TBI22 and TBI26 at **NZ$155.27 per hour**. Using ACC's published rate rather than an invented one is what makes this defensible in the room — the buyer already knows the number.
 
-That tension got sharper in October 2022, when the Amsterdam international consensus statement made sub-symptom-threshold aerobic exercise — prescribed from an individually *measured* heart-rate threshold, derived by a graded exercise test — the first-line treatment for concussion. Randomised trials from the University at Buffalo group established that early prescribed aerobic exercise shortens recovery and reduces the incidence of persisting symptoms. So the assessment Cl. 5.8.2.1.2 asks for is no longer a peripheral measure. It is the thing that generates the treatment.
+**Fortnightly supervision is 26 sessions per year.** Supervision is one-on-one, so each session consumes an hour of the supervisor's clinical time and an hour of the supervised clinician's clinical time.
 
-None of this is a criticism of your team. The guideline moved faster than the workforce did, and the contract has not caught up.
+| Assumption | Supervisor time | Supervised clinician time | **Total per supervised clinician, per year** |
+|---|---|---|---|
+| **1 hour per session** | 26 × $155.27 = **$4,037** | 26 × $155.27 = **$4,037** | **NZ$8,074** |
+| **30 minutes per session** | 13 × $155.27 = **$2,019** | 13 × $155.27 = **$2,019** | **NZ$4,037** |
 
-I work on two halves of that problem.
+**State the assumptions out loud, because they matter.**
 
-**The competency.** Concussion Clinical Mastery is a clinical concussion programme written for physiotherapists and occupational therapists — the disciplines already on your team — covering graded exertion testing, derivation of the individual heart-rate threshold, prescription against it, progression by objective criteria, and the scope boundary that governs where the clinician's responsibility ends. It is endorsed by Osteopathy Australia. Completion is certificated per clinician, which means it goes in the contract file as documented team competency rather than as an assertion.
+- **Session length is not specified in the contract.** The schedule requires fortnightly one-on-one supervision; it does not say how long a session runs. Both rows above are therefore scenarios, not findings. Present both.
+- **This counts clinical time at its billable rate rather than at salary.** That is a deliberate choice: it measures the opportunity cost of taking two clinicians off funded delivery, which is the way the loss is actually felt by an organisation with a full caseload. An organisation that would rather cost the same hours at salary plus on-cost should do so — the number will come out lower, and the shape of the comparison does not change. Say this before the reader says it.
+- **The log and the per-case review sit on top.** Cl. 6.3.1.2.5 requires a maintained log of every case discussed and Cl. 6.3.1.3 makes the supplier responsible for every case being reviewed. Neither is costed above. Both are real administrative time.
+- **The regime runs "until competency is demonstrated"** — Cl. 6.3.1.1 is open-ended by construction. There is no contractual end date. It ends when the supplier can evidence competency, which returns the supplier to the same question it started with.
 
-**The instrument.** SST Trainer delivers the prescribed programme between appointments and measures it. The patient's own wearable streams heart rate from every home session, so the clinician sees objective time-in-band and adherence rather than a self-report. The measured threshold is re-tested serially, which produces a *functional* outcome measure — a physiological trajectory — rather than a symptom score. At service exit, that accumulated data compiles into the content of an **ACC884 Client Summary Report**: service provided, risk assessment, outcomes, services still needed.
+**Against a recurring, open-ended annual cost of that shape, a competency course is a one-off per clinician.** That is the entire commercial argument, and it does not require anyone to believe anything about clinical outcomes.
 
-I want to be precise about what that last part is, because it is easy to overstate. SST Trainer produces print-ready report content that your clinician reviews and transcribes onto ACC's own current fillable ACC884 form. It compiles the content; it does not replace the prescribed form and it does not file anything with ACC on your behalf. The work it removes is the reconstruct-it-from-notes work, not the submission itself.
+## 1.4 What CCM actually provides against this — stated exactly
 
-Where this matters to you specifically is that suppliers are measured on **client outcomes, quality and timeliness**, and this produces evidence against all three: a measured physiological outcome, a documented review trail across the episode rather than a discharge-day reconstruction, and a report that is substantially compiled by the time it is due — six-monthly, within 15 business days of 31 December and 10 business days of 30 June.
+This is the paragraph that must not drift, so it is written to be quoted verbatim.
 
-Two things make that evidence worth more than it looks. **Cl. 1.2.2** makes the one-year extension conditional on ACC being satisfied with your performance — which means the file you are building now is the file that decision gets made on, well before anyone asks you for it. And **Cl. 13.4** has you consenting to ACC sharing your performance data, non-anonymised, with every other contracted supplier. Your recovery-duration and return-to-work numbers are visible to your competitors by name. Those numbers come from ACC's own data rather than from self-report, so they cannot be managed by how the episode is written up — only by what actually happened in it.
+**Concussion Clinical Mastery is documented, dated, per-named-clinician evidence of concussion-specific professional development, in a form a supplier can put forward toward the Part B Table 2 competency requirement and toward the Cl. 6.3.1.1 professional development obligation. ACC decides what satisfies those requirements. ACC has named no course and no accreditor, so no provider — CEA included — can claim ACC recognition, and CEA does not.**
 
-I would value 20 minutes with you and, if it is useful, whoever holds the reporting obligation. I am not asking you to buy anything in that conversation. I want to test whether the gap I have described matches the one you are actually carrying, and I have one commercial question I would rather ask you than guess at.
+What that means in practice:
 
-Kind regards,
+- CCM completion is **certificated per clinician, dated, and tied to a named individual.** It converts "our physiotherapists are experienced in concussion" — an assertion — into a document that goes in the contract file and survives an audit against "demonstrated competencies, and (where applicable) Concussion Services Supervision logs."
+- The content is **specifically about mild to moderate brain injury**, which is the exact scope Cl. 6.3.1.1 names. Generic musculoskeletal or general-practice CPD is not on its face responsive to a clause that says "with specific relevance to working with people who have had a mild to moderate brain injury." CCM is.
+- What CCM **does not** do: it does not make a clinician compliant, it does not remove a supervision requirement, and it does not confer eligibility. Those are ACC's determinations about the supplier's workforce, made on the supplier's evidence. CEA supplies evidence; it does not supply a ruling.
 
-**Zac Lewis**
-Registered Osteopath (AHPRA-registered) · B.Clin.Sci, M.Ost.Med
-Director, Concussion Education Australia Pty Ltd
-ACN 688 155 508 · ABN 74 688 155 508
-2 Wordsworth St, Byron Bay NSW 2481, Australia
-zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
+**On the experience criterion, be straight.** Cl. 6.2.3 excludes providers who do not meet the **experience** criteria — two years' recent postgraduate practice — and no course fixes a shortfall in years of practice. CCM is responsive to the **competency and professional-development** limbs of the gate, not the experience limb. Saying this unprompted is worth more than it costs; the reader has the contract and will notice.
 
----
+**One honest complication, which is better raised by CEA than discovered by the buyer.** The competency bullet ACC prints for allied health is generic — "ability to identify and apply best available current evidence in professional practice and decision making" — rather than concussion-specific. A supplier can reasonably argue its senior clinicians already satisfy it. The wedge is not the bullet, it is the parenthesis: **"and be able to support this with evidence."** A dated certificate from a named provider covering mild-to-moderate brain injury is the cheapest form of that evidence in existence, and it costs a fraction of the supervision regime that applies when the evidence is not there.
 
-# PART 2 — ONE-PAGE VALUE PROPOSITION
+## 1.5 Who this applies to, and how big the exposure is
 
-*(This is the leave-behind. It should survive being forwarded to someone who was not in the meeting.)*
+The gate names five professions: registered nurses, physiotherapists, occupational therapists, speech language therapists and social workers. In practice the concussion caseload sits heavily with **physiotherapists and occupational therapists**, and those are the disciplines CCM is written for.
 
-## ACC884-compliant outcome reporting, and documented team competency for the contract file
-
-**The situation.** **Cl. 5.8.2.1.2** obliges the supplier to deliver "assessment of exercise tolerance and/or functional capacity." **Cl. 5.2.1** mandates a team — medical, neuropsychology, psychology, OT, physiotherapy — in which no discipline is trained at entry to practice in graded exercise testing. Since October 2022, international consensus has made the heart-rate threshold derived from that assessment the basis of the first-line treatment for concussion. The contract requires the capability; the mandated team composition does not supply it.
-
-**Why it matters now.** **Cl. 1.2.2** makes the one-year extension conditional on ACC's satisfaction with performance — so the evidence filed today is what that decision will rest on. **Cl. 13.4** means performance data is shared **non-anonymised** with every other contracted supplier: these numbers are seen by name. And the Part B performance measures are recovery-duration and return-to-work metrics benchmarked at national average or one deviation higher, drawn from **ACC's own data rather than supplier self-report** — they cannot be improved by better write-ups, only by better outcomes.
-
-**The offer.** Two components, sold together.
-
-| | |
-|---|---|
-| **SST Trainer** — per-organisation software licence | Delivers and measures the sub-symptom-threshold aerobic programme between appointments. Objective heart-rate data from the client's own wearable. Serial re-testing produces a measured functional outcome. Compiles ACC884 Client Summary Report content at service exit. |
-| **Concussion Clinical Mastery** — per-seat competency training | Clinical concussion programme for the physiotherapists and OTs already on your team. Graded exertion testing, threshold derivation, prescription, progression, scope boundary. Certificated per clinician. Endorsed by Osteopathy Australia. |
-
-### Mapped to the three things ACC measures you on
-
-**CLIENT OUTCOMES.** The measured heart-rate threshold is a physiological outcome, not a symptom report. Re-tested serially across the episode, it produces a *trajectory* — an objective record of exercise tolerance recovering (or not recovering). Where a symptom score tells ACC what the client said, a measured threshold tells ACC what the client's physiology did. The final re-test result is the outcome statement in the ACC884. This matters more than it would in a self-reported scheme: because the Part B measures are drawn from ACC's own data, the only route to a better number is a better recovery — and the evidence base for sub-threshold aerobic prescription is that it shortens recovery.
-
-**QUALITY.** Every home session is recorded against the prescribed heart-rate band, so adherence and dose are observed rather than assumed. Every graded re-test is a documented review point, which means the file shows outcome measures were reviewed *across* the service rather than assembled at discharge. The clinician delivering it holds a certificated competency in the specific protocol — documented, dated and per-person, ready for the contract file. The tool is clinician-directed throughout: it presents data and paces the protocol; the clinician holds every decision.
-
-**TIMELINESS.** Reporting is six-monthly, due within 15 business days after 31 December and 10 business days after 30 June, with client summary reporting due at service exit. Because the content accumulates as the service is delivered, the ACC884 is substantially compiled before it is due. The task at deadline becomes review-and-transcribe rather than reconstruct-from-notes.
-
-### Stated plainly, so nothing is overclaimed
-
-SST Trainer produces **print-ready ACC884 content that your clinician reviews and transcribes onto ACC's own current fillable form.** It compiles the content. It does not replace the prescribed form, does not submit anything to ACC, and makes no diagnostic, prognostic or clearance claim. The supervising clinician holds all clinical judgement.
-
-**Concussion Education Australia Pty Ltd** · ACN 688 155 508 · ABN 74 688 155 508
-2 Wordsworth St, Byron Bay NSW 2481, Australia
-Director: Zac Lewis, Registered Osteopath (AHPRA-registered), B.Clin.Sci, M.Ost.Med
+The exposure scales with hiring. Every new graduate, every clinician moving in from an unrelated caseload, and every clinician recruited without a documented concussion history arrives on the wrong side of the gate. **This is not a one-time remediation project; it is an onboarding cost the supplier carries permanently.** An organisation with meaningful turnover is running this regime continuously on someone.
 
 ---
 
-# PART 3 — THE FULL PITCH DOCUMENT
+# §2 — THE METHOD PROBLEM
 
-## 3.1 The guideline gap
+*(Second, not first. It is a genuinely strong argument, and it is the reason the software exists — but it asks the buyer to accept a clinical premise, where §1 only asks them to read their own contract.)*
 
-For two decades, concussion management meant rest until symptoms cleared. That model shaped the workforce: the disciplines assembled around concussion care were the ones that manage symptoms, support function and address the psychological sequelae of a slow recovery. ACC's mandated Concussion Services team — medical, neuropsychology, psychology, occupational therapy, physiotherapy — is a coherent, well-designed team **for that model**.
+## 2.1 A funded activity with no specified method
 
-In October 2022 the model changed. The 6th International Conference on Concussion in Sport concluded that sub-symptom-threshold aerobic exercise, prescribed early from an individually derived heart-rate threshold, is first-line treatment. Not adjunctive. Not a fallback. First-line.
+**Cl. 5.8.2.1.2** obliges the supplier to deliver *"assessment of exercise tolerance and/or functional capacity."* **TBI22** funds that assessment, and **TBI26** funds exercise programmes, at **NZ$155.27 per hour**.
 
-The threshold is derived by a symptom-limited graded exercise test. The Buffalo Concussion Treadmill Test ramps the client's exertion in standardised per-minute increments under continuous heart-rate, RPE and symptom monitoring until symptoms are provoked. The heart rate at that point — the HRt — is the physiological ceiling: the point at which impaired cerebral autoregulation and blunted cerebrovascular CO₂ reactivity can no longer meet exertional demand. Training is then prescribed at 80–90% of that measured value, and the ceiling is progressed by re-testing.
+**The contract specifies no method for either.** ACC's National Concussion Guidelines endorse sub-symptom-threshold aerobic exercise and likewise give no method.
 
-Three things follow that matter to a supplier organisation:
+That matters clinically, and it matters contractually. A funded activity with no standard method cannot be consistent across a national supplier network by definition, and it cannot be evidenced beyond "an assessment was performed."
 
-**First, the competency required is specific and it is not generic exercise prescription.** It is the administration of a standardised symptom-limited graded test, correct identification of the symptom-threshold endpoint as distinct from volitional exhaustion, conversion of that value into a prescription, and progression governed by re-test rather than by time elapsed or by how the client says they feel.
+## 2.2 What the method is, when there is one
 
-**Second, none of the five mandated disciplines carries that competency by default.** Physiotherapy is nearest, and physiotherapists are the natural holders of it — but nearest is not the same as trained. The 1,272-physiotherapist survey is the cleanest evidence available: high existing concussion training (70%), high knowledge scores (13/15), and specific self-identified deficits in return-to-play decision confidence and in knowing when graded exertional training is indicated. The gap is one of **currency, not of competence.**
+The 6th International Conference on Concussion in Sport (Amsterdam, October 2022; Patricios et al., *British Journal of Sports Medicine*, 57(11), 695–711) concluded that sub-symptom-threshold aerobic exercise, prescribed from an individually derived heart-rate threshold, is first-line treatment for concussion rather than a fallback once rest has failed.
 
-**Third, the treatment is now delivered mostly where the clinician cannot see it.** A sub-threshold aerobic prescription is roughly 20 minutes most days of the week. The client is in the clinic perhaps once a week or once a fortnight. So the great majority of the actual treatment happens at home, unobserved — and whether it happened at the prescribed intensity is, without an instrument, unknowable. The clinician is asked to progress a prescription on the basis of a self-report about a heart rate the client did not measure.
+The threshold is not estimated from age. It is **measured**, by a symptom-limited graded exercise test — the Buffalo Concussion Treadmill Test, developed and validated over fifteen years by Leddy, Willer and colleagues at the University at Buffalo. In Leddy et al. (2019), a randomised controlled trial of **103 adolescents aged 13–18**, participants prescribed sub-symptom-threshold aerobic exercise recovered in a **median of 13 days versus 17 days** for the stretching control group (**P = .009**).
 
-That third point is where the reporting problem and the clinical problem turn out to be the same problem. An organisation that cannot see the treatment cannot evidence the outcome, because it has nothing objective to report.
+The competency this requires is specific, and it is not generic exercise prescription: administration of a standardised symptom-limited graded test, correct identification of the symptom-threshold endpoint as distinct from volitional exhaustion, conversion of that measured value into a prescription, and progression governed by re-test rather than by elapsed time or by how the client says they feel.
 
-## 3.2 What SST Trainer does
+**And most of the treatment happens where the clinician cannot see it.** A sub-threshold aerobic prescription is roughly 20 minutes most days. The client is in clinic perhaps weekly or fortnightly. Without an instrument, the clinician is progressing a prescription on the basis of a self-report about a heart rate the client never measured.
 
-SST Trainer is a **clinician-directed rehabilitation-delivery and monitoring tool.** It does not diagnose, does not prognose and does not clear anyone for return to play or work. It delivers a prescription the clinician set, measures what happened, and returns that data to the clinician.
+## 2.3 What SST Trainer does
 
-**A measured threshold, not an age formula.** A guided graded test establishes the individual heart-rate threshold. The training band is derived from that measured value, capped at it. The tool does not substitute an estimated maximum heart rate for a measured physiological ceiling — the measured value is the entire clinical point of the protocol, and estimating it would discard the evidence base.
+SST Trainer is a **clinician-directed rehabilitation-delivery and monitoring tool**. It does not diagnose, does not prognose, and does not clear anyone for return to play or work.
 
-**Home sessions are observed, not reported.** The client trains with their own wearable. Heart rate streams live during the session, so the record shows time-in-band, session duration, and any stop-rule event where symptoms rose enough to require the session be reduced or halted. The clinician sees what happened rather than what was remembered.
+- **A measured threshold, not an age formula.** A guided graded test establishes the individual heart-rate threshold; the training band is derived from and capped at that measured value.
+- **Home sessions are observed, not reported.** The client trains with their own wearable. Heart rate streams during the session, so the record shows time-in-band, duration, and any symptom stop-rule event.
+- **Only verified sessions progress the prescription.** A session recorded from a live wearable advances the band. A manually entered value is retained for safety and continuity but never progresses the prescription. Progression rests on measured data or it does not happen.
+- **Re-testing is the outcome measure.** The graded test repeats on a structured schedule, producing a serial physiological trajectory and a documented review point each time.
+- **Risk flagging.** Where the measured threshold sits below the validated prolonged-recovery cut-off, the record carries that flag, measured rather than impressionistic.
 
-**Only verified sessions progress the prescription.** A session recorded from a live wearable advances the training band. A manually entered number is retained for safety and continuity but never progresses the prescription. This is a deliberate integrity constraint: the progression decision rests on measured data or it does not happen.
+**No efficacy claim is made for the software.** CEA holds no outcome data on SST Trainer. The evidence cited above is for the *protocol*, not for CEA's implementation of it, and the two must never be blurred. What SST Trainer offers is that the protocol is delivered as published, and that what happened is measured rather than assumed.
 
-**Re-testing is the outcome measure.** The graded test is repeated on a structured schedule. Each re-test both progresses the ceiling and creates a documented review point. Across an episode this produces a serial physiological trajectory — the functional outcome measure. The endpoint is objective: a re-test that provokes no symptom exacerbation to volitional exhaustion means exercise tolerance has recovered.
+## 2.4 BIST — say this before you are asked
 
-**Risk flagging.** Where the measured threshold sits below the validated prolonged-recovery cut-off, the record carries that flag. This feeds directly into the risk-assessment field of the ACC884 and it is measured rather than impressionistic.
+**BIST is named in the current contract**, in the Part B performance measurement table, as the exemplar outcome measure: clients entering Stage 2 complete an outcome measurement tool on completion of the service, "e.g. Brain Injury Screening Tool (BIST)", with a target of **≥85% completion**. It is offered as an example rather than mandated, consistent with the contract's practice of naming no compulsory instrument.
 
-## 3.3 What the ACC884 output is — and what it is not
+**Do not position against it. Position beside it.** BIST is a symptom-screening instrument. Assessment of exercise tolerance is a different activity, producing a different kind of datum — a measured physiological ceiling rather than a symptom score. A supplier can and should run both: BIST against the 85% target, exercise-tolerance assessment against Cl. 5.8.2.1.2. **SST Trainer complements BIST and does not replace it**, and any sentence implying otherwise should be struck.
 
-This section exists to prevent a misunderstanding that would damage the relationship later. Read it as written.
+**And know who built it.** Per the PLoS One competing-interests statement, BIST was co-authored by an ACC staff member and by paid employees of **three ACC-contracted suppliers — Active+, Axis Sports Medicine and Wellington Sports Medicine**. The incumbent instrument is not merely free; it is institutionally the buyer's own. Nobody should walk into this market implying that no one has tried this before, or that the incumbents are unsophisticated. They co-wrote the instrument in the contract.
 
-**What ACC884 is.** Under the ACC Concussion Services operational guidelines, the **ACC884 Client Summary Report** is the end-of-service reporting deliverable provided to ACC and to the client's primary-care provider. It summarises the service provided, a risk assessment, the outcomes achieved, and any services still needed.
+---
 
-**What ACC884 is not.** It is not a treatment plan and it is not a request to extend treatment. A request for further funded treatment is the **ACC32** (Request for Prior Approval of Treatment) and it is a separate instrument. Similarly, **ACC885 is the Did Not Attend form** — it is not a progress report. Any vendor who tells you their software "files your ACC treatment plan" has not read the forms.
+# §3 — THE REPORTING BENEFIT
 
-**What SST Trainer produces.** The tool renders the SST-derived content for the ACC884's fields, structured to match them:
+*(Third. Genuine, and the thing a reporting lead will like — but it is an efficiency argument, and efficiency arguments do not open doors on their own.)*
+
+**What the ACC884 is.** Under the Concussion Services operational guidelines, the **ACC884 Client Summary Report** is the end-of-service reporting deliverable provided to ACC and to the client's primary-care provider. It summarises the service provided, a risk assessment, the outcomes achieved, and any services still needed.
+
+**What it is not.** It is **not a treatment plan** and not a request to extend treatment — further funded treatment is requested via **ACC32**. And **ACC885 is the Did Not Attend form**, not a progress report. Vendors get these wrong constantly and suppliers notice immediately.
+
+**What SST Trainer supplies.** Because the data accumulates during delivery, the report content is substantially assembled before it is due:
 
 | ACC884 field | What SST Trainer supplies |
 |---|---|
-| Service provided | Clinician-supervised sub-symptom-threshold aerobic exercise delivered against a measured heart-rate threshold, with monitored between-visit home sessions — including the prescription actually issued |
+| Service provided | Clinician-supervised sub-symptom-threshold aerobic exercise against a measured heart-rate threshold, with monitored between-visit home sessions, including the prescription actually issued |
 | Risk assessment | Whether the measured threshold fell below the validated prolonged-recovery cut-off, with the clinician's note |
-| Outcomes | The serial threshold trajectory and the most recent re-test result, stated as whether objective exercise tolerance has recovered or remains symptom-limited |
-| Services still needed | Whether further supervised programme is indicated on the measured outcome, with the note that additional funded treatment is requested separately via ACC32 |
+| Outcomes | The serial threshold trajectory and most recent re-test, stated as whether objective exercise tolerance has recovered or remains symptom-limited |
+| Services still needed | Whether further supervised programme is indicated on the measured outcome, noting that additional funded treatment is requested separately via ACC32 |
 | Supporting detail | Adherence and review record across the episode — evidence that outcome measures were reviewed during delivery, not reconstructed at exit |
 
-**How it is delivered, exactly.** The output is **print-ready HTML**, generated on request for a given service code and client. It carries an explicit instruction on the face of it: *transcribe onto ACC's current fillable ACC884 form.* ACC's form layout is authoritative. SST Trainer supplies the measured content to populate it.
+**Stated exactly, so nothing is overclaimed.** The output is **print-ready content that the clinician reviews and transcribes onto ACC's current fillable ACC884 form**. It does not replace the prescribed form, does not submit or file anything with ACC, does not connect to the ACC provider portal, and does not remove the clinician's obligation to review every statement submitted under their name. What it removes is the hour spent reconstructing an episode from appointment notes. **There is no PMS write-back claim in this pack.**
 
-**It does not auto-file.** It does not submit to ACC, does not connect to the ACC provider portal, and does not remove the clinician's obligation to review every statement before it is submitted under their name. What it removes is the hour spent reconstructing a service episode from appointment notes.
+The forms are jurisdiction-locked in software: an Australian service code cannot emit an ACC form.
 
-**Jurisdictional integrity.** The ACC forms are only available where the jurisdiction is New Zealand. The system validates the requested form against the service's jurisdiction and rejects the request otherwise — an Australian service code cannot emit an ACC form. This is enforced in the software, not by policy.
-
-## 3.4 The competency layer — Concussion Clinical Mastery seats
-
-The report is only as defensible as the clinician who signs it. So the licence is sold with seats.
-
-**Concussion Clinical Mastery (CCM)** is CEA's clinical concussion programme. In the New Zealand scheme context it is the correct product because the buyer's clinicians are **physiotherapists and occupational therapists** — the clinical disciplines on the mandated team. (CEA also publishes an exercise-physiology CPD product; it is aimed at a different profession and is not what is offered here.)
-
-CCM covers, as it bears on this contract:
-
-- The neurometabolic and cerebrovascular basis of exercise intolerance after concussion — why the threshold exists and why training must stay below it.
-- Recognition and red-flag triage, and the escalation pathway.
-- The graded exertion test protocols in full: standardised increments, continuous monitoring, and the two distinct termination criteria — including the distinction between the symptom-threshold endpoint and volitional exhaustion, which is the single most commonly misapplied element of the protocol.
-- Conversion of the measured HRt into a complete prescription, with worked calculation of the target band.
-- The real-time symptom-monitoring stop rule, and progression by re-test.
-- Phenotype-specific rehabilitation across the recognised concussion phenotypes — vestibular, oculomotor, cervicogenic, autonomic, cognitive/fatigue, affective, headache — and how to identify the dominant driver when several co-present.
-- Graded return to activity, sport and work, including how physical and cognitive load are coordinated.
-- Persistent post-concussion symptoms, and the structured decision framework for a programme that will not progress.
-- Documentation, inter-professional communication and the scope boundary: findings recorded as rehabilitation observations and recommendations, never as diagnosis or clearance.
-
-**Why this matters to the contract file rather than to the clinician's CPD log.** Completion is certificated per clinician, dated, and tied to a named individual. That converts "our physiotherapists are experienced in concussion" — an assertion — into a documented, auditable statement of team competency in the specific first-line protocol. When ACC comes to form the view under Cl. 1.2.2 that decides the extension, those are different kinds of answer — and one of them is in the file already.
-
-**Credential position, stated honestly.**
-- CCM is **endorsed by Osteopathy Australia.** That endorsement is real and it belongs to CCM.
-- CEA's separate exercise-physiology CPD product has been through independent review under ESSA's professional development endorsement process. **That endorsement is pending — the decision has not issued — and CEA does not claim it.**
-- CEA holds no New Zealand accreditation, and this pack does not represent CCM as carrying one. If a New Zealand professional-body recognition is material to your decision, say so and CEA will pursue it. [ZAC: confirm whether Physiotherapy New Zealand or the Physiotherapy Board require or offer any recognition pathway relevant here before the first supplier meeting — do not speculate in the room.]
-- **The programme is authored by a registered osteopath.** No exercise physiologist authored or co-authored it. CEA does not claim exercise-physiologist authorship. It is referenced to the primary peer-reviewed literature and independently reviewed as described above.
-- The author has an mTBI manuscript **prepared for submission — not yet submitted to any journal.** It is not published, and it is not cited as though it were.
-
-## 3.5 Implementation
-
-Deliberately shallow. If the implementation is heavy, it does not happen.
-
-**Stage 1 — scoping conversation (20 minutes).** Confirm the capability gap as the organisation actually experiences it, and settle the one commercial question in §4 below.
-
-**Stage 2 — single-clinician pilot on live episodes.** One clinician, one CCM seat, a small number of real service episodes end to end: measured threshold, monitored home sessions, serial re-tests, and an ACC884 Client Summary Report content pack generated at exit. This produces the artefact the organisation actually needs to evaluate — a report from a real episode, not a demo.
-
-**Stage 3 — review the artefact.** The clinical lead and whoever holds the reporting obligation read the generated content against what they currently submit. The question is narrow: is this better evidence, and is it less work?
-
-**Stage 4 — team rollout.** Organisation-wide licence, CCM seats for the clinicians who will deliver the protocol. Seats can be staged; the licence cannot.
-
-**What the organisation supplies:** clinicians willing to run the protocol as published, and clients with a compatible wearable. **What CEA supplies:** the licence, the seats, onboarding for the first clinician, and a named contact.
-
-## 3.6 Data and privacy posture — New Zealand
-
-The organisation is a health agency handling health information about identifiable individuals, under a government-funded contract. It cannot adopt a tool that puts that obligation at risk, and its procurement process will ask. The honest position:
-
-**Governing law.** The **Privacy Act 2020** applies, together with the **Health Information Privacy Code 2020** as the sector-specific instrument governing health information. The supplier organisation is the agency holding the information; CEA operates as its service provider in respect of information processed through SST Trainer.
-
-**Collection and purpose.** SST Trainer collects only what the protocol requires: the graded test result, the prescription derived from it, heart-rate data from prescribed sessions, symptom stop-rule events, and the clinician's notes. It does not collect diagnostic imaging, does not collect unrelated clinical history, and does not collect continuous background physiological data outside prescribed sessions. Collection is limited to the purpose of delivering and evidencing the prescribed rehabilitation.
-
-**Client identification.** Sessions are keyed to a service code and a client label controlled by the organisation, not to a nationally unique identifier held by CEA.
-
-**Access.** Reports are retrieved with both the service code and a separate view key. The forms are jurisdiction-locked as described in §3.3.
-
-**Cross-border.** CEA is an Australian company and the platform is hosted with a commercial cloud provider. Under the Privacy Act 2020's cross-border disclosure requirements, the organisation must satisfy itself as to the protections applying to information transferred outside New Zealand. CEA will provide hosting locations, sub-processor detail and a written data-processing agreement on request, and will accommodate a data-residency requirement if the organisation's procurement position requires one. [ZAC: confirm actual hosting region and sub-processors before answering this in a procurement questionnaire. Do not answer it from memory. If a supplier requires NZ or AU data residency as a condition, that is a build decision to take on its merits, not a claim to make in advance.]
-
-**Correction, access and breach.** Client access and correction requests are handled by the organisation as the holding agency; CEA supports them. CEA will notify the organisation without delay of any privacy breach affecting its information so that the organisation can meet its own notification obligations to the Privacy Commissioner and to affected individuals.
-
-**Retention and exit.** The organisation's data remains the organisation's. On termination CEA will export it in a usable format and delete its copies on the agreed schedule.
-
-**Clinical liability.** The tool is clinician-directed. It presents data and paces a protocol; the supervising clinician holds every clinical decision, including any decision about progression, regression, escalation or return to activity. Nothing in the product constitutes a diagnosis, a prognosis or a clearance.
+**Data and privacy, in one paragraph.** The **Privacy Act 2020** and the **Health Information Privacy Code 2020** apply; the supplier is the holding agency and CEA acts as its service provider. Collection is limited to protocol data — graded test results, the prescription, heart rate during prescribed sessions, stop-rule events and clinician notes. No imaging, no unrelated history, no continuous background monitoring outside prescribed sessions. Sessions are keyed to a service code and an organisation-controlled client label. CEA is an Australian entity; hosting locations, a sub-processor list and a written data-processing agreement are available for privacy review, and CEA will engage on a data-residency requirement if the supplier's procurement position requires one. Breach notification to the supplier is without delay so the supplier can meet its own obligations. Data is the supplier's, exportable on termination.
 
 ---
 
-# PART 4 — PRICING FRAME
+# §4 — WHAT IS OFFERED, AND PRICE
 
-## The structure
+## 4.1 The two components
 
-**Per-organisation licence** — annual, covering the software: delivery, monitoring, serial re-testing, the outcome record and the ACC884 content generation, across the organisation's concussion caseload.
+**Concussion Clinical Mastery (CCM) — per-seat competency training.** CEA's clinical concussion programme, written for the physiotherapists and occupational therapists on the mandated team. Covers the neurometabolic and cerebrovascular basis of exercise intolerance; recognition, red-flag triage and escalation; the graded exertion test protocols in full, including the distinction between the symptom-threshold endpoint and volitional exhaustion; conversion of the measured threshold into a prescription with worked calculation; the real-time symptom stop rule and progression by re-test; phenotype-specific rehabilitation across the recognised concussion phenotypes; graded return to activity, sport and work; persistent post-concussion symptoms; and documentation, inter-professional communication and the scope boundary. **Certificated per clinician, dated, tied to a named individual.**
 
-**Per-seat competency training** — Concussion Clinical Mastery, one seat per clinician who will deliver the protocol. Seats are one-off, not recurring, and the certification attaches to the individual. Volume banding applies at the multi-site end.
+**SST Trainer — per-clinician software licence.** Delivers and measures the prescribed protocol between appointments, produces the serial threshold trajectory, and compiles ACC884 Client Summary Report content at service exit.
 
-Sold together, because the licence without competency produces reports a clinician cannot defend, and competency without the instrument produces trained clinicians who still cannot see the treatment.
+They are sold together because neither works alone: the licence without competency produces reports a clinician cannot defend, and competency without the instrument produces trained clinicians who still cannot see the treatment.
 
-## The question that sets the price — ask it first
+## 4.2 Price
 
-**Is SST Trainer paid by the supplier out of contract margin, or is it recoverable within the funded service?**
-
-This is not a detail. It is the whole pricing question, and it has two completely different answers:
-
-- **If it comes out of margin,** the supplier is buying an efficiency and a capability with its own money. The buying committee is finance-shaped, the comparison is against clinician hours saved, and the sustainable number is small — an annual licence in the **low single-digit thousands**.
-- **If it is recoverable within the funded service** — as part of the service being delivered, or within an equipment, technology or service-delivery provision of the contract — the supplier is buying a capability that improves its measured performance without eroding margin. The buying committee is clinical and contractual, the comparison is against the value of a stronger position when the Cl. 1.2.2 extension is assessed, and the sustainable number is an order of magnitude higher — a **five-figure annual licence** at a multi-site organisation.
-
-**The same product. A 10× spread. Determined entirely by which side of that line it falls on.**
-
-**This is the first question to ask in the first Queenstown conversation.** Not the second. The supplier knows the answer, or knows who does, and CEA does not — guessing it means either pricing at $3k when $30k was available, or pricing at $30k and being dismissed before anyone looks at the product.
-
-Ask it directly and without embarrassment: *"Is a tool like this something you'd expect to fund out of your own margin, or is there room for it inside the funded service?"* A supplier under contract is not offended by a vendor who understands how they get paid. They are relieved.
-
-**Until that answer exists, quote nothing.** Present the structure — organisation licence plus seats — describe the two ranges as a function of the funding question, and let the supplier resolve it. [ZAC: do not put a number in writing before this is settled. Once one supplier answers it, the answer very likely generalises across the scheme and the pricing model is fixed for every subsequent conversation.]
-
-## Sequencing
-
-**Anchor on Active+ but do not wait on it.** Active+ is the largest supplier — 1,400+ clinicians and, on its own account, some 93,000 ACC referrals over ten years. It is the right anchor: winning it makes every subsequent conversation easier. It is also the slowest, because an organisation that size has procurement, clinical governance, privacy review and an IT function, and each will take its turn.
-
-**So run a small independent in parallel, for a live reference.** A single-clinic or small-group supplier can decide in one conversation, pilot within a fortnight, and produce something Active+ procurement cannot argue with: a real ACC884 content pack from a real episode, and a clinician who will say on the phone that it works. Reference beats deck.
-
-**Queenstown is available as the design partner.** Take it. A design partner that helps shape the ACC884 output is a better first customer than a bigger organisation that buys a finished thing — and it is where the funding question gets answered.
-
----
-
-# PART 5 — TIER-SPECIFIC VARIANTS
-
-## 5.1 Short version — single-clinic independent supplier
-
-*(One clinical decision-maker who is also the owner. No procurement function. Decides in one conversation. Keep it short and make it concrete.)*
-
-**Subject:** Your ACC884s, and the exercise-testing gap — 15 minutes?
-
-Dear [name],
-
-You have just filed the six-monthly report for January to June, so I am guessing the reporting side of this contract is fresher in your mind than you would like.
-
-Here is the thing I actually wanted to raise. Cl. 5.8.2.1.2 of your Service Schedule obliges you to deliver "assessment of exercise tolerance and/or functional capacity." Cl. 5.2.1 specifies the team — medical, neuropsych, psychology, OT, physio — and none of those disciplines is trained in graded exercise testing at entry to practice. Meanwhile the 2022 international consensus made heart-rate-threshold aerobic exercise the first-line treatment for concussion, prescribed from a threshold you measure with exactly that kind of test. So the contract asks for the capability, the mandated team does not supply it, and the guideline has made it the centre of the treatment rather than a side measure. The guideline moved faster than the workforce did.
-
-I work on both halves of that.
-
-**The training** is a clinical concussion programme for physios and OTs — graded exertion testing, deriving the individual heart-rate threshold, prescribing against it, progressing by re-test, and where the scope boundary sits. Endorsed by Osteopathy Australia. Certificated per clinician, so it goes in the contract file as documentation rather than as an assertion.
-
-**The tool** delivers the programme between appointments and measures it. The client trains with their own watch; heart rate streams back, so you see the actual dose rather than a self-report. Serial re-testing gives you a measured physiological outcome instead of a symptom score. At service exit it compiles the ACC884 Client Summary Report content — service provided, risk assessment, outcomes, services still needed — which you review and transcribe onto ACC's own form. It compiles the content; it does not file anything and it does not replace the form. That is the honest description.
-
-The reason it is worth 15 minutes is that suppliers are measured on outcomes, quality and timeliness, and this gives you evidence for all three: a measured outcome, a review trail across the episode rather than a discharge-day reconstruction, and a report that is mostly written by the time it is due.
-
-Worth adding that the performance measures are recovery-duration and return-to-work numbers taken from ACC's own data, not from what you write in the report — so they move when recovery actually shortens, and not otherwise. Given Cl. 13.4 has those numbers shared non-anonymised with every other supplier in the scheme, and Cl. 1.2.2 hangs the extension on ACC's satisfaction with performance, what goes in the file over the next eighteen months is worth more than it feels like right now.
-
-I would like to run it on a handful of your real episodes with one clinician and show you the report that comes out the other end. If it is not better than what you submit now, that is a clear answer and it costs you a fortnight.
-
-I also have one commercial question I would rather ask than guess: would a tool like this come out of your own margin, or is there room for it inside the funded service? Your answer shapes what I can build.
-
-Kind regards,
-
-**Zac Lewis**
-Registered Osteopath (AHPRA-registered) · B.Clin.Sci, M.Ost.Med
-Director, Concussion Education Australia Pty Ltd · ACN 688 155 508
-zac@concussion-education-australia.com · +61 449 186 579
-
----
-
-## 5.2 Procurement-oriented version — Active+
-
-*(1,400+ clinicians, ~93,000 ACC referrals over ten years, multi-site, with procurement, clinical governance, privacy and IT functions. This version answers the questions those functions will ask, before they ask them. It is longer on purpose — the failure mode here is not being ignored, it is being stalled by an unanswered assurance question.)*
-
-### A. What is proposed
-
-A **per-organisation licence** to SST Trainer across Active+'s ACC Concussion Services caseload, with **per-seat clinical competency certification** (Concussion Clinical Mastery) for the physiotherapists and occupational therapists delivering the sub-symptom-threshold aerobic protocol.
-
-The proposition to Active+ specifically is scale: a capability gap that costs a single-clinic supplier a few reports a year costs an organisation of Active+'s size a systematic, auditable inconsistency in how the first-line concussion treatment is delivered and evidenced across sites. A per-organisation licence standardises the protocol, the data captured, and the structure of the outcome report across every site at once.
-
-### B. The capability case
-
-**Cl. 5.8.2.1.2** obliges the supplier to deliver "assessment of exercise tolerance and/or functional capacity." **Cl. 5.2.1** mandates a team composition — medical, neuropsychology, psychology, occupational therapy, physiotherapy — containing no discipline trained in graded exercise testing at entry to practice. The Service Schedule requires the capability and specifies a workforce that does not supply it.
-
-International consensus (Amsterdam, October 2022) sharpened that materially by making sub-symptom-threshold aerobic exercise, prescribed from a heart-rate threshold derived by graded exercise testing, the first-line treatment for concussion. The Cl. 5.8.2.1.2 assessment is therefore no longer a peripheral measure — it generates the treatment. Physiotherapy is nearest to the competency and is its natural home; the published evidence is that the profession's specific self-identified deficits are precisely return-to-play decision confidence and knowing when graded exertional training is indicated.
-
-For an organisation with 1,400+ clinicians, the operative question is not whether individual clinicians are capable. It is whether the organisation can **demonstrate, per named clinician and on a date**, that the people delivering the first-line protocol were trained in it. Certificated per-seat competency answers that question in a form an auditor accepts.
-
-**Why the timing is worth Active+'s attention.** The Service Schedule runs to 30 June 2027 with one 1-year extension available, and **Cl. 1.2.2** makes that extension conditional on ACC's satisfaction with performance. There is no imminent decision — which is precisely the argument. The performance record that decision will rest on is being written now, across every site, in every episode. At Active+'s scale the marginal difference between an evidenced measured outcome and a reconstructed symptom summary compounds across thousands of episodes before anyone formally asks for it.
-
-**Cl. 13.4** raises the stakes on the same numbers: Active+ consents to ACC sharing its performance data, **non-anonymised**, with every other contracted supplier. As the largest supplier in the scheme, Active+'s numbers are the benchmark others are read against — and they are read by name.
-
-### C. Contractual performance mapping
-
-| ACC measures | Evidence produced |
+| | |
 |---|---|
-| **Client outcomes** | Serial measured heart-rate threshold — a physiological, functional outcome measure rather than a symptom score. Trajectory across the episode; objective recovery endpoint (re-test to volitional exhaustion without symptom exacerbation). The Part B measures (recovery duration, return to work, benchmarked at national average or one deviation higher) derive from **ACC's own data, not supplier self-report** — so they respond only to actual recovery, which is what the prescribed protocol is evidenced to shorten. |
-| **Quality** | Objective dose and adherence from every prescribed home session. Every graded re-test is a documented review point, evidencing outcome review *during* delivery. Delivery by a certificated clinician. Standardised protocol and data structure across all sites. |
-| **Timeliness** | Report content accumulates during delivery, so the ACC884 is substantially compiled ahead of the deadline — six-monthly, 15 business days after 31 December, 10 business days after 30 June, and at service exit. Deadline task becomes review-and-transcribe. |
+| **SST Trainer** | **NZ$49 per actively-delivering clinician per month.** Only clinicians actually delivering the protocol are counted. |
+| **Concussion Clinical Mastery seats** | **One-off, NZ$895 per clinician**, falling to **NZ$425 at 40+ seats**. Not recurring. The certification attaches to the individual. |
+| **Pilot** | **Free for the first two reference organisations.** |
 
-### D. Scope of the reporting claim — read before the demo
+## 4.3 The comparison, made explicitly
 
-SST Trainer generates **print-ready ACC884 Client Summary Report content** for a given service episode: service provided, risk assessment, outcomes, and services still needed, plus the supporting trajectory, adherence and review record.
+Set the seat price against the supervision arithmetic from §1.3 and the comparison makes itself.
 
-It does **not**:
-- replace ACC's prescribed fillable ACC884 form — the output carries an explicit transcription instruction and ACC's form layout is authoritative;
-- submit or file anything with ACC, or connect to the ACC provider portal;
-- remove the clinician's obligation to review every statement submitted under their name;
-- make any diagnostic, prognostic or return-to-activity clearance claim.
+| | Recurring? | Per clinician |
+|---|---|---|
+| Concussion Services Supervision regime, 1 hr fortnightly, both parties' clinical time at $155.27/hr | **Yes — annually, until competency is demonstrated** | **NZ$8,074/yr** |
+| Same regime at 30 minutes | **Yes — annually** | **NZ$4,037/yr** |
+| CCM seat | **No — one-off** | **NZ$895**, or **NZ$425** at 40+ seats |
+| SST Trainer | Monthly, per actively-delivering clinician | **NZ$588/yr** |
 
-Two form-level clarifications, because they are commonly got wrong by vendors: **ACC884 is the Client Summary Report, not a treatment plan** — extension of funded treatment is requested via **ACC32**. **ACC885 is the Did Not Attend form, not a progress report.**
+The honest framing: **the supervision cost is what the contract obliges when the evidence is absent. CCM is the cheapest documented evidence a supplier can produce toward closing that gap — and it is ACC, not CEA, that decides whether it does.**
 
-The forms are jurisdiction-locked in software: the requested form is validated against the service's jurisdiction, so an Australian service code cannot emit an ACC form.
+## 4.4 Implementation
 
-### E. Clinical governance
+Deliberately shallow, because heavy implementations do not happen.
 
-The tool is clinician-directed. It presents measured data and paces a published protocol; the supervising clinician holds every clinical decision. Two constraints are built in rather than advised:
+1. **Scoping conversation, 20 minutes.** Clinical lead, plus whoever holds the reporting obligation if available. Confirm how many clinicians are currently on, or at risk of, the supervision requirement.
+2. **Pilot on live episodes.** One or two clinicians, CCM seats, a small number of real service episodes end to end: measured threshold, monitored home sessions, serial re-tests, and an ACC884 content pack at exit. Free for the first two reference organisations.
+3. **Review the artefacts.** Two questions, both narrow. Is the certificate something the organisation would be comfortable putting in front of ACC as competency evidence? Is the report better evidence and less work than what is submitted today?
+4. **Rollout.** Seats for the clinicians who will deliver the protocol; licences for those actively delivering. Both can be staged.
 
-1. The training band is derived from and capped at the **measured** heart-rate threshold — not an age-estimated maximum.
-2. **Only sessions recorded from a live wearable progress the prescription.** Manually entered values are retained for safety and continuity but never advance the band. Progression rests on measured data or it does not occur.
+## 4.5 Credential position, stated before it is asked
 
-Adverse-event handling: symptom stop-rule events are recorded against the session and surfaced to the clinician. Red-flag escalation remains a clinical act performed by the clinician under the organisation's own procedures; the tool does not triage.
+- **CCM is endorsed by Osteopathy Australia.** That endorsement is real and it belongs to CCM.
+- **CEA's separate exercise-physiology product has an ESSA professional development endorsement pending.** The decision has not issued, CEA does not claim it, and **it belongs to the other product, not to CCM.**
+- **CEA holds no New Zealand accreditation, and none exists to hold** for this purpose. ACC has named no accreditor for the Table 2 competency requirement. That cuts both ways and both halves should be said: there is nothing for CEA to obtain, and equally nothing for any competitor to point at. Osteopathy Australia endorsement carries no regulatory weight in New Zealand and is not represented as doing so.
+- **The programme is authored by a registered osteopath.** No exercise physiologist authored or co-authored it. It is referenced to the primary peer-reviewed literature.
+- **The director's mTBI manuscript is prepared for submission** — not submitted, not under review, not published, and not cited as a publication.
+- **Exercise physiologists have no ACC provider door**, which is why the product offered here is CCM and not CEA's exercise-physiology programme. The scheme's clinicians are physiotherapists and occupational therapists.
 
-### F. Privacy, security and information governance
+---
 
-- **Instruments:** Privacy Act 2020 and the Health Information Privacy Code 2020. Active+ is the holding agency; CEA acts as service provider in respect of information processed through the platform.
-- **Data minimisation:** protocol data only — graded test results, prescription, heart rate during prescribed sessions, stop-rule events, clinician notes. No imaging, no unrelated history, no continuous background physiological monitoring outside prescribed sessions.
-- **Identification:** service code plus an organisation-controlled client label. Report retrieval requires both the code and a separate view key.
-- **Cross-border disclosure:** CEA is an Australian entity; the platform is hosted with a commercial cloud provider. CEA will supply hosting locations, a sub-processor list and a written data-processing agreement for privacy review, and will engage on a data-residency requirement if Active+'s position requires one.
-- **Breach notification:** CEA will notify Active+ without delay of any privacy breach affecting its information, so that Active+ can meet its obligations to the Privacy Commissioner and to affected individuals.
-- **Exit:** data is Active+'s. Export in a usable format on termination, with deletion of CEA copies on an agreed schedule.
+# §5 — OBJECTIONS AND ANSWERS
 
-[ZAC: procurement at this scale will send a written security and privacy questionnaire. Do not answer any question in it from memory — hosting region, sub-processors, encryption at rest and in transit, backup and retention, access control, penetration-testing history, insurance. Where the honest answer is "not yet formalised", say so and give a date. A single overstated control answer discovered later ends the relationship.]
+**"Our clinicians already meet the competency requirement."**
+Very likely several of them do, and the pitch does not dispute it. The clause does not ask what the supplier believes — it asks for competency "and be able to support this with evidence." The question is narrower than it first appears: for each named clinician on the concussion caseload, what is the document? Where a clinician has a concussion-specific qualification, a research record or a documented supervised history, there is an answer. Where the answer is "years of general practice", that is exactly the position Cl. 6.2.2 addresses.
 
-### G. Vendor
+**"So does completing your course make our clinician compliant?"**
+No, and CEA will not say that it does. It produces dated, per-named-clinician evidence of concussion-specific professional development that the supplier submits. ACC determines whether the requirement is met. Anyone telling you their course confers ACC eligibility is describing something ACC has not created.
 
-**Concussion Education Australia Pty Ltd**
-ACN 688 155 508 · ABN 74 688 155 508
-2 Wordsworth St, Byron Bay NSW 2481, Australia
-Director: **Zac Lewis**, Registered Osteopath (AHPRA-registered), B.Clin.Sci, M.Ost.Med
+**"Is CCM ACC-approved or ACC-recognised?"**
+No. ACC has named no course, no curriculum and no accreditor for this requirement, so no provider can hold that recognition. If ACC establishes a recognition pathway, CEA will pursue it and say so.
 
-CEA is a specialist concussion education and clinical-tools provider. It publishes to depth in a single condition rather than breadth across many. Concussion Clinical Mastery is endorsed by Osteopathy Australia.
+**"Our supervision is not costing us $8,000 a clinician."**
+It may well not be. The figures cost both parties' clinical time at ACC's own TBI22/TBI26 rate of $155.27/hr, because that is what a full-caseload organisation forgoes by taking two clinicians off funded delivery. Costed at salary plus on-cost the number is lower. Session length is not specified in the contract either, which is why both a 60-minute and a 30-minute scenario are presented. Substitute your own figures — the shape of the comparison against a one-off seat does not change.
 
-Stated for the record, so nothing is discovered later: CEA is a small vendor. Its clinical programmes are authored by a registered osteopath and **no exercise physiologist authored or co-authored them**. An ESSA professional-development endorsement of CEA's separate exercise-physiology product has been independently reviewed but is **pending and is not claimed**. The director's mTBI manuscript is **prepared for submission — not submitted, not peer reviewed and unpublished**. CEA holds no New Zealand accreditation and does not represent that it does.
+**"We already use BIST, and it is free."**
+BIST is in the contract as the exemplar outcome measure with an 85% completion target, and it should stay there. It is a symptom-screening instrument; exercise-tolerance assessment under Cl. 5.8.2.1.2 is a different activity producing a different datum. SST complements BIST rather than replacing it. The 85% target is unaffected.
 
-### H. Commercial structure
+**"What is your evidence that the software works?"**
+CEA holds no outcome data on the software and makes no efficacy claim for it. The evidence base cited is for the protocol — Amsterdam 2022 for sub-symptom-threshold aerobic exercise as first-line treatment, and Leddy et al. 2019 (n=103, ages 13–18) for median recovery of 13 versus 17 days, P=.009. What SST offers is that the protocol is delivered as published, and that adherence and dose are measured rather than assumed.
 
-Per-organisation annual licence plus per-seat competency certification, with volume banding on seats at Active+'s scale.
+**"Does it integrate with our practice management system?"**
+No integration is offered or claimed. The ACC884 output is print-ready content the clinician reviews and transcribes onto ACC's form.
 
-The licence figure depends on one question CEA would rather ask than assume: **whether a tool of this kind is funded from supplier margin or is recoverable within the funded service.** CEA will present a figure once Active+ indicates which applies. That is a deliberate choice — a number quoted against the wrong assumption wastes the procurement cycle.
+**"Who wrote the course?"**
+A registered osteopath. No exercise physiologist authored or co-authored it. It is endorsed by Osteopathy Australia — an Australian professional body endorsement that carries no regulatory weight in New Zealand, stated plainly so it is not mistaken for something it is not.
 
-### I. Proposed path
-
-1. **Clinical scoping (30 minutes)** — clinical lead, contract/reporting lead. Confirm the capability gap and settle the funding question.
-2. **Single-site pilot** — one site, a small number of live episodes, end to end, producing a real ACC884 content pack.
-3. **Governance and privacy review** — in parallel with the pilot, not after it, so it is not the thing that stalls the decision.
-4. **Multi-site rollout** — organisation licence, staged seat allocation by site.
+**"We are a small supplier. Forty seats is not us."**
+The banding runs from NZ$895 down to NZ$425 at 40+, so a small supplier pays the top of the band. The supervision arithmetic is per clinician, so the comparison holds at any scale — a two-clinician supplier carrying one clinician on the regime is carrying the same annual figure per head as a fifty-clinician one.
 
 ---
 
@@ -434,75 +269,116 @@ The licence figure depends on one question CEA would rather ask than assume: **w
 # NOT PART OF THE PITCH — INTERNAL ONLY
 # ═══════════════════════════════════════════
 
-**Do not send this section. Do not paste it into an email. If this document is forwarded to a supplier, everything above Part 5's end goes; this does not.**
+**Do not send this section. Do not paste it into an email. Everything above this line may be forwarded; this may not.**
 
-## Product gaps — the honest state, verified against the code
+## What changed in this rewrite, and why
 
-**1. There is no clinician-facing button for the ACC884.** The report is generated by `GET /api/sst/report?code=X&k=<viewKey>&patient=<label>&skin=acc884`. It is reachable **by URL only** — no UI in the clinician dashboard links to it. A clinician cannot currently discover or generate the report without being handed a constructed URL.
+The pack previously led with the ACC884 reporting-admin argument and the Cl. 5.2.1 vs Cl. 5.8.2.1.2 tension. Both are now demoted. The lead is the Part B Table 2 / Cl. 6.2.2 / 6.2.3 / 6.3.1.1 / 6.3.1.2 competency gate.
 
-*Implication for the pitch:* a demo is fine (you construct the URL), and a design-partner pilot is fine (you generate it for them). **A self-serve rollout across 1,400 clinicians is not fine.** Do not sell Active+ on a workflow that does not exist yet. Either build the button before the Active+ conversation gets serious, or scope the first engagement as design-partner work where CEA generates the report. Do not let the demo imply a UI that is not there.
+**Why the swap is right:** the old lead asked the buyer to accept a clinical premise (the guideline moved, your team was not trained for it) before it reached anything commercial. The new lead asks the buyer only to read a clause they signed and multiply it by a rate ACC publishes. It converts the sale from "better care" to "cheaper compliance", which is a shorter argument and a harder one to wave away. And the fallback cost is recurring and open-ended while the product is one-off, which is the strongest possible shape for a price comparison.
 
-**2. PMS write-back (Cliniko / Gensolve) is built but gated off and unvalidated.** The adapter exists (`lib/sst-trainer/pms/`), and it is env-flag-gated — `PMS_WRITEBACK_ENABLED` defaults off, and it cannot return a live adapter without both the flag on *and* a real API key. **It has never been validated against a live tenant.** Nothing in this pack claims PMS integration, and nothing should. Note that the older SstPitch "in certification" Gensolve claim was REMOVED from the live component on 2026-07-20 — do not reintroduce it.
-
-**3. ACC884 output is transcription, not filing, and that is a real cost.** The clinician still retypes onto ACC's form. The value is the compilation, not the submission. If a supplier's actual pain turns out to be *submission* rather than *compilation*, the product is a weaker fit than this pack implies and you should hear that in the scoping call rather than discover it at pilot review.
-
-**4. Watch/web protocol parity and the subscription webhook** — see the go-live review notes; they are not blockers for a design-partner pilot but they are blockers for a paid multi-site rollout.
-
-## CONTRACT FACTS OF RECORD — do not re-introduce the old version
-
-**An earlier draft of this pack opened on "you are at your year-one renewal point." That was wrong.** It came from the **GETS advance notice**, which described a 1+1+1 structure. The **executed ACC Service Schedule does not say that.** The error was caught before the pack was used. It is recorded here so it does not get reintroduced by anyone working from the GETS notice or from an old draft.
-
-**The corrected facts, from the executed Service Schedule:**
+## Contract facts of record
 
 | Item | Fact |
 |---|---|
-| **Contract term** | **1 July 2025 → 30 June 2027** (two years, not one) |
-| **Extension** | **One 1-year extension**, at ACC's discretion — **Cl. 1.2.2**, expressly conditional on ACC being satisfied with supplier performance |
-| **Renewal decision timing** | **None imminent.** There is no year-one renewal point. Do not imply one. |
-| **Six-monthly reporting** | Within **15 business days of 31 December** and **10 business days of 30 June**. The Jan–Jun 2026 report was therefore due in mid-July 2026 — just filed. |
-| **Peer visibility of performance data** | **Cl. 13.4** — supplier consents to ACC sharing its **non-anonymised** performance data with all other contracted suppliers |
-| **Mandated team composition** | **Cl. 5.2.1** — medical, neuropsychology, psychology, occupational therapy, physiotherapy |
+| **Current term** | **1 July 2025 → 30 June 2026**, extendable by **two further one-year terms** — at a decision point now |
+| **Competency requirement** | **Part B, Table 2** — registration + APC, 2 years' recent postgraduate experience, demonstrate competency re mild-to-moderate brain injury "and be able to support this with evidence" |
+| **Failure of competency criteria** | **Cl. 6.2.2** — supplier must ensure completion of Concussion Services Supervision requirements |
+| **Failure of experience criteria** | **Cl. 6.2.3** — "not permitted to provide Services" |
+| **PD obligation under supervision** | **Cl. 6.3.1.1** — further PD "with specific relevance to… mild to moderate brain injury" until competency demonstrated |
+| **Supervision specification** | **Cl. 6.3.1.2** — supervisor 5+ yrs in previous 7 in mTBI *and* 1+ yr on an ACC Concussion Services or Neuropsych contract; fortnightly 1:1; maintained log; **Cl. 6.3.1.3** supplier responsible that every case is reviewed |
+| **Documentary requirement** | Operational Guidelines — supplier gives ACC a summary letter outlining how the requirements will be met |
 | **Exercise tolerance obligation** | **Cl. 5.8.2.1.2** — "assessment of exercise tolerance and/or functional capacity" |
-| **Performance measures** | **Part B, Table 4** — recovery-duration and return-to-work metrics, benchmarked at "National Average or one deviation higher", sourced from **ACC's own data, not supplier self-report** |
+| **Rate benchmark** | **TBI22 / TBI26 at NZ$155.27/hr** |
+| **BIST** | Named in Part B as exemplar outcome measure, "e.g.", **≥85% Stage 2 completion target** |
+| **ACC provider education** | In-house build, Totara LMS at learning.acc.co.nz, CPD-bearing webinars — **zero concussion content in catalogue** |
 
-**Why the corrected version is a better pitch than the wrong one.** The false hook was a deadline. The real material is an argument: the contract requires a capability its own mandated team does not supply (5.2.1 vs 5.8.2.1.2), the extension turns on performance evidence being built now (1.2.2), the numbers cannot be improved by better writing because they come from ACC's data (Part B), and they are visible to competitors by name (13.4). That is a structurally stronger sale, and it does not expire.
+⚠️ **TERM DISCREPANCY — resolve before any supplier conversation.** An earlier draft of this pack stated the schedule runs **1 July 2025 → 30 June 2027 with one 1-year extension**, citing Cl. 1.2.2. The sourced research in `ACC-AS-BUYER.md` §R2.3 gives **1 July 2025 → 30 June 2026, extendable by two further one-year terms**, from the archived `Concussion Services.SS.July 2025` schedule. **These cannot both be right.** This rewrite follows the sourced version. **[ZAC: settle this against your own copy of the executed schedule before quoting a term or an extension structure to anyone.** An earlier error in this pack already came from reading the GETS advance notice as if it were the contract — do not repeat the mechanism.]
 
-**[ZAC: verify the clause numbers against your own copy of the executed schedule before quoting them to a supplier.]** Citing a clause number is high-credibility when right and catastrophic when wrong — the person across the table has the document. If you cannot verify a number, cite the substance without the number: "the schedule obliges you to deliver assessment of exercise tolerance" is safe; a wrong clause reference is not.
-
-## Market and strategy notes
-
-**The funding question is the single highest-value unknown in this entire market.** One supplier's answer probably generalises across the scheme. Get it answered in Queenstown before doing any pricing work, and before any Active+ conversation reaches numbers. Everything downstream — pricing, positioning, whether this is a $3k or $30k product, and whether the market is worth $150k or $1.5m a year in total — sits on it.
-
-**Market size, honestly.** A few dozen supplier organisations nationally is a market you can enumerate on one page. That is a strength (no distribution problem — you can literally list every buyer) and a weakness (there is no volume to compensate for a low price point, and no room to burn a reputation; if two suppliers hear you overclaimed, you are finished in the scheme). Both facts argue for the same behaviour: land few, land properly, never overstate.
-
-**Active+ is the anchor and the trap.** Winning it validates the category. Waiting on it burns a year. Run the independent in parallel from day one — the reference from a small supplier who will take a phone call is worth more to Active+ procurement than any deck, and it costs weeks rather than quarters.
-
-**Only one of the three hooks decays, and it decays fast.** The just-filed six-monthly report is fresh for a few weeks and then it is not — that one argues for using this pack now rather than next quarter. The Cl. 1.2.2 extension condition and the Cl. 13.4 peer-visibility lever do not decay at all; if anything the extension argument strengthens as the record accumulates. So there is urgency, but it is the urgency of a good opening line, not of a closing window. Do not manufacture false deadline pressure on top of it — this buyer reads contracts for a living.
-
-**Handle Cl. 13.4 with care.** "Your competitors can see your numbers" is the strongest lever in the pack and also the easiest to make sound like a threat. Deliver it as a shared fact about how the scheme works, never as a warning. The version that lands is the observation that performance data is visible by name, therefore evidence quality is a competitive position rather than a compliance chore. The version that fails is anything that sounds like *you should be worried.*
-
-**Sizing figures need a source before they are spoken.** The ~21,000 claims and 15–25% referral-rate figures are working estimates. They are fine for internal sizing and fine as "my understanding is roughly". They are not fine stated as ACC-published statistics to a supplier who works inside the scheme and will know if they are wrong. Losing credibility on a number you did not need to cite is an avoidable way to lose the room.
-
-**Do not pitch CRM into this market.** The exercise-physiology CPD product is aimed at exercise physiologists. The scheme's clinicians are physiotherapists and OTs. CCM is the scheme product. Getting this wrong signals you do not understand the buyer's workforce.
+**[ZAC: verify every clause number above against your own copy before citing it by number.]** Citing a clause is high-credibility when right and unrecoverable when wrong — the person across the table has the document. If a number cannot be verified, cite the substance without it: *"the schedule requires your clinicians to evidence brain-injury competency, and puts those who can't under fortnightly supervision"* is safe; a wrong clause reference is not.
 
 ## Claim discipline — the lines that must not move
 
-- ACC884 = **Client Summary Report**. Not a treatment plan. ACC32 is the extension request. ACC885 = **Did Not Attend**. Not a progress report. Never blur these; a supplier will catch it instantly and it is the fastest possible way to look like a vendor who has not read the contract.
+- **Never "CCM makes your clinician compliant."** Never "removes the supervision requirement." Never "ACC-approved", "ACC-recognised", "meets the ACC requirement." The permitted formulation is: **evidence the supplier puts forward; ACC decides.**
+- **ACC has named no course and no accreditor**, so no competitor can claim recognition either. Say this — it neutralises the entire category of competitor claim, and it is true.
+- **No efficacy claim for the software.** CEA holds no outcome data. Protocol evidence ≠ product evidence.
+- **Leddy 2019 = median 13 vs 17 days, n=103, ages 13–18, P=.009.** Never "4.6 days". That number has crept in before.
+- **CCM holds the Osteopathy Australia endorsement. ESSA is pending, belongs to CRM, and is not claimed.** Do not let these two swap.
+- **No exercise physiologist authored the courses.** Say it before being asked.
+- **The mTBI manuscript is prepared for submission** — not submitted, not under review, not published.
+- **CEA holds no NZ accreditation and none exists to hold.**
+- **ACC884 = Client Summary Report. ACC32 = extension request. ACC885 = Did Not Attend.** Never blur.
 - **Compiles content; does not file.** No auto-filing language, ever.
-- **CCM holds the Osteopathy Australia endorsement.** ESSA is **pending**, belongs to the other product, and is not claimed.
-- **No exercise physiologist authored the courses.** Say it before you are asked.
-- **The mTBI manuscript is prepared for submission — not submitted, not under review, not published.** Do not cite it as a publication, and do not describe it as "under review".
-- **No diagnostic, prognostic or clearance claim.** Clinician-directed throughout.
-- **No PMS integration claim.**
+- **No PMS write-back claim.** The adapter exists at `lib/sst-trainer/pms/`, is env-gated off (`PMS_WRITEBACK_ENABLED`), and has never been validated against a live tenant. The older SstPitch "in certification" Gensolve claim was removed from the live component on 2026-07-20 — do not reintroduce it.
+- **Do not pitch CRM into this market.** Exercise physiologists have no ACC provider door. The scheme's clinicians are physios and OTs; the product is CCM.
+- **Never imply the incumbents are unsophisticated.** BIST was co-authored by an ACC staff member and paid employees of Active+, Axis Sports Medicine and Wellington Sports Medicine. Position SST as complementary substrate, never as a replacement.
 
-## STILL REQUIRED BEFORE THIS GOES ANYWHERE
+## Product gaps — honest state
 
-- **[ZAC: source the ~21,000 claims and 15–25% referral figures]**, or downgrade them to explicit estimates in speech.
-- **[ZAC: confirm hosting region and sub-processor list]** before any privacy answer to any supplier.
-- **[ZAC: decide whether the ACC884 UI button is built before or after the Active+ approach]** — this decides whether the Active+ conversation is a sale or a design-partner conversation.
-- **[ZAC: confirm any NZ professional-body recognition pathway]** for CCM (Physiotherapy New Zealand / Physiotherapy Board) before it is raised in a meeting.
-- **[ZAC: confirm the exact ACC884 submission timeframe]** against the current operational guidelines before quoting it in writing to a supplier — the six-monthly reporting deadlines and the service-exit deadline are separate obligations and should not be conflated.
-- **[ZAC: verify Cl. 1.2.2, 5.2.1, 5.8.2.1.2, 13.4 and Part B Table 4]** against your own copy of the executed Service Schedule before any of them is cited by number in an email or a meeting.
-- **[ZAC: never cite the GETS advance notice as if it were the contract]** — that is where the wrong 1+1+1 term came from.
-- **[ZAC: get the funding question answered in Queenstown]** — this is the highest-value action in the pack.
+**1. There is no clinician-facing button for the ACC884.** It is generated by `GET /api/sst/report?code=X&k=<viewKey>&patient=<label>&skin=acc884` — reachable by URL only, with no dashboard link. A demo is fine (you construct the URL) and a design-partner pilot is fine (you generate it). **A self-serve rollout is not.** Do not let a demo imply a UI that does not exist. §3 is written to survive this because it never promises self-service.
+
+**2. ACC884 output is transcription, not filing.** If a supplier's actual pain turns out to be *submission* rather than *compilation*, §3 is a weaker fit than it reads. Hear that in the scoping call, not at pilot review. It is another reason §3 is third rather than first.
+
+**3. Watch/web protocol parity and the subscription webhook** — not blockers for a free pilot, blockers for a paid multi-site rollout.
+
+## Pricing notes
+
+Pricing is now decided and in the pack: **SST NZ$49/actively-delivering clinician/month; CCM NZ$895 → NZ$425 at 40+; first two reference organisations free.** The earlier "ask the funding question before quoting anything" instruction is superseded for these numbers — but **the funding question is still worth asking**, because whether a supplier funds this from margin or recovers it inside the funded service determines how hard the seat count can be pushed and whether a per-organisation licence is worth constructing later. Ask it; do not gate the quote on it.
+
+The supervision arithmetic is the anchor and it should be presented before the price, never after. $8,074 recurring next to $895 one-off is a comparison the buyer completes themselves. Reversed, it is a vendor justifying a number.
+
+## Strategy notes
+
+- **Lead with §1 in every first contact, at every supplier size.** §2 and §3 are what the conversation moves to once §1 has earned it. A first email that opens on reporting admin gets filed.
+- **The free pilot is for two organisations and it buys references, not revenue.** Prefer one small independent that can decide in a single conversation and one mid-sized supplier with a real supervision burden. Do not spend both slots on the largest supplier — its procurement cycle will consume the slot without producing a reference.
+- **Ask early and directly: how many of your clinicians are currently under the Concussion Services Supervision requirements?** The answer sizes the deal, and asking it demonstrates the contract has actually been read. If the answer is "none, and none ever", the §1 lead is weak at that organisation and §2 should carry the conversation instead.
+- **The ACC-side gap is real but is a different sale.** ACC's own provider-education catalogue contains zero concussion content while ACC contractually mandates concussion competency. That is an ACC-as-buyer argument, tracked in `ACC-AS-BUYER.md`. Do not conflate the two motions or lead a supplier with it.
+- **Market shape:** a few dozen supplier organisations nationally, enumerable on one page. No distribution problem and no room to burn a reputation. If two suppliers hear that CEA overclaimed on ACC recognition, the scheme is closed. That single risk is why §1.4 is written the way it is.
+
+## Still required
+
+- **[ZAC: resolve the contract-term discrepancy]** — 2026 + two extensions (sourced) vs 2027 + one extension (earlier draft).
+- **[ZAC: verify Part B Table 2, Cl. 6.2.2, 6.2.3, 6.3.1.1, 6.3.1.2, 6.3.1.3 and 5.8.2.1.2]** against the executed schedule before citing by number.
+- **[ZAC: confirm the $155.27 TBI22/TBI26 rate is current]** — the arithmetic in §1.3 and the objection answers all rest on it.
+- **[ZAC: confirm hosting region and sub-processor list]** before answering any privacy question.
+- **[ZAC: decide whether the ACC884 UI button is built before or after the first paid rollout.]**
 - **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.
+
+---
+
+# APPENDIX — COVER EMAIL (send-ready)
+
+**Send to:** the supplier's clinical lead. Second choice, the contract or quality manager. Not a generic inbox.
+
+**Subject:** The competency evidence requirement in your Concussion Services schedule
+
+Dear [name],
+
+I want to raise something specific in your ACC Concussion Services Service Schedule, because I think it costs more than it looks like it costs.
+
+Part B, Table 2 requires every physiotherapist, occupational therapist, registered nurse, speech language therapist and social worker delivering the service to hold registration and a current practising certificate, two years' recent postgraduate experience, and — regarding mild to moderate brain injury — to demonstrate competency *and be able to support this with evidence*. Where a provider does not meet the competency criteria, Cl. 6.2.2 obliges you to put them through the Concussion Services Supervision requirements, and Cl. 6.3.1.1 obliges that clinician to undertake further professional development with specific relevance to mild to moderate brain injury until competency is demonstrated.
+
+The supervision specification is the part with the cost in it. Cl. 6.3.1.2 requires a supervisor with five years' mild-to-moderate brain injury experience in the previous seven *and* at least a year on an ACC Concussion Services or Neuropsychological Assessment contract, fortnightly one-on-one supervision, a maintained log of every case discussed, and your responsibility that every case is reviewed.
+
+Fortnightly is 26 sessions a year. If I cost that at ACC's own TBI22/TBI26 rate of $155.27 an hour — as the opportunity cost of taking two clinicians off funded delivery — an hour a fortnight is about **NZ$4,000 of supervisor time plus NZ$4,000 of the supervised clinician's time, so roughly NZ$8,000 per supervised clinician per year**. At half-hour sessions it is about NZ$4,000. The contract does not specify session length, so both are scenarios rather than findings, and costing the hours at salary rather than at the billable rate will give you a lower figure. Either way it recurs, and Cl. 6.3.1.1 has no end date on it — it runs until competency is demonstrated.
+
+What is unusual about the requirement is that **ACC names no course, no curriculum and no accreditor.** You bear the cost and you choose the provider. That means no education provider can claim ACC recognition, and I am not going to claim it either.
+
+What I offer is narrower and I would rather state it exactly. **Concussion Clinical Mastery is dated, per-named-clinician, certificated evidence of concussion-specific professional development that you can put forward toward the Table 2 competency requirement and the Cl. 6.3.1.1 obligation. ACC decides whether it satisfies them.** It covers graded exertion testing, derivation of the individual heart-rate threshold, prescription against that measured value, progression by re-test, phenotype-specific rehabilitation, graded return to activity and work, and the scope boundary. It is endorsed by Osteopathy Australia — an Australian body, which carries no regulatory weight in New Zealand, and I mention it as provenance rather than as recognition. It is a one-off per clinician: NZ$895, falling to NZ$425 at forty or more seats.
+
+It does not fix a shortfall in years of practice — Cl. 6.2.3 is about experience and no course substitutes for that. It is responsive to the competency and professional-development limbs.
+
+There is a second half I will mention briefly. Cl. 5.8.2.1.2 obliges you to deliver assessment of exercise tolerance and/or functional capacity, and ACC funds it at $155.27 an hour while specifying no method. Since the 2022 Amsterdam consensus, the method that matters is a symptom-limited graded test producing a measured heart-rate threshold, with sub-threshold aerobic exercise prescribed against it as first-line treatment. SST Trainer delivers that prescription between appointments and measures it — the client's own wearable streams heart rate, so you see actual dose rather than a self-report, and serial re-testing gives a measured physiological trajectory. NZ$49 per actively-delivering clinician per month. It complements BIST rather than replacing it; BIST is a symptom screen and this is a different activity, and your 85% Stage 2 completion target is unaffected.
+
+Two things I should say without being asked. I hold no outcome data on the software and make no efficacy claim for it — the evidence I cite is for the protocol, principally Leddy and colleagues' 2019 randomised trial in 103 adolescents, median recovery 13 days versus 17 (P=.009). And the courses are authored by a registered osteopath; no exercise physiologist authored them.
+
+I would value 20 minutes. The question I would actually like to ask is how many of your clinicians are currently on, or close to, the supervision requirements — that determines whether any of this is worth your time. I am also running the first two organisations as unpaid reference pilots, which is a straightforward trade: you carry no fee for the pilot period, I get a supplier who will take a phone call.
+
+Kind regards,
+
+**Zac Lewis**
+Registered Osteopath (AHPRA-registered) · B.Clin.Sci, M.Ost.Med
+Director, Concussion Education Australia Pty Ltd
+ACN 688 155 508 · ABN 74 688 155 508
+2 Wordsworth St, Byron Bay NSW 2481, Australia
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
