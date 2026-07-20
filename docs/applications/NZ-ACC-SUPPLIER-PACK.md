@@ -67,13 +67,15 @@ Two things close it, and they are sold together because neither works alone:
 
 **Send to:** the supplier's clinical lead or contract manager. Not the reception inbox, not a generic info@ address. If only one name is reachable, the clinical lead is the better target — they feel the capability gap; the contract manager feels the reporting load.
 
-**Subject:** Cl. 5.8.2.1.2 — exercise tolerance assessment, and where the capability for it sits
+**Subject:** Your ACC recovery numbers — and the one lever that actually moves them
 
 Dear [name],
 
-You will have filed your six-monthly report a few days ago, so the reporting burden is probably fresher in your mind than usual. That is partly why I am writing now.
+You will have filed your six-monthly report a few days ago, so this is probably fresher in your mind than usual — which is partly why I am writing now.
 
-There is a tension in the Service Schedule that I think every supplier in the scheme is carrying quietly.
+Your Concussion Services performance is scored by ACC from its own claims data — recovery duration and return-to-work, benchmarked against the national average — not from how you write your reports. Under Cl. 13.4 those numbers are visible, non-anonymised, to every other supplier in the scheme, and under Cl. 1.2.2 your extension turns on ACC being satisfied with them. The only lever that moves that score is faster actual recovery.
+
+There is one place a supplier can find that gain, and it sits in a tension in the Service Schedule that I think most of the scheme is carrying quietly.
 
 **Cl. 5.2.1** specifies the team: medical, neuropsychology, psychology, occupational therapy, physiotherapy. **Cl. 5.8.2.1.2** obliges you to deliver "assessment of exercise tolerance and/or functional capacity." None of the five mandated disciplines is trained at entry to practice in graded exercise testing. The contract requires the capability in one clause and specifies a team composition that does not supply it in another.
 
