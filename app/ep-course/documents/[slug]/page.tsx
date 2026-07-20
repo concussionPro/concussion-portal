@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCrmCourseAccess } from '@/components/ep-course/CrmCourseGate'
 import { EpDocumentRenderer } from '@/components/ep-course/EpDocumentRenderer'
 import { PrintDocumentButton } from '@/components/ep-course/PrintDocumentButton'
 import { getEpDocument, EP_DOCUMENTS } from '@/data/ep-documents'
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
 
 export default async function EpDocumentPage({ params }: PageParams) {
   // Paid deliverable — gated to enrolled / demo / admin via the shared course gate.
-  const access = await requireAiCourseAccess('/login')
+  const access = await requireCrmCourseAccess()
   const { slug } = await params
   const doc = getEpDocument(slug)
   if (!doc) notFound()

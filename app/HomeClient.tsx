@@ -1,18 +1,77 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble, MapPin } from 'lucide-react'
+import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble, MapPin, GraduationCap, HeartPulse } from 'lucide-react'
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { CourseSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
+import CcmPricingContent from '@/components/pricing/CcmPricingContent'
+import CrmPricingContent from '@/components/crm/CrmPricingContent'
 import { OtherCityInterest } from '@/components/OtherCityInterest'
-import { HomepageAiCourseCard } from '@/components/HomepageAiCourseCard'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { trackShopClick } from '@/lib/analytics'
 
+// TRUTH GATE: ESSA endorsement is PENDING. Until the certificate lands, the CRM
+// stream must not show the ESSA logo or an "Endorsed by" claim on the home page
+// — the most public surface we have. Same discipline as /cpd, CourseStreams,
+// CrmPricingContent and the CRM checkout route: flip CONFIG.FEATURES.ESSA_ACCREDITED
+// on real approval and this section upgrades itself.
+const ESSA_APPROVED = CONFIG.FEATURES.ESSA_ACCREDITED
+
+const HOME_STREAMS: Array<{
+  id: 'ccm' | 'crm'; code: string; name: string; audience: string; icon: typeof GraduationCap
+  href: string; endorseImg: string; endorseOrg: string; endorseSub: string
+  /** True while the endorsing body has not confirmed — renders "pending", no logo. */
+  endorsePending?: boolean
+  tagline: string
+  modules: { n: string; title: string; sub: string }[]
+}> = [
+  {
+    id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery',
+    audience: 'Physiotherapists & allied health', icon: GraduationCap, href: '/pricing',
+    endorseImg: '/osteopathy-australia-endorsed.png',
+    endorseOrg: 'Osteopathy Australia',
+    endorseSub: `AHPRA-aligned · 8 CPD hrs online, ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop`,
+    tagline: 'Assess, diagnose and manage concussion — SCAT6, VOMS & BESS, return-to-play and phenotype rehab.',
+    modules: [
+      { n: '01', title: 'What is a Concussion?', sub: 'The science & mechanisms' },
+      { n: '02', title: 'Diagnosis & Initial Assessment', sub: 'Theory & clinical tools' },
+      { n: '03', title: 'Practical Assessment & Acute Management', sub: 'Clinical reasoning & acute protocols' },
+      { n: '04', title: 'Persistent Symptoms & Long-Term Management', sub: 'PPCS & CTE' },
+      { n: '05', title: 'Multidisciplinary Management', sub: 'The care team' },
+      { n: '06', title: 'Return to Play, Work & School', sub: 'Graduated protocols' },
+      { n: '07', title: 'Rehabilitation by Phenotype', sub: 'Targeted pathways' },
+      { n: '08', title: 'Legal, Ethical & Documentation', sub: 'Defensible practice' },
+    ],
+  },
+  {
+    id: 'crm', code: 'CRM', name: 'Concussion Rehab Mastery',
+    audience: 'Exercise physiologists', icon: HeartPulse, href: '/concussion-rehab-mastery',
+    endorseImg: '/essa-endorsed.png',
+    endorseOrg: 'Exercise & Sports Science Australia',
+    endorsePending: !ESSA_APPROVED,
+    endorseSub: ESSA_APPROVED
+      ? `8 ESSA CPD points online · up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours`
+      : `Built to ESSA CPD standards · 8 hrs online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop`,
+    tagline: 'Prescribe the exercise rehab that moves recovery — measured-threshold aerobic training, in EP scope.',
+    modules: [
+      { n: '01', title: 'Concussion for the Exercise Physiologist', sub: 'The EP lens' },
+      { n: '02', title: 'Recognition, Red Flags & Scope', sub: 'Where your lane starts & stops' },
+      { n: '03', title: 'Assessment That Is the Treatment', sub: 'The BCTT & HRt' },
+      { n: '04', title: 'Sub-Symptom-Threshold Aerobic Rehab', sub: 'The measured dose' },
+      { n: '05', title: 'Phenotype-Specific Exercise Rehab', sub: 'Targeted reconditioning' },
+      { n: '06', title: 'Graded Return to Activity & Sport', sub: 'Progression to performance' },
+      { n: '07', title: 'Persistent Symptoms & the Complex Case', sub: 'When recovery stalls' },
+      { n: '08', title: 'Documentation, Communication & Referral', sub: 'Funder-ready reporting' },
+    ],
+  },
+]
+
 export default function HomeClient() {
+  const [stream, setStream] = useState<'ccm' | 'crm'>('ccm')
 
   return (
     <>
@@ -21,7 +80,7 @@ export default function HomeClient() {
           homepage confuses crawlers. */}
       <CourseSchema />
 
-      <div className="min-h-screen bg-[var(--background)] relative">
+      <div className="min-h-screen bg-[#e7ecee] relative">
 
         {/* ── Ambient gradient wash behind hero ──────────── */}
         <div className="absolute inset-0 hero-gradient pointer-events-none" aria-hidden="true" />
@@ -31,186 +90,70 @@ export default function HomeClient() {
         <SiteNav />
 
 
-        {/* ── Hero ─────────────────────────────────────────── */}
-        <section className="pt-[120px] md:pt-[136px] pb-10 md:pb-12 px-5 md:px-8 relative z-10">
-          <div className="max-w-[1200px] mx-auto">
-            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] gap-10 lg:gap-14 items-start animate-fade-in">
 
-              {/* ── LEFT: Copy + CTAs ─────────────────────── */}
-              <div className="min-w-0 max-w-[620px]">
 
-                {/* Badge row — CPD + the OA endorsement (authority) up top */}
-                <div className="mb-6 flex flex-wrap items-center gap-2.5">
-                  <div className="badge mb-0">
-                    {CONFIG.COURSE.CPD_BADGE_TEXT}
-                  </div>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(13,115,119,0.25)] bg-white px-3 py-1.5 shadow-sm">
-                    <Image src="/osteopathy-australia-endorsed.png" alt="" width={26} height={24} className="h-6 w-auto" aria-hidden="true" />
-                    <span className="text-xs font-semibold text-[var(--foreground)]">Endorsed by Osteopathy Australia</span>
-                  </span>
-                </div>
-
-                {/* Headline */}
-                <h1 className="text-[2.25rem] md:text-[3.25rem] leading-[1.05] font-bold tracking-[-0.03em] text-[var(--foreground)] mb-5">
-                  Stop guessing.{' '}
-                  <span className="text-gradient">
-                    Master concussion management.
-                  </span>
-                </h1>
-
-                {/* Subhead */}
-                <p className="text-base md:text-lg text-[var(--muted-foreground)] leading-relaxed mb-8">
-                  Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
-                </p>
-
-                {/* CTAs — the paid course leads (owner, 2026-07-05: the
-                    landing under-weighted the offer); free start is the
-                    secondary door, preview + forms tertiary. */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                  <Link
-                    href="/pricing"
-                    className="btn-primary px-8 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    View pricing &amp; enrol
-                    <ArrowRight className="w-4.5 h-4.5" />
-                  </Link>
-                  <Link
-                    href="/scat-mastery"
-                    className="px-8 py-4 rounded-xl text-base font-bold text-[var(--accent)] bg-white border-2 border-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors inline-flex items-center justify-center gap-2 shadow-md"
-                  >
-                    Start with the free SCAT6 course
-                    <ArrowRight className="w-4.5 h-4.5" />
-                  </Link>
-                </div>
-                <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <Link
-                    href="/preview"
-                    className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors"
-                  >
-                    Preview the modules →
-                  </Link>
-                  <Link
-                    href="/scat-forms"
-                    className="text-sm font-medium text-[var(--accent)] hover:underline"
-                  >
-                    Free SCAT forms →
-                  </Link>
-                </div>
-
-                <p className="text-sm text-muted-foreground mt-3 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  7-day money-back guarantee — try risk-free
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay)
-                </p>
-                <p className="text-sm text-slate-500 mt-1">
-                  Complete Course (online + workshop in your city) — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
-                </p>
-                <a href="#locations" className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:underline">
-                  <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  Workshops: Melbourne · Sydney · Byron Bay — or nominate your city
-                </a>
-
-                {/* Social proof strip */}
-                {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 pt-6 border-t border-[rgba(13,115,119,0.08)]">
-                    <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
-                      <span className="font-semibold text-[var(--foreground)]">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded by Australian clinicians
-                    </span>
-
-                  </div>
-                )}
-              </div>
-
-              {/* ── RIGHT: Product showcase ───────────────── */}
-              <div className="relative lg:sticky lg:top-[120px]">
-
-                {/* Soft glow behind the showcase */}
-                <div
-                  className="absolute -inset-8 bg-gradient-to-br from-[rgba(13,115,119,0.12)] via-[rgba(255,255,255,0)] to-[rgba(234,88,12,0.08)] blur-2xl rounded-[40px] pointer-events-none"
-                  aria-hidden="true"
-                />
-
-                <div className="relative space-y-4">
-
-                  {/* Product showcase — the online learning suite. Always shown,
-                      so the hero never goes image-less when no workshop is
-                      'confirmed' (e.g. after Melbourne flipped to 'completed'). */}
-                  <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)]">
-                    <div className="relative aspect-[16/10] bg-slate-900 overflow-hidden">
-                      <Image
-                        src="/ccm-online-preview.png"
-                        alt="Concussion Clinical Mastery online learning suite — interactive modules with quizzes, checkpoints and clinical references"
-                        fill
-                        sizes="(min-width: 1024px) 460px, 100vw"
-                        className="object-cover object-top"
-                        priority
-                      />
-                      <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
-                        <BookOpen className="w-3 h-3 text-[var(--accent)]" aria-hidden="true" />
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">The online course</span>
-                      </div>
-                    </div>
-                    <div className="p-4 md:p-5">
-                      <p className="text-sm font-bold text-slate-900">8 interactive online modules</p>
-                      <p className="mt-1 text-sm text-slate-600 leading-snug">
-                        SCAT6, VOMS &amp; BESS, return-to-play and phenotype rehab — with quizzes, checkpoints &amp; 140+ references.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Next workshop — Melbourne (hero-scale card with large photo) */}
-                  {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
-                    <Link
-                      href="/courses/melbourne"
-                      className="group block rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(15,23,42,0.2)] hover:border-orange-300 transition-all"
+        {/* ── Course stream tabs — sit above the title; clicking swaps the whole
+            course landing (same pricing-page design) between CCM and CRM. ── */}
+        <section className="relative z-10 pt-[100px] md:pt-[116px] px-5 md:px-8">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)] mb-4">
+              Two CPD streams — choose yours
+            </p>
+            <div role="tablist" aria-label="Choose your course stream" className="grid grid-cols-2 gap-3">
+              {HOME_STREAMS.map((s) => {
+                const active = s.id === stream
+                const Icon = s.icon
+                return (
+                  <div key={s.id} className="flex flex-col gap-2.5">
+                    {/* Compact tab — the clickable stream selector */}
+                    <button
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setStream(s.id)}
+                      className={`flex items-center gap-3 rounded-2xl px-5 py-4 text-left border-2 transition-all ${
+                        active
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-lg shadow-[rgba(13,115,119,0.25)]'
+                          : 'bg-white border-[rgba(13,115,119,0.15)] text-[var(--foreground)] hover:border-[rgba(13,115,119,0.4)] hover:shadow-md'
+                      }`}
                     >
-                      <div className="relative aspect-[16/9] bg-slate-900 overflow-hidden">
-                        <Image
-                          src="/melbourne-workshop.jpg"
-                          alt="Concussion Clinical Mastery · Melbourne · 13 June 2026"
-                          fill
-                          sizes="(min-width: 1024px) 460px, 100vw"
-                          className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                          priority
-                        />
-                        <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
-                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
-                          <span className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
-                            Next workshop confirmed
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-4 md:p-5">
-                        <div className="flex items-baseline justify-between gap-3 mb-1.5">
-                          <p className="text-base md:text-lg font-bold text-slate-900 leading-tight">
-                            Melbourne · 13 Jun 2026
-                          </p>
-                          <span className="text-xs font-semibold text-orange-700 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all flex-shrink-0">
-                            See workshop
-                            <ArrowRight className="w-3 h-3" aria-hidden="true" />
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-600 leading-snug">
-                          Rydges Exhibition St · 8am–4pm · catered lunch included
-                        </p>
-                        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[rgba(13,115,119,0.25)] bg-[rgba(13,115,119,0.06)] px-2.5 py-1">
-                          <BedDouble className="w-3.5 h-3.5 text-[var(--accent)]" aria-hidden="true" />
-                          <span className="text-[11px] font-semibold tracking-tight text-[var(--accent)]">
-                            {CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off Rydges accommodation for attendees
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
+                      <span className={`flex-none w-11 h-11 rounded-xl grid place-items-center ${active ? 'bg-white/15' : 'bg-[rgba(13,115,119,0.08)]'}`}>
+                        <Icon className={`w-6 h-6 ${active ? 'text-white' : 'text-[var(--accent)]'}`} strokeWidth={1.8} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className={`block text-[10px] font-bold tracking-[0.14em] ${active ? 'text-white/70' : 'text-[var(--accent)]'}`}>{s.code}</span>
+                        <span className="block text-[15px] font-bold leading-tight">{s.name}</span>
+                        <span className={`block text-[12px] leading-tight mt-0.5 ${active ? 'text-white/85' : 'text-[var(--muted-foreground)]'}`}>{s.audience}</span>
+                      </span>
+                    </button>
 
-                </div>
-              </div>
-
+                    {/* Endorsement sits BELOW the tab (not nested inside it) — the
+                        #1 trust signal, but light. OA under CCM, ESSA under CRM.
+                        Only rendered here on the home page; the in-content badge is
+                        hidden when embedded so it never repeats. */}
+                    <span className="flex items-center gap-2.5 px-1.5">
+                      {!s.endorsePending && (
+                        <Image src={s.endorseImg} alt={`Endorsed by ${s.endorseOrg}`} width={64} height={56} className="h-12 w-auto flex-none" />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+                          {s.endorsePending ? 'Endorsement pending' : 'Endorsed by'}
+                        </span>
+                        <span className="block text-[13px] font-bold text-[var(--foreground)] leading-tight">{s.endorseOrg}</span>
+                      </span>
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </section>
+
+        {/* Active stream landing — the full pricing-page design, swapped by tab.
+            hideNav so the homepage owns the single SiteNav; noPadTop trims the
+            landing's own top offset since the tabs already provide it. */}
+        <div className="relative z-10">
+          {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
+        </div>
 
         {/* ── Workshop locations ───────────────────────────── */}
         <section id="locations" className="section-padding relative z-10">
@@ -304,32 +247,34 @@ export default function HomeClient() {
 
         {/* ── Stats bento grid ────────────────────────────── */}
         <section className="px-5 md:px-8 pb-16 md:pb-20 relative z-10">
-          <div className="max-w-[760px] mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-delay-1">
-              {[
-                { value: 'Up to 14', label: 'AHPRA CPD Hours', sub: '8 online + 6 workshop' },
-                { value: '8', label: 'Online Modules', sub: 'Interactive quizzes' },
-                { value: '140+', label: 'References', sub: 'Evidence-based' },
-              ].map((stat) => (
-                <div key={stat.label} className="stat-tile text-center">
-                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--accent)] mb-1">
-                    {stat.value}
+          <div className="max-w-[860px] mx-auto">
+            <div className="rounded-2xl bg-white border border-[rgba(13,115,119,0.11)] shadow-[0_1px_2px_rgba(10,15,20,0.04),0_14px_36px_-6px_rgba(13,115,119,0.14)] px-5 py-6 md:px-8 md:py-7 animate-fade-in-delay-1">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 divide-[rgba(13,115,119,0.08)] md:divide-x">
+                {[
+                  { value: 'Up to 14', label: 'AHPRA CPD Hours', sub: '8 online + 6 workshop' },
+                  { value: '8', label: 'Online Modules', sub: 'Interactive quizzes' },
+                  { value: '140+', label: 'References', sub: 'Evidence-based' },
+                ].map((stat) => (
+                  <div key={stat.label} className="text-center md:px-3">
+                    <div className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--accent)] mb-1 tabular-nums">
+                      {stat.value}
+                    </div>
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--foreground)] mb-0.5">
+                      {stat.label}
+                    </div>
+                    <div className="text-[11px] text-[var(--muted-foreground)] opacity-70">
+                      {stat.sub}
+                    </div>
                   </div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--foreground)] mb-0.5">
-                    {stat.label}
-                  </div>
-                  <div className="text-[11px] text-[var(--muted-foreground)] opacity-70">
-                    {stat.sub}
-                  </div>
+                ))}
+                <div className="flex items-center justify-center md:px-3">
+                  <Image
+                    src="/osteopathy-australia-endorsed.png"
+                    alt="Osteopathy Australia Endorsed Course"
+                    width={108} height={96}
+                    className="h-20 md:h-24 w-auto"
+                  />
                 </div>
-              ))}
-              <div className="stat-tile flex items-center justify-center p-3">
-                <Image
-                  src="/osteopathy-australia-endorsed.png"
-                  alt="Osteopathy Australia Endorsed Course"
-                  width={108} height={96}
-                  className="h-20 md:h-24 w-auto"
-                />
               </div>
             </div>
           </div>
@@ -394,12 +339,6 @@ export default function HomeClient() {
         </section>
 
 
-        {/* ── AI in Clinical Practice — early-access capture (moved from hero) ── */}
-        <section className="px-5 md:px-8 pb-4 relative z-10">
-          <div className="max-w-[480px] mx-auto">
-            <HomepageAiCourseCard />
-          </div>
-        </section>
 
         {/* ── What clinicians miss ─────────────────────────── */}
         <section className="section-padding relative z-10">

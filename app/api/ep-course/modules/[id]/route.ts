@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getEpModuleById } from '@/data/ep-modules'
 import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { isUserEnrolled } from '@/lib/ai-course/access'
+import { userOwnsCrm } from '@/lib/crm-course'
 import { DEMO_KEY } from '@/lib/demo-key'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -23,11 +23,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Invalid module id' }, { status: 400 })
   }
 
-  // ── Auth: admin (cookie/header) OR demo_key cookie OR enrolled user ──
-  // Mirrors checkServerAccess in components/ai-course/CourseGate.tsx (the gate
-  // every EP *page* uses) so the page gate and the content API can never
-  // disagree: an enrolled purchaser who passes the dashboard gate must not
-  // 403 here the day the course is sold.
+  // ── Auth: admin (cookie/header) OR demo_key cookie OR CRM purchaser ──
+  // WATERTIGHT PER STREAM: EP content unlocks on CRM ownership
+  // (course_purchases slug 'crm'), NOT the AI-course flag it used to key off —
+  // that leaked EP access to AI-course buyers and gave CRM buyers nothing
+  // (2026-07-19 bug fix). CCM stays on users.access_level; AI on
+  // ai_course_enrolled; CRM on course_purchases. Three streams, three gates.
   const adminCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value
   const isAdmin = !!adminCookie && !!verifyAdminSessionToken(adminCookie)
   const adminHeader = request.headers.get('x-admin-key')
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!authorized) {
     const sessionCookie = request.cookies.get('session')?.value
     const session = sessionCookie ? verifySessionToken(sessionCookie) : null
-    if (session) authorized = await isUserEnrolled(session.email)
+    if (session) authorized = await userOwnsCrm(session.email)
   }
 
   const module = getEpModuleById(moduleId)

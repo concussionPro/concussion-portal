@@ -61,20 +61,24 @@ struct HomeView: View {
     }
 
     private func bandCard(_ p: Prescription) -> some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 7) {
             Text("TODAY'S BAND")
-                .font(.system(size: 11, weight: .bold))
-                .tracking(1.4)
+                .font(.system(size: 11, weight: .bold)).tracking(1.4)
                 .foregroundStyle(.secondary)
-            BandRing(low: p.bandLow, high: p.bandHigh, ceiling: p.hrt,
-                     centerBig: "\(p.bandLow)–\(p.bandHigh)", centerSmall: "bpm",
-                     bigColor: Color(red: 0.46, green: 0.94, blue: 0.58))
+            Text("\(p.bandLow)–\(p.bandHigh)")
+                .font(.system(size: 46, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(Color(red: 0.46, green: 0.94, blue: 0.58))
+            Text("BPM").font(.system(size: 10.5, weight: .semibold)).tracking(1)
+                .foregroundStyle(.secondary)
+            BandBar(low: p.bandLow, high: p.bandHigh, ceiling: p.hrt)
+                .padding(.horizontal, 8).padding(.top, 3)
             Text("Ceiling \(p.hrt) bpm · \(p.minutes) min/day")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11.5, weight: .medium))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
         .background(
             LinearGradient(colors: [Color.green.opacity(0.10), Color.green.opacity(0.03)],
                            startPoint: .top, endPoint: .bottom),

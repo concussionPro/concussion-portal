@@ -128,6 +128,42 @@ struct BandRing: View {
     }
 }
 
+// MARK: - Band bar — horizontal HR-zone gauge (a distinct visual from the ring)
+
+struct BandBar: View {
+    let low: Int
+    let high: Int
+    let ceiling: Int
+    var height: CGFloat = 11
+
+    private var floorHR: Double { Double(low) - 16 }
+    private func frac(_ v: Int) -> Double {
+        let span = Double(ceiling) + 6 - floorHR
+        guard span > 0 else { return 0 }
+        return min(1, max(0, (Double(v) - floorHR) / span))
+    }
+
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.12)).frame(height: height)
+                Capsule()
+                    .fill(LinearGradient(colors: [Color(red: 0.16, green: 0.78, blue: 0.42),
+                                                  Color(red: 0.46, green: 0.94, blue: 0.58)],
+                                         startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(8, (frac(high) - frac(low)) * w), height: height)
+                    .offset(x: frac(low) * w)
+                Rectangle().fill(Color.red)
+                    .frame(width: 2.5, height: height + 7)
+                    .offset(x: min(w - 2.5, frac(ceiling) * w))
+            }
+            .frame(height: height + 7)
+        }
+        .frame(height: height + 7)
+    }
+}
+
 // MARK: - 0–10 (and any small integer range) score picker
 //
 // Deliberately NOT crown-driven: a focusable digitalCrownRotation inside a

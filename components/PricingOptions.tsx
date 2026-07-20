@@ -15,7 +15,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { CONFIG, afterpayInstalment, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
-import { HomepageAiCourseCard } from './HomepageAiCourseCard'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
@@ -358,7 +357,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
         )}
 
-        <div className="grid sm:grid-cols-2 gap-4 pt-5">
+        <div className="grid sm:grid-cols-2 gap-6 pt-5 max-w-3xl mx-auto">
           {/* CCM Online - Compact (online component of CCM) */}
           <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}>
             <div className="flex items-center gap-2.5 mb-3">
@@ -593,7 +592,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           last — the price ladder reads top-down, never a $99 SKU anchoring the
           flagship. Order is set with CSS order utilities; DOM order below is
           Online → Complete → AI for edit-diff stability. */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-stretch">
+      <div className="grid md:grid-cols-2 gap-6 pt-5 items-stretch max-w-4xl mx-auto">
 
         {/* ── CCM Online — online component of CCM (displays second) ── */}
         <div
@@ -854,10 +853,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           )}
         </div>
 
-        {/* ── AI in Clinical Practice — $99 add-on course (displays last) ── */}
-        <div className="order-3 flex [&>*]:flex-1">
-          <HomepageAiCourseCard />
-        </div>
       </div>
 
       {/* Trust Signals */}
@@ -877,7 +872,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-teal-800 mb-1">For clinics + organisations</p>
             <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1">Training a whole team?</h3>
             <p className="text-sm text-slate-700 leading-relaxed">
-              In-house team training for clinics, sports organisations, and hospital networks — Concussion + AI in Clinical Practice, delivered on-site around your workflow. On-site days from $8,000.
+              In-house concussion training for clinics, sports organisations, and hospital networks — delivered on-site around your workflow. On-site days from $8,000.
             </p>
           </div>
           <a

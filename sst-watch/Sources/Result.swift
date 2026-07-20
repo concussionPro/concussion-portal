@@ -52,8 +52,13 @@ struct ResultView: View {
                     .font(.system(size: 11, weight: .bold))
                     .tracking(1.4)
                     .foregroundStyle(.secondary)
-                BandRing(low: lo, high: hi, ceiling: hrt,
-                         centerBig: "\(hrt)", centerSmall: "bpm", bigColor: .red)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("\(hrt)")
+                        .font(.system(size: 58, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.red)
+                    Text("bpm").font(.callout).foregroundStyle(.secondary)
+                }
                 Text("This is where your symptoms started to rise.")
                     .font(.caption2).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

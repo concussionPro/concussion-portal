@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { GraduationCap, HeartPulse } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
@@ -37,16 +38,16 @@ export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Str
     <>
       <SiteNav />
 
-      {/* ── Stream toggle ─────────────────────────────────────────────── */}
-      <div className="bg-background border-b border-border/40">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-5">
-          <p className="text-center text-[11px] font-bold uppercase tracking-[0.16em] text-accent mb-3">
+      {/* ── Stream toggle — large, standalone (not attached to the top bar) ── */}
+      <div className="bg-background">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 md:pt-16 pb-8">
+          <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-accent mb-5">
             Choose your stream
           </p>
           <div
             role="tablist"
             aria-label="Choose your CPD stream"
-            className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-white border border-border/60 shadow-sm"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
             {STREAMS.map((s) => {
               const active = s.id === stream
@@ -57,25 +58,25 @@ export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Str
                   role="tab"
                   aria-selected={active}
                   onClick={() => select(s.id)}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all ${
+                  className={`flex items-center gap-4 rounded-2xl px-6 py-6 text-left border-2 transition-all ${
                     active
-                      ? 'bg-accent text-white shadow-md shadow-accent/20'
-                      : 'text-muted-foreground hover:bg-accent/5'
+                      ? 'bg-accent text-white border-accent shadow-lg shadow-accent/25'
+                      : 'bg-white border-border/60 text-foreground hover:border-accent/40 hover:shadow-md'
                   }`}
                 >
                   <span
-                    className={`flex-none w-9 h-9 rounded-lg grid place-items-center ${
+                    className={`flex-none w-14 h-14 rounded-2xl grid place-items-center ${
                       active ? 'bg-white/15' : 'bg-accent/8'
                     }`}
                   >
-                    <Icon className={`w-[18px] h-[18px] ${active ? 'text-white' : 'text-accent'}`} strokeWidth={1.9} />
+                    <Icon className={`w-7 h-7 ${active ? 'text-white' : 'text-accent'}`} strokeWidth={1.8} />
                   </span>
                   <span className="min-w-0">
-                    <span className={`block text-[10px] font-bold tracking-[0.12em] ${active ? 'text-white/70' : 'text-accent/70'}`}>
+                    <span className={`block text-[11px] font-bold tracking-[0.14em] mb-0.5 ${active ? 'text-white/70' : 'text-accent/70'}`}>
                       {s.code}
                     </span>
-                    <span className="block text-sm font-bold leading-tight truncate">{s.name}</span>
-                    <span className={`block text-[11.5px] leading-tight truncate ${active ? 'text-white/80' : 'text-muted-foreground'}`}>
+                    <span className="block text-lg font-bold leading-tight">{s.name}</span>
+                    <span className={`block text-sm leading-tight mt-0.5 ${active ? 'text-white/85' : 'text-muted-foreground'}`}>
                       {s.audience}
                     </span>
                   </span>
@@ -83,6 +84,14 @@ export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Str
               )
             })}
           </div>
+
+          {/* Free taster — try the first module before enrolling */}
+          <p className="mt-5 text-center text-sm text-muted-foreground">
+            Not sure yet?{' '}
+            <Link href="/preview" className="font-semibold text-accent underline underline-offset-2 hover:text-accent/80">
+              Try Module 1 free →
+            </Link>
+          </p>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { sql } from '@vercel/postgres'
+import { detectCountry, isInternational, isHomeCountry } from '@/lib/geo'
 
 // Edge-compatible constant-time string comparison
 // Pads shorter string to prevent leaking length via timing
@@ -211,23 +212,34 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ─── /international — explicit geo-router entry (restored 2026-07-20) ──────
+  // This path 404'd (never a route); overseas visitors and ad links pointing at
+  // it dead-ended. It's now a smart router: AU/NZ → the normal AUD pricing page,
+  // everyone else (incl. unknown geo — /international IMPLIES overseas intent) →
+  // the international (USD) pricing page. Bots pass through to /pricing-international
+  // so the intl page is the crawlable canonical.
+  if (pathname === '/international') {
+    const country = detectCountry(request.headers)
+    const dest = request.nextUrl.clone()
+    // AU/NZ → normal AUD pricing; everyone else INCLUDING unknown geo →
+    // international (the /international URL is explicit overseas intent).
+    dest.pathname = isHomeCountry(country) ? '/pricing' : '/pricing-international'
+    return NextResponse.redirect(dest, 302)
+  }
+
   // ─── Geo-routing: /pricing → /pricing-international for non-AU/NZ ─────────
   if (pathname === '/pricing') {
-    // Cloudflare proxies requests, so Vercel sees Cloudflare's IP, not the user's.
-    // cf-ipcountry has the real user's country; x-vercel-ip-country is the fallback.
-    const country = request.headers.get('cf-ipcountry')
-      || request.headers.get('x-vercel-ip-country')
+    // Country from the shared detector (cf-ipcountry first — Cloudflare proxies
+    // to Vercel, so Vercel's own geo sees CF's edge IP, not the visitor).
+    const country = detectCountry(request.headers)
     const ua = request.headers.get('user-agent') || ''
-
-    // Don't redirect bots (preserve SEO for /pricing)
-    if (!BOT_UA_PATTERN.test(ua)) {
-      // Redirect non-AU/NZ visitors to international pricing
-      if (country && country !== 'AU' && country !== 'NZ') {
-        const intlUrl = request.nextUrl.clone()
-        intlUrl.pathname = '/pricing-international'
-        // Preserve query params (e.g. ?canceled=true, ?location=sydney)
-        return NextResponse.redirect(intlUrl, 302)
-      }
+    // Don't redirect bots (preserve SEO for /pricing). Only redirect a KNOWN
+    // overseas country — unknown geo stays on /pricing (AU default) so a missing
+    // cf-ipcountry header never traps AU buyers on USD pricing.
+    if (!BOT_UA_PATTERN.test(ua) && isInternational(country)) {
+      const intlUrl = request.nextUrl.clone()
+      intlUrl.pathname = '/pricing-international'
+      return NextResponse.redirect(intlUrl, 302)
     }
   }
 
@@ -380,6 +392,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/pricing',
+    '/international',
     '/CourseContent_2026.pdf',
     '/docs/:path*.pdf',
     '/docs/:path*.zip',

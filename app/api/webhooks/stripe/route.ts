@@ -15,6 +15,7 @@ import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
 import { recordCoursePurchase } from '@/lib/course-purchases'
 import { enrolUser as enrolAiCourseUser, unenrolUser as unenrolAiCourseUser } from '@/lib/ai-course/access'
 import { findCourse } from '@/lib/ai-course/provider-catalogue'
+import { CRM_COURSE_SLUG, CRM_PRACTICAL_SLUG, crmInvoiceDescription, type CrmTier } from '@/lib/crm-course'
 
 function labelForCourse(courseType: string, accessLevel: string): string {
   switch (courseType) {
@@ -296,6 +297,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // got in).
   if (session.metadata?.courseType === 'clinic-hub-pack' || session.metadata?.productType === 'clinic-hub-pack') {
     await handleHubPackPurchase(session, customerEmail, customerName)
+    return
+  }
+
+  // CRM (Concussion Rehab Mastery, EP stream) purchase — grants the CRM
+  // entitlement (course_purchases), NOT any CCM access_level. Isolated fulfilment:
+  // CRM-specific invoice + /ep-course welcome. Returns early.
+  if (session.metadata?.productType === 'crm-course' || session.metadata?.productType === 'crm-upgrade') {
+    await handleCrmPurchase(session, customerEmail, customerName)
     return
   }
 
@@ -701,6 +710,192 @@ async function handleShortCoursePurchase(
   }
 
   console.log(`[short-course] Provisioned ${redact(customerEmail)} for ${courseSlug} — $${amountAud} ${currency}`)
+}
+
+/**
+ * CRM (Concussion Rehab Mastery — EP stream) purchase. Watertight from CCM:
+ * grants the CRM entitlement in course_purchases ('crm' unlocks /ep-course
+ * content; 'crm-practical' = attends the SHARED CCM/CRM workshop), records the
+ * nominated city, fires the purchase analytics with stream='crm', attaches a
+ * CRM-SPECIFIC tax invoice, and sends the /ep-course welcome. Never touches
+ * users.access_level (that's CCM). Fulfilment failures rethrow so Stripe retries.
+ */
+async function handleCrmPurchase(
+  session: Stripe.Checkout.Session,
+  customerEmail: string,
+  customerName: string,
+) {
+  const tier = (session.metadata?.tier || 'online') as CrmTier
+  const location = session.metadata?.location || ''
+  const currency = (session.currency || 'aud').toUpperCase()
+  const amountCents = session.amount_total || 0
+  const amountAud = amountCents / 100
+
+  // Ensure the user exists. accessLevel 'preview' can only ever UPGRADE-guard —
+  // it never downgrades an existing CCM online-only/full-course user (see
+  // createUser ON CONFLICT). workshopLocation records the nominated city.
+  const existing = await findUserByEmail(customerEmail)
+  const userId = existing
+    ? existing.id
+    : await createUser({
+        email: customerEmail,
+        name: customerName,
+        accessLevel: 'preview',
+        stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
+        workshopLocation: location || undefined,
+        signupSource: 'ep-course',
+      })
+  // Existing user: still capture the nominated city (COALESCE won't overwrite an
+  // earlier one, which is fine — one nomination per person).
+  if (existing && location) {
+    await createUser({ email: customerEmail, name: customerName, accessLevel: existing.accessLevel, workshopLocation: location, signupSource: 'ep-course' })
+  }
+
+  // Entitlements — rethrow on failure so Stripe retries (buyer must not be left
+  // paid-without-access). online/complete grant the content course; complete/
+  // upgrade add the shared practical-day nomination.
+  try {
+    if (tier === 'online' || tier === 'complete') {
+      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_COURSE_SLUG, stripeSessionId: session.id, amountAud })
+    }
+    if (tier === 'complete' || tier === 'upgrade') {
+      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_PRACTICAL_SLUG, stripeSessionId: session.id, amountAud })
+    }
+  } catch (err) {
+    console.error(`[crm] entitlement write failed for ${redact(customerEmail)} (${tier}):`, err)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: CRM fulfilment failed for ${redact(customerEmail)}`,
+        html: `<p>A customer paid for CRM (${escapeHtml(tier)}) but the <strong>entitlement write failed</strong> — no /ep-course access yet.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Amount:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></p><p>Error: ${escapeHtml(err instanceof Error ? err.message : String(err))}</p><p>Stripe will retry the webhook automatically.</p>`,
+      })
+    } catch (alertErr) { console.error('[crm] admin alert failed:', alertErr) }
+    throw err
+  }
+
+  try {
+    await sql`UPDATE abandoned_checkouts SET recovered = true WHERE email = ${customerEmail.toLowerCase()} AND recovered = false`
+  } catch (err) {
+    console.error('[crm] abandoned-checkout recover failed:', err)
+  }
+
+  // Analytics — same purchase_complete event the CCM path fires, marked
+  // stream='crm' + the nominated city so EP demand shows in Ready-to-Train and
+  // per-sequence attribution works. (Owner: "populate in analytics".)
+  try {
+    const md = session.metadata ?? {}
+    const billing = session.customer_details?.address
+    const likelyWorkshopCity = location || nearestWorkshopSlug(billing)
+    await logAnalyticsEvent(
+      'purchase_complete',
+      {
+        stream: 'crm',
+        courseType: `crm-${tier}`,
+        tier,
+        amount: amountAud,
+        currency,
+        transactionId: session.id,
+        accessLevel: 'crm',
+        likelyWorkshopCity: likelyWorkshopCity || null,
+        buyerCity: billing?.city || null,
+        buyerState: billing?.state || null,
+        buyerCountry: billing?.country || null,
+        firstReferrer: md.attr_first_ref || null,
+        referrer: md.attr_ref || null,
+        firstUtm: md.attr_first_utm ? safeJson(md.attr_first_utm) : null,
+        utmSource: md.utm_source || null,
+        utmMedium: md.utm_medium || null,
+        utmCampaign: md.utm_campaign || null,
+      },
+      customerEmail,
+      { sessionId: md.attr_session || null, referrer: md.attr_first_ref || md.attr_ref || null },
+    )
+  } catch (err) {
+    console.error('[crm] analytics log failed:', err)
+  }
+
+  try {
+    const { trackServerPurchase } = await import('@/lib/measurement-protocol')
+    await trackServerPurchase(session.id, amountAud, currency, customerEmail)
+  } catch (err) {
+    console.error('[crm] server-side conversion failed:', err)
+  }
+
+  // CRM-SPECIFIC tax invoice — the line item names Concussion Rehab Mastery, the
+  // tier and city, so it matches the buyer's own tax records (owner directive).
+  let crmInvoice: { filename: string; content: Buffer } | undefined
+  try {
+    const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
+    const issueDate = new Date()
+    const invNumber = invoiceNumberFromSession(session.id, issueDate)
+    const pdf = generateTaxInvoicePdf({
+      invoiceNumber: invNumber,
+      issueDate,
+      buyer: { name: customerName, email: customerEmail },
+      lineItems: [{
+        description: crmInvoiceDescription(tier, location || undefined),
+        quantity: 1,
+        unitPriceCents: amountCents,
+        totalCents: amountCents,
+      }],
+      totalCents: amountCents,
+      currency,
+      paidAt: issueDate,
+      paymentReference: session.id,
+    })
+    crmInvoice = { filename: `${invNumber}.pdf`, content: pdf }
+  } catch (invErr) {
+    console.error(`[crm] invoice PDF generation failed for ${redact(customerEmail)}:`, invErr)
+  }
+
+  // Welcome + magic link into the EP course.
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
+  const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=crm_purchase&redirect=${encodeURIComponent('/ep-course/dashboard')}`
+  const tierLabel = tier === 'online' ? 'Online course' : tier === 'complete' ? 'Complete (online + practical day)' : 'Practical Day upgrade'
+  try {
+    await sendEmail({
+      to: customerEmail,
+      subject: `You're enrolled — Concussion Rehab Mastery`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1e293b;">
+          <div style="height: 4px; background: linear-gradient(90deg, #0d9488, #0ea5e9); border-radius: 2px; margin-bottom: 24px;"></div>
+          <h2 style="margin: 0 0 12px; font-size: 22px; color: #0f172a;">You're in, ${escapeHtml(customerName.split(' ')[0] || 'there')}.</h2>
+          <p style="margin: 0 0 14px; font-size: 15px;"><strong>Concussion Rehab Mastery</strong> — ${escapeHtml(tierLabel)}${location ? ` · workshop city: ${escapeHtml(location)}` : ''}.</p>
+          <p style="text-align: center; margin: 24px 0;">
+            <a href="${loginUrl}" style="display: inline-block; padding: 14px 28px; background: #0d9488; color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Open the course →</a>
+          </p>
+          <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
+            <strong>What you paid:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br>
+            <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>${crmInvoice ? '<br><strong>Tax invoice:</strong> attached to this email' : ''}
+          </div>
+          <p style="margin: 14px 0 0; font-size: 14px; color: #475569;">Questions — just reply to this email.</p>
+          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">Zac Lewis<br>Concussion Education Australia</div>
+        </div>
+      `,
+      tags: [
+        { name: 'type', value: 'crm-purchase' },
+        { name: 'tier', value: tier },
+      ],
+      ...(crmInvoice ? { attachments: [crmInvoice] } : {}),
+    })
+  } catch (emailErr) {
+    console.error(`[crm] welcome email failed for ${redact(customerEmail)}:`, emailErr)
+  }
+
+  // Admin ping.
+  try {
+    await sendEmail({
+      to: CONFIG.CONTACT_EMAIL,
+      subject: `New sale: Concussion Rehab Mastery (${tierLabel})${location ? ` · ${location}` : ''} — ${currency} $${amountAud.toFixed(2)}`,
+      html: `<p><strong>New CRM (EP stream) sale.</strong></p><ul><li><strong>Customer:</strong> ${escapeHtml(customerEmail)} (${escapeHtml(customerName)})</li><li><strong>Tier:</strong> ${escapeHtml(tierLabel)}</li>${location ? `<li><strong>Workshop city:</strong> ${escapeHtml(location)}</li>` : ''}<li><strong>Amount:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}</li><li><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></li></ul>`,
+      tags: [{ name: 'type', value: 'admin-crm-sale' }],
+    })
+  } catch (adminErr) {
+    console.error('[crm] admin ping failed:', adminErr)
+  }
+
+  console.log(`[crm] Provisioned ${redact(customerEmail)} — ${tier}${location ? ` (${location})` : ''} — $${amountAud} ${currency}`)
 }
 
 /**
@@ -1170,6 +1365,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   let courseType: string | undefined
   let productType: string | undefined
   let refundedCourseSlug: string | undefined
+  let refundedTier: string | undefined
   try {
     const { getStripe } = await import('@/lib/stripe')
     if (charge.payment_intent && typeof charge.payment_intent === 'string') {
@@ -1179,9 +1375,28 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
       const sessionMeta = sessions.data[0]?.metadata
       productType = sessionMeta?.productType
       refundedCourseSlug = sessionMeta?.courseSlug
+      refundedTier = sessionMeta?.tier
       courseType = courseType || sessionMeta?.courseType
     }
   } catch { /* fallback to heuristic below */ }
+
+  // CRM refund → remove the CRM entitlement. crm-course full refund revokes the
+  // online course (and the practical add-on if it was the complete bundle);
+  // a crm-upgrade refund removes only the practical day (they keep online).
+  // Never touches CCM access_level.
+  if (productType === 'crm-course' || productType === 'crm-upgrade') {
+    try {
+      if (productType === 'crm-upgrade') {
+        await sql`DELETE FROM course_purchases WHERE user_email = ${email.toLowerCase()} AND course_slug = ${CRM_PRACTICAL_SLUG}`
+      } else {
+        await sql`DELETE FROM course_purchases WHERE user_email = ${email.toLowerCase()} AND course_slug IN (${CRM_COURSE_SLUG}, ${CRM_PRACTICAL_SLUG})`
+      }
+      console.log(`Revoked CRM entitlement (${productType}${refundedTier ? `/${refundedTier}` : ''}) for ${redact(email)} after full refund`)
+    } catch (err) {
+      console.error(`Failed to revoke CRM entitlement for ${redact(email)} after refund:`, err)
+    }
+    return
+  }
 
   const chargeAmount = (charge.amount || 0) / 100
 

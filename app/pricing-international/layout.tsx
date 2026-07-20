@@ -1,12 +1,14 @@
 import { Metadata } from 'next'
 
+// HONESTY: no "CE credits" / accreditation claims — ACSM CECs are pending
+// (application in progress) and ESSA is pending. Metadata must not claim either.
 export const metadata: Metadata = {
-  title: 'International Pricing (USD) — Clinical Concussion Course',
-  description: 'The SCAT6-specific clinical concussion course for healthcare professionals worldwide. 8 CE credits, 130+ peer-reviewed references, endorsed by a national medical peak body. USD $347.',
-  keywords: 'concussion course, SCAT6 training, concussion CE credits, concussion management course, VOMS training, BESS scoring, concussion certification, clinical concussion education',
+  title: 'Concussion Rehab Mastery — International (USD) for Exercise Physiologists',
+  description: 'The concussion course that trains exercise physiologists to deliver the consensus-recommended first-line treatment — sub-symptom-threshold aerobic exercise from a measured HR threshold — and ships the tools to do it. USD $347. ACSM CEC application in progress.',
+  keywords: 'concussion exercise physiology, sub-symptom threshold aerobic exercise, exercise physiologist concussion, HR threshold concussion rehab, Buffalo test, clinical exercise physiologist CEC, concussion rehabilitation course',
   openGraph: {
-    title: 'Concussion Education Australia — International Pricing (USD)',
-    description: 'Master SCAT6, VOMS and BESS. 8 CE credits, endorsed by Osteopathy Australia. USD $347.',
+    title: 'Concussion Rehab Mastery — International (for Exercise Physiologists)',
+    description: 'You already run the exercise test. The consensus just made it the gate to first-line concussion treatment. The EP-scoped course + the tools to deliver it. USD $347.',
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/pricing-international',
   },

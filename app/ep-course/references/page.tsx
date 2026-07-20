@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCrmCourseAccess } from '@/components/ep-course/CrmCourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 import { epModules, epDisplayId } from '@/data/ep-modules'
 
@@ -30,7 +31,7 @@ function linkifyRef(ref: string) {
 }
 
 export default async function EpReferencesPage() {
-  const access = await requireAiCourseAccess('/login')
+  const access = await requireCrmCourseAccess()
   const total = epModules.reduce((s, m) => s + (m.clinicalReferences?.length ?? 0), 0)
 
   return (

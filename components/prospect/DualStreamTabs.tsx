@@ -76,9 +76,24 @@ const DOCS = [
   'Return-to-Play Tracking Sheets', 'Billing & Item-Number Guide',
 ]
 
-export function DualStreamTabs({ detailed, learningHref }: { detailed?: DetailedStreams; learningHref?: string }) {
-  const [stream, setStream] = useState<StreamId>('ccm')
-  const active = STREAMS[stream]
+export function DualStreamTabs({
+  detailed,
+  learningHref,
+  initialStream = 'ccm',
+  essaApproved = false,
+}: {
+  detailed?: DetailedStreams
+  learningHref?: string
+  /** EP-audience pitches open on the CRM stream; default keeps CCM-first. */
+  initialStream?: StreamId
+  /** CONFIG.FEATURES.ESSA_ACCREDITED — flips CRM copy pending → accredited.
+      Compliance: FALSE must never say "accredited" (Zac 2026-07-01). */
+  essaApproved?: boolean
+}) {
+  const [stream, setStream] = useState<StreamId>(initialStream)
+  // CRM accreditation copy is the ONE place ESSA approval changes wording.
+  const crmAccredBody = essaApproved ? 'ESSA-accredited · 8 CPD points' : 'ESSA CPD-standard · pending'
+  const active = { ...STREAMS[stream], ...(stream === 'crm' ? { accredBody: crmAccredBody } : {}) }
   const activeModules = detailed ? detailed[stream] : null
 
   return (
@@ -121,7 +136,7 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
                   fastest signal for a prospect scanning the two cards (Zac 2026-07-01). */}
               <p className={`text-lg sm:text-xl font-bold tracking-tight leading-tight mt-3 ${on ? 'text-white' : 'text-foreground'}`}>{s.audience}</p>
               <p className={`text-xs mt-1 leading-snug ${on ? 'text-white/80' : 'text-muted-foreground'}`}>{s.tagline}</p>
-              <span className={`inline-flex items-center mt-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${on ? 'bg-white/15 text-white' : 'bg-accent/10 text-accent'}`}>{s.accredBody}</span>
+              <span className={`inline-flex items-center mt-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${on ? 'bg-white/15 text-white' : 'bg-accent/10 text-accent'}`}>{id === 'crm' ? crmAccredBody : s.accredBody}</span>
             </button>
           )
         })}
@@ -143,11 +158,19 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
         {/* ESSA approval is genuinely pending — the CRM stream PDO is submitted,
             not yet endorsed. Surface that explicitly so the pitch never implies
             live ESSA accreditation it doesn't have (Zac 2026-07-01). */}
-        {stream === 'crm' && (
+        {stream === 'crm' && !essaApproved && (
           <div className="-mt-2 mb-5 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5">
             <Clock className="w-3.5 h-3.5 text-amber-700 mt-0.5 flex-shrink-0" strokeWidth={2} />
             <p className="text-[12px] text-amber-800 leading-snug">
-              <strong>ESSA endorsement pending.</strong> The CRM stream has been submitted to ESSA for CPD endorsement — approval is in progress, not yet granted. Modules are preview-only until it lands.
+              <strong>ESSA endorsement pending.</strong> The CRM stream is built to ESSA CPD standards and has been submitted for endorsement — approval is in progress, not yet granted. Modules are preview-only until it lands.
+            </p>
+          </div>
+        )}
+        {stream === 'crm' && essaApproved && (
+          <div className="-mt-2 mb-5 flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2.5">
+            <Check className="w-3.5 h-3.5 text-emerald-700 mt-0.5 flex-shrink-0" strokeWidth={2.4} />
+            <p className="text-[12px] text-emerald-800 leading-snug">
+              <strong>ESSA-accredited.</strong> The CRM stream carries 8 ESSA CPD points for exercise physiologists — plus the shared practical day.
             </p>
           </div>
         )}

@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Activity } from 'lucide-react'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCrmCourseAccess } from '@/components/ep-course/CrmCourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 import BctcCalculatorClient from './BctcCalculatorClient'
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function BcttToolPage() {
-  const access = await requireAiCourseAccess('/login')
+  const access = await requireCrmCourseAccess()
 
   return (
     <div className="flex min-h-screen bg-slate-50">

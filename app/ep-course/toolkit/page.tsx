@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Activity, ClipboardList, Dumbbell, TrendingUp, CheckSquare, LineChart, ArrowRight } from 'lucide-react'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCrmCourseAccess } from '@/components/ep-course/CrmCourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 
 export const metadata: Metadata = {
@@ -58,7 +59,7 @@ const KIND_COLOR: Record<string, string> = {
 }
 
 export default async function EpToolkitPage() {
-  const access = await requireAiCourseAccess('/login')
+  const access = await requireCrmCourseAccess()
 
   return (
     <div className="flex min-h-screen bg-slate-50">

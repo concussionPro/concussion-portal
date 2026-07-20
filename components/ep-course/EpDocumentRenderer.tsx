@@ -36,14 +36,20 @@ const CALLOUT_STYLE = {
 const CALLOUT_LABEL = { key: 'Key', scope: 'Scope', warning: 'Red flag' } as const
 
 function RuledField({ label, hint }: { label: string; hint?: string }) {
+  // Editable on screen: a real text input styled as a ruled line. Uncontrolled,
+  // so no client state is needed — the browser prints whatever the clinician
+  // typed (Print / Save as PDF).
   return (
-    <div className="flex flex-col">
-      <div className="flex items-baseline gap-2">
+    <label className="flex flex-col">
+      <span className="flex items-baseline gap-2">
         <span className="text-sm font-semibold text-slate-700">{label}</span>
         {hint && <span className="text-[11px] italic text-slate-400">{hint}</span>}
-      </div>
-      <div className="mt-5 border-b border-slate-300" />
-    </div>
+      </span>
+      <input
+        type="text"
+        className="mt-2 w-full rounded-none border-0 border-b border-slate-300 bg-transparent px-0 py-1 text-sm text-slate-900 outline-none focus:border-teal-500 print:border-slate-300"
+      />
+    </label>
   )
 }
 
@@ -83,7 +89,7 @@ function Block({ block }: { block: DocBlock }) {
           <ul className="space-y-2">
             {block.items.map((it, i) => (
               <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-slate-700">
-                <span className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-2 border-slate-400" />
+                <input type="checkbox" className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-2 border-slate-400 accent-teal-600" />
                 <span>{it}</span>
               </li>
             ))}
@@ -118,7 +124,13 @@ function Block({ block }: { block: DocBlock }) {
               {Array.from({ length: block.rows }).map((_, r) => (
                 <tr key={r}>
                   {block.columns.map((_, c) => (
-                    <td key={c} className="h-8 border border-slate-300 px-2 py-1 align-top" />
+                    <td key={c} className="border border-slate-300 p-0 align-top">
+                      <input
+                        type="text"
+                        aria-label={`${block.columns[c]} row ${r + 1}`}
+                        className="h-8 w-full border-0 bg-transparent px-2 py-1 text-xs text-slate-900 outline-none focus:bg-teal-50"
+                      />
+                    </td>
                   ))}
                 </tr>
               ))}

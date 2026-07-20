@@ -57,3 +57,7 @@ sst-watch/SSTWatch.xcodeproj/
 sst-watch/build/
 sst-watch/DerivedData/
 sst-watch/Sources/Info.plist
+
+# Local dev smoke-test / screenshot scripts (read .env.local, not for CI)
+.runtime.mjs
+bcap.mjs

@@ -290,7 +290,9 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
       />
       {!hideNav && <SiteNav />}
 
-      <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-12 md:pb-20">
+      {/* Embedded (hideNav, e.g. under the homepage stream tabs): the page nav +
+          tabs already give the top offset, so drop the fixed-nav padding. */}
+      <div className={`max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
 
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
@@ -389,7 +391,10 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
 
         {/* OA endorsement — prominent block. The endorsement is one of the
             highest-trust signals in AHPRA-aligned CPD, so it carries visual
-            weight here even though the H1 leads with what we do. */}
+            weight here even though the H1 leads with what we do.
+            Hidden when embedded (hideNav) — the homepage renders it under the
+            stream tab, so it must not repeat here. */}
+        {!hideNav && (
         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6">
           <Image src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" width={160} height={144} className="h-20 sm:h-24 w-auto" priority />
           <div className="text-left">
@@ -398,6 +403,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · 8 CPD hrs online, 14 with the workshop</p>
           </div>
         </div>
+        )}
 
         {/* Live workshop training photo — visual proof of the in-person
             component before pricing. Research: photos of the actual product

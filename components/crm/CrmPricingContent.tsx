@@ -20,6 +20,7 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
+import CrmCheckoutButton from '@/components/crm/CrmCheckoutButton'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — pricing/landing content.
@@ -120,7 +121,9 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
     <div className="min-h-screen bg-background">
       {!hideNav && <SiteNav />}
 
-      <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-12 md:pb-20">
+      {/* When embedded (hideNav — e.g. under the homepage stream tabs) the page
+          nav + tabs already provide the top offset, so drop the fixed-nav pad. */}
+      <div className={`max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
 
         {/* Page Header */}
         <div className="text-center mb-8">
@@ -207,8 +210,10 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           <EpLeadCapture variant="hero" location="hero" />
         </div>
 
-        {/* ESSA standards block — the EP trust signal (accreditation pending,
-            so this is "designed to standard", not a claimed endorsement). */}
+        {/* ESSA standards block — the EP trust signal. Hidden when embedded
+            (hideNav) — the homepage renders the ESSA endorsement under the stream
+            tab, so it must not repeat here. */}
+        {!hideNav && (
         <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
           <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
           <div className="text-left">
@@ -225,6 +230,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             </p>
           </div>
         </div>
+        )}
 
         {/* Live workshop training photo — visual proof of the in-person day */}
         <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
@@ -322,12 +328,15 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 ))}
               </ul>
 
-              <a
-                href={INTEREST_HREF}
-                className="mt-auto w-full text-center py-3 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
-              >
-                Register for online
-              </a>
+              <div className="mt-auto">
+                <CrmCheckoutButton
+                  tier="online"
+                  accredited={accredited}
+                  interestHref={INTEREST_HREF}
+                  label={accredited ? 'Enrol — CRM Online' : 'Register for online'}
+                  className="w-full py-3 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-2"
+                />
+              </div>
             </div>
 
             {/* ── Complete tier — recommended ──────────────────────────── */}
@@ -376,13 +385,32 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 ))}
               </ul>
 
-              <a
-                href={INTEREST_HREF}
-                className="btn-primary mt-auto w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
-              >
-                Register for the complete package
-                <ArrowRight className="w-4 h-4" />
-              </a>
+              <div className="mt-auto">
+                <CrmCheckoutButton
+                  tier="complete"
+                  accredited={accredited}
+                  interestHref={INTEREST_HREF}
+                  label={accredited ? 'Enrol — CRM Complete' : 'Register for the complete package'}
+                  className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Upgrade path — an existing online buyer adds the SHARED practical
+              day. Interest-capture until ESSA; a live upgrade checkout after. */}
+          <div className="mt-5 text-center">
+            <div className="inline-block">
+              <p className="text-[12.5px] text-[var(--muted-foreground)] mb-2">
+                Already enrolled in CRM Online? Add the shared practical day.
+              </p>
+              <CrmCheckoutButton
+                tier="upgrade"
+                accredited={accredited}
+                interestHref={INTEREST_HREF}
+                label={accredited ? 'Add the practical day' : 'Register interest in the practical day'}
+                className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-[13px] hover:bg-slate-50 transition-colors"
+              />
             </div>
           </div>
 

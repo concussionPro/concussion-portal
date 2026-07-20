@@ -33,7 +33,7 @@ import { COURSES, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
    Only surface courses that are effectively LIVE and self-serve purchasable:
    Vagus is 'pilot' / hidden until its funnel exists, so it must not appear here
    (it re-appears automatically the moment its status flips to live). */
-const CROSS_SELL_COURSES = ['ai-in-clinical-practice', 'vagus-nerve']
+const CROSS_SELL_COURSES = ['vagus-nerve']
   .map(id => COURSES.find(c => c.id === id))
   .filter((c): c is NonNullable<typeof c> =>
     !!c && c.purchasableViaCheckout && getEffectiveStatus(c) === 'live')

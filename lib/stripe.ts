@@ -179,7 +179,10 @@ export async function createCourseCheckoutSession({
     unitAmount = COURSE_PRICING.INTERNATIONAL_ONLINE
     currency = 'usd'
     productName = 'Clinical Concussion Course — International'
-    productDescription = '8 online modules (8 CE credits) · Lifetime access · Clinical Toolkit · Reference Repository · Certificate of completion'
+    // HONESTY GATE: "CE credits" is a US accreditation currency and CEA holds no
+    // US accreditation (ACSM application not yet submitted). State HOURS, which is
+    // verifiable, never CREDITS. Same discipline as CONFIG.FEATURES.ESSA_ACCREDITED.
+    productDescription = '8 online modules (8 hours of learning) · Lifetime access · Clinical Toolkit · Reference Repository · Certificate of completion'
   } else if (courseType === 'workshop-upgrade') {
     unitAmount = isEarlyBird ? COURSE_PRICING.WORKSHOP_UPGRADE_EARLY : COURSE_PRICING.WORKSHOP_UPGRADE_REGULAR
     currency = 'aud'
@@ -337,6 +340,94 @@ export async function createCourseCheckoutSession({
   })
 
   return session
+}
+
+/**
+ * Create a Stripe Checkout Session for a CRM (Concussion Rehab Mastery)
+ * purchase — the exercise-physiology stream. IDENTICAL to CCM except the
+ * content + its own entitlement: one-time `payment` mode, dynamic price_data
+ * (no dashboard Price needed), CRM-specific product + invoice text, and a
+ * NOMINATED workshop city carried in metadata. Fulfilment (course_purchases
+ * entitlement, CRM invoice, /ep-course welcome) lives in handleCrmPurchase.
+ *
+ * Callers MUST gate on CONFIG.FEATURES.ESSA_ACCREDITED — this function does not
+ * (kept pure); the /api/crm/checkout route refuses when the flag is off.
+ */
+export async function createCrmCheckoutSession({
+  tier,
+  location,
+  customerEmail,
+  successUrl,
+  cancelUrl,
+  utm,
+  attribution,
+}: {
+  tier: import('@/lib/crm-course').CrmTier
+  /** Nominated workshop city (required for online — feeds shared Ready-to-Train). */
+  location?: string
+  customerEmail?: string
+  successUrl: string
+  cancelUrl: string
+  utm?: Record<string, string>
+  attribution?: Record<string, string>
+}): Promise<Stripe.Checkout.Session> {
+  const { crmPriceCents, crmProductName, crmInvoiceDescription, crmIsEarlyBird } = await import('@/lib/crm-course')
+  const unitAmount = crmPriceCents(tier, location)
+  const isEarlyBird = crmIsEarlyBird(location)
+  const productType = tier === 'upgrade' ? 'crm-upgrade' : 'crm-course'
+
+  return getStripe().checkout.sessions.create({
+    mode: 'payment',
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+    line_items: [
+      {
+        price_data: {
+          currency: 'aud',
+          unit_amount: unitAmount,
+          product_data: {
+            name: crmProductName(tier, location),
+            // Shown on the Stripe page; the tax invoice uses crmInvoiceDescription too.
+            description: crmInvoiceDescription(tier, location),
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    customer_email: customerEmail || undefined,
+    after_expiration: { recovery: { enabled: true } },
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: {
+      productType,
+      // 'crm' stream marker so analytics + refunds never confuse it with CCM.
+      stream: 'crm',
+      tier,
+      location: location || '',
+      isEarlyBird: isEarlyBird ? 'true' : 'false',
+      currency: 'aud',
+      source: 'portal',
+      timestamp: new Date().toISOString(),
+      ...(utm?.utm_source ? { utm_source: utm.utm_source } : {}),
+      ...(utm?.utm_medium ? { utm_medium: utm.utm_medium } : {}),
+      ...(utm?.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
+      ...(attribution?.sessionId ? { attr_session: attribution.sessionId.slice(0, 200) } : {}),
+      ...(attribution?.firstReferrer ? { attr_first_ref: attribution.firstReferrer.slice(0, 480) } : {}),
+      ...(attribution?.referrer ? { attr_ref: attribution.referrer.slice(0, 480) } : {}),
+      ...(attribution?.firstUtm ? { attr_first_utm: attribution.firstUtm.slice(0, 480) } : {}),
+    },
+    payment_intent_data: {
+      metadata: { email: customerEmail || '', productType, stream: 'crm', tier },
+    },
+    billing_address_collection: 'required',
+    phone_number_collection: { enabled: true },
+    custom_text: {
+      submit: {
+        message: tier === 'online'
+          ? "You'll receive a login link by email to start the CRM course immediately."
+          : `Your nominated workshop city: ${location || 'TBD'}. Your date launches as your city fills — at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice, early-bird rate locked in.`,
+      },
+    },
+  })
 }
 
 /**

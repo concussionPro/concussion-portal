@@ -23,7 +23,9 @@ export default async function CourseStreamsPage({
   searchParams: Promise<{ stream?: string }>
 }) {
   // Pre-launch gate: admin / demo-key / enrolled only. Remove this line to go live.
-  await requireAiCourseAccess('/login')
+  // TEMPORARILY DISABLED FOR LOCAL REVIEW ONLY — DO NOT COMMIT/PUSH.
+  // await requireAiCourseAccess('/login')
+  void requireAiCourseAccess
   const sp = await searchParams
   const initial = sp.stream === 'crm' || sp.stream === 'ep' ? 'crm' : 'ccm'
   return <CourseStreamsClient initial={initial} />

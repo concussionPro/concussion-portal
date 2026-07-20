@@ -12,7 +12,7 @@
 Concussion Education Australia (CEA)
 Draft v1.0 · 2026
 
-This document recommends a target venue for each of the three papers, explains the rationale and submission requirements for each, and sets out a sequencing strategy. The strategy is deliberately **publish-around-HREC, authority-over-revenue**: none of the three papers requires an ethics-gated prospective trial, so all three can ship on the strength of the existing literature plus the described build/framework. Any outcome/effectiveness study on routine-care data is **explicitly out of scope for this package** — it is gated on primary data and ethics, and per the CEA publications strategy it stays off the target list until it is real (see §5.4). The venue choices below are reordered around **fastest credible public output first** (a medRxiv preprint and a protocols.io deposit go live in days), with indexed-journal acceptance following.
+This document recommends a target venue for each of the three papers, explains the rationale and submission requirements for each, and sets out a sequencing strategy. The strategy is deliberately **publish-around-HREC, authority-over-revenue**: none of the three papers requires an ethics-gated prospective trial, so all three can ship on the strength of the existing literature plus the described build/framework. Any outcome/effectiveness study on routine-care data is **explicitly out of scope for this package** — it is gated on primary data and ethics, and per the CEA publications strategy it stays off the target list until it is real (see §5.4). The venue choices below are reordered around **fastest credible public output first** (an OSF Preprints / Preprints.org preprint and a protocols.io deposit go live in days), with indexed-journal acceptance following.
 
 ---
 
@@ -44,9 +44,9 @@ This document recommends a target venue for each of the three papers, explains t
 
 **Speed strategy: preprint NOW, journal in parallel.**
 
-### Step 1 (do immediately): post a preprint on *medRxiv*
+### Step 1 (do immediately): post a preprint on *OSF Preprints* / *Preprints.org*
 
-- **Why:** medRxiv makes the review **public and citable within days** (a screening pass, not peer review), with a permanent DOI. This is the fastest possible authority signal — it stakes the claim, is indexable, and can be cited in the other two papers and in clinic-facing material *now*, before any journal decision lands. It does not preclude subsequent journal publication (medRxiv is designed to precede it).
+- **Why:** OSF Preprints / Preprints.org make the review **public and citable within days** (a screening pass, not peer review), with a permanent DOI. This is the fastest possible authority signal — it stakes the claim, is indexable, and can be cited in the other two papers and in clinic-facing material *now*, before any journal decision lands. It does not preclude subsequent journal publication. **NOT medRxiv/bioRxiv — their scope explicitly excludes narrative reviews (Paper 1 is a narrative review), so they will decline it at screening.**
 - **Requirements:** Health-sciences preprint; author + affiliation + ORCID; declared conflict of interest (the author built the tool — disclose prominently); no ethics approval needed (no human data). Free.
 
 ### Step 2 (in parallel): submit to *Journal of Concussion* (SAGE, open access)
@@ -64,7 +64,7 @@ This document recommends a target venue for each of the three papers, explains t
 - **Why:** BJSM is the field-defining venue (it published the Amsterdam consensus) and would carry maximum authority, but it is highly selective, prefers commissioned or systematic reviews over single-author narrative reviews, and a strong product disclosure raises the bar — all of which is *slow*. Speed is the priority here. **Send a one-week pre-submission enquiry to an editor; only pursue BJSM if it comes back genuinely enthusiastic, and only with a systematic reframing.** Otherwise do not spend time on it.
 - **Requirements:** Pre-submission enquiry first; tight word/reference limits; PRISMA expected if framed as systematic.
 
-**Verdict:** Preprint on **medRxiv now** (public in days) + submit to **Journal of Concussion** in parallel (fastest credible indexed venue, no code gating). Hold *Frontiers* as fallback. Skip BJSM unless a one-week pre-submission enquiry comes back hot.
+**Verdict:** Preprint on **OSF Preprints / Preprints.org now** (public in days; NOT medRxiv — excludes narrative reviews) + submit to **Journal of Concussion** in parallel (fastest credible indexed venue, no code gating). Hold *Frontiers* as fallback. Skip BJSM unless a one-week pre-submission enquiry comes back hot.
 
 ---
 
@@ -124,7 +124,7 @@ This document recommends a target venue for each of the three papers, explains t
 **Recommended order, reordered around getting something public in *days* rather than months:**
 
 1. **Get two outputs public immediately (days, not months).** In parallel:
-   - **Paper 1 → medRxiv preprint.** Public and citable within days; stakes the authority claim and supplies the citation base the other two lean on.
+   - **Paper 1 → OSF Preprints / Preprints.org preprint** (NOT medRxiv — narrative reviews excluded). Public and citable within days; stakes the authority claim and supplies the citation base the other two lean on.
    - **Paper 3 → protocols.io deposit.** The fastest *real-world* output and the highest-leverage one: it is what clinics actually adopt, and adoption is the goal in its own right. Deposit the executable step-by-step first.
 2. **Submit the indexed-journal versions in parallel.** Paper 1 → *Journal of Concussion* (fastest credible indexed venue, no code gating); Paper 3 → *JMIR Research Protocols*. These upgrade the preprint/deposit to peer-reviewed authority without holding up the public output.
 3. **Paper 2 (tools paper) → *JMIR mHealth and uHealth*.** A write-and-submit development paper; it benefits from citing Papers 1 and 3 as the clinical/workflow context. **Do not route this to JOSS** — the open-sourcing + open-review burden is a multi-week project at odds with speed and the IP position.
@@ -145,7 +145,7 @@ This document recommends a target venue for each of the three papers, explains t
 
 | Paper | Fastest public output | Indexed journal (parallel) | Ethics needed? | APC? |
 |---|---|---|---|---|
-| 1 — Clinical review | **medRxiv preprint** (days) | Journal of Concussion (OA); fallback Frontiers; skip BJSM unless enquiry hot | No | Preprint: no · Journal: yes |
+| 1 — Clinical review | **OSF Preprints / Preprints.org** (days; NOT medRxiv) | Journal of Concussion (OA); fallback Frontiers; skip BJSM unless enquiry hot | No | Preprint: no · Journal: yes |
 | 2 — Tools/methods | (none — write-and-submit) | **JMIR mHealth and uHealth** (NOT JOSS) | No | Yes |
 | 3 — Protocol/framework | **protocols.io deposit** (days) | JMIR Research Protocols | No | Protocols.io minimal · JMIR: yes |
 | ~~Future — outcome/retrospective study~~ | **OUT OF SCOPE for this package** — excluded as gated on primary data + ethics (see §5.4); not a target, deliverable, or promised output | — | Yes (if ever pursued) | — |
