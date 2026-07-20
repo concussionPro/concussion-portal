@@ -876,3 +876,282 @@ And a line from the same document that reads as if written for this product:
 ### R3.7 THE ONE-PARAGRAPH IMPLICATION
 
 Grading in this contract is **downside-only and disconnected from volume**. There is no bonus, no penalty, no rate variation, and — verified from ACC's own internal allocation procedure — **no performance input into who gets referred to whom**; allocation is geography plus the personal preference of a Recovery Team Member. What grading *can* do is trigger a performance improvement plan under Standard T&Cs cl. 14, make the supplier pay for repeat evaluations under cl. 13.7, and cost them the contract at renewal under cl. 1.2.2. And from 1 July 2026 the framework a supplier is judged by became **six ACC-computed measures with no numeric targets, four of them return-to-work, none of them supplier-reported** — which removes the last measure a documentation tool could have improved and makes any "we'll lift your scorecard" claim false. The single defensible commercial hook that survives is narrow and precise: **2026 schedule cl. 12.3.1 and Standard T&Cs cl. 14.2(b) both oblige ACC to hear a case-mix explanation before requiring change, and an objective exercise-tolerance measurement is the only kind of evidence a concussion supplier could bring to that conversation.** Sell it as the defence in the six-monthly performance meeting. Do not sell it as growth, and do not sell concussion as the door into a larger ACC exercise market — nine adjacent rehabilitation schedules were swept and **not one of them purchases exercise at all.**
+
+---
+
+## ROUND 4 — remediation frequency and supplier entry
+
+**Researched:** 2026-07-21. Answers two questions: (1) does ACC's performance-consequence chain documented in R3.2b ever actually fire, and at what rate; (2) the full mechanics of becoming an ACC Concussion Services supplier, and how many suppliers there really are.
+
+### RIGOUR + METHOD NOTE
+
+`acc.co.nz` remains Imperva-blocked; ACC pages and PDFs were recovered via the Wayback Machine (`https://web.archive.org/web/<TS>id_/<URL>`). `gets.govt.nz` and `fyi.org.nz` were fetched live with curl. The two central new documents of this round are **ACC OIA releases published on fyi.org.nz**, which is a public archive of the responses ACC actually sent — a stronger provenance than anything in R3. Every claim carries the URL fetched plus a quote. Failed fetches are recorded as UNVERIFIED.
+
+**The two documents that carry this round:**
+
+| Doc | URL fetched |
+|---|---|
+| **ACC OIA response GOV-045270, 9 Feb 2026** — provider audits, billing irregularities, outcomes, recoveries, referrals | `https://fyi.org.nz/request/33169/response/138525/attach/4/GOV%20045270%20Response.pdf` |
+| **ACC "Health Services Provider Remedies Framework"**, approved 16 Sep 2025, 21pp — released as an attachment to that OIA | `https://fyi.org.nz/request/33169/response/138525/attach/3/GOV%20045270%20Health%20Services%20Provider%20Remedies%20Framework.pdf` |
+
+Parent OIA thread: `https://fyi.org.nz/request/33169-request-for-information-on-provider-billing-irregularities-audit-processes-and-fraud-controls-2019-2025` (requester Spencer Jones, 8 Dec 2025; ACC reference GOV-045270; status "partially successful").
+
+---
+
+### R4.0 THE SHORT VERSION — LEAD WITH THESE TWO
+
+**1(c) THE BASE RATE: remediation is real machinery that almost never reaches a supplier, and when it fires it fires on BILLING, not on clinical performance.**
+
+ACC logged roughly **915 provider billing-issue cases** across its entire health-provider network in an ~8–11 month window (Feb/May 2025 → 13 Jan 2026). Of those, the outcomes were: **527 "behaviour change"** (which ACC defines as education), **146 payments recovered**, and **3 breach-of-contract notices**. **Zero contract terminations and zero suspensions** were located for billing issues. Separately, over the full **seven years 2019–2025**, ACC's Fraud Prevention and Investigation team closed **132 provider cases**, substantiated **50**, and referred **2** to Police.
+
+Three breach notices, in under a year, across every physiotherapist, GP, psychologist, dentist, acupuncturist, radiologist and rehabilitation supplier ACC pays. **And the provider types ACC names as most frequently flagged are individual practitioner disciplines — acupuncturist, physiotherapist, occupational therapist, psychologist, dentist, support worker — not multi-site rehabilitation suppliers.** No named instance of an ACC *rehabilitation supplier* being put on a performance improvement plan, issued a breach notice, or terminated appears anywhere in public material found in this round or in R3.
+
+**Blunt implication: a "remediation / poor-grade rescue" product angle is not viable as a primary pitch.** A National Manager at Active+ or Habit has almost certainly never seen ACC serve a breach notice on their organisation, has never been placed on a performance improvement plan for clinical performance, and will not recognise the risk you are describing. Worse: ACC's remedies machinery, as documented, is aimed at *conduct, competence, health and billing* — it is **a different machine from the Service Schedule cl. 12 performance-measure benchmarking documented in R3.1**. Nothing found this round connects a bad Table 4 score to a remedy. Sell the case-mix defence (R3.3) as *cheap insurance and professional credibility*, not as protection against a live threat.
+
+**2(e) THE SUPPLIER COUNT: 25 organisations hold a Concussion Services contract today, across 128 supplier-region listings. The "13" and the "25" are both correct and now fully reconciled.**
+
+ACC's live provider directory carried **21 organisations in May and August 2025** and **25 in January 2026** (post-award). The Oct 2025 GETS award named **13** — but the GETS notice states the round was open to two distinct groups: brand-new respondents, *and* existing suppliers expanding coverage. Diffing the directory snapshots resolves it exactly: **5 of the 13 awardees were genuinely new** (Align Health, Astech SRS, Rope Neuro Rehabilitation, Tui Allied Health, What Ever It Takes); **8 were incumbents adding regions**; **1 incumbent (QE Health) dropped off**. 21 − 1 + 5 = **25**. The remaining 12 incumbents never reapplied, per the Advance Notice: *"Incumbents do not need to reapply to hold this contract."*
+
+---
+
+### R4.1 THE REMEDIES MACHINERY — IT EXISTS, IT IS NEW, AND IT IS FULLY DOCUMENTED ⭐
+
+R3.2b built the consequence chain from the April 2018 Standard T&Cs cl. 13–14. **A far better document now exists and supersedes that reconstruction.**
+
+**ACC Health Services Provider Remedies Framework**, `OWNER: Manager Health Sector Engagement & Performance / Manager Recovery Services`, `DATE APPROVED 16 September 2025`, `APPROVER: Deputy Chief Executive – System Commissioning & Performance`, `DATE OF NEXT REVIEW 30 June 2026`. Note the approver — **John Bennett's office** (per `ACC-AS-BUYER.md` §5).
+
+> "This framework sets out ACC's approach to investigating concerns about a health services provider's **conduct** (including compliance with contracts for services), **competence** or **health**, together with the principles ACC will consider when deciding what remedies (if any) are required."
+> — §1 Purpose
+
+⚠️ **Read that scope line carefully. The framework's trigger is conduct / competence / health. It is NOT the Service Schedule performance-measure framework.** Grep of the 21-page document for `performance measure`, `national average`, `benchmark`, `return to work` returns nothing. **The R3.1 Table 4 measures and this remedies framework are two separate systems, and no document found connects them.**
+
+**The four-stage process** (§4): *"Stage 1 – assess … Stage 2 – explore … Stage 3 – enquire … Stage 4 – resolve."*
+
+**The remedy ladder and who can impose it** (§§3.1, 4.1–4.4, 9):
+
+| Decision-maker | Overbilling authority | Remedies available |
+|---|---|---|
+| Engagement & Performance Manager / Performance Monitoring Advisor | up to **$5,000** | letter of expectations; refuse payment; **performance improvement plan**; repayment plan |
+| Team Manager E&P / Provider Monitoring Manager | up to **$25,000** | the above **+ contract suspension** |
+| **Provider Issues Management Group** (no risk of harm to public) | up to **$100,000** | the above **+ contract termination + civil litigation** |
+| **Provider Risk of Harm Group** (risk of harm to public) | — | the above **+ notification to responsible authority or HDC** |
+| Manager Health Sector E&P / Manager Recovery Services | all issues | all of the above **+ referral to the Prosecution Panel** for law-enforcement notification or ACC-led prosecution |
+
+Verbatim on the PIP itself:
+
+> "**9.4 Performance improvement plan.** A performance improvement plan requires a health services provider to undertake certain actions or restricts them in certain ways… A performance improvement plan can (amongst other requirements) require a health services provider to **undertake education/training** or impose restrictions on the payment of a health services provider's invoices. The plan can also set out monitoring arrangements…
+> ACC may **issue** performance improvement plans to contract for services providers and may **agree** plans with Cost of Treatment Regulations providers and pre-approved treatment providers."
+
+⭐ **"undertake education/training" is written into the remedy.** That is the only place in the entire ACC corpus researched across four rounds where clinician education appears as a contractual consequence. It is a small hook — but it is a real one, and it is new.
+
+Termination confirms R3.2b's ten-business-day chain, restated in ACC's own operational language:
+
+> "**9.7 Contract termination.** If a contract for services provider has breached a provision of its contract for services with ACC, ACC may give notice… The notice must give the health services provider **ten business days** to stop or to remedy the breach (if it is capable of remedy)."
+
+And a natural-justice provision that matters commercially, because it is the same door as R3.3's case-mix defence:
+
+> "**5.1 Natural justice.** …If a proposed decision may adversely affect the interests of a health services provider, ACC must be satisfied that the provider is aware of the matters on which the proposed decision is based and **has had an opportunity, at any time in the course of the provider remedies process, to respond on those matters.**"
+
+The framework also treats *remediation* as a formal mitigating factor (§6.3): *"Remediation involves a health services provider taking steps to address any concerns… The decision as to the appropriateness of the remediation is for ACC to make."*
+
+---
+
+### R4.2 HOW OFTEN DOES IT ACTUALLY FIRE? THE ONLY PUBLISHED NUMBERS ⭐
+
+All figures from **ACC OIA response GOV-045270, 9 February 2026**. ACC's own scoping caveat, verbatim:
+
+> "Information held by the Provider Monitoring team is only readily available from **May 2025** onwards. Prior to that date, ACC used multiple different systems to record information. Information held by the Engagement and Performance team is only readily available since **February 2025** onwards."
+
+**ACC could not answer back to 2019 because it did not keep the records.** That alone tells you how central provider performance management has historically been.
+
+**Table 1 — cases logged (Provider Monitoring May 2025 → 13 Jan 2026; Engagement & Performance Feb 2025 → 13 Jan 2026), verbatim:**
+
+| Issue | Total |
+|---|---|
+| Admin billing error | 52 |
+| Delayed billing | 23 |
+| Double billing | 95 |
+| Incorrect Billing | 537 |
+| Other | 208 |
+
+**Table 2 — outcomes, verbatim:**
+
+| Outcome of actions undertaken by ACC | Total |
+|---|---|
+| Behaviour change | **527** |
+| Recovered payment | **146** |
+| **Breach of contract notice issued** | **3** |
+| Blank/not specified | 241 |
+
+> "'Behaviour change' mostly relates to **ACC providing education to providers or suppliers**. In some cases, there was a recommended contract change."
+
+**On suspensions and terminations — the decisive verbatim negative:**
+
+> "**We did not locate any contracts terminated or suspensions which related to billing issues.** As such, we are refusing this part of your request, as the information does not exist or, despite reasonable efforts to locate it, cannot be found. This decision has been made under section 18(e) of the Act."
+
+**Money recovered (Table 3):** admin billing error $80,621; incorrect billing $304,717 + $127,173; double billing $34,422; necessary-and-appropriate $141,658; telehealth $6,504. **Total ≈ $695,000** — against ACC's provider spend, a rounding error.
+
+**Which provider types get flagged (§3.1), verbatim and unordered:**
+> "Acupuncturist / Physiotherapist / Occupational Therapist / Psychologist / Dentist / Support worker"
+
+**Note what is absent: no rehabilitation supplier category, no concussion, no vocational rehabilitation, no "specialist assessment providers" — despite the requester explicitly offering those categories as examples.** The action is on individual practitioners billing under the Cost of Treatment Regulations, not on contracted multidisciplinary suppliers.
+
+#### (d) The integrity/fraud function is separate — and it is where the hard action is
+
+> "The Fraud Prevention and Investigation team are separate to the Provider Monitoring team and Engagement and Performance team. Between 1 January 2019 and 31 December 2025, Fraud Prevention and Investigation closed a total of **132 provider cases** (interventions and investigations)."
+> "Of the total 132 provider cases closed… we **substantiated 50 cases** of fraud or abuse-indicated behaviour."
+> "Between 1 January 2019 and 31 December 2025, **two provider cases were referred to Police**."
+> "There were **121 notifications to Responsible Authorities** between 1 January 2019 and 28 January 2026. However, **most of these do not relate to billing issues.** Some relate to fraud, risk of harm, or professional conduct or competence."
+
+**The brief's hypothesis is confirmed: the hardest supplier-facing action ACC takes is fraud and professional-conduct action, and none of it is addressable by education or by a better clinical instrument.** 121 notifications to registration boards over seven years is roughly 17/year across the whole network — and it is a referral to the Physiotherapy Board or the Psychologists Board, not a contract remedy.
+
+**Direction of travel — the one forward-looking line, verbatim:**
+
+> "In 2025 ACC began moving towards **more proactive detection of irregular provider behaviour, with a provider monitoring tool in development.** This tool will use **detection flags to assign risk scores to providers**, to identify the appropriate intervention level."
+
+ACC refused to release its fraud-detection methodology, billing-anomaly detection rules and red-flag indicators under **s6(c)** of the OIA (*"prejudice the maintenance of the law"*). So the thresholds are and will stay unknowable.
+
+#### (b) Does ACC publish any supplier audit or performance results? VERIFIED NEGATIVE — twice over.
+
+- **Annual Report.** `https://web.archive.org/web/20241020211512id_/https://www.acc.co.nz/assets/corporate-documents/ACC8695-Annual-Report-2024.pdf` (6.7 MB, text-extracted and grepped). Case-insensitive grep for `provider audit`, `supplier audit`, `provider monitoring`, `provider integrity`, `performance improvement plan`, `supplier performance`, `terminated`: **zero hits**. Every occurrence of "fraud" is either the 2024 MyACC customer-account fraud incident, the corporate risk register, or standard audit-opinion boilerplate. **ACC's Annual Report does not report on provider or supplier performance management at all.** (The 2025 Annual Report `ACC8755` is in the Wayback index but the raw fetch returned 212 bytes — **UNVERIFIED**.)
+- **Everything else.** R3.5 already established: no concussion dataset on data.govt.nz, no supplier-level performance figure on any ACC page, six-monthly supplier reports unpublished. Nothing found this round changes that. **The GOV-045270 OIA response is the only published quantification of ACC provider performance action that exists.**
+
+#### (a) Any named instance of action against a rehabilitation supplier? NONE FOUND.
+
+Searched fyi.org.nz across ACC's 963 archived OIA requests for supplier performance, provider audit, contract termination and performance improvement plans. The relevant threads found were: `Guidelines for Performance Management of ACC Provider` (`https://fyi.org.nz/request/11431-guidelines-for-performance-management-of-acc-provider`, 2019, successful, response PDF not extracted — **UNVERIFIED contents**); `Complaints about Providers and Assessors` (`https://fyi.org.nz/request/11098-complaints-about-providers-and-assessors`, 2019, partially successful); and the two 2025 Spencer Jones requests. **No OIA response, news item or media report naming a rehabilitation supplier placed on a PIP, issued a breach notice, or terminated was found.** Combined with ACC's own s18(e) "does not exist… cannot be found" on terminations, treat the base rate for a *concussion supplier* as **effectively zero within recorded memory**.
+
+---
+
+### R4.3 HOW YOU BECOME A CONCUSSION SERVICES SUPPLIER
+
+#### (a) Closed periodic tender. R1 is VERIFIED, from the GETS notices themselves.
+
+Both notices fetched live from gets.govt.nz on 2026-07-21.
+
+**Concussion Services 2025** — `https://www.gets.govt.nz/ACC/ExternalTenderDetails.htm?id=31972756`
+> `RFx ID: 31972756` · `Reference #: CSS 2025` · **`Tender Type: Request for Proposals (RFP)`** · `Open Date: Tuesday, 1 July 2025 3:00 PM` · `Close Date: Sunday, 10 August 2025 5:00 PM` · `Categories: 85000000 - Healthcare Services` · `Regions:` all 17 · `Exemption Reason: None` · `Required Pre-qualifications: None` · `Contact: ACC Health Tenders — ACCHealthTenders@acc.co.nz`
+> **`RFx Outcome: This tender has been awarded.` `Award Date: Friday, 24 October 2025.` `Date RFx was completed/updated: Wednesday, 1 April 2026.`**
+
+**Concussion Services – Advance Notice** — `https://www.gets.govt.nz/ACC/ExternalTenderDetails.htm?id=31320863`
+> `Tender Type: Notice of Information (Advance Notice) (NOI)` · `Open Date: Friday, 21 March 2025` · `Close Date: Tuesday, 1 July 2025` · `Related Tenders: 31972756`
+> "**PLEASE NOTE: This opportunity is only for new suppliers. Incumbents do not need to reapply to hold this contract.**"
+> "The current contract expires on 30 June 2025. The new contract will start on 1 July 2025 for **1 year with 2 further rights of renewal of 1 year (i.e., 1+1+1 year)**."
+
+**Note the ~3.5-month advance warning**: the NOI opened 21 March 2025, the RFP opened 1 July 2025. That NOI is the signal to watch for.
+
+⚠️ **A typo in the award notice worth knowing before you quote it:** the CSS 2025 overview reads *"The new contract starts on 1 July 2025 and expires on 30 June **2025**"* — plainly wrong. Use the Advance Notice's 1+1+1 formulation and the Service Schedule term (R3 provenance note: the 2026 schedule states 1 Jul 2025 → 30 Jun 2027 with **one** further year).
+
+#### (b) Eligibility criteria, in full
+
+**The team requirement — verbatim from BOTH GETS notices** (identical text):
+> "The Concussion Service requires a **core interdisciplinary team of Registered Health professionals in each region applied for** and must include:
+> • Medical Practitioner • Neuropsychologist • Clinical psychologist and/or Psychologist • Occupational Therapist • Physiotherapist.
+> The interdisciplinary team **may also** include: • Registered Nurses • Speech Language Therapists • Social Workers.
+> All members of the interdisciplinary team must meet the qualifications, experience and supervision criteria set out in the CSS Service Schedule."
+
+**Read "in each region applied for."** This is the single hardest barrier: you must stand up five registered disciplines including a neuropsychologist and a vocationally-scoped medical practitioner **per region**, not nationally.
+
+The Service Schedule restates it as a maintenance obligation, not a one-off (July 2025 schedule, `https://web.archive.org/web/20251009113522id_/https://www.acc.co.nz/assets/contracts/concussion-services-service-schedule.pdf`, cl. 5.2.1): *"The Supplier must **maintain** a core Interdisciplinary Team in each Service location which consists of a minimum of a: Medical Practitioner. Neuropsychologist. Clinical psychologists and/or Psychologists. Occupational therapist. Physiotherapist."*
+
+**Individual criteria — Part B: Table 2, "Service Provider Qualifications, Registration and Membership, Experience and Competency Criteria".** APC (annual practising certificate) is required for every discipline. Key rows, verbatim:
+
+| Profession | Registration | Experience |
+|---|---|---|
+| **Neuropsychologist** | "current registration and an annual practising certificate with the **New Zealand Psychologists Board** with a scope of practice in one of the following: Neuropsychologist / Clinical Psychologist… Must have successfully completed a university-based graduate or postgraduate course or papers in neuropsychology… Must hold current membership of at least one of the following: New Zealand Psychological Society / NZ College of Clinical Psychologists / An appropriate international neuropsychological professional body." | "a minimum of **two years' Recent postgraduate clinical practice experience in supervised neuropsychological assessments and rehabilitation**" |
+| **Medical Practitioner** | "current registration and an annual practising certificate with the **New Zealand Medical Council with a vocational scope** in one of the following: Rehabilitation Medicine / Occupational Medicine / General Practice / Internal Medicine / Neurology / Neurosurgery / Paediatrics / Psychiatry / **Sport and Exercise Medicine**" | "a minimum of **two years' recent experience** practicing within their specialist vocational scope" |
+| **Clinical Psychologist or Psychologist** | NZ Psychologists Board APC; "a qualification that meets at least **Level 8 (postgraduate)** of a NZQA recognised course of study"; membership as above | "a minimum of two years' Recent postgraduate clinical practice experience in working with Clients who have mental health difficulties associated with physical injuries (excluding clinical placements and internships)" |
+| **Registered nurse / Physiotherapist / Occupational therapist / Speech language therapist / Social worker** | "current registration and an annual practising certificate with the relevant New Zealand Authority" | "a minimum of **two years' Recent postgraduate clinical practice experience**" |
+
+**The supervision escape hatch** — this is how a supplier legally staffs a region it cannot fully credential: *"NOTE: Where a Service provider does not meet this experience criteria the Supplier must comply with the **Concussion Services Supervision** requirements outlined in Part B, clause 6.3 for that Service provider."* And a discretionary waiver, cl. 6.1.3: ACC may approve a differently-qualified professional if *"There is a **service gap in the Service location area**."*
+
+**Records obligation**, cl. 6.1.2: *"The Supplier must maintain records demonstrating that each Service provider has been evaluated and complies… This includes… current registration status, demonstrated competencies, and (where applicable) **Concussion Services Supervision logs**. The Supplier must provide these records to ACC **immediately upon request**."*
+
+**Premises — thinner than expected.** Clause 3 does not specify a facility standard. Verbatim: *"3.1 The Services will be provided in an appropriate location… 3.2 **All rehabilitation interventions will be conducted from one clinic wherever possible**, rather than at separate Service provider locations. 3.3 In exceptional circumstances, rehabilitation interventions may be delivered remotely via Telehealth… 3.4 The Supplier must have Service providers **available to deliver the Service within the Service location area(s)** specified in Part A, clause 2."* Method of delivery: *"5.4.1 The primary method for delivery of the Services is **In-person**."*
+
+**Insurance: UNVERIFIED.** No insurance or professional-indemnity clause appears in the Concussion Services Service Schedule (grep for `insur`, `indemnit`: no substantive hits). If one exists it sits in ACC's Standard Terms and Conditions, which was not re-fetched this round.
+
+**Volume minimums: none in the Service Schedule.** But note R3.1's **2026 schedule cl. 12.3.2**, which makes low volume a benchmarking trigger *"Where the volume of eligible claims being treated by the Supplier falls below the median for the National Average… (at ACC's discretion)."* That is a de facto volume floor applied after you hold the contract, not an entry criterion.
+
+**Health and safety** is a real obligation (cl. 16): a Health and Safety Risk Management Plan, incident reporting via ACC's online form, and cl. 16.3.1 — *"The Supplier must undertake a **pre-qualification check**… to confirm its **Subcontractors** have appropriate health and safety accreditation and risk management plans."*
+
+#### (c) The actual application steps, verbatim from the CSS 2025 notice
+
+> "**HOW TO APPLY - NEW RESPONDENTS.** All new Respondents are required to answer **ALL** questions in the **Application Response Form**. Additionally, they must complete the **Concussion Service Provider Spreadsheet** available in Section 6 of the Application Response Form."
+> "**HOW TO APPLY - ADDITIONAL SERVICE COVERAGE.** Existing suppliers wishing to **expand their service coverage** are required to complete the sections marked for 'existing' or 'all' respondents in the Application Response Form. Please refer to **2.5 Submitting an Application in the RFA (Response for Application)** for further instructions."
+> "**INDICATIVE TIMELINE.** The Applications will be evaluated after 10 August 2025. Respondents will be notified of the outcome of their application **8-10 weeks after receipt**. Contract start Date: **when contract is signed by both parties**."
+
+So the documented sequence is: **GETS Advance Notice (NOI) → register on GETS → download the RFA pack → Application Response Form + Concussion Service Provider Spreadsheet → ~8–10 weeks' evaluation → contract signature (rolling, not a fixed date) → appearance on ACC's public provider directory.** Downstream vendor/payment setup (ACC111 vendor registration) is covered in `NZ-ACC-PROCUREMENT-REALITY.md`; note ACC's eBusiness Gateway closed 2 April 2026 and was replaced by ProviderHub.
+
+⚠️ The RFP attachments (Application Response Form, RFA, Provider Spreadsheet) require a GETS login and were **not retrieved — UNVERIFIED contents.** Registration is free (unverified RealMe tier). This is the cheapest remaining lead in this document: log in to GETS and check whether closed-tender attachments stay downloadable.
+
+#### (d) Next opportunity, and mid-term entry
+
+**Next open round: on the evidence, around the 2027 contract expiry** — the 2026 Service Schedule states a term to **30 June 2027** with one further one-year right of renewal, so the re-tender window is 2027 or 2028 at ACC's discretion. **Watch for a GETS Advance Notice (NOI) roughly 3–4 months ahead**, which is the lead time ACC gave in 2025 (21 Mar NOI → 1 Jul RFP). Set a GETS notification on category **85000000 – Healthcare Services**.
+
+**Mid-term entry routes, ranked by evidence:**
+
+1. **Subcontracting to an existing supplier — contractually contemplated, and the only route with textual support.** The Service Schedule repeatedly anticipates Subcontractors: cl. 14.1.6 (*"Confirm that the Supplier's Subcontractors (if any) satisfactorily meet…"*), cl. 16.1.2.2 (*"Ensure all Subcontractors providing the Services are…"*), cl. 16.3.1 (pre-qualification check). **No ACC approval of the subcontractor is described as a precondition — the obligation sits on the Supplier.** This is the realistic path, and it is a commercial conversation with Active+ / Habit / Proactive, not with ACC.
+2. **"Additional Service Coverage" via an existing supplier's expansion application** — real, but only available when a round is open, and only to organisations that already hold the contract.
+3. **A secondary panel: no evidence any exists.** Nothing found.
+
+**"Secondary Care Proof of Concept" (Habit, ABI) and "Middlemore TBI Pathways pilot" — chased and still UNVERIFIED.** A CDX sweep of **34,962 archived acc.co.nz URLs since 2023** for `secondary-care`, `middlemore`, `tbi-pathway` returns nothing relevant (the only "secondary care" hits are a Musculoskeletal Secondary Care Clinical Advisory Group). Two `escalated-care-pathways` provider-news pages exist from 2023, unrelated to concussion. **Both concussion pilots remain traceable only to ACC's internal procedure document (R3.2c). OIA is the only route, and they remain the highest-value unknown in this document series.**
+
+#### (e) The supplier count, reconciled ⭐
+
+Source: ACC's public provider directory, three Wayback snapshots, suppliers counted by unique non-ACC referral email address in the raw HTML.
+
+| Snapshot | URL | Organisations |
+|---|---|---|
+| 3 May 2025 (pre-award) | `https://web.archive.org/web/20250503074153id_/https://www.acc.co.nz/for-providers/treatment-recovery/referring-to-rehabilitation/concussion-service-providers/` | **21** |
+| 8 Aug 2025 (pre-award) | `…/20250808145118id_/…` | **21** |
+| **28 Jan 2026 (post-award, latest snapshot available)** | `…/20260128065810id_/…` | **25** |
+
+**What changed:** five organisations added — **Align Health** (`contracts@alignhealth.co.nz`), **Astech SRS** (`hello@astechnz.com`), **Rope Neuro Rehabilitation** (`referrals@ropeneurorehab.co.nz`), **Tui Allied Health** (`referrals@tuialliedhealth.co.nz`), **What Ever It Takes** (`referrals@whateverittakes.co.nz`). One removed — **QE Health** (`referrals@qehealth.co.nz`). 21 − 1 + 5 = **25**.
+
+**All five additions are among the 13 named in the Oct 2025 GETS award. The other eight awardees were already on the directory in May 2025** — ABI Rehabilitation, Axis Sports Medicine, Body In Motion, Bay Rehab, Habit Health, **New Zealand Health Group Limited** (the legal entity behind **Geneva Healthcare**), Specialist Rehab Services (`srsltd.co.nz`), TBI Health Group. They were the "**Existing suppliers wishing to expand their service coverage**" the RFP explicitly invited. **That is the whole explanation of 13 vs 25, and it is now verified rather than inferred** — this resolves the open item at `NZ-ACC-TARGET-LIST.md` §462.
+
+**The twelve incumbents who never reapplied and hold the contract by rollover:** Active+, Proactive Rehab, APM Workcare, Advantage South, Laura Fergusson Brain Injury Trust, Motus Health, APT Rehab, Coastal Rehab Services, Rehab Taranaki, Hemisphere Health, Focus on Potential, and Canterbury DHB Brain Injury Rehab (`braininjuryrehab@cdhb.health.nz`).
+
+**Locations: ACC publishes coverage, not premises.** The directory lists **128 supplier-region entries across 17 regions**, each naming the territorial authorities covered and a Yes/No child-and-youth flag. **No physical clinic addresses or site counts are published anywhere.** Coverage breadth by organisation, counted from the Jan 2026 snapshot:
+
+| Organisation | Regions covered (of 17) |
+|---|---|
+| **Active+** | **17** |
+| **Proactive Rehab** | **17** |
+| APM Workcare | 15 |
+| Habit Health (incl Southern Rehab) | 15 |
+| TBI Health Group | 12 |
+| Geneva Healthcare | 8 |
+| Axis Sports Medicine | 6 |
+| ABI Rehabilitation | 5 |
+| Specialist Rehab Services | 5 |
+| What Ever It Takes / Focus on Potential / Advantage South | 3 each |
+| Bay Rehab / Body In Motion / Coastal Rehab / CDHB / LFBIT / Tui Allied Health | 2 each |
+| Rope Neuro / Astech SRS / Motus / Hemisphere / APT Rehab / Rehab Taranaki / Align Health | 1 each |
+
+**This confirms §3's "Active+ 17/17 regions" and adds that Proactive Rehab matches it exactly.** Four organisations (Active+, Proactive, APM, Habit) cover 64 of the 128 listings — **half the national footprint sits with four accounts.**
+
+---
+
+### R4.4 WHAT THIS DOES TO THE PITCH — BLUNT
+
+1. **Kill the remediation angle as a lead.** Three breach notices in a year across all of ACC's health providers, zero terminations, zero suspensions, and no rehabilitation supplier ever publicly named. There is no burning platform, and claiming one invites the same honest reply §5 already warned about: *nobody has ever pulled us up on it.*
+2. **The remedies framework is still worth knowing — for one sentence.** PIPs can require *"education/training"*, and natural justice (§5.1) gives the supplier a right to respond with evidence. That reinforces R3.3's case-mix-defence argument, which remains the only verified commercial hook, and it is insurance, not growth.
+3. **Do not conflate the two ACC systems.** Service Schedule cl. 12 Table 4 benchmarking (R3.1) and the Health Services Provider Remedies Framework (R4.1) are separate, and nothing found links a bad Table 4 score to a remedy. Saying "a bad scorecard gets you a PIP" would be a fabrication.
+4. **The addressable market is 25 organisations, and it is top-heavy.** Four accounts carry half the national coverage. This is founder-led enterprise sales to a named list — as `NZ-ACC-PROCUREMENT-REALITY.md` concluded, now with a verified denominator.
+5. **You cannot become a supplier, and you should not try.** Five registered disciplines including a neuropsychologist and a vocationally-scoped medical practitioner **per region**, a closed RFP with ~3.5 months' notice, next window 2027–28. **Subcontracting to an existing supplier is the only mid-term route the contract actually contemplates.**
+
+### R4.5 WHAT COULD NOT BE VERIFIED THIS ROUND
+
+| Item | Status | Next step |
+|---|---|---|
+| **CSS 2025 RFP attachments** (Application Response Form, RFA, Concussion Service Provider Spreadsheet) | Behind GETS login; not retrieved | Register free on GETS (unverified RealMe) and test whether closed-tender attachments remain downloadable. Cheapest remaining lead. |
+| **ACC Annual Report 2025** (`ACC8755`) | In Wayback index at `20251206053711`; raw fetch returned 212 bytes | Real browser |
+| **GOV 002073 (2019) "Guidelines for Performance Management of ACC Providers"** response PDF | Thread verified successful; PDF contents not extracted | `https://fyi.org.nz/request/11431-guidelines-for-performance-management-of-acc-provider` |
+| **Insurance / professional indemnity requirement** | No clause in the Concussion Services Service Schedule | Check ACC Standard Terms and Conditions |
+| **Health Services Provider Remedies Framework – Operational Guidelines** | Named in §1 of the framework; not released | OIA |
+| **Provider Issues Management Group / Provider Risk of Harm Group Terms of Reference** | Both named; not released | OIA — would reveal how often each group actually meets and how many cases it hears |
+| **Provider-remedy data before Feb/May 2025** | ACC refused under s18(f); records were in "multiple different systems" | Not obtainable |
+| **Fraud-detection methodology, anomaly rules, red-flag indicators** | Refused under s6(c) | Not obtainable |
+| **"Secondary Care Proof of Concept" / "Middlemore TBI Pathways pilot"** | Zero trace across 34,962 archived acc.co.nz URLs since 2023 | OIA — highest-value unknown |
+| **Any named instance of a rehabilitation supplier PIP / breach / termination** | None found in 963 ACC OIA threads, GETS, or the Annual Report | Probably does not exist publicly |
