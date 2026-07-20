@@ -1,0 +1,67 @@
+# TARGET NEEDS MATRIX — what each of the 10 targets actually needs, and what to sell
+
+**Purpose.** One decision surface. For each target: educate on *what*, tool yes/no, reporting yes/no, the accreditation/listing pathway, and the product to sell. This **decides what each existing pack should sell** — it does not replace the packs.
+
+**Compiled:** 2026-07-21. Supersedes scattered product-assignment commentary across the packs.
+
+---
+
+## The four products (fixed — assigned, not invented)
+
+| Code | Product | Audience | Role |
+|---|---|---|---|
+| **CCM** | Concussion Clinical Mastery | Physiotherapists, OTs, allied health | Diagnosis / assessment / management. OA-endorsed. |
+| **CRM** | Concussion Rehab Mastery | Exercise physiologists / exercise professionals | Exercise-prescription (BCTT → HRt → FITT). ESSA endorsement **pending**. |
+| **Free** | Recognise–screen–refer | Entry-level / PT-level | Awareness + referral, not delivery. |
+| **SST** | SST Trainer (subscription tool) | Whoever **delivers** the between-visit sub-symptom aerobic programme | Measures HRt, monitors home sessions, returns data to a clinician dashboard, compiles reports. |
+
+## Two rules that decide every row
+
+1. **Product follows the profession.** Physios/OTs/allied-health → CCM. Exercise physiologists / exercise professionals → CRM. PT/fitness-level → Free. (Verified spine, all packs: field trained pre-2022 on the rest model; specific gap is *when graded exertional training is indicated* — 1,272-physio survey, 70% trained, 13/15 knowledge, gap at RTP confidence + exertion indication.)
+2. **SST follows the deliverer, not the body.** SST only matters to an org/clinic that actually runs the home-exercise phase. **Selling SST into a professional body / CPD channel is a category error** — at most SST is relevant to individual members *downstream*, once they surface as a clinic deal.
+
+---
+
+## THE MATRIX
+
+| # | Target | Who they are | Q1 Educate — on what? | Q2 Tool (SST)? | Q3 Consistent reporting? | Q4 Pathway → what it gets us | **VERDICT: primary / upsell / SST in scope?** |
+|---|---|---|---|---|---|---|---|
+| **1** | **NZ ACC suppliers** (25 orgs) | Physios/OTs in mandated interdisciplinary teams who **deliver** Stage 2 rehab & report to ACC | **YES — exercise-prescription/graded-exertion.** ACC-mandated team (medical, neuropsych, psych, OT, physio) has **no exercise-testing competency** yet must deliver the guideline treatment. Deliverers are physios/OTs → CCM audience. | **YES — flagship SST channel.** They run the between-visit aerobic programme; per DO-TODAY the 25 suppliers are the SST *buyers*. | **They report (mandated six-monthly to ACC) — but SST does NOT feed the scorecard.** 5 of 6 graded measures compute from ACC claims data; SST's honest value is dashboard records + a **case-mix defence** at the performance conversation (cl. 12.3.1), not scorecard improvement. *Never* pitch "our data improves your numbers." | **Direct B2B procurement** to 25 named suppliers. No accreditation. Gets: subscription revenue + course seats. Hook: six-monthly report just filed, shared with competitors (cl. 13.4), extension to 2028 is performance-conditional. | **PRIMARY SST** (org subscription) · **UPSELL CCM** for the physio/OT team · **SST: fully in scope (this is the channel).** |
+| **2** | **SEPNZ / PNZ Neurology SIG / OTNZ-WNA** | NZ physios & OTs (clinicians) | **YES — diagnosis/assessment/management → CCM** (clinical, physio/OT audience). Per DO-TODAY: send CCM here, never the free course. | **No — sell to the body ≠ sell SST.** Individual members may deliver rehab, but the SIG is an education/reach channel. SST only downstream, when a member's clinic (e.g. an ACC supplier) becomes a deal. | **No.** A SIG offering CPD reach reports to no funder. | **Association reach / de-facto endorsement** (no NZ regulator accredits courses — PBNZ/OTBNZ run self-directed CPD w/ audit). SEPNZ webinar/CPD channel **VERIFIED** (courses + CPD + events, sportsphysiotherapy.org.nz). OTNZ-WNA = discount+donation model (OT Potential precedent). | **PRIMARY CCM** via association channel · **SST: not sold to the body** (top-of-funnel for the supplier sale only). |
+| **3** | **REPS NZ + SESNZ/CEPNZ** | NZ exercise professionals, **PT-to-CEP level** | **Split. REPS = PT-level → Free/entry course** (mostly can't use CCM/CRM). **SESNZ/CEPNZ = clinical EPs → CRM.** | **No.** PTs don't run clinical concussion home-rehab; SESNZ is a listing channel not a delivery org. | **No.** | **REPS = endorsed-CPD provider scheme — a real application** (VERIFIED: reps.org.nz CPD-provider registration; CPD year 1 Oct–30 Sep, points awarded). **SESNZ = CPD Opportunities listing by request** (no formal scheme, likely free). | **REPS → Free course** (SST out) · **SESNZ → CRM listing** · **SST: not sold to either body.** |
+| **4** | **ACSM** | US exercise physiologists / clinical EPs (ACSM-EP, ACSM-CEP) | **YES — exercise-prescription → CRM.** Frame as **scope expansion** (new billable population), not deficiency. Empty CEC catalogue + ACSM's own Hot-Topic flag. | **No — not to the body.** EPs/CEPs deliver, but ACSM is an approved-provider/CEC channel. SST individual-downstream only. | **No.** CEC compliance, not scheme reporting. | **ACSM Education Provider approval** → CEC-awarding + catalogue listing to a large member base. Fee inside Formstack form. | **PRIMARY CRM** · **SST: out of scope for the body.** |
+| **5** | **CEP-UK / AHCS** ⭐ | **UK clinical exercise PHYSIOLOGISTS** (portfolio/equivalence registrants) | **YES — exercise-prescription → CRM.** ⚠️ **NOT CCM.** These are exercise physiologists; the exercise-prescription course is the correct product. Pack-as-built already uses CRM. | **No.** This is a funded **portfolio-evidence** channel (£650 CPD funding, route closes 31 Dec 2026), not a delivery org. Sell CRM as portfolio evidence; SST is not the play. | **No** — portfolio evidence for registration, not funder reporting. | **NOT an accreditation application** — no provider scheme. Direct outreach: AHCS signpost + ~164 named registrants. **VERIFIED:** portfolio route **closes 31 Dec 2026** (AHCS news 2025-12-10); register is CEP-UK/AHCS Clinical Exercise Physiologist. | **PRIMARY CRM (NOT CCM — see flag)** · **SST: out of scope.** |
+| **6** | **CIMSPA** | UK exercise/fitness professionals, **mostly PT-level** | **Marginal — CRM nominally**, but demand is *manufactured* (10 CPD pts/yr, ≥5 from endorsed providers). Audience largely below clinical-delivery level. Lowest priority. | **No.** PT-level, don't deliver clinical concussion rehab. | **No** (CPD-points compliance, not scheme reporting). | **Training Provider Partnership + product endorsement**, bi-monthly windows, ~£700+VAT yr1. Endorsement stamp + member channel. **Confirm window before paying the £140 admin fee.** | **CRM (endorsement listing, LOW priority)** · **SST: out of scope.** |
+| **7** | **CASES** | UK sport & exercise scientists | **YES — narrow → CRM.** In performance settings **the sport scientist is often the one running graded exertion**; they hold the competency, lack the concussion-specific protocol. | **No — not to the body.** Academy/club scientists do run graded exertion (SST relevant *individually*), but CASES is a CPD-endorsement/distribution channel. | **No.** | **CPD Endorsement** (fee unpublished — ask; the £1,800 site figure is degree/CUES, not CPD; annual renewal; £50 deducted on rejection). Credits logo + newsletter/magazine + ~53k social. | **PRIMARY CRM** · **SST: out of scope for the body** (possible downstream in academies/clubs). |
+| **8** | **BASA / HPCSA** | South African **biokineticists** (clinical exercise-prescription scope) | **YES — exercise-prescription → CRM.** Biokinetics scope = exactly this. | **No — not to this channel.** Biokineticists deliver (SST individually relevant), but this is a per-activity accreditation play. | **Not the hook.** May report to medical schemes, but not on concussion outcomes. | **HPCSA per-activity accreditation** via approved accreditor (BASA / UCT). **No retrospective accreditation — must precede any ZA enrolment (geo-gate first).** Fee ~R1,380, **non-refundable even if declined.** Gets: claimable CEUs + accreditation number. | **PRIMARY CRM** · **SST: out of scope for the channel.** |
+| **9** | **CSEP** | Canadian exercise physiologists (CSEP-CEP/CPT) | **Need largely MET.** Canadian concussion training (CCMI, assessment-oriented) is entrenched. Only real gap = the **exercise-prescription layer** beneath the staging → CRM as a narrow, differentiated increment. Low priority. | **No — not to the body.** Listing/PDC channel. | **No.** | **Route 2 accreditation** (fee unpublished — ask) → PDC + promotion to ~5,000 members. Route 1 (member self-report) already free. ESSA-equivalency simplifies review. | **CRM (LOW-priority listing; fee enquiry only)** · **SST: out of scope.** |
+| **10** | **Cliniko clinics** | AU/NZ allied-health clinics (physios/OTs) with concussion caseloads | **YES — diagnosis/assessment/management → CCM** (allied-health audience). | **YES — they DELIVER between-visit rehab.** SST core. Cliniko **PMS write-back exists** (SST report → treatment note + PDF) as a differentiator. ⚠️ Currently **dormant/unvalidated** (6 `VERIFY` shapes, zero callers) — do **not** claim it live. | **Partial — clinic-workflow/dashboard + PMS write-back, not scheme reporting.** AU clinics report to no concussion scheme (NZ ones may touch ACC). | **No accreditation pathway** — direct commercial/product channel. SST tool + CCM course; Cliniko integration is the wedge. | **PRIMARY CCM + SST bundled** · **SST: fully in scope** (write-back is a differentiator, not a live claim). |
+
+---
+
+## WHERE THE PLAN WOULD SELL THE WRONG THING — read this
+
+**1. CEP-UK is the one live product-mismatch. Sell CRM, not CCM.**
+The founder's target list tagged CEP-UK as a **CCM** target. CEP-UK/AHCS registrants are **clinical exercise physiologists** — the exercise-prescription profession — so **CRM is correct and CCM is wrong.** Good news: the built `CEP-UK-OUTREACH-PACK.md` already sells **CRM**. The mismatch is in the mental model / target list, not the pack. Action: correct the list label to CRM; do not send CCM here. (CCM to an exercise-physiologist audience reads as the wrong scope and kills the mapping.)
+
+**2. SST is in scope for exactly TWO of the ten targets: NZ ACC suppliers (#1) and Cliniko clinics (#10).**
+Both are *delivery organisations*. Every other target is a professional body or CPD channel — pitching SST *into the body* is a category error. SST reaches those audiences only downstream, one member-clinic at a time. If any outreach pack starts pitching the SST subscription to SEPNZ, ACSM, CEP-UK, CIMSPA, CASES, BASA, CSEP, REPS or SESNZ, that is the misfire to stop.
+
+**3. Two honesty limits on the SST "reporting" story (ACC #1).**
+SST does **not** improve the ACC six-monthly scorecard — 5 of 6 graded measures are computed from ACC claims data. Its real reporting value is the clinician dashboard + a *case-mix defence* at the performance review. Selling it as "our data lifts your numbers" is false under the current framework.
+
+**4. CSEP need is already met.** Only the exercise-prescription layer is a genuine gap; keep it a low-priority fee-enquiry listing, not a growth bet.
+
+---
+
+## VERIFICATION LEDGER (this round — fetched, not recalled)
+
+| Claim | Status | Source |
+|---|---|---|
+| CEP-UK/AHCS portfolio route closes **31 Dec 2026** | **VERIFIED** | AHCS news 2025-12-10, *"CEP-UK and AHCS to close portfolio registration pathway…"* — closing date "31st December 2026" |
+| No Clinical Exercise Physiologist register on AHCS's *accredited-registers* index (it sits with CEP-UK, governed by "Scope of Practice for CEPs" + "AHCS Standards of Proficiency") | **VERIFIED** | ahcs.ac.uk/registration/ahcs-accredited-registers/ (register not listed there); AHCS news article names the governing docs |
+| REPS NZ runs a **CPD-provider registration scheme** external providers apply to; CPD year 1 Oct–30 Sep | **VERIFIED** | reps.org.nz/cpd-provider-information/ |
+| SEPNZ runs a courses / CPD / events channel a provider can pitch into | **VERIFIED** | sportsphysiotherapy.org.nz (Courses, CPD, Certificate Courses, Calendar Events) |
+| CEP-UK **"six practice areas × nine conditions"** grid, **neurological** as a named practice area, and **£650** per-registrant funding | **UNVERIFIED via fetch** — asserted in `CEP-UK-OUTREACH-PACK.md` only; CEP-UK site (cep.uk.com) was unreachable. **To check:** pull the exact labels from the "Scope of Practice for Clinical Exercise Physiologists" + "AHCS Standards of Proficiency" before the competency-mapping table ships (this is the pack's own top fill-in). |
+| OTNZ-WNA hosted-webinar/CPD channel | **UNVERIFIED via fetch** — site is ASP.NET, nav not extractable. Note: the planned OTNZ-WNA motion is discount+donation (OT Potential precedent), not a webinar, so a webinar channel is not required for that plan. |
+| Cliniko PMS write-back is built but **dormant/unvalidated** | **VERIFIED (code)** — `PMS-ANGLE-REVIEW.md`: zero production callers, 6 `VERIFY` shapes; do not claim it live. |
