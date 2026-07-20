@@ -550,3 +550,329 @@ An individually measured heart-rate threshold is the objective input to *that* d
 
 ### One thing to correct in `NZ-ACC-TARGET-LIST.md`
 §3 of that document lists "Service progression — Proportion of clients who enter Stage 2 from Stage 1" as a measure benchmarked at *"National Average or one deviation higher."* The **Operational Guidelines give it a hard directional target of ≤65%** — a ceiling. The two framings point in opposite directions and the guidelines version should govern any outreach copy. See §4 above.
+
+---
+
+## ROUND 3 — grading, referral allocation, and the wider neuro-rehab surface
+
+**Researched:** 2026-07-20. Answers: how suppliers are graded, whether grading has consequences (funding / contract / referral volume / reputation), whether SST data could serve the graded measures, the size and shape of ACC's wider rehab market, and what claim data ACC publishes.
+
+### RIGOUR + METHOD NOTE
+
+`acc.co.nz` is Imperva-blocked to both WebFetch and curl (a live re-fetch this round returned **HTTP 200 / 212 bytes**). Everything below was recovered via the **Wayback Machine** — CDX for discovery (`40,894` archived acc.co.nz URLs since 2022), `https://web.archive.org/web/<TS>id_/<URL>` for raw bytes. Non-ACC sources fetched live. Every claim carries the URL fetched plus a quote. Failed fetches are marked UNVERIFIED.
+
+**⚠️ PROVENANCE WARNING ON THE CENTRAL DOCUMENT OF THIS ROUND.** The single most important finding rests on a PDF that is **not in the Wayback Machine**. The file `concussion-services-service-schedule.pdf` in the working scratchpad (md5 `85effdb59c70f99f0f9d188c576a9c25`, 572,457 bytes) does not match any of the three archived snapshots of that URL (2023-03-30 → Dec 2022 schedule; 2024-05-21 → Mar 2024 schedule; 2025-10-09 → July 2025 schedule). It was fetched **live from acc.co.nz earlier on 2026-07-20**, before the Imperva block engaged. Its internal evidence is self-consistent and dates it forward of every archived version:
+
+| Evidence | Value |
+|---|---|
+| PDF `CreationDate` (embedded metadata) | **Thu 28 May 2026** (July 2025 schedule: 5 Jun 2025) |
+| Page footer | `Service Schedule Concussion Services 01 July 2026` |
+| cl. 1.1 Term | `1 July 2025` → close of **30 June 2027** |
+| cl. 1.2 extension | **one** further term of one year (July 2025 schedule: two) |
+| cl. 3.1.2 Maximum Funding Limit | **$4,120.00** (July 2025 schedule: $4,078.00) |
+
+**Treat it as the current schedule effective 01 July 2026, but re-download it from acc.co.nz in a real browser before quoting any of it to a supplier.** It is called **"the 2026 schedule"** below; the Wayback-verified `20251009113522` version is **"the July 2025 schedule"**.
+
+---
+
+### R3.0 The short version — and three corrections to §4 above
+
+1. **The ≤65% ceiling is gone.** The 2026 schedule replaced all three percentage targets with **six** measures, every one benchmarked to "National Average or one deviation [higher/lower]" and every one sourced from **ACC data**. There is not a single numeric target left in Part B: Table 4, and not a single supplier-self-reported measure. §R3.1.
+2. **Four of the six new measures are return-to-work measures.** `ACC-AS-BUYER.md` R2 states "ACC's own concussion contract does not measure RTW." **That is now wrong.** The 2026 schedule measures RTW effectiveness, RTW efficiency and RTW sustainability — in ACC's own currency, the one SST's own doc called "the weakest link". §R3.1.
+3. **Referral allocation is GEOGRAPHIC and ADMINISTRATIVE, and performance plays no part in it.** ACC's internal procedure directs staff to "**Identify and select a contracted provider in the client's geographic area**" from a "Contracted Suppliers by Geographic Area of Coverage" list. There is no panel, no rotation, no scoring, no client choice, and no performance input anywhere in the process. **Grading does not move referral volume.** §R3.2c — this is the answer to the round's critical question and it is largely a negative one.
+4. **Grading has one hard consequence and it is not money.** No bonus, no penalty, no at-risk payment, no rate variation exists in any version of the schedule. The consequence chain is Standard T&Cs cl. 13–14: evaluation → performance improvement plan → (supplier pays for repeat evaluation) → notice of breach → termination in 10 business days. §R3.2a–b.
+5. **cl. 13.4 — non-anonymised performance sharing between competing suppliers — was DELETED from the July 2025 schedule and RESTORED in the 2026 schedule.** `ACC-AS-BUYER.md` §7 leans on it. It is live again, but it was absent for a year. §R3.2d.
+6. **ACC's rehab contracts do not mention exercise. At all.** Nine schedules were grepped for `exercise | exertion | graded activity | conditioning | physical activity | aerobic | fitness | heart rate`. Across Training for Independence, TBI Residential Rehabilitation, Pain Management, Non-Acute Rehabilitation Pathways and Specialist Paediatric & Adolescent Rehabilitation the total substantive hits is **zero** — every "exercise" occurrence is the boilerplate "Good Industry Practice **is the exercise of** due care" definition. The sole real hit in the entire corpus is Vocational Rehabilitation cl. 5.19. §R3.4.
+
+---
+
+### R3.1 HOW SUPPLIERS ARE ACTUALLY GRADED
+
+The framework lives in **Part B, clause 12 + Part B: Table 4** of the Service Schedule. Clause 12.1 is identical across every version: *"Supplier performance monitoring requirements are described in detail in the Concussion Services Operational Guidelines."* It has changed three times in three years.
+
+#### Generation 1 — the Mar 2024 schedule (term 1 Jul 2023 → 30 Jun 2025)
+`https://web.archive.org/web/20240521125230id_/https://www.acc.co.nz/assets/contracts/concussion-services-service-schedule.pdf`
+
+| Measure | Description (verbatim) | Target | Source |
+|---|---|---|---|
+| Client Outcome Measurement | "Clients who enter Treatment and Rehabilitation services (Stage 2) complete an outcome measurement tool on completion of the service. E.g. Brain Injury Screening Tool (BIST)" | **≥70%** | Supplier Data |
+| Client Outcomes | "Proportion of clients who enter Treatment and Rehabilitation services (Stage 2) from Assessment and Triage services (Stage 1)." | **≤65%** | ACC Data |
+| Timeliness | "The ACC884 Education and Risk Assessment Report is submitted to ACC within ten business days of referral acceptance." | **≥90%** | Supplier Data |
+
+#### Generation 2 — the July 2025 schedule (term 1 Jul 2025 → 30 Jun 2026)
+`https://web.archive.org/web/20251009113522id_/https://www.acc.co.nz/assets/contracts/concussion-services-service-schedule.pdf`
+
+Same three measures. The BIST completion target was **raised 70% → 85%**, and the timeliness clock was **re-anchored from "referral acceptance" to "commencement of Stage 1 Services"**:
+
+> "**Client outcome measurement** — Clients who enter Treatment and Rehabilitation Services (Stage 2) complete an outcome measurement tool on completion of the Service. e.g. Brain Injury Screening Tool (BIST). — **≥85% of Clients in Stage 2 complete an outcome measurement** — Supplier data
+> **Quality** — Proportion of Clients who enter Treatment and Rehabilitation Services (Stage 2) from Education and Assessment Services (Stage 1). — **≤65%** — ACC data
+> **Timeliness** — The Client Summary Report (ACC884) is submitted to ACC within ten Business days of commencement of Stage 1 Services. — **≥90%** — Supplier data"
+
+**This is the version §4 above documents, and its ≤65% reading is correct for that version.** Note the label change: the progression measure was "Client Outcomes" in 2024 and is "**Quality**" here. ACC reclassified turning people away as a quality indicator.
+
+#### Generation 3 — the 2026 schedule (term 1 Jul 2025 → 30 Jun 2027) ⭐ CURRENT
+Live fetch 2026-07-20, see provenance warning above.
+
+Clause 12.2 now lists three *categories*:
+> "12.2.1 Service progression. 12.2.2 Timeliness of Service entry. 12.2.3 Return to work outcomes."
+
+**Part B: Table 4 – Performance Measurement (2026), verbatim, all six rows:**
+
+| Measure | Description | Target | Source |
+|---|---|---|---|
+| Service progression | "Proportion of Clients who enter Treatment and Rehabilitation Services (Stage 2) from Education and Assessment Services (Stage 1)." | National Average or one deviation **higher** | ACC data |
+| Timeliness of Service entry | "Proportion of Clients who enter Education and Assessment Services (Stage 1) **within two weeks of injury date**." | National Average or one deviation **higher** | ACC data |
+| Timeliness of Service entry | "Proportion of Clients who enter Education and Assessment Services (Stage 1) **after six months of injury date**." | National Average or one deviation **higher** | ACC data |
+| Return to work outcome – **Effectiveness** | "Proportion of Clients receiving weekly compensation **for more than 26 weeks** following entry into Education and Assessment Services (Stage 1)." | National Average or one deviation **higher** | ACC data |
+| Return to work outcome – **Efficiency** | "**Average number of weeks of weekly compensation received** following entry into Education and Assessment Services (Stage 1)." | National Average or one deviation **higher** | ACC data |
+| Return to work outcome – **Sustainability** | "Proportion of Clients who have **sustained their return to work for at least three months**." | National Average or one deviation **lower** | ACC data |
+
+**Read the four structural changes.**
+
+1. **Zero numeric targets.** Grep of the 2026 schedule for `65%`, `85%`, `90%`, `70%` returns **nothing**. Everything is relative to the national average of the other 24 suppliers.
+2. **Zero supplier-reported measures.** All six rows read "ACC data". The BIST-completion measure and the ACC884-timeliness measure — the two a supplier could directly control by filing forms — were **removed from the graded framework entirely**. (BIST/outcome-measure data still appears in the six-monthly narrative report under Table 5, but it is no longer a Performance Measure.)
+3. **Return to work is now three of six measures**, computed off weekly-compensation records the supplier never touches.
+4. **A new volume trigger.** Clause 12.3 defines how benchmarking bites, and 12.3.2 has nothing to do with clinical quality:
+
+> "12.3 To avoid doubt, where a Performance Measure specifies a target of 'National Average or one deviation [higher/lower]' (as the case may be) the Supplier's performance will be benchmarked against the National Average, having regard to the following:
+> **12.3.1** Where performance is materially different from the National Average including (but not limited to) where it **exceeds the upper or lower range of the distribution**; demonstrates a **sustained adverse trend over time**; or **differs materially from that of comparable suppliers in the absence of a clear difference in the client groups or injury types being treated**.
+> **12.3.2** Where the **volume of eligible claims being treated by the Supplier falls below the median** for the National Average for the relevant reporting period (**at ACC's discretion**)."
+
+Definition (2026 schedule, Part B definitions):
+> "**National Average** means the national average of all Suppliers of Concussion Services for that Performance Measurement (as determined by ACC data) for the relevant reporting period."
+
+**12.3.1's third limb is the interesting one:** a supplier whose numbers differ from its peers must be able to point to a **clear difference in the client groups or injury types being treated**. That is a case-mix defence, and it is written into the contract as the only accepted explanation for being an outlier.
+
+**So: is ≤65% a target, a cap, a review trigger, or tied to payment?** For the July 2025 schedule it was a **ceiling with no payment consequence** — a review trigger. For the current 2026 schedule the question no longer applies: **there is no 65% figure**, and progression is judged against whatever the other 24 suppliers did. It is now possible to be graded badly for progressing *too few* clients as well as too many, because 12.3.1 flags performance that "exceeds the upper **or lower** range of the distribution".
+
+---
+
+### R3.2 DOES GRADING HAVE CONSEQUENCES?
+
+#### (a) FUNDING — no. Verified negative.
+
+Grep of both the July 2025 and 2026 schedules for `bonus | penalt | at risk | withhold | abate | incentiv | clawback` returns **no performance-linked hits** in either. Prices are flat fee-for-service against fixed item codes (TBI05/TBI21/TBI26/TBI22 all **$155.27/hr** in the 2026 schedule, unchanged; TBI27 $193.72; TBI28 $304.42; TBI29 $75.31; TBI30 $608.88 single fee; TBI13 $64.56; TBI14 $101.48). The only price mechanism is unilateral and unrelated to performance:
+
+> "4.1 ACC will review pricing when, at **ACC's sole discretion**, we consider a review necessary." — 2026 schedule, Part A cl. 4
+
+**There is no at-risk payment, no bonus, no penalty and no performance-linked rate variation in the Concussion Services contract. A supplier that grades badly earns exactly the same per hour as one that grades well.**
+
+The only money consequence is the funding cap and its clawback, which is not a performance measure: **$4,120.00 excl GST** in the 2026 schedule (cl. 3.1.2), **$4,078.00** in the July 2025 schedule. ⚠️ **Both supersede the $3,914.49 figure in §2 above**, which came from the March 2025 Operational Guidelines. Do not quote $3,914.49.
+
+#### (b) CONTRACT — yes, and the chain is fully specified. Just not in the Service Schedule.
+
+The Service Schedule itself contains nothing beyond cl. 1.2.2 (*"ACC being satisfied with the performance of the Services by the Supplier"* as an extension precondition) and cl. 1.4 (*"There is no obligation on the part of ACC to extend the Term… **even if the Supplier has satisfactorily performed all the Services**"*). Grep for `improvement plan | remediat | performance manage` in the 2026 schedule returns only unrelated hits.
+
+The teeth are in **ACC's Contract for Services – Standard Terms and Conditions (April 2018)**, which the schedule incorporates:
+`https://web.archive.org/web/20230202033452id_/https://www.acc.co.nz/assets/contracts/health-contract-terms-conditions.pdf`
+
+**Clause 13 — Evaluation.** ACC may evaluate "any and all aspects of this Contract" (13.2), "itself or by using an appropriate subcontractor or other government agency" (13.4), on 10 business days' notice or as little as 24 hours (13.5), with access to "your records and premises and the records and premises of any relevant subcontractor", and the evaluator "may… attend Services being provided, and talk with Clients" (13.6). And the cost rule:
+
+> "13.7. We will not charge you and you will not charge us for any initial evaluation process. **You will pay for any further evaluations about the same performance issues if you have not improved your Service standards to the level required by ACC** within an agreed length of time."
+
+**Clause 14 — "Improving services".** This is the escalation ladder, verbatim:
+
+> "14.1. Reports and communications provided by you in relation to Service delivery, **ACC monitoring of data** and Service delivery, and findings from evaluations (including audits) may be used by ACC… to improve Service performance.
+> 14.2. ACC and you will discuss reports to identify any issues and decide: (a) if performance could be expected to change, or **(b) if there are other factors that provide a reasonable basis for the identified performance.**
+> 14.3. If a change in performance is required, then we will work with you to develop required action(s)…
+> 14.5. If improvements have been evidenced, but further change in performance is required, both Parties will agree to an **extension of the performance improvement plan**…
+> **14.6. If we do not observe sufficient improvement… or if you do not agree to a performance improvement plan, we may issue a notice of breach of contract under clause 20.8.**"
+
+> "20.8. …that Party may give notice to the other specifying the breach. The notice must give the other Party **10 business days** to stop or to remedy the breach…
+> 20.9. If the breach has not stopped or been remedied within 10 business days, the Party that gave the notice may forward… a **notice of termination** of: (a) this Contract and all of the Services, or (b) any particular Service Schedule(s)."
+
+**The complete chain: ACC data monitoring → discussion → performance improvement plan → extension → notice of breach → termination in 10 business days, with the supplier paying for repeat evaluations along the way.**
+
+⭐ **Clause 14.2(b) is the commercially important sentence in this entire round.** ACC is contractually required to consider *"other factors that provide a reasonable basis for the identified performance"* before requiring change. Read together with 2026 schedule cl. 12.3.1 — outlier status is judged *"in the absence of a clear difference in the client groups or injury types being treated"* — **the contract explicitly makes room for a supplier to explain its numbers with evidence about its case mix.** That is the only place in the whole framework where a supplier's own data can alter its grading outcome. See §R3.3.
+
+#### (c) REFERRAL VOLUME — NO. This is the round's critical answer and it is a clean negative. ⭐
+
+**Source: ACC's own internal process document, recovered from Wayback.**
+`https://web.archive.org/web/20240521125149id_/https://www.acc.co.nz/assets/Policy-and-procedure-documents/set-up-concussion-service.pdf`
+Header: *"ACC > Claims Management > Manage Claims > Manage Social Interventions / Supports > Set Up Concussion Service — Uncontrolled Copy Only : Version 29.0 : Last Edited Tuesday, 17 January 2023"*. Five pages, swimlaned by role (Recovery Assistant / Recovery Coordinator / Recovery Partner / Recovery Administrator).
+
+**How a client is actually allocated, verbatim, Activity 4.0 (Recovery Administrator):**
+
+> "**b Identify and select a contracted provider in the client's geographic area.**"
+> "NOTE **What if a preferred provider has been specified in the task?** Select the vendor from the **Contracted Supplier by Geographic Area Coverage** list. Go to task (d)."
+> "**c** Add the selected Provider as a participant on the claim."
+> "**d** Approve the purchase order."
+> "**e** Select 'Add documents' and generate the **TBI01 – Concussion Service Approve – Vendor letter**."
+
+Supporting references named in the document: *"Contracted Suppliers by Geographic Area of Coverage"* and *"Service Contracts and Contracted Providers - MFP spreadsheet"*.
+
+Handling a decline (Activity 3.0):
+> "NOTE **What if you receive an NGCM - Admin Request task for a re-referral if a Provider cannot accept a referral?** If the provider was chosen by the **RTM** in the original referral, go back to the RTM to advise of the decline. If the provider was chosen by **admin** then you need to choose an alternate provider"
+
+Paediatric routing:
+> "NOTE **What if the referral is for a child?** Go to the **Concussion Service Providers** link and choose a provider who offers child and youth service."
+
+**Answer each sub-question directly:**
+
+| Question | Verified answer |
+|---|---|
+| Does ACC direct the referral? | **Yes, when ACC is the referrer.** A Recovery Administrator (or the Recovery Team Member) picks the supplier and raises the purchase order. |
+| Does the client choose? | **No. Zero occurrences** of client choice, preference or consent to provider selection anywhere in the five-page procedure. The only client contact scripted is the decline letter (TBI02) when they are found ineligible. |
+| Does the GP choose? | **Effectively yes, on the majority route.** Per §1 above, GP/NP and Te Whatu Ora referrals (ACC883 / ACC7988) need **no purchase order and no ACC prior approval** — the referrer sends it straight to a supplier of their choosing. ACC's internal procedure only engages when **ACC itself** initiates. |
+| Is it geographic? | **Yes, explicitly.** "a contracted provider in the client's **geographic area**", off a "Contracted Supplier by **Geographic Area Coverage** list". |
+| Is there a panel or rotation? | **No.** No rotation rule, no round-robin, no allocation quota, no scoring appears anywhere. |
+| Does supplier performance influence the steering? | **No.** The words *performance*, *quality*, *outcome*, *rating* and *measure* do **not** appear in the selection steps. The only selection filters are geography and the child/youth flag. |
+
+**Two exceptions worth knowing, both verbatim from the same document:**
+- **RTM preference overrides admin.** "What if a preferred provider has been specified in the task? Select the vendor from the Contracted Supplier by Geographic Area Coverage list." Individual Recovery Team Members can and do name a supplier — an undocumented, relationship-driven channel with no published criteria. **This is the only lever on referral volume the evidence supports, and it is personal, not systemic.**
+- **Named suppliers get bespoke pathways.** "NOTE **What if you are sending the referral to Habit or ABI?** These providers are participating in the **Secondary Care Proof of Concept**. Do not set up an initial purchase order." And separately, a **Middlemore hospital TBI Pathways pilot programme** "which removes the need for prior approval for concussion services". **Two of the largest suppliers already sit inside ACC pilot pathways that bypass the normal PO process.** ⚠️ Neither the Secondary Care Proof of Concept nor the Middlemore TBI Pathways pilot appears in any public ACC page found this round — **UNVERIFIED beyond this internal document, and both are worth an OIA.**
+
+**Bottom line for 2(c): grading does not move referrals. Geography, referrer habit and individual RTM relationships move referrals.** Any pitch premised on "better numbers will win you more volume" is unsupported by the evidence and a National Manager will know it. What performance *can* do is lose you the contract at renewal (cl. 1.2.2) or trigger a performance improvement plan (T&Cs cl. 14) — a downside-only mechanism.
+
+#### (d) PUBLICATION / REPUTATION — one live provision, restored after a year's absence, plus nothing public.
+
+**Supplier-to-supplier sharing.** The clause `ACC-AS-BUYER.md` §7 relies on:
+
+> "**13.4** The Supplier consents to ACC sharing **non-anonymised** ACC information in its reports, including information relating to **the Supplier's performance under this Contract**, with **all other contracted suppliers** providing Concussion Services to ACC."
+> — 2026 schedule, Part B cl. 13.4
+
+**⚠️ Correction of record: this clause is ABSENT from the July 2025 schedule.** That version's clause 13 stops at 13.3 (grep confirms: only 13.1, 13.2, 13.3 exist). So cl. 13.4 was present pre-2025, deleted for the 2025–26 year, and restored for 2026–27. It is live now — but the SST "supplier performance visibility" argument was, for a year, resting on a deleted clause. **Re-verify it in the browser before building a pitch on it.**
+
+**Client- or referrer-facing publication: none.** ACC's public provider directory is
+`https://web.archive.org/web/20260128065810id_/https://www.acc.co.nz/for-providers/treatment-recovery/referring-to-rehabilitation/concussion-service-providers/`
+
+> "Find a concussion service provider in your area. **Search the regional list** for a concussion service provider close to you. **See which providers accept child and youth referrals.**"
+
+Each entry carries exactly three fields: **supplier name, referral email address, territorial-authority locations, and a Yes/No "Provides child and youth service" flag.** No performance data, no outcome data, no rating, no volume, no waiting time. **25 unique suppliers** are listed (counted by unique referral email), 11 of them covering Auckland. This directory is the totality of what a referrer or client can see, and it makes suppliers look interchangeable by design.
+
+**Nothing else is published.** No ACC page found this round publishes any supplier-level concussion performance figure.
+
+---
+
+### R3.3 COULD SST DATA SERVE THE GRADED MEASURES? — honest, measure by measure
+
+Assessed against the **2026** framework, since that is what a supplier is now graded on.
+
+| 2026 measure | Source | Could SST contribute? | Honest assessment |
+|---|---|---|---|
+| **Service progression** (Stage 1 → Stage 2) | ACC data | **Indirectly — as decision support, not as data** | ACC computes this from its own claims records. SST cannot touch the number. It can change the *clinical decision* that generates the number, and it can supply the case-mix defence under cl. 12.3.1 / T&C 14.2(b). This is the strongest honest claim and it is a narrow one. |
+| **Timeliness of entry — within two weeks of injury** | ACC data | **No.** | Driven entirely by referrer behaviour upstream of the supplier. Nothing the supplier does after receiving the referral moves it. A supplier's score here is largely a function of its referrer mix. |
+| **Timeliness of entry — after six months of injury** | ACC data | **No.** | Same. This measures which clients get sent to you, not what you do. |
+| **RTW Effectiveness** (>26 weeks on weekly comp) | ACC data | **Only through actual outcomes** | Computed from compensation records. SST can only move it by genuinely shortening recovery — which is precisely the evidence SST does not have (see `ACC-AS-BUYER.md` §7). Do not imply otherwise. |
+| **RTW Efficiency** (avg weeks of weekly comp) | ACC data | **Only through actual outcomes** | Same. |
+| **RTW Sustainability** (RTW held ≥3 months) | ACC data | **Only through actual outcomes** | Same — and note the target direction is *lower* deviation, i.e. you are penalised for falling below peers. Arguably the measure most plausibly connected to exercise tolerance (premature RTW → relapse), and the one with the least evidence behind that connection. |
+
+**Blunt version: five of the six graded measures are computed from ACC claims data that a supplier cannot influence except through real outcomes, and the two entry-timeliness measures it cannot influence at all.** The BIST-completion measure — the one a documentation tool could have gamed — was removed from the graded set in 2026. **Any pitch of the form "our data improves your scorecard" is false under the current framework.** Say so first.
+
+**On the progression measure specifically — this is where a real argument exists.** Two contract provisions, quoted above, do exactly one thing: they create a defence.
+
+- 2026 schedule cl. 12.3.1 flags a supplier whose numbers differ from peers *"in the absence of a **clear difference in the client groups or injury types being treated**"*.
+- Standard T&Cs cl. 14.2(b) obliges ACC, before requiring change, to decide *"if there are **other factors that provide a reasonable basis for the identified performance**"*.
+
+An objective, individually measured exercise-tolerance result — a heart-rate threshold, a serial re-test, an adherence record — is admissible evidence under both. It supports a progression decision **in either direction**: a measured HRt well below the prognostic threshold justifies progressing a client into Stage 2 against a peer-average that would otherwise flag you as over-progressing; a normal exercise tolerance justifies discharging at Stage 1 and defends you against the opposite flag. And because 12.3.1 now flags outliers at **both** ends of the distribution, the defence is symmetric — which the old ≤65% ceiling was not.
+
+**But be precise about what that is worth.** It is a *defence at a six-monthly performance conversation*, not a scorecard input, and not referral volume. It matters to a supplier only in the moment they are already being asked to explain themselves. That is a real but narrow commercial hook, and it should be sold as risk mitigation to a National Manager, not as growth.
+
+---
+
+### R3.4 THE WIDER ACC NEURO-REHAB SURFACE
+
+Nine ACC rehabilitation Service Schedules were recovered from Wayback and text-extracted. **All are pre-block snapshots; several are past their stated End Date and may have been reissued — check terms before quoting.**
+
+| Contract | Schedule fetched (Wayback TS) | Term stated | Funds | Indicative codes / rates (excl GST) |
+|---|---|---|---|---|
+| **Concussion Services** | `20251009113522` + live 2026 | 1 Jul 2025 → 30 Jun 2027 | Triage, Stage 1 education/assessment, Stage 2 therapy | TBI05/21/22/26 **$155.27/hr**; TBI27 $193.72; TBI28 $304.42; TBI30 $608.88; cap **$4,120.00**/client |
+| **Training for Independence – Tamariki & Rangatahi** | `20260409154416` (`titr-schedule.pdf`) | 1 Jul 2023 → **30 Jun 2028** | Rehab planning + delivered training toward independence | TITR01 planning **$155.27/hr**; TITR02 psychologist $193.72/hr; TITR11 delivery $155.27/hr; TITR13 $102.73/hr; TITR14 Key Worker **$466.72 set monthly**; TITR05/06 report writing paid per hour |
+| **Training for Independence – Adults with Sensitive Claims** | `20220216192937` | to 30 Jun 2022 (**stale**) | Same shape, sensitive-claims cohort | TI01D rehab planning $121.75/hr (2022 pricing) |
+| **Training for Independence – Te Ata Tū** | `20241125110318` | — | Kaupapa Māori TI variant | — |
+| **Training for Independence – Children & Youth** | `20220216164720` | — (**stale**) | — | — |
+| **TBI Residential Rehabilitation** | `20250227153753` | 1 May 2020 → 31 Mar 2026 | Inpatient/residential neuro rehab beds + day rehab | TRR06 active residential **$1,424.61 per bed/day**; TRD01 day rehab $648.67 flat; TRR10 bed retention $265.71; TRR20 provider advice $142.22/hr; TRR21 initial medical $307.11 |
+| **Pain Management Services** | `20250227155245` | 1 Dec 2021 → 30 Nov 2025 | Triage + banded community/tertiary packages | PN01 triage **$565.07 fixed**; PN100A Community L1 **$2,724.58 package**; PN200A Community L2 **$4,959.23**; PN300A Tertiary **$7,616.01**; PN350A **$9,910.63**; PN410 specialist pain medicine $1,047.41 |
+| **Vocational Rehabilitation** | `20230330034058` | 1 Mar 2021 → 30 Apr 2024 (**stale**) | Stay at Work / Back to Work outcome-priced packages | VRS21 $763.91 **set fee**; VRS22 $886.26; VRB11 $785.11; VRB12 $965.25; VRTT2 travel $123.00/hr |
+| **Non-Acute Rehabilitation Pathways** | `20250227134231` | 1 Jul 2023 → 30 Jun 2026 | Inpatient non-acute rehab bed-days | NRP05 exceptionally complex **$1,353.28 per day**; values to $39,707.70 appear in the schedule |
+| **Specialist Paediatric & Adolescent Rehabilitation** | `20220216192832` | — (**stale**) | Paediatric specialist rehab | — |
+
+#### Does any of them mention exercise? Verified sweep. ⭐
+
+Every schedule above was grepped case-insensitively for `exercise`, `exertion`, `graded activity`, `conditioning`, `physical activity`, `aerobic`, `fitness`, `heart rate`, `exercise physiolog`.
+
+| Schedule | Substantive hits |
+|---|---|
+| Training for Independence – Tamariki & Rangatahi | **0** (1 × "exercise" = "Good Industry Practice is **the exercise of** due care") |
+| Training for Independence – Adults (Sensitive Claims) | **0** |
+| Training for Independence – Children & Youth | **0** |
+| Training for Independence – Te Ata Tū | **0** |
+| TBI Residential Rehabilitation | **0** (1 × boilerplate) |
+| Pain Management Services | **0** (1 × boilerplate) |
+| Non-Acute Rehabilitation Pathways | **0** |
+| Specialist Paediatric & Adolescent Rehabilitation | **0** |
+| **Vocational Rehabilitation** | **2 — the only real hits in the corpus** |
+
+The Vocational Rehabilitation hits, verbatim, both inside cl. 5.19 *Work Specific Functional Rehabilitation*:
+
+> "5.19.3.2. Provision of task and context specific rehabilitation in areas essential to the Client's pre-injury job or identified job options. Where applicable, **incorporating exercises that mimic what the Client does at their pre-injury job** or in an identified job option."
+> "5.19.3.3. Educating the Client on the management of their injury, injury prevention and **completing exercises independently**."
+> "5.19.4.1. Service must address work specific barriers that cannot be addressed through a graduated return to work, work trial or with the support of treating providers."
+
+**This is a decisive negative finding and it should change the strategy.** ACC's rehabilitation contracts do not purchase exercise. Training for Independence buys *training toward independence in daily activities*, priced per hour of clinician time, with no physiological content whatsoever. TBI Residential buys *bed-days*. Pain Management buys *packages*. Non-Acute Rehab buys *bed-days*. The only ACC contract in the corpus that contemplates exercise at all frames it as **job-task mimicry**, not conditioning — and it is explicitly not neuro.
+
+**"Escalated Care": UNVERIFIED as a contract.** Two ACC provider-news pages about an "Escalated Care Pathways (ECP) pilot" exist in the archive (`.../escalated-care-pathways-ecp-pilot-continues-to-show-positive-benefits/`, `.../escalated-care-pathways-showing-positive-benefits/`), but **no Escalated Care service schedule exists in the ACC contracts directory** and neither page was fetched this round. Do not describe Escalated Care as a contract. **No ACC "Stroke" or "Community Rehabilitation" contract exists** in the contracts directory either — the nearest equivalents are Non-Acute Rehabilitation Pathways and Home & Community Support.
+
+#### How many suppliers hold each, and is this a larger market?
+
+**The suppliers are largely the same organisations.** Counted from ACC's public provider directories:
+
+- **Concussion Services — 25 suppliers** (`.../concussion-service-providers/`, archived `20260128065810`).
+- **Pain Management — ~20 suppliers** (`.../pain-management-service-provider`, archived `20250821045035`, counted by unique non-ACC referral email). The overlap with the concussion list is heavy and named: **Active+, APM Workcare, Habit Health, Proactive Rehab, TBI Health Group, Body In Motion, Advantage South, Southern Rehab** all appear on both, alongside DHB/Te Whatu Ora pain centres (Auckland, Capital & Coast, Hutt Valley, Canterbury) that do not do concussion.
+- **Vocational Rehabilitation** — provider page fetched (`20250731090544`) but yielded **no parseable supplier emails**. **UNVERIFIED count.**
+
+**The honest read on "is concussion the entry point to a bigger market".**
+
+**Yes on customer overlap — and that is the real finding.** The same six or seven national multi-site groups hold concussion *and* pain *and* (per the Concussion OG's onward-referral list in §1 above: Vocational Rehabilitation, Home and Community Support, Neuropsychology, Psychology, Training for Independence, Pain Management) sit across ACC's whole rehab surface. Landing Active+ or Habit or Proactive or TBI Health for concussion puts you inside an organisation that already holds several other ACC contracts. **The expansion path is account expansion within a supplier, not contract expansion across ACC.**
+
+**No on contract fit.** Not one of the adjacent contracts funds, specifies, or even mentions graded exercise, exertion testing or conditioning. There is no second contract to sell the same capability into. Pain Management is package-priced and buys a programme, not an assessment; Training for Independence buys ADL training by the hour; the residential contracts buy beds. **A heart-rate-guided exertion product has exactly one contractual home at ACC, and it is the sub-clause of TBI22 already documented in §5 above.**
+
+**On size.** ACC does not publish spend by rehabilitation contract, so this cannot be ranked. On unit economics alone the concussion contract is the *smallest* of those examined — a **$4,120** per-client cap against Pain Management packages of **$4,959–$9,910** and TBI Residential at **$1,424.61 per bed-day** (≈$43,000/month). **Concussion is the low-value end of ACC's rehab spend, not the entry to a bigger one.** Its value as a wedge is the *number of suppliers* it touches (25, nearly all of the multi-contract nationals), not the money in it.
+
+---
+
+### R3.5 PUBLISHED ACC DATA — what exists to benchmark against
+
+**Concussion-specific supplier or claim data: none published. Verified negative.**
+
+- **NZ Government open data catalogue** (`https://catalogue.data.govt.nz/api/3/action/package_search`, queried live 2026-07-20). ACC has **99 datasets**. A query for `concussion OR "brain injury"` returns **exactly one** result — *"OIA Response - #50395"* (`https://catalogue.data.govt.nz/dataset/oia-response-50395`, contents not retrieved — **UNVERIFIED**). ACC's published datasets are overwhelmingly injury-cause OIA releases: eye injuries, football injuries, ACL injuries, e-scooter injuries, horse injuries, playground injuries, washing-line injuries. **There is no concussion claims dataset, no service-level dataset and no supplier-performance dataset.**
+- **ACC does publish "Weekly claims data"** — a live nav item on ACC's provider section (visible in the Jan 2026 archived page, path `https://www.acc.co.nz/for-providers/provider-news-and-events/weekly-claims-data/`). **Not fetched this round — UNVERIFIED whether it breaks out concussion or supplier.** Worth one browser visit; it is the only recurring ACC data publication found.
+- **ACC's own six-monthly supplier reports hold the benchmark data and are not published.** Part B: Table 5 requires referral counts by source, median time to ACC884, and goal-achievement bands for the general population and specifically for Māori. ACC holds all of it. None is public. **OIA is the only route** (consistent with §8 above and `NZ-ACC-TARGET-LIST.md` §8.4).
+
+**The one published quantification of the TBI market — and it is nine years old.**
+`https://web.archive.org/web/...id_/https://www.acc.co.nz/...` — *Traumatic Brain Injury Strategy and Action Plan (2017–2021)*, ACC (local copy `tbistrat.pdf`; **⚠️ the exact Wayback URL for this file was not re-recorded this round — treat the citation as needing a re-fetch**):
+
+> "In New Zealand it is estimated that up to **36,000 people suffer TBIs each year, of which 95% are mild**. The majority do not seek medical assistance or report this to ACC."
+> "ACC statistics show that nearly **14,000 people are treated for TBIs each year**. The cost of TBI-related claims was **$83.5 million in the 2015 financial year**."
+> "**over half of ACC's serious injury claims relating to TBI**… TBIs are second only to stroke for their impacts on employment and income (Dixon, 2015)."
+> "Just over **20% of all TBIs in New Zealand are sustained through sport-related activity**."
+
+And a line from the same document that reads as if written for this product:
+
+> "**some measures used in the sector are not comparable or shared between health providers, which makes it difficult to monitor a person's progress and the overall effectiveness of services.**"
+
+**Use the $83.5m / 14,000 figures with the FY2015 date attached, or not at all.** They are the only published TBI cost and volume numbers found, they are a decade stale, and quoting them undated in front of ACC would be the exact "hasn't read the material" failure this document series exists to prevent.
+
+---
+
+### R3.6 WHAT COULD NOT BE VERIFIED THIS ROUND
+
+| Item | Status | Next step |
+|---|---|---|
+| **The 2026 Service Schedule itself** | Live-fetched pre-block; **not in Wayback**; md5 `85effdb59c70f99f0f9d188c576a9c25` | **Re-download from acc.co.nz in a real browser and diff.** Everything in R3.0–R3.3 depends on it. |
+| **Whether the July 2025 schedule was ever operative** | Two schedules both start 1 Jul 2025 with different end dates (30 Jun 2026 vs 30 Jun 2027) and different Part B: Table 4 | Ask `ConcussionServices@acc.co.nz` which schedule governs, or OIA |
+| **Concussion Services Operational Guidelines matching the 2026 schedule** | cl. 12.1 says monitoring detail lives there; only the July 2025 OG (18pp) and March 2025 OG (43pp) were recovered | Re-fetch `concussion-og.pdf` in a browser |
+| **"Secondary Care Proof of Concept" (Habit, ABI)** | Named only in ACC's internal procedure doc; **no public trace** | OIA — potentially the highest-value unknown in this document |
+| **"Middlemore hospital TBI Pathways pilot programme"** | Same — internal doc only, removes prior-approval requirement | OIA |
+| **Whether the internal procedure (v29.0, Jan 2023) is current** | It is a 2024 archive of a 2023 document | OIA for the current version |
+| **Escalated Care Pathways** | Two provider-news pages exist in CDX; **not fetched**; no service schedule found | Fetch both pages; do not call it a contract until then |
+| **Vocational Rehabilitation supplier count** | Provider page fetched, no emails parsed | Real browser |
+| **ACC "Weekly claims data"** | Page exists in nav; not fetched | Real browser — cheapest remaining data lead |
+| **OIA Response #50395** | Only concussion/brain-injury hit in ACC's open data; contents not retrieved | `https://catalogue.data.govt.nz/dataset/oia-response-50395` |
+| **TBI Strategy 2017–2021 Wayback URL** | Quotes verified from a local copy; canonical archive URL not re-recorded | Re-fetch before citing |
+| **Spinal Cord Injury Rehabilitation schedule** | Only Wayback snapshot is the Imperva block page (189 bytes) | Real browser |
+| **Whether current TI / Pain / VR schedules have been reissued** | Several fetched schedules are past their stated End Date | Real browser before quoting any rate |
+
+### R3.7 THE ONE-PARAGRAPH IMPLICATION
+
+Grading in this contract is **downside-only and disconnected from volume**. There is no bonus, no penalty, no rate variation, and — verified from ACC's own internal allocation procedure — **no performance input into who gets referred to whom**; allocation is geography plus the personal preference of a Recovery Team Member. What grading *can* do is trigger a performance improvement plan under Standard T&Cs cl. 14, make the supplier pay for repeat evaluations under cl. 13.7, and cost them the contract at renewal under cl. 1.2.2. And from 1 July 2026 the framework a supplier is judged by became **six ACC-computed measures with no numeric targets, four of them return-to-work, none of them supplier-reported** — which removes the last measure a documentation tool could have improved and makes any "we'll lift your scorecard" claim false. The single defensible commercial hook that survives is narrow and precise: **2026 schedule cl. 12.3.1 and Standard T&Cs cl. 14.2(b) both oblige ACC to hear a case-mix explanation before requiring change, and an objective exercise-tolerance measurement is the only kind of evidence a concussion supplier could bring to that conversation.** Sell it as the defence in the six-monthly performance meeting. Do not sell it as growth, and do not sell concussion as the door into a larger ACC exercise market — nine adjacent rehabilitation schedules were swept and **not one of them purchases exercise at all.**
