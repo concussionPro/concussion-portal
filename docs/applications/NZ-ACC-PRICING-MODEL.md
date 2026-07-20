@@ -1,5 +1,67 @@
 # NZ ACC Concussion Services — Pricing Model
 
+---
+
+# ★ THE PRICE (supersedes the banded base+variable card above)
+
+**Structure decision (owner, 2026-07-20): a FLAT ANNUAL SUBSCRIPTION. Not per-episode.**
+
+Per-episode was rejected for three reasons, all of which a procurement lead would raise:
+1. **It requires the supplier to report episode volume to CEA** — administrative burden on the customer to be billed correctly, and a data flow nobody wants to negotiate.
+2. **Procurement cannot budget a variable.** A line item that moves with caseload does not fit an annual budget approval; a fixed number does.
+3. **Anything proportional to ACC payments weakens the contractual position.** Software licensing is defensible as procurement of an *input* under Standard T&Cs cl.16.1. A fee that scales with ACC billing invites the argument that CEA is taking a share of the funded service — which is the "subcontracting the Services" reading we need to avoid.
+
+The episode economics still do the work: they *justify* the band, they are not *charged* per episode.
+
+## The card — NZD, excl GST, per organisation, per year
+
+| Band | Concussion episodes/yr | **Annual subscription** | ≈ % of that band's exercise-related ACC billing |
+|---|---|---|---|
+| **Large** (multi-region) | 500+ | **NZ$22,000** | ~3.1% |
+| **Regional** | 150–499 | **NZ$9,000** | ~3.1% |
+| **Single-clinic** | under 150 | **NZ$2,400** | ~3.3% |
+
+**The arithmetic, so it survives a procurement lead doing it themselves:**
+- Blended episode value = **NZ$2,265**; exercise-related subset (TBI22 + TBI26 @ $155.27/hr) = **NZ$967/episode**.
+- Large band modelled at 730 episodes (Active+): 730 × $967 = **$705,910** of exercise-related billing. $22,000 = **3.1%**.
+- Regional at 300 episodes: 300 × $967 = $290,100. $9,000 = **3.1%**.
+- Single-clinic at 75 episodes: 75 × $967 = $72,525. $2,400 = **3.3%**.
+
+**One sentence to say it in:** *"It's a flat annual licence — twenty-two thousand for an organisation your size. That's about three percent of what you already bill ACC for the exercise-tolerance side of these episodes, and it doesn't move with your caseload."*
+
+## Seats — separate, one-off, not annual
+
+CCM competency training is a **one-off per clinician**, not a subscription. Individual equivalent is NZ$1,297.
+
+| Seats | Per seat |
+|---|---|
+| 1–4 | NZ$895 |
+| 5–14 | NZ$695 |
+| 15–39 | NZ$545 |
+| 40+ | NZ$425 |
+
+Justified as a cost-structure fact — no venue, no facilitator day, bulk provisioning — not as a discount. That is why it does not move further under pressure.
+
+## Pilot
+
+**NZ$4,500** (large/regional) or **NZ$1,800** (single-clinic), **100% creditable** against the first year's subscription. One clinician, a small number of real episodes, end to end.
+
+For the **first two reference customers, the pilot is free.** The reference is worth more than the fee, and it buys the case study that every subsequent conversation leans on.
+
+## Under the two funding scenarios
+
+The funding question changes the *conversation*, not the price:
+- **Funded from supplier margin** — lead with the flat annual number and the 3% framing. The point is that it is small, fixed, and budgetable.
+- **Recoverable within the funded service** — the same number, but now framed against episode throughput: at $22,000 across 730 episodes it is **$30 per episode**, roughly 11 minutes of one TBI26 hour.
+
+Either way you quote the same figure. **This removes the "we can't quote until we know" position from the supplier pack — it is obsolete.**
+
+## Annual true-up
+
+Offer unprompted: *"If your episode volume turns out to sit in a lower band, we move you down at renewal."* It costs nothing, it neutralises the fact that band assignment rests on modelled volume, and it signals the pricing is principled rather than extracted.
+
+---
+
 **Built:** 20 July 2026
 **Supersedes:** the "$3,000 low case / $30,000 high case" position in `VOLUME-REVENUE-MODEL.md` §B2 and the "quote nothing until the funding question is answered" instruction in `NZ-ACC-SUPPLIER-PACK.md` §Part 4.
 
