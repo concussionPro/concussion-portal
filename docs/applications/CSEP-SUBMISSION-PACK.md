@@ -74,8 +74,8 @@ Kind regards,
 
 **Zac Lewis**
 Registered Osteopath (AHPRA) · B.Clin.Sci, M.Ost.Med
-Founder, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Director and founder, Concussion Education Australia Pty Ltd
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -88,8 +88,9 @@ Dear CSEP,
 
 Please find our **Route 2 accreditation request** for **Concussion Rehab Mastery**.
 
-**Provider:** Concussion Education Australia — [ZAC: registered legal entity name and company/ABN number]
-**Registered address:** [ZAC: registered address]
+**Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025)
+**Correspondence address:** 2 Wordsworth St, Byron Bay NSW 2481, Australia
+**Contact:** Zac Lewis, Director — zac@concussion-education-australia.com · +61 449 186 579
 **Format:** online, asynchronous, self-paced — 8 modules
 **Duration:** 480 minutes of assessed instructional content
 **PDCs sought:** 8 (one credit per assessed instructional hour)
@@ -114,9 +115,10 @@ I would welcome the opportunity to answer reviewer questions and to make any ame
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA number]) · B.Clin.Sci, M.Ost.Med
-Founder and author, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
+2 Wordsworth St, Byron Bay NSW 2481, Australia
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -332,14 +334,13 @@ Zac is the sole author of Concussion Rehab Mastery. Stated plainly for the revie
 
 ---
 
-## [ZAC: ...] — fill-ins before sending
+## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: registered legal entity name]**, **[ZAC: company/ABN number]**, **[ZAC: registered address]** — application header.
 - **[ZAC: AHPRA registration number]** — author credentials.
-- **[ZAC: email and phone]** — contact block on both emails.
 - **[ZAC: CAD price point]** — decide the Canadian price before Email 2.
 - **[ZAC: fee confirmed by CSEP]**, **[ZAC: payment method, date, reference]** — only after CSEP's reply to Email 1. If Route 2 carries no fee, delete that line from Email 2.
 - **Canadian annex** — must exist as a document before Email 2 goes out; it is offered to reviewers as part of the submission.
 - **Sequencing decision:** if ESSA endorsement lands before you send, update sections 11 and 8 to state it as granted — it is the single highest-leverage addition to this application.
 - **Do not send the "INTERNAL — MARKET REALITY" or "POSITIONING SPINE" sections.** Both are CEA-internal. The submitted material is Email 1, Email 2 and sections 1–13 only.
 - **Go/no-go on Route 2:** once CSEP answers Email 1, weigh the fee and documentation burden against the market-reality note above. If either is material, stay on the free Route 1 self-report channel and revisit later.
+- **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

@@ -130,9 +130,10 @@ I have a complete submission ready — learning outcomes, assessment specificati
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA number]) · B.Clin.Sci, M.Ost.Med
-Founder and author, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
+2 Wordsworth St, Byron Bay NSW 2481, Australia
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -164,9 +165,10 @@ The full submission is ready to send.
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA number]) · B.Clin.Sci, M.Ost.Med
-Founder and author, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
+2 Wordsworth St, Byron Bay NSW 2481, Australia
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -177,8 +179,9 @@ Founder and author, Concussion Education Australia
 | Field | Detail |
 |---|---|
 | **Activity title** | Concussion Rehab Mastery |
-| **Provider** | Concussion Education Australia — [ZAC: registered legal entity name and company/ABN number] |
-| **Provider address** | [ZAC: registered address] |
+| **Provider** | Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025) |
+| **Provider address** | 2 Wordsworth St, Byron Bay NSW 2481, Australia |
+| **Provider contact** | Zac Lewis, Director — zac@concussion-education-australia.com · +61 449 186 579 |
 | **Provider country** | Australia |
 | **Activity type** | Online, asynchronous, self-paced short course — assessed |
 | **Duration** | 480 minutes (8.0 hours) of assessed instructional content, across 8 modules |
@@ -452,15 +455,13 @@ So the position is: **topic gap real, channel occupied.** Both halves matter.
 
 ---
 
-## [ZAC: ...] — fill-ins before sending
+## STILL REQUIRED BEFORE SENDING
 
 - **[ZAC: confirm the biokinetics accreditor]** — whether BASA itself holds HPCSA accreditor status or routes to another approved accreditor, and the exact entity name and board designation.
 - **[ZAC: current UCT CPD accreditation office contact address]** — for Email 1B.
 - **[ZAC: has any South African practitioner already enrolled in CRM?]** — determine before submitting; disclose honestly if so.
 - **[ZAC: ZA enrolment block]** — geo-gate or otherwise prevent South African enrolment until the accreditation number issues. Must be live before submission.
-- **[ZAC: registered legal entity name, company/ABN number, registered address]** — §1 activity identification.
 - **[ZAC: AHPRA registration number]** — both email signatures.
-- **[ZAC: email and phone]** — contact blocks.
 - **[ZAC: ZAR price point]** — §1 and §14.
 - **[ZAC: confirm the accreditor's actual fee]** before paying — the R1,380 / R2,750 figures are the published UCT benchmark, not a quote.
 - **[ZAC: confirm the accreditation validity period]** and diarise renewal — a lapsed number cannot be repaired retrospectively.
@@ -468,3 +469,4 @@ So the position is: **topic gap real, channel occupied.** Both halves matter.
 - **[ZAC: confirm no affiliate or equipment commercial relationship exists]** — §14 asserts none.
 - **South African annex** — must be written and exist as a document before the submission is sent (§9).
 - **Full 136-item bibliography in APA format** — must be assembled and ready to supply on request (§10).
+- **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

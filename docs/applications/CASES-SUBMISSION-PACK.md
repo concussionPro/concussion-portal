@@ -62,8 +62,8 @@ Kind regards,
 
 **Zac Lewis**
 Registered Osteopath (AHPRA) · B.Clin.Sci, M.Ost.Med
-Founder, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Director and founder, Concussion Education Australia Pty Ltd
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -76,8 +76,9 @@ Dear CASES Education team,
 
 Please find our application for **CPD Endorsement** of **Concussion Rehab Mastery**, an online, self-paced, stand-alone programme for sport and exercise practitioners.
 
-**Provider:** Concussion Education Australia — [ZAC: registered legal entity name and company/ABN number]
-**Registered address:** [ZAC: registered address]
+**Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025)
+**Correspondence address:** 2 Wordsworth St, Byron Bay NSW 2481, Australia
+**Contact:** Zac Lewis, Director — zac@concussion-education-australia.com · +61 449 186 579
 **Credits sought:** 8 (480 minutes of assessed instructional content; 1 credit per hour)
 **Format:** online, asynchronous, self-paced — 8 modules
 **Assessment:** 87 questions delivered per module, 80% pass mark
@@ -101,9 +102,10 @@ I would be glad to answer any question from the reviewers and to make amendments
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA number]) · B.Clin.Sci, M.Ost.Med
-Founder and author, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
+2 Wordsworth St, Byron Bay NSW 2481, Australia
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -321,12 +323,11 @@ Endorsement is understood to be annual. CEA will submit for renewal on schedule.
 
 ---
 
-## [ZAC: ...] — fill-ins before sending
+## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: registered legal entity name]**, **[ZAC: company/ABN number]**, **[ZAC: registered address]** — for the application header.
 - **[ZAC: AHPRA registration number]** — author credentials.
-- **[ZAC: email and phone]** — contact block on both emails.
 - **[ZAC: GBP price point]** — decide the UK price before submitting.
 - **[ZAC: fee confirmed by CASES]**, **[ZAC: payment method, date, reference]** — populate in Email 2 only after CASES confirms the actual CPD fee in reply to Email 1. Do not pay against the £1,800+VAT CUES figure.
 - **UK annex** — the UK-context annex described in section 9 must exist as a document before Email 2 goes out; it is offered to reviewers as part of the submission.
 - **Do not send the "Positioning spine" section.** It is internal framing. The submitted material is Email 1, Email 2 and sections 1–13 only.
+- **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

@@ -67,17 +67,19 @@ Two things close it, and they are sold together because neither works alone:
 
 **Send to:** the supplier's clinical lead or contract manager. Not the reception inbox, not a generic info@ address. If only one name is reachable, the clinical lead is the better target — they feel the capability gap; the contract manager feels the reporting load.
 
-**Subject:** Concussion Services capability — the exercise-testing gap, ahead of your renewal point
+**Subject:** Cl. 5.8.2.1.2 — exercise tolerance assessment, and where the capability for it sits
 
 Dear [name],
 
-You are approximately twelve months into the Concussion Services contract that commenced on 1 July 2025, which puts you at the first renewal point — and, I imagine, in the middle of a conversation with ACC about what the first year showed.
+You will have filed your six-monthly report a few days ago, so the reporting burden is probably fresher in your mind than usual. That is partly why I am writing now.
 
-I am writing about one specific capability question that I think is live for every supplier in the scheme right now.
+There is a tension in the Service Schedule that I think every supplier in the scheme is carrying quietly.
 
-The 2022 Amsterdam international consensus statement made sub-symptom-threshold aerobic exercise — prescribed from an individually measured heart-rate threshold, derived by a graded exercise test — the first-line treatment for concussion. The evidence behind it is strong: randomised trials from the University at Buffalo group established that early prescribed aerobic exercise shortens recovery and reduces the incidence of persisting symptoms.
+**Cl. 5.2.1** specifies the team: medical, neuropsychology, psychology, occupational therapy, physiotherapy. **Cl. 5.8.2.1.2** obliges you to deliver "assessment of exercise tolerance and/or functional capacity." None of the five mandated disciplines is trained at entry to practice in graded exercise testing. The contract requires the capability in one clause and specifies a team composition that does not supply it in another.
 
-The mandated Concussion Services team is medical, neuropsychology, psychology, occupational therapy and physiotherapy. None of those disciplines is trained at entry to practice in graded exercise testing. So suppliers are being asked to deliver a guideline treatment with a team that was not trained for it — through no fault of anyone's, and simply because the guideline moved faster than the workforce.
+That tension got sharper in October 2022, when the Amsterdam international consensus statement made sub-symptom-threshold aerobic exercise — prescribed from an individually *measured* heart-rate threshold, derived by a graded exercise test — the first-line treatment for concussion. Randomised trials from the University at Buffalo group established that early prescribed aerobic exercise shortens recovery and reduces the incidence of persisting symptoms. So the assessment Cl. 5.8.2.1.2 asks for is no longer a peripheral measure. It is the thing that generates the treatment.
+
+None of this is a criticism of your team. The guideline moved faster than the workforce did, and the contract has not caught up.
 
 I work on two halves of that problem.
 
@@ -89,6 +91,8 @@ I want to be precise about what that last part is, because it is easy to oversta
 
 Where this matters to you specifically is that suppliers are measured on **client outcomes, quality and timeliness**, and this produces evidence against all three: a measured physiological outcome, a documented review trail across the episode rather than a discharge-day reconstruction, and a report that is substantially compiled by the time it is due — six-monthly, within 15 business days of 31 December and 10 business days of 30 June.
 
+Two things make that evidence worth more than it looks. **Cl. 1.2.2** makes the one-year extension conditional on ACC being satisfied with your performance — which means the file you are building now is the file that decision gets made on, well before anyone asks you for it. And **Cl. 13.4** has you consenting to ACC sharing your performance data, non-anonymised, with every other contracted supplier. Your recovery-duration and return-to-work numbers are visible to your competitors by name. Those numbers come from ACC's own data rather than from self-report, so they cannot be managed by how the episode is written up — only by what actually happened in it.
+
 I would value 20 minutes with you and, if it is useful, whoever holds the reporting obligation. I am not asking you to buy anything in that conversation. I want to test whether the gap I have described matches the one you are actually carrying, and I have one commercial question I would rather ask you than guess at.
 
 Kind regards,
@@ -98,7 +102,7 @@ Registered Osteopath (AHPRA-registered) · B.Clin.Sci, M.Ost.Med
 Director, Concussion Education Australia Pty Ltd
 ACN 688 155 508 · ABN 74 688 155 508
 2 Wordsworth St, Byron Bay NSW 2481, Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -108,7 +112,9 @@ ACN 688 155 508 · ABN 74 688 155 508
 
 ## ACC884-compliant outcome reporting, and documented team competency for the contract file
 
-**The situation.** International consensus made heart-rate-threshold aerobic exercise the first-line treatment for concussion in October 2022. The mandated Concussion Services team — medical, neuropsychology, psychology, OT, physiotherapy — contains no discipline trained at entry to practice in graded exercise testing. Suppliers must deliver the guideline treatment with a team that was not trained for it.
+**The situation.** **Cl. 5.8.2.1.2** obliges the supplier to deliver "assessment of exercise tolerance and/or functional capacity." **Cl. 5.2.1** mandates a team — medical, neuropsychology, psychology, OT, physiotherapy — in which no discipline is trained at entry to practice in graded exercise testing. Since October 2022, international consensus has made the heart-rate threshold derived from that assessment the basis of the first-line treatment for concussion. The contract requires the capability; the mandated team composition does not supply it.
+
+**Why it matters now.** **Cl. 1.2.2** makes the one-year extension conditional on ACC's satisfaction with performance — so the evidence filed today is what that decision will rest on. **Cl. 13.4** means performance data is shared **non-anonymised** with every other contracted supplier: these numbers are seen by name. And the Part B performance measures are recovery-duration and return-to-work metrics benchmarked at national average or one deviation higher, drawn from **ACC's own data rather than supplier self-report** — they cannot be improved by better write-ups, only by better outcomes.
 
 **The offer.** Two components, sold together.
 
@@ -119,7 +125,7 @@ ACN 688 155 508 · ABN 74 688 155 508
 
 ### Mapped to the three things ACC measures you on
 
-**CLIENT OUTCOMES.** The measured heart-rate threshold is a physiological outcome, not a symptom report. Re-tested serially across the episode, it produces a *trajectory* — an objective record of exercise tolerance recovering (or not recovering). Where a symptom score tells ACC what the client said, a measured threshold tells ACC what the client's physiology did. The final re-test result is the outcome statement in the ACC884.
+**CLIENT OUTCOMES.** The measured heart-rate threshold is a physiological outcome, not a symptom report. Re-tested serially across the episode, it produces a *trajectory* — an objective record of exercise tolerance recovering (or not recovering). Where a symptom score tells ACC what the client said, a measured threshold tells ACC what the client's physiology did. The final re-test result is the outcome statement in the ACC884. This matters more than it would in a self-reported scheme: because the Part B measures are drawn from ACC's own data, the only route to a better number is a better recovery — and the evidence base for sub-threshold aerobic prescription is that it shortens recovery.
 
 **QUALITY.** Every home session is recorded against the prescribed heart-rate band, so adherence and dose are observed rather than assumed. Every graded re-test is a documented review point, which means the file shows outcome measures were reviewed *across* the service rather than assembled at discharge. The clinician delivering it holds a certificated competency in the specific protocol — documented, dated and per-person, ready for the contract file. The tool is clinician-directed throughout: it presents data and paces the protocol; the clinician holds every decision.
 
@@ -211,7 +217,7 @@ CCM covers, as it bears on this contract:
 - Persistent post-concussion symptoms, and the structured decision framework for a programme that will not progress.
 - Documentation, inter-professional communication and the scope boundary: findings recorded as rehabilitation observations and recommendations, never as diagnosis or clearance.
 
-**Why this matters to the contract file rather than to the clinician's CPD log.** Completion is certificated per clinician, dated, and tied to a named individual. That converts "our physiotherapists are experienced in concussion" — an assertion — into a documented, auditable statement of team competency in the specific first-line protocol. At a renewal conversation, those are different kinds of answer.
+**Why this matters to the contract file rather than to the clinician's CPD log.** Completion is certificated per clinician, dated, and tied to a named individual. That converts "our physiotherapists are experienced in concussion" — an assertion — into a documented, auditable statement of team competency in the specific first-line protocol. When ACC comes to form the view under Cl. 1.2.2 that decides the extension, those are different kinds of answer — and one of them is in the file already.
 
 **Credential position, stated honestly.**
 - CCM is **endorsed by Osteopathy Australia.** That endorsement is real and it belongs to CCM.
@@ -273,7 +279,7 @@ Sold together, because the licence without competency produces reports a clinici
 This is not a detail. It is the whole pricing question, and it has two completely different answers:
 
 - **If it comes out of margin,** the supplier is buying an efficiency and a capability with its own money. The buying committee is finance-shaped, the comparison is against clinician hours saved, and the sustainable number is small — an annual licence in the **low single-digit thousands**.
-- **If it is recoverable within the funded service** — as part of the service being delivered, or within an equipment, technology or service-delivery provision of the contract — the supplier is buying a capability that improves its measured performance without eroding margin. The buying committee is clinical and contractual, the comparison is against the value of a stronger renewal position, and the sustainable number is an order of magnitude higher — a **five-figure annual licence** at a multi-site organisation.
+- **If it is recoverable within the funded service** — as part of the service being delivered, or within an equipment, technology or service-delivery provision of the contract — the supplier is buying a capability that improves its measured performance without eroding margin. The buying committee is clinical and contractual, the comparison is against the value of a stronger position when the Cl. 1.2.2 extension is assessed, and the sustainable number is an order of magnitude higher — a **five-figure annual licence** at a multi-site organisation.
 
 **The same product. A 10× spread. Determined entirely by which side of that line it falls on.**
 
@@ -303,9 +309,9 @@ Ask it directly and without embarrassment: *"Is a tool like this something you'd
 
 Dear [name],
 
-You are about a year into the Concussion Services contract that started 1 July 2025, so the first renewal point is either just behind you or just ahead.
+You have just filed the six-monthly report for January to June, so I am guessing the reporting side of this contract is fresher in your mind than you would like.
 
-One thing I suspect is on your list: the 2022 international consensus made heart-rate-threshold aerobic exercise the first-line treatment for concussion — prescribed from a threshold you measure with a graded exercise test. The ACC-mandated team is medical, neuropsych, psychology, OT and physio. None of those disciplines is trained in exercise testing at entry to practice. The guideline moved faster than the workforce did.
+Here is the thing I actually wanted to raise. Cl. 5.8.2.1.2 of your Service Schedule obliges you to deliver "assessment of exercise tolerance and/or functional capacity." Cl. 5.2.1 specifies the team — medical, neuropsych, psychology, OT, physio — and none of those disciplines is trained in graded exercise testing at entry to practice. Meanwhile the 2022 international consensus made heart-rate-threshold aerobic exercise the first-line treatment for concussion, prescribed from a threshold you measure with exactly that kind of test. So the contract asks for the capability, the mandated team does not supply it, and the guideline has made it the centre of the treatment rather than a side measure. The guideline moved faster than the workforce did.
 
 I work on both halves of that.
 
@@ -314,6 +320,8 @@ I work on both halves of that.
 **The tool** delivers the programme between appointments and measures it. The client trains with their own watch; heart rate streams back, so you see the actual dose rather than a self-report. Serial re-testing gives you a measured physiological outcome instead of a symptom score. At service exit it compiles the ACC884 Client Summary Report content — service provided, risk assessment, outcomes, services still needed — which you review and transcribe onto ACC's own form. It compiles the content; it does not file anything and it does not replace the form. That is the honest description.
 
 The reason it is worth 15 minutes is that suppliers are measured on outcomes, quality and timeliness, and this gives you evidence for all three: a measured outcome, a review trail across the episode rather than a discharge-day reconstruction, and a report that is mostly written by the time it is due.
+
+Worth adding that the performance measures are recovery-duration and return-to-work numbers taken from ACC's own data, not from what you write in the report — so they move when recovery actually shortens, and not otherwise. Given Cl. 13.4 has those numbers shared non-anonymised with every other supplier in the scheme, and Cl. 1.2.2 hangs the extension on ACC's satisfaction with performance, what goes in the file over the next eighteen months is worth more than it feels like right now.
 
 I would like to run it on a handful of your real episodes with one clinician and show you the report that comes out the other end. If it is not better than what you submit now, that is a clear answer and it costs you a fortnight.
 
@@ -324,7 +332,7 @@ Kind regards,
 **Zac Lewis**
 Registered Osteopath (AHPRA-registered) · B.Clin.Sci, M.Ost.Med
 Director, Concussion Education Australia Pty Ltd · ACN 688 155 508
-[ZAC: email] · [ZAC: phone]
+zac@concussion-education-australia.com · +61 449 186 579
 
 ---
 
@@ -340,15 +348,21 @@ The proposition to Active+ specifically is scale: a capability gap that costs a 
 
 ### B. The capability case
 
-International consensus (Amsterdam, October 2022) made sub-symptom-threshold aerobic exercise, prescribed from a heart-rate threshold derived by graded exercise testing, the first-line treatment for concussion. ACC's mandated Concussion Services team contains no discipline trained in exercise testing at entry to practice. Physiotherapy is nearest and is the natural home for the competency — the published evidence is that the profession's specific self-identified deficits are precisely return-to-play decision confidence and knowing when graded exertional training is indicated.
+**Cl. 5.8.2.1.2** obliges the supplier to deliver "assessment of exercise tolerance and/or functional capacity." **Cl. 5.2.1** mandates a team composition — medical, neuropsychology, psychology, occupational therapy, physiotherapy — containing no discipline trained in graded exercise testing at entry to practice. The Service Schedule requires the capability and specifies a workforce that does not supply it.
+
+International consensus (Amsterdam, October 2022) sharpened that materially by making sub-symptom-threshold aerobic exercise, prescribed from a heart-rate threshold derived by graded exercise testing, the first-line treatment for concussion. The Cl. 5.8.2.1.2 assessment is therefore no longer a peripheral measure — it generates the treatment. Physiotherapy is nearest to the competency and is its natural home; the published evidence is that the profession's specific self-identified deficits are precisely return-to-play decision confidence and knowing when graded exertional training is indicated.
 
 For an organisation with 1,400+ clinicians, the operative question is not whether individual clinicians are capable. It is whether the organisation can **demonstrate, per named clinician and on a date**, that the people delivering the first-line protocol were trained in it. Certificated per-seat competency answers that question in a form an auditor accepts.
+
+**Why the timing is worth Active+'s attention.** The Service Schedule runs to 30 June 2027 with one 1-year extension available, and **Cl. 1.2.2** makes that extension conditional on ACC's satisfaction with performance. There is no imminent decision — which is precisely the argument. The performance record that decision will rest on is being written now, across every site, in every episode. At Active+'s scale the marginal difference between an evidenced measured outcome and a reconstructed symptom summary compounds across thousands of episodes before anyone formally asks for it.
+
+**Cl. 13.4** raises the stakes on the same numbers: Active+ consents to ACC sharing its performance data, **non-anonymised**, with every other contracted supplier. As the largest supplier in the scheme, Active+'s numbers are the benchmark others are read against — and they are read by name.
 
 ### C. Contractual performance mapping
 
 | ACC measures | Evidence produced |
 |---|---|
-| **Client outcomes** | Serial measured heart-rate threshold — a physiological, functional outcome measure rather than a symptom score. Trajectory across the episode; objective recovery endpoint (re-test to volitional exhaustion without symptom exacerbation). |
+| **Client outcomes** | Serial measured heart-rate threshold — a physiological, functional outcome measure rather than a symptom score. Trajectory across the episode; objective recovery endpoint (re-test to volitional exhaustion without symptom exacerbation). The Part B measures (recovery duration, return to work, benchmarked at national average or one deviation higher) derive from **ACC's own data, not supplier self-report** — so they respond only to actual recovery, which is what the prescribed protocol is evidenced to shorten. |
 | **Quality** | Objective dose and adherence from every prescribed home session. Every graded re-test is a documented review point, evidencing outcome review *during* delivery. Delivery by a certificated clinician. Standardised protocol and data structure across all sites. |
 | **Timeliness** | Report content accumulates during delivery, so the ACC884 is substantially compiled ahead of the deadline — six-monthly, 15 business days after 31 December, 10 business days after 30 June, and at service exit. Deadline task becomes review-and-transcribe. |
 
@@ -432,6 +446,27 @@ The licence figure depends on one question CEA would rather ask than assume: **w
 
 **4. Watch/web protocol parity and the subscription webhook** — see the go-live review notes; they are not blockers for a design-partner pilot but they are blockers for a paid multi-site rollout.
 
+## CONTRACT FACTS OF RECORD — do not re-introduce the old version
+
+**An earlier draft of this pack opened on "you are at your year-one renewal point." That was wrong.** It came from the **GETS advance notice**, which described a 1+1+1 structure. The **executed ACC Service Schedule does not say that.** The error was caught before the pack was used. It is recorded here so it does not get reintroduced by anyone working from the GETS notice or from an old draft.
+
+**The corrected facts, from the executed Service Schedule:**
+
+| Item | Fact |
+|---|---|
+| **Contract term** | **1 July 2025 → 30 June 2027** (two years, not one) |
+| **Extension** | **One 1-year extension**, at ACC's discretion — **Cl. 1.2.2**, expressly conditional on ACC being satisfied with supplier performance |
+| **Renewal decision timing** | **None imminent.** There is no year-one renewal point. Do not imply one. |
+| **Six-monthly reporting** | Within **15 business days of 31 December** and **10 business days of 30 June**. The Jan–Jun 2026 report was therefore due in mid-July 2026 — just filed. |
+| **Peer visibility of performance data** | **Cl. 13.4** — supplier consents to ACC sharing its **non-anonymised** performance data with all other contracted suppliers |
+| **Mandated team composition** | **Cl. 5.2.1** — medical, neuropsychology, psychology, occupational therapy, physiotherapy |
+| **Exercise tolerance obligation** | **Cl. 5.8.2.1.2** — "assessment of exercise tolerance and/or functional capacity" |
+| **Performance measures** | **Part B, Table 4** — recovery-duration and return-to-work metrics, benchmarked at "National Average or one deviation higher", sourced from **ACC's own data, not supplier self-report** |
+
+**Why the corrected version is a better pitch than the wrong one.** The false hook was a deadline. The real material is an argument: the contract requires a capability its own mandated team does not supply (5.2.1 vs 5.8.2.1.2), the extension turns on performance evidence being built now (1.2.2), the numbers cannot be improved by better writing because they come from ACC's data (Part B), and they are visible to competitors by name (13.4). That is a structurally stronger sale, and it does not expire.
+
+**[ZAC: verify the clause numbers against your own copy of the executed schedule before quoting them to a supplier.]** Citing a clause number is high-credibility when right and catastrophic when wrong — the person across the table has the document. If you cannot verify a number, cite the substance without the number: "the schedule obliges you to deliver assessment of exercise tolerance" is safe; a wrong clause reference is not.
+
 ## Market and strategy notes
 
 **The funding question is the single highest-value unknown in this entire market.** One supplier's answer probably generalises across the scheme. Get it answered in Queenstown before doing any pricing work, and before any Active+ conversation reaches numbers. Everything downstream — pricing, positioning, whether this is a $3k or $30k product, and whether the market is worth $150k or $1.5m a year in total — sits on it.
@@ -440,7 +475,9 @@ The licence figure depends on one question CEA would rather ask than assume: **w
 
 **Active+ is the anchor and the trap.** Winning it validates the category. Waiting on it burns a year. Run the independent in parallel from day one — the reference from a small supplier who will take a phone call is worth more to Active+ procurement than any deck, and it costs weeks rather than quarters.
 
-**The renewal-point timing hook decays.** It is sharp now, at the year-one point. It blunts once the renewal conversation is finished. If this pack is going to be used, it should be used in the next few weeks, not next quarter.
+**Only one of the three hooks decays, and it decays fast.** The just-filed six-monthly report is fresh for a few weeks and then it is not — that one argues for using this pack now rather than next quarter. The Cl. 1.2.2 extension condition and the Cl. 13.4 peer-visibility lever do not decay at all; if anything the extension argument strengthens as the record accumulates. So there is urgency, but it is the urgency of a good opening line, not of a closing window. Do not manufacture false deadline pressure on top of it — this buyer reads contracts for a living.
+
+**Handle Cl. 13.4 with care.** "Your competitors can see your numbers" is the strongest lever in the pack and also the easiest to make sound like a threat. Deliver it as a shared fact about how the scheme works, never as a warning. The version that lands is the observation that performance data is visible by name, therefore evidence quality is a competitive position rather than a compliance chore. The version that fails is anything that sounds like *you should be worried.*
 
 **Sizing figures need a source before they are spoken.** The ~21,000 claims and 15–25% referral-rate figures are working estimates. They are fine for internal sizing and fine as "my understanding is roughly". They are not fine stated as ACC-published statistics to a supplier who works inside the scheme and will know if they are wrong. Losing credibility on a number you did not need to cite is an avoidable way to lose the room.
 
@@ -456,12 +493,14 @@ The licence figure depends on one question CEA would rather ask than assume: **w
 - **No diagnostic, prognostic or clearance claim.** Clinician-directed throughout.
 - **No PMS integration claim.**
 
-## [ZAC: ...] — fill-ins before this goes anywhere
+## STILL REQUIRED BEFORE THIS GOES ANYWHERE
 
-- **[ZAC: email and phone]** — every signature block.
 - **[ZAC: source the ~21,000 claims and 15–25% referral figures]**, or downgrade them to explicit estimates in speech.
 - **[ZAC: confirm hosting region and sub-processor list]** before any privacy answer to any supplier.
 - **[ZAC: decide whether the ACC884 UI button is built before or after the Active+ approach]** — this decides whether the Active+ conversation is a sale or a design-partner conversation.
 - **[ZAC: confirm any NZ professional-body recognition pathway]** for CCM (Physiotherapy New Zealand / Physiotherapy Board) before it is raised in a meeting.
 - **[ZAC: confirm the exact ACC884 submission timeframe]** against the current operational guidelines before quoting it in writing to a supplier — the six-monthly reporting deadlines and the service-exit deadline are separate obligations and should not be conflated.
+- **[ZAC: verify Cl. 1.2.2, 5.2.1, 5.8.2.1.2, 13.4 and Part B Table 4]** against your own copy of the executed Service Schedule before any of them is cited by number in an email or a meeting.
+- **[ZAC: never cite the GETS advance notice as if it were the contract]** — that is where the wrong 1+1+1 term came from.
 - **[ZAC: get the funding question answered in Queenstown]** — this is the highest-value action in the pack.
+- **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

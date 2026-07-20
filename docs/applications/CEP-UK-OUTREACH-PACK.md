@@ -79,9 +79,10 @@ If there is a recognition, listing or approval process that would let AHCS point
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA number]) · B.Clin.Sci, M.Ost.Med
-Founder and author, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508), trading as Concussion Education Australia
+2 Wordsworth St, Byron Bay NSW 2481, Australia
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -221,11 +222,13 @@ Points are claimed on a strict 1 point = 1 hour of assessed instructional conten
 
 ---
 
-## [ZAC: ...] — fill-ins before sending
+## STILL REQUIRED BEFORE SENDING
 
 - **[ZAC: CEP-UK / AHCS named CPD or registration contact]** — Email 1 recipient. Find a named person; a generic inbox will not carry this.
-- **[ZAC: exact practice-area and condition labels]** from the current published CEP-UK / AHCS competency framework — must replace the paraphrased labels in columns 2 and 3 of the primary mapping table before that table is sent anywhere.
+- **[ZAC: exact practice-area and condition labels]** from the current published CEP-UK / AHCS competency framework — must replace the paraphrased labels in columns 2 and 3 of the primary mapping table before that table is sent anywhere. A paraphrase is the single fastest way for an assessor to dismiss the mapping, and the wording is public, so there is no reason to approximate it.
 - **[ZAC: AHPRA registration number]** — Email 1 signature.
-- **[ZAC: email, phone, course URL]** — contact and link blocks.
+- **[ZAC: course URL]** — the link block in Email 2; must be live before send.
 - **[ZAC: GBP price point for the UK market]** — not stated in the outreach above by design, but you need it decided before replies arrive, and it should sit sensibly under £650.
 - **[ZAC: source and lawful basis for the registrant contact list]** — required before any bulk send; also confirm the List-Unsubscribe / one-click unsubscribe implementation on this lane.
+
+**Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

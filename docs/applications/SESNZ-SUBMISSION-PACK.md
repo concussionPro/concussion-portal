@@ -1,7 +1,8 @@
 # SESNZ — CPD Opportunities Listing Request
 ## Submission Pack — Concussion Rehab Mastery (CRM)
 
-**Provider:** Concussion Education Australia (CEA)
+**Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025), 2 Wordsworth St, Byron Bay NSW 2481, Australia
+**Contact:** Zac Lewis, Director — zac@concussion-education-australia.com · +61 449 186 579
 **Product:** Concussion Rehab Mastery — 8 CPD points, online, self-paced
 **To:** `natmanager@sesnz.org.nz` · **CC:** CEPNZ [ZAC: CEPNZ contact address]
 
@@ -88,8 +89,8 @@ Ngā mihi,
 
 **Zac Lewis**
 Registered Osteopath (AHPRA) · B.Clin.Sci, M.Ost.Med
-Founder, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Director and founder, Concussion Education Australia Pty Ltd
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -162,13 +163,12 @@ Full bibliography available on request.
 
 ---
 
-## [ZAC: ...] — fill-ins before sending
+## STILL REQUIRED BEFORE SENDING
 
 - **[ZAC: CEPNZ contact address]** — the CC address; confirm the correct current CEPNZ contact before sending.
-- **[ZAC: email and phone]** — contact block.
 - **[ZAC: NZD price]** — SESNZ will likely want it on the listing.
 - **[ZAC: exact CRM course URL]** — the page the listing links to; must be live before you send.
-- **Optional, only if asked for:** legal entity name and address. A listing request usually doesn't need them, so don't volunteer them.
+- **Entity details are final** and are recorded in the pack header (Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · 2 Wordsworth St, Byron Bay NSW 2481 · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579). A listing request usually doesn't need them, so don't volunteer them in the email — supply on request only.
 - **NZ annex** — offered in the email; have it ready in case they say yes, but don't attach it unsolicited.
 - **Do not send the "INTERNAL" or "POSITIONING SPINE" sections.** Both are CEA-internal. What gets sent is the email and, if useful, the one-page summary.
 - **Sequencing:** this listing is the adjunct. The ACC supplier channel described in the internal note is the New Zealand priority — don't let the listing absorb effort that belongs there.

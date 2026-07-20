@@ -359,29 +359,37 @@ Both primary credentials carry a mandatory 60-CEC three-year recertification cyc
 
 ---
 
-## FOUNDER MUST COMPLETE BEFORE SUBMITTING
+## APPLICANT IDENTIFICATION — FINAL COPY
 
-Everything above is final copy. These are the only fields that cannot be completed from source material and must be supplied at submission.
+Paste these values into the corresponding Formstack fields.
 
 1. **Applicant legal entity name** — the registered entity that will appear on the approval letter, the certificate, and the ACSM Approved Providers listing. Must match the entity that pays the application fee.
-   `[ZAC: legal entity name, e.g. "____________ Pty Ltd", trading as Concussion Education Australia]`
+   **Concussion Education Australia Pty Ltd**, trading as Concussion Education Australia (CEA)
+   ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · incorporated 18 June 2025
 
 2. **Primary administrative contact — full name**
-   `[ZAC: contact full name]`
+   Zac Lewis
 
 3. **Primary administrative contact — title/position**
-   `[ZAC: title, e.g. Director]`
+   Director
 
-4. **Primary administrative contact — email address** (this address receives the approval letter, the logo and official statement wording, and all annual renewal notices — use a monitored address, not a personal one)
-   `[ZAC: admin email]`
+4. **Primary administrative contact — email address** (this address receives the approval letter, the logo and official statement wording, and all annual renewal notices)
+   zac@concussion-education-australia.com
 
 5. **Primary administrative contact — postal address** (street, city, state/territory, postcode, country)
-   `[ZAC: full postal address]`
+   2 Wordsworth St, Byron Bay NSW 2481, Australia
 
-6. **AHPRA registration number** — inserted at the marked position in A5 (CV summary, Qualifications).
+6. **Primary administrative contact — telephone**
+   +61 449 186 579
+
+---
+
+## STILL REQUIRED BEFORE SUBMITTING
+
+1. **AHPRA registration number** — inserted at the marked position in A5 (CV summary, Qualifications).
    `[ZAC: AHPRA registration number, format OST00000000000]`
 
-7. **Application fee** — not published; revealed inside the Formstack form. Record the amount and the payment reference on submission, and diarise the annual renewal date.
+2. **Application fee** — not published; revealed inside the Formstack form. Record the amount and the payment reference on submission, and diarise the annual renewal date.
    `[ZAC: fee amount + payment reference + renewal date]`
 
 **Pre-submission checks:**

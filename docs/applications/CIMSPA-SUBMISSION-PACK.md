@@ -85,8 +85,8 @@ Kind regards,
 
 **Zac Lewis**
 Registered Osteopath (AHPRA) · B.Clin.Sci, M.Ost.Med
-Founder, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Director and founder, Concussion Education Australia Pty Ltd
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -100,8 +100,9 @@ Dear CIMSPA Training Partnerships team,
 
 Further to your confirmation of the [ZAC: window month] submission window, please find our **Training Provider Partnership application** and our **priority product submission** for endorsement.
 
-**Provider:** Concussion Education Australia — [ZAC: registered legal entity name and company/ABN number]
-**Registered address:** [ZAC: registered address]
+**Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025)
+**Correspondence address:** 2 Wordsworth St, Byron Bay NSW 2481, Australia
+**Contact:** Zac Lewis, Director — zac@concussion-education-australia.com · +61 449 186 579
 **Priority product:** Concussion Rehab Mastery
 **Format:** online, asynchronous, self-paced — 8 modules
 **Duration:** 480 minutes of assessed instructional content = **8.0 CPD points**
@@ -121,9 +122,10 @@ I look forward to the panel's review and will respond to any amendment request p
 Kind regards,
 
 **Zac Lewis**
-Registered Osteopath (AHPRA registration [ZAC: AHPRA number]) · B.Clin.Sci, M.Ost.Med
-Founder and author, Concussion Education Australia
-[ZAC: email] · [ZAC: phone] · concussion-education-australia.com
+Registered Osteopath (AHPRA registration [ZAC: AHPRA registration number]) · B.Clin.Sci, M.Ost.Med
+Director, founder and author — Concussion Education Australia Pty Ltd (ACN 688 155 508 · ABN 74 688 155 508)
+2 Wordsworth St, Byron Bay NSW 2481, Australia
+zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
 ---
 
@@ -340,14 +342,12 @@ Zac is the sole author of Concussion Rehab Mastery. To state the position precis
 
 ---
 
-## [ZAC: ...] — fill-ins before sending
+## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: registered legal entity name]** — the exact legal entity name to appear on the partnership agreement.
-- **[ZAC: company/ABN number]** and **[ZAC: registered address]** — as CIMSPA will require for the partner agreement and invoicing.
 - **[ZAC: AHPRA registration number]** — for the author-credentials section.
-- **[ZAC: email and phone]** — contact block on both emails.
 - **[ZAC: GBP price point]** — decide the UK price before submission; CIMSPA asks for it and it appears on the directory listing.
 - **[ZAC: window month]**, **[ZAC: payment date]**, **[ZAC: payment reference]** — populate in Email 2 only after CIMSPA confirms the window and the £140+VAT transfer clears.
 - **Confirm from CIMSPA's reply, do not assume:** the re-endorsement rate in year two, whether an overseas provider faces additional requirements, and the preferred standards-mapping template.
 - **Do not send the "INTERNAL" or "POSITIONING SPINE" sections.** Both are CEA-internal. The submitted material is Email 1, Email 2 and the application content sections only.
 - **Spend gate:** do not transfer the £140+VAT admin fee until CIMSPA has confirmed the next open window in reply to Email 1, and until the ~£700+VAT year-one total has been weighed against the compliance-driven demand reality in the internal note above.
+- **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia (ASIC registered office: 40 Shirley St, Byron Bay NSW 2481 — supply only if the partner agreement specifically demands the registered office) · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.
