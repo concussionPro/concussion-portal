@@ -38,7 +38,13 @@ const PILLARS = [
   {
     icon: GraduationCap,
     title: 'A credential stack you can stand behind',
-    body: 'AHPRA-registered author, a peer-reviewed mTBI publication (Neurotrauma Reports, 2024), and a professional-sport clinical background. ACSM CEC application in progress and ESSA endorsement pending — added to your certificate the day each is confirmed.',
+    // The mTBI manuscript is UNDER PEER REVIEW, not published — never state it as
+    // a published paper (it was previously listed as "Neurotrauma Reports, 2024").
+    // Course content has been independently reviewed by two reviewers appointed by
+    // ESSA as part of its PD endorsement process — that is the accurate, citable
+    // form of independent exercise-physiology review. Do NOT upgrade this to
+    // "EP co-authored" or "EP validated"; no EP authored the course.
+    body: 'AHPRA-registered author, an mTBI manuscript under peer review, and a professional-sport clinical background. Course content independently reviewed by two reviewers appointed by ESSA through its professional development endorsement process. ACSM CEC application in progress and ESSA endorsement pending — added to your certificate the day each is confirmed.',
   },
   {
     icon: ShieldCheck,
