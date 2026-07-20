@@ -41,8 +41,8 @@ function basicAuth(apiKey: string): string {
 /** Derive the region shard from the key suffix (`...-au4` → `au4`). */
 function shardFromKey(apiKey: string): string {
   const dash = apiKey.lastIndexOf('-')
-  // VERIFY: Cliniko keys append the shard after the last '-'. If absent, Cliniko
-  // documents `au1` as a safe default for older keys.
+  // VALIDATED live 2026-07-20 (au5 trial tenant): shard follows the last '-'.
+  // `au1` remains Cliniko's documented default for older suffix-less keys.
   return dash >= 0 && dash < apiKey.length - 1 ? apiKey.slice(dash + 1) : 'au1'
 }
 
@@ -73,8 +73,7 @@ export class ClinikoAdapter implements PmsAdapter {
   async findPatient(query: string): Promise<PmsPatient[]> {
     if (!this.apiKey) return []
     try {
-      // VERIFY: Cliniko patient search uses `q[]` LHS-bracket filters; a simple
-      // name search is commonly `?q[]=first_name:~<term>`. Endpoint: /patients.
+      // VALIDATED live 2026-07-20: `?q[]=first_name:~<term>` returns matches.
       const url = `${this.baseUrl}/patients?q[]=${encodeURIComponent(`first_name:~${query}`)}&per_page=25`
       const res = await fetch(url, { headers: this.headers() })
       if (!res.ok) return []
@@ -102,21 +101,21 @@ export class ClinikoAdapter implements PmsAdapter {
   async writeNote(patientId: string, note: PmsNote): Promise<PmsWriteResult> {
     if (!this.apiKey) return { ok: false, error: NOT_CONFIGURED }
     try {
-      // Cliniko has no plain "note" object — the simplest documented text
-      // write-back is a treatment note (POST /treatment_notes). Only
-      // `patient_id` and `content` are required; `content` is a
-      // `sections[].questions[]` tree where each question carries a typed
-      // `answer`. A `type: "text"` question is the minimal free-text field.
-      // `treatment_note_template_id`/`booking_id`/`draft` are optional and
-      // omitted here. The note author is auto-set to the practitioner behind
-      // the API key. HTML (p/br/ul/li/b/i/u/a/…) is permitted in answers.
-      // There is NO documented occurred/date field on the create body — the
-      // record is timestamped by Cliniko (`created_at`), so `note.occurredAt`
-      // is folded into the section name for provenance instead of sent raw.
-      // Ref: redguava/cliniko-api sections/treatment_notes.md (Create a
-      // Treatment Note) — https://github.com/redguava/cliniko-api
+      // Cliniko has no plain "note" object — the simplest text write-back is a
+      // treatment note (POST /treatment_notes). VALIDATED live 2026-07-20
+      // against an au5 trial tenant: contrary to the archived docs, `title` is
+      // REQUIRED at the top level ("can't be blank") and `draft` must be sent
+      // explicitly ("is not included in the list" when omitted) — with both,
+      // the create returns 201. `content` is a `sections[].questions[]` tree;
+      // a `type: "text"` question is the minimal free-text field, HTML
+      // permitted in answers. The note author is auto-set to the practitioner
+      // behind the API key. There is no occurred/date field on the create body
+      // — Cliniko stamps `created_at` — so `note.occurredAt` is folded into
+      // the section name for provenance instead of sent raw.
       const body = {
         patient_id: patientId,
+        title: note.title,
+        draft: false,
         content: {
           sections: [
             {
@@ -216,8 +215,8 @@ export class ClinikoAdapter implements PmsAdapter {
     if (!this.apiKey) return []
     try {
       // NO webhooks — poll appointments updated since `sinceISO` and read the
-      // did_not_arrive flag for attendance.
-      // VERIFY: filter key for "updated since" is `q[]=updated_at:>=<iso>`.
+      // did_not_arrive flag for attendance. VALIDATED live 2026-07-20:
+      // `q[]=updated_at:>=<iso>` filters correctly on this endpoint.
       const url = `${this.baseUrl}/appointments?q[]=${encodeURIComponent(`updated_at:>=${sinceISO}`)}&per_page=100`
       const res = await fetch(url, { headers: this.headers() })
       if (!res.ok) return []
@@ -235,17 +234,20 @@ interface ClinikoPatient {
   id: string | number
   first_name?: string
   last_name?: string
-  date_of_birth?: string // VERIFY: 'YYYY-MM-DD'
+  date_of_birth?: string // VALIDATED 2026-07-20: 'YYYY-MM-DD'
 }
 
 interface ClinikoAppointment {
   id: string | number
-  // VERIFY: patient linkage is a nested link object in Cliniko; the numeric id
-  // is parsed out of `patient.links.self` in practice. We read a flat
-  // `patient_id` here and mark it for verification.
+  // VALIDATED live 2026-07-20: there is NO flat patient_id on appointment
+  // payloads — patient linkage is ONLY the nested link object, and the numeric
+  // id must be parsed from the tail of `patient.links.self`
+  // (https://api.<shard>.cliniko.com/v1/patients/<id>). The flat field is kept
+  // as a fallback in case older shards differ.
   patient_id?: string | number
+  patient?: { links?: { self?: string } }
   did_not_arrive?: boolean
-  starts_at?: string // VERIFY: ISO 8601
+  starts_at?: string // VALIDATED 2026-07-20: ISO 8601 (e.g. 2026-07-20T04:09:15Z)
 }
 
 function toPmsPatient(p: ClinikoPatient): PmsPatient {
@@ -259,9 +261,11 @@ function toPmsPatient(p: ClinikoPatient): PmsPatient {
 }
 
 function toPmsAppointment(a: ClinikoAppointment): PmsAppointment {
+  // Nested link is the real shape (validated); flat patient_id is a fallback.
+  const linkId = a.patient?.links?.self?.match(/\/patients\/(\d+)/)?.[1]
   return {
     id: String(a.id),
-    patientId: a.patient_id != null ? String(a.patient_id) : '',
+    patientId: linkId ?? (a.patient_id != null ? String(a.patient_id) : ''),
     attended: a.did_not_arrive !== true,
     at: a.starts_at ?? '',
   }

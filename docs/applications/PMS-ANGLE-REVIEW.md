@@ -185,3 +185,23 @@ Writing a report **into** a patient record makes CEA a processor/agent operating
 ---
 
 *Sources: cliniko.com/pricing · docs.api.cliniko.com/developer-portal · docs.api.cliniko.com/guides/uploading_patient_attachments · docs.api.cliniko.com/openapi/treatmentnote · github.com/redguava/cliniko-api (archived) · gensolve.com · gensolve.com/nz · docs.gensolve.com (JS-rendered, not fetchable) · repo code as cited inline.*
+
+---
+
+## LIVE VALIDATION RESULT — 2026-07-20 (au5 trial tenant)
+
+All six Cliniko `VERIFY:` shapes resolved against a real tenant. Full pass after two adapter fixes:
+
+| Shape | Result |
+|---|---|
+| Shard from key suffix (`-au5`) | ✅ as coded |
+| `q[]=first_name:~` patient search | ✅ as coded |
+| `date_of_birth` = YYYY-MM-DD | ✅ as coded |
+| `POST /treatment_notes` | ❌→fixed: `title` is REQUIRED top-level and `draft` must be explicit; 201 with both |
+| 3-step presigned attachment flow | ✅ as coded (201, attachment id returned) |
+| `updated_at:>=` poll filter + `starts_at` ISO | ✅ as coded |
+| Appointment→patient linkage | ❌→fixed: NO flat `patient_id` exists; id parsed from `patient.links.self` URL. End-to-end confirmed: adapter poll now attributes the appointment (`attended=true`) |
+
+**The Cliniko adapter is production-shape-correct as of this validation.** Still gated off (`PMS_WRITEBACK_ENABLED`), still no production caller, and the patient-identity bridge (clinician picks the PMS patient at report time) remains unbuilt — those are the remaining gaps, not API correctness.
+
+Note the integration model: per-tenant API key pasted by the clinic. **There is no Cliniko marketplace approval required for this to work, and no SST listing on Cliniko exists today** — a listing in Cliniko's public integrations directory is an optional marketing/partnership step to pursue separately once the feature is live.
