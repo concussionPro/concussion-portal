@@ -315,7 +315,7 @@ export default function AccSupplierPage() {
               ))}
             </ul>
             <p className="m-0 mt-auto pt-4 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
-              SST Trainer · per-organisation licence
+              SST Trainer · licensed per clinician
             </p>
           </div>
 
