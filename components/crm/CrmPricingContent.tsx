@@ -56,7 +56,9 @@ const buildFaqs = (accredited: boolean): FaqItem[] => [
   },
   {
     q: 'How many CPD points is it worth?',
-    a: 'The online modules are 8 CPD hours, mapped to 8 ESSA CPD points. The complete package adds the full-day practical for 14 CPD hours total — most of a member’s annual Further-Education requirement in one course.',
+    a: accredited
+      ? 'The online modules are 8 CPD hours, mapped to 8 ESSA CPD points. The complete package adds the full-day practical for 14 CPD hours total — most of a member’s annual Further-Education requirement in one course.'
+      : 'The online modules are 8 CPD hours and the complete package totals 14 CPD hours. ESSA CPD-point mapping is pending accreditation — we’ll confirm the point value here once it’s granted.',
   },
   {
     q: 'Do I get the clinical tools, or just the lessons?',
@@ -190,8 +192,9 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           {/* One-line "why EPs" strap under the stats */}
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
             A new, referral-worthy service line — GPs, physios and clinics need someone to deliver
-            measured exercise rehab. 8 CPD points is roughly half your annual ESSA Further-Education
-            requirement, done online and self-paced.
+            measured exercise rehab. {accredited
+              ? '8 CPD points is roughly half your annual ESSA Further-Education requirement, done online and self-paced.'
+              : '8 CPD hours online, self-paced — ESSA CPD-point mapping pending accreditation.'}
           </p>
 
           {/* Primary hero CTA */}
@@ -365,7 +368,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM Complete</h3>
               <p className="text-[12px] text-slate-500 mb-2 font-medium">Online modules + the full-day hands-on practical</p>
               <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-                Everything in Online — the course and all the tools — plus a supervised practical day. 14 CPD hours covers most of your annual ESSA requirement.
+                Everything in Online — the course and all the tools — plus a supervised practical day. 14 CPD hours{accredited ? ' covers most of your annual ESSA requirement.' : ' in total (ESSA accreditation pending).'}
               </p>
 
               <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">

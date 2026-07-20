@@ -55,7 +55,9 @@ const buildFaqs = (accredited: boolean): FaqItem[] => [
   },
   {
     q: 'How many CPD points is it worth?',
-    a: 'The online modules are 8 CPD hours, mapped to 8 ESSA CPD points. The complete package adds the full-day practical for 14 CPD hours total — most of a member’s annual Further-Education requirement in one course.',
+    a: accredited
+      ? 'The online modules are 8 CPD hours, mapped to 8 ESSA CPD points. The complete package adds the full-day practical for 14 CPD hours total — most of a member’s annual Further-Education requirement in one course.'
+      : 'The online modules are 8 CPD hours and the complete package totals 14 CPD hours. ESSA CPD-point mapping is pending accreditation — we’ll confirm the point value here once it’s granted.',
   },
   {
     q: 'Do I get the clinical tools, or just the lessons?',

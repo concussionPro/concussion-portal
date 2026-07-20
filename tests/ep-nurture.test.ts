@@ -217,23 +217,32 @@ describe('ep-nurture cron — stage-window selection', () => {
   })
 })
 
-describe('EP nurture templates — ESSA truth gate (flag FALSE)', () => {
+describe('EP nurture templates — ESSA truth gate (must hold in BOTH flag states)', () => {
   const rendered = EP_NURTURE_SEQUENCE.map((s) =>
     s.template('Jordan Smith', 'https://portal.test/concussion-rehab-mastery'),
   )
 
-  it('runs with ESSA_ACCREDITED = false (precondition)', () => {
-    expect(CONFIG.FEATURES.ESSA_ACCREDITED).toBe(false)
-  })
+  // NOTE: this suite must pass in BOTH flag states. It used to assert the flag
+  // was literally false, which would have turned ESSA approval day into a red
+  // CI run blocking the very deploy that flips it. It now asserts the copy is
+  // CONSISTENT with whatever the flag says — which is the property we actually
+  // care about, and it keeps protecting us after launch.
+  const accredited = CONFIG.FEATURES.ESSA_ACCREDITED
 
   it('has exactly four touches on Days 3, 7, 14, 21', () => {
     expect(EP_NURTURE_SEQUENCE.map((s) => s.day)).toEqual([3, 7, 14, 21])
   })
 
-  it('no template claims "ESSA-accredited" while accreditation is pending', () => {
+  it('ESSA claims match the flag — pending copy when false, accredited when true', () => {
     for (const html of rendered) {
-      expect(html).not.toContain('ESSA-accredited')
-      expect(html).toContain('accreditation pending')
+      if (accredited) {
+        expect(html).not.toContain('accreditation pending')
+      } else {
+        // The critical direction: never assert accreditation we do not hold.
+        expect(html).not.toContain('ESSA-accredited')
+        expect(html).not.toContain('ESSA CPD point')
+        expect(html).toContain('accreditation pending')
+      }
     }
   })
 

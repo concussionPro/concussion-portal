@@ -10,6 +10,7 @@
 'use client'
 
 import { useState } from 'react'
+import { CONFIG } from '@/lib/config'
 import {
   Home, BookOpen, Brain, Activity, FileText, Library, BookMarked,
   ExternalLink, TrendingUp, Stethoscope, Lock, Menu, X, Tag,
@@ -178,7 +179,9 @@ function SidebarBody({
       </nav>
 
       <div className="pt-5 border-t border-white/30">
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{accreditation === 'essa' ? 'ESSA Endorsement Pending' : 'AHPRA Aligned'}</p>
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{accreditation === 'essa'
+          ? (CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA Endorsed' : 'ESSA Endorsement Pending')
+          : 'AHPRA Aligned'}</p>
         <p className="text-[10px] text-muted-foreground">OA Endorsed · 8 CPD hrs online (14 with the practical day)</p>
       </div>
     </>

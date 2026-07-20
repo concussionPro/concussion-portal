@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
+import { CONFIG } from '@/lib/config'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — PUBLIC sales/landing page (EP-scoped stream).
@@ -11,22 +12,26 @@ import CrmPricingContent from '@/components/crm/CrmPricingContent'
 // instructor → FAQ. The page is a gated server shell; CrmPricingContent holds
 // the client UI.
 //
-// IMPORTANT: built ahead of launch. MUST stay unlisted + unindexed until the
-// founder flips it live — hence noindex/nofollow, the access gate, and no link
-// from any nav/homepage.
+// IMPORTANT: built ahead of launch. Unlisted + unindexed + gated until ESSA
+// approval — but ALL THREE shutters are driven by CONFIG.FEATURES.ESSA_ACCREDITED
+// so approval day is one flag flip, not a hunt for hand-edits. This is the page
+// the EP nurture sequence links to; if the gate outlived the flag, every lead
+// would land on /login the day the emails start claiming accreditation.
 // ─────────────────────────────────────────────────────────────────────────────
+
+const LIVE = CONFIG.FEATURES.ESSA_ACCREDITED
 
 export const metadata: Metadata = {
   title: 'Concussion Rehab Mastery — Built for Exercise Physiologists',
-  description:
-    'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists. 8 online modules · 8 CPD hours · the clinical tools to deliver it · designed to ESSA CPD standards (accreditation pending).',
-  robots: 'noindex, nofollow',
+  description: LIVE
+    ? 'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists. 8 online modules · 8 ESSA CPD points · the clinical tools to deliver it.'
+    : 'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists. 8 online modules · 8 CPD hours · the clinical tools to deliver it · designed to ESSA CPD standards (accreditation pending).',
+  robots: LIVE ? 'index, follow' : 'noindex, nofollow',
 }
 
 export default async function ConcussionRehabMasteryPage() {
-  // GATED PRE-LAUNCH (Zac 2026-06): admin / demo-key / enrolled only — must NOT
-  // be publicly reachable until launch. Remove this line to go live.
-  await requireAiCourseAccess('/login')
+  // Pre-launch gate: admin / demo-key / enrolled only. Opens on ESSA approval.
+  if (!LIVE) await requireAiCourseAccess('/login')
 
   return <CrmPricingContent />
 }

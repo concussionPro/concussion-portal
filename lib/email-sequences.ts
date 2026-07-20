@@ -1575,7 +1575,9 @@ export const EP_NURTURE_SEQUENCE = [
     template: (name: string, courseLink: string) => emailShell(`
       <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
       <p>Two practical objections come up with any CPD: the time and the cost. Here's where the EP course lands on both.</p>
-      <p><strong>Time.</strong> 8 CPD points, fully online and self-paced &mdash; roughly half your annual ESSA Further-Education requirement in one course, done on your schedule rather than a fixed workshop date.</p>
+      <p><strong>Time.</strong> ${CONFIG.FEATURES.ESSA_ACCREDITED
+        ? '8 CPD points, fully online and self-paced &mdash; roughly half your annual ESSA Further-Education requirement in one course'
+        : '8 CPD hours, fully online and self-paced &mdash; ESSA CPD-point mapping is pending accreditation'}, done on your schedule rather than a fixed workshop date.</p>
       <p><strong>Cost.</strong> At $${CONFIG.COURSE.PRICE_ONLINE} the online course is employer-reimbursable &mdash; you get a tax invoice and a certificate on completion, so it goes straight to your PD budget.</p>
       <p>${essaCpdLine()}. If you later want the hands-on practical day as well, you can add it and take the total to 14 hours &mdash; but the online course on its own is 8 CPD.</p>
       <center><a href="${utm(courseLink, 'ep_nurture_day14', 'cpd_reimbursement')}" class="cta-btn">See what's included</a></center>

@@ -14,6 +14,14 @@ import { getReportSkins, reportSkinLabel, type Jurisdiction, type ReportSkinKind
  * validated against that jurisdiction's allowed set, so an AU code can't emit an
  * ACC form and vice-versa. Output is print-ready HTML — the ACC forms are meant
  * to be TRANSCRIBED onto ACC's fillable form; SST compiles the content.
+ *
+ * IDENTITY IS REQUEST-SCOPED, NEVER STORED. `sst_clinic_sessions` holds only a
+ * clinic-chosen `patient_label` (de-identified by design — see load.ts). An
+ * ACC884 is useless to ACC without the ACC45 claim number and the client's real
+ * name/DOB, so the clinician supplies them per-request (`first`, `last`, `dob`,
+ * `claim`, `ethnicity`, `clinician`, `credential`); they are stamped on the
+ * printed output and never written back to the store. Do NOT "fix" this by
+ * persisting identity — the de-identification is the privacy posture.
  */
 const ALL_SKINS: ReportSkinKind[] = ['gp-report', 'rtp-clearance', 'rtw-summary', 'medicolegal', 'acc884', 'acc885']
 
@@ -51,8 +59,23 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Request-scoped identity (never persisted). Blank fields simply fall back to
+  // the de-identified label, so an omitted identity degrades gracefully.
+  const str = (k: string) => sp.get(k)?.trim() || undefined
+  const clinicianName = str('clinician')
+
   try {
-    const input = await loadReportInput(code, patientLabel, jurisdiction)
+    const input = await loadReportInput(code, patientLabel, jurisdiction, {
+      patient: {
+        firstName: str('first'),
+        lastName: str('last'),
+        dob: str('dob'),
+        ethnicity: str('ethnicity'),
+        claimRef: str('claim'),
+        diagnosis: str('diagnosis'),
+      },
+      clinician: clinicianName ? { name: clinicianName, credential: str('credential') } : undefined,
+    })
     if (!input) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
     const content = renderSkin(skin, input)
     const clinicName = (await getClinic(code))?.clinicName ?? undefined
