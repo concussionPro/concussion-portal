@@ -327,8 +327,12 @@ export async function middleware(request: NextRequest) {
     )
   }
 
-  // Protected frontend routes — require valid session, redirect to /login if missing
+  // Protected frontend routes — require valid session, redirect to /login if missing.
+  // DEV-ONLY: skip on localhost so the dashboard/courses can be reviewed without login.
   const protectedPrefixes = ['/learning', '/dashboard', '/settings', '/clinical-toolkit', '/complete-reference', '/assessment', '/scat-course', '/references']
+  if (process.env.NODE_ENV !== 'production' && protectedPrefixes.some(p => pathname.startsWith(p))) {
+    return NextResponse.next()
+  }
   if (protectedPrefixes.some(p => pathname.startsWith(p))) {
     const sessionToken = request.cookies.get('session')?.value
     if (!sessionToken) {

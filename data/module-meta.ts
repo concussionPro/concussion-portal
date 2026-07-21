@@ -117,10 +117,33 @@ const scatModules: SCATModuleMeta[] = [
   },
 ]
 
+export interface FreeShortCourseMeta extends ModuleMeta {
+  sectionsCount: number
+}
+
+// Module 104 — standalone FREE awareness short course ("Concussion Care Has
+// Changed"). Deliberately kept OUT of getSCATModulesMeta(): that set (101–103)
+// drives the 3-module SCAT free certificate. 104 is its own free offering,
+// surfaced as a distinct featured card in the learning dashboard.
+const freeShortCourse: FreeShortCourseMeta = {
+  id: 104,
+  title: 'Concussion Care Has Changed',
+  subtitle: 'The New First-Line Treatment Every Clinician Needs to Know',
+  duration: '~1 hour',
+  points: 0,
+  sectionsCount: 10,
+  description:
+    'The 2022 consensus rewrote concussion treatment. Most clinicians were trained on the old model — this free module brings you up to date.',
+}
+
 export function getModulesMeta(): ModuleMeta[] {
   return paidModules
 }
 
 export function getSCATModulesMeta(): SCATModuleMeta[] {
   return scatModules
+}
+
+export function getFreeShortCourseMeta(): FreeShortCourseMeta {
+  return freeShortCourse
 }

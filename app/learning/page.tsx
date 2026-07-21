@@ -1,10 +1,10 @@
 'use client'
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
-import { CheckCircle2, Clock, Award, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { CheckCircle2, Clock, Award, Lock, ArrowRight, Loader2, Sparkles, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
-import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
+import { getModulesMeta, getSCATModulesMeta, getFreeShortCourseMeta } from '@/data/module-meta'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -43,6 +43,8 @@ function LearningSuiteInner() {
 
   const paidModules = getModulesMeta()
   const scatModules = getSCATModulesMeta()
+  const freeShortCourse = getFreeShortCourseMeta()
+  const freeShortCourseComplete = isModuleComplete(freeShortCourse.id)
 
   const accessLevel = user?.accessLevel || ''
   const isPreview = accessLevel === 'preview'
@@ -182,6 +184,81 @@ function LearningSuiteInner() {
               return null
             })()}
 
+            {/* Free Short Course — DISTINCT featured banner (module 104).
+                Shown to EVERYONE (free/preview AND paid). Deliberately styled
+                unlike the glass module cards and the locked paid cards: a
+                dark-teal gradient banner with an amber "FREE" eyebrow so it
+                reads as a separate, no-cost offering — not another module. */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => handleModuleClick(freeShortCourse.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleModuleClick(freeShortCourse.id) } }}
+              className="group relative mt-5 cursor-pointer overflow-hidden rounded-xl border border-teal-400/30 bg-gradient-to-br from-[#0d5c63] via-[#0f766e] to-[#155e75] p-6 sm:p-7 shadow-lg shadow-teal-900/20 transition-all hover:shadow-xl hover:shadow-teal-900/30"
+            >
+              {/* decorative glow */}
+              <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-300/10 blur-3xl" />
+
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  {/* Eyebrow badge — amber accent, distinct from paid styling */}
+                  <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-300/95 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-amber-950">
+                    <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    Free Short Course
+                  </div>
+
+                  <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+                    {freeShortCourse.title}
+                  </h2>
+                  <p className="mt-1 text-sm font-medium text-teal-50/90">
+                    {freeShortCourse.subtitle}
+                  </p>
+                  <p className="mt-2 max-w-2xl text-xs leading-relaxed text-teal-100/80">
+                    The 2022 consensus rewrote concussion treatment. Most clinicians were trained on the old model — this free module brings you up to date.
+                  </p>
+
+                  {/* Meta chips */}
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-white/15">
+                      <Clock className="h-3.5 w-3.5" strokeWidth={2} />
+                      {freeShortCourse.duration}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-white/15">
+                      <BookOpen className="h-3.5 w-3.5" strokeWidth={2} />
+                      {freeShortCourse.sectionsCount} lessons
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-white/15">
+                      <Award className="h-3.5 w-3.5" strokeWidth={2} />
+                      Certificate on completion
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-300/20 px-2.5 py-1 text-[11px] font-semibold text-amber-100 ring-1 ring-amber-300/30">
+                      No cost
+                    </span>
+                  </div>
+                </div>
+
+                {/* Primary CTA */}
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleModuleClick(freeShortCourse.id) }}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#0f766e] shadow-sm transition-all hover:bg-teal-50 hover:shadow-md sm:w-auto"
+                  >
+                    {freeShortCourseComplete ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+                        Review the free module
+                      </>
+                    ) : (
+                      <>
+                        Start the free module
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Module Cards — accessible modules */}
             <div className="space-y-3 mt-5">
               {modules.map((module) => {
@@ -275,6 +352,7 @@ function LearningSuiteInner() {
                   <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
                     Paid Course
                   </span>
+                  <span className="text-xs font-bold text-foreground">from A${CONFIG.COURSE.PRICE_ONLINE}</span>
                 </div>
                 <div className="space-y-3">
                   {paidModules.map((module) => (
@@ -326,7 +404,7 @@ function LearningSuiteInner() {
                         className="absolute bottom-5 right-5 sm:bottom-6 sm:right-6 px-4 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-1.5 z-10"
                       >
                         <Lock className="w-3 h-3" />
-                        Unlock
+                        Unlock — A${CONFIG.COURSE.PRICE_ONLINE}
                       </Link>
                     </div>
                   ))}
