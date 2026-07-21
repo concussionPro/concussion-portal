@@ -248,7 +248,7 @@ export default function ConcussionUpdatePage() {
             <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-6">
               <Zap className="w-3.5 h-3.5 text-[#5b9aa6]" />
               <span className="text-xs font-bold text-[#5b9aa6] uppercase tracking-wide">
-                Free · 45–60 min · No Credit Card
+                Free · ~50 min · No Credit Card
               </span>
             </div>
 
@@ -271,7 +271,7 @@ export default function ConcussionUpdatePage() {
             {/* Trust pills */}
             <div className="flex flex-wrap gap-3 mb-10">
               {[
-                { icon: Clock, label: '45–60 min' },
+                { icon: Clock, label: '~50 min' },
                 { icon: Shield, label: 'Evidence-Based' },
                 { icon: Award, label: 'Certificate' },
                 { icon: Star, label: 'No Credit Card' },
@@ -350,7 +350,7 @@ export default function ConcussionUpdatePage() {
                     Get free instant access
                   </h2>
                   <p className="text-sm text-slate-500">
-                    No credit card · Immediate · 45–60 min
+                    No credit card · Immediate · ~50 min
                   </p>
                 </div>
 
@@ -456,7 +456,7 @@ export default function ConcussionUpdatePage() {
                   <p className="text-xs text-slate-500 mt-0.5">No cost, ever</p>
                 </div>
                 <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/50 p-3.5 text-center">
-                  <p className="text-xl font-black text-slate-900">45–60 min</p>
+                  <p className="text-xl font-black text-slate-900">~50 min</p>
                   <p className="text-xs text-slate-500 mt-0.5">To complete</p>
                 </div>
               </div>
