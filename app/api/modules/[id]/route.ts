@@ -33,13 +33,11 @@ export async function GET(
     const sessionToken = request.cookies.get('session')?.value
     let sessionData = sessionToken ? verifySessionToken(sessionToken) : null
 
-    // DEV-ONLY review bypass: let the free lead modules (101-104) render without
-    // signup on localhost so the free course can be reviewed. Production keeps
-    // the email-capture gate untouched.
-    const devFreePreview =
-      process.env.NODE_ENV !== 'production' && moduleId >= 101 && moduleId <= 104
-    if (!sessionData && devFreePreview) {
-      sessionData = { email: 'preview@localhost', accessLevel: 'preview' } as ReturnType<typeof verifySessionToken>
+    // DEV-ONLY review bypass: on localhost, serve ANY module (free or paid) with
+    // full access so the whole course can be reviewed without login. Production
+    // keeps every gate untouched.
+    if (!sessionData && process.env.NODE_ENV !== 'production') {
+      sessionData = { email: 'preview@localhost', accessLevel: 'full-course' } as ReturnType<typeof verifySessionToken>
     }
 
     if (!sessionData) {

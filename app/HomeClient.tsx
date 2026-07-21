@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble, MapPin, GraduationCap, HeartPulse } from 'lucide-react'
+import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble, MapPin, GraduationCap, HeartPulse, ExternalLink } from 'lucide-react'
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { CourseSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
@@ -24,6 +24,8 @@ const ESSA_APPROVED = CONFIG.FEATURES.ESSA_ACCREDITED
 const HOME_STREAMS: Array<{
   id: 'ccm' | 'crm'; code: string; name: string; audience: string; icon: typeof GraduationCap
   href: string; endorseImg: string; endorseOrg: string; endorseSub: string
+  /** External link to the endorsing body's listing — makes the badge clickable. */
+  endorseHref?: string
   /** True while the endorsing body has not confirmed — renders "pending", no logo. */
   endorsePending?: boolean
   tagline: string
@@ -34,6 +36,7 @@ const HOME_STREAMS: Array<{
     audience: 'Physiotherapists & allied health', icon: GraduationCap, href: '/pricing',
     endorseImg: '/osteopathy-australia-endorsed.png',
     endorseOrg: 'Osteopathy Australia',
+    endorseHref: 'https://osteopathy.org.au/Web/Web/cpd/endorsed-courses.aspx?hkey=3c85c306-c65a-4a5d-90f1-782a78dedd86',
     endorseSub: `AHPRA-aligned · 8 CPD hrs online, ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop`,
     tagline: 'Assess, diagnose and manage concussion — SCAT6, VOMS & BESS, return-to-play and phenotype rehab.',
     modules: [
@@ -130,17 +133,35 @@ export default function HomeClient() {
                         #1 trust signal, but light. OA under CCM, ESSA under CRM.
                         Only rendered here on the home page; the in-content badge is
                         hidden when embedded so it never repeats. */}
-                    <span className="flex items-center gap-2.5 px-1.5">
-                      {!s.endorsePending && (
-                        <Image src={s.endorseImg} alt={`Endorsed by ${s.endorseOrg}`} width={64} height={56} className="h-12 w-auto flex-none" />
-                      )}
-                      <span className="min-w-0">
-                        <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-                          {s.endorsePending ? 'Endorsement pending' : 'Endorsed by'}
-                        </span>
-                        <span className="block text-[13px] font-bold text-[var(--foreground)] leading-tight">{s.endorseOrg}</span>
-                      </span>
-                    </span>
+                    {(() => {
+                      const inner = (
+                        <>
+                          {!s.endorsePending && (
+                            <Image src={s.endorseImg} alt={`Endorsed by ${s.endorseOrg}`} width={72} height={64} className="h-[52px] w-auto flex-none" />
+                          )}
+                          <span className="min-w-0 text-left">
+                            <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+                              {s.endorsePending ? 'Endorsement pending' : 'Endorsed by'}
+                            </span>
+                            <span className="flex items-center gap-1 text-[14.5px] font-bold text-[var(--foreground)] leading-tight">
+                              {s.endorseOrg}
+                              {s.endorseHref && !s.endorsePending && (
+                                <ExternalLink className="w-3.5 h-3.5 opacity-50 flex-none" strokeWidth={2.2} />
+                              )}
+                            </span>
+                          </span>
+                        </>
+                      )
+                      // Prominent, bordered badge. Clickable when the body publishes a listing.
+                      const cls = `flex items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-colors ${s.endorsePending ? 'border-dashed border-[var(--border)] bg-transparent' : 'border-[var(--border)] bg-white/70 shadow-sm'}`
+                      return s.endorseHref && !s.endorsePending ? (
+                        <a href={s.endorseHref} target="_blank" rel="noopener noreferrer" className={`${cls} hover:border-[var(--accent)] hover:bg-white cursor-pointer`}>
+                          {inner}
+                        </a>
+                      ) : (
+                        <span className={cls}>{inner}</span>
+                      )
+                    })()}
                   </div>
                 )
               })}
