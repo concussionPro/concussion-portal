@@ -83,3 +83,35 @@ The free course feeds two different paid products for two different buyers — m
 It converts **clinicians who can act on the gap** in either market. For **PT-level endorsement audiences** (CIMSPA, REPS) the free course delivers reach, a listing and brand credibility, but weak conversion — neither diagnosis nor clinical exercise delivery is in their scope, so neither upgrade applies. Treat those listings as distribution, not a revenue target.
 
 **One product decision for you:** the free course must serve two masters — the endorsement bodies want "recognise-screen-refer safely" (Modules 1–2 deliver exactly that) and the funnel wants the management gap revealed (Modules 3–4). They are compatible in one course. But confirm each endorsing body will accept a course whose back half is "here is what you cannot yet do" — most will, because Modules 1–2 alone satisfy a safety-CPD remit, and 3–4 read as "further learning available." If any body wants a self-contained course with no upsell, give them Modules 1–2 only as the endorsed unit.
+
+---
+
+# The full funnel — course leads to the subscription (the recurring layer)
+
+The course is a **one-time** sale. The **recurring** revenue is the one Clinical Testing subscription (Single A$49 / Small clinic A$99 / Enterprise A$149 per month), which bundles **both tools in one sub, not two SKUs**:
+
+- **Baseline & Serial Testing** — assessment: the pre-injury comparator and objective serial tracking (CCM-weighted).
+- **SST Trainer** — exercise delivery: measured threshold, between-visit monitoring, verified progression (CRM-weighted).
+
+The course's job is not only to teach — it is to make the clinician understand these tools are **needed for complete, faithful care**, because they genuinely are. This is the same honest-gap logic as the free course, one level deeper: the course teaches the protocol; the protocol requires the instrument.
+
+## Why the tools are needed — stated honestly, not as a sales bolt-on
+
+**SST Trainer — required for faithful delivery of the exercise protocol.** The published protocol's own requirements state it cannot be delivered on paper: you cannot reliably measure the threshold, enforce the sub-symptom band during an unsupervised home session, or verify adherence before progressing, without continuous heart-rate monitoring that returns to the clinician. A clinician who finishes the course and tries to deliver it on a paper prescription hits exactly that wall. That is the non-coercive reason it is needed — the evidence-based protocol requires it.
+
+**Baseline & Serial Testing — needed for best-practice assessment and defensible clearance.** A pre-injury baseline is the comparator that makes a return-to-play clearance defensible rather than a judgement call; serial testing tracks recovery objectively. Frame it honestly as *needed to assess and clear to best practice* — NOT as "you cannot treat without it," which would overclaim.
+
+## How each course identifies the tools
+
+- **CRM (exercise) → SST Trainer as the delivery instrument.** The exercise-delivery modules teach a protocol that requires monitoring; the course names SST as how it is done, because the protocol requires it. Strongest, most honest tool-need in the funnel.
+- **CCM (diagnosis/management) → Baseline for assessment and clearance, plus the monitored exercise-rehab phase** (deliver via SST, or coordinate with an EP who runs it).
+
+## The revenue shape
+
+- **One-time:** free course ($0) -> paid course (CCM/CRM, ~$497 equivalent per market).
+- **Recurring:** one Clinical Testing subscription (A$49/99/149/mo per seat-band) — the compounding layer, seeded by the course.
+- The course pays for acquisition; **the subscription is the lifetime value.** A single converted clinic at the clinic tier is ~A$1,188/yr recurring — more than two course sales, every year.
+
+## The gate that blocks the recurring layer today
+
+The subscription **cannot bill until the three Stripe price IDs are set** (see SST-billing-go-live). Until then the funnel can seed *founding (free)* clinic sign-ups but cannot convert them to paid subs. Switching billing on is the single highest-leverage step in the whole model, because the subscription is the only recurring line and the course exists largely to feed it.
