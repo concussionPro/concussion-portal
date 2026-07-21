@@ -48,6 +48,26 @@ export async function GET(request: NextRequest) {
     if (!sessionToken) {
       const demoResponse = getDemoViewerResponse(request)
       if (demoResponse) return demoResponse
+      // DEV-ONLY: return a PREVIEW user on localhost so the learning dashboard
+      // and free course render for review — free modules accessible, paid
+      // modules shown locked with the upgrade CTA. Production is untouched.
+      if (process.env.NODE_ENV !== 'production') {
+        return NextResponse.json({
+          success: true,
+          user: {
+            id: 'dev-preview',
+            email: 'preview@localhost',
+            name: 'Dev Preview',
+            accessLevel: 'preview',
+            bookOwner: false,
+            workshopLocation: null,
+            createdAt: new Date().toISOString(),
+            nurtureUnsubscribed: true,
+            progressEmailsOptedOut: true,
+            isDemo: true,
+          },
+        })
+      }
       return NextResponse.json(
         { error: 'No session found' },
         { status: 401 }
@@ -63,6 +83,18 @@ export async function GET(request: NextRequest) {
       // happens to have an old session cookie from a different visit.
       const demoResponse = getDemoViewerResponse(request)
       if (demoResponse) return demoResponse
+      // DEV-ONLY: a stale/invalid cookie must not block localhost review either.
+      if (process.env.NODE_ENV !== 'production') {
+        return NextResponse.json({
+          success: true,
+          user: {
+            id: 'dev-preview', email: 'preview@localhost', name: 'Dev Preview',
+            accessLevel: 'preview', bookOwner: false, workshopLocation: null,
+            createdAt: new Date().toISOString(), nurtureUnsubscribed: true,
+            progressEmailsOptedOut: true, isDemo: true,
+          },
+        })
+      }
       return NextResponse.json(
         { error: 'Invalid or expired session' },
         { status: 401 }

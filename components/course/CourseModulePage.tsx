@@ -97,7 +97,7 @@ export interface CourseModuleDescriptor {
    */
   supportsDemoViewer: boolean
   /**
-   * This course hosts the free SCAT modules (ids 101-103) with their special
+   * This course hosts the free SCAT modules (ids 101-104) with their special
    * quiz access, completion screens, upsells and free-course completion
    * tracking. Flagship only.
    */
@@ -260,8 +260,9 @@ export function CourseModulePage({ descriptor }: { descriptor: CourseModuleDescr
     return <UpgradeOfferScreen moduleId={moduleId} router={router} loginPath={loginPathFor(moduleId)} />
   }
 
-  // If not authenticated and trying to access SCAT module (101-103), redirect to signup
-  if (!isAuthenticated && moduleId >= 101 && moduleId <= 103) {
+  // If not authenticated and trying to access SCAT module (101-104), redirect to signup.
+  // DEV-ONLY: skip the gate on localhost so the free course renders for review.
+  if (!isAuthenticated && moduleId >= 101 && moduleId <= 104 && process.env.NODE_ENV === 'production') {
     router.push('/scat-mastery')
     return (
       <div className="flex min-h-screen bg-slate-50 items-center justify-center">
@@ -333,8 +334,8 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
 
   const [isRetaking, setIsRetaking] = useState<Record<number, boolean>>({})
 
-  // Free SCAT modules (101-103) — flagship only; other courses never host them.
-  const isSCATModule = hasScatModules && moduleId >= 101 && moduleId <= 103
+  // Free SCAT modules (101-104) — flagship only; other courses never host them.
+  const isSCATModule = hasScatModules && moduleId >= 101 && moduleId <= 104
 
   // localStorage key for the section checkpoint (course-prefixed, never collides)
   const checkpointKey = checkpointKeyFor(moduleId)

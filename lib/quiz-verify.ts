@@ -22,7 +22,7 @@ const PASS_THRESHOLD = 0.75
 
 function answerKeyFor(moduleId: number): Map<string, number> | null {
   const source =
-    moduleId >= 101 && moduleId <= 103
+    moduleId >= 101 && moduleId <= 104
       ? scatModules.find((m) => m.id === moduleId)
       : modules.find((m) => m.id === moduleId)
   if (!source || !source.quiz?.length) return null

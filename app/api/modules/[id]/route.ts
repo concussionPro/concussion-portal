@@ -31,20 +31,20 @@ export async function GET(
 
     // Check authentication
     const sessionToken = request.cookies.get('session')?.value
+    let sessionData = sessionToken ? verifySessionToken(sessionToken) : null
 
-    if (!sessionToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+    // DEV-ONLY review bypass: let the free lead modules (101-104) render without
+    // signup on localhost so the free course can be reviewed. Production keeps
+    // the email-capture gate untouched.
+    const devFreePreview =
+      process.env.NODE_ENV !== 'production' && moduleId >= 101 && moduleId <= 104
+    if (!sessionData && devFreePreview) {
+      sessionData = { email: 'preview@localhost', accessLevel: 'preview' } as ReturnType<typeof verifySessionToken>
     }
-
-    // Verify session
-    const sessionData = verifySessionToken(sessionToken)
 
     if (!sessionData) {
       return NextResponse.json(
-        { error: 'Invalid or expired session' },
+        { error: 'Authentication required' },
         { status: 401 }
       )
     }
@@ -55,7 +55,7 @@ export async function GET(
       sessionData.accessLevel === 'full-course'
 
     // Get appropriate module based on access level
-    const isSCATModule = moduleId >= 101 && moduleId <= 103
+    const isSCATModule = moduleId >= 101 && moduleId <= 104
     let module
 
     if (hasFullAccess) {
@@ -100,7 +100,7 @@ export async function GET(
     }
 
     // For preview users accessing PAID modules (1-8): truncate content
-    // SCAT modules (101-103) are the free course — preview users get FULL access
+    // SCAT modules (101-104) are the free course — preview users get FULL access
     let responseModule = module
     let allSectionTitles: string[] | undefined
     if (sessionData.accessLevel === 'preview' && !isSCATModule) {
