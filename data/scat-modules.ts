@@ -948,7 +948,7 @@ export const scatModules: SCATModule[] = [
     id: 104,
     title: 'Concussion Care Has Changed',
     subtitle: 'The New First-Line Treatment Every Clinician Needs to Know',
-    duration: '~50 min',
+    duration: '~1 hour',
     points: 0,
     description: 'Concussion management has been rewritten in the last decade. Rest is out; early sub-symptom-threshold aerobic exercise is now a first-line treatment. This short awareness module covers the paradigm shift and the evidence behind it, how to recognise and refer safely, what modern management now involves, and — honestly — where that leaves you.',
     sections: [
