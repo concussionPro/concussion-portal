@@ -6,7 +6,7 @@
  * Restructured April 2026 for conversion optimisation
  */
 
-import { Section, QuizQuestion } from './modules'
+import { Section, QuizQuestion, ModulePart } from './modules'
 
 // SCATModule MUST be structurally IDENTICAL to Module for type compatibility
 export interface SCATModule {
@@ -19,6 +19,10 @@ export interface SCATModule {
   sections: Section[]
   quiz: QuizQuestion[]
   clinicalReferences: string[]
+  // Optional part-grouping (mirrors Module.parts). When present, the course
+  // player renders a knowledge check after each part instead of one quiz at the
+  // end — used by module 104 to intersperse checks through the module.
+  parts?: ModulePart[]
 }
 
 // Type aliases for backwards compatibility
@@ -930,17 +934,21 @@ export const scatModules: SCATModule[] = [
   },
 
   // =========================================================================
-  // MODULE 104: Concussion Care Has Changed (~15 min)
+  // MODULE 104: Concussion Care Has Changed (~45 min engaged)
   // FREE awareness module — exposes the paradigm shift and the felt need.
+  // Interactive: infographics, tap-to-reveal, gut-check polls, and interspersed
+  // knowledge checks (grouped via `parts`, one check after each part).
   // Awareness/context only: NO graded-test method, NO band/bpm math, NO
-  // phenotyping technique, NO progression rules, NO dosing protocol. Those
-  // stay in the paid courses so they are not made redundant.
+  // phenotyping technique, NO progression rules, NO dosing protocol, NO
+  // clearance-decision method. Those stay in the paid courses so they are not
+  // made redundant. Hard funnel questions EXPOSE the competence gap and name
+  // what the full course teaches — they never teach the method itself.
   // =========================================================================
   {
     id: 104,
     title: 'Concussion Care Has Changed',
     subtitle: 'The New First-Line Treatment Every Clinician Needs to Know',
-    duration: '~1 hour',
+    duration: '45 min',
     points: 0,
     description: 'Concussion management has been rewritten in the last decade. Rest is out; early sub-symptom-threshold aerobic exercise is now a first-line treatment. This short awareness module covers the paradigm shift and the evidence behind it, how to recognise and refer safely, what modern management now involves, and — honestly — where that leaves you.',
     sections: [
@@ -948,13 +956,23 @@ export const scatModules: SCATModule[] = [
         id: 'concussion-care-has-changed',
         title: 'Concussion Care Has Changed',
         content: [
+          'Start with your own instinct before we get to the evidence.',
+          '',
+          '[POLL: A patient rings the day after a concussion and asks what to do. Based on today\'s best evidence, what is the correct advice? | Strict rest until every symptom has completely gone | A brief period of relative rest (24–48 hours), then early sub-symptom-threshold aerobic exercise | Two weeks of complete physical and cognitive rest | Rest is only needed if they lost consciousness || 1 | Prolonged strict rest beyond the first 24–48 hours is now understood to slow recovery, not speed it. Current evidence supports a brief period of relative rest followed by early sub-symptom-threshold aerobic exercise as a first-line treatment. If your instinct was "rest until symptom-free," you were taught the old model — read on.]',
+          '',
           'For decades, the standard advice after a concussion was strict physical and cognitive rest until the patient was completely symptom-free — the so-called "cocoon" approach. The intuition was reasonable: an injured brain needs space to recover. Taken beyond the first day or two, it turned out to cause harm.',
           '',
           'That is no longer the evidence-based standard. Prolonged rest beyond the first 24–48 hours is now understood to be counterproductive: it drives physical deconditioning, removes the adaptive stimulus the recovering brain needs, amplifies mood disturbance and anxiety, fosters fear-avoidance, and is associated with SLOWER — not faster — clinical recovery.',
           '',
-          'The decisive shift came from controlled trials of early sub-symptom-threshold aerobic exercise. In the pivotal randomised trial, adolescents with sport-related concussion who were prescribed individualised sub-symptom-threshold aerobic exercise recovered faster than those given a placebo-like stretching program: median time to recovery was 13 days (IQR 10–18.5) in the aerobic-exercise group versus 17 days (IQR 13–23) in the stretching group (n=103, ages 13–18, P=.009; Leddy et al., JAMA Pediatrics 2019), with no increase in adverse events. This single trial did more than any other to move exercise from "contraindicated" to "first-line."',
+          'The decisive shift came from controlled trials of early sub-symptom-threshold aerobic exercise. Before you read the result, predict it:',
           '',
-          'The 2022 international consensus formalised the change. The Amsterdam Consensus Statement (Patricios et al., 2023 — 6th International Conference on Concussion in Sport) endorses early, symptom-limited activity and prescribed sub-symptom-threshold aerobic exercise as part of standard management, explicitly moving away from prolonged rest. Early sub-symptom-threshold aerobic exercise is now considered a first-line treatment for concussion.',
+          '[REVEAL: In the pivotal randomised trial (Leddy et al., JAMA Pediatrics 2019), adolescents were given either individualised early sub-symptom-threshold aerobic exercise or a placebo-like stretching program. How much faster did the exercise group recover? | Median time to recovery was 13 days (IQR 10–18.5) in the aerobic-exercise group versus 17 days (IQR 13–23) in the stretching group (n=103, ages 13–18, P=.009), with no increase in adverse events. This single trial did more than any other to move exercise from "contraindicated" to "first-line."]',
+          '',
+          'That result — not opinion, but a randomised trial — is why exercise moved from something to avoid to something to prescribe. The 2022 international consensus then formalised the change.',
+          '',
+          '[QUOTE: Amsterdam Consensus Statement (Patricios et al., 2023 — 6th International Conference on Concussion in Sport) | Following a brief period of relative rest, patients should be encouraged to gradually and progressively increase activity while staying below levels that meaningfully worsen their symptoms; prescribed sub-symptom-threshold aerobic exercise is now part of standard management.]',
+          '',
+          'The 2022 international consensus endorses early, symptom-limited activity and prescribed sub-symptom-threshold aerobic exercise as part of standard management, explicitly moving away from prolonged rest. Early sub-symptom-threshold aerobic exercise is now considered a first-line treatment for concussion.',
           '',
           '[HIGHLIGHT: Most clinicians practising today were trained on the old "rest until symptom-free" model. If that is still the advice you give, your concussion practice is a decade behind the evidence.]',
         ],
@@ -964,6 +982,8 @@ export const scatModules: SCATModule[] = [
         title: 'What a Concussion Actually Is',
         content: [
           'A concussion is a mild traumatic brain injury caused by a biomechanical force transmitted to the brain. Crucially, that force does NOT have to be a direct blow to the head. A hit to the body, a fall, or a whiplash-type collision can transmit enough rotational and acceleration force through the neck to injure the brain — which is why a concussion can occur with no visible head contact at all.',
+          '',
+          '[REVEAL: True or false — a normal CT or MRI scan rules out a concussion. | False. Concussion is a FUNCTIONAL injury (a disruption of how neurons work), not a STRUCTURAL one, so standard CT and MRI are typically normal. Imaging is used to rule out a structural emergency such as a bleed — it can never confirm or exclude a concussion, which is diagnosed clinically.]',
           '',
           'Those forces cause the brain\'s tissues to stretch and deform. Because the brain\'s outer and inner structures have different densities and anchoring points, rapid movement makes them shift at slightly different rates, stretching the long connecting fibres (axons) — particularly at the junctions between grey and white matter. This is a FUNCTIONAL injury, not a structural one: standard CT and MRI scans are typically normal, which is exactly why concussion is diagnosed clinically rather than on a scan.',
           '',
@@ -980,6 +1000,8 @@ export const scatModules: SCATModule[] = [
         content: [
           'Concussion is common, and it is under-counted. Estimates put sport-related concussions in the United States at 1.6 to 3.8 million each year, and the true figure is almost certainly higher because many are never reported — athletes minimise symptoms to stay on the field, and many injured people never present to a clinician at all.',
           '',
+          '[REVEAL: Roughly how many concussions are estimated to occur in Australia each year, across all settings? | Around 180,000 a year — and that is an estimate of a substantially under-reported total. It spans not only sport but falls (especially in older adults), workplace incidents and road trauma. If you only think "concussion" on a football field, you are missing most of them.]',
+          '',
           'In Australia, roughly 180,000 concussions are estimated to occur each year across all settings — not only sport, but also falls, workplace incidents and motor vehicle accidents. Falls in older adults and road trauma account for a large share that sits well outside the sporting context clinicians most readily associate with concussion.',
           '',
           'The reason the numbers matter to you is simple: concussion does not walk in wearing a label. It presents in general practice, physiotherapy, osteopathy, workplaces and emergency departments — often as a headache, a "whiplash," dizziness, or a vague sense of "not feeling right" days after an event the patient did not think was serious. If you see patients at all, you see concussion, whether or not it is recognised as such.',
@@ -993,9 +1015,13 @@ export const scatModules: SCATModule[] = [
         content: [
           'Recognition is where every clinician\'s role begins, and it does not require any special equipment — it requires knowing what to look for. Concussion presents as a combination of what you can OBSERVE and what the person REPORTS, and importantly, no single feature is required for the diagnosis. In particular, loss of consciousness happens in only a minority of concussions; its absence never rules concussion out.',
           '',
+          '[REVEAL: A player takes a knock, stays on their feet, and never loses consciousness. Can this still be a concussion? | Yes. Loss of consciousness occurs in only a minority of concussions, so its absence proves nothing. A plausible mechanism plus any new symptom is enough to suspect concussion, remove the person from risk, and assess or refer.]',
+          '',
           'OBSERVABLE SIGNS may include: lying motionless, being slow to get up, unsteadiness or loss of balance, a blank or vacant look, disorientation or confusion, clutching the head, or a facial injury after a head impact. These are the cues a bystander, coach or clinician can see from the outside.',
           '',
           'REPORTED SYMPTOMS span several categories: physical (headache, pressure in the head, nausea, dizziness, sensitivity to light or noise, blurred vision, balance problems); cognitive (feeling "in a fog," slowed down, difficulty concentrating or remembering); emotional (irritability, sadness, feeling more emotional or anxious than usual); and sleep-related (drowsiness, sleeping more or less than usual, trouble falling asleep).',
+          '',
+          '[INFOGRAPHIC: concussion-symptom-clusters]',
           '',
           'Two features make recognition tricky. First, symptoms often EVOLVE — someone can look and feel fine immediately after an impact and then deteriorate over the following minutes and hours, which is why re-checking matters and why no athlete returns to play the same day. Second, the trigger can be subtle: a plausible mechanism plus any new symptom is enough to suspect concussion, remove the person from risk, and assess or refer.',
           '',
@@ -1009,6 +1035,10 @@ export const scatModules: SCATModule[] = [
           'Before management comes recognition — and recognition is where every clinician\'s responsibility begins. A concussion can occur WITHOUT any loss of consciousness and WITHOUT direct head contact; forces transmitted to the head, including whiplash-type rotational forces, are enough. Any athlete with a plausible mechanism and new symptoms should be removed from play and assessed.',
           '',
           'Red flag recognition is the most time-critical clinical skill in concussion management. Missing a red flag is the highest-risk error you can make.',
+          '',
+          '[INFOGRAPHIC: red-flag-decision]',
+          '',
+          '[POLL: Four people present after a head knock. Which one needs an ambulance (000) called right now? | A headache rated 3/10 that eases with rest | Feeling "foggy" 30 minutes after the impact | Two episodes of vomiting since the injury | Mild trouble concentrating during your assessment || 2 | Repeated vomiting (two or more episodes) is a red flag for possible intracranial bleeding and warrants an immediate emergency call. Headache, fogginess and concentration difficulty are expected concussion symptoms that, on their own, do not.]',
           '',
           '[CALLOUT: warning | CALL AN AMBULANCE (000) IMMEDIATELY for any of: loss of consciousness for more than 1 minute (or any LOC in a child under 5); deteriorating conscious state; severe or rapidly increasing "thunderclap" headache; repeated vomiting (two or more episodes); seizure or convulsive movements; focal neurological deficit such as unilateral weakness, numbness, facial droop or speech deficit; neck pain with neurological symptoms; double vision; or signs of a basal skull fracture. Do not attempt further assessment — escalate.]',
           '',
@@ -1036,6 +1066,8 @@ export const scatModules: SCATModule[] = [
         content: [
           'One of the biggest shifts in modern concussion care is the recognition that "concussion" is not a single, uniform condition. Two patients with the same diagnosis can have almost nothing in common in how they present — because concussion disrupts several different systems, and different systems are affected in different people. Clinicians now describe these as distinct symptom PHENOTYPES.',
           '',
+          '[REVEAL: Before you read on — how many distinct concussion phenotypes can you name? | Six are commonly described: cognitive, vestibular, ocular, cervical, mood/anxiety, and autonomic/exertional. Naming them is awareness. Telling which one (or combination) is driving a given patient — and what to do about it — is a clinical assessment skill, not something to attempt from a list.]',
+          '',
           'The commonly described phenotypes include: COGNITIVE (fogginess, slowed processing, memory and concentration difficulty); VESTIBULAR (dizziness, imbalance, sensitivity to busy visual environments); OCULAR (difficulty with eye teaming and focusing, discomfort reading or using screens); CERVICAL (neck-driven headache and dizziness arising from the same forces that injured the brain); MOOD / ANXIETY (irritability, low mood, heightened anxiety); and AUTONOMIC / EXERTIONAL (symptoms provoked by physical or mental effort, reflecting disrupted regulation of heart rate and blood flow).',
           '',
           'Why does this matter for awareness? Because it explains why a one-size-fits-all approach fails. The reason two patients need different management is that they have different phenotypes — and matching care to the driving phenotype is what separates modern, effective concussion management from generic advice to "rest and see how you go."',
@@ -1051,9 +1083,13 @@ export const scatModules: SCATModule[] = [
         content: [
           'Recognising and referring is where your responsibility begins — not where concussion care ends. Modern management involves two distinct competencies, and neither is guesswork.',
           '',
+          '[INFOGRAPHIC: ep-scope-boundary]',
+          '',
           'The first is CLINICAL DIAGNOSIS AND MANAGEMENT: confirming the diagnosis, distinguishing concussion from cervical, vestibular and other drivers (phenotyping), identifying persistent post-concussive symptoms (PPCS), and making graduated return-to-play and return-to-learn decisions with clearance. This is the work of medical practitioners (GPs, sports physicians) and, within their scope, physiotherapists and other clinicians.',
           '',
           'The second is DELIVERING THE EXERCISE TREATMENT itself. The first-line active treatment — sub-symptom-threshold aerobic exercise — is dosed off an individually MEASURED heart-rate threshold and delivered between clinic visits, day after day, not only in the consulting room. Prescribing, dosing and progressing that exertion is the domain of the exercise physiologist.',
+          '',
+          '[REVEAL: Who sets the dose for the exercise treatment — and off what? | It is dosed off an individually MEASURED heart-rate threshold, not a number you can guess or copy from a handout, and it is prescribed and progressed by an appropriately trained clinician (the exercise physiologist for delivery). This module tells you THAT a measured threshold exists — how it is measured, set and progressed is the clinical method taught in the full courses.]',
           '',
           '[CALLOUT: key | Two roles, one patient. DIAGNOSIS AND CLINICAL MANAGEMENT — phenotyping, PPCS, return-to-play clearance — is the clinician\'s job (GP / sports physician / physiotherapist). DELIVERING THE MEASURED-THRESHOLD EXERCISE TREATMENT between visits is the exercise physiologist\'s job. Recognising which role a given task belongs to is itself a clinical skill.]',
           '',
@@ -1066,7 +1102,11 @@ export const scatModules: SCATModule[] = [
         content: [
           'Recovery is not a single switch from "injured" to "cleared." Modern concussion care uses a STEPWISE, GRADED return across the different demands a person faces — physical activity and sport, cognitive load at school or study, and the demands of work. Each follows a staged progression from lighter to heavier load.',
           '',
+          '[INFOGRAPHIC: recovery-timeline]',
+          '',
           'The graduated RETURN-TO-SPORT strategy is described in international guidelines as a sequence of stages: (1) symptom-limited daily activity; (2) light aerobic exercise; (3) sport-specific exercise; (4) non-contact training drills; (5) full-contact practice; and finally (6) return to competition. A person moves up the ladder gradually, and contact is reintroduced only near the end.',
+          '',
+          '[POLL: A community footballer is feeling "basically back to normal" and wants to play this weekend. Who can clear them to return to full contact? | Any clinician who has seen the patient | The patient themselves, once symptoms feel gone | A coach, if the player passes a fitness run | A medical practitioner making the return-to-contact clearance decision || 3 | Return-to-contact clearance is a MEDICAL decision. Naming the return-to-sport ladder is awareness; judging readiness to advance between stages, and providing clearance, requires clinical method and medical authority — deliberately not taught here.]',
           '',
           'RETURN-TO-LEARN and RETURN-TO-WORK follow the same philosophy: a graded reintroduction of cognitive and occupational demand — reduced hours, modified duties, frequent breaks and a quiet environment early on — building back toward a full load as tolerance improves. Early, partial, supported return consistently produces better outcomes than prolonged complete absence.',
           '',
@@ -1081,6 +1121,8 @@ export const scatModules: SCATModule[] = [
         content: [
           'Most people recover from concussion within a few weeks. But a meaningful minority do not — when symptoms continue beyond the expected window (commonly cited as around four weeks), the presentation is described as persistent post-concussive symptoms, or PPCS.',
           '',
+          '[REVEAL: A patient is still symptomatic at six weeks. Is PPCS a dead end best managed with more rest and time? | No. PPCS reflects real, ongoing dysfunction (cognitive, vestibular, ocular, cervical, mood or autonomic — often combined) and is MANAGEABLE. It responds to active, targeted, multidisciplinary care matched to the drivers — not to more rest and waiting. It is a defined, treatable pathway that warrants specialist referral.]',
+          '',
           'PPCS is not a sign that someone is "not trying" or that the injury was imagined. It reflects real, ongoing dysfunction — which may be cognitive, vestibular, ocular, cervical, mood-related or autonomic, often in combination — and its risk is increased by factors such as high initial symptom burden, prior concussions, pre-existing anxiety or depression, and, notably, by outdated management such as prolonged strict rest.',
           '',
           'The important message for awareness is that PPCS is MANAGEABLE, not a dead end. It is addressed through active, targeted, multidisciplinary care — matching treatment to the specific drivers keeping the person symptomatic — rather than through more rest and waiting. Recognising that persistence is a defined, treatable pathway that warrants specialist referral is the awareness point.',
@@ -1094,9 +1136,13 @@ export const scatModules: SCATModule[] = [
         content: [
           'Be honest about where this leaves you. After this module you can RECOGNISE a suspected concussion and REFER safely — genuinely useful, and genuinely within reach for any clinician. What you are not yet equipped to do is diagnose and clinically manage a concussion, or deliver the measured-threshold exercise treatment. Those require method, not awareness.',
           '',
-          'Complete care also requires the right tools. A measured heart-rate threshold and monitored between-visit exercise sessions cannot be tracked on paper — the part of the treatment that happens between appointments has to be measured and monitored, not estimated.',
+          '[CALLOUT: key | Where this module leaves you: you can now RECOGNISE and REFER. You are NOT yet equipped to diagnose-and-manage, to phenotype, to set or progress the exercise dose, or to make the return-to-contact clearance decision. That is not a gap in you — it is the boundary between awareness and clinical method, and closing it is exactly what the full courses are for.]',
           '',
-          'Two courses close these gaps: Concussion Clinical Mastery for diagnosis and clinical management, and Concussion for the Exercise Physiologist for delivering the exercise treatment. This module was built to make the gap visible — the courses are where you close it.',
+          'Complete care also requires the right tools, because the treatment cannot be delivered or monitored on paper. The measured heart-rate threshold that the exercise dose is built on has to actually be MEASURED, and the sessions that happen between appointments — where most of the treatment lives — have to be MONITORED, not estimated from a handout.',
+          '',
+          'That is what the clinical tools are for. The SST Trainer measures the threshold the program is built on, guides and monitors the between-visit home sessions, and returns that session data to the treating clinician so the program can be reviewed and progressed faithfully — the treatment cannot be delivered or followed on paper, and this is what makes faithful delivery possible. Baseline testing supports best-practice assessment: it establishes an individual reference point to measure a person\'s recovery against, rather than judging them against population averages. Neither tool is a shortcut and neither replaces the clinical method — they are what faithful delivery and best-practice assessment actually require once you have been trained in the method.',
+          '',
+          'Two courses close the knowledge gaps: Concussion Clinical Mastery for diagnosis and clinical management (physiotherapists, OTs and other clinicians), and Concussion for the Exercise Physiologist for delivering the exercise treatment (exercise physiologists). This module was built to make the gap visible — the courses, and the tools that support them, are where you close it.',
         ],
       },
     ],
@@ -1269,12 +1315,112 @@ export const scatModules: SCATModule[] = [
         correctAnswer: 0,
         explanation: 'Symptoms persisting beyond roughly four weeks are described as PPCS. It reflects real, ongoing dysfunction and is managed with active, targeted, multidisciplinary care matched to the drivers — not with more rest and waiting. Recognising it as a defined, treatable pathway that warrants specialist referral is the awareness point.',
       },
+      {
+        id: 'q104-15',
+        question: 'A 15-year-old is 6 days post-concussion, symptoms clearly improving. Her mother, who has read that "exercise is the new treatment," asks you to set up her exercise program today. You have completed this awareness module. What is the correct action?',
+        options: [
+          'Prescribe a fixed daily jog at a comfortable pace — a simple, safe default for everyone',
+          'Have her exercise until symptoms become moderately provoked each session, to build tolerance faster',
+          'Recognise that safely setting the dose requires an individually measured threshold and a method you have not been trained in — refer to a clinician or exercise physiologist who delivers it',
+          'Advise complete rest until she is fully symptom-free, then a sudden return to sport',
+        ],
+        correctAnswer: 2,
+        explanation: 'This is the trap the module is built to expose: awareness tells you the treatment EXISTS and is dosed off an individually measured threshold, but it deliberately does not teach how that threshold is measured or how the dose is set and progressed — there is no safe "default" number, and pushing into symptoms is harmful. How to measure the threshold and prescribe and progress the dose is the clinical method taught in Concussion for the Exercise Physiologist (delivery) and Concussion Clinical Mastery (clinical management). The correct move from awareness alone is to refer.',
+      },
+      {
+        id: 'q104-16',
+        question: 'An office worker is 2 weeks post-concussion, back at reduced hours with only mild residual symptoms, and asks when he can return to his weekend contact football. What is the correct response?',
+        options: [
+          'Clear him for full contact now, since his symptoms are only mild',
+          'Tell him to advance one stage of the return-to-sport ladder every day regardless of how he feels',
+          'Recognise that judging readiness to progress between stages, and providing return-to-contact clearance, is a clinical and medical decision beyond awareness — he should advance only under the appropriate clinician, who provides clearance',
+          'Advise indefinite rest from all physical activity until every symptom has gone for a month',
+        ],
+        correctAnswer: 2,
+        explanation: 'You can NAME the return-to-sport ladder from this module, but knowing the stages is not the same as knowing how to pace them or who signs off. How a patient is safely progressed between stages, and who is authorised to provide return-to-contact clearance, integrates the full clinical picture and requires medical authority — the decision method is taught in Concussion Clinical Mastery, not in an awareness briefing. Advancing on a fixed daily schedule, or clearing him yourself, would both be errors.',
+      },
+      {
+        id: 'q104-17',
+        question: 'A patient 3 weeks post-injury still has dizziness in busy visual environments and headaches when reading. A colleague says, "just start the aerobic exercise treatment — that fixes concussion." What is the most appropriate response?',
+        options: [
+          'Agree — sub-symptom-threshold aerobic exercise treats every concussion presentation identically',
+          'Start vestibular and visual rehabilitation yourself from an online tutorial',
+          'Recognise that identifying which phenotype(s) are driving this presentation, and matching treatment to them, is a clinical assessment skill you have not been trained in — refer for a phenotype-informed assessment',
+          'Advise the patient to avoid all screens and reading permanently',
+        ],
+        correctAnswer: 2,
+        explanation: 'This presentation points to vestibular and ocular features, which is exactly why "one treatment fixes everything" fails. This module NAMES the phenotypes so you appreciate they exist; distinguishing them at the bedside and matching targeted treatment to the driving phenotype is a clinical assessment skill taught in Concussion Clinical Mastery (with phenotype-specific rehabilitation progressions in the EP course). Neither treating blindly nor improvising rehab from a tutorial is appropriate from awareness alone.',
+      },
+      {
+        id: 'q104-18',
+        question: 'You are the first clinician to see a rugby player 20 minutes after a heavy tackle. He is increasingly drowsy, has vomited twice, and his headache is getting worse. What is the correct action?',
+        options: [
+          'Complete a full sideline cognitive and balance assessment first, then decide',
+          'Reassure him, give simple analgesia, and review him tomorrow',
+          'Stop assessing and escalate immediately — call an ambulance (000); deteriorating conscious state, repeated vomiting and a worsening headache are red flags for a possible intracranial emergency',
+          'Send him home to rest in a dark room and monitor the symptoms himself',
+        ],
+        correctAnswer: 2,
+        explanation: 'Red-flag recognition is the most time-critical skill in concussion care, and missing one is the highest-risk error you can make. A deteriorating conscious state, repeated vomiting (two or more episodes) and a rapidly worsening headache together demand an immediate 000 call — you do NOT continue assessment, reassure, or send home. When in doubt, escalate: the cost of over-referral is a scan; the cost of under-referral can be catastrophic.',
+      },
+      {
+        id: 'q104-19',
+        question: 'Why can the between-visit part of the exercise treatment not simply be handled with a printed handout and generic advice?',
+        options: [
+          'It can — a photocopied exercise sheet is entirely sufficient for every patient',
+          'Because the dose is built on an individually measured threshold and the sessions between appointments have to be measured and monitored, not estimated; faithful delivery requires the right assessment and monitoring tools',
+          'Because exercise is dangerous after concussion and should always be avoided',
+          'Because only medication, not exercise, has any role in modern concussion care',
+        ],
+        correctAnswer: 1,
+        explanation: 'Most of the treatment happens between appointments, and it is built on an individually measured threshold — so the between-visit sessions must be measured and monitored rather than estimated from paper. That is what tools such as the SST Trainer (which measures the threshold, monitors the home sessions and returns the data to the clinician) and Baseline testing (an individual reference point for assessment) support. The tools enable faithful delivery and best-practice assessment; the underlying clinical method is taught in the full courses.',
+      },
     ],
     clinicalReferences: [
       'Leddy JJ, Haider MN, Ellis MJ, et al. Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics. 2019;173(4):319-325.',
       'Patricios JS, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport–Amsterdam, October 2022. British Journal of Sports Medicine. 2023;57(11):695-711.',
       'Australian Institute of Sport. AIS Concussion and Brain Health Position Statement 2024. Canberra: AIS; 2024.',
       'Echemendia RJ, et al. Sport Concussion Assessment Tool — 6th Edition (SCAT6). British Journal of Sports Medicine. 2023;57(11):622-631.',
+    ],
+    // Part-grouping intersperses a knowledge check after each part instead of
+    // one quiz at the end. EVERY quiz id must appear in exactly one part's
+    // quizIds, or an unassigned question can never be answered/submitted.
+    parts: [
+      {
+        id: 'part-1',
+        title: 'Part 1: The Paradigm Shift',
+        subtitle: 'Why rest is out, what a concussion actually is, and the evidence that rewrote the standard of care',
+        sectionIds: ['concussion-care-has-changed', 'what-a-concussion-is'],
+        quizIds: ['q104-1', 'q104-2', 'q104-3', 'q104-9', 'q104-10'],
+      },
+      {
+        id: 'part-2',
+        title: 'Part 2: The Scale of It & Recognising It',
+        subtitle: 'How common concussion really is, and the signs and symptoms every clinician should recognise',
+        sectionIds: ['the-scale-of-it', 'signs-and-symptoms'],
+        quizIds: ['q104-11', 'q104-5'],
+      },
+      {
+        id: 'part-3',
+        title: 'Part 3: Recognise & Refer Safely',
+        subtitle: 'Red flags, urgent referral, and the highest-risk error in concussion care',
+        sectionIds: ['recognise-and-refer-safely'],
+        quizIds: ['q104-4', 'q104-18'],
+      },
+      {
+        id: 'part-4',
+        title: 'Part 4: What Modern Management Involves',
+        subtitle: 'The many faces of concussion and the two distinct roles that complete care requires',
+        sectionIds: ['many-faces-of-concussion', 'what-modern-management-now-involves'],
+        quizIds: ['q104-12', 'q104-6', 'q104-7', 'q104-17'],
+      },
+      {
+        id: 'part-5',
+        title: 'Part 5: Recovery, Persistence & Where This Leaves You',
+        subtitle: 'Graded return, persistent symptoms, and an honest account of the competence gap',
+        sectionIds: ['return-to-work-school-play', 'when-symptoms-persist', 'where-this-leaves-you'],
+        quizIds: ['q104-13', 'q104-16', 'q104-14', 'q104-8', 'q104-15', 'q104-19'],
+      },
     ],
   },
 ]
