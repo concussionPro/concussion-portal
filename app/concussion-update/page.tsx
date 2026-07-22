@@ -316,7 +316,7 @@ export default function ConcussionUpdatePage() {
                 <p className="text-xs text-slate-500 font-semibold">— Sarah, Physiotherapist</p>
               </div>
               <p className="text-sm text-slate-500">
-                AHPRA aligned · Endorsed by Osteopathy Australia
+                A free, AHPRA-aligned awareness module — awards a certificate of completion.
               </p>
             </div>
           </div>
@@ -473,6 +473,9 @@ export default function ConcussionUpdatePage() {
               </h2>
               <p className="text-sm text-slate-500">
                 This module makes the gap visible. The complete course is where you close it.
+              </p>
+              <p className="text-xs text-slate-400 mt-2">
+                Concussion Clinical Mastery is endorsed by Osteopathy Australia · hours count toward AHPRA CPD.
               </p>
             </div>
 

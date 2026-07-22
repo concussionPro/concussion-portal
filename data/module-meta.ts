@@ -131,7 +131,7 @@ const freeShortCourse: FreeShortCourseMeta = {
   subtitle: 'The New First-Line Treatment Every Clinician Needs to Know',
   duration: '~1 hour',
   points: 0,
-  sectionsCount: 10,
+  sectionsCount: 12,
   description:
     'The 2022 consensus rewrote concussion treatment. Most clinicians were trained on the old model — this free module brings you up to date.',
 }

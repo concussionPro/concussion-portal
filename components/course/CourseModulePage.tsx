@@ -907,6 +907,29 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 {(() => {
                   const lastModuleId = isSCATModule ? 103 : 8
                   const hasNext = moduleId < lastModuleId
+                  // Module 104 — the free standalone "Concussion Care Has Changed"
+                  // awareness course. It promises a certificate of completion, so
+                  // its completion screen surfaces the claim CTA (not "View All
+                  // Modules"). Cert issued via /api/certificate?type=recognition-referral.
+                  if (moduleId === 104) {
+                    return (
+                      <>
+                        <button
+                          onClick={() => router.push('/settings#certificate')}
+                          className="px-8 py-3.5 bg-[var(--accent)] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+                        >
+                          Claim your certificate
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => router.push(backHref)}
+                          className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+                        >
+                          Back to all modules
+                        </button>
+                      </>
+                    )
+                  }
                   // Course finished (paid 8/8): the certificate is the payoff —
                   // surface it HERE, not buried in Settings (2026-07-05 audit).
                   // Flagship only (showCertificateCta).

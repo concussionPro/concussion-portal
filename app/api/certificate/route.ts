@@ -7,6 +7,7 @@ import {
   getSCATCertificateData,
   getOnlineCourseCertificateData,
   getFullCourseCertificateData,
+  getRecognitionReferralCertificateData,
 } from '@/lib/certificate'
 import { getResend, sendEmail, sendEmailWithAttachment, escapeHtml as sharedEscapeHtml } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
@@ -17,6 +18,16 @@ import { CONFIG } from '@/lib/config'
 
 const SCAT_MODULE_IDS = [101, 102, 103]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
+// Module 104 — free standalone "Concussion Care Has Changed" awareness course.
+// Its completion certificate (recognition-referral) is gated on module 104 alone.
+const RECOGNITION_REFERRAL_MODULE_IDS = [104]
+
+/** Which module ids gate a given certificate type. */
+function moduleIdsForCertType(courseType: string): number[] {
+  if (courseType === 'scat-mastery') return SCAT_MODULE_IDS
+  if (courseType === 'recognition-referral') return RECOGNITION_REFERRAL_MODULE_IDS
+  return PAID_MODULE_IDS
+}
 
 /**
  * GET /api/certificate?type=scat-mastery|online-course|full-course
@@ -60,7 +71,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No progress found' }, { status: 404 })
     }
 
-    const moduleIds = courseType === 'scat-mastery' ? SCAT_MODULE_IDS : PAID_MODULE_IDS
+    const moduleIds = moduleIdsForCertType(courseType)
     const allCompleted = moduleIds.every(id => progress[String(id)]?.completed)
 
     if (!allCompleted) {
@@ -100,6 +111,8 @@ export async function GET(request: NextRequest) {
       certData = getSCATCertificateData(participantName, sessionData.email, completionDate)
     } else if (courseType === 'full-course') {
       certData = getFullCourseCertificateData(participantName, sessionData.email, completionDate)
+    } else if (courseType === 'recognition-referral') {
+      certData = getRecognitionReferralCertificateData(participantName, sessionData.email, completionDate)
     } else {
       certData = getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
     }
@@ -171,7 +184,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No progress found' }, { status: 404 })
     }
 
-    const moduleIds = courseType === 'scat-mastery' ? SCAT_MODULE_IDS : PAID_MODULE_IDS
+    const moduleIds = moduleIdsForCertType(courseType)
     const allCompleted = moduleIds.every(id => progress[String(id)]?.completed)
 
     if (!allCompleted) {
@@ -209,6 +222,8 @@ export async function POST(request: NextRequest) {
       certData = getSCATCertificateData(participantName, sessionData.email, completionDate)
     } else if (courseType === 'full-course') {
       certData = getFullCourseCertificateData(participantName, sessionData.email, completionDate)
+    } else if (courseType === 'recognition-referral') {
+      certData = getRecognitionReferralCertificateData(participantName, sessionData.email, completionDate)
     } else {
       certData = getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
     }
@@ -327,9 +342,14 @@ async function sendCertificateEmail(opts: {
   /** access_level so we dont pitch the workshop to someone who already owns it */
   userAccessLevel?: 'preview' | 'online-only' | 'full-course'
 }): Promise<boolean> {
+  // 0-CPD activities (the free awareness module) are completion certificates,
+  // not CPD certificates — keep the framing honest.
+  const isCompletionOnly = opts.cpdPoints === 0
   return sendEmailWithAttachment({
     to: opts.to,
-    subject: `Your CPD Certificate — ${opts.courseTitle}`,
+    subject: isCompletionOnly
+      ? `Your Certificate of Completion — ${opts.courseTitle}`
+      : `Your CPD Certificate — ${opts.courseTitle}`,
     attachments: [
       {
         filename: `CPD-Certificate-${opts.certificateId}.pdf`,
@@ -361,12 +381,21 @@ async function sendCertificateEmail(opts: {
                   <div style="font-size: 18px; font-weight: 700; color: #166534; margin-bottom: 8px;">
                     ${sharedEscapeHtml(opts.courseTitle)}
                   </div>
+                  ${isCompletionOnly ? `
+                  <div style="font-size: 24px; font-weight: 800; color: #059669;">
+                    Certificate of Completion
+                  </div>
+                  <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                    Certificate ID: ${sharedEscapeHtml(opts.certificateId)}
+                  </div>
+                  ` : `
                   <div style="font-size: 32px; font-weight: 800; color: #059669;">
                     ${opts.cpdPoints} CPD ${opts.cpdPoints === 1 ? 'Point' : 'Points'}
                   </div>
                   <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
                     AHPRA-Aligned · Certificate ID: ${sharedEscapeHtml(opts.certificateId)}
                   </div>
+                  `}
                 </div>
 
                 <p>Your certificate is attached to this email as a PDF. Save it for your records.</p>

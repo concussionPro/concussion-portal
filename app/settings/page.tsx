@@ -31,6 +31,10 @@ export default function SettingsPage() {
   const [scatCertDownloading, setScatCertDownloading] = useState(false)
   const [scatCertEmailStatus, setScatCertEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
+  // Free awareness course (module 104) certificate state
+  const [freeCertDownloading, setFreeCertDownloading] = useState(false)
+  const [freeCertEmailStatus, setFreeCertEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
   // Name editing state
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
@@ -94,6 +98,9 @@ export default function SettingsPage() {
   const completedScatModules = scatModuleIds.filter(id => isModuleComplete(id)).length
   const allScatComplete = completedScatModules === 3
   const isPreviewUser = user?.accessLevel === 'preview'
+
+  // Free awareness short course (module 104) — standalone completion certificate
+  const isFreeCourseComplete = isModuleComplete(104)
 
   const getCertType = () => {
     // All paid users get the online-course certificate (8 CPD).
@@ -182,6 +189,46 @@ export default function SettingsPage() {
       setScatCertEmailStatus(data.success ? 'sent' : 'error')
     } catch (error) {
       setScatCertEmailStatus('error')
+      setCertError('Failed to email certificate. Please try again.')
+    }
+  }
+
+  const handleDownloadFreeCert = async () => {
+    setCertError(null)
+    setFreeCertDownloading(true)
+    try {
+      const response = await fetch('/api/certificate?type=recognition-referral', { credentials: 'include' })
+      if (!response.ok) throw new Error('Download failed')
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Certificate-of-Completion.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      setCertError('Failed to download certificate. Please try again.')
+    } finally {
+      setFreeCertDownloading(false)
+    }
+  }
+
+  const handleEmailFreeCert = async () => {
+    setCertError(null)
+    setFreeCertEmailStatus('sending')
+    try {
+      const res = await fetch('/api/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'recognition-referral' }),
+        credentials: 'include',
+      })
+      const data = await res.json()
+      setFreeCertEmailStatus(data.success ? 'sent' : 'error')
+    } catch (error) {
+      setFreeCertEmailStatus('error')
       setCertError('Failed to email certificate. Please try again.')
     }
   }
@@ -617,6 +664,72 @@ export default function SettingsPage() {
                             style={{ width: `${(completedModules / 8) * 100}%` }}
                           />
                         </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Free awareness course (module 104) — Certificate of Completion */}
+                {isFreeCourseComplete && (
+                  <div id="certificate" className="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Award className="w-5 h-5 text-[#5b9aa6]" strokeWidth={2} />
+                      <h2 className="text-xl font-bold text-slate-900">Concussion Recognition &amp; Referral</h2>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-5 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-bold text-emerald-900">
+                          Certificate of Completion
+                        </span>
+                      </div>
+                      <p className="text-xs text-emerald-700">
+                        You&apos;ve completed the free awareness module &ldquo;Concussion Care Has Changed&rdquo;. This certifies you can recognise a suspected concussion and refer safely — it is an awareness certificate, not CPD hours. Download or email it below.
+                      </p>
+                    </div>
+
+                    {freeCertEmailStatus === 'sent' && (
+                      <p className="text-xs text-emerald-700 mb-3">
+                        Certificate emailed to <span className="font-semibold">{user?.email}</span>
+                      </p>
+                    )}
+                    {freeCertEmailStatus === 'error' && (
+                      <p className="text-xs text-red-600 mb-3">
+                        Email failed — use the download button instead.
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={handleDownloadFreeCert}
+                        disabled={freeCertDownloading}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-[#5b9aa6] text-white rounded-lg hover:bg-[#4a8a96] transition-colors disabled:opacity-50"
+                      >
+                        {freeCertDownloading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                        Download Certificate
+                      </button>
+                      <button
+                        onClick={handleEmailFreeCert}
+                        disabled={freeCertEmailStatus === 'sending'}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-[#5b9aa6] border-2 border-[#5b9aa6] rounded-lg hover:bg-teal-50 transition-colors disabled:opacity-50"
+                      >
+                        {freeCertEmailStatus === 'sending' ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Mail className="w-4 h-4" />
+                        )}
+                        Email Certificate
+                      </button>
+                    </div>
+
+                    {certError && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm text-red-700">{certError}</p>
                       </div>
                     )}
                   </div>

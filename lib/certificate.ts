@@ -26,7 +26,7 @@ export interface CertificateData {
   cpdPoints: number
   completionDate: Date
   learningOutcomes: string[]
-  courseType: 'scat-mastery' | 'online-course' | 'full-course'
+  courseType: 'scat-mastery' | 'online-course' | 'full-course' | 'recognition-referral'
 }
 
 interface CertificateResult {
@@ -42,7 +42,11 @@ function generateCertificateId(email: string, courseType: string, date: Date): s
     .slice(0, 8)
     .toUpperCase()
   const year = date.getFullYear()
-  const prefix = courseType === 'scat-mastery' ? 'SCAT' : courseType === 'full-course' ? 'FULL' : 'ONL'
+  const prefix =
+    courseType === 'scat-mastery' ? 'SCAT'
+    : courseType === 'full-course' ? 'FULL'
+    : courseType === 'recognition-referral' ? 'RR'
+    : 'ONL'
   return `CEA-${prefix}-${year}-${hash}`
 }
 
@@ -306,6 +310,30 @@ export function getOnlineCourseCertificateData(participantName: string, particip
       'Recognise red flags and apply appropriate referral pathways',
     ],
     courseType: 'online-course',
+  }
+}
+
+// Free awareness short course (module 104 — "Concussion Care Has Changed").
+// This is a COMPLETION certificate, NOT a CPD-hours certificate: the module is
+// awareness-level (recognise & refer), so it carries 0 CPD points and certifies
+// exactly that — recognition and safe referral. Do not attach CPD hours unless
+// the activity becomes genuinely accredited.
+export function getRecognitionReferralCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
+  return {
+    participantName,
+    participantEmail,
+    courseTitle: 'Concussion Recognition & Referral',
+    courseDescription: 'Completion of the free awareness module "Concussion Care Has Changed" — the modern first-line management paradigm, and how to recognise a suspected concussion and refer safely. An awareness activity; it does not confer clinical assessment or management competency.',
+    cpdPoints: 0,
+    completionDate,
+    learningOutcomes: [
+      'Recognise a suspected concussion, including presentations without loss of consciousness or direct head contact',
+      'Identify red flags that require immediate emergency referral (000)',
+      'Apply the recognise–remove–refer sideline principle, including no same-day return to play',
+      'Match referral urgency (emergency, urgent within 24 hours, routine office review) to the clinical picture',
+      'Understand which recognition tool (SCAT6 vs SCOAT6) applies and when, and the boundary between awareness and clinical method',
+    ],
+    courseType: 'recognition-referral',
   }
 }
 
