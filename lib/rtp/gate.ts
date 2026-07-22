@@ -5,9 +5,11 @@
  * athlete surface will be free at launch, nothing is publicly reachable yet.
  * A request is allowed when it is either:
  *   - an admin request (admin_session cookie / x-admin-key / Bearer), or
- *   - carrying the shared demo key (x-demo-key header, ?demo= query, or the
- *     demo_key cookie set by /demo/essa) — the same pre-launch reviewer gate
- *     the EP / AI courses use.
+ *   - carrying the shared demo key (x-demo-key header or the demo_key cookie
+ *     set by /demo/*) — the same pre-launch reviewer gate the EP / AI courses
+ *     use. The ?demo= query param is intentionally NOT accepted (it leaks the
+ *     key into logs / Referer). DEMO_KEY is empty (fail-closed) in production
+ *     unless HEIDI_DEMO_KEY is set (see lib/demo-key.ts).
  *
  * This mirrors checkAiCourseAccess() but without the enrolled-user path, since
  * RTP has no paid entitlement column. To launch publicly, relax this gate.
@@ -27,15 +29,8 @@ function cookieValue(header: string | null, name: string): string | undefined {
 
 export function isRtpRequestAllowed(request: Request): boolean {
   if (isAdminRequest(request)) return true
-  let queryDemo: string | null = null
-  try {
-    queryDemo = new URL(request.url).searchParams.get('demo')
-  } catch {
-    /* non-absolute URL — ignore */
-  }
   const supplied =
     request.headers.get('x-demo-key') ||
-    queryDemo ||
     cookieValue(request.headers.get('cookie'), 'demo_key')
   return !!supplied && supplied === DEMO_KEY
 }

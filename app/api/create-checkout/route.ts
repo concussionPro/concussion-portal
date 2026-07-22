@@ -6,6 +6,8 @@ import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
 import { createCheckoutSchema } from '@/lib/schemas'
 import { isBookOwner } from '@/lib/users'
+import { detectCountry } from '@/lib/geo'
+import { CONFIG } from '@/lib/config'
 
 // Bundle owner discount applied automatically to course purchases.
 // Sales page promises "$100 off the course" for Reference+Toolkit owners.
@@ -135,12 +137,38 @@ export async function POST(request: NextRequest) {
       cancelUrl = `${baseUrl}/pricing?canceled=true`
     }
 
+    // International pricing currency is derived from the visitor country
+    // (cf-ipcountry) SERVER-SIDE — never from client input — so a buyer cannot
+    // pick a cheaper currency than their geo. Only affects international-online.
+    const country = courseType === 'international-online' ? detectCountry(request.headers) : undefined
+
+    // SOUTH AFRICA HARD COMPLIANCE GATE: HPCSA rules (since 1 Nov 2024) forbid a
+    // SA practitioner enrolling in a CPD activity before it is accredited — the
+    // fee is non-refundable and there is no retrospective remedy. Block ZA buyers
+    // from the CRM/international checkout until the CEU number issues
+    // (CONFIG.FEATURES.HPCSA_ACCREDITED). Fail closed. See /hpcsa register-interest.
+    if (
+      courseType === 'international-online' &&
+      country === 'ZA' &&
+      !CONFIG.FEATURES.HPCSA_ACCREDITED
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Not yet available in South Africa. This course is pending HPCSA CEU accreditation — HPCSA rules prevent enrolment before accreditation is granted. Register your interest and we will notify you the day it opens.',
+          registerInterest: '/hpcsa',
+        },
+        { status: 403 }
+      )
+    }
+
     // Create Stripe Checkout Session
     const checkoutSession = await createCourseCheckoutSession({
       courseType: courseType as CourseType,
       location: (courseType === 'full-course' || courseType === 'workshop-upgrade') ? location : undefined,
       preferredCity: courseType === 'online-only' ? preferredCity : undefined,
       customerEmail: sessionEmail || email,
+      country,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl,
       promoCode: typeof promoCode === 'string' ? promoCode : undefined,

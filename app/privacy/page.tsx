@@ -31,7 +31,7 @@ export default function PrivacyPage() {
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-10">
-          This policy explains how Concussion Education Australia (CEA Pty Ltd, ABN 15 657 685 613)
+          This policy explains how Concussion Education Australia (CEA Pty Ltd, ABN 74 688 155 508)
           (&quot;we&quot;, &quot;us&quot;) handles personal information and sensitive health information
           collected through our clinical tools, in particular the pre-season concussion baseline
           testing tool. We handle this information in line with the Australian Privacy Principles (APPs)

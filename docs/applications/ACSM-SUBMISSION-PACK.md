@@ -7,7 +7,7 @@
 **Application portal:** acsm.formstack.com/forms/acsm_education_provider_application_2024
 **Reviewer:** CCRB Continuing Professional Education (CPE) Sub-committee
 
-> **How to use this document.** Every section below is final copy. Paste each asset into the corresponding Formstack field. Nothing here requires drafting except the bracketed `[ZAC: ...]` fields listed in the final section.
+> **How to use this document.** Every section below is final copy. Paste each asset into the corresponding Formstack field. Nothing here requires drafting; the only open items are the **ACTION** lines in the final section (the application fee, revealed inside the Formstack form, and the pre-submission integrity confirmations).
 
 > **Standing accuracy constraints observed in this pack.** No ACSM CEC award is claimed or implied. No ESSA endorsement is claimed as granted. No exercise physiologist is claimed as an author. The author's mild traumatic brain injury manuscript is described only as prepared for submission — never as under review or published. ACSM's published positions are cited as public statements of the field's needs; no ACSM endorsement of this course is stated or implied.
 
@@ -230,6 +230,10 @@ Two disclosures accompany that statement, and both are load-bearing:
 
 The full course bibliography comprises **136 peer-reviewed and authoritative references**, of which **106 carry resolvable DOIs**, distributed across the eight modules (M1: 15, M2: 15, M3: 19, M4: 23, M5: 17, M6: 18, M7: 18, M8: 11). The complete per-module reference list is available on request. The following 28 core references represent the primary evidence base for the course's clinical claims.
 
+The method the course teaches is itself published as a citable, open-access standard, and should be read alongside this bibliography:
+
+- **Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury) (Version 1). Zenodo. https://doi.org/10.5281/zenodo.21482634** (Open access, CC-BY-4.0. Concept DOI https://doi.org/10.5281/zenodo.21482633 always resolves to the latest version.)
+
 **Consensus and clinical practice guidelines**
 
 1. Patricios, J. S., Schneider, K. J., Dvořák, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport (Amsterdam, October 2022). *British Journal of Sports Medicine*, 57(11), 695–711. https://doi.org/10.1136/bjsports-2023-106898
@@ -359,6 +363,16 @@ Both primary credentials carry a mandatory 60-CEC three-year recertification cyc
 
 ---
 
+## A10 — The Standardised Method Is Now Citable, and the Tool That Delivers It
+
+**The gap this closes.** The 2022 consensus made a standardised, symptom-limited graded exercise test — and the individual heart-rate threshold it yields — the gate to first-line concussion treatment. But the College's own commentary (Hildenbrand & Herring, FACSM, 2025) records that the FITT translation of that method for concussion is unfinished, ACSM's CEC catalogue teaches no method for administering it, and the ACSM-EP / ACSM-CEP has, at present, no standardised, reproducible way to deliver that test-to-prescription pathway as a billable service line in a new patient population. The competency exists; the method and the tooling to operationalise it do not sit anywhere in ACSM provision.
+
+**The method is now a published standard.** The pathway is fixed and citable: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, 2026; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634), anchored on the same evidence base ACSM's article points to (Patricios 2023; Leddy 2019 / 2021 / 2023). It specifies contraindication screening, BCTT/BCBT administration, HRt derivation, HRt-to-FITT conversion, re-test-governed progression, and the scope boundary. CRM is the course that teaches it; the protocol is the reviewable standard behind the course.
+
+**The SST Trainer is the tool members use to deliver it.** Reading the protocol does not, by itself, put a service line in an EP's diary. The SST Trainer operationalises the protocol end to end: it runs the graded exercise test (BCTT/BCBT), records the **measured** individual heart-rate threshold, converts it into the sub-symptom-threshold aerobic prescription, monitors the between-visit home sessions, and returns a measured HR-threshold trajectory plus standardised progress and outcome reporting the referring physician can act on. The wedge is that the threshold is **measured, not estimated** — which is exactly what makes the EP's output defensible and billable in a population they are not currently seeing. Public demonstration: `/sst-trainer?clinic=DEMO00` and `/preseason/b/DEMO00`. Net effect for ACSM: a published method its members can cite, and a tool that turns an existing certified competency into a deliverable, measurable concussion service line — the precise translation task ACSM's own commentary flagged as outstanding.
+
+---
+
 ## APPLICANT IDENTIFICATION — FINAL COPY
 
 Paste these values into the corresponding Formstack fields.
@@ -366,6 +380,7 @@ Paste these values into the corresponding Formstack fields.
 1. **Applicant legal entity name** — the registered entity that will appear on the approval letter, the certificate, and the ACSM Approved Providers listing. Must match the entity that pays the application fee.
    **Concussion Education Australia Pty Ltd**, trading as Concussion Education Australia (CEA)
    ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · incorporated 18 June 2025
+   **ACTION (founder): confirm the registered ABN before submitting.** 74 688 155 508 is the ABN published live on the CEA site and is used here; an earlier draft carried 74 688 155 508. Verify which ABN sits on the registered entity (and that the ACN matches it) so the value on the ACSM approval letter is correct.
 
 2. **Primary administrative contact — full name**
    Zac Lewis
@@ -389,13 +404,54 @@ Paste these values into the corresponding Formstack fields.
 1. **AHPRA registration number** — inserted at the marked position in A5 (CV summary, Qualifications).
    `OST0001852866`
 
-2. **Application fee** — not published; revealed inside the Formstack form. Record the amount and the payment reference on submission, and diarise the annual renewal date.
-   `[ZAC: fee amount + payment reference + renewal date]`
+2. **Application fee** — not published; revealed inside the Formstack form. **ACTION: the Formstack form reveals the fee — record the amount + payment reference on submission and diarise the annual renewal date.**
 
-**Pre-submission checks:**
-- `[ZAC: confirm]` No CEC figure appears on any public page, sales page, or marketing asset. The 8.0 figure in A8 is a request only.
-- `[ZAC: confirm]` No ESSA endorsement is claimed anywhere in the submission or on any linked page. The two ESSA-appointed reviewers are described as an independent review of the course, not as endorsement.
-- `[ZAC: confirm]` No page linked from this application implies ACSM endorsement. If the application links to a landing page, that page must cite ACSM's published Hot Topic position only as a public statement of the field's needs.
-- `[ZAC: confirm]` The mTBI manuscript (Lewis & Baker) is described as prepared for submission only — never as under review or published — in every asset submitted or linked.
-- `[ZAC: confirm]` The "Positioning spine" section is internal framing only. Nothing from it has been pasted into a Formstack field. Only assets A1–A9 are submitted.
-- `[ZAC: confirm]` No submitted asset characterises ACSM-certified professionals as deficient, undertrained or unsafe. The framing is service-line expansion using an existing competency.
+**Pre-submission checks — CONFIRM each before submitting:**
+- **CONFIRM:** No CEC figure appears on any public page, sales page, or marketing asset. The 8.0 figure in A8 is a request only.
+- **CONFIRM:** No ESSA endorsement is claimed anywhere in the submission or on any linked page. The two ESSA-appointed reviewers are described as an independent review of the course, not as endorsement.
+- **CONFIRM:** No page linked from this application implies ACSM endorsement. If the application links to a landing page, that page must cite ACSM's published Hot Topic position only as a public statement of the field's needs.
+- **CONFIRM:** The mTBI manuscript (Lewis & Baker) is described as prepared for submission only — never as under review or published — in every asset submitted or linked.
+- **CONFIRM:** The "Positioning spine" section is internal framing only. Nothing from it has been pasted into a Formstack field. Only assets A1–A9 are submitted.
+- **CONFIRM:** No submitted asset characterises ACSM-certified professionals as deficient, undertrained or unsafe. The framing is service-line expansion using an existing competency.
+
+---
+
+# REAL FORM — page-by-page answers (live capture, 2026-07-22)
+
+The A1–A9 asset structure above is OUR content taxonomy; the actual Formstack form (19 pages) asks its own questions. This section records the REAL fields and the answers given, captured live during submission. Reuse verbatim at renewal.
+
+## Page 4 — Audience & Accreditation Information
+
+**Description of target audience:**
+> Credentialed exercise physiologists and clinical exercise physiologists delivering exercise assessment and prescription in clinical, sports-medicine, rehabilitation, and performance settings. The program trains them to apply their existing graded-exercise-testing competency to concussion/mild traumatic brain injury: administering symptom-limited graded exertion testing (Buffalo Concussion Treadmill/Bike Test), deriving the individual heart-rate threshold, prescribing sub-symptom-threshold aerobic exercise against it, and progressing rehabilitation on measured physiological criteria. Content is clinical in depth and assumes exercise-science training; it is not designed for group exercise or general fitness audiences.
+
+**ACSM certifications appropriate (checkboxes):** Exercise Physiologist ✓ · Clinical Exercise Physiologist ✓ · (Group Exercise Instructor and Personal Trainer deliberately UNCHECKED — clinical scope discipline.)
+
+**Accreditations by other organizations:**
+> Osteopathy Australia — CPD endorsement of our flagship program "Concussion Clinical Mastery" (course-level endorsement; approved [FOUNDER: OA approval date]; valid through [FOUNDER: OA expiry]). Note: this endorsement applies to that program, not to the program submitted in this application. The submitted program (Concussion Rehab Mastery) has been independently reviewed by two reviewers appointed by Exercise & Sports Science Australia (ESSA) through its professional development endorsement process; that endorsement decision is pending and is not claimed. No NCCA accreditation.
+
+**Does the organization offer certifications?** No. (CEA issues certificates of completion for educational programs, not professional certifications — ACSM's non-competition check.)
+
+## Page — Live Course/Conference (In Person and/or Virtual)
+
+**Is your organization applying their live course/conference?** No. (CRM is online, self-paced, asynchronous — no live component in this application. "Yes" routes into live-event pages that don't apply.)
+
+## Page 13 — On-Demand Online Course/Webinar
+
+**Title:** Concussion Rehab Mastery (CRM)
+**Description:** 130-word block as captured in chat 2026-07-22 (Amsterdam consensus → BCTT/HRt → sub-threshold prescription → phenotypes → RTP → scope boundary; 136 refs; protocol DOI 10.5281/zenodo.21482634; 80% exams).
+**Learning objectives:** 5 supplied (BCTT/HRt derivation; sub-threshold prescription w/ band+stop rule; progression by re-test not time incl. reduce-not-rest; phenotype differentiation; graded RTP in scope + referrer-ready documentation).
+**Course outline:** 8 modules × 60 min (CRM module titles), 87 assessment items, 80% pass.
+**Length:** 8 hours.
+**Course access:** URL https://portal.concussion-education-australia.com/demo/review-acsm — no username/password required (direct reviewer link); credentialed logins offered via zac@ if preferred.
+**Author CV file:** `~/Desktop/CEA-applications/Zac-Lewis-CV-ACSM.docx` (built 2026-07-22 from A5 — includes Zenodo protocol, honest manuscript + ESSA disclosures).
+**Interaction methods:** asynchronous author Q&A (email, ~1 business day) + in-module scenario polls/reveals + per-question explanatory feedback on all 87 items. No live component — stated plainly.
+**CECs:** 8 (480 min instructional; exam time excluded per ACSM rule).
+**Completion basis:** Examination ONLY (no attendance/honor/evaluation boxes).
+**Additional on-demand courses?** No — this application submits CRM only.
+
+## Fees & Payment — REVEALED (form, 2026-07-22)
+
+Fees are NOT CEC-based. **Annual Provider Fee: US$500 (nonrefundable, every year). Initial Course Fee: US$100/course** (10 or fewer courses; refundable if the course is denied). **Year-1 total for CRM: US$600. Recurring: US$500/yr** (+US$100 per additional course; US$50/course at 11+).
+Payment link auto-generates and is EMAILED to the lead program administrator on submission — **the application is NOT processed until payment is confirmed**. Pay same-day; record payment reference + date + set a renewal reminder for the $500 annual fee.
+Payback: 2 course sales clears year 1 (~1.5 sales/yr holds the listing) vs 75-unit base forecast.

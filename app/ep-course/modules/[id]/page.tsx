@@ -37,7 +37,7 @@ const EP_COURSE: CourseModuleDescriptor = {
   hasScatModules: false,
   showCertificateCta: false,
   headerModuleNumber: 'url',
-  scatQuizFailUpsellSuffix: '8 modules, 14 CPD hours',
+  scatQuizFailUpsellSuffix: '8 modules, 8 CPD hours',
 }
 
 export default function ModulePage() {

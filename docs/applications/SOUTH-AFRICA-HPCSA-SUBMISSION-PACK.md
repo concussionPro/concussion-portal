@@ -16,7 +16,7 @@ HPCSA has not permitted retrospective accreditation of CPD activities **since 1 
 
 **Operational consequence, and it is absolute: no South African practitioner may be enrolled in Concussion Rehab Mastery until the accreditation number has been issued.** Not a pilot cohort. Not a single early adopter. Not a "we'll sort the paperwork after". One South African enrolment before the accreditation letter lands makes that practitioner's CEUs unclaimable and makes the accreditation itself materially harder to obtain.
 
-If CRM is already reachable by South African buyers through the public site, **geo-gate or otherwise block ZA enrolment before submitting**, and keep it blocked until the number is in hand. [ZAC: confirm whether any South African practitioner has already enrolled. If any have, disclose that honestly to the accreditor — do not conceal it — and be prepared for those individuals to be unable to claim CEUs for that completion.]
+If CRM is already reachable by South African buyers through the public site, **geo-gate or otherwise block ZA enrolment before submitting**, and keep it blocked until the number is in hand. **ACTION (founder): confirm whether any South African practitioner has already enrolled. If any have, disclose that honestly to the accreditor — do not conceal it — and be prepared for those individuals to be unable to claim CEUs for that completion.**
 
 ### RULE 2 — The service fee is charged even if the application is withdrawn or declined.
 
@@ -24,7 +24,7 @@ The accreditor's fee is a **service fee for assessment**, not a fee for a succes
 
 **Operational consequence:** do not submit until the submission is complete and the answers are settled. There is no cheap way to test the water. The enquiry email in this pack exists precisely so that the open questions get answered **before** any fee is committed.
 
-**Fee benchmark (UCT, published):** **R1,380 per application** for short courses and workshops, capped at **R2,750** for activities of two days or more. CRM is 480 minutes — a short course — so the R1,380 tier is the expected band. [ZAC: confirm current fee directly with the chosen accreditor before paying; the published figure is a benchmark, not a quote, and BASA's schedule may differ from UCT's.]
+**Fee benchmark (UCT, published):** **R1,380 per application** for short courses and workshops, capped at **R2,750** for activities of two days or more. CRM is 480 minutes — a short course — so the R1,380 tier is the expected band. **ACTION: the enquiry email requests the current fee — confirm it directly with the chosen accreditor before paying; the published figure is a benchmark, not a quote, and BASA's schedule may differ from UCT's.**
 
 ---
 
@@ -39,11 +39,11 @@ The approved accreditors relevant here:
 - **UCT** — University of Cape Town, an approved accreditor with a published fee schedule and a documented application route.
 - **SAMA** — South African Medical Association.
 - **SAAFP** — South African Academy of Family Physicians.
-- **The biokinetics professional body** — the natural home for this activity given the target profession. [ZAC: confirm the current accrediting entity and its exact name for biokinetics; BASA (Biokinetics Association of South Africa) is the contact point below, but verify whether BASA itself holds accreditor status or whether it routes to another approved accreditor.]
+- **The biokinetics professional body** — the natural home for this activity given the target profession. **ACTION: the enquiry email requests confirmation of the current accrediting entity and its exact name for biokinetics; BASA (Biokinetics Association of South Africa) is the contact point below, but verify whether BASA itself holds accreditor status or whether it routes to another approved accreditor.**
 
 **Accreditation is per activity, not per provider.** Each distinct activity is submitted, assessed, numbered and lettered on its own. Completing this successfully for CRM establishes nothing automatic for any future CEA activity — each one repeats the process, and each one carries its own fee.
 
-**Accreditation is time-limited.** [ZAC: confirm the validity period with the accreditor and diarise the renewal — a lapsed number means practitioners enrolling after expiry cannot claim, and by Rule 1 that cannot be fixed retrospectively either.]
+**Accreditation is time-limited.** **ACTION: the enquiry email requests the validity period — confirm it with the accreditor and diarise the renewal; a lapsed number means practitioners enrolling after expiry cannot claim, and by Rule 1 that cannot be fixed retrospectively either.**
 
 ---
 
@@ -141,7 +141,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 
 **Send this if the biokinetics route is slow, unclear, or comes back declining to assess an international online activity. UCT is an approved accreditor with a published fee schedule and a documented process, which makes it the more predictable fallback.**
 
-**To:** [ZAC: current UCT CPD accreditation office address — confirm from the UCT CPD accreditation page before sending]
+**To: ACTION — confirm the current UCT CPD accreditation office address from the UCT CPD accreditation page before sending.**
 **Subject:** CPD accreditation application — online concussion exercise-rehabilitation activity (international provider, 8 CEUs)
 
 Dear UCT CPD Accreditation Office,
@@ -187,11 +187,11 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 | **Duration** | 480 minutes (8.0 hours) of assessed instructional content, across 8 modules |
 | **Assessment** | 87 questions, delivered per module, 80% pass mark at module level |
 | **CEUs sought** | 8 clinical CEUs, plus 1 ethics CEU (see §11) |
-| **Primary board** | Biokinetics [ZAC: confirm exact board designation with the accreditor] |
+| **Primary board** | Biokinetics — **ACTION: confirm exact board designation with the accreditor (the enquiry email requests it)** |
 | **Additional relevance** | Physiotherapy, and any HPCSA-registered practitioner with exercise-based rehabilitation within scope |
 | **Stand-alone** | Yes — no prerequisite purchase, no required follow-on |
 | **Commencement for South African practitioners** | Not before the accreditation number is issued |
-| **Fee to attendee** | R2,200 |
+| **Fee to attendee** | R6,400 |
 
 ## 2. Provider
 
@@ -329,20 +329,23 @@ The activity carries **51 assessed learning objectives**, reproduced in full bel
 
 **The clinical protocol is international, not jurisdictional.** The BCTT, the heart-rate threshold, the 80–90% prescription band, the ≥2-point symptom-exacerbation stop rule, the retest-driven progression algorithm, the seven-phenotype framework and the six-stage graded return-to-sport strategy all derive from the international consensus statement and the peer-reviewed literature behind it. They are applied identically in Cape Town and in Melbourne. Nothing in the physiological content of Modules 1, 3, 4, 5 or 7 is Australia-specific.
 
-**Return-to-play governance.** Module 6 teaches the transferable competency: identify the two governing minimums (a mandated calendar stand-down and a symptom-free period), determine which one governs in a given case, and refuse to progress an athlete past the stage the applicable governance permits. The Australian instrument in the core content is presented as a worked example, not as a governing rule. CEA supplies a **South African annex** setting out the applicable South African instruments — including World Rugby's graduated return-to-play framework as applied by SA Rugby, and the relevant national sporting-body protocols — alongside the module content, so the South African learner exercises the competency against the rules that bind them. [ZAC: this annex must be written and must exist as a document before the submission is sent; it is offered to the assessor as part of the application.]
+**Return-to-play governance.** Module 6 teaches the transferable competency: identify the two governing minimums (a mandated calendar stand-down and a symptom-free period), determine which one governs in a given case, and refuse to progress an athlete past the stage the applicable governance permits. The Australian instrument in the core content is presented as a worked example, not as a governing rule. CEA supplies a **South African annex** setting out the applicable South African instruments — including World Rugby's graduated return-to-play framework as applied by SA Rugby, and the relevant national sporting-body protocols — alongside the module content, so the South African learner exercises the competency against the rules that bind them. **DONE: the South African annex exists — `docs/applications/ANNEX-SOUTH-AFRICA.md` — and is offered to the assessor as part of the application.**
 
 **Scope of practice.** The boundary the activity teaches maps directly onto HPCSA practice: diagnosis of concussion and clearance for return to contact are medical acts. Biokineticists, physiotherapists and other HPCSA-registered practitioners in this pathway operate under a referral relationship with a medical practitioner and none of them clears an athlete for contact. Module 2 teaches recognise-and-escalate rather than diagnose. Module 8 teaches the practitioner to record findings as exercise-rehabilitation observations and recommendations, never as diagnosis or clearance. The material states explicitly that the learner's own regulator and professional board define their lane, and directs learners to it.
 
-**Record-keeping and privacy.** Module 8 teaches the substantive principles — lawful collection, use and disclosure limits, security of health information, consent, cross-border transfer, and the specific obligations triggered by AI scribe tools — and the delivered examples cite the Australian instrument. The South African annex sets out the corresponding obligations under the **Protection of Personal Information Act (POPIA)** and the HPCSA's own guidance on the keeping of patient records, so the South African learner applies the identical competency under the instrument that binds them. [ZAC: confirm the exact HPCSA booklet reference for record-keeping guidance before submission.]
+**Record-keeping and privacy.** Module 8 teaches the substantive principles — lawful collection, use and disclosure limits, security of health information, consent, cross-border transfer, and the specific obligations triggered by AI scribe tools — and the delivered examples cite the Australian instrument. The South African annex sets out the corresponding obligations under the **Protection of Personal Information Act (POPIA)** and the HPCSA's own guidance on the keeping of patient records, so the South African learner applies the identical competency under the instrument that binds them. **ACTION: confirm the exact HPCSA booklet reference for record-keeping guidance before submission.**
 
 **Clinical relevance and volume.** South Africa carries a high burden of sport-related concussion, concentrated in contact codes with substantial participation at school, club and professional level. The demand for practitioners competent to deliver exercise-based post-concussion rehabilitation — and to know precisely where their responsibility ends — is a live clinical need rather than a theoretical one.
 
 **Language and units.** The activity is written in British/South African English spelling, uses SI units throughout, and is referenced to journals South African practitioners read.
 
+**The biokineticist owns the treatment — what was missing is a standardised, accredited method and a tool to deliver it.** Individualised exercise prescription for clinical pathology is the biokineticist's defining scope, which is why the 2022 shift moved first-line concussion treatment into their hands. What the profession lacked was a *standardised, citable* concussion method and an instrument to run it consistently. Both now exist. The method is published open-access and citable: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, 2026; CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634), specifying contraindication screening, BCTT/BCBT administration, heart-rate-threshold derivation, the 80–90% prescription band, and re-test-driven progression. The SST Trainer is the tool a biokineticist uses to deliver it — running the graded exercise test, capturing the **measured** heart-rate threshold, issuing the sub-symptom-threshold prescription, monitoring between-visit home sessions, and returning a measured HR-threshold trajectory with standardised progress reporting to the referring practitioner (demo: `/sst-trainer?clinic=DEMO00`). This does not alter the accreditation sequence: **accreditation must precede the activity and precede enrolment** (Rules 1 and 2 above), and the protocol and tool are presented inside that gate, not as a way around it.
+
 ## 10. Evidence base
 
-The activity is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature. The spine:
+The activity is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature. The method taught is itself published as a citable, open-access standard, and heads the spine:
 
+- Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury) (Version 1). Zenodo. https://doi.org/10.5281/zenodo.21482634 *(Open access, CC-BY-4.0; concept DOI https://doi.org/10.5281/zenodo.21482633 always resolves to the latest version.)*
 - Patricios, J. S., Schneider, K. J., Dvořák, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport — Amsterdam, October 2022. *British Journal of Sports Medicine*, 57(11), 695–711. https://doi.org/10.1136/bjsports-2023-106898
 - Leddy, J. J., Haider, M. N., Ellis, M. J., et al. (2019). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. *JAMA Pediatrics*, 173(4), 319–325. https://doi.org/10.1001/jamapediatrics.2018.4397
 - Leddy, J. J., Master, C. L., Mannix, R., et al. (2021). Early targeted heart rate aerobic exercise versus placebo stretching for sport-related concussion in adolescents: a randomised controlled trial. *Lancet Child & Adolescent Health*, 5(11), 792–799. https://doi.org/10.1016/S2352-4642(21)00267-4
@@ -393,7 +396,7 @@ The request is built on the most conservative possible basis: **one CEU per hour
 
 All of this content is assessed, on the same 80% pass basis as the clinical content.
 
-[ZAC: the accreditor may prefer that the ethics hour be carved out of the 8.0 rather than added to it — i.e. 7 clinical + 1 ethics rather than 8 clinical + 1 ethics. Ask the question in Email 1 and accept the accreditor's determination without argument. Do not claim 9 CEUs if the accreditor's convention is that the ethics CEU comes out of the total.]
+**ACTION: the enquiry email asks this — the accreditor may prefer that the ethics hour be carved out of the 8.0 rather than added to it (7 clinical + 1 ethics rather than 8 clinical + 1 ethics). Ask the question in Email 1 and accept the accreditor's determination without argument. Do not claim 9 CEUs if the accreditor's convention is that the ethics CEU comes out of the total.**
 
 ## 12. Independent review and existing recognition
 
@@ -417,7 +420,7 @@ Zac is the sole author of Concussion Rehab Mastery. Stated plainly for the asses
 
 ## 14. Commercial disclosure
 
-The activity is sold by Concussion Education Australia at R2,200. **There is no commercial sponsorship of the content, no pharmaceutical or device-industry funding, and no product promotion within the activity.** CEA has no financial relationship with any manufacturer of exercise-testing or monitoring equipment. The Buffalo Concussion Treadmill Test and Buffalo Concussion Bike Test are taught as published, validated protocols; CEA has no commercial interest in either and receives no consideration in connection with them. [ZAC: confirm this remains true — if any affiliate or equipment relationship exists, it must be disclosed here.]
+The activity is sold by Concussion Education Australia at R6,400. **There is no commercial sponsorship of the content, no pharmaceutical or device-industry funding, and no product promotion within the activity.** CEA has no financial relationship with any manufacturer of exercise-testing or monitoring equipment. The Buffalo Concussion Treadmill Test and Buffalo Concussion Bike Test are taught as published, validated protocols; CEA has no commercial interest in either and receives no consideration in connection with them. **ACTION (founder): confirm this remains true — if any affiliate or equipment relationship exists, it must be disclosed here.**
 
 ## 15. Content maintenance
 
@@ -441,7 +444,7 @@ So the position is: **topic gap real, channel occupied.** Both halves matter.
 **Strategic implications:**
 
 1. **Do not model this as a topic-competition win.** Model it as a distribution problem with a favourable product position. The accreditation gets CRM into the eligible set; something else has to get it in front of practitioners.
-2. **Consider whether BioCPD is a partner rather than a rival.** An incumbent with a catalogue gap and an existing audience is a plausible distribution partner for the thing it does not have. That conversation is worth having, and it is a different conversation from the accreditation. [ZAC: decide whether to approach BioCPD before or after accreditation is secured. Approaching after is stronger — an already-accredited activity is a finished product they can list, not a project they have to sponsor.]
+2. **Consider whether BioCPD is a partner rather than a rival.** An incumbent with a catalogue gap and an existing audience is a plausible distribution partner for the thing it does not have. That conversation is worth having, and it is a different conversation from the accreditation. **ACTION (founder): decide whether to approach BioCPD before or after accreditation is secured. Approaching after is stronger — an already-accredited activity is a finished product they can list, not a project they have to sponsor.**
 3. **Multi-professional framing is the hedge.** If the biokinetics channel proves hard to enter, physiotherapy is the second audience the same single accreditation already serves. That is exactly why §4 names it explicitly.
 4. **Rugby is the demand driver, not the sales channel.** High concussion volume creates the clinical need. It does not by itself put CRM in front of practitioners. Do not confuse the two when forecasting.
 
@@ -457,16 +460,16 @@ So the position is: **topic gap real, channel occupied.** Both halves matter.
 
 ## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: confirm the biokinetics accreditor]** — whether BASA itself holds HPCSA accreditor status or routes to another approved accreditor, and the exact entity name and board designation.
-- **[ZAC: current UCT CPD accreditation office contact address]** — for Email 1B.
-- **[ZAC: has any South African practitioner already enrolled in CRM?]** — determine before submitting; disclose honestly if so.
-- **[ZAC: ZA enrolment block]** — geo-gate or otherwise prevent South African enrolment until the accreditation number issues. Must be live before submission.
+- **ACTION: confirm the biokinetics accreditor** — whether BASA itself holds HPCSA accreditor status or routes to another approved accreditor, and the exact entity name and board designation. The enquiry email requests this.
+- **ACTION: confirm the current UCT CPD accreditation office contact address** — for Email 1B (from the UCT CPD accreditation page).
+- **ACTION (founder): confirm whether any South African practitioner has already enrolled in CRM** — determine before submitting; disclose honestly if so.
+- **ACTION (founder): put the ZA enrolment block live** — geo-gate or otherwise prevent South African enrolment until the accreditation number issues. Must be live before submission.
 - **OST0001852866** — both email signatures.
-- **R2,200** — §1 and §14.
-- **[ZAC: confirm the accreditor's actual fee]** before paying — the R1,380 / R2,750 figures are the published UCT benchmark, not a quote.
-- **[ZAC: confirm the accreditation validity period]** and diarise renewal — a lapsed number cannot be repaired retrospectively.
-- **[ZAC: confirm the HPCSA record-keeping booklet reference]** cited in §9.
-- **[ZAC: confirm no affiliate or equipment commercial relationship exists]** — §14 asserts none.
-- **South African annex** — must be written and exist as a document before the submission is sent (§9).
+- **Price = R6,400** (ZAR list, single source `lib/international-pricing.ts`; a consistent conversion of the US$347 anchor, not the old R2,200) — §1 and §14. **Optional (founder): SA may be PPP-discounted by lowering the ZAR row in `lib/international-pricing.ts` if desired, but ship R6,400 unless a decision is made.**
+- **ACTION: the enquiry email requests the accreditor's actual fee** — confirm before paying; the R1,380 / R2,750 figures are the published UCT benchmark, not a quote.
+- **ACTION: the enquiry email requests the accreditation validity period** — confirm and diarise renewal; a lapsed number cannot be repaired retrospectively.
+- **ACTION: confirm the HPCSA record-keeping booklet reference** cited in §9.
+- **ACTION (founder): confirm no affiliate or equipment commercial relationship exists** — §14 asserts none; if any exists it must be disclosed.
+- **South African annex** — DONE: `docs/applications/ANNEX-SOUTH-AFRICA.md` (§9).
 - **Full 136-item bibliography in APA format** — must be assembled and ready to supply on request (§10).
 - **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

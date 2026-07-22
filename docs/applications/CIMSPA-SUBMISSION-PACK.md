@@ -98,7 +98,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 
 Dear CIMSPA Training Partnerships team,
 
-Further to your confirmation of the [ZAC: window month] submission window, please find our **Training Provider Partnership application** and our **priority product submission** for endorsement.
+Further to your confirmation of the submission window, please find our **Training Provider Partnership application** and our **priority product submission** for endorsement.
 
 **Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025)
 **Correspondence address:** 2 Wordsworth St, Byron Bay NSW 2481, Australia
@@ -107,9 +107,9 @@ Further to your confirmation of the [ZAC: window month] submission window, pleas
 **Format:** online, asynchronous, self-paced — 8 modules
 **Duration:** 480 minutes of assessed instructional content = **8.0 CPD points**
 **Assessment:** 87 questions delivered per module, 80% pass mark
-**Price:** GBP 295
+**Price:** £275 (GBP list price, single source `lib/international-pricing.ts`; UK renewal US$99/yr)
 
-The £140+VAT administration fee has been transferred by bank transfer on [ZAC: date] under reference [ZAC: payment reference]. I have not submitted any secondary product; our in-person clinical programme will follow in a later window as per your process.
+The £140+VAT administration fee has been transferred by bank transfer. *(Fill the transfer date and reference from the bank confirmation before sending.)* I have not submitted any secondary product; our in-person clinical programme will follow in a later window as per your process.
 
 The full submission content follows below, structured to your application headings. I have also mapped the programme against the CIMSPA professional standards for the Exercise Referral Practitioner, Advanced Personal Trainer and Strength and Conditioning Practitioner roles, and I am happy to remap against any alternative standard your review panel considers a closer fit.
 
@@ -282,6 +282,8 @@ We will remap to any alternative standard the review panel prefers, and will sup
 
 Concussion Rehab Mastery does not duplicate or compete with any CIMSPA qualification, standard or endorsed product. No CIMSPA occupational standard covers concussion rehabilitation; no endorsed product currently offered addresses heart-rate-threshold-guided post-concussion exercise prescription. The programme is complementary specialist CPD that extends the reach of existing endorsed practitioners into a condition their employers and clients increasingly expect them to handle.
 
+**The front-line problem, and the standardised pathway members refer into.** The front-line CIMSPA member's concussion job is not to treat — it is safe **recognition and referral**: spot the presentation, apply the red-flag triage, and route the client onward without either missing a danger sign or over-stepping scope. Their exposure is that "route onward" has, until now, meant referring into an undefined space. That space is now a published, citable clinical standard: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, 2026; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634). A front-line member can recognise-and-refer with confidence because the pathway they refer into is now a defined method delivered on the SST Trainer — graded exercise testing to a **measured** heart-rate threshold, the sub-symptom-threshold prescription, monitored between-visit sessions, and standardised progress reporting back to the referrer (demo: `/sst-trainer?clinic=DEMO00`). For members who want to *deliver* that pathway rather than only refer into it, CRM (this endorsed programme) is the upgrade — but the protocol and the SST Trainer are the downstream standardised pathway, not a front-line tool, and the front-line competency remains recognise-and-refer.
+
 ## 9. UK contextualisation
 
 The clinical protocol at the heart of this programme is international. The BCTT, the heart-rate threshold, the 80–90% prescription band, the symptom-exacerbation stop rule and the graded return-to-sport strategy are drawn from the international consensus statement and the underlying Buffalo research programme, and are applied identically in the UK.
@@ -290,8 +292,9 @@ Where jurisdiction matters — statutory return-to-play stand-down periods, data
 
 ## 10. Evidence base
 
-The programme is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature rather than secondary summaries. The spine of the evidence base:
+The programme is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature rather than secondary summaries. The method taught is itself published as a citable, open-access standard, and heads the spine of the evidence base:
 
+- Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury) (Version 1). Zenodo. https://doi.org/10.5281/zenodo.21482634 *(Open access, CC-BY-4.0; concept DOI https://doi.org/10.5281/zenodo.21482633.)*
 - Patricios, J. S., Schneider, K. J., Dvořák, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport — Amsterdam, October 2022. *British Journal of Sports Medicine*, 57(11), 695–711. https://doi.org/10.1136/bjsports-2023-106898
 - Leddy, J. J., Haider, M. N., Ellis, M. J., et al. (2019). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. *JAMA Pediatrics*, 173(4), 319–325. https://doi.org/10.1001/jamapediatrics.2018.4397
 - Leddy, J. J., Master, C. L., Mannix, R., et al. (2021). Early targeted heart rate aerobic exercise versus placebo stretching for sport-related concussion in adolescents: a randomised controlled trial. *Lancet Child & Adolescent Health*, 5(11), 792–799. https://doi.org/10.1016/S2352-4642(21)00267-4
@@ -335,7 +338,7 @@ Zac is the sole author of Concussion Rehab Mastery. To state the position precis
 ## 13. Commercial and licensing information
 
 - **Delivery:** CEA's own platform; individual learner accounts.
-- **Pricing:** GBP 295
+- **Pricing:** £275 (GBP list price, single source `lib/international-pricing.ts`; UK renewal US$99/yr)
 - **Group/employer purchasing:** available; CEA supports multi-seat purchase for employer partners.
 - **Endorsement mark usage:** CEA will apply the CIMSPA endorsement mark to the product page, the certificate and the product's marketing collateral only, in accordance with CIMSPA brand guidelines, and will withdraw it immediately on lapse or non-renewal.
 - **Review cycle:** content is reviewed against the current international consensus statement and updated within CEA's normal revision cycle; CEA will resubmit for re-endorsement at the interval CIMSPA requires.
@@ -345,8 +348,8 @@ Zac is the sole author of Concussion Rehab Mastery. To state the position precis
 ## STILL REQUIRED BEFORE SENDING
 
 - **OST0001852866** — for the author-credentials section.
-- **GBP 295** — decide the UK price before submission; CIMSPA asks for it and it appears on the directory listing.
-- **[ZAC: window month]**, **[ZAC: payment date]**, **[ZAC: payment reference]** — populate in Email 2 only after CIMSPA confirms the window and the £140+VAT transfer clears.
+- **UK price = £275** (GBP list, single source `lib/international-pricing.ts`); CIMSPA asks for it and it appears on the directory listing.
+- **ACTION: the enquiry email requests the submission window** — CIMSPA confirms the open window in reply to Email 1; fill the transfer date + payment reference in Email 2 only after the £140+VAT transfer clears.
 - **Confirm from CIMSPA's reply, do not assume:** the re-endorsement rate in year two, whether an overseas provider faces additional requirements, and the preferred standards-mapping template.
 - **Do not send the "INTERNAL" or "POSITIONING SPINE" sections.** Both are CEA-internal. The submitted material is Email 1, Email 2 and the application content sections only.
 - **Spend gate:** do not transfer the £140+VAT admin fee until CIMSPA has confirmed the next open window in reply to Email 1, and until the ~£700+VAT year-one total has been weighed against the compliance-driven demand reality in the internal note above.

@@ -28,6 +28,9 @@ import {
   Lock,
   PlayCircle,
   Sparkles,
+  X,
+  BadgeCheck,
+  ShieldCheck,
 } from 'lucide-react'
 import { getEpModulesMeta, epProgressId } from '@/data/ep-modules'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -51,7 +54,7 @@ function UpgradeOfferScreen({ router }: { router: AppRouterInstance }) {
               This course is part of our{' '}
               <strong className="text-white">complete 8-module professional program</strong>. Get
               instant access to all modules, downloadable resources, and earn{' '}
-              <strong className="text-white">up to 14 AHPRA CPD hours</strong>.
+              <strong className="text-white">up to 8 AHPRA CPD hours</strong>.
             </p>
             <a
               href={CONFIG.SHOP_URL}
@@ -177,6 +180,7 @@ function DashboardContent() {
   const router = useRouter()
   const { isModuleComplete, getModuleProgress } = useProgress()
   const modules = getEpModulesMeta()
+  const [showCert, setShowCert] = useState(false)
 
   // Meta ids are DISPLAY ids (1-8) for URLs/labels; the shared progress store
   // namespaces EP modules to 201-208 — always read progress via epProgressId.
@@ -209,10 +213,15 @@ function DashboardContent() {
         <div className="max-w-4xl mx-auto py-8 md:py-12 px-4 sm:px-6 md:px-8 lg:px-12">
           {/* Editorial hero */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-              <span className="text-[11px] font-semibold text-teal-600 uppercase tracking-[0.14em]">
-                Concussion Education Australia · Endorsed CPD
+            <div className="flex flex-col gap-1 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                <span className="text-[11px] font-semibold text-teal-600 uppercase tracking-[0.14em]">
+                  Concussion Education Australia · CPD — 8 hours
+                </span>
+              </div>
+              <span className="text-[11px] font-medium text-slate-400 pl-3.5">
+                ESSA endorsement pending — under review by two ESSA-appointed reviewers; no endorsement is currently held or claimed.
               </span>
             </div>
             <div className="flex items-start gap-4">
@@ -444,24 +453,346 @@ function DashboardContent() {
                 <FileText className="w-[18px] h-[18px] text-slate-400 group-hover:text-teal-600 transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-slate-800">Admin Documents</div>
-                <div className="text-xs text-slate-500">Accreditation &amp; governance</div>
+                <div className="text-sm font-semibold text-slate-800">Clinical Report Templates</div>
+                <div className="text-xs text-slate-500">NDIS · WorkCover/CTP · GP referrer</div>
               </div>
               <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-500 transition-colors flex-shrink-0" />
             </Link>
 
-            <div className="flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-200 p-4">
-              <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                <Award className="w-[18px] h-[18px] text-slate-300" />
+            <button
+              type="button"
+              onClick={() => setShowCert(true)}
+              className="group flex items-center gap-3 rounded-xl bg-white border border-slate-200 shadow-sm p-4 text-left transition-all hover:shadow-md hover:border-teal-200"
+            >
+              <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                <Award className="w-[18px] h-[18px] text-slate-400 group-hover:text-teal-600 transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-slate-500">Certificate</div>
-                <div className="text-xs text-slate-400">Issued on course completion</div>
+                <div className="text-sm font-semibold text-slate-800">Certificate</div>
+                <div className="text-xs text-slate-500">View sample certificate</div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-500 transition-colors flex-shrink-0" />
+            </button>
+          </div>
+
+          {/* Course author & governance — reviewer surface */}
+          <CourseAuthorPanel />
+
+          {/* Quality / complaints policy — required for accreditation, not yet in repo */}
+          <QualityPolicyPanel />
+        </div>
+      </main>
+
+      {showCert && <SampleCertificateModal onClose={() => setShowCert(false)} />}
+    </div>
+  )
+}
+
+// ── Course author & governance ────────────────────────────────────────────
+// Reviewer-facing credentials panel. Every fact here is sourced from the ACSM
+// submission pack (A5 — Presenter Biography) and the applicant identification
+// block; nothing is invented. The instructor bio paragraph is quoted verbatim.
+function CourseAuthorPanel() {
+  return (
+    <section className="mt-12">
+      <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-slate-500 mb-4">
+        Course Author &amp; Governance
+      </h2>
+      <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 sm:p-7">
+        <div className="flex items-start gap-4">
+          <div className="hidden sm:flex flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 items-center justify-center shadow-sm">
+            <BadgeCheck className="w-6 h-6 text-white" strokeWidth={2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              Zac Lewis — B.Clin.Sci, M.Ost.Med
+            </h3>
+            <p className="text-sm text-slate-500 font-medium mt-0.5">
+              Registered Osteopath (AHPRA) · Sole author &amp; presenter
+            </p>
+
+            {/* Credential chips */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                AHPRA reg. OST0001852866
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                Master of Osteopathic Medicine
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                Bachelor of Clinical Science
+              </span>
+            </div>
+
+            {/* Bio — quoted verbatim from ACSM pack A5 */}
+            <p className="text-sm text-slate-600 leading-relaxed mt-4">
+              Zac Lewis is an AHPRA-registered osteopath and the founder of Concussion Education
+              Australia. He holds a Bachelor of Clinical Science and a Master of Osteopathic Medicine,
+              and has more than a decade of clinical experience in neurological health with a
+              concentrated focus on concussion assessment and rehabilitation. He is the sole author of
+              Concussion Rehab Mastery — the module structure, all instructional content, the 136-item
+              peer-reviewed evidence base, and all 87 assessment items.
+            </p>
+
+            {/* Provider + governance grid */}
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 mt-5 pt-5 border-t border-slate-100">
+              <div>
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Provider</dt>
+                <dd className="text-sm text-slate-700 font-medium mt-0.5">
+                  Concussion Education Australia Pty Ltd
+                </dd>
+                <dd className="text-xs text-slate-500">ABN 74 688 155 508</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Course</dt>
+                <dd className="text-sm text-slate-700 font-medium mt-0.5">
+                  Concussion Rehab Mastery
+                </dd>
+                <dd className="text-xs text-slate-500">8 modules · 8 CPD hours · 80% quiz pass mark · 136 references</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Endorsement status</dt>
+                <dd className="text-sm text-slate-600 mt-0.5 leading-relaxed">
+                  ESSA endorsement of Concussion Rehab Mastery is{' '}
+                  <strong className="text-slate-700">pending</strong> — under review by two ESSA-appointed
+                  reviewers; no ESSA endorsement is currently held or claimed. Osteopathy Australia&apos;s
+                  CPD endorsement applies to the companion Concussion Clinical Mastery program, not to this
+                  course.
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Published protocol</dt>
+                <dd className="text-sm text-slate-600 mt-0.5 leading-relaxed">
+                  The rehabilitation method taught here is a published, citable clinical protocol:{' '}
+                  <a
+                    href="https://doi.org/10.5281/zenodo.21482634"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-teal-700 font-medium hover:underline"
+                  >
+                    <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise
+                    Rehabilitation after Concussion (mTBI)</em>, Lewis&nbsp;Z. (2026), Zenodo, CC-BY-4.0
+                  </a>{' '}
+                  (DOI 10.5281/zenodo.21482634). The SST Trainer operationalises it — graded BCTT/BCBT
+                  test, measured HR threshold, sub-symptom-threshold prescription and monitored home
+                  sessions.
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Quality / complaints policy ───────────────────────────────────────────
+// Reviewer-facing summary of the REAL published policy at /terms (identical for
+// AU, NZ and international buyers). Every fact here is sourced verbatim from that
+// page — refund window, complaints channel, ACL preservation and Privacy-Act
+// handling. Full authoritative text lives at /terms.
+function QualityPolicyPanel() {
+  return (
+    <section className="mt-6 mb-4">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 sm:p-7">
+        <div className="flex items-start gap-4">
+          <div className="hidden sm:flex flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 items-center justify-center shadow-sm">
+            <ShieldCheck className="w-6 h-6 text-white" strokeWidth={2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              Quality assurance &amp; complaints policy
+            </h3>
+            <p className="text-sm text-slate-500 font-medium mt-0.5">
+              Published policy — applies identically to AU, NZ and international participants
+            </p>
+
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mt-5">
+              <div>
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Refunds</dt>
+                <dd className="text-sm text-slate-600 leading-relaxed mt-1">
+                  Full refund within 7 days of purchase if less than 25% of the course has been accessed
+                  (fewer than 2 modules). No refund once more than 25% has been consumed. Approved refunds are
+                  processed within 5&ndash;10 business days.
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Complaints &amp; refund requests</dt>
+                <dd className="text-sm text-slate-600 leading-relaxed mt-1">
+                  Email{' '}
+                  <a href="mailto:zac@concussion-education-australia.com" className="text-teal-700 font-medium hover:underline">
+                    zac@concussion-education-australia.com
+                  </a>
+                  . We respond within 1 business day.
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Australian Consumer Law</dt>
+                <dd className="text-sm text-slate-600 leading-relaxed mt-1">
+                  Your rights under the Australian Consumer Law are preserved. Where there is a major failure,
+                  you are entitled to a refund regardless of the timeframe above.
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Privacy</dt>
+                <dd className="text-sm text-slate-600 leading-relaxed mt-1">
+                  Personal information is handled under the Australian Privacy Principles (Privacy Act 1988).
+                </dd>
+              </div>
+            </dl>
+
+            <p className="text-sm text-slate-500 mt-5 pt-4 border-t border-slate-100">
+              Full terms:{' '}
+              <Link href="/terms" className="text-teal-700 font-medium hover:underline">
+                /terms
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Sample (specimen) certificate ─────────────────────────────────────────
+// A watermarked SPECIMEN that mirrors the real CPD certificate template
+// (lib/certificate.ts — the `online-course` type: 8 CPD hours, landscape A4,
+// #5b9aa6 border/accents, CEA header, Zac Lewis signature block). It is
+// populated ONLY with known-true facts. The OA endorsement line that the live
+// PDF template carries is deliberately omitted here — OA endorses the companion
+// CCM program, not this course. A placeholder marks where an accreditation /
+// registration number would sit once an accreditor assigns one.
+function SampleCertificateModal({ onClose }: { onClose: () => void }) {
+  const teal = '#5b9aa6'
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Sample certificate"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-3xl my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-semibold text-white/80 uppercase tracking-[0.14em]">
+            Specimen certificate — not a completion record
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Certificate canvas — landscape A4 proportion, mirrors the PDF */}
+        <div className="relative bg-white rounded-lg shadow-2xl overflow-hidden">
+          {/* SPECIMEN watermark */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span
+              className="text-[7rem] sm:text-[9rem] font-black tracking-[0.15em] -rotate-[24deg] select-none"
+              style={{ color: 'rgba(91,154,166,0.12)' }}
+            >
+              SPECIMEN
+            </span>
+          </div>
+
+          {/* Double border */}
+          <div className="m-2.5 border-2 rounded-sm" style={{ borderColor: teal }}>
+            <div className="m-1 border rounded-sm px-6 sm:px-12 py-8 sm:py-10 text-center" style={{ borderColor: teal }}>
+              {/* Header */}
+              <div className="text-[13px] sm:text-sm font-bold tracking-wide" style={{ color: teal }}>
+                CONCUSSION EDUCATION AUSTRALIA
+              </div>
+              <div className="text-[10px] sm:text-xs text-slate-500 mt-1">
+                Concussion Education Australia Pty Ltd · ABN 74 688 155 508
+              </div>
+
+              <div className="mt-6 text-[11px] sm:text-xs tracking-[0.14em] text-slate-500 uppercase">
+                Certificate of Completion
+              </div>
+              <div className="mx-auto mt-2 h-px w-24" style={{ backgroundColor: teal }} />
+
+              <div className="mt-5 text-xs sm:text-sm text-slate-600">This is to certify that</div>
+              <div className="mt-3 text-2xl sm:text-3xl font-bold text-slate-800 italic">
+                [ Participant name ]
+              </div>
+              <div className="mx-auto mt-1.5 h-px w-56 max-w-full" style={{ backgroundColor: teal }} />
+
+              <div className="mt-4 text-xs sm:text-sm text-slate-600">
+                has successfully completed the following CPD activity:
+              </div>
+              <div className="mt-2 text-lg sm:text-xl font-bold" style={{ color: teal }}>
+                Concussion Rehab Mastery
+              </div>
+              <div className="mt-2 text-[11px] sm:text-xs text-slate-500 max-w-xl mx-auto leading-relaxed">
+                Evidence-based concussion rehabilitation for exercise physiologists — 8 clinical modules
+                covering the neurometabolic cascade, sub-symptom-threshold aerobic rehabilitation,
+                phenotype-directed management and staged return-to-activity.
+              </div>
+
+              {/* Details grid */}
+              <div className="mt-7 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl mx-auto">
+                <div>
+                  <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">CPD hours awarded</div>
+                  <div className="text-xl sm:text-2xl font-bold mt-1" style={{ color: teal }}>8</div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-400">AHPRA-Aligned</div>
+                </div>
+                <div>
+                  <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">Date of completion</div>
+                  <div className="text-xs sm:text-sm font-bold text-slate-700 mt-1">Issued on completion</div>
+                </div>
+                <div>
+                  <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">Mode of delivery</div>
+                  <div className="text-xs sm:text-sm font-bold text-slate-700 mt-1">Online — Self-Paced</div>
+                </div>
+              </div>
+
+              {/* Accreditation / registration number region */}
+              <div className="mt-6 mx-auto max-w-md rounded-md border border-dashed border-slate-300 bg-slate-50/70 px-4 py-2.5">
+                <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">
+                  Accreditation / registration number
+                </div>
+                <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                  [ Assigned by the accrediting body on approval — e.g. ACSM / CASES / HPCSA / CEP-UK ]
+                </div>
+              </div>
+
+              {/* Signature block */}
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-left">
+                <div className="text-center sm:text-left">
+                  <div className="text-lg italic" style={{ color: teal }}>Zac Lewis</div>
+                  <div className="mx-auto sm:mx-0 mt-1 h-px w-40" style={{ backgroundColor: '#cbd5e1' }} />
+                  <div className="text-[10px] sm:text-xs text-slate-500 mt-1.5 leading-snug">
+                    Zac Lewis — B.Clin.Sci, M.Ost.Med
+                    <br />
+                    Registered Osteopath · AHPRA OST0001852866
+                    <br />
+                    Concussion Education Australia
+                  </div>
+                </div>
+                <div className="text-center sm:text-right text-[10px] sm:text-xs text-slate-400 leading-snug">
+                  Certificate ID: CEA-ONL-YYYY-XXXXXXXX
+                  <br />
+                  <span className="italic">(specimen — no verifiable ID)</span>
+                  <br />
+                  Verify: portal.concussion-education-australia.com
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </main>
+
+        <p className="mt-3 text-center text-[11px] text-white/60">
+          Watermarked specimen for accreditation review. Live certificates are generated per participant
+          on verified course completion (80% quiz pass mark across all modules).
+        </p>
+      </div>
     </div>
   )
 }

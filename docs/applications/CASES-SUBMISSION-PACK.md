@@ -34,6 +34,8 @@
 
 That mismatch — carrying the graded-exertion responsibility in practice without formal training in the concussion protocol governing it — is the demand. It is narrow, it is specific, it is a duty-of-care exposure for the practitioner and the employing organisation, and it is exactly what an 8-credit CPD programme can close.
 
+**The protocol they are already running is now a published, defensible standard — and there is a tool to run it.** The scientist's exposure is sharpest precisely because the concussion protocol they deliver has, until now, had no single citable reference behind it. That reference now exists: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, 2026; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634) specifies BCTT/BCBT administration and termination criteria, the meaning of the symptom-limited heart-rate threshold, the 80–90% prescription band, and the re-test-driven progression rule — i.e. the exact method a sport and exercise scientist is delegated to run. CASES-endorsed CPD (this pack) supplies the recognised competency; the protocol supplies the defensible standard; the SST Trainer is the tool that operationalises it — running the graded exercise test, recording the **measured** heart-rate threshold, issuing the sub-symptom-threshold prescription, and returning a measured HR-threshold trajectory with standardised progress reporting for the club or academy record. Public demonstration: `/sst-trainer?clinic=DEMO00` and `/preseason/b/DEMO00`.
+
 **Corollaries for how the pack is written:** lead with the practitioner in the performance setting, not with concussion statistics. Keep scope discipline prominent — it is what makes the argument credible rather than a scope grab. Do not claim UK practitioners are unaware of concussion; claim that the graded-exertion protocol they are already running is not something they were formally trained to run.
 
 ---
@@ -83,9 +85,9 @@ Please find our application for **CPD Endorsement** of **Concussion Rehab Master
 **Format:** online, asynchronous, self-paced — 8 modules
 **Assessment:** 87 questions delivered per module, 80% pass mark
 **Stand-alone:** yes — no prerequisite, no required follow-on, complete in itself
-**Price:** GBP 295
+**Price:** £275 (GBP list price, single source `lib/international-pricing.ts`; UK renewal US$99/yr)
 
-The application fee of [ZAC: fee confirmed by CASES] has been paid by [ZAC: method] on [ZAC: date], reference [ZAC: reference].
+**ACTION: the enquiry email (Email 1) requests the CPD fee — once CASES confirms it, record fee + payment method + date + reference here before sending Email 2. Do not pay against the £1,800+VAT CUES figure.**
 
 The case for endorsement is narrow and specific, and I would rather state it that way than as a general concussion-awareness argument.
 
@@ -271,8 +273,9 @@ CASES requires that endorsed CPD suits a UK setting. CEA addresses that on three
 
 ## 10. Evidence base
 
-The programme is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature. The spine:
+The programme is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature. The method the programme teaches is itself published as a citable, open-access standard, and heads the spine:
 
+- Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury) (Version 1). Zenodo. https://doi.org/10.5281/zenodo.21482634 *(Open access, CC-BY-4.0; concept DOI https://doi.org/10.5281/zenodo.21482633 always resolves to the latest version.)*
 - Patricios, J. S., Schneider, K. J., Dvořák, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport — Amsterdam, October 2022. *British Journal of Sports Medicine*, 57(11), 695–711. https://doi.org/10.1136/bjsports-2023-106898
 - Leddy, J. J., Haider, M. N., Ellis, M. J., et al. (2019). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. *JAMA Pediatrics*, 173(4), 319–325. https://doi.org/10.1001/jamapediatrics.2018.4397
 - Leddy, J. J., Master, C. L., Mannix, R., et al. (2021). Early targeted heart rate aerobic exercise versus placebo stretching for sport-related concussion in adolescents: a randomised controlled trial. *Lancet Child & Adolescent Health*, 5(11), 792–799. https://doi.org/10.1016/S2352-4642(21)00267-4
@@ -326,8 +329,8 @@ Endorsement is understood to be annual. CEA will submit for renewal on schedule.
 ## STILL REQUIRED BEFORE SENDING
 
 - **OST0001852866** — author credentials.
-- **GBP 295** — decide the UK price before submitting.
-- **[ZAC: fee confirmed by CASES]**, **[ZAC: payment method, date, reference]** — populate in Email 2 only after CASES confirms the actual CPD fee in reply to Email 1. Do not pay against the £1,800+VAT CUES figure.
+- **UK price = £275** (GBP list, single source `lib/international-pricing.ts`).
+- **ACTION: the enquiry email requests the CPD fee** — populate fee + payment method, date, reference in Email 2 only after CASES confirms the actual CPD fee in reply to Email 1. Do not pay against the £1,800+VAT CUES figure.
 - **UK annex** — the UK-context annex described in section 9 must exist as a document before Email 2 goes out; it is offered to reviewers as part of the submission.
 - **Do not send the "Positioning spine" section.** It is internal framing. The submitted material is Email 1, Email 2 and sections 1–13 only.
 - **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

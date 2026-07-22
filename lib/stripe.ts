@@ -15,6 +15,7 @@
 
 import Stripe from 'stripe'
 import { CONFIG, isEarlyBirdForLocation } from '@/lib/config'
+import { intlPriceForCountry } from '@/lib/international-pricing'
 
 // Lazy init: Stripe is only needed at request time, not during build page collection
 let _stripe: Stripe | null = null
@@ -120,10 +121,14 @@ export async function createCourseCheckoutSession({
   bundleDiscountAud = 0,
   clinicianCount,
   clinicName,
+  country,
 }: {
   courseType: CourseType
   location?: string
   preferredCity?: string
+  /** Visitor country (ISO-3166 alpha-2), derived server-side from cf-ipcountry.
+   *  Only used for `international-online` to pick the local charge currency. */
+  country?: string | null
   /** Hub Pack only: buyer-declared clinician headcount → the key's seat cap. */
   clinicianCount?: number
   clinicName?: string
@@ -176,12 +181,17 @@ export async function createCourseCheckoutSession({
   let productDescription: string
 
   if (courseType === 'international-online') {
-    unitAmount = COURSE_PRICING.INTERNATIONAL_ONLINE
-    currency = 'usd'
+    // Local-currency pricing, resolved from the visitor country (server-derived
+    // from cf-ipcountry — never client input). Single source of truth in
+    // lib/international-pricing.ts so display and charge always match.
+    const intl = intlPriceForCountry(country)
+    unitAmount = intl.unitAmount
+    currency = intl.currency
     productName = 'Clinical Concussion Course — International'
     // HONESTY GATE: "CE credits" is a US accreditation currency and CEA holds no
     // US accreditation (ACSM application not yet submitted). State HOURS, which is
     // verifiable, never CREDITS. Same discipline as CONFIG.FEATURES.ESSA_ACCREDITED.
+    // 8 hours only — overseas buyers cannot attend the workshop, so never 14.
     productDescription = '8 online modules (8 hours of learning) · Lifetime access · Clinical Toolkit · Reference Repository · Certificate of completion'
   } else if (courseType === 'workshop-upgrade') {
     unitAmount = isEarlyBird ? COURSE_PRICING.WORKSHOP_UPGRADE_EARLY : COURSE_PRICING.WORKSHOP_UPGRADE_REGULAR

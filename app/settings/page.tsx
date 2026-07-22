@@ -576,6 +576,11 @@ export default function SettingsPage() {
                   )}
                 </div>
 
+                {/* Stable anchor for /settings#certificate — always present so
+                    both the paid CPD cert (below) and the free-course cert land
+                    here regardless of which card renders. */}
+                <div id="certificate" className="scroll-mt-24" />
+
                 {/* Certificate */}
                 {isPaidUser && (
                   <div className="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-6">
@@ -671,7 +676,7 @@ export default function SettingsPage() {
 
                 {/* Free awareness course (module 104) — Certificate of Completion */}
                 {isFreeCourseComplete && (
-                  <div id="certificate" className="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-6">
+                  <div className="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-6">
                     <div className="flex items-center gap-3 mb-6">
                       <Award className="w-5 h-5 text-[#5b9aa6]" strokeWidth={2} />
                       <h2 className="text-xl font-bold text-slate-900">Concussion Recognition &amp; Referral</h2>

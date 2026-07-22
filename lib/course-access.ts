@@ -60,9 +60,10 @@ export async function checkCourseApiAccess(
     return { ok: true, reason: 'admin' }
   }
 
+  // Cookie or header only — the ?demo= query param is intentionally NOT
+  // accepted (it leaks the key into server/access logs and Referer headers).
   const supplied =
     request.headers.get('x-demo-key') ||
-    new URL(request.url).searchParams.get('demo') ||
     request.cookies.get('demo_key')?.value
   if (supplied && supplied === DEMO_KEY) {
     return { ok: true, reason: 'demo-key' }

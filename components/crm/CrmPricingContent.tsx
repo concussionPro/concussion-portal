@@ -17,10 +17,12 @@ import {
   LineChart,
   HeartPulse,
 } from 'lucide-react'
+import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import CrmCheckoutButton from '@/components/crm/CrmCheckoutButton'
+import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — pricing/landing content.
@@ -281,6 +283,43 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             of practice.
           </p>
         </div>
+
+        {/* ── SST + Baseline instrument visuals — the platform proof. Hidden when
+            embedded (hideNav): the homepage renders its own instruments section
+            below the stream tabs, so it must not repeat here. ── */}
+        {!hideNav && (
+          <div className="max-w-4xl mx-auto mt-8 mb-2">
+            <InstrumentKeyframes />
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
+                <SstWatchVisual />
+                <div className="p-5">
+                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
+                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
+                    A graded test measures each patient&rsquo;s symptom threshold; they train just
+                    under it — live heart rate, verified progression, every session on your dashboard.
+                  </p>
+                  <Link href="/sst-trainer" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                    See the patient app <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+              <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
+                <BaselineLaptopVisual />
+                <div className="p-5">
+                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">Pre-Season Baseline Testing</h3>
+                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
+                    One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a
+                    PDF report lands in your inbox — on file for the day it matters.
+                  </p>
+                  <Link href="/preseason" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
+                    See how clubs use it <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Pricing Cards — two tiers, copied from the CCM bento card design */}
         <div id="pricing-cards" className="mt-6">

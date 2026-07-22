@@ -62,12 +62,12 @@ async function isAuthorised(req: Request): Promise<boolean> {
   const adminKey = headerList.get('x-admin-key')
   if (adminKey && process.env.ADMIN_API_KEY && adminKey === process.env.ADMIN_API_KEY) return true
 
+  // Demo key: header or cookie only. The ?demo= query param is intentionally
+  // NOT accepted (it leaks the key into logs / Referer). Fail-closed if unset.
   const demoKey = process.env.HEIDI_DEMO_KEY
   if (demoKey) {
     if (headerList.get('x-demo-key') === demoKey) return true
     if (cookieStore.get('demo_key')?.value === demoKey) return true
-    const url = new URL(req.url)
-    if (url.searchParams.get('demo') === demoKey) return true
   }
 
   return false
@@ -167,7 +167,7 @@ export async function GET() {
     ok: true,
     endpoint: '/api/cpd/events',
     method: 'POST',
-    auth: 'x-admin-key header OR x-demo-key header OR demo_key cookie OR ?demo= query param',
+    auth: 'x-admin-key header OR x-demo-key header OR demo_key cookie',
     contract: {
       request: {
         userId: 'string (required)',

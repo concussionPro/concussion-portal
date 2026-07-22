@@ -95,8 +95,8 @@ Please find our **Route 2 accreditation request** for **Concussion Rehab Mastery
 **Duration:** 480 minutes of assessed instructional content
 **PDCs sought:** 8 (one credit per assessed instructional hour)
 **Assessment:** 87 questions delivered per module, 80% pass mark
-**Price:** CAD $475
-**Fee:** [ZAC: fee confirmed by CSEP] paid [ZAC: method, date, reference] — or, if no fee applies, delete this line
+**Price:** CA$475 (CAD list price, single source `lib/international-pricing.ts`; renewal US$99/yr)
+**Fee: ACTION — the enquiry email requests the accreditation fee.** Record fee + payment method, date, reference here once CSEP confirms it in reply to Email 1; if Route 2 carries no fee, delete this line.
 
 The case for accreditation is a change in the evidence that has moved concussion treatment into CSEP members' hands.
 
@@ -267,6 +267,8 @@ The mapping to CSEP credentials is direct:
 
 **The boundary, stated for both.** Diagnosis of concussion is a medical act in Canada as in Australia. Return-to-contact clearance is a medical act. Neither a CSEP-CEP nor a CSEP-CPT diagnoses concussion or clears an athlete for contact, and the course states that in every module rather than once in a disclaimer. Learners are trained to document their findings as exercise-physiology observations and recommendations and to hand the clearance decision to the responsible physician.
 
+**The differentiating layer is now a published standard, and there is a tool that delivers it.** The one genuine differentiator this pack argues — the exercise-prescription layer beneath assessment-oriented Canadian concussion training — is now backed by a citable standard rather than a course claim: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, 2026; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634), which specifies exactly the layer assessment-oriented training omits: BCTT/BCBT-derived threshold identification, HRt-to-FITT conversion, real-time symptom-response monitoring, and re-test-driven progression. The SST Trainer is the tool a CSEP-CEP uses to deliver that layer — running the graded exercise test, capturing the **measured** heart-rate threshold, issuing the sub-symptom-threshold prescription, monitoring between-visit sessions, and returning a measured HR-threshold trajectory with standardised reporting to the referring physician (demo: `/sst-trainer?clinic=DEMO00`). This strengthens the equivalency case without changing the sequence: **the CSEP Route 2 submission still holds until the ESSA endorsement is granted** — the protocol and tool sit inside the ESSA AEP scope CSEP already recognises, and are argued only once that endorsement lands.
+
 ## 9. Canadian context
 
 **Return-to-play legislation and guidance.** Module 6 teaches a jurisdiction-neutral competency: identify the mandated stand-down requirements that apply to the athlete in front of you, determine which minimum governs, refuse to progress the athlete past the stage the governance permits, and hand the contact-clearance decision to the physician. Canadian learners exercise that competency against the instruments that bind them — **Parachute Canada's Canadian Guideline on Concussion in Sport**, provincial concussion legislation including **Ontario's Rowan's Law (Concussion Safety), 2018** and its mandatory removal-from-sport and return-to-sport protocol requirements, equivalent provincial requirements elsewhere, and the return-to-play protocol of the athlete's sport organisation. The Australian instrument cited in the delivered content is presented as the worked example; CEA supplies a **Canadian annex** setting the Canadian instruments alongside the module content, and will align that annex to any structure CSEP prefers.
@@ -277,8 +279,9 @@ The mapping to CSEP credentials is direct:
 
 ## 10. Evidence base
 
-The course is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature rather than secondary summaries. The spine:
+The course is built on **136 peer-reviewed references, 106 of which carry DOIs**, drawn from the primary literature rather than secondary summaries. The method taught is itself published as a citable, open-access standard, and heads the spine:
 
+- Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury) (Version 1). Zenodo. https://doi.org/10.5281/zenodo.21482634 *(Open access, CC-BY-4.0; concept DOI https://doi.org/10.5281/zenodo.21482633.)*
 - Patricios, J. S., Schneider, K. J., Dvořák, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport — Amsterdam, October 2022. *British Journal of Sports Medicine*, 57(11), 695–711. https://doi.org/10.1136/bjsports-2023-106898
 - Leddy, J. J., Haider, M. N., Ellis, M. J., et al. (2019). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. *JAMA Pediatrics*, 173(4), 319–325. https://doi.org/10.1001/jamapediatrics.2018.4397
 - Leddy, J. J., Master, C. L., Mannix, R., et al. (2021). Early targeted heart rate aerobic exercise versus placebo stretching for sport-related concussion in adolescents: a randomised controlled trial. *Lancet Child & Adolescent Health*, 5(11), 792–799. https://doi.org/10.1016/S2352-4642(21)00267-4
@@ -337,8 +340,8 @@ Zac is the sole author of Concussion Rehab Mastery. Stated plainly for the revie
 ## STILL REQUIRED BEFORE SENDING
 
 - **OST0001852866** — author credentials.
-- **CAD $475** — decide the Canadian price before Email 2.
-- **[ZAC: fee confirmed by CSEP]**, **[ZAC: payment method, date, reference]** — only after CSEP's reply to Email 1. If Route 2 carries no fee, delete that line from Email 2.
+- **Canadian price = CA$475** (CAD list, single source `lib/international-pricing.ts`).
+- **ACTION: the enquiry email requests the accreditation fee** — fill fee + payment method, date, reference only after CSEP's reply to Email 1. If Route 2 carries no fee, delete that line from Email 2.
 - **Canadian annex** — must exist as a document before Email 2 goes out; it is offered to reviewers as part of the submission.
 - **Sequencing decision:** if ESSA endorsement lands before you send, update sections 11 and 8 to state it as granted — it is the single highest-leverage addition to this application.
 - **Do not send the "INTERNAL — MARKET REALITY" or "POSITIONING SPINE" sections.** Both are CEA-internal. The submitted material is Email 1, Email 2 and sections 1–13 only.

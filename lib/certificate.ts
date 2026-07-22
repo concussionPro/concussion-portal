@@ -100,7 +100,14 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(100, 116, 139) // slate-500
-  doc.text('Endorsed by Osteopathy Australia', centerX, y, { align: 'center' })
+  // Osteopathy Australia endorses Concussion Clinical Mastery ONLY (the CCM
+  // online course + full workshop cert). The free SCAT course, the free
+  // recognition-referral awareness cert, and CRM are NOT OA-endorsed — printing
+  // the line on those certs is a false endorsement claim (AHPRA/ACL). Gate it.
+  const isOaEndorsed = data.courseType === 'online-course' || data.courseType === 'full-course'
+  if (isOaEndorsed) {
+    doc.text('Endorsed by Osteopathy Australia', centerX, y, { align: 'center' })
+  }
 
   // ── Certificate Title ──────────────────────────────────
   y += 14

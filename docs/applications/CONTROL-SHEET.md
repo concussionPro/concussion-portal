@@ -17,10 +17,10 @@ These few inputs recur across every pack. Fill them once and I'll drop them into
 |---|---|---|---|
 | AUD (home) | $497 | — | base, online-only |
 | USD (ACSM) | **$347** | $99 | live on /acsm |
-| GBP (CEP-UK, CASES, CIMSPA) | **£295** | £85 | premium over £258 convert; UK CPD bears it |
+| GBP (CEP-UK, CASES, CIMSPA) | **£275** (SUPERSEDED £295 — live table is lib/international-pricing.ts) | — | geo-derived at checkout |
 | CAD (CSEP) | **$475** | $130 | near straight convert |
 | NZD (SESNZ, NZ assoc.) | **$549** | $150 | near straight convert |
-| ZAR (South Africa) | **R2,200** | R600 | deep PPP cut from R5,960 convert — R5,960 is unsellable against BioCPD + the R1,380 accreditation fee |
+| ZAR (South Africa) | **R6,400** (SUPERSEDED R2,200 — live table is lib/international-pricing.ts; PPP-discount by lowering the ZAR row if desired) | — | geo-derived at checkout |
 
 Medicare provider **473492BF** is on file but is AU-billing only — it does NOT go in any overseas application.
 
@@ -112,7 +112,7 @@ For each: what it is, where it goes, how you actually submit, the fee, and the O
 - **What:** `03-protocol-COMPLETE.docx/.pdf` — the clinician-directed SSTAE protocol. This is the academic proof-of-method that every pack references.
 - **Where it goes:** you want a citable DOI. protocols.io's importer has mangled it five times. **Recommendation: upload the PDF to Zenodo instead** — it mints a DOI on the file as-is, no importer, no page limit, done in an hour. JMIR Research Protocols is the peer-reviewed version, submitted separately as a manuscript.
 - **What the DOI proves:** the *method* is published and specified. **Efficacy belongs to Leddy 2019 (cited inside it), which is the treatment's evidence — not the tool's.** Every pitch uses the same three-step chain: the treatment is evidenced (Leddy) → here is the published protocol to deliver it (your DOI) → here is the course/tool that lets you do it.
-- **Only-you:** upload to Zenodo, send me the DOI, I thread it into ACSM/CEP-UK/South-Africa where the placeholder waits.
+- **DONE:** uploaded to Zenodo and published open-access (CC-BY-4.0). DOI **10.5281/zenodo.21482634** (concept DOI 10.5281/zenodo.21482633) is now threaded into ACSM/CEP-UK/South-Africa and every other pack — no placeholder remains.
 
 ---
 
@@ -122,6 +122,6 @@ For each: what it is, where it goes, how you actually submit, the fee, and the O
 
 **Blocked only on Part A:** ACSM (AHPRA#), CEP-UK (AHPRA# + GBP + URL + list lawful basis).
 
-**Real work beyond Part A:** South Africa (ZAR price + annex + geo-block) · NZ ACC (verify your contract copy) · Protocol (Zenodo upload).
+**Real work beyond Part A:** South Africa (ZAR price + annex + geo-block) · NZ ACC (verify your contract copy). (Protocol Zenodo upload — DONE, DOI 10.5281/zenodo.21482634.)
 
 **Priority order:** CEP-UK (deadline 31 Dec 2026) → ACSM → NZ ACC pilot → South Africa → the rest as replies come in.

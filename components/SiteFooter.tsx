@@ -66,7 +66,7 @@ export function SiteFooter() {
 
         <div className="border-t border-slate-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            &copy; {new Date().getFullYear()} Concussion Education Australia. ABN 15 657 685 613. All rights reserved.
+            &copy; {new Date().getFullYear()} Concussion Education Australia. ABN 74 688 155 508. All rights reserved.
           </p>
           <p className="text-xs">
             Endorsed by Osteopathy Australia &middot; For all AHPRA clinicians &middot; 14 CPD Hours

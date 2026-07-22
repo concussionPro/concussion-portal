@@ -4,7 +4,7 @@
 **Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025), 2 Wordsworth St, Byron Bay NSW 2481, Australia
 **Contact:** Zac Lewis, Director — zac@concussion-education-australia.com · +61 449 186 579
 **Product:** Concussion Rehab Mastery — 8 CPD points, online, self-paced
-**To:** `natmanager@sesnz.org.nz` · **CC:** CEPNZ [ZAC: CEPNZ contact address]
+**To:** `natmanager@sesnz.org.nz` · **CC:** CEPNZ — **ACTION: confirm the current CEPNZ contact address before sending; if not confirmed, send to `natmanager@sesnz.org.nz` only and add CEPNZ on the follow-up.**
 
 ---
 
@@ -54,7 +54,7 @@ Every relevant profession completed its concussion training **before** that shif
 # EMAIL — listing request
 
 **To:** natmanager@sesnz.org.nz
-**CC:** [ZAC: CEPNZ contact address]
+**CC:** CEPNZ — **ACTION: confirm the current CEPNZ contact address before sending; omit the CC if unconfirmed.**
 **Subject:** Request to list an online concussion rehabilitation course on the SESNZ CPD Opportunities page
 
 Kia ora,
@@ -137,8 +137,9 @@ Points are claimed at 1 point per hour of assessed instructional content — the
 
 The full 51-objective list is available on request.
 
-**Evidence base.** 136 peer-reviewed references, 106 with DOIs. The spine of it:
+**Evidence base.** 136 peer-reviewed references, 106 with DOIs. The method the course teaches is itself published as a citable, open-access standard, and heads the spine of it:
 
+- Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury) (Version 1). Zenodo. https://doi.org/10.5281/zenodo.21482634 *(Open access, CC-BY-4.0; concept DOI https://doi.org/10.5281/zenodo.21482633.)*
 - Patricios, J. S., Schneider, K. J., Dvořák, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport — Amsterdam, October 2022. *British Journal of Sports Medicine*, 57(11), 695–711. https://doi.org/10.1136/bjsports-2023-106898
 - Leddy, J. J., Haider, M. N., Ellis, M. J., et al. (2019). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. *JAMA Pediatrics*, 173(4), 319–325. https://doi.org/10.1001/jamapediatrics.2018.4397
 - Leddy, J. J., Master, C. L., Mannix, R., et al. (2021). Early targeted heart rate aerobic exercise versus placebo stretching for sport-related concussion in adolescents: a randomised controlled trial. *Lancet Child & Adolescent Health*, 5(11), 792–799. https://doi.org/10.1016/S2352-4642(21)00267-4
@@ -153,21 +154,23 @@ The full 51-objective list is available on request.
 
 Full bibliography available on request.
 
+**Why this matters for a listing.** The method taught is not a proprietary claim — it is a published, open-access clinical protocol with a resolvable DOI (Lewis, 2026; https://doi.org/10.5281/zenodo.21482634), citable by any SESNZ member. That gives the listing citable credibility: the free introductory material and the paid CRM course both rest on a standard members can inspect and reference, and the SST Trainer is the tool that operationalises it in practice (demo: `/sst-trainer?clinic=DEMO00`).
+
 **New Zealand context.** The clinical protocol is international — the BCTT, the heart-rate threshold, the 80–90% prescription band, the symptom-exacerbation stop rule and the graded return-to-sport strategy apply identically in New Zealand. Where jurisdiction matters, the competency taught is jurisdiction-neutral: identify the mandated stand-down that applies to the athlete, determine which minimum governs, refuse to progress past what the governance permits, and leave contact clearance with the medical practitioner. NZ learners exercise that against **ACC and New Zealand sport-sector concussion guidance** and the relevant national sporting organisation's return-to-play protocol. Record-keeping and privacy content is exercised against the **Privacy Act 2020** and the **Health Information Privacy Code 2020**. CEA holds an NZ annex mapping these and will supply it if useful.
 
 **Independent review and status.** Independently reviewed by **two reviewers appointed by ESSA** through its professional development endorsement process, covering content accuracy, currency of the evidence base, assessment design and scope-of-practice appropriateness. **ESSA endorsement is pending** — not yet granted, and not claimed. CEA's separate in-person clinical programme is endorsed by Osteopathy Australia; that endorsement applies to that programme only and is not claimed for this course. CEA does not hold ACSM Continuing Education Credits.
 
 **Author.** **Zac Lewis** — Registered Osteopath (AHPRA-registered), B.Clin.Sci, M.Ost.Med. More than a decade in neurological health and concussion, treating and rehabilitating concussed patients across community, sporting and complex persistent-symptom presentations. Played ice hockey nationally and professionally in New Zealand and Canada, which is why the material treats return-to-play pressure and symptom under-reporting as operational problems rather than footnotes. Zac is the sole author. Stated plainly: **no exercise physiologist authored the course**, and CEA does not claim exercise-physiologist authorship or clinical validation — it was written by a registered osteopath, referenced to the primary literature, and put through the independent ESSA-appointed review described above.
 
-**Price:** NZ$549 · **Course page:** concussion-education-australia.com [ZAC: exact CRM course URL for the listing]
+**Price:** NZ$575 (NZD list price, single source `lib/international-pricing.ts`) · **Course page:** `https://portal.concussion-education-australia.com/sesnz` — **ACTION: confirm this landing page is live before sending.**
 
 ---
 
 ## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: CEPNZ contact address]** — the CC address; confirm the correct current CEPNZ contact before sending.
-- **NZ$549** — SESNZ will likely want it on the listing.
-- **[ZAC: exact CRM course URL]** — the page the listing links to; must be live before you send.
+- **ACTION: confirm the current CEPNZ contact address** before sending — the CC on the email; omit the CC if unconfirmed.
+- **Price = NZ$575** (NZD list, single source `lib/international-pricing.ts`) — SESNZ will likely want it on the listing.
+- **ACTION: confirm the listing URL is live** — `https://portal.concussion-education-australia.com/sesnz` is the page the listing links to; it must be live before you send.
 - **Entity details are final** and are recorded in the pack header (Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · 2 Wordsworth St, Byron Bay NSW 2481 · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579). A listing request usually doesn't need them, so don't volunteer them in the email — supply on request only.
 - **NZ annex** — offered in the email; have it ready in case they say yes, but don't attach it unsolicited.
 - **Do not send the "INTERNAL" or "POSITIONING SPINE" sections.** Both are CEA-internal. What gets sent is the email and, if useful, the one-page summary.

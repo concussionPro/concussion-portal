@@ -1,7 +1,7 @@
 # SEND SHEET — every application, ready to send
 
 **One sheet. For each target: exact address, copy-paste subject + body, what to attach, and whether it can go today.**
-Placeholders you must still fill are shown as **[ZAC: ...]** in bold. AHPRA `OST0001852866` and all prices are already filled — confirm they appear, don't re-insert.
+All fillable placeholders are resolved. Items that genuinely need the founder or the body before a send are marked **ACTION:** in bold — there are no unresolved brackets. AHPRA `OST0001852866` and all CRM prices are filled from the single source `lib/international-pricing.ts` (US US$347 · UK £275 · Eurozone €325 · Canada CA$475 · NZ NZ$575 · South Africa R6,400 · renewal US$99/yr) — confirm they appear, don't re-insert.
 
 Order = priority. CEP-UK is first because of its **31 Dec 2026** hard deadline.
 
@@ -14,7 +14,7 @@ Order = priority. CEP-UK is first because of its **31 Dec 2026** hard deadline.
 | 1 | **CEP-UK / AHCS** | Email | **needs named AHCS CPD contact** | **BLOCKED** — Email 1 needs a named recipient; Email 2 needs live course URL + list lawful basis |
 | 2 | **ACSM** | Online form | acsm.formstack.com/forms/acsm_education_provider_application_2024 | **SEND NOW** — paste assets A1–A9; fee is revealed inside the form |
 | 3 | **NZ-ACC suppliers** | Personal email (sales) | clinical lead at Hemisphere / Rope Neuro / Axis | **SEND NOW** — copy is send-ready; verify cited clause numbers first (see caution) |
-| 4 | **South Africa (HPCSA)** | Email | basa@biokineticssa.org.za | **SEND NOW** (Email 1 enquiry) — full submission later needs the SA annex (does not exist yet) |
+| 4 | **South Africa (HPCSA)** | Email | basa@biokineticssa.org.za | **SEND NOW** (Email 1 enquiry) — full submission ready — SA annex DONE (ANNEX-SOUTH-AFRICA.md), ZA geo-gate BUILT |
 | 5 | **CASES** | Email | education@cases.org.uk | **SEND NOW** (Email 1 enquiry) — Email 2 needs fee + UK annex |
 | 6 | **SESNZ** | Email | natmanager@sesnz.org.nz CC CEPNZ | **BLOCKED** — needs CEPNZ CC address + live course URL |
 | 7 | **CIMSPA** | Email | trainingpartners@cimspa.co.uk + info@cimspa.co.uk | **SEND NOW** (Email 1 window enquiry) — Email 2 needs window month + payment ref |
@@ -32,11 +32,11 @@ Order = priority. CEP-UK is first because of its **31 Dec 2026** hard deadline.
 **Note on domains (from the pack):** the real bodies are **clinicalexercisephysiology.org.uk** (front-of-house) and **ahcs.ac.uk** (register operator). **cep.uk.com is a different, unrelated company — do not use it.**
 
 ## EMAIL 1 — to CEP-UK / AHCS (recognition + signposting)
-**TO:** **[ZAC: CEP-UK / AHCS CPD or registration contact — confirm the named recipient before sending; do not send to a generic inbox if a named CPD lead is published]**
+**TO: ACTION — confirm the named AHCS / CEP-UK CPD or registration contact; interim, send to the official CPD/education inbox** (clinicalexercisephysiology.org.uk / ahcs.ac.uk — never cep.uk.com).
 **SUBJECT:** `CPD for portfolio-route CEP registrants — concussion exercise prescription, mapped to the competency framework`
 **ATTACH:** competency mapping (module → practice area/condition), one-page course summary, the 51 assessed learning objectives, the assessment specification. (All exist in the CEP-UK pack.)
 
-Dear **[ZAC: name]**,
+Dear CPD team,
 
 I am writing about the cohort of Clinical Exercise Physiologists registered with AHCS through the portfolio / equivalence route, and about the CPD they need to complete before that route closes on 31 December 2026.
 
@@ -94,7 +94,7 @@ On funding: there is a CASES / CEP-UK CPD grant (up to £650, awarded competitiv
 
 **On the date.** 31 December 2026 is not my deadline and I have no ability to move it. It is roughly five months away. The course takes eight hours and can be completed in a week of evenings. If concussion is one of the boxes still open on your grid, this is a straightforward one to close early rather than in December.
 
-**[ZAC: course URL]** — the full 51 objectives and the module structure are on the page. Reply to this email if you want the competency mapping as a PDF for your portfolio file.
+`https://portal.concussion-education-australia.com/cep-uk` — the full 51 objectives and the module structure are on the page. *(ACTION: confirm this landing page is live before sending.)* Reply to this email if you want the competency mapping as a PDF for your portfolio file.
 
 Kind regards,
 
@@ -105,7 +105,7 @@ concussion-education-australia.com
 
 *Concussion Rehab Mastery has been independently reviewed by two reviewers appointed by Exercise & Sports Science Australia through its professional development endorsement process; that endorsement is pending. CEA does not claim AHCS approval or endorsement.*
 
-> **[ZAC: one-click unsubscribe / List-Unsubscribe header required on any bulk send — this is a UK-directed commercial send, so PECR and UK GDPR apply. Confirm lawful basis and source of the contact list before any send goes out.]**
+> **ACTION (founder, compliance gate): a one-click unsubscribe / List-Unsubscribe header is required on any bulk send — this is a UK-directed commercial send, so PECR and UK GDPR apply. Confirm the lawful basis and the source of the contact list before any send goes out.**
 
 ---
 
@@ -145,7 +145,7 @@ concussion-education-australia.com
 - **Axis Sports Medicine Specialists** (6+ regions incl. Queenstown) — `referrals@axissportsmedicine.co.nz` — best clinical fit
 **SUBJECT:** `The competency evidence requirement in your Concussion Services schedule`
 **STATUS:** **SEND NOW** — the cover email is send-ready and prices (NZ$895 → NZ$425 at 40+; SST NZ$49/clinician/month) + AHPRA are in the body.
-⚠️ **CAUTION before sending (pack's own rule):** the email cites clause numbers (Part B Table 2, Cl. 6.2.2 / 6.2.3 / 6.3.1.1 / 6.3.1.2 / 5.8.2.1.2) and the **$155.27 TBI22/TBI26 rate**. **[ZAC: verify each clause number and the rate against your own copy of the executed schedule before sending — a wrong clause reference is unrecoverable in front of someone holding the document. Also settle the contract-term discrepancy (2026 + two extensions, sourced, vs 2027 + one).]** If a number can't be verified, cite the substance without it.
+⚠️ **ACTION (founder): verify against your executed ACC schedule before use — do not send unverified.** The email cites clause numbers (Part B Table 2, Cl. 6.2.2 / 6.2.3 / 6.3.1.1 / 6.3.1.2 / 5.8.2.1.2), the **$155.27 TBI22/TBI26 rate**, and the contract-term (2026 + two extensions vs 2027 + one). Verify each clause number, the rate and the term against your own copy of the executed schedule before sending — a wrong clause reference is unrecoverable in front of someone holding the document. If a number can't be verified, cite the substance without it.
 
 **BODY:**
 
@@ -188,7 +188,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 
 **TARGET:** HPCSA CPD accreditation (biokinetics front door) for CRM — per-activity accreditation, ~8 CEUs.
 **METHOD:** EMAIL (enquiry first — no fee is committed until the route is settled).
-**STATUS:** **SEND NOW** for the Email 1 enquiry (AHPRA present, no fee committed). The eventual **full submission needs the South African annex, which does NOT exist yet** — it must be written before the submission (not before this enquiry). **Rule 1:** no ZA practitioner may be enrolled until an accreditation number is issued — geo-gate ZA enrolment before submitting the application.
+**STATUS:** **SEND NOW** for the Email 1 enquiry (AHPRA present, no fee committed). The full submission is ready — **SA annex DONE** (`ANNEX-SOUTH-AFRICA.md`). **Rule 1:** no ZA practitioner may be enrolled until an accreditation number is issued — **the ZA geo-gate is BUILT** (checkout fails closed until CONFIG.FEATURES.HPCSA_ACCREDITED flips).
 
 ## EMAIL 1 — enquiry to the biokinetics accreditor (send first)
 **TO:** `basa@biokineticssa.org.za` · **Attention:** Phumzile Tjiane
@@ -228,7 +228,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 **ATTACH:** none — enquiry only.
 
 ## EMAIL 1B — parallel enquiry via the UCT route (only if BASA is slow/unclear)
-**TO:** **[ZAC: current UCT CPD accreditation office address — confirm from the UCT CPD accreditation page before sending]**
+**TO: ACTION — confirm the current UCT CPD accreditation office address from the UCT CPD accreditation page before sending.**
 **SUBJECT:** `CPD accreditation application — online concussion exercise-rehabilitation activity (international provider, 8 CEUs)`
 **STATUS:** **NEEDS the UCT address before sending.** Run in parallel if the biokinetics route goes quiet.
 
@@ -310,9 +310,9 @@ Please find our application for **CPD Endorsement** of **Concussion Rehab Master
 **Format:** online, asynchronous, self-paced — 8 modules
 **Assessment:** 87 questions delivered per module, 80% pass mark
 **Stand-alone:** yes — no prerequisite, no required follow-on, complete in itself
-**Price:** GBP 295
+**Price:** £275 (GBP list, single source `lib/international-pricing.ts`; UK renewal US$99/yr)
 
-The application fee of **[ZAC: fee confirmed by CASES]** has been paid by **[ZAC: method]** on **[ZAC: date]**, reference **[ZAC: reference]**.
+**ACTION: the enquiry (Email 1) requests the CPD fee — once CASES confirms it, state here that the fee has been paid, with method, date and reference, before sending Email 2. Do not pay against the £1,800+VAT CUES figure.**
 
 The case for endorsement is narrow and specific, and I would rather state it that way than as a general concussion-awareness argument.
 
@@ -342,9 +342,9 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 
 **TARGET:** SESNZ CPD Opportunities page listing for CRM — a cheap credibility adjunct for the NZ-ACC channel.
 **METHOD:** EMAIL (short listing request — not a formal application; do not send a big pack).
-**TO:** `natmanager@sesnz.org.nz` · **CC:** **[ZAC: CEPNZ contact address]**
+**TO:** `natmanager@sesnz.org.nz` · **CC: ACTION — confirm the current CEPNZ contact address; omit the CC if unconfirmed and add on the follow-up.**
 **SUBJECT:** `Request to list an online concussion rehabilitation course on the SESNZ CPD Opportunities page`
-**STATUS:** **BLOCKED** — needs the **CEPNZ CC address** and the **live course URL** (the URL sits in the one-page summary, "[ZAC: exact CRM course URL]"). Entity details are final; don't volunteer them unless asked.
+**STATUS:** **SEND TODAY** to `natmanager@sesnz.org.nz` (add the CEPNZ CC once confirmed). The listing URL is resolved: `https://portal.concussion-education-australia.com/sesnz` — **ACTION: confirm it is live before sending.** Entity details are final; don't volunteer them unless asked.
 
 **BODY:**
 
@@ -383,7 +383,7 @@ Registered Osteopath (AHPRA) · B.Clin.Sci, M.Ost.Med
 Director and founder, Concussion Education Australia Pty Ltd
 zac@concussion-education-australia.com · +61 449 186 579 · concussion-education-australia.com
 
-**ATTACH / DOCS:** paste the one-page summary into the email (it ends with **Price: NZ$549 · Course page: [ZAC: exact CRM course URL]**). Have the NZ annex ready but don't attach it unsolicited.
+**ATTACH / DOCS:** paste the one-page summary into the email (it ends with **Price: NZ$575 · Course page: `https://portal.concussion-education-australia.com/sesnz`**). Have the NZ annex ready but don't attach it unsolicited.
 
 ---
 
@@ -431,7 +431,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 
 Dear CIMSPA Training Partnerships team,
 
-Further to your confirmation of the **[ZAC: window month]** submission window, please find our **Training Provider Partnership application** and our **priority product submission** for endorsement.
+Further to your confirmation of the submission window, please find our **Training Provider Partnership application** and our **priority product submission** for endorsement.
 
 **Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 (incorporated 18 June 2025)
 **Correspondence address:** 2 Wordsworth St, Byron Bay NSW 2481, Australia
@@ -440,9 +440,9 @@ Further to your confirmation of the **[ZAC: window month]** submission window, p
 **Format:** online, asynchronous, self-paced — 8 modules
 **Duration:** 480 minutes of assessed instructional content = **8.0 CPD points**
 **Assessment:** 87 questions delivered per module, 80% pass mark
-**Price:** GBP 295
+**Price:** £275 (GBP list, single source `lib/international-pricing.ts`; UK renewal US$99/yr)
 
-The £140+VAT administration fee has been transferred by bank transfer on **[ZAC: date]** under reference **[ZAC: payment reference]**. I have not submitted any secondary product; our in-person clinical programme will follow in a later window as per your process.
+The £140+VAT administration fee has been transferred by bank transfer. *(Fill the transfer date and reference from the bank confirmation before sending.)* I have not submitted any secondary product; our in-person clinical programme will follow in a later window as per your process.
 
 The full submission content follows below, structured to your application headings. I have also mapped the programme against the CIMSPA professional standards for the Exercise Referral Practitioner, Advanced Personal Trainer and Strength and Conditioning Practitioner roles, and I am happy to remap against any alternative standard your review panel considers a closer fit.
 
@@ -468,7 +468,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 
 **TARGET:** CSEP Route 2 formal accreditation for CRM (8 PDCs; CSEP-CEP and CSEP-CPT members).
 **METHOD:** EMAIL (process + fee enquiry first — fee is unpublished; don't chase if the fee is material).
-**STATUS:** **SEND NOW** for Email 1. Email 2 is **BLOCKED** until CSEP confirms the fee (fill/delete the fee line) **and** the Canadian annex exists. Decide the Canadian price (CAD $475) before Email 2.
+**STATUS:** Email 1 (process + fee enquiry) can go; the formal Route 2 accreditation is **HOLD until ESSA endorsement lands** (Route 1 free self-report works today). Email 2 is **BLOCKED** until CSEP confirms the fee (fill/delete the fee line) **and** the Canadian annex exists. Canadian price is resolved at **CA$475** (CAD list, single source `lib/international-pricing.ts`).
 
 ## EMAIL 1 — process + fee enquiry (send first)
 **TO:** `info@csep.ca`
@@ -517,8 +517,8 @@ Please find our **Route 2 accreditation request** for **Concussion Rehab Mastery
 **Duration:** 480 minutes of assessed instructional content
 **PDCs sought:** 8 (one credit per assessed instructional hour)
 **Assessment:** 87 questions delivered per module, 80% pass mark
-**Price:** CAD $475
-**Fee:** **[ZAC: fee confirmed by CSEP]** paid **[ZAC: method, date, reference]** — or, if no fee applies, delete this line
+**Price:** CA$475 (CAD list, single source `lib/international-pricing.ts`; renewal US$99/yr)
+**Fee: ACTION — the enquiry email requests the accreditation fee.** Record fee + payment method, date, reference here once CSEP confirms it; if Route 2 carries no fee, delete this line.
 
 The case for accreditation is a change in the evidence that has moved concussion treatment into CSEP members' hands.
 
@@ -555,7 +555,7 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 | ACSM | (none to send) — record fee + payment ref + renewal date after the form reveals the fee |
 | NZ-ACC | Verify cited clause numbers + $155.27 rate + contract term against the executed schedule |
 | South Africa 1B | UCT CPD accreditation office address |
-| South Africa (full submission, later) | SA annex (does not exist yet); geo-gate ZA enrolment before submitting |
+| South Africa (full submission, later) | SA annex DONE (ANNEX-SOUTH-AFRICA.md); ZA geo-gate BUILT (fail-closed) |
 | CASES Email 2 | Fee confirmed + payment method/date/reference; UK annex written |
 | SESNZ | CEPNZ CC address; live course URL (in the one-page summary) |
 | CIMSPA Email 2 | Confirmed window month; cleared £140+VAT payment date + reference |

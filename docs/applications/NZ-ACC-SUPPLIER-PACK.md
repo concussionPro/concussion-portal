@@ -131,6 +131,8 @@ The threshold is not estimated from age. It is **measured**, by a symptom-limite
 
 The competency this requires is specific, and it is not generic exercise prescription: administration of a standardised symptom-limited graded test, correct identification of the symptom-threshold endpoint as distinct from volitional exhaustion, conversion of that measured value into a prescription, and progression governed by re-test rather than by elapsed time or by how the client says they feel.
 
+**That method is now published as a standard, and is citable.** Where the contract and ACC's own guidelines specify none, there is now a resolvable, open-access one: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, Z., 2026; Zenodo; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634; concept DOI https://doi.org/10.5281/zenodo.21482633). It specifies contraindication screening, BCTT/BCBT administration and termination criteria, heart-rate-threshold derivation, the sub-symptom-threshold prescription, and re-test-governed progression — i.e. the exact method Cl. 5.8.2.1.2 leaves undefined. It cites, and does not replace, the evidence base (Patricios 2023; Leddy 2019/2021/2023); efficacy belongs to that evidence, the protocol is the delivery standard.
+
 **And most of the treatment happens where the clinician cannot see it.** A sub-threshold aerobic prescription is roughly 20 minutes most days. The client is in clinic perhaps weekly or fortnightly. Without an instrument, the clinician is progressing a prescription on the basis of a self-report about a heart rate the client never measured.
 
 ## 2.3 What SST Trainer does
@@ -152,6 +154,16 @@ SST Trainer is a **clinician-directed rehabilitation-delivery and monitoring too
 **Do not position against it. Position beside it.** BIST is a symptom-screening instrument. Assessment of exercise tolerance is a different activity, producing a different kind of datum — a measured physiological ceiling rather than a symptom score. A supplier can and should run both: BIST against the 85% target, exercise-tolerance assessment against Cl. 5.8.2.1.2. **SST Trainer complements BIST and does not replace it**, and any sentence implying otherwise should be struck.
 
 **And know who built it.** Per the PLoS One competing-interests statement, BIST was co-authored by an ACC staff member and by paid employees of **three ACC-contracted suppliers — Active+, Axis Sports Medicine and Wellington Sports Medicine**. The incumbent instrument is not merely free; it is institutionally the buyer's own. Nobody should walk into this market implying that no one has tried this before, or that the incumbents are unsophisticated. They co-wrote the instrument in the contract.
+
+## 2.5 The one problem this solves for ACC — consistency, outcomes and reporting, together
+
+ACC's difficulty with Cl. 5.8.2.1.2 is not that the activity is unfunded — it is funded, at NZ$155.27/hour. It is that a funded activity with **no specified method cannot be consistent across a national supplier network, cannot be measured, and cannot be evidenced beyond "an assessment was performed"** — which is exactly what a performance-measurement framework (the Part B table) needs and cannot currently get. The published protocol and the SST Trainer close that gap on all three axes at once:
+
+- **Consistency.** Every contracted supplier delivers the *same* standardised method — the published protocol (Lewis, 2026; https://doi.org/10.5281/zenodo.21482634) — rather than its own interpretation of an undefined clause. National consistency becomes a property of the method, not a hope.
+- **Outcomes, measured.** The SST Trainer produces a **measured** individual heart-rate threshold and a serial re-test trajectory — an objective physiological outcome (recovered, or still symptom-limited) rather than a symptom score alone. This is the datum ACC lacks: whether exercise tolerance actually recovered, in numbers that are comparable across suppliers.
+- **Reporting, standardised and near-automatic.** Because the data accumulates during delivery, the ACC884 Client Summary Report content is substantially pre-assembled and standardised across the network (see §3), so ACC receives comparable, well-documented outcome reporting instead of free-text variation.
+
+The net effect: a funder that today cannot tell a consistently-delivering, well-documenting supplier from a poorly-documenting one on this activity would receive a standardised method, a measured outcome, and standardised reporting from every supplier that adopts it — which is what makes supplier performance on this activity legible in the first place. The protocol standardises what is delivered; the SST Trainer measures and documents that it was delivered. Public demonstration: `/sst-trainer?clinic=DEMO00` and `/preseason/b/DEMO00`.
 
 ---
 

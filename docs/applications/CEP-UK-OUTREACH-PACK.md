@@ -49,14 +49,16 @@ That is the whole problem in one finding. The knowledge is high. The knowledge i
 
 **Concussion Rehab Mastery is the update, not the remedial.** It assumes the learner already holds exercise physiology competence — cardiorespiratory response to exercise, graded exercise testing principles, heart-rate and RPE monitoring, FITT programming. It does not teach those. It teaches the concussion-specific protocol, the phenotype reasoning and the scope boundary that sit on top of them. A registrant coming to this course is not filling a hole in their education. They are updating a currency that the literature moved out from under them in October 2022.
 
+**A recognised competency now needs a defensible, citable standard — and a tool to run it.** What a CEP-UK / AHCS registrant lacks is not the skill but a *recognised concussion-rehab competency built on a standard they can point to*. That standard now exists and is citable: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, 2026; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634), specifying contraindication screening, BCTT/BCBT administration, heart-rate-threshold derivation, the sub-symptom-threshold prescription, and re-test-governed progression. The course teaches it; the SST Trainer is the tool a registrant uses to deliver it in practice — running the graded exercise test, capturing the **measured** individual heart-rate threshold, issuing the sub-threshold prescription, monitoring between-visit home sessions, and producing a measured HR-threshold trajectory with standardised progress reporting. Recognised CPD (this pack) plus a published standard plus a working tool is a complete, defensible concussion-rehab competency a registrant can put on a portfolio. Public demonstration: `/sst-trainer?clinic=DEMO00` and `/preseason/b/DEMO00`.
+
 ---
 
 # EMAIL 1 — To CEP-UK / AHCS (recognition and signposting)
 
-**To:** [ZAC: CEP-UK / AHCS CPD or registration contact — confirm the named recipient before sending; do not send to a generic inbox if a named CPD lead is published]
+**To: ACTION — confirm the named AHCS/CPD recipient; interim, send to the official CPD/education inbox at CEP-UK (clinicalexercisephysiology.org.uk) or the AHCS register operator (ahcs.ac.uk). Do not use cep.uk.com — it is an unrelated company.**
 **Subject:** CPD for portfolio-route CEP registrants — concussion exercise prescription, mapped to the competency framework
 
-Dear [ZAC: name],
+Dear CPD team,
 
 I am writing about the cohort of Clinical Exercise Physiologists registered with AHCS through the portfolio / equivalence route, and about the CPD they need to complete before that route closes on 31 December 2026.
 
@@ -115,7 +117,7 @@ On funding: there is a CASES / CEP-UK CPD grant (up to £650, awarded competitiv
 
 **On the date.** 31 December 2026 is not my deadline and I have no ability to move it. It is roughly five months away. The course takes eight hours and can be completed in a week of evenings. If concussion is one of the boxes still open on your grid, this is a straightforward one to close early rather than in December.
 
-[ZAC: course URL] — the full 51 objectives and the module structure are on the page. Reply to this email if you want the competency mapping as a PDF for your portfolio file.
+`https://portal.concussion-education-australia.com/cep-uk` — the full 51 objectives and the module structure are on the page. *(ACTION: confirm this landing page is live before sending.)* Reply to this email if you want the competency mapping as a PDF for your portfolio file.
 
 Kind regards,
 
@@ -126,7 +128,7 @@ concussion-education-australia.com
 
 *Concussion Rehab Mastery has been independently reviewed by two reviewers appointed by Exercise & Sports Science Australia through its professional development endorsement process; that endorsement is pending. CEA does not claim AHCS approval or endorsement.*
 
-[ZAC: one-click unsubscribe / List-Unsubscribe header required on any bulk send — this is a UK-directed commercial send, so PECR and UK GDPR apply. Confirm lawful basis and source of the contact list before any send goes out.]
+> **ACTION (founder, compliance gate): a one-click unsubscribe / List-Unsubscribe header is required on any bulk send — this is a UK-directed commercial send, so PECR and UK GDPR apply. Confirm the lawful basis and the source of the contact list before any send goes out.**
 
 ---
 
@@ -207,6 +209,8 @@ Points are claimed on a strict 1 point = 1 hour of assessed instructional conten
 
 **Evidence base.** 136 peer-reviewed references, 106 with DOIs. Spine: Patricios et al. 2023 (*BJSM* 57(11):695–711); Leddy et al. 2019 (*JAMA Pediatrics* 173(4):319–325); Leddy et al. 2021 (*Lancet Child & Adolescent Health* 5(11):792–799); Leddy et al. 2023 systematic review and meta-analysis (*BJSM* 57(12):762–770); Leddy et al. 2011 graded exercise test reliability (*Clinical Journal of Sport Medicine* 21(2):89–94); Haider et al. 2019 Buffalo Concussion Bike Test (*Sports Health* 11(6):492–497); Bezherano et al. 2021 (*CJSM* 31(5):465–468); Giza & Hovda 2014 (*Neurosurgery* 75(Suppl 4):S24–S33); Ellis, Leddy & Willer 2015 phenotype classification (*Brain Injury* 29(2):238–248); Mucha et al. 2014 VOMS (*AJSM* 42(10):2479–2486); Schneider et al. 2014 cervicovestibular rehabilitation RCT (*BJSM* 48(17):1294–1298); Iverson et al. 2017 predictors of recovery (*BJSM* 51(12):941–948).
 
+**Published method (the standard the course teaches).** The delivery method is published open-access and citable: Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury) (Version 1). Zenodo. https://doi.org/10.5281/zenodo.21482634 (CC-BY-4.0; concept DOI https://doi.org/10.5281/zenodo.21482633).
+
 **Author.** **Zac Lewis** — Registered Osteopath, AHPRA-registered. B.Clin.Sci, M.Ost.Med. More than a decade in neurological health and concussion across community, sporting and complex persistent-symptom presentations. Played ice hockey nationally and professionally in New Zealand and Canada, which is why the material treats return-to-play pressure, symptom under-reporting and the gap between a symptom-free athlete and a physiologically recovered one as operational problems rather than footnotes. Sole author. **No exercise physiologist authored or co-authored the programme, and CEA claims neither exercise-physiologist authorship nor exercise-physiologist clinical validation.**
 
 **Independent review.** Independently reviewed by **two reviewers appointed by Exercise & Sports Science Australia (ESSA) through its professional development endorsement process**, covering content accuracy, currency of the evidence base, assessment design and scope-of-practice appropriateness. The **ESSA endorsement decision is pending** and is not claimed in the interim.
@@ -229,11 +233,11 @@ Points are claimed on a strict 1 point = 1 hour of assessed instructional conten
 
 ## STILL REQUIRED BEFORE SENDING
 
-- **[ZAC: CEP-UK / AHCS named CPD or registration contact]** — Email 1 recipient. Find a named person; a generic inbox will not carry this.
-- ~~[ZAC: exact practice-area and condition labels]~~ **DONE (verified 2026-07-21).** The primary mapping table now uses the CEP-UK's exact labels — six areas of practice (Curriculum Framework) and the "Neurological/Neuromuscular" condition (Scope of Practice). Source URLs + verbatim quotes in `CEP-UK-FRAMEWORK-VERIFIED.md`. Note for Email 1 recipient/domain: the real CEP-UK site is **clinicalexercisephysiology.org.uk** (front-of-house) and **ahcs.ac.uk** (register operator) — **cep.uk.com is a different, unrelated company, do not use it.**
+- **ACTION: confirm the named AHCS/CEP-UK CPD or registration contact** — Email 1 recipient. Find a named person; interim, send to the official CPD/education inbox. A generic inbox will carry the enquiry but a named person is stronger.
+- **Practice-area and condition labels — DONE (verified 2026-07-21).** The primary mapping table now uses the CEP-UK's exact labels — six areas of practice (Curriculum Framework) and the "Neurological/Neuromuscular" condition (Scope of Practice). Source URLs + verbatim quotes in `CEP-UK-FRAMEWORK-VERIFIED.md`. Note for Email 1 recipient/domain: the real CEP-UK site is **clinicalexercisephysiology.org.uk** (front-of-house) and **ahcs.ac.uk** (register operator) — **cep.uk.com is a different, unrelated company, do not use it.**
 - **OST0001852866** — Email 1 signature.
-- **[ZAC: course URL]** — the link block in Email 2; must be live before send.
-- **GBP 295** — not stated in the outreach above by design, but you need it decided before replies arrive, and it should sit sensibly under £650.
-- **[ZAC: source and lawful basis for the registrant contact list]** — required before any bulk send; also confirm the List-Unsubscribe / one-click unsubscribe implementation on this lane.
+- **Course URL** — `https://portal.concussion-education-australia.com/cep-uk`; the link block in Email 2 must be live before send.
+- **UK price = £275** (GBP list price, single source `lib/international-pricing.ts`; UK renewal US$99/yr) — sits sensibly under £650. Not stated in the outreach above by design, but it is settled, not open.
+- **ACTION (founder, compliance gate): confirm the source and lawful basis for the registrant contact list** — required before any bulk send; also confirm the List-Unsubscribe / one-click unsubscribe implementation on this lane.
 
 **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.

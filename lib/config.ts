@@ -168,6 +168,14 @@ export const CONFIG = {
     // CPD points". Flip to true ONLY on real approval. Bundled to the client
     // (not secret). This is the one switch that takes the EP stream live.
     ESSA_ACCREDITED: false,
+    // HPCSA (South Africa) CEU accreditation of the CRM. FALSE until the
+    // accreditation number is issued. HARD COMPLIANCE GATE: since 1 Nov 2024 no
+    // SA practitioner may enrol in a CPD activity before it is accredited, the
+    // fee is non-refundable, and there is NO retrospective remedy — so SA (ZA)
+    // buyers must be BLOCKED from the CRM checkout until this is true (enforced
+    // server-side in create-checkout, displayed as "register interest" on /hpcsa
+    // and /pricing-international). Flip to true ONLY when the CEU number issues.
+    HPCSA_ACCREDITED: false,
   },
 }
 

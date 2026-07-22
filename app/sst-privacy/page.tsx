@@ -22,7 +22,7 @@ export default function SstPrivacyPage() {
         </p>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-          This policy explains how Concussion Education Australia (CEA Pty Ltd, ABN 15 657 685 613)
+          This policy explains how Concussion Education Australia (CEA Pty Ltd, ABN 74 688 155 508)
           (&quot;we&quot;, &quot;us&quot;) handles information collected through the{' '}
           <strong className="text-foreground">SST Trainer</strong> mobile and web application
           (the &quot;app&quot;). We handle information in line with the Australian Privacy Principles

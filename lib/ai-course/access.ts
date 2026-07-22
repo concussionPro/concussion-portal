@@ -41,16 +41,14 @@ export async function checkAiCourseAccess(request: NextRequest): Promise<AccessR
   }
 
   // Demo-key path — a scoped, course-only key for sharing with partners
-  // (e.g. Heidi pitch). Setting HEIDI_DEMO_KEY=<random> in Vercel env
-  // grants AI course access to anyone supplying that exact key via the
-  // x-demo-key header OR the ?demo= query string. NOT a full admin key —
-  // does not unlock /api/admin/* routes elsewhere in the portal.
-  // private-review access — x-demo-key header, ?demo= query, OR the demo_key
-  // cookie (set by /demo/essa). DEMO_KEY falls back to a committed constant when
-  // HEIDI_DEMO_KEY is unset, so the reviewer links work without a Vercel env var.
+  // (e.g. Heidi pitch) and accreditation reviewers. Accepted via the
+  // x-demo-key header OR the demo_key cookie (set by /demo/*). The ?demo=
+  // query param is intentionally NOT accepted — it would leak the key into
+  // server/access logs and Referer headers. NOT a full admin key — does not
+  // unlock /api/admin/* routes. DEMO_KEY is empty (fail-closed) in production
+  // unless HEIDI_DEMO_KEY is set (see lib/demo-key.ts).
   const supplied =
     request.headers.get('x-demo-key') ||
-    new URL(request.url).searchParams.get('demo') ||
     request.cookies.get('demo_key')?.value
   if (supplied && supplied === DEMO_KEY) {
     return { ok: true, reason: 'demo-key' }
