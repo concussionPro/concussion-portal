@@ -17,6 +17,9 @@ export function completedWorkshopSlugs(now: Date = nowSafe()): string[] {
     .filter((loc) => {
       if (loc.status === 'completed') return true
       if (loc.dateObj && loc.dateObj.getTime() < now.getTime()) return true
+      // A city that has run a PAST round is alumni-eligible even while its
+      // `status` is 'collecting' for the next round (Sydney, Byron Bay).
+      if ((loc as { hasRunWorkshop?: boolean }).hasRunWorkshop) return true
       return false
     })
     .map((loc) => loc.slug)

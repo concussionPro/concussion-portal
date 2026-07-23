@@ -65,12 +65,18 @@ export const CONFIG = {
   //         'confirmed'  = admin set date + venue after threshold hit
   //         'completed'  = workshop has happened
   LOCATIONS: {
+    // hasRunWorkshop: a PAST round has already run in this city (its attendees
+    // are alumni), independent of `status` which governs the NEXT round. Sydney
+    // (Mar 7 2026) and Byron Bay (Nov 22 2025) have both run and are now
+    // collecting for their next round — so they must count as alumni-eligible
+    // even while `status='collecting'`. See workshop-alumni.completedWorkshopSlugs.
     SYDNEY: {
       city: 'Sydney',
       slug: 'sydney',
       date: '',
       dateObj: null as Date | null,
       status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      hasRunWorkshop: true, // ran Sydney 7 Mar 2026
     },
     BYRON_BAY: {
       city: 'Byron Bay',
@@ -78,6 +84,7 @@ export const CONFIG = {
       date: '',
       dateObj: null as Date | null,
       status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      hasRunWorkshop: true, // ran Byron Bay 22 Nov 2025
     },
     ADELAIDE: {
       city: 'Adelaide',
@@ -85,6 +92,7 @@ export const CONFIG = {
       date: '',
       dateObj: null as Date | null,
       status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      hasRunWorkshop: false,
     },
     WA: {
       city: 'Perth (WA)',
@@ -92,17 +100,18 @@ export const CONFIG = {
       date: '',
       dateObj: null as Date | null,
       status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      hasRunWorkshop: false,
     },
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
       date: 'Saturday 13 June 2026',
       dateObj: new Date('2026-06-13T08:00:00+10:00') as Date | null,
-      // 'completed' (2026-06-15): workshop RAN on 13 June. 6 paid attendees are
-      // now alumni — full-course + workshop_location='melbourne' + past dateObj.
-      // They're the warm base for Level 2 / continuing-ed outreach (see the
-      // workshop-alumni segment). Sales blocked; page reframes to the next round.
+      // 'completed' (2026-06-15): workshop RAN on 13 June (its third Melbourne
+      // round, after Oct 25 2025 and Feb 7 2026). Paid attendees are alumni —
+      // full-course + workshop_location='melbourne'. Warm base for Level 2.
       status: 'completed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      hasRunWorkshop: true, // ran Melbourne Oct 25 '25, Feb 7 '26, Jun 13 '26
     },
   },
 
@@ -124,6 +133,11 @@ export const CONFIG = {
     // the start of 2026. Update when the next round is announced.
     ROUND_START: {
       melbourne: '2026-01-01',
+      // Sydney ran 7 Mar 2026, Byron Bay ran 22 Nov 2025 — scope each next round
+      // to AFTER its last completed round so past alumni don't consume next-round
+      // seats/threshold. Bump these when the next Syd/BB dates are announced.
+      sydney: '2026-03-08',
+      'byron-bay': '2025-11-23',
     } as Record<string, string>,
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },
