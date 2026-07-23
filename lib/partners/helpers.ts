@@ -6,8 +6,6 @@
  * cold-clinic outreach engine (lib/prospect/*) — this arm must never be
  * able to break the clinic funnel.
  */
-import crypto from 'crypto'
-
 export type PartnerType = 'academy' | 'school' | 'club'
 export type PartnerStatus = 'lead' | 'contacted' | 'active' | 'declined'
 
@@ -27,9 +25,16 @@ export function kebabCase(name: string): string {
     .replace(/^-+|-+$/g, '') // trim leading/trailing hyphens
 }
 
-/** Random, unguessable access key (8 bytes → ~11 base64url chars). */
+/** Random, unguessable access key (8 bytes → ~11 base64url chars).
+ *  Uses Web Crypto (globalThis.crypto) so this module stays runtime-agnostic —
+ *  it gets bundled into the Edge OG-image route, where Node's `crypto` isn't
+ *  available (was a build warning). Web Crypto works in both Edge and Node. */
 export function generateAccessKey(): string {
-  return crypto.randomBytes(8).toString('base64url')
+  const bytes = new Uint8Array(8)
+  globalThis.crypto.getRandomValues(bytes)
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 /** Canonical tier for an institution type: 1 academy / 2 school / 3 club. */

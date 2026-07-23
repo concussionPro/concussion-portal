@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { getModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
+import { CONFIG } from '@/lib/config'
 import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -63,6 +64,108 @@ export function CourseNavigation({
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false)
+  }
+
+  // ── FREE SHORT COURSE (module 104) — isolated experience ──────────────────
+  // Module 104 is the standalone free "Concussion Care Has Changed" awareness
+  // course. It must NOT render the paid 8-module tree (getModulesMeta) — a
+  // short-course viewer should see ONLY this course's chapters plus an obvious
+  // upgrade path, never the full course or its content, regardless of their
+  // access level. (Owner: a logged-in full-course user was seeing full access.)
+  if (currentModuleId === 104) {
+    const isPaid = accessLevel === 'online-only' || accessLevel === 'full-course'
+    return (
+      <>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden fixed top-4 left-4 z-50 bg-white p-3 rounded-xl shadow-lg"
+          aria-label="Toggle navigation"
+        >
+          {mobileMenuOpen ? <X className="w-6 h-6 text-slate-800" /> : <Menu className="w-6 h-6 text-slate-800" />}
+        </button>
+        {mobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={closeMobileMenu} />
+        )}
+        <div className={cn(
+          "h-screen bg-white border-r border-slate-200 flex flex-col z-40 transition-transform duration-300",
+          "w-full sm:w-96 md:w-80",
+          "fixed md:sticky md:top-0",
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}>
+          {/* Header — this is the FREE short course, not the full course */}
+          <div className="p-6 border-b border-slate-200">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-wide text-teal-700 bg-teal-50 border border-teal-200 rounded px-2 py-0.5 mb-3">
+              Free short course
+            </span>
+            <button
+              onClick={() => router.push(isPaid ? '/dashboard' : '/learning')}
+              className="flex items-start gap-3 text-left hover:opacity-70 transition-all w-full group"
+            >
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Brain className="w-5 h-5 text-white" strokeWidth={2} />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-lg font-bold text-slate-800 tracking-tight leading-tight">Concussion Care Has Changed</h1>
+                <p className="text-xs text-slate-500 mt-1">~1 hour · certificate on completion</p>
+              </div>
+            </button>
+          </div>
+
+          {/* Chapters — ONLY this course's sections */}
+          <div className="flex-1 overflow-y-auto py-4">
+            <nav className="space-y-0.5 px-3">
+              {(sectionTitles ?? []).map((title, idx) => {
+                const isCurrent = idx === currentSectionIndex
+                const isVisited = visitedSections?.has(idx)
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => { if (onSectionNavigate) { onSectionNavigate(idx) } else { navigateToSection(104) } setMobileMenuOpen(false) }}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-left group",
+                      isCurrent ? "bg-teal-50 border border-teal-200" : "hover:bg-slate-50"
+                    )}
+                  >
+                    {isVisited && !isCurrent ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />
+                    ) : (
+                      <div className={cn("w-3.5 h-3.5 rounded-full border-2 flex-shrink-0", isCurrent ? "border-teal-500 bg-teal-500" : "border-slate-300")} />
+                    )}
+                    <span className={cn("text-xs truncate", isCurrent ? "text-teal-700 font-semibold" : "text-slate-600 group-hover:text-slate-800")}>
+                      {title}
+                    </span>
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
+
+          {/* Upgrade path — obvious route to the full paid course */}
+          <div className="p-4 border-t border-slate-200 bg-gradient-to-br from-teal-50 to-emerald-50">
+            {isPaid ? (
+              <button onClick={() => router.push('/dashboard')} className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-slate-800 transition-colors">
+                Go to your full course
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Rocket className="w-4 h-4 text-teal-600" />
+                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">Go further</span>
+                </div>
+                <p className="text-[12px] text-slate-600 leading-relaxed mb-3">
+                  This is the awareness primer. The full <strong>Concussion Clinical Mastery</strong> course — 8 modules of diagnosis, assessment &amp; rehab — is where clinical competence is built.
+                </p>
+                <button onClick={() => router.push('/pricing')} className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-slate-800 transition-colors">
+                  Unlock the full course — A${CONFIG.COURSE.PRICE_ONLINE}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </>
+    )
   }
 
   return (
