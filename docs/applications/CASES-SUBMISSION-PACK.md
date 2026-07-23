@@ -334,3 +334,23 @@ Endorsement is understood to be annual. CEA will submit for renewal on schedule.
 - **UK annex** — the UK-context annex described in section 9 must exist as a document before Email 2 goes out; it is offered to reviewers as part of the submission.
 - **Do not send the "Positioning spine" section.** It is internal framing. The submitted material is Email 1, Email 2 and sections 1–13 only.
 - **Entity details are final:** Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · D-U-N-S 889691346 · 2 Wordsworth St, Byron Bay NSW 2481, Australia · Zac Lewis, Director · zac@concussion-education-australia.com · +61 449 186 579.
+
+---
+
+# CONFIRMED from the CASES CPD Endorsement Guidelines (read 2026-07-23)
+
+**CRM IS ELIGIBLE — self-paced online courses qualify.** The guidelines explicitly list "Online courses" and "Educational modules" as suitable, and have a dedicated fee category "Course (online or in-person training courses taking place over a period of time e.g. 3 months)." No need to reposition as a live cohort. Must be stand-alone (CRM is) and applicable to a UK setting (UK annex covers this).
+
+**FEE — REVEALED (not the £1,800 CUES figure). CEA = Commercial Provider, category "Course":**
+- Single enrolment/year: **£500 initial / £250 renewal**
+- Continuous/multiple enrolment: **£1,000 initial / £500 renewal**
+- CRM is always-open self-paced → likely the **continuous £1,000/£500** tier; confirm which applies. Rejected = refund minus £50.
+
+**PEER-ASSESSMENT CHECKLIST (Table 2) — CRM's answers:**
+- Scientific evidence base ✓ (136 refs + protocol DOI 10.5281/zenodo.21482634)
+- Clear objectives/audience, learning outcomes ✓ (51 objectives)
+- Assessment method for the certificate ✓ (87 Qs, 80% pass)
+- QA + evaluation/feedback + complaints process ✓ (/terms policy)
+- **Weak spots to pre-empt:** "involved professionals/users in development" → cite the **two ESSA-appointed reviewers**; "organiser a CASES member?" → no, **not essential**; "H&S + insurance" → online course, minimal H&S, note PI cover.
+
+**PROCESS:** EOI to **education@bases.org.uk** (done) → eligibility check → **submit application form + pay fee** → peer assessment → listed/promoted (credits logo, newsletter ~2,900, quarterly TSES magazine, socials). CEA manages its own bookings (portal checkout) — no 15% CASES booking cut needed. **STATUS: UNBLOCKED — at the form+fee step; UK annex (ANNEX-UK.md) ready.**

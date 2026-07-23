@@ -441,6 +441,111 @@ export async function createCrmCheckoutSession({
 }
 
 /**
+ * Create a Stripe Checkout Session for an INTERNATIONAL CRM (Concussion Rehab
+ * Mastery) purchase — online-only, geo-priced, one-time `payment` mode. Overseas
+ * EPs cannot attend the AU practical day, so there is NO city/location and NO
+ * practical entitlement: the buyer gets the online CRM course (one-time /
+ * lifetime) + the bundled clinical platform (SST Trainer + Baseline), which is
+ * FREE for year 1 then bills MONTHLY at the real single-clinician SST price
+ * (A$49/mo) via a real sst-trainer subscription the webhook attaches.
+ *
+ * Currency + amount come from lib/international-pricing.ts (intlPriceForCountry),
+ * the SAME single source the /pricing-international display uses, so display and
+ * charge always match. `country` MUST be server-derived (cf-ipcountry) by the
+ * caller — never client input.
+ *
+ * customer_creation:'always' + setup_future_usage:'off_session' ensure a Stripe
+ * customer AND a saved payment method exist so the webhook can attach the
+ * bundled-then-monthly SST subscription and charge it from year 2.
+ *
+ * Callers MUST gate on CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE — this function is
+ * kept pure; the /api/crm/checkout-international route refuses when the flag is off.
+ */
+export async function createCrmInternationalCheckoutSession({
+  country,
+  customerEmail,
+  successUrl,
+  cancelUrl,
+  utm,
+  attribution,
+}: {
+  /** Visitor country (ISO-3166 alpha-2), derived server-side from cf-ipcountry. */
+  country?: string | null
+  customerEmail?: string
+  successUrl: string
+  cancelUrl: string
+  utm?: Record<string, string>
+  attribution?: Record<string, string>
+}): Promise<Stripe.Checkout.Session> {
+  const intl = intlPriceForCountry(country)
+
+  return getStripe().checkout.sessions.create({
+    mode: 'payment',
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+    // Always create a customer + save the card off-session so the annual renewal
+    // subscription can be attached and charged from year 2.
+    customer_creation: 'always',
+    line_items: [
+      {
+        price_data: {
+          currency: intl.currency,
+          unit_amount: intl.unitAmount,
+          product_data: {
+            name: 'Concussion Rehab Mastery — International',
+            description:
+              '8 online modules (8 hours of learning) · Lifetime course access · Clinical platform included for year 1 (SST Trainer + Baseline & Serial Testing) · Clinical Toolkit · Certificate of completion',
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    customer_email: customerEmail || undefined,
+    after_expiration: { recovery: { enabled: true } },
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: {
+      productType: 'crm-course',
+      // 'crm' stream marker — analytics + refunds never confuse it with CCM.
+      stream: 'crm',
+      // Online tier only — no in-person day sold overseas.
+      tier: 'online',
+      // The flag the webhook reads to fire bundle-provisioning + the renewal sub.
+      international: 'true',
+      // NO location — international buyers can't attend the AU workshop.
+      currency: intl.currency,
+      source: 'portal',
+      timestamp: new Date().toISOString(),
+      ...(utm?.utm_source ? { utm_source: utm.utm_source } : {}),
+      ...(utm?.utm_medium ? { utm_medium: utm.utm_medium } : {}),
+      ...(utm?.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
+      ...(attribution?.sessionId ? { attr_session: attribution.sessionId.slice(0, 200) } : {}),
+      ...(attribution?.firstReferrer ? { attr_first_ref: attribution.firstReferrer.slice(0, 480) } : {}),
+      ...(attribution?.referrer ? { attr_ref: attribution.referrer.slice(0, 480) } : {}),
+      ...(attribution?.firstUtm ? { attr_first_utm: attribution.firstUtm.slice(0, 480) } : {}),
+    },
+    payment_intent_data: {
+      // Save the card to the customer so the year-2 renewal can charge it.
+      setup_future_usage: 'off_session',
+      metadata: {
+        email: customerEmail || '',
+        productType: 'crm-course',
+        stream: 'crm',
+        tier: 'online',
+        international: 'true',
+      },
+    },
+    billing_address_collection: 'required',
+    phone_number_collection: { enabled: true },
+    custom_text: {
+      submit: {
+        message:
+          "You'll get a login link by email to start the CRM course immediately, plus your clinic code for the SST Trainer + Baseline platform (first year included).",
+      },
+    },
+  })
+}
+
+/**
  * Get submit message for full-course checkout based on city status
  */
 function getCheckoutSubmitMessage(location?: string): string {

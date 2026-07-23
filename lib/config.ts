@@ -182,6 +182,14 @@ export const CONFIG = {
     // CPD points". Flip to true ONLY on real approval. Bundled to the client
     // (not secret). This is the one switch that takes the EP stream live.
     ESSA_ACCREDITED: false,
+    // International CRM live commerce (online-only, geo-priced) + the bundled
+    // platform provisioning + the US$99/yr renewal subscription. FALSE = fully
+    // inert: no international live checkout, no bundle-provisioning on ANY course
+    // purchase, no subscription creation. Flipping to TRUE is the single go-live
+    // switch for the whole international CRM sales+fulfilment model — VERIFY IN
+    // STRIPE TEST MODE FIRST (esp. the year-2 renewal charge). See
+    // /api/crm/checkout-international + handleCrmPurchase/handleCheckoutCompleted.
+    CRM_INTERNATIONAL_LIVE: false,
     // HPCSA (South Africa) CEU accreditation of the CRM. FALSE until the
     // accreditation number is issued. HARD COMPLIANCE GATE: since 1 Nov 2024 no
     // SA practitioner may enrol in a CPD activity before it is accredited, the

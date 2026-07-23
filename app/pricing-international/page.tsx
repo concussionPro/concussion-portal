@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { detectCountry } from '@/lib/geo'
 import { intlPriceForCountry } from '@/lib/international-pricing'
+import { CONFIG } from '@/lib/config'
 import CrmInternationalContent from '@/components/crm/CrmInternationalContent'
 
 /**
@@ -22,5 +23,12 @@ import CrmInternationalContent from '@/components/crm/CrmInternationalContent'
  */
 export default async function PricingInternationalPage() {
   const price = intlPriceForCountry(detectCountry(await headers()))
-  return <CrmInternationalContent price={{ display: price.display, code: price.code }} />
+  // `live` flips the founding-cohort interest capture over to a real geo-priced
+  // checkout button. Inert (interest-capture) until the owner sets the flag.
+  return (
+    <CrmInternationalContent
+      price={{ display: price.display, code: price.code }}
+      live={CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE}
+    />
+  )
 }

@@ -154,6 +154,13 @@ export async function getSstClinicStripeCustomer(rawCode: unknown): Promise<stri
   return (rec?.stripeCustomerId as string) ?? null
 }
 
+/** The Stripe subscription id stored on a clinic — used to keep the CRM annual
+ *  renewal subscription IDEMPOTENT (never create a second one for a clinic). */
+export async function getSstClinicStripeSubscription(rawCode: unknown): Promise<string | null> {
+  const rec = (await getClinic(rawCode)) as unknown as Record<string, unknown> | null
+  return (rec?.stripeSubscriptionId as string) ?? null
+}
+
 /** Uppercase, trim; returns '' when the code can't possibly be valid. */
 export function normaliseClinicCode(raw: unknown): string {
   const code = String(raw ?? '').trim().toUpperCase()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 import { setSstClinicPlan } from '@/lib/sst-trainer/clinic-registry'
+import { provisionPlatformForBuyer } from '@/lib/sst-trainer/bundle'
 
 export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
@@ -361,6 +362,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     await sql`UPDATE abandoned_checkouts SET recovered = true WHERE email = ${customerEmail.toLowerCase()} AND recovered = false`
   } catch (err) {
     console.error('Failed to mark abandoned checkouts as recovered:', err)
+  }
+
+  // Bundle: CCM enrolment includes the working clinical platform (SST Trainer +
+  // Baseline). Provision it for online-only / full-course buyers. Gated behind
+  // CRM_INTERNATIONAL_LIVE so it stays fully inert until the owner flips the one
+  // go-live switch (see config). Best-effort — a provisioning hiccup must never
+  // lose the sale or cause endless Stripe retries; it can NEVER downgrade access.
+  if (
+    CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE &&
+    (accessLevel === 'online-only' || accessLevel === 'full-course')
+  ) {
+    await provisionPlatformBestEffort(customerEmail, customerName, `CCM ${courseType}`)
   }
 
   // Step 2: Check workshop threshold — send admin alert when threshold hit
@@ -779,6 +792,40 @@ async function handleCrmPurchase(
     console.error('[crm] abandoned-checkout recover failed:', err)
   }
 
+  // Bundle: every CRM enrolment includes the working clinical platform (SST
+  // Trainer + Baseline). Provision it. UNGATED: a CRM purchase can only ever
+  // exist once a CRM checkout route is deliberately switched on, and CRM buyers
+  // are explicitly promised the platform ("the platform is the product").
+  //
+  // INTERNATIONAL only (gated on international:'true' AND the go-live flag): the
+  // platform is bundled FREE for year 1, then bills MONTHLY at the real single-
+  // clinician SST price (A$49/mo). We attach a REAL sst-trainer subscription with
+  // a 365-day trial so monthly billing starts automatically at year 2 — managed
+  // by the EXISTING sst-trainer subscription webhook handling. Resolve the Stripe
+  // customer + saved card here and hand them to the provisioner (which owns the
+  // clinic code the subscription is keyed to). Best-effort — never lose the sale.
+  let bundledSubscription: { customerId: string; defaultPaymentMethod?: string } | undefined
+  if (session.metadata?.international === 'true' && CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE) {
+    const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id
+    if (customerId) {
+      let defaultPaymentMethod: string | undefined
+      try {
+        const { getStripe } = await import('@/lib/stripe')
+        const piId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id
+        if (piId) {
+          const pi = await getStripe().paymentIntents.retrieve(piId)
+          defaultPaymentMethod = typeof pi.payment_method === 'string' ? pi.payment_method : pi.payment_method?.id
+        }
+      } catch (pmErr) {
+        console.error(`[crm-intl] payment-method lookup failed for ${redact(customerEmail)} (year-2 monthly billing will need a PM):`, pmErr)
+      }
+      bundledSubscription = { customerId, defaultPaymentMethod }
+    } else {
+      console.error(`[crm-intl] no Stripe customer on international CRM session ${session.id} — cannot attach the bundled SST subscription`)
+    }
+  }
+  await provisionPlatformBestEffort(customerEmail, customerName, `CRM ${tier}`, bundledSubscription)
+
   // Analytics — same purchase_complete event the CCM path fires, marked
   // stream='crm' + the nominated city so EP demand shows in Ready-to-Train and
   // per-sequence attribution works. (Owner: "populate in analytics".)
@@ -896,6 +943,35 @@ async function handleCrmPurchase(
   }
 
   console.log(`[crm] Provisioned ${redact(customerEmail)} — ${tier}${location ? ` (${location})` : ''} — $${amountAud} ${currency}`)
+}
+
+/**
+ * PIECE 2 wrapper — provision the bundled platform best-effort. On failure it
+ * alerts the admin and RETURNS (never throws): a provisioning hiccup must not
+ * lose the sale or trigger endless Stripe retries. `context` is a short label
+ * for the logs/alert (e.g. "CRM online", "CCM full-course").
+ */
+async function provisionPlatformBestEffort(
+  email: string,
+  name: string,
+  context: string,
+  bundledSubscription?: { customerId: string; defaultPaymentMethod?: string },
+): Promise<void> {
+  try {
+    const code = await provisionPlatformForBuyer(email, name, bundledSubscription)
+    console.log(`[bundle] platform provisioned for ${redact(email)} (${context}) — clinic ${code}`)
+  } catch (err) {
+    console.error(`[bundle] platform provisioning failed for ${redact(email)} (${context}):`, err)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: platform provisioning failed for ${redact(email)} (${context})`,
+        html: `<p>A customer paid but the <strong>bundled SST Trainer + Baseline platform provisioning failed</strong> — the course entitlement is fine, but they have no clinic code yet.</p><p><strong>Email:</strong> ${escapeHtml(email)}<br><strong>Context:</strong> ${escapeHtml(context)}</p><p>Error: ${escapeHtml(err instanceof Error ? err.message : String(err))}</p><p>Provision manually via the founding/clinical-testing flow, or retry. The sale is NOT at risk and Stripe will NOT retry.</p>`,
+      })
+    } catch (alertErr) {
+      console.error('[bundle] provisioning admin alert failed:', alertErr)
+    }
+  }
 }
 
 /**

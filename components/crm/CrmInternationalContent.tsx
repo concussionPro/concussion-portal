@@ -44,8 +44,8 @@ const INTL_FAQS: { q: string; a: string }[] = [
     a: 'The course is built to ACSM CEC standards and the Approved-Provider application is in progress; ESSA endorsement is pending — the content has been independently reviewed by two reviewers appointed by ESSA through its professional development endorsement process. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
   },
   {
-    q: 'What does the annual renewal cover?',
-    a: 'US$99/yr isn’t a software charge — it includes your annual concussion-update module, so it meets that year’s recurring CPD requirement and keeps the platform live. Course access itself is lifetime.',
+    q: 'Is there an ongoing cost?',
+    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + Baseline & Serial Testing) is included free for your first year. After that, keeping the platform is A$49/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
   },
   {
     q: 'What’s the refund policy?',
@@ -53,8 +53,36 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
 ]
 
-export default function CrmInternationalContent({ price }: { price: IntlPriceView }) {
+export default function CrmInternationalContent({ price, live = false }: { price: IntlPriceView; live?: boolean }) {
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
+
+  // Live checkout (only when `live`): POST to the geo-priced international
+  // checkout route and redirect to the returned Stripe URL. Country + currency
+  // are resolved server-side there — the client sends nothing price-bearing.
+  const [enrolling, setEnrolling] = useState(false)
+  const [enrolError, setEnrolError] = useState<string | null>(null)
+  const handleEnrol = async () => {
+    if (enrolling) return
+    setEnrolling(true)
+    setEnrolError(null)
+    try {
+      const res = await fetch('/api/crm/checkout-international', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data?.url) {
+        setEnrolError(data?.error || 'Could not start checkout. Please try again.')
+        setEnrolling(false)
+        return
+      }
+      window.location.href = data.url
+    } catch {
+      setEnrolError('Could not start checkout. Please try again.')
+      setEnrolling(false)
+    }
+  }
   const toggleFaq = (i: number) => {
     setOpenFaqs((prev) => {
       const next = new Set(prev)
@@ -279,26 +307,49 @@ export default function CrmInternationalContent({ price }: { price: IntlPriceVie
                 ))}
               </ul>
 
-              {/* Renewal reframed as CPD compliance, not software rent */}
+              {/* Platform: bundled free year 1, then the real monthly rate */}
               <div className="rounded-xl bg-teal-50/60 border border-teal-200 px-4 py-3 mb-4">
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
-                  <strong className="text-teal-800">Renewal US$99/yr (USD)</strong> isn&rsquo;t a
-                  software charge — it includes your <strong>annual concussion-update module</strong>,
-                  so it meets that year&rsquo;s recurring CPD requirement and keeps the platform live.
+                  <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
+                  The clinical platform (SST Trainer + Baseline) is <strong>included free for your
+                  first year</strong>, then <strong>A$49/month</strong> to keep it — starts
+                  automatically at 12 months, cancel anytime.
                 </p>
               </div>
 
               <div className="mt-auto">
-                <a
-                  href="#founding"
-                  className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
-                >
-                  Join the founding cohort
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-                <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
-                  Prices shown in your region&rsquo;s currency · founding-cohort registration ahead of enrolment opening
-                </p>
+                {live ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleEnrol}
+                      disabled={enrolling}
+                      className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+                      {!enrolling && <ArrowRight className="w-4 h-4" />}
+                    </button>
+                    {enrolError && (
+                      <p className="text-[11px] text-center text-red-600 mt-2">{enrolError}</p>
+                    )}
+                    <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
+                      Prices shown in your region&rsquo;s currency · secure checkout · 7-day money-back guarantee
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <a
+                      href="#founding"
+                      className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+                    >
+                      Join the founding cohort
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                    <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
+                      Prices shown in your region&rsquo;s currency · founding-cohort registration ahead of enrolment opening
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -494,31 +545,77 @@ export default function CrmInternationalContent({ price }: { price: IntlPriceVie
           </div>
 
           <div className="text-center mt-10">
-            <a
-              href="#founding"
-              className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"
-            >
-              Register your interest
-              <ArrowRight className="w-5 h-5" />
-            </a>
+            {live ? (
+              <button
+                type="button"
+                onClick={handleEnrol}
+                disabled={enrolling}
+                className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+                {!enrolling && <ArrowRight className="w-5 h-5" />}
+              </button>
+            ) : (
+              <a
+                href="#founding"
+                className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"
+              >
+                Register your interest
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            )}
             <p className="text-xs text-muted-foreground mt-4">
               ACSM Approved-Provider application in progress · ESSA endorsement pending · 8 CPD hours
             </p>
           </div>
         </div>
 
-        {/* Bottom capture — founding cohort */}
+        {/* Bottom capture — founding cohort when inert; live enrol when the flag is on */}
         <div id="founding" className="max-w-2xl mx-auto mt-16 scroll-mt-24">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
-              Be a founding-cohort clinic
-            </h2>
-            <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
-              Register your interest and we&rsquo;ll notify you the moment enrolment opens —
-              founding pricing, locked, ahead of the ACSM listing going live.
-            </p>
-          </div>
-          <EpLeadCapture variant="full" location="international" />
+          {live ? (
+            <>
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
+                  Enrol in Concussion Rehab Mastery
+                </h2>
+                <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
+                  The EP-scoped course + the working clinical platform, delivered wholly online.
+                  {' '}Your first year on the platform is included; secure checkout in your region&rsquo;s
+                  currency, 7-day money-back guarantee.
+                </p>
+              </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleEnrol}
+                  disabled={enrolling}
+                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+                  {!enrolling && <ArrowRight className="w-5 h-5" />}
+                </button>
+                {enrolError && (
+                  <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>
+                )}
+                <p className="text-[11px] text-muted-foreground mt-3">
+                  {price.display} {price.code} one-time · lifetime course + first year of the platform free · then A$49/mo to keep the platform
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
+                  Be a founding-cohort clinic
+                </h2>
+                <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
+                  Register your interest and we&rsquo;ll notify you the moment enrolment opens —
+                  founding pricing, locked, ahead of the ACSM listing going live.
+                </p>
+              </div>
+              <EpLeadCapture variant="full" location="international" />
+            </>
+          )}
         </div>
 
       </div>
@@ -533,13 +630,25 @@ export default function CrmInternationalContent({ price }: { price: IntlPriceVie
           <span className="text-sm font-semibold text-foreground">
             {price.display} · 8 CPD
           </span>
-          <a
-            href="#founding"
-            className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0"
-          >
-            Register
-            <ArrowRight className="w-3.5 h-3.5" />
-          </a>
+          {live ? (
+            <button
+              type="button"
+              onClick={handleEnrol}
+              disabled={enrolling}
+              className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {enrolling ? 'Starting…' : 'Enrol'}
+              {!enrolling && <ArrowRight className="w-3.5 h-3.5" />}
+            </button>
+          ) : (
+            <a
+              href="#founding"
+              className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0"
+            >
+              Register
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
       </div>
     </div>
