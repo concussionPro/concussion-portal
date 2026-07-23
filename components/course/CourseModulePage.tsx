@@ -15,6 +15,7 @@ import { SectionStepper, type VirtualSection } from '@/components/course/Section
 import { SectionNavButtons } from '@/components/course/SectionNavButtons'
 import { SectionTypeBadge, estimateReadingTime } from '@/components/course/SectionTypeBadge'
 import { useModuleData, type CourseKey } from '@/hooks/useModuleData'
+import { Sidebar } from '@/components/dashboard/Sidebar'
 import { CONFIG } from '@/lib/config'
 import type { QuizQuestion, Section } from '@/data/modules'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
@@ -997,16 +998,26 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
     )
   }
 
+  // FREE/PREVIEW users read a free course (SCAT 101-103, or 104) INSIDE the
+  // portal architecture — the dashboard Sidebar, which shows every paid feature
+  // (Clinical Testing, Toolkit, References, CCM/CRM via Learning Suite) locked
+  // with an upgrade carrot. Paid users keep the course-player nav. (Owner: free
+  // course must live in the portal with zero access outside it, locked+carrot.)
+  const isPreview = accessLevel === 'preview'
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <NavComponent
-        sectionTitles={virtualSections.map(v => v.label)}
-        currentSectionIndex={currentSectionIndex}
-        onSectionNavigate={navigateSection}
-        lockedAfterIndex={lockedAfterIndex}
-        visitedSections={visitedSections}
-      />
-      <main className="flex-1 w-full md:ml-0 overflow-y-auto" ref={contentAreaRef}>
+      {isPreview ? (
+        <Sidebar />
+      ) : (
+        <NavComponent
+          sectionTitles={virtualSections.map(v => v.label)}
+          currentSectionIndex={currentSectionIndex}
+          onSectionNavigate={navigateSection}
+          lockedAfterIndex={lockedAfterIndex}
+          visitedSections={visitedSections}
+        />
+      )}
+      <main className={cn("flex-1 w-full overflow-y-auto", isPreview ? "md:ml-64" : "md:ml-0")} ref={contentAreaRef}>
         <div className="max-w-4xl mx-auto py-6 md:py-12 px-4 sm:px-6 md:px-8 lg:px-12">
           {/* Module Header — full on section 0, compact on subsequent sections */}
           {currentSectionIndex === 0 ? (

@@ -1,7 +1,8 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, Stethoscope } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, Stethoscope, Sparkles, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CONFIG } from '@/lib/config'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
@@ -56,6 +57,7 @@ export function Sidebar() {
     accessLevel: sessionUser.accessLevel || 'preview',
     enrolledAt: sessionUser.createdAt || '',
   } : null
+  const isPreview = user?.accessLevel === 'preview'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showRestoredBanner, setShowRestoredBanner] = useState(false)
 
@@ -149,10 +151,15 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1">
-          {navItems.filter((item) => (!item.ownerOnly || isOwnerEmail(sessionUser?.email)) && (!item.clinicalGated || showClinicalTesting)).map((item) => {
+          {/* Preview (free) users SEE the whole portal — every paid feature
+              (Clinical Testing, Toolkit, Outreach, References, Complete Ref) is
+              shown LOCKED with a carrot; only the free course + free items are
+              open. Clinical Testing is normally clinicalGated-hidden, but preview
+              users see it locked (visible-but-locked builds upgrade desire). */}
+          {navItems.filter((item) => (!item.ownerOnly || isOwnerEmail(sessionUser?.email)) && (!item.clinicalGated || showClinicalTesting || isPreview)).map((item) => {
             const isActive =
               pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-            const isLocked = item.paidOnly && user?.accessLevel === 'preview'
+            const isLocked = (item.paidOnly || item.clinicalGated) && isPreview
 
             if (isLocked) {
               return (
@@ -199,6 +206,27 @@ export function Sidebar() {
             )
           })}
         </nav>
+
+        {/* Upgrade carrot — preview users only. The reward for the locks above. */}
+        {isPreview && (
+          <Link
+            href="/pricing"
+            onClick={closeMobileMenu}
+            className="mt-3 block rounded-xl bg-gradient-to-br from-accent to-accent-dark p-3.5 text-white shadow-md shadow-accent/20 hover:shadow-lg hover:scale-[1.02] transition-all group"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4" strokeWidth={2} />
+              <span className="text-sm font-bold">Unlock everything</span>
+            </div>
+            <p className="text-[11px] text-white/85 leading-snug mb-2">
+              The full 8-module course, the clinical tools (SST + Baseline) and every reference — assess and manage, don&rsquo;t just recognise.
+            </p>
+            <span className="inline-flex items-center gap-1 text-[12px] font-bold bg-white/15 rounded-lg px-2.5 py-1 group-hover:bg-white/25 transition-colors">
+              Enrol — A${CONFIG.COURSE.PRICE_ONLINE}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </Link>
+        )}
 
         {/* Footer */}
         <div className="pt-5 border-t border-white/30 space-y-3">
