@@ -912,18 +912,31 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                   // its completion screen surfaces the claim CTA (not "View All
                   // Modules"). Cert issued via /api/certificate?type=recognition-referral.
                   if (moduleId === 104) {
+                    // PEAK conversion moment — lead with the upgrade, gap-framed
+                    // (you can recognise & refer; assessing/managing is the paid
+                    // skill), certificate secondary. Design-for-conversion.
                     return (
                       <>
+                        <p className="text-sm text-slate-600 max-w-md text-center mb-1 leading-relaxed">
+                          You can now recognise a concussion and refer safely. <strong className="text-slate-800">Assessing, diagnosing and managing it</strong> is the clinical skill — and that&rsquo;s the full course.
+                        </p>
                         <button
-                          onClick={() => router.push('/settings#certificate')}
+                          onClick={() => router.push('/pricing')}
                           className="px-8 py-3.5 bg-[var(--accent)] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
                         >
-                          Claim your certificate
+                          Become clinically competent — Concussion Clinical Mastery
                           <ArrowRight className="w-4 h-4" />
+                        </button>
+                        <p className="text-xs text-slate-500">8 CPD hours online · A${CONFIG.COURSE.PRICE_ONLINE} · lifetime access</p>
+                        <button
+                          onClick={() => router.push('/settings#certificate')}
+                          className="mt-1 text-sm font-semibold text-accent hover:underline"
+                        >
+                          Claim your free certificate
                         </button>
                         <button
                           onClick={() => router.push(backHref)}
-                          className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+                          className="text-xs font-semibold text-slate-400 hover:text-slate-600"
                         >
                           Back to all modules
                         </button>
@@ -962,7 +975,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                     </button>
                   )
                 })()}
-                {isSCATModule && moduleId !== 102 && (
+                {isSCATModule && moduleId !== 102 && moduleId !== 104 && (
                   <div className="flex flex-col items-center gap-2">
                     <Link
                       href="/pricing"
