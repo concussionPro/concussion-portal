@@ -10,8 +10,8 @@ import { Clock, Link2, FileText } from 'lucide-react'
  * tool landing pages (owner 2026-07-06: "two distinct tabs for each tool …
  * toggle between landing pages … not just the demo animations"). Land on
  * SST Trainer. Each tab is a complete landing (hero + facts + how-it-works).
- * Pricing (both tools) and the founding CTA are shared below. Baseline
- * (preseason) visual style; launches into the founding signup → portal.
+ * Pricing (both tools) + an evidence block are shared below. Tools are
+ * included with CCM/CRM enrolment; A$49/mo standalone. Preseason visual style.
  */
 
 const ACCENT = '#0d9488'
@@ -25,11 +25,11 @@ type TabId = (typeof TABS)[number]['id']
 
 const TIERS = [
   { name: 'Single', who: 'One clinician', price: 'A$49', full: 'A$98', popular: false,
-    features: ['Both tools — SST Trainer + baseline', 'First 3 patients free', 'Measured trajectory, flare flags & auto GP report', 'Free through founding, then lock A$49 for life'] },
+    features: ['Both tools — SST Trainer + baseline', 'Included with CCM / CRM enrolment', 'Measured trajectory, flare flags & auto GP report', 'A$49/mo standalone · 50% off'] },
   { name: 'Small clinic', who: 'Up to 5 clinicians', price: 'A$99', full: 'A$198', popular: true,
-    features: ['Everything in Single, for your whole team', 'Up to 5 clinicians on one licence', 'Priority onboarding + direct line to our team', 'Free through founding, then lock A$99 for life'] },
+    features: ['Everything in Single, for your whole team', 'Up to 5 clinicians on one licence', 'Priority onboarding + direct line to our team', 'A$99/mo standalone · 50% off'] },
   { name: 'Enterprise', who: 'Up to 15 clinicians', price: 'A$149', full: 'A$298', popular: false,
-    features: ['Everything in Small clinic, up to 15 clinicians', 'Founding-clinic referral-directory listing', 'Clubs, leagues & payers — talk to us', 'Free through founding, then lock A$149 for life'] },
+    features: ['Everything in Small clinic, up to 15 clinicians', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us', 'A$149/mo standalone · 50% off'] },
 ]
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -54,9 +54,9 @@ function FreeBadge({ note }: { note: string }) {
     <div className="mt-1 flex flex-col gap-1.5">
       <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-[13.5px] font-bold text-emerald-800">
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
-        Free for your first 3 patients — no card, no time limit
+        Included with your CCM / CRM course enrolment
       </span>
-      <span className="text-[12.5px] font-bold text-emerald-700">Founding clinics lock in half price for life — <s className="font-medium text-slate-400">A$98/198/298</s> A$49 / A$99 / A$149.</span>
+      <span className="text-[12.5px] font-bold text-emerald-700">50% off standalone — <s className="font-medium text-slate-400">A$98/198/298</s> A$49 / A$99 / A$149.</span>
       <span className="text-[12px] font-medium text-slate-400">{note}</span>
     </div>
   )
@@ -87,7 +87,7 @@ function SstTab() {
             patient trains in it between appointments. SST Trainer is the delivery layer: you prescribe
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/clinical-suite/founding">Start your free trial</Cta><Cta variant="ghost" href="/sst-trainer">Try it live →</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/sst-trainer">Try it live →</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
@@ -147,7 +147,7 @@ function BaselineTab() {
             any computer, report to your clinic inbox. When an injury happens mid-season, you’re the clinic
             holding their baseline, and the rehab that follows.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/clinical-suite/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta></div>
           <FreeBadge note="One link per club · ~5 min per athlete · report to your clinic" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center">
@@ -226,15 +226,15 @@ function ClinicianLoopback() {
   )
 }
 
-/* ── What founding clinics get (visible benefits) ───────────────────────── */
-/* ── Shared: pricing (both tools) + founding CTA ────────────────────────── */
+/* ── Shared: pricing + evidence ─────────────────────────────────────────── */
+
 function SharedPricing() {
   return (
     <>
       <Section className="pb-16">
         <div className="mb-[26px] text-center">
           <h2 className="mb-2 text-[clamp(26px,3vw,36px)] font-extrabold leading-[1.05] tracking-[-0.02em]">One price, both tools.</h2>
-          <p className="mx-auto m-0 max-w-[560px] text-[15px] leading-[1.5] text-slate-500">Every plan includes SST Trainer and baseline testing. Free through the founding period — then founding clinics lock their rate for life. Patients never pay.</p>
+          <p className="mx-auto m-0 max-w-[560px] text-[15px] leading-[1.5] text-slate-500">Every plan includes SST Trainer and baseline testing — included with your CCM / CRM enrolment. Patients never pay.</p>
         </div>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {TIERS.map((t) => (
@@ -244,7 +244,7 @@ function SharedPricing() {
               <p className="m-0 text-[13px] text-slate-500">{t.who}</p>
               <p className="m-0 mt-3"><s className="text-[16px] font-semibold text-slate-300">{t.full}</s> <span className="ml-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">half price</span></p>
               <p className="m-0 mt-0.5 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}<span className="text-[14px] font-semibold text-slate-400"> / month</span></p>
-              <Link href="/clinical-suite/founding" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Start free</Link>
+              <Link href="/pricing" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Get with the course</Link>
               <ul className="mt-5 flex flex-col gap-2.5 p-0">
                 {t.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.45] text-slate-600">
@@ -255,14 +255,30 @@ function SharedPricing() {
             </div>
           ))}
         </div>
-        <p className="mt-5 text-center text-[12px] text-slate-400">Prices in AUD ex GST. Free during the founding period; founding rates lock for life and rise for clinics who join later.</p>
+        <p className="mt-5 text-center text-[12px] text-slate-400">Prices in AUD ex GST. Included with CCM / CRM enrolment; A$49/mo standalone thereafter.</p>
       </Section>
 
       <Section className="pb-20">
-        <div className="flex flex-col items-center gap-[13px] rounded-[22px] border p-9 text-center" style={{ background: 'linear-gradient(135deg, #effbfa, #e6f6f3)', borderColor: '#c5ebe4' }}>
-          <h2 className="m-0 font-extrabold tracking-[-0.02em]" style={{ fontSize: 'clamp(22px,2.6vw,30px)', lineHeight: 1.1 }}>Be one of our first 20 founding clinics.</h2>
-          <p className="m-0 max-w-[560px] text-[14.5px] leading-[1.55] text-slate-600">The delivery layer for first-line concussion care — measured rehab and pre-season baselines you prescribe and oversee, on one licence. Free through the founding period, your first three patients free, and your rate locked for life.</p>
-          <div className="mt-1 flex flex-wrap justify-center gap-[11px]"><Cta href="/clinical-suite/founding">Become a founding clinic</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+        <div className="rounded-[22px] border p-8 sm:p-9" style={{ background: 'linear-gradient(135deg, #effbfa, #e6f6f3)', borderColor: '#c5ebe4' }}>
+          <div className="flex items-start gap-3">
+            <FileText size={20} style={{ color: ACCENT }} className="mt-0.5 flex-none" />
+            <div>
+              <h2 className="m-0 font-extrabold tracking-[-0.02em]" style={{ fontSize: 'clamp(20px,2.4vw,26px)', lineHeight: 1.15 }}>The evidence, and the published method</h2>
+              <p className="m-0 mt-2 max-w-[760px] text-[14px] leading-[1.6] text-slate-600">
+                Sub-symptom-threshold aerobic exercise is first-line concussion care (Patricios et al.,
+                Amsterdam 2023, BJSM; Leddy, JAMA Peds 2019), and completing the prescribed sessions roughly
+                halves recovery time (Leddy et al., PMC9378725). The method the tools deliver is a citable
+                open-access protocol — <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic
+                Exercise Rehabilitation after Concussion (mTBI)</em>, Lewis Z. (2026), Zenodo, CC-BY-4.0,{' '}
+                <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: ACCENT }}>doi.org/10.5281/zenodo.21482634</a>
+                {' '}— backed by the course&rsquo;s 140+ reference evidence base.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-[11px]">
+                <Cta href="/pricing">Enrol to unlock the tools</Cta>
+                <Cta variant="ghost" href="/clinical-suite/evidence">See all the evidence →</Cta>
+              </div>
+            </div>
+          </div>
         </div>
       </Section>
     </>
