@@ -40,6 +40,9 @@ export default function CrmCheckoutButton({
   const [city, setCity] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Online tier has no practical day → no city. Complete/upgrade CAN nominate a
+  // city, but it's optional — you may buy now and nominate later.
+  const needsCity = tier !== 'online'
 
   // Pending ESSA → interest capture only, never a live checkout.
   if (!accredited) {
@@ -53,13 +56,12 @@ export default function CrmCheckoutButton({
   async function start() {
     setError(null)
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setError('Enter a valid email.'); return }
-    if (!city) { setError('Nominate your workshop city.'); return }
     setBusy(true)
     try {
       const res = await fetch('/api/crm/checkout', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ tier, email, location: city }),
+        body: JSON.stringify({ tier, email, location: city || undefined }),
       })
       const data = await res.json()
       if (!res.ok || !data.url) { setError(data.error || 'Could not start checkout.'); setBusy(false); return }
@@ -80,7 +82,9 @@ export default function CrmCheckoutButton({
 
   return (
     <div className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left">
-      <p className="text-[13px] font-bold text-slate-800 mb-2">Nominate your workshop city to continue</p>
+      <p className="text-[13px] font-bold text-slate-800 mb-2">
+        {needsCity ? 'Your details — nominate a city now, or decide later' : 'Enter your email to continue'}
+      </p>
       <input
         type="email"
         inputMode="email"
@@ -89,16 +93,18 @@ export default function CrmCheckoutButton({
         onChange={(e) => setEmail(e.target.value)}
         className="w-full mb-2 rounded-lg border border-slate-300 px-3 py-2 text-[14px]"
       />
-      <select
-        value={city}
-        onChange={(e) => setCity(e.target.value)}
-        className="w-full mb-3 rounded-lg border border-slate-300 px-3 py-2 text-[14px] bg-white"
-      >
-        <option value="">Select your workshop city…</option>
-        {CITIES.map((c) => (
-          <option key={c.slug} value={c.slug}>{c.label}</option>
-        ))}
-      </select>
+      {needsCity && (
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="w-full mb-3 rounded-lg border border-slate-300 px-3 py-2 text-[14px] bg-white"
+        >
+          <option value="">I&rsquo;ll nominate my city later</option>
+          {CITIES.map((c) => (
+            <option key={c.slug} value={c.slug}>{c.label}</option>
+          ))}
+        </select>
+      )}
       {error && <p className="text-[12px] text-red-600 mb-2">{error}</p>}
       <button type="button" onClick={start} disabled={busy} className={className}>
         {busy ? 'Starting…' : 'Continue to secure checkout'} <ArrowRight className="w-4 h-4" />
