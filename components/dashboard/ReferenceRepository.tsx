@@ -516,9 +516,9 @@ const references: Reference[] = [
   {
     id: 'mayer2010',
     authors: 'Mayer, A. R., Ling, J. M., & Mannell, M. V.',
-    year: '2010',
+    year: '2012',
     title: 'Diffusion abnormalities in pediatric mild traumatic brain injury',
-    journal: 'Journal of Neuroscience, 30(32), 10963–10970',
+    journal: 'Journal of Neuroscience, 32(50), 17961–17969',
     doi: '10.1523/JNEUROSCI.3379-12.2012',
     category: 'Imaging'
   },
@@ -617,7 +617,7 @@ const references: Reference[] = [
   {
     id: 'marchi2016',
     authors: 'Marchi, N., Bazarian, J. J., & Janigro, D.',
-    year: '2016',
+    year: '2013',
     title: 'Consequences of repeated blood-brain barrier disruption in football players',
     journal: 'PLOS ONE, 8(3), e56805',
     doi: '10.1371/journal.pone.0056805',
