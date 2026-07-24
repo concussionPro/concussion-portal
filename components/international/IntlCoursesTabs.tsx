@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { GraduationCap, HeartPulse } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import UkCourseContent from '@/components/uk/UkCourseContent'
+import CcmInternationalContent from '@/components/ccm/CcmInternationalContent'
 import CrmInternationalContent from '@/components/crm/CrmInternationalContent'
 
 /**
@@ -73,11 +73,9 @@ export default function IntlCoursesTabs({ price, crmLive }: { price: Price; crmL
         </section>
       )}
 
-      <div className={cn('relative', !showTabs && 'pt-[72px]')}>
-        {!showTabs || stream === 'ccm'
-          ? <UkCourseContent price={price} embedded />
-          : <CrmInternationalContent price={price} live hideNav />}
-      </div>
+      {!showTabs || stream === 'ccm'
+        ? <CcmInternationalContent price={price} hideNav />
+        : <CrmInternationalContent price={price} live hideNav />}
     </div>
   )
 }

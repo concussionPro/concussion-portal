@@ -5,11 +5,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowRight, Check, ShieldCheck, HeartPulse, Activity, ClipboardList,
-  LineChart, Award, Quote, FileText, ChevronDown, ChevronUp, Building2, BookOpen,
+  Award, Quote, FileText, ChevronDown, ChevronUp, Building2, BookOpen,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
-import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
+import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 
 /**
  * CRM (Concussion Rehab Mastery) — INTERNATIONAL landing.
@@ -37,7 +37,7 @@ export interface IntlPriceView {
 const INTL_FAQS: { q: string; a: string }[] = [
   {
     q: 'Is this a course or a platform?',
-    a: 'Both — always sold as one. Enrolment includes the working instruments you deliver concussion rehab with: the live Baseline & Serial Testing tool, the SST Trainer app (graded test → HR-threshold prescription → monitored home sessions), the BCTT calculator and the full Clinical Toolkit. The platform is never available without the training — running HR-threshold prescriptions on brain-injured patients without concussion education isn’t safe.',
+    a: 'Both — always sold as one. Enrolment includes the working instruments you deliver concussion rehab with: the SST Trainer app (graded test → HR-threshold prescription → monitored home sessions), the BCTT calculator and the full Clinical Toolkit. The platform is never available without the training — running HR-threshold prescriptions on brain-injured patients without concussion education isn’t safe.',
   },
   {
     q: 'What accreditation does it carry?',
@@ -45,7 +45,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Is there an ongoing cost?',
-    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + Baseline & Serial Testing) is included free for your first year. After that, keeping the platform is A$49/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
+    a: 'The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$49/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
   },
   {
     q: 'What’s the refund policy?',
@@ -252,10 +252,9 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           </h2>
           <p className="text-base text-muted-foreground">
             You don&rsquo;t just learn the protocol — you leave with the instruments to run it.
-            Every enrolment includes the working clinical platform: the Preseason Baseline &amp;
-            Serial Testing tool, the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator
-            (heart-rate threshold &rarr; prescription) and the full Clinical Toolkit — all built
-            around the exercise-physiology scope of practice.
+            Every enrolment includes the working clinical platform: the Sub-Symptom-Threshold (SST)
+            Trainer app, the BCTT calculator (heart-rate threshold &rarr; prescription) and the full
+            Clinical Toolkit — all built around the exercise-physiology scope of practice.
           </p>
         </div>
 
@@ -294,7 +293,6 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
                 {[
                   '8 EP-scoped modules · 8 CPD hours',
-                  'Live Baseline & Serial Testing tool',
                   'SST Trainer — test → prescription → monitoring',
                   'BCTT calculator + full Clinical Toolkit',
                   'SSTAE templates + phenotype library',
@@ -311,7 +309,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               <div className="rounded-xl bg-teal-50/60 border border-teal-200 px-4 py-3 mb-4">
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
                   <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
-                  The clinical platform (SST Trainer + Baseline) is <strong>included free for your
+                  The clinical platform (the SST Trainer) is <strong>included free for your
                   first year</strong>, then <strong>A$49/month</strong> to keep it — starts
                   automatically at 12 months, cancel anytime.
                 </p>
@@ -365,34 +363,19 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           </div>
         </div>
 
-        {/* SST + Baseline instrument visuals — the platform proof (same as AU page) */}
-        <div className="max-w-4xl mx-auto mt-10 mb-2">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
-              <SstWatchVisual />
-              <div className="p-5">
-                <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
-                <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
-                  A graded test measures each patient&rsquo;s symptom threshold; they train just
-                  under it — live heart rate, verified progression, every session on your dashboard.
-                </p>
-                <Link href="/sst-trainer?clinic=DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
-                  See the patient app <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-            <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
-              <BaselineLaptopVisual />
-              <div className="p-5">
-                <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">Pre-Season Baseline Testing</h3>
-                <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
-                  One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a
-                  PDF report lands in your inbox — on file for the day it matters.
-                </p>
-                <Link href="/preseason/b/DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
-                  Try the baseline flow <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
+        {/* SST instrument visual — the platform proof (CRM = rehab-only, no baseline) */}
+        <div className="max-w-xl mx-auto mt-10 mb-2">
+          <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
+            <SstWatchVisual />
+            <div className="p-5">
+              <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
+              <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
+                A graded test measures each patient&rsquo;s symptom threshold; they train just
+                under it — live heart rate, verified progression, every session on your dashboard.
+              </p>
+              <Link href="/sst-trainer?clinic=DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                See the patient app <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </div>
@@ -408,7 +391,6 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
-              { icon: LineChart, title: 'Preseason Baseline & Serial Testing', desc: 'Capture the patient’s healthy baseline (symptoms, cognition, oculomotor), then auto-build the serial-comparison report — recovery measured against their own normal, not a generic zero.' },
               { icon: HeartPulse, title: 'Sub-Symptom-Threshold (SST) Trainer', desc: 'The patient app: threshold test → in-band heart-rate training on the wearable they already own → guided progression. Clinician-set and overseen by you.' },
               { icon: Activity, title: 'BCTT Calculator → Prescription', desc: 'Enter the Buffalo test stages; get the heart-rate threshold (HRt) and the 80–90% training band with the plain-language prescription.' },
               { icon: ClipboardList, title: 'Clinical Toolkit + Reporting Templates', desc: 'SSTAE templates, the phenotype library, and referrer-ready progress and outcome reporting — the paperwork done.' },

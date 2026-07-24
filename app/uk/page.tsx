@@ -2,24 +2,14 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { detectCountry } from '@/lib/geo'
 import { intlPriceForCountry } from '@/lib/international-pricing'
-import UkCourseContent from '@/components/uk/UkCourseContent'
+import CcmInternationalContent from '@/components/ccm/CcmInternationalContent'
 
 /**
  * /uk — UK-facing landing for Concussion Clinical Mastery (CCM), the physio
- * course. Target audience = UK physiotherapists (CSP), reached via the CSP
- * course-advert channel.
- *
- * WHY A DEDICATED PAGE: /pricing shows AUD (wrong currency for a UK physio) and
- * /pricing-international is CRM-branded (wrong course — that's the EP stream).
- * This page shows CCM in GBP and routes to the `international-online` checkout,
- * which grants `online-only` access = the CCM 8-module course (verified in
- * lib/stripe.ts COURSE_ACCESS_MAP). Price + charge both come from
- * lib/international-pricing (GB → £275), so display and charge always match.
- *
- * SCOPE (HCPC): copy frames CCM as clinical ASSESSMENT & MANAGEMENT within
- * physiotherapy scope — screening (SCAT6, VOMS, BESS), graded return-to-play,
- * phenotype rehab — with red-flag referral to medical for diagnosis/clearance.
- * Physios screen and assess (which EPs do not), so CCM — not CRM — is theirs.
+ * course, reached via the CSP course-advert channel. Reuses the shared
+ * CcmInternationalContent (the international landing structure) — NOT a bespoke
+ * page. Auto-currency (GB → £275), international-online checkout grants the CCM
+ * 8-module course.
  */
 export const metadata: Metadata = {
   title: 'Concussion Clinical Mastery for Physiotherapists — Online CPD | Concussion Education Australia',
@@ -30,5 +20,5 @@ export const metadata: Metadata = {
 
 export default async function UkCoursePage() {
   const price = intlPriceForCountry(detectCountry(await headers()))
-  return <UkCourseContent price={{ display: price.display, code: price.code }} />
+  return <CcmInternationalContent price={{ display: price.display, code: price.code }} />
 }
