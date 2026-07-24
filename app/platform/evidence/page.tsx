@@ -251,6 +251,28 @@ export default function EvidencePage() {
       <section className="px-6 pb-16">
         <div className="mx-auto max-w-[960px]">
           <h2 className="text-[22px] font-bold tracking-[-0.01em] text-[#16243f]">Key references</h2>
+
+          {/* The published protocol — the citable standard of the method this platform delivers */}
+          <div className="mt-6 rounded-2xl border-2 border-[#3c7a1f]/30 bg-[#eef5e8] p-6">
+            <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-[#3c7a1f]">The published protocol</p>
+            <p className="mt-2 text-[15.5px] font-semibold leading-relaxed text-[#16243f]">
+              Lewis, Z. (2026). A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise
+              Rehabilitation after Concussion (mild Traumatic Brain Injury). Zenodo. CC-BY-4.0.
+            </p>
+            <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-600">
+              The citable, peer-reviewable standard of the method this platform delivers — the clinical spine
+              of the Concussion Rehab Mastery course, referenced to a 136-item evidence base.
+            </p>
+            <a
+              href="https://doi.org/10.5281/zenodo.21482634"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-[#3c7a1f] hover:underline"
+            >
+              doi.org/10.5281/zenodo.21482634 →
+            </a>
+          </div>
+
           <div className="mt-6 flex flex-col gap-4">
             {REFERENCES.map((ref) => (
               <div
@@ -295,7 +317,7 @@ export default function EvidencePage() {
               For clinicians
             </Link>
             <Link
-              href="/clinical-suite/pricing"
+              href="/pricing"
               className="rounded-full px-6 py-3 text-[15px] font-bold text-white transition-colors hover:opacity-90"
               style={{ backgroundColor: PLATFORM.green }}
             >

@@ -87,7 +87,7 @@ function SstTab() {
             patient trains in it between appointments. SST Trainer is the delivery layer: you prescribe
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/sst-trainer">Try it live →</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/sst-trainer">Try it live →</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
@@ -147,7 +147,7 @@ function BaselineTab() {
             any computer, report to your clinic inbox. When an injury happens mid-season, you’re the clinic
             holding their baseline, and the rehab that follows.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="One link per club · ~5 min per athlete · report to your clinic" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center">
