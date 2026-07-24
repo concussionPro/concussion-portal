@@ -10,7 +10,7 @@ const BASE_NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
   { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
-  { label: 'Preseason Baseline', path: '/preseason', accent: false },
+  { label: 'Clinical Tools', path: '/clinical-suite', accent: false },
   { label: 'Blog', path: '/blog', accent: false },
 ]
 

@@ -118,6 +118,32 @@ function Card({ children, className, href, onClick, span2 }: CardProps) {
   )
 }
 
+/* ──────────────── Section Label ────────────────
+   Groups the quick-reference home into its three pillars: Courses, Clinical
+   Tools, Documents & Reference. Each pillar's tiles click straight into the
+   relevant content. */
+function SectionLabel({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
+  title: string
+  subtitle: string
+}) {
+  return (
+    <div className="flex items-center gap-2.5 mb-3 px-1">
+      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/12 to-accent/4 flex items-center justify-center flex-shrink-0">
+        <Icon className="w-4 h-4 text-accent" strokeWidth={1.8} />
+      </div>
+      <div className="min-w-0">
+        <h3 className="text-sm font-bold text-foreground leading-none tracking-tight">{title}</h3>
+        <p className="text-[11px] text-muted-foreground leading-none mt-1">{subtitle}</p>
+      </div>
+    </div>
+  )
+}
+
 /* ──────────────── Main Bento Grid ──────────────── */
 export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWorkshopNominated }: {
   accessLevel?: string
@@ -203,239 +229,318 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
 
   const pctComplete = Math.round((displayModules / displayMaxModules) * 100)
 
+  const clinicalToolkitHref = hubForPaid && isOwnerEmail(user?.email) ? '/clinical-testing' : '/clinical-toolkit'
+
   return (
-    <div className="bento-premium">
-      {/* ── 1. Course Progress (wide) ─────────────────── */}
-      <Card href="/learning" span2>
-        <div className="flex items-start gap-4">
-          <div className="relative flex-shrink-0">
-            <MicroRing value={displayModules} max={displayMaxModules} size={56} />
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
-              {pctComplete}%
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="stat-label">{isPreview ? 'SCAT Course Progress' : 'Course Progress'}</p>
-            <p className="stat-value">{displayModules} <span className="text-base font-medium text-muted-foreground">/ {displayMaxModules} modules</span></p>
-            <div className="mt-3">
-              <div className="progress-track">
-                <div className="progress-fill" style={{ width: `${pctComplete}%` }} />
-              </div>
-            </div>
-            {inProgressCount > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                {inProgressCount} module{inProgressCount > 1 ? 's' : ''} in progress
-              </p>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* ── Hub Pack owner seat visibility — renders null for non-owners
-            (fetch gated inside the component, no layout shift) ── */}
-      <HubSeatsCard />
-
-      {/* ── 2. CPD Hours ───────────────────────────── */}
-      <Card href="/learning">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-            <Award className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
-          </div>
-          <p className="stat-label mb-0">{isPreview ? 'Free CPD Hours' : 'Online CPD Hours'}</p>
-        </div>
-        <p className="stat-value-accent">
-          {displayCPD}<span className="text-base text-muted-foreground font-medium"> / {displayMaxCPD}</span>
-        </p>
-        <div className="mt-3 progress-track">
-          <div className="progress-fill" style={{ width: `${cpdBarPct}%` }} />
-        </div>
-        {displayModules === displayMaxModules && displayMaxModules > 0 ? (
-          <p className="text-xs text-accent font-semibold mt-2">All {isPreview ? 'free' : 'online'} points earned</p>
-        ) : isPreview ? (
-          <p className="text-xs text-muted-foreground mt-2">1 CPD hour awarded on completing all 3 modules</p>
-        ) : null}
-      </Card>
-
-      {/* ── 3. Study Time ───────────────────────────── */}
-      <Card>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-400/5 flex items-center justify-center">
-            <Clock className="w-[18px] h-[18px] text-blue-600/70" strokeWidth={1.8} />
-          </div>
-          <p className="stat-label mb-0">Study Time</p>
-        </div>
-        {studyTime < 0.1 ? (
-          <>
-            <p className="stat-value text-lg">Start Learning</p>
-            <p className="text-xs text-muted-foreground mt-1">Your study hours appear here</p>
-          </>
-        ) : (
-          <>
-            <p className="stat-value">{studyTime.toFixed(1)}<span className="text-base font-medium text-muted-foreground"> hrs</span></p>
-            <p className="text-xs text-muted-foreground mt-1">Active learning time</p>
-          </>
-        )}
-      </Card>
-
-      {/* ── 4. Learning Suite ───────────────────────── */}
-      <Card href="/learning">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-            <BookOpen className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
-          </div>
-          <p className="stat-label mb-0">Learning Suite</p>
-        </div>
-        <p className="text-sm text-foreground font-semibold mb-1">{isPreview ? '3 Free SCAT Modules' : '8 Clinical Modules'}</p>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {isPreview
-            ? 'SCAT6 & SCOAT6 mastery training — completely free.'
-            : 'Evidence-based concussion management training with AHPRA-aligned CPD tracking.'}
-        </p>
-      </Card>
-
-      {/* ── 5. Clinical Toolkit → becomes Clinical Hub when launched ── */}
-      {/* Bare /clinical-hub renders the DEMO roster (no code/key params) —
-          route paid users through Clinical Testing, which owns their real
-          code + private hub link. */}
-      <Card href={hubForPaid && isOwnerEmail(user?.email) ? '/clinical-testing' : '/clinical-toolkit'}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className={cn(
-            'w-9 h-9 rounded-xl flex items-center justify-center',
-            isPreview
-              ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
-              : 'bg-gradient-to-br from-emerald-500/10 to-emerald-400/5'
-          )}>
-            {isPreview
-              ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
-              : hubForPaid
-                ? <Stethoscope className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
-                : <FileText className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
-            }
-          </div>
-          <p className="stat-label mb-0">{hubForPaid ? 'Clinical Hub' : 'Clinical Toolkit'}</p>
-          {isPreview && (
-            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
-              Paid
-            </span>
-          )}
-        </div>
-        <p className="text-sm text-foreground font-semibold mb-1">
-          {hubForPaid ? 'Manage your patients' : 'Printable Resources'}
-        </p>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {hubForPaid
-            ? 'SST programs, SCAT6 baselines and recovery tracking — plus your printable resources.'
-            : 'Assessment templates, return-to-play protocols, and clinical decision aids.'}
-        </p>
-      </Card>
-
-      {/* ── Clinical Tools suite — the in-clinic instruments (SST Trainer +
-            pre-season baseline). PRE-RELEASE: owner-only until the clinical
-            suite launches. Hidden entirely (not teased) from every other user,
-            paid or preview, so the unfinished tools are invisible on the portal
-            (owner directive). Re-appears for paid users the moment clinical
-            access resolves to 'course'/'sst' (SST_CLINICAL_LIVE=true). ── */}
-      {showClinicalTools && (
-        <Card span2 className="border border-emerald-200/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 flex items-center justify-center">
-              <Stethoscope className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
-            </div>
-            <p className="stat-label mb-0">Clinical Tools</p>
-          </div>
-          <p className="text-sm text-foreground font-semibold mb-3">In-clinic instruments — assessment &amp; rehab</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <Link href="/preseason" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
-              <FileText className="w-4 h-4 text-emerald-600/70 flex-shrink-0" strokeWidth={1.8} />
-              <span className="min-w-0">
-                <span className="block text-[13px] font-semibold text-foreground leading-tight">Baseline Testing</span>
-                <span className="block text-[11px] text-muted-foreground leading-tight">SCAT6 baselines · initial exam</span>
-              </span>
-            </Link>
-            <Link href="/sst-trainer" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
-              <Stethoscope className="w-4 h-4 text-emerald-600/70 flex-shrink-0" strokeWidth={1.8} />
-              <span className="min-w-0">
-                <span className="block text-[13px] font-semibold text-foreground leading-tight">SST Trainer</span>
-                <span className="block text-[11px] text-muted-foreground leading-tight">Sub-symptom-threshold rehab · wearable</span>
-              </span>
-            </Link>
-          </div>
-        </Card>
-      )}
-
-      {/* ── SST Trainer subscription (HIDDEN until launch) ── */}
-      {sstLive && (
-        <Card span2 className="border border-accent/20">
+    <div className="space-y-8">
+      {/* ═══ Quick stats strip — where you are, at a glance ═══ */}
+      <div className="bento-premium">
+        {/* Course Progress (wide) */}
+        <Card href="/learning" span2>
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center flex-shrink-0">
-              <HeartPulse className="w-[20px] h-[20px] text-accent" strokeWidth={1.8} />
+            <div className="relative flex-shrink-0">
+              <MicroRing value={displayModules} max={displayMaxModules} size={56} />
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
+                {pctComplete}%
+              </span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm text-foreground font-semibold">SST Trainer</p>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20 uppercase tracking-wider">
-                  Subscription
-                </span>
+              <p className="stat-label">{isPreview ? 'SCAT Course Progress' : 'Course Progress'}</p>
+              <p className="stat-value">{displayModules} <span className="text-base font-medium text-muted-foreground">/ {displayMaxModules} modules</span></p>
+              <div className="mt-3">
+                <div className="progress-track">
+                  <div className="progress-fill" style={{ width: `${pctComplete}%` }} />
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-                Prescribe heart-rate-paced, sub-symptom-threshold exercise rehab and track your patients&apos; recovery. Manage sessions right here in your dashboard.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => startSstCheckout('monthly')}
-                  disabled={sstLoading !== null}
-                  className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg bg-accent text-white hover:opacity-90 transition disabled:opacity-60"
-                >
-                  {sstLoading === 'monthly' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Subscribe monthly
-                </button>
-                <button
-                  onClick={() => startSstCheckout('annual')}
-                  disabled={sstLoading !== null}
-                  className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg border border-accent/30 text-accent hover:bg-accent/5 transition disabled:opacity-60"
-                >
-                  {sstLoading === 'annual' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Annual — save 2 months
-                </button>
-              </div>
+              {inProgressCount > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {inProgressCount} module{inProgressCount > 1 ? 's' : ''} in progress
+                </p>
+              )}
             </div>
           </div>
         </Card>
-      )}
 
-      {/* ── 6. SCAT Forms ───────────────────────────── */}
-      <Card href="/scat-forms">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-400/5 flex items-center justify-center">
-            <Activity className="w-[18px] h-[18px] text-violet-600/70" strokeWidth={1.8} />
+        {/* Hub Pack owner seat visibility — renders null for non-owners */}
+        <HubSeatsCard />
+
+        {/* CPD Hours */}
+        <Card href="/learning">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+              <Award className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
+            </div>
+            <p className="stat-label mb-0">{isPreview ? 'Free CPD Hours' : 'Online CPD Hours'}</p>
           </div>
-          <p className="stat-label mb-0">SCAT Forms</p>
+          <p className="stat-value-accent">
+            {displayCPD}<span className="text-base text-muted-foreground font-medium"> / {displayMaxCPD}</span>
+          </p>
+          <div className="mt-3 progress-track">
+            <div className="progress-fill" style={{ width: `${cpdBarPct}%` }} />
+          </div>
+          {displayModules === displayMaxModules && displayMaxModules > 0 ? (
+            <p className="text-xs text-accent font-semibold mt-2">All {isPreview ? 'free' : 'online'} points earned</p>
+          ) : isPreview ? (
+            <p className="text-xs text-muted-foreground mt-2">1 CPD hour awarded on completing all 3 modules</p>
+          ) : null}
+        </Card>
+
+        {/* Study Time */}
+        <Card>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-400/5 flex items-center justify-center">
+              <Clock className="w-[18px] h-[18px] text-blue-600/70" strokeWidth={1.8} />
+            </div>
+            <p className="stat-label mb-0">Study Time</p>
+          </div>
+          {studyTime < 0.1 ? (
+            <>
+              <p className="stat-value text-lg">Start Learning</p>
+              <p className="text-xs text-muted-foreground mt-1">Your study hours appear here</p>
+            </>
+          ) : (
+            <>
+              <p className="stat-value">{studyTime.toFixed(1)}<span className="text-base font-medium text-muted-foreground"> hrs</span></p>
+              <p className="text-xs text-muted-foreground mt-1">Active learning time</p>
+            </>
+          )}
+        </Card>
+      </div>
+
+      {/* ═══ PILLAR 1 — COURSES ═══ */}
+      <section>
+        <SectionLabel icon={BookOpen} title="Courses" subtitle="Your training, CPD and workshop" />
+        <div className="bento-premium">
+          {/* Learning Suite — entry to all courses (CCM / CRM / free SCAT) */}
+          <Card href="/learning" span2>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-5 h-5 text-accent" strokeWidth={1.8} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="stat-label">Learning Suite</p>
+                <p className="text-sm text-foreground font-semibold mb-1">{isPreview ? '3 Free SCAT Modules' : 'All your courses & modules'}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {isPreview
+                    ? 'SCAT6 & SCOAT6 mastery training — completely free. Enrol to unlock the full 8-module clinical course.'
+                    : 'Concussion Clinical Mastery, SCAT6/SCOAT6 training and specialty courses — with AHPRA-aligned CPD tracking.'}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* In-Person Workshop */}
+          <WorkshopCard
+            accessLevel={accessLevel}
+            isPreview={isPreview}
+            allModulesComplete={completedModules >= 8}
+            workshopLocation={workshopLocation}
+            onWorkshopNominated={onWorkshopNominated}
+          />
+
+          {/* More CPD from CEA — short-course cross-sell */}
+          {CROSS_SELL_COURSES.length > 0 && (
+            <Card>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500/10 to-teal-400/5 flex items-center justify-center">
+                  <GraduationCap className="w-[18px] h-[18px] text-teal-600/70" strokeWidth={1.8} />
+                </div>
+                <p className="stat-label mb-0">More CPD from CEA</p>
+              </div>
+              <p className="text-sm text-foreground font-semibold mb-3">Short specialty courses</p>
+              <div className="space-y-2">
+                {CROSS_SELL_COURSES.map(c => (
+                  <Link
+                    key={c.id}
+                    href={c.route}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-border bg-white/50 px-3.5 py-2.5 hover:border-teal-300 hover:bg-teal-50/40 transition-colors"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-foreground leading-tight truncate">{c.title}</span>
+                      <span className="block text-[11px] text-muted-foreground leading-tight">
+                        {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
+                      </span>
+                    </span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-teal-600/60 flex-shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">Digital Assessment</p>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          SCAT6, Child SCAT6, and SCOAT6 — fillable and downloadable.
-        </p>
-      </Card>
+      </section>
 
-      {/* ── 7. Reference Repository (wide) ──────────── */}
-      <Card href="/references" span2>
-        <div className="flex items-start gap-4">
-          <div className={cn(
-            'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
-            isPreview
-              ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
-              : 'bg-gradient-to-br from-amber-500/10 to-amber-400/5'
-          )}>
-            {isPreview
-              ? <Lock className="w-5 h-5 text-slate-400" strokeWidth={1.8} />
-              : <Library className="w-5 h-5 text-amber-600/70" strokeWidth={1.8} />
-            }
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="stat-label">Reference Repository</p>
+      {/* ═══ PILLAR 2 — CLINICAL TOOLS ═══ */}
+      <section>
+        <SectionLabel icon={Stethoscope} title="Clinical Tools" subtitle="Instruments to assess & manage patients" />
+        <div className="bento-premium">
+          {/* In-clinic instruments (SST Trainer + baseline). PRE-RELEASE:
+              owner/clinical-access only — hidden entirely from everyone else
+              (owner directive: unfinished tools must not appear usable). */}
+          {showClinicalTools && (
+            <Card span2 className="border border-emerald-200/40">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 flex items-center justify-center">
+                  <Stethoscope className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
+                </div>
+                <p className="stat-label mb-0">In-Clinic Instruments</p>
+              </div>
+              <p className="text-sm text-foreground font-semibold mb-3">Assessment &amp; rehab — use with your patients</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <Link href="/preseason" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
+                  <FileText className="w-4 h-4 text-emerald-600/70 flex-shrink-0" strokeWidth={1.8} />
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-semibold text-foreground leading-tight">Baseline Testing</span>
+                    <span className="block text-[11px] text-muted-foreground leading-tight">SCAT6 baselines · initial exam</span>
+                  </span>
+                </Link>
+                <Link href="/sst-trainer" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
+                  <Stethoscope className="w-4 h-4 text-emerald-600/70 flex-shrink-0" strokeWidth={1.8} />
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-semibold text-foreground leading-tight">SST Trainer</span>
+                    <span className="block text-[11px] text-muted-foreground leading-tight">Sub-symptom-threshold rehab · wearable</span>
+                  </span>
+                </Link>
+              </div>
+            </Card>
+          )}
+
+          {/* Preview/free-course users: locked instruments teaser — the carrot.
+              They're learning to ASSESS; the tools to MANAGE come with the course. */}
+          {!showClinicalTools && isPreview && (
+            <Card href="/pricing" span2 className="border border-amber-200/40">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+                  <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+                </div>
+                <p className="stat-label mb-0">In-Clinic Instruments</p>
+                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+                  Paid
+                </span>
+              </div>
+              <p className="text-sm text-foreground font-semibold mb-1">The tools to manage what you learn to assess</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                SST Trainer (heart-rate-paced rehab) and SCAT6 baseline testing come with the full course — the instruments to actually manage patients through recovery, not just diagnose them. Enrol to unlock.
+              </p>
+            </Card>
+          )}
+
+          {/* SST Trainer subscription (HIDDEN until launch) */}
+          {sstLive && (
+            <Card span2 className="border border-accent/20">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center flex-shrink-0">
+                  <HeartPulse className="w-[20px] h-[20px] text-accent" strokeWidth={1.8} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm text-foreground font-semibold">SST Trainer</p>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20 uppercase tracking-wider">
+                      Subscription
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                    Prescribe heart-rate-paced, sub-symptom-threshold exercise rehab and track your patients&apos; recovery. Manage sessions right here in your dashboard.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => startSstCheckout('monthly')}
+                      disabled={sstLoading !== null}
+                      className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg bg-accent text-white hover:opacity-90 transition disabled:opacity-60"
+                    >
+                      {sstLoading === 'monthly' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      Subscribe monthly
+                    </button>
+                    <button
+                      onClick={() => startSstCheckout('annual')}
+                      disabled={sstLoading !== null}
+                      className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg border border-accent/30 text-accent hover:bg-accent/5 transition disabled:opacity-60"
+                    >
+                      {sstLoading === 'annual' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      Annual — save 2 months
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* SCAT Forms — digital assessment, available to all */}
+          <Card href="/scat-forms">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-400/5 flex items-center justify-center">
+                <Activity className="w-[18px] h-[18px] text-violet-600/70" strokeWidth={1.8} />
+              </div>
+              <p className="stat-label mb-0">SCAT Forms</p>
+            </div>
+            <p className="text-sm text-foreground font-semibold mb-1">Digital Assessment</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              SCAT6, Child SCAT6, and SCOAT6 — fillable and downloadable.
+            </p>
+          </Card>
+        </div>
+      </section>
+
+      {/* ═══ PILLAR 3 — DOCUMENTS & REFERENCE (doc output) ═══ */}
+      <section>
+        <SectionLabel icon={FileText} title="Documents & Reference" subtitle="Printable resources & the evidence base" />
+        <div className="bento-premium">
+          {/* Clinical Toolkit → becomes Clinical Hub when launched.
+              Bare /clinical-hub renders the DEMO roster — route paid users
+              through Clinical Testing, which owns their real code + hub link. */}
+          <Card href={clinicalToolkitHref} span2>
+            <div className="flex items-start gap-4">
+              <div className={cn(
+                'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
+                isPreview
+                  ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
+                  : 'bg-gradient-to-br from-emerald-500/10 to-emerald-400/5'
+              )}>
+                {isPreview
+                  ? <Lock className="w-5 h-5 text-slate-400" strokeWidth={1.8} />
+                  : hubForPaid
+                    ? <Stethoscope className="w-5 h-5 text-emerald-600/70" strokeWidth={1.8} />
+                    : <FileText className="w-5 h-5 text-emerald-600/70" strokeWidth={1.8} />
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="stat-label">{hubForPaid ? 'Clinical Hub' : 'Clinical Toolkit'}</p>
+                  {isPreview && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+                      Paid
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-foreground font-semibold mb-1">
+                  {hubForPaid ? 'Manage your patients' : 'Printable clinical resources'}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {hubForPaid
+                    ? 'SST programs, SCAT6 baselines and recovery tracking — plus your printable resources.'
+                    : 'Assessment templates, return-to-play protocols, referral letters and clinical decision aids — ready to print or hand to a patient.'}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Reference Repository */}
+          <Card href="/references">
+            <div className="flex items-center gap-3 mb-3">
+              <div className={cn(
+                'w-9 h-9 rounded-xl flex items-center justify-center',
+                isPreview
+                  ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
+                  : 'bg-gradient-to-br from-amber-500/10 to-amber-400/5'
+              )}>
+                {isPreview
+                  ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+                  : <Library className="w-[18px] h-[18px] text-amber-600/70" strokeWidth={1.8} />
+                }
+              </div>
+              <p className="stat-label mb-0">Reference Repository</p>
               {isPreview && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
                   Paid
                 </span>
               )}
@@ -444,48 +549,9 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable library of concussion research — journal articles, meta-analyses, and clinical guidelines.
             </p>
-          </div>
+          </Card>
         </div>
-      </Card>
-
-      {/* ── More CPD from CEA — short-course cross-sell ── */}
-      {CROSS_SELL_COURSES.length > 0 && (
-        <Card>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500/10 to-teal-400/5 flex items-center justify-center">
-              <GraduationCap className="w-[18px] h-[18px] text-teal-600/70" strokeWidth={1.8} />
-            </div>
-            <p className="stat-label mb-0">More CPD from CEA</p>
-          </div>
-          <p className="text-sm text-foreground font-semibold mb-3">Short specialty courses</p>
-          <div className="space-y-2">
-            {CROSS_SELL_COURSES.map(c => (
-              <Link
-                key={c.id}
-                href={c.route}
-                className="flex items-center justify-between gap-2 rounded-xl border border-border bg-white/50 px-3.5 py-2.5 hover:border-teal-300 hover:bg-teal-50/40 transition-colors"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-semibold text-foreground leading-tight truncate">{c.title}</span>
-                  <span className="block text-[11px] text-muted-foreground leading-tight">
-                    {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
-                  </span>
-                </span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-teal-600/60 flex-shrink-0" />
-              </Link>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* ── 8. In-Person Workshop ───────────────────── */}
-      <WorkshopCard
-        accessLevel={accessLevel}
-        isPreview={isPreview}
-        allModulesComplete={completedModules >= 8}
-        workshopLocation={workshopLocation}
-        onWorkshopNominated={onWorkshopNominated}
-      />
+      </section>
     </div>
   )
 }
