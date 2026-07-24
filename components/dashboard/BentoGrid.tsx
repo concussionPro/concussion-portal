@@ -420,7 +420,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
               </div>
               <p className="text-sm text-foreground font-semibold mb-1">The tools to manage what you learn to assess</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                SST Trainer (heart-rate-paced rehab) and SCAT6 baseline testing come with the full course — the instruments to manage patients through recovery, not just diagnose them. Enrol to unlock the course; the clinical suite rolls out to founding members.
+                SST Trainer (heart-rate-paced rehab) and SCAT6 baseline testing come with the full course — the instruments to manage patients through recovery, not just diagnose them. Enrol to unlock the course; the clinical suite is included and available now.
               </p>
             </Card>
           )}

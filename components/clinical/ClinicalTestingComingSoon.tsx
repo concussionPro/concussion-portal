@@ -25,8 +25,8 @@ export function ClinicalTestingComingSoon() {
               Clinical Testing suite
             </h1>
             <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
-              Measured-threshold exercise rehab and club baseline testing are being finalised with
-              founding clinics. You&rsquo;ll see it here the moment it opens.
+              Measured-threshold exercise rehab and club baseline testing are included with your CCM
+              or CRM enrolment. You&rsquo;ll see them here once your enrolment is active.
             </p>
           </div>
         </div>
