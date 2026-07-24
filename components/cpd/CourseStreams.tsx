@@ -89,8 +89,8 @@ const STREAMS: Record<StreamId, Stream> = {
     icon: HeartPulse,
     whoFor:
       'Accredited Exercise Physiologists and Exercise Scientists delivering concussion rehabilitation within EP scope.',
-    format: '8 modules, online and self-paced.',
-    cpd: '8 CPD hours',
+    format: '8 modules online and self-paced, plus the shared full-day hands-on workshop.',
+    cpd: '8 CPD hours online · 16 CPD hours with the workshop',
     credential: ESSA_LINE,
     covers: [
       'Sub-symptom-threshold aerobic exercise as first-line rehab',

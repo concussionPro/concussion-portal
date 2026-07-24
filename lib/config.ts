@@ -181,7 +181,9 @@ export const CONFIG = {
     // pending" and NEVER "accredited"; when true → "ESSA-accredited · 8 ESSA
     // CPD points". Flip to true ONLY on real approval. Bundled to the client
     // (not secret). This is the one switch that takes the EP stream live.
-    ESSA_ACCREDITED: false,
+    // GRANTED 2026-07-24 — ESSA accredited CRM (Concussion Rehab for EP's),
+    // 8 online + 8 F2F = 16 CPDs. Real ESSA badge in public/essa-endorsed.png.
+    ESSA_ACCREDITED: true,
     // International CRM live commerce (online-only, geo-priced) + the bundled
     // platform provisioning + the US$99/yr renewal subscription. FALSE = fully
     // inert: no international live checkout, no bundle-provisioning on ANY course

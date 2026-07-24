@@ -53,14 +53,14 @@ const buildFaqs = (accredited: boolean): FaqItem[] => [
   {
     q: 'Is it ESSA accredited?',
     a: accredited
-      ? 'Yes — the course is ESSA-accredited. The online modules carry 8 ESSA CPD points, and the complete package (with the practical day) totals 14 CPD hours.'
+      ? 'Yes — the course is ESSA-accredited. The online modules carry 8 ESSA CPD points, and the complete package (with the practical day) totals 16 CPD hours.'
       : 'ESSA CPD accreditation is pending — the course is in application and has been designed to ESSA CPD standards. We don’t claim accreditation we don’t yet hold; this page updates the moment it’s confirmed.',
   },
   {
     q: 'How many CPD points is it worth?',
     a: accredited
-      ? 'The online modules are 8 CPD hours, mapped to 8 ESSA CPD points. The complete package adds the full-day practical for 14 CPD hours total — most of a member’s annual Further-Education requirement in one course.'
-      : 'The online modules are 8 CPD hours and the complete package totals 14 CPD hours. ESSA CPD-point mapping is pending accreditation — we’ll confirm the point value here once it’s granted.',
+      ? 'The online modules are 8 CPD hours, mapped to 8 ESSA CPD points. The complete package adds the full-day practical for 16 CPD hours total — most of a member’s annual Further-Education requirement in one course.'
+      : 'The online modules are 8 CPD hours and the complete package totals 16 CPD hours. ESSA CPD-point mapping is pending accreditation — we’ll confirm the point value here once it’s granted.',
   },
   {
     q: 'Do I get the clinical tools, or just the lessons?',
@@ -230,8 +230,8 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {accredited
-                ? '8 ESSA CPD points online · ESSA Code & NASRHP aligned · up to 14 CPD hours'
-                : 'Accreditation pending · ESSA Code & NASRHP aligned · up to 14 CPD hours'}
+                ? '8 ESSA CPD points online · ESSA Code & NASRHP aligned · up to 16 CPD hours'
+                : 'Accreditation pending · ESSA Code & NASRHP aligned · up to 16 CPD hours'}
             </p>
           </div>
         </div>
@@ -392,7 +392,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                     Recommended
                   </span>
                   <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                    14 CPD
+                    16 CPD
                   </span>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -407,7 +407,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM Complete</h3>
               <p className="text-[12px] text-slate-500 mb-2 font-medium">Online modules + the full-day hands-on practical</p>
               <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-                Everything in Online — the course and all the tools — plus a supervised practical day. 14 CPD hours{accredited ? ' covers most of your annual ESSA requirement.' : ' in total (ESSA accreditation pending).'}
+                Everything in Online — the course and all the tools — plus a supervised practical day. 16 CPD hours{accredited ? ' covers most of your annual ESSA requirement.' : ' in total (ESSA accreditation pending).'}
               </p>
 
               <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
@@ -418,7 +418,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                   'Supervised SCAT6 / VOMS / BESS / cervical',
                   'Expert real-time feedback as you go',
                   'OSCE-assessed hands-on competency',
-                  '14 CPD hours total',
+                  '16 CPD hours total',
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-1.5 text-[12.5px]">
                     <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
@@ -638,7 +638,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             </a>
             <p className="text-xs text-muted-foreground mt-4">
               {accredited
-                ? 'ESSA-accredited · 8 ESSA CPD points online · up to 14 CPD hours'
+                ? 'ESSA-accredited · 8 ESSA CPD points online · up to 16 CPD hours'
                 : 'ESSA CPD accreditation pending · designed to ESSA CPD standards'}
             </p>
           </div>

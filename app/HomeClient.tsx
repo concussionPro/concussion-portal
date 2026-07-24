@@ -57,8 +57,8 @@ const HOME_STREAMS: Array<{
     endorseOrg: 'Exercise & Sports Science Australia',
     endorsePending: !ESSA_APPROVED,
     endorseSub: ESSA_APPROVED
-      ? `8 ESSA CPD points online · up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours`
-      : `Built to ESSA CPD standards · 8 hrs online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop`,
+      ? `8 ESSA CPD points online · up to 16 CPD hours`
+      : `Built to ESSA CPD standards · 8 hrs online, up to 16 with the workshop`,
     tagline: 'Prescribe the exercise rehab that moves recovery — measured-threshold aerobic training, in EP scope.',
     modules: [
       { n: '01', title: 'Concussion for the Exercise Physiologist', sub: 'The EP lens' },
