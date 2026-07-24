@@ -170,7 +170,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           {/* Punch stat bento */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
             <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">14<span className="text-base font-semibold">hrs</span></p>
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">16<span className="text-base font-semibold">hrs</span></p>
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD with day</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
@@ -492,7 +492,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                     ['Supervised SCAT6 / VOMS / BESS / cervical', false, true],
                     ['Expert 1:1 feedback', false, true],
                     ['OSCE competency assessment', false, true],
-                    ['Total CPD hours', '8', '14'],
+                    ['Total CPD hours', '8', '16'],
                   ] as [string, boolean | string, boolean | string][]).map(([feature, online, complete], i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                       <td className="py-3 px-4 text-slate-700">{feature}</td>

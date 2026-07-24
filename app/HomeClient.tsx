@@ -143,7 +143,14 @@ export default function HomeClient() {
                         Only rendered here on the home page; the in-content badge is
                         hidden when embedded so it never repeats. */}
                     {(() => {
-                      const inner = (
+                      // ESSA supplies a full horizontal lockup (its logo + "Accredited by
+                      // Exercise & Sports Science Australia" baked in) — render it ALONE at
+                      // its natural 5.5:1 ratio, correctly sized (no duplicate text, no
+                      // squish, no blur). OA is a compact square badge → logo + label.
+                      const isLockup = !s.endorsePending && s.endorseImg === '/essa-endorsed.png'
+                      const inner = isLockup ? (
+                        <Image src={s.endorseImg} alt={`Accredited by ${s.endorseOrg}`} width={264} height={48} className="h-[38px] sm:h-[44px] w-auto" />
+                      ) : (
                         <>
                           {!s.endorsePending && (
                             <Image src={s.endorseImg} alt={`Endorsed by ${s.endorseOrg}`} width={72} height={64} className="h-[52px] w-auto flex-none" />
