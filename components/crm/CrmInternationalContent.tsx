@@ -53,7 +53,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
 ]
 
-export default function CrmInternationalContent({ price, live = false }: { price: IntlPriceView; live?: boolean }) {
+export default function CrmInternationalContent({ price, live = false, hideNav = false }: { price: IntlPriceView; live?: boolean; hideNav?: boolean }) {
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
 
   // Live checkout (only when `live`): POST to the geo-priced international
@@ -107,7 +107,7 @@ export default function CrmInternationalContent({ price, live = false }: { price
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteNav />
+      {!hideNav && <SiteNav />}
       <InstrumentKeyframes />
 
       <div className="max-w-6xl mx-auto px-6 pb-12 md:pb-20 pt-[120px]">
