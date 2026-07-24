@@ -223,7 +223,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
             </p>
             <div className="mt-[18px] flex flex-wrap gap-3">
               <Link
-                href="/platform/founding"
+                href="/pricing"
                 className="rounded-[12px] bg-slate-900 px-5 py-[14px] text-[14px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
               >
                 Get your clinic code

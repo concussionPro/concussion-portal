@@ -233,7 +233,7 @@ function DocumentsPaywall({ clinicName }: { clinicName: string | null }) {
       >
         Unlock documents — subscribe <ArrowRight className="h-4 w-4" />
       </Link>
-      <p className="mt-3 text-xs text-slate-400">Founding clinics lock A$49/month for life. First 3 patients free.</p>
+      <p className="mt-3 text-xs text-slate-400">A$49/month, locked for life. First 3 patients free.</p>
     </div>
   )
 }

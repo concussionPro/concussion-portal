@@ -229,7 +229,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        {/* ── Clinical instruments — founding-period access with enrolment.
+        {/* ── Clinical instruments — included with CCM/CRM enrolment.
             Clinical Testing becomes a paid monthly subscription (owner,
             2026-07-05) — never promise 'included forever'. ── */}
         <section className="section-padding relative z-10">

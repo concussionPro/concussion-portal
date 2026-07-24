@@ -116,7 +116,7 @@ function Shell() {
             <div className="glass-premium rounded-2xl p-6 sm:p-8">
               <div className="text-center mb-6">
                 <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700 mb-2">
-                  <Lock className="mb-0.5 mr-1 inline h-3 w-3" /> Unlocks with enrolment · founding period
+                  <Lock className="mb-0.5 mr-1 inline h-3 w-3" /> Included with your CCM or CRM enrolment
                 </p>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">
                   Your patient instruments
