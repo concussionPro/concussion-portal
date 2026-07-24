@@ -115,7 +115,9 @@ function LearningSuiteInner() {
       href: `/modules/${nextScat.id}`,
       price: null,
     },
-  ]
+    // CRM (EP/ESSA stream) is NOT live until ESSA endorsement lands — filtered
+    // out below until CONFIG.FEATURES.ESSA_ACCREDITED flips.
+  ].filter((c) => c.key !== 'crm' || CONFIG.FEATURES.ESSA_ACCREDITED)
 
   return (
     <ProtectedRoute>

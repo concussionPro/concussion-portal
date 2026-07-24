@@ -76,6 +76,13 @@ const HOME_STREAMS: Array<{
 export default function HomeClient() {
   const [stream, setStream] = useState<'ccm' | 'crm'>('ccm')
 
+  // CRM (EP / ESSA stream) is NOT live until ESSA endorsement is actually
+  // granted. Until then the homepage presents CCM as the single course — no CRM
+  // tab, no "two streams" framing, no ESSA badge. Flip CONFIG.FEATURES.
+  // ESSA_ACCREDITED when the certificate lands and CRM re-appears everywhere.
+  const showCrm = ESSA_APPROVED
+  const visibleStreams = showCrm ? HOME_STREAMS : HOME_STREAMS.filter((s) => s.id === 'ccm')
+
   return (
     <>
       {/* Organization schema intentionally NOT emitted here — the root layout
@@ -99,11 +106,13 @@ export default function HomeClient() {
             course landing (same pricing-page design) between CCM and CRM. ── */}
         <section className="relative z-10 pt-[100px] md:pt-[116px] px-5 md:px-8">
           <div className="max-w-3xl mx-auto">
-            <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)] mb-4">
-              Two CPD streams — choose yours
-            </p>
-            <div role="tablist" aria-label="Choose your course stream" className="grid grid-cols-2 gap-3">
-              {HOME_STREAMS.map((s) => {
+            {showCrm && (
+              <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)] mb-4">
+                Two CPD streams — choose yours
+              </p>
+            )}
+            <div role="tablist" aria-label="Choose your course stream" className={showCrm ? 'grid grid-cols-2 gap-3' : 'max-w-md mx-auto'}>
+              {visibleStreams.map((s) => {
                 const active = s.id === stream
                 const Icon = s.icon
                 return (
@@ -173,7 +182,7 @@ export default function HomeClient() {
             hideNav so the homepage owns the single SiteNav; noPadTop trims the
             landing's own top offset since the tabs already provide it. */}
         <div className="relative z-10">
-          {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
+          {!showCrm || stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
         </div>
 
         {/* ── Workshop locations ───────────────────────────── */}
