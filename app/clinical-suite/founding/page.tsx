@@ -1,12 +1,7 @@
-import type { Metadata } from 'next'
-import FoundingClinicPage from '@/app/platform/founding/page'
+import { redirect } from 'next/navigation'
 
-export const metadata: Metadata = {
-  title: 'Become a founding clinic — SST Trainer | Concussion Education Australia',
-  description: 'Join the founding cohort for the concussion Clinical Testing suite: free through the founding period, your first 3 patients free, and your rate locked for life.',
-  alternates: { canonical: '/clinical-suite/founding' },
-}
-
+// Founding-clinic funnel retired — tools are now included with CCM/CRM
+// enrolment. Redirect to the course pricing so no dead links remain.
 export default function Page() {
-  return <FoundingClinicPage />
+  redirect('/pricing')
 }
