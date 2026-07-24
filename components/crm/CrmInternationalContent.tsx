@@ -23,7 +23,7 @@ import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/Instr
  *     — display always matches the checkout charge)
  *   - founding-cohort interest capture, no live checkout (market review)
  *
- * HONESTY GUARDRAILS: ACSM CECs are PENDING and ESSA is PENDING — never claim
+ * HONESTY GUARDRAILS: ACSM CECs are PENDING; ESSA is GRANTED (2026-07-24) — never claim
  * credits/accreditation not held; never imply ACSM endorses CRM (citing ACSM's
  * public position is fair use). The mTBI manuscript is under review, never
  * "published". No EP authored the course.
@@ -41,7 +41,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'What accreditation does it carry?',
-    a: 'The course is built to ACSM CEC standards and the Approved-Provider application is in progress; ESSA endorsement is pending — the content has been independently reviewed by two reviewers appointed by ESSA through its professional development endorsement process. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
+    a: 'The course is built to ACSM CEC standards and the Approved-Provider application is in progress; the course is ESSA-accredited (16 CPDs), independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
   },
   {
     q: 'Is there an ongoing cost?',
@@ -206,7 +206,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               Built to ACSM CEC &amp; ESSA CPD standards
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              ACSM Approved-Provider application in progress · ESSA endorsement pending · 8 CPD hours
+              ACSM Approved-Provider application in progress · ESSA-accredited · 8 CPD hours
             </p>
           </div>
         </div>
@@ -462,7 +462,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" strokeWidth={2} />
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
             <strong>Continuing-education status:</strong> the course is built to ACSM CEC standards
-            and its Approved-Provider application is in progress; ESSA endorsement is pending —
+            and its ACSM Approved-Provider application is in progress; the course is ESSA-accredited —
             content independently reviewed by two reviewers appointed by ESSA through its
             professional development endorsement process. We don&rsquo;t claim credits or
             accreditation we don&rsquo;t yet hold — this page updates the day each is confirmed.
@@ -547,7 +547,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               </a>
             )}
             <p className="text-xs text-muted-foreground mt-4">
-              ACSM Approved-Provider application in progress · ESSA endorsement pending · 8 CPD hours
+              ACSM Approved-Provider application in progress · ESSA-accredited · 8 CPD hours
             </p>
           </div>
         </div>

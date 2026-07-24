@@ -6,7 +6,7 @@ import { SstSuiteLanding } from '@/components/platform/SstSuiteLanding'
 /**
  * /sst — PUBLIC, standalone Clinical Testing landing (SST Trainer + baseline),
  * in the /preseason baseline visual style. Single page, tabbed between the
- * two tools, land on SST. Launches into the founding signup → portal, where
+ * two tools, land on SST. Launches into course enrolment; the tools are included, where
  * the tools are free-trial and course content is purchase-gated. Public and
  * indexable (top-level route, outside the noindex /platform layout).
  */
