@@ -156,7 +156,7 @@ export function Sidebar() {
               shown LOCKED with a carrot; only the free course + free items are
               open. Clinical Testing is normally clinicalGated-hidden, but preview
               users see it locked (visible-but-locked builds upgrade desire). */}
-          {navItems.filter((item) => (!item.ownerOnly || isOwnerEmail(sessionUser?.email)) && (!item.clinicalGated || showClinicalTesting || isPreview)).map((item) => {
+          {navItems.filter((item) => (!item.ownerOnly || isOwnerEmail(sessionUser?.email)) && (!item.clinicalGated || showClinicalTesting)).map((item) => {
             const isActive =
               pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
             const isLocked = (item.paidOnly || item.clinicalGated) && isPreview
