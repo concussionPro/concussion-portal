@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowRight, Check, ShieldCheck, HeartPulse, Activity, ClipboardList,
-  LineChart, Award, ChevronDown, ChevronUp, Building2, BookOpen, Stethoscope,
+  LineChart, Award, ChevronDown, ChevronUp, Building2, Stethoscope, ExternalLink,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
@@ -181,15 +181,30 @@ export default function CcmInternationalContent({ price, hideNav = false }: { pr
           </div>
         </div>
 
-        {/* Standards / endorsement — OA is HELD */}
-        <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
-          <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
+        {/* Standards / endorsement — OA is HELD. Real logo, links to the OA
+            endorsed-courses register (the public listing of CCM's endorsement). */}
+        <a
+          href="https://osteopathy.org.au/Web/Web/cpd/endorsed-courses.aspx?hkey=3c85c306-c65a-4a5d-90f1-782a78dedd86"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4 transition-colors hover:border-teal-300 hover:bg-teal-50/80"
+        >
+          <Image
+            src="/osteopathy-australia-endorsed.png"
+            alt="Endorsed by Osteopathy Australia"
+            width={80}
+            height={72}
+            className="h-12 sm:h-14 w-auto flex-shrink-0"
+          />
           <div className="text-left">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Endorsed CPD</p>
-            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">Endorsed by Osteopathy Australia</p>
+            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight inline-flex items-center gap-1.5">
+              Endorsed by Osteopathy Australia
+              <ExternalLink className="w-3.5 h-3.5 opacity-50" strokeWidth={2.2} />
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">8 CPD hours · certificate on completion · self-recorded for UK/overseas CPD</p>
           </div>
-        </div>
+        </a>
 
         {/* Training photo */}
         <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
