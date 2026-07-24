@@ -998,15 +998,17 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
     )
   }
 
-  // FREE/PREVIEW users read a free course (SCAT 101-103, or 104) INSIDE the
-  // portal architecture — the dashboard Sidebar, which shows every paid feature
-  // (Clinical Testing, Toolkit, References, CCM/CRM via Learning Suite) locked
-  // with an upgrade carrot. Paid users keep the course-player nav. (Owner: free
-  // course must live in the portal with zero access outside it, locked+carrot.)
-  const isPreview = accessLevel === 'preview'
+  // The FREE courses (SCAT 101-103 + the 104 awareness course) live INSIDE the
+  // portal architecture — the dashboard Sidebar — for EVERYONE, not just preview
+  // users (a paid tester must see it too). Free users get every paid feature
+  // (Clinical Testing, Toolkit, References, CCM/CRM via Learning Suite) shown
+  // LOCKED with an upgrade carrot; paid users see the same portal nav unlocked.
+  // Paid modules 1-8 keep the course-player nav for paid students. (Owner: the
+  // free course must live in the portal with the paid items locked + a carrot.)
+  const usePortalSidebar = isSCATModule || accessLevel === 'preview'
   return (
     <div className="flex min-h-screen bg-slate-50">
-      {isPreview ? (
+      {usePortalSidebar ? (
         <Sidebar />
       ) : (
         <NavComponent
@@ -1017,7 +1019,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
           visitedSections={visitedSections}
         />
       )}
-      <main className={cn("flex-1 w-full overflow-y-auto", isPreview ? "md:ml-64" : "md:ml-0")} ref={contentAreaRef}>
+      <main className={cn("flex-1 w-full overflow-y-auto", usePortalSidebar ? "md:ml-64" : "md:ml-0")} ref={contentAreaRef}>
         <div className="max-w-4xl mx-auto py-6 md:py-12 px-4 sm:px-6 md:px-8 lg:px-12">
           {/* Module Header — full on section 0, compact on subsequent sections */}
           {currentSectionIndex === 0 ? (
