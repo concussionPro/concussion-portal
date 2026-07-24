@@ -143,21 +143,20 @@ export default function HomeClient() {
                         Only rendered here on the home page; the in-content badge is
                         hidden when embedded so it never repeats. */}
                     {(() => {
-                      // ESSA supplies a full horizontal lockup (its logo + "Accredited by
-                      // Exercise & Sports Science Australia" baked in) — render it ALONE at
-                      // its natural 5.5:1 ratio, correctly sized (no duplicate text, no
-                      // squish, no blur). OA is a compact square badge → logo + label.
-                      const isLockup = !s.endorsePending && s.endorseImg === '/essa-endorsed.png'
-                      const inner = isLockup ? (
-                        <Image src={s.endorseImg} alt={`Accredited by ${s.endorseOrg}`} width={352} height={64} className="h-[52px] sm:h-[62px] w-auto" />
-                      ) : (
+                      // Both endorsements render IDENTICALLY: compact logo + label at
+                      // the same height. OA = square shield; ESSA = compact starburst+
+                      // wordmark mark (cropped from its lockup to match). Only the verb
+                      // differs — OA endorses, ESSA accredits.
+                      const accredits = s.endorseImg === '/essa-endorsed.png'
+                      const verb = s.endorsePending ? 'Endorsement pending' : (accredits ? 'Accredited by' : 'Endorsed by')
+                      const inner = (
                         <>
                           {!s.endorsePending && (
-                            <Image src={s.endorseImg} alt={`Endorsed by ${s.endorseOrg}`} width={72} height={64} className="h-[52px] w-auto flex-none" />
+                            <Image src={s.endorseImg} alt={`${verb} ${s.endorseOrg}`} width={200} height={100} className="h-[42px] sm:h-[48px] w-auto flex-none" />
                           )}
                           <span className="min-w-0 text-left">
                             <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-                              {s.endorsePending ? 'Endorsement pending' : 'Endorsed by'}
+                              {verb}
                             </span>
                             <span className="flex items-center gap-1 text-[14.5px] font-bold text-[var(--foreground)] leading-tight">
                               {s.endorseOrg}
