@@ -5,7 +5,7 @@ export const module3: Module = {
   title: 'Assessment That Is the Treatment',
   subtitle:
     'The Buffalo Concussion Treadmill/Bike Test — Exercise Physiology Rationale, Standardised Protocol, and the Symptom Threshold That Becomes the Prescription',
-  duration: '90 min',
+  duration: '60 min',
   points: 1.5,
   description:
     'The flagship Exercise Physiology module. Builds the physiological rationale for graded exertion testing — why a Balke-based ramp protocol can locate the autonomic and cerebrovascular ceiling — then walks through the complete Buffalo Concussion Treadmill Test (BCTT) and Buffalo Concussion Bike Test (BCBT) workflows: pre-screen and red-flag triage, baseline vitals and symptom scoring, the precise per-minute Balke protocol steps, the ≥3-point symptom-threshold criterion, and how the heart rate at symptom threshold (HRt) physiologically represents the point where impaired CBF regulation and autonomic function can no longer meet exertional demand. Covers test-retest reliability, converting HRt into an individualised sub-symptom-threshold prescription, structured re-testing to progress the ceiling, and VOMS, BESS and timed tandem gait as EP-scope serial outcome measures. 12-question quiz tests protocol detail, physiology and scope discipline.',

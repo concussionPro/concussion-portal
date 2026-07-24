@@ -5,7 +5,7 @@ export const module2: Module = {
   title: 'Recognition, Red Flags & Scope of Practice',
   subtitle:
     'Neurophysiology of Observable Signs, Red-Flag Pathophysiology and the Medico-Legal Scope Boundary',
-  duration: '30 min',
+  duration: '60 min',
   points: 0.5,
   description:
     'A science-degree-level treatment of concussion recognition and triage for the Accredited Exercise Physiologist. Covers the neurophysiological mechanisms underlying each symptom cluster, the pathophysiology of life-threatening red flags (intracranial haemorrhage, second-impact syndrome, cervical spine injury) and why each mandates immediate escalation, the structure and limits of SCAT6/SCOAT6 in EP hands, and the precise medico-legal rationale for the AEP\'s recognise-don\'t-diagnose boundary.',

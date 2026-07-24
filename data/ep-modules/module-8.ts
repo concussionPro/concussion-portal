@@ -4,7 +4,7 @@ export const module8: Module = {
   id: 208,
   title: 'Documentation, Communication & Referral',
   subtitle: 'Recording, Reporting and Closing the Loop With the Care Team',
-  duration: '30 min',
+  duration: '60 min',
   points: 0.5,
   description:
     'The shortest module in the program, and the one that protects everything you do in the other seven. Concussion rehabilitation is a shared-care activity: an Accredited Exercise Physiologist (AEP) almost never works alone, and the value of your reconditioning work is only realised when it is recorded clearly and communicated back to the referring clinician. This module covers the four EP-scope documents every concussion AEP produces — a BCTT/assessment record, a session and progression tracking sheet, an EP-to-referrer communication letter, and a return-to-activity progress note — each shown as a real, copyable artifact with the specific structure, framing language and scope boundary built in. It also covers the medico-legal three jobs of records, the record-within-scope principle, Australian Privacy Principles compliance, and a tool-neutral note on AI-assisted clinical documentation. The governing principle throughout: within your scope you recommend and report; you do not diagnose and you do not grant medical clearance for return to contact.',

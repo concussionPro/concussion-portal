@@ -4,7 +4,7 @@ export const module4: Module = {
   id: 204,
   title: 'Sub-Symptom-Threshold Aerobic Rehabilitation',
   subtitle: 'The Biochemistry of Recovery, the FITT Prescription, and Progressing the Physiological Ceiling',
-  duration: '90 min',
+  duration: '60 min',
   points: 1.5,
   description:
     'The core exercise-physiology module. Begins with the full biochemical and physiological explanation of WHY sub-symptom-threshold aerobic exercise drives concussion recovery — autonomic restoration (vagal tone, baroreflex sensitivity, HRV), normalisation of cerebral autoregulation and cerebrovascular CO₂ reactivity, exercise-induced BDNF upregulation and neuroplasticity/angiogenesis, reduced neuroinflammation via microglial phenotype shift, and systemic deconditioning reversal — all achieved below the threshold that would re-trigger the neurometabolic energy crisis. The heart-rate threshold (HRt) is explained as the measurable physiological ceiling of the autonomic/cerebrovascular impairment. The module then covers the full EP prescription skill set: FITT programming from HRt (80–90% band), the real-time ≥2-point symptom-exacerbation stop rule, the re-test-driven progression algorithm, interval and cross-training considerations, and managing the deconditioned or anxious patient. EP scope throughout: you prescribe, monitor and progress; you do not diagnose concussion or grant medical clearance.',
