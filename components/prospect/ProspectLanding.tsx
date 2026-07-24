@@ -191,6 +191,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               before the rest of the pitch. Gated to Purpose (ESSA-pending EP stream). */}
           {isPurpose && (
             <DualStreamTabs
+              essaApproved={CONFIG.FEATURES.ESSA_ACCREDITED}
               detailed={{
                 slug: clinic.slug,
                 accessKey: clinic.accessKey ?? '',

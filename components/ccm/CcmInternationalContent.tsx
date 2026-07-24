@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowRight, Check, ShieldCheck, HeartPulse, Activity, ClipboardList,
-  LineChart, Award, ChevronDown, ChevronUp, Building2, Stethoscope, ExternalLink,
+  LineChart, Award, ChevronDown, ChevronUp, Building2, Stethoscope, ExternalLink, FileText,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
@@ -398,6 +398,21 @@ export default function CcmInternationalContent({ price, hideNav = false }: { pr
             physiotherapy/allied-health scope of practice. Diagnosis and return-to-play clearance where
             red flags are present remain with the treating medical practitioner — the course teaches when
             and how to refer.
+          </p>
+        </div>
+
+        {/* Evidence base + published protocol — the citable method behind the tools */}
+        <div className="max-w-3xl mx-auto mb-8 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+          <FileText className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" strokeWidth={2} />
+          <p className="text-[13.5px] text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">Evidence-based, and the rehab method is published.</strong>{' '}
+            The course is referenced to a 140+ source peer-reviewed evidence base, and the
+            sub-symptom-threshold rehabilitation method behind the SST Trainer is a citable open-access
+            protocol — <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise
+            Rehabilitation after Concussion (mTBI)</em>, Lewis Z. (2026), Zenodo, CC-BY-4.0,{' '}
+            <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="text-accent font-semibold hover:underline">
+              doi.org/10.5281/zenodo.21482634
+            </a>.
           </p>
         </div>
 

@@ -237,13 +237,13 @@ export default function HomeClient() {
           <div className="max-w-[960px] mx-auto">
             <div className="text-center mb-8 md:mb-10">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
-                Yours with enrolment through the founding period
+                Included with your enrolment
               </span>
               <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
                 Two clinical instruments, <span className="text-gradient">not just modules</span>
               </h2>
               <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-xl mx-auto">
-                Enrol during the founding period and your clinic code activates both instruments: prescribe
+                Enrol and your clinic code activates both instruments: prescribe
                 measured-threshold exercise rehab from your patients&apos; own watches, and run
                 self-administered SCAT6 baselines for whole clubs.
               </p>

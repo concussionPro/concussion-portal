@@ -10,6 +10,7 @@ import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getModulesMeta } from '@/data/module-meta'
 import { getEpModulesMeta } from '@/data/ep-modules'
 import { DualStreamTabs } from '@/components/prospect/DualStreamTabs'
+import { CONFIG } from '@/lib/config'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -93,6 +94,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
                drive the clickable module list below — CCM module 1 is the live
                trial, CRM is preview-only until ESSA approval. No duplicate list. */
             <DualStreamTabs
+              essaApproved={CONFIG.FEATURES.ESSA_ACCREDITED}
               detailed={{
                 slug: clinic.slug,
                 accessKey: clinic.accessKey ?? '',
