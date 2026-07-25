@@ -5,6 +5,7 @@ import { updateLastLogin } from '@/lib/users'
 import { createJWTSession, verifySessionToken, type SessionData } from '@/lib/jwt-session'
 import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
 import { sql } from '@/lib/db'
+import { userOwnsCrm } from '@/lib/crm-course'
 
 /** Ensure the used_magic_tokens table exists (runs once per cold start) */
 let tableEnsured = false
@@ -38,14 +39,37 @@ function existingValidSession(request: NextRequest): SessionData | null {
   return verifySessionToken(cookie)
 }
 
-/** Where an already-logged-in user should land (same rules as fresh login). */
-function sessionRedirectTarget(session: SessionData, redirect: string | null): string {
-  let target = session.accessLevel === 'preview' ? '/modules/101' : '/dashboard'
+/**
+ * Where a user should land after auth.
+ *
+ * CRM (EP stream) buyers carry access_level 'preview' because the streams are
+ * isolated (lib/crm-course.ts) — so the plain preview rule dropped a PAYING EP
+ * customer onto /modules/101, the free SCAT course, every time they used their
+ * magic link. Resolve CRM ownership first and send them to their own course.
+ */
+async function resolveLandingTarget(
+  accessLevel: string,
+  email: string,
+  redirect: string | null,
+): Promise<string> {
+  const isFreeTier = accessLevel === 'preview' && !(await userOwnsCrm(email))
+  let target = accessLevel === 'preview'
+    ? (isFreeTier ? '/modules/101' : '/ep-course')
+    : '/dashboard'
+  // Free-tier users may deep-link ONLY into module content; a CRM buyer may
+  // also deep-link into their own course.
   if (redirect && isValidRedirect(redirect) &&
-      (session.accessLevel !== 'preview' || redirect.startsWith('/modules/'))) {
+      (accessLevel !== 'preview' ||
+        redirect.startsWith('/modules/') ||
+        (!isFreeTier && redirect.startsWith('/ep-course')))) {
     target = redirect
   }
   return target
+}
+
+/** Where an already-logged-in user should land (same rules as fresh login). */
+function sessionRedirectTarget(session: SessionData, redirect: string | null): Promise<string> {
+  return resolveLandingTarget(session.accessLevel, session.email, redirect)
 }
 
 function escapeHtml(s: string): string {
@@ -144,7 +168,7 @@ export async function GET(request: NextRequest) {
       // Dead link but the browser is already logged in? Send them through.
       const session = existingValidSession(request)
       if (session) {
-        return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+        return NextResponse.redirect(new URL(await sessionRedirectTarget(session, redirect), request.url), 303)
       }
       await logAuthFailure({
         endpoint: '/api/auth/verify',
@@ -165,7 +189,7 @@ export async function GET(request: NextRequest) {
       // still-valid session, just take them where they were headed.
       const session = existingValidSession(request)
       if (session) {
-        return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+        return NextResponse.redirect(new URL(await sessionRedirectTarget(session, redirect), request.url), 303)
       }
       return new NextResponse(
         errorHtml('Link Already Used', 'This login link has already been used. Please request a new one.'),
@@ -231,7 +255,7 @@ export async function POST(request: NextRequest) {
       const session = existingValidSession(request)
       if (session) {
         if (isFormPost) {
-          return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+          return NextResponse.redirect(new URL(await sessionRedirectTarget(session, redirect), request.url), 303)
         }
         return NextResponse.json({
           success: true,
@@ -273,7 +297,7 @@ export async function POST(request: NextRequest) {
       const session = existingValidSession(request)
       if (session) {
         if (isFormPost) {
-          return NextResponse.redirect(new URL(sessionRedirectTarget(session, redirect), request.url), 303)
+          return NextResponse.redirect(new URL(await sessionRedirectTarget(session, redirect), request.url), 303)
         }
         return NextResponse.json({
           success: true,
@@ -332,11 +356,7 @@ export async function POST(request: NextRequest) {
       // welcome CTA lands them IN Module 1, one click, authenticated). All
       // other redirect targets stay blocked for preview so a link can't
       // point them at gated pages that bounce.
-      let target = tokenData.accessLevel === 'preview' ? '/modules/101' : '/dashboard'
-      if (redirect && isValidRedirect(redirect) &&
-          (tokenData.accessLevel !== 'preview' || redirect.startsWith('/modules/'))) {
-        target = redirect
-      }
+      const target = await resolveLandingTarget(tokenData.accessLevel, tokenData.email, redirect)
       response = NextResponse.redirect(new URL(target, request.url), 303)
     } else {
       response = NextResponse.json({

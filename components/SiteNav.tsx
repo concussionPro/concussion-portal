@@ -19,7 +19,9 @@ const BASE_NAV_ITEMS = [
   { label: 'Blog', path: '/blog', accent: false },
 ]
 
-type AuthState = { accessLevel: string } | null // null = loading/unknown
+// ownsCrm rides along because a CRM (EP) buyer's accessLevel is 'preview' —
+// without it the nav sent a paying EP customer to the free SCAT course.
+type AuthState = { accessLevel: string; ownsCrm: boolean } | null // null = loading/unknown
 
 export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   const pathname = usePathname()
@@ -34,12 +36,12 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.success && data.user) {
-          setAuth({ accessLevel: data.user.accessLevel })
+          setAuth({ accessLevel: data.user.accessLevel, ownsCrm: data.user.ownsCrm === true })
         } else {
-          setAuth({ accessLevel: '' }) // not logged in
+          setAuth({ accessLevel: '', ownsCrm: false }) // not logged in
         }
       })
-      .catch(() => setAuth({ accessLevel: '' }))
+      .catch(() => setAuth({ accessLevel: '', ownsCrm: false }))
   }, [])
 
   // Demo watermark sits at top:0 z-[100]; if present, push nav below it.
@@ -67,7 +69,13 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   } else if (auth.accessLevel === '') {
     navItems.push({ label: 'Login', path: '/login', accent: false })
   } else if (auth.accessLevel === 'preview') {
-    navItems.push({ label: 'My Course', path: '/scat-course', accent: false })
+    // A CRM buyer is 'preview' on the CCM ladder but a paying customer of the
+    // EP stream — "My Course" must be THEIR course, not the free SCAT one.
+    navItems.push({
+      label: 'My Course',
+      path: auth.ownsCrm ? '/ep-course' : '/scat-course',
+      accent: false,
+    })
   } else {
     navItems.push({ label: 'Dashboard', path: '/dashboard', accent: false })
   }
@@ -76,7 +84,7 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-    setAuth({ accessLevel: '' })
+    setAuth({ accessLevel: '', ownsCrm: false })
     router.push('/')
   }
 

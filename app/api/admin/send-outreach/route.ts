@@ -118,6 +118,12 @@ export async function POST(request: NextRequest) {
     SELECT id, email, name, access_level, nurture_unsubscribed, is_test
     FROM users
     WHERE access_level = 'preview'
+      -- CRM (EP stream) buyers carry access_level 'preview' (isolated streams,
+      -- lib/crm-course.ts) — never treat a paying EP customer as a free lead.
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(email) AND cp.course_slug = 'crm'
+      )
     ORDER BY created_at DESC
   `
 

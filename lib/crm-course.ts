@@ -10,6 +10,7 @@
  */
 import { CONFIG, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
 import { userOwnsCourse } from '@/lib/course-purchases'
+import { sql } from '@/lib/db'
 
 /** Owns the online CRM course → unlocks /ep-course content. */
 export const CRM_COURSE_SLUG = 'crm'
@@ -21,6 +22,32 @@ export type CrmTier = 'online' | 'complete' | 'upgrade'
 /** True when this buyer owns the online CRM course (the /ep-course content gate). */
 export function userOwnsCrm(email: string): Promise<boolean> {
   return userOwnsCourse(email, CRM_COURSE_SLUG)
+}
+
+/**
+ * Emails of every CRM owner, lowercased.
+ *
+ * A CRM buyer's `users.access_level` stays 'preview' (the streams are isolated),
+ * so every query shaped `WHERE access_level = 'preview'` silently scoops up
+ * PAYING EP customers as free-course leads — the free-trial conversion cron,
+ * lead scoring, SCAT-completer follow-ups, warming pushes. Filter those lanes
+ * with this set.
+ *
+ * FAILS CLOSED-ish by design: on a DB error it returns null, and callers must
+ * treat null as "can't prove they're free — skip the funnel" rather than
+ * emailing a paying customer a free-course pitch.
+ */
+export async function crmOwnerEmails(): Promise<Set<string> | null> {
+  try {
+    const { rows } = await sql<{ user_email: string }>`
+      SELECT LOWER(user_email) AS user_email
+      FROM course_purchases
+      WHERE course_slug = ${CRM_COURSE_SLUG}
+    `
+    return new Set(rows.map((r) => r.user_email))
+  } catch {
+    return null
+  }
 }
 
 /**

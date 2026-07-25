@@ -1,8 +1,8 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, Stethoscope, Sparkles, ArrowRight } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, MapPin, Stethoscope, Sparkles, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
@@ -52,6 +52,12 @@ export function Sidebar() {
   const scatCompletedModules = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 103 && p.completed
   ).length
+  // EP/CRM modules are namespaced 201-208 in the shared progress store
+  // (EP_MODULE_ID_OFFSET) — getTotalCompletedModules() only counts CCM 1-8, so a
+  // CRM buyer's ring would otherwise read 0/8 forever.
+  const crmCompletedModules = Object.values(progress).filter(
+    (p) => p.moduleId >= 201 && p.moduleId <= 208 && p.completed
+  ).length
   const { user: sessionUser } = useSession()
   const clinicalAccess = useClinicalAccess()
   const showClinicalTesting = ['owner', 'course', 'sst'].includes(clinicalAccess)
@@ -62,13 +68,24 @@ export function Sidebar() {
     accessLevel: sessionUser.accessLevel || 'preview',
     enrolledAt: sessionUser.createdAt || '',
   } : null
-  // A CRM buyer's access_level stays 'preview' (the streams are isolated —
-  // lib/crm-course.ts), so gating on accessLevel ALONE showed a paying EP
-  // customer a free-tier sidebar: every tool padlocked, the SCAT progress ring,
-  // and an "Unlock everything — enrol A$497" CCM upsell. Treat a CRM owner as
-  // a paying user everywhere the lock/upsell logic runs.
+  // THREE tiers, not two. A CRM buyer's access_level stays 'preview' (streams
+  // are isolated — lib/crm-course.ts), so a single isPreview flag was wrong in
+  // both directions: keyed on accessLevel it showed a paying EP customer a
+  // free-trial sidebar; flipped off wholesale it would have unlocked the CCM
+  // paid tools they never bought.
+  //   isCcmPaid  — bought CCM: CCM content + every CCM paid tool
+  //   ownsCrm    — bought CRM: /ep-course ONLY; CCM tools stay locked (siloed)
+  //   isFreeTier — bought neither: the free SCAT trial funnel
   const ownsCrm = sessionUser?.ownsCrm === true
-  const isPreview = user?.accessLevel === 'preview' && !ownsCrm
+  const isCcmPaid = user?.accessLevel === 'online-only' || user?.accessLevel === 'full-course'
+  const isFreeTier = !isCcmPaid && !ownsCrm
+  // In-person upgrade price for the user's NOMINATED city (single source:
+  // upgradePriceFor tracks the early-bird window). No city yet → the generic
+  // early-bird difference, and /upgrade collects the nomination.
+  const upgradeCitySlug = sessionUser?.workshopLocation || null
+  const upgradePrice = upgradePriceFor(upgradeCitySlug)
+  const upgradeCityLabel =
+    Object.values(CONFIG.LOCATIONS).find((l) => l.slug === upgradeCitySlug)?.city ?? null
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showRestoredBanner, setShowRestoredBanner] = useState(false)
 
@@ -155,8 +172,8 @@ export function Sidebar() {
         {/* CPD Progress Ring */}
         <div className="mb-8">
           <ProgressRing
-            progress={isPreview ? scatCompletedModules : completedModules}
-            total={isPreview ? 3 : 8}
+            progress={isCcmPaid ? completedModules : ownsCrm ? crmCompletedModules : scatCompletedModules}
+            total={isFreeTier ? 3 : 8}
           />
         </div>
 
@@ -175,11 +192,16 @@ export function Sidebar() {
           ).map((item) => {
             const isActive =
               pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-            // Clinical Testing only reaches this list when showClinicalTesting is
-            // true — i.e. the visitor is ENTITLED (owner / course / sst). Padlocking
-            // it on top of that told an entitled user they were locked out of a
-            // page that lets them straight in. Only paidOnly items lock.
-            const isLocked = item.paidOnly && isPreview
+            // paidOnly items are CCM entitlements (Toolkit, Outreach Kit,
+            // References, Complete Reference) — they lock for anyone without CCM,
+            // INCLUDING CRM buyers. The destination pages gate on accessLevel
+            // themselves, so unlocking the icon for a CRM buyer would only have
+            // sent them to a page that turns them away.
+            // Clinical Testing is different: it only reaches this list when
+            // showClinicalTesting is true (owner/course/sst entitled), so
+            // padlocking it told an entitled user they were locked out of a page
+            // that lets them straight in.
+            const isLocked = item.paidOnly && !isCcmPaid
 
             if (isLocked) {
               return (
@@ -227,8 +249,10 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Upgrade carrot — preview users only. The reward for the locks above. */}
-        {isPreview && (
+        {/* Upgrade carrot — genuinely FREE-tier users only. A CRM buyer is a
+            paying customer of the other stream, not a free-trial lead, and must
+            never be shown the free-course upgrade funnel. */}
+        {isFreeTier && (
           <Link
             href="/pricing"
             onClick={closeMobileMenu}
@@ -243,6 +267,35 @@ export function Sidebar() {
             </p>
             <span className="inline-flex items-center gap-1 text-[12px] font-bold bg-white/15 rounded-lg px-2.5 py-1 group-hover:bg-white/25 transition-colors">
               Enrol — A${CONFIG.COURSE.PRICE_ONLINE}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </Link>
+        )}
+
+        {/* In-person upgrade — ONLINE-ONLY buyers, on every dashboard page.
+            Upgrade CTAs existed on individual pages (dashboard bento, module
+            completion, references, toolkit) but never on the sidebar, the one
+            surface present throughout the dash. Price is DERIVED from
+            upgradePriceFor() for the user's nominated city — never hardcoded —
+            so it tracks the early-bird window automatically. */}
+        {user?.accessLevel === 'online-only' && (
+          <Link
+            href="/upgrade"
+            onClick={closeMobileMenu}
+            className="mt-3 block rounded-xl border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white p-3.5 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all group"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin className="w-4 h-4 text-amber-700" strokeWidth={2} />
+              <span className="text-sm font-bold text-amber-900">Add the practical day</span>
+            </div>
+            <p className="text-[11px] text-amber-900/75 leading-snug mb-2">
+              {upgradeCityLabel
+                ? `Hands-on VOMS, BESS, cervical & vestibular assessment — ${upgradeCityLabel}.`
+                : 'Hands-on VOMS, BESS, cervical & vestibular assessment. Nominate your city.'}
+              {' '}Takes you to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
+            </p>
+            <span className="inline-flex items-center gap-1 text-[12px] font-bold bg-amber-100 text-amber-900 rounded-lg px-2.5 py-1 group-hover:bg-amber-200 transition-colors">
+              Upgrade — A${upgradePrice}
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </Link>

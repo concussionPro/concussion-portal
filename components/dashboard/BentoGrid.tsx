@@ -24,6 +24,7 @@ import { useSession } from '@/contexts/SessionContext'
 import { HubSeatsCard } from '@/components/dashboard/HubSeatsCard'
 import { isOwnerEmail } from '@/lib/owner'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
+import { useCourseTier } from './useCourseTier'
 import Link from 'next/link'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { COURSES, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
@@ -159,7 +160,8 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   } = useProgress()
 
   const accessLevel = user?.accessLevel || accessLevelProp || ''
-  const isPreview = accessLevel === 'preview'
+  const { isFreeTier: bentoFreeTier, ownsCrm: bentoOwnsCrm, isCcmPaid: isCcmPaidTier } = useCourseTier(accessLevel)
+  const isPreview = bentoFreeTier
 
   // SST Trainer + Clinical Testing must stay invisible to EVERYONE but the owner
   // until the clinical suite launches — including paid users (owner directive).
@@ -209,9 +211,20 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
     (p) => p.moduleId >= 101 && p.moduleId <= 103 && !!p.startedAt && !p.completed,
   ).length
 
-  const displayModules = isPreview ? scatCompleted : completedModules
+  // CRM (EP) buyers are access_level 'preview' but own an 8-module paid stream
+  // namespaced 201-208 — counting them off the CCM 1-8 range left their tiles
+  // reading 0/8 forever, and counting them as free showed SCAT stats.
+  const crmCompleted = Object.values(progress).filter(
+    (p) => p.moduleId >= 201 && p.moduleId <= 208 && p.completed,
+  ).length
+  const crmInProgress = Object.values(progress).filter(
+    (p) => p.moduleId >= 201 && p.moduleId <= 208 && !!p.startedAt && !p.completed,
+  ).length
+  const streamCompleted = bentoOwnsCrm && !isCcmPaidTier ? crmCompleted : completedModules
+
+  const displayModules = isPreview ? scatCompleted : streamCompleted
   const displayMaxModules = isPreview ? 3 : 8
-  const displayCPD = isPreview ? scatCPD : cpdPoints
+  const displayCPD = isPreview ? scatCPD : bentoOwnsCrm && !isCcmPaidTier ? crmCompleted : cpdPoints
   // Free SCAT6 Mastery course = 1 CPD hour (awarded when all 3 modules complete).
   const displayMaxCPD = isPreview ? 1 : 8
   // The CPD hour is awarded all-at-once on completion, so for preview users the
@@ -223,6 +236,8 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
 
   const inProgressCount = isPreview
     ? scatInProgress
+    : bentoOwnsCrm && !isCcmPaidTier
+    ? crmInProgress
     : Object.values(progress).filter(
         (p) => p.moduleId >= 1 && p.moduleId <= 8 && !!p.startedAt && !p.completed,
       ).length

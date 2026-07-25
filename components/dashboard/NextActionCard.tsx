@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
+import { useCourseTier } from './useCourseTier'
 import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2, Lock, GraduationCap } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -34,7 +35,13 @@ export function NextActionCard() {
 
   const accessLevel = user?.accessLevel || ''
   const userEmail = user?.email || ''
-  const isPreview = accessLevel === 'preview'
+  // A CRM buyer is access_level 'preview' but a paying EP customer — this card
+  // drives module targets AND the certificate type, so classifying them as free
+  // pointed them at SCAT modules and would have issued a SCAT certificate.
+  // Their own stream lives at /ep-course with its own card, so this CCM/SCAT
+  // card simply does not apply to them.
+  const { isFreeTier, ownsCrm } = useCourseTier(accessLevel)
+  const isPreview = isFreeTier
   const paidModules = getModulesMeta()
   const scatModules = getSCATModulesMeta()
   const modules = isPreview ? scatModules : paidModules
@@ -162,6 +169,13 @@ export function NextActionCard() {
     } finally {
       setPoolSubmitting(false)
     }
+  }
+
+  // CRM-only buyers have their own stream dashboard (/ep-course/dashboard).
+  // This card speaks CCM/SCAT — modules, progress, certificate type — so
+  // rendering it for them would offer a CCM certificate they haven't earned.
+  if (ownsCrm && accessLevel !== 'online-only' && accessLevel !== 'full-course') {
+    return null
   }
 
   /* ── All Complete ───────────────────────────── */

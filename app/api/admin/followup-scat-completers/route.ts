@@ -32,6 +32,13 @@ async function findTargets() {
     FROM users u
     JOIN user_progress up ON up.user_id = u.id
     WHERE u.access_level = 'preview'
+      -- A CRM (EP stream) buyer's access_level stays 'preview' because the two
+      -- streams are isolated (lib/crm-course.ts). Excluded here so a PAYING EP
+      -- customer is never swept into the free-course funnel.
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = 'crm'
+      )
       AND COALESCE(u.nurture_unsubscribed, false) = false
   `
   const targets: Array<{ id: string; email: string; name: string }> = []

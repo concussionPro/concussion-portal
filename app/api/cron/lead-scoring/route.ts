@@ -74,6 +74,12 @@ export async function GET(request: NextRequest) {
     SELECT id, email, name, created_at, last_login_at, signup_source
     FROM users
     WHERE access_level = 'preview'
+      -- CRM (EP stream) buyers carry access_level 'preview' (isolated streams,
+      -- lib/crm-course.ts) — never treat a paying EP customer as a free lead.
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(email) AND cp.course_slug = 'crm'
+      )
       AND created_at > ${ninetyDaysAgo.toISOString()}
       AND COALESCE(is_test, false) = false
     ORDER BY created_at DESC
@@ -90,6 +96,13 @@ export async function GET(request: NextRequest) {
     FROM user_progress up
     JOIN users u ON up.user_id = u.id
     WHERE u.access_level = 'preview'
+      -- A CRM (EP stream) buyer's access_level stays 'preview' because the two
+      -- streams are isolated (lib/crm-course.ts). Excluded here so a PAYING EP
+      -- customer is never swept into the free-course funnel.
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = 'crm'
+      )
       AND u.created_at > ${ninetyDaysAgo.toISOString()}
   `
   const progressMap = new Map<string, Record<string, { completed?: boolean }>>()

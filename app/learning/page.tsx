@@ -47,12 +47,16 @@ function LearningSuiteInner() {
   const freeShortCourseComplete = isModuleComplete(freeShortCourse.id)
 
   const accessLevel = user?.accessLevel || ''
-  // CRM ownership is course_purchases-based, NOT access_level (streams are
-  // isolated — lib/crm-course.ts), so a CRM-only buyer carries 'preview'.
-  // Without this they saw the free-tier Learning Suite AND their own paid
-  // course rendered as locked.
+  // THREE tiers (see Sidebar). CRM ownership is course_purchases-based, NOT
+  // access_level, so a CRM-only buyer carries 'preview'. They are NOT a
+  // free-trial lead (don't show them the SCAT funnel as "their" course) and NOT
+  // a CCM buyer (CCM modules/tools stay locked — the streams stay siloed).
   const ownsCrm = user?.ownsCrm === true
-  const isPreview = accessLevel === 'preview' && !ownsCrm
+  const isPaidCcm = accessLevel === 'online-only' || accessLevel === 'full-course'
+  const isFreeTier = !isPaidCcm && !ownsCrm
+  // `isPreview` drives the CCM-vs-free framing of the header/progress panel. A
+  // CRM buyer gets neither — their own stream panel is selected below.
+  const isPreview = isFreeTier
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
   const studyTime = getTotalStudyTime()
@@ -63,18 +67,27 @@ function LearningSuiteInner() {
   ).length
   // SCAT course = 1 CPD hour (awarded on completing all 3 modules)
   const scatCPD = scatCompleted === 3 ? 1 : 0
+  // EP/CRM modules are namespaced 201-208 in the shared progress store
+  // (EP_MODULE_ID_OFFSET); getTotalCompletedModules() counts CCM 1-8 only, so a
+  // CRM buyer's panel would read 0/8 forever off the CCM counter.
+  const crmCompleted = Object.values(progress).filter(
+    (p) => p.moduleId >= 201 && p.moduleId <= 208 && p.completed,
+  ).length
+  // The completed-module count for whichever 8-module stream this user owns.
+  const streamCompleted = isPaidCcm ? completedModules : crmCompleted
 
   const handleModuleClick = (moduleId: number) => {
     router.push(`/modules/${moduleId}`)
   }
 
-  // Choose which modules to show based on access level (used by the resume banner)
-  const modules = isPreview ? scatModules : paidModules
+  // Which course's modules drive the "resume where you left off" banner. A CRM
+  // buyer must NOT be pointed at CCM modules they don't own, nor at the free
+  // SCAT funnel — they resume their own stream.
+  const modules = isPaidCcm ? paidModules : isFreeTier ? scatModules : []
 
   // COURSES — the Learning Suite lists COURSES (not one course's modules).
   // Each course opens its modules in the course player. Paid courses the user
   // doesn't own show locked + price (visible-but-locked upsell).
-  const isPaidCcm = accessLevel === 'online-only' || accessLevel === 'full-course'
   const nextCcm = paidModules.find((m) => !isModuleComplete(m.id)) || paidModules[0]
   const nextScat = scatModules.find((m) => !isModuleComplete(m.id)) || scatModules[0]
   type CourseCard = {
@@ -102,7 +115,7 @@ function LearningSuiteInner() {
       description: 'Graded exercise testing, heart-rate-threshold prescription, phenotype reconditioning and graded return-to-activity — the exercise-physiology course.',
       moduleCount: 8,
       cpd: 8,
-      completed: 0,
+      completed: crmCompleted,
       // A CRM owner opens their course; everyone else gets the sales page.
       // Was hardcoded `accessible: false`, which locked paying EP buyers out of
       // the card for the course they had just bought.
@@ -142,11 +155,17 @@ function LearningSuiteInner() {
             <div className="glass rounded-xl p-6 mb-5 border-l-4 border-[#64a8b0]">
               <div className="border-b border-slate-200/50 pb-4 mb-4">
                 <h1 className="text-2xl font-bold text-foreground mb-1 tracking-tight">
-                  {isPreview ? 'SCAT6/SCOAT6 Mastery Course' : 'Clinical Mastery Training'}
+                  {isFreeTier
+                    ? 'SCAT6/SCOAT6 Mastery Course'
+                    : isPaidCcm
+                      ? 'Clinical Mastery Training'
+                      : 'Concussion Rehab Mastery'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {isPreview
+                  {isFreeTier
                     ? 'Free SCAT6, SCOAT6 & Child SCAT6 Assessment Training'
+                    : !isPaidCcm
+                    ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD Points · Exercise Rehabilitation for Concussion`
                     : accessLevel === 'full-course'
                     ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} Online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management`
                     : `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD Hours · Evidence-Based Concussion Management`}
@@ -158,13 +177,15 @@ function LearningSuiteInner() {
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Modules Complete</div>
                   <div className="text-xl font-bold text-gradient">
-                    {isPreview ? `${scatCompleted} / 3` : `${completedModules} / 8`}
+                    {isFreeTier ? `${scatCompleted} / 3` : `${streamCompleted} / 8`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
-                  <div className="text-xs font-medium text-muted-foreground mb-1">{isPreview ? 'Free CPD Hours' : 'Online CPD Hours'}</div>
+                  <div className="text-xs font-medium text-muted-foreground mb-1">
+                    {isFreeTier ? 'Free CPD Hours' : isPaidCcm ? 'Online CPD Hours' : 'ESSA CPD Points'}
+                  </div>
                   <div className="text-xl font-bold text-gradient">
-                    {isPreview ? `${scatCPD} / 1` : `${cpdPoints} / 8`}
+                    {isFreeTier ? `${scatCPD} / 1` : `${streamCompleted} / 8`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
@@ -175,8 +196,8 @@ function LearningSuiteInner() {
 
               {/* Overall Progress Bar */}
               {(() => {
-                const totalModules = isPreview ? 3 : 8
-                const done = isPreview ? scatCompleted : completedModules
+                const totalModules = isFreeTier ? 3 : 8
+                const done = isFreeTier ? scatCompleted : streamCompleted
                 const pct = Math.round((done / totalModules) * 100)
                 return (
                   <div className="mt-4">
@@ -198,7 +219,7 @@ function LearningSuiteInner() {
             {/* Course Framing Card — shown to ALL users (free/preview included —
                 they're the segment that most needs orientation) until they start
                 their first module */}
-            {showFramingCard && !getModuleProgress(isPreview ? 101 : 1).startedAt && (
+            {showFramingCard && !getModuleProgress(isFreeTier ? 101 : isPaidCcm ? 1 : 201).startedAt && (
               <div className="glass rounded-xl p-5 mb-5 border-l-4 border-teal-500 relative">
                 <button
                   onClick={(e) => { e.stopPropagation(); localStorage.setItem('framing-card-dismissed', 'true'); setShowFramingCard(false) }}
@@ -209,9 +230,11 @@ function LearningSuiteInner() {
                 </button>
                 <h3 className="text-sm font-bold text-foreground mb-1">How This Course Works</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {isPreview
+                  {isFreeTier
                     ? '3 short modules take you through SCAT6, SCOAT6 and Child SCAT6 — about an hour all up, with 1 CPD hour and a certificate on completion. The full program adds 8 clinical modules (8 CPD hours online, up to 14 with the hands-on workshop).'
-                    : '8 online modules build your clinical reasoning foundation. The full-day practical workshop (full-course access) is where you apply assessment skills hands-on.'}
+                    : isPaidCcm
+                    ? '8 online modules build your clinical reasoning foundation. The full-day practical workshop (full-course access) is where you apply assessment skills hands-on.'
+                    : '8 online modules build your exercise-rehabilitation reasoning — graded testing, heart-rate-threshold prescription and graded return to activity. The shared practical day is where you apply it hands-on.'}
                 </p>
               </div>
             )}

@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { X, Play, Award, BookOpen, Clock, GraduationCap, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/contexts/SessionContext'
+import { useCourseTier } from './useCourseTier'
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
   const { user } = useSession()
+  const { ownsCrm, isFreeTier } = useCourseTier()
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
@@ -43,8 +45,9 @@ export function WelcomeModal() {
   const handleStartModule = () => {
     localStorage.setItem('hasSeenWelcome', 'true')
     setIsOpen(false)
-    const isPreviewUser = user?.accessLevel === 'preview'
-    router.push(isPreviewUser ? '/modules/101' : '/modules/1')
+    // A CRM buyer is 'preview' on the CCM ladder — sending them to /modules/101
+    // dropped a paying EP customer into the free SCAT course.
+    router.push(ownsCrm ? '/ep-course' : isFreeTier ? '/modules/101' : '/modules/1')
   }
 
   const handleViewModules = () => {
@@ -56,10 +59,13 @@ export function WelcomeModal() {
   if (!isOpen) return null
 
   const firstName = user?.name?.split(' ')[0] || 'there'
-  const isPreviewUser = user?.accessLevel === 'preview'
+  // Only the genuinely-free tier gets the SCAT framing — a CRM buyer is
+  // 'preview' on the CCM ladder but a paying customer of the EP stream.
+  const isPreviewUser = isFreeTier
   const isFullCourse = user?.accessLevel === 'full-course'
-  // Free SCAT6 Mastery course awards 1 CPD hour on completion; online course = 8.
-  const cpdPoints = isPreviewUser ? '1' : '8'
+  // Free SCAT6 Mastery course awards 1 CPD hour on completion; either paid
+  // 8-module stream (CCM online or CRM) = 8.
+  const cpdPoints = isFreeTier ? '1' : '8'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
