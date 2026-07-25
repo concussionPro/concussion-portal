@@ -6,9 +6,14 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
+// 'Courses' points at the DUAL-STREAM chooser, not straight at CCM pricing.
+// Until this changed, the ESSA-accredited CRM (exercise-physiology) stream had
+// no route from the global nav at all: an EP landing on a blog post, /scat-forms
+// or /clinical-suite had no path to their own product, and "Pricing" led only to
+// the physio/osteo/chiro course.
 const BASE_NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
-  { label: 'Pricing', path: '/pricing', accent: false },
+  { label: 'Courses', path: '/courses/streams', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Clinical Tools', path: '/clinical-suite', accent: false },
   { label: 'Blog', path: '/blog', accent: false },
@@ -119,14 +124,17 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
                 {item.label}
               </Link>
             ))}
+            {/* An action, not a link — this was an <a href="/"> with
+                preventDefault, which read as navigation to assistive tech and
+                tripped no-html-link-for-pages. */}
             {isLoggedIn && (
-              <a
-                href="/"
-                onClick={(e) => { e.preventDefault(); handleLogout() }}
+              <button
+                type="button"
+                onClick={handleLogout}
                 className="text-[13px] font-medium px-3 py-2 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
               >
                 Logout
-              </a>
+              </button>
             )}
             {onPricing ? (
               <button
@@ -195,13 +203,13 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
               </Link>
             ))}
             {isLoggedIn && (
-              <a
-                href="/"
-                onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); handleLogout() }}
+              <button
+                type="button"
+                onClick={() => { setMobileMenuOpen(false); handleLogout() }}
                 className="text-left text-sm py-2.5 px-3 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
               >
                 Logout
-              </a>
+              </button>
             )}
             {onPricing ? (
               <button

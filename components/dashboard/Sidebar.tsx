@@ -22,9 +22,14 @@ const navItems: Array<{
   paidOnly?: boolean
   ownerOnly?: boolean
   clinicalGated?: boolean
+  /** Shown only to CRM (EP stream) owners — the CCM sidebar never links it. */
+  crmOnly?: boolean
 }> = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
+  // CRM course entry. Stream-isolated: only rendered for course_purchases
+  // slug 'crm' owners, so a CCM buyer never sees it and vice versa.
+  { icon: Activity, label: 'Rehab Mastery (EP)', href: '/ep-course', crmOnly: true },
   // Clinical Testing = the live patient tools (SST Trainer + pre-season
   // baseline). PRE-RELEASE: ownerOnly until the subscription launch
   // (owner directive 2026-07-05) — hidden from every other dashboard.
@@ -57,7 +62,13 @@ export function Sidebar() {
     accessLevel: sessionUser.accessLevel || 'preview',
     enrolledAt: sessionUser.createdAt || '',
   } : null
-  const isPreview = user?.accessLevel === 'preview'
+  // A CRM buyer's access_level stays 'preview' (the streams are isolated —
+  // lib/crm-course.ts), so gating on accessLevel ALONE showed a paying EP
+  // customer a free-tier sidebar: every tool padlocked, the SCAT progress ring,
+  // and an "Unlock everything — enrol A$497" CCM upsell. Treat a CRM owner as
+  // a paying user everywhere the lock/upsell logic runs.
+  const ownsCrm = sessionUser?.ownsCrm === true
+  const isPreview = user?.accessLevel === 'preview' && !ownsCrm
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showRestoredBanner, setShowRestoredBanner] = useState(false)
 
@@ -144,22 +155,31 @@ export function Sidebar() {
         {/* CPD Progress Ring */}
         <div className="mb-8">
           <ProgressRing
-            progress={user?.accessLevel === 'preview' ? scatCompletedModules : completedModules}
-            total={user?.accessLevel === 'preview' ? 3 : 8}
+            progress={isPreview ? scatCompletedModules : completedModules}
+            total={isPreview ? 3 : 8}
           />
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1">
-          {/* Preview (free) users SEE the whole portal — every paid feature
-              (Clinical Testing, Toolkit, Outreach, References, Complete Ref) is
-              shown LOCKED with a carrot; only the free course + free items are
-              open. Clinical Testing is normally clinicalGated-hidden, but preview
-              users see it locked (visible-but-locked builds upgrade desire). */}
-          {navItems.filter((item) => (!item.ownerOnly || isOwnerEmail(sessionUser?.email)) && (!item.clinicalGated || showClinicalTesting)).map((item) => {
+          {/* Preview (free) users see the paid CONTENT features (Toolkit,
+              Outreach, References, Complete Ref) LOCKED with a carrot — only the
+              free course + free items are open. Clinical Testing is different:
+              it is filtered out entirely unless the visitor is entitled
+              (owner/course/sst), so it never renders locked. CRM (EP) items
+              render only for CRM owners — the streams stay isolated. */}
+          {navItems.filter((item) =>
+            (!item.ownerOnly || isOwnerEmail(sessionUser?.email)) &&
+            (!item.clinicalGated || showClinicalTesting) &&
+            (!item.crmOnly || ownsCrm)
+          ).map((item) => {
             const isActive =
               pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-            const isLocked = (item.paidOnly || item.clinicalGated) && isPreview
+            // Clinical Testing only reaches this list when showClinicalTesting is
+            // true — i.e. the visitor is ENTITLED (owner / course / sst). Padlocking
+            // it on top of that told an entitled user they were locked out of a
+            // page that lets them straight in. Only paidOnly items lock.
+            const isLocked = item.paidOnly && isPreview
 
             if (isLocked) {
               return (

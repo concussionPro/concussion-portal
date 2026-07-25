@@ -51,9 +51,10 @@ export const COURSE_PRICING = {
   // Clinic Hub Pack — 5 online seats + branded docs + admin pack ($1,500).
   // Targeted at clinic owners via cold B2B outreach.
   CLINIC_HUB_PACK: CONFIG.COURSE.PRICE_CLINIC_HUB_PACK * 100,
-  // Per-clinician seat beyond the 5 included in Hub Pack base ($250).
+  // Per-clinician seat beyond the 5 included in Hub Pack base (see CONFIG —
+  // A$497; the old "$250" here was stale).
   CLINIC_HUB_EXTRA_SEAT: CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT * 100,
-  // Per-clinician workshop upgrade for Hub Pack buyers ($500).
+  // Per-clinician workshop upgrade for Hub Pack buyers (see CONFIG — A$600).
   CLINIC_WORKSHOP_UPGRADE: CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE * 100,
 } as const
 
@@ -213,7 +214,11 @@ export async function createCourseCheckoutSession({
     unitAmount = COURSE_PRICING.CLINIC_HUB_EXTRA_SEAT
     currency = 'aud'
     productName = 'Concussion Hub Pack — Extra Online Seat'
-    productDescription = `Adds 1 online seat for a clinician beyond the ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} included in the Hub Pack base · 8 modules · 14 CPD hours · OA endorsed · Lifetime access`
+    // ONLINE seat (COURSE_ACCESS_MAP → 'online-only') = ONLINE_CPD_POINTS only.
+    // This said "14 CPD hours" — the online+in-person total — on the Stripe
+    // checkout page and the customer's receipt, for a seat that carries no
+    // in-person day.
+    productDescription = `Adds 1 online seat for a clinician beyond the ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} included in the Hub Pack base · ${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours · OA endorsed · Lifetime access`
   } else if (courseType === 'clinic-workshop-upgrade') {
     unitAmount = COURSE_PRICING.CLINIC_WORKSHOP_UPGRADE
     currency = 'aud'
@@ -229,6 +234,16 @@ export async function createCourseCheckoutSession({
       ? `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD hours · AHPRA aligned · All materials included`
       : `8 online modules (start today) + full-day in-person workshop (${locationLabel} — date launches as your city fills, min ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice) · 14 CPD hours · AHPRA aligned`
   }
+
+  // Hub Pack base price already includes 5 seats — never let a promo code stack
+  // on the marginal seat/upgrade add-ons either.
+  //
+  // SCAT6 is the $50 free-course completion reward and is valid on the ONLINE
+  // course only. Blocking it below while still setting allow_promotion_codes:true
+  // meant the buyer just typed SCAT6 into Stripe's manual field and got it on the
+  // full course anyway — the "enforced here" comment was not true in practice.
+  const scat6OnIneligibleCourse =
+    promoCode?.toUpperCase() === CONFIG.COURSE.PROMO_CODE && courseType !== 'online-only'
 
   // Apply bundle-owner discount to AUD course purchases (online-only / full-course).
   // Stored as metadata so the webhook can reconcile and the finance record is clear.
@@ -256,9 +271,11 @@ export async function createCourseCheckoutSession({
     // Bundle credit already applied to the line item — don't let a promo
     // code stack a second discount on top of it.
     allowPromotionCodes = false
-  } else if (promoCode && !(promoCode.toUpperCase() === 'SCAT6' && courseType !== 'online-only')) {
-    // SCAT6 ($50 completion reward) is ONLY valid on the online course —
-    // enforced here, never left to Stripe dashboard coupon config.
+  } else if (scat6OnIneligibleCourse) {
+    // Close the manual-entry bypass: refusing to auto-apply SCAT6 is pointless
+    // if we then hand the buyer an open promo field to type it into.
+    allowPromotionCodes = false
+  } else if (promoCode) {
     try {
       const promoCodes = await stripe.promotionCodes.list({ code: promoCode.toUpperCase(), active: true, limit: 1 })
       if (promoCodes.data.length > 0) {

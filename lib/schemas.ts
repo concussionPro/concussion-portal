@@ -56,7 +56,14 @@ export const createCheckoutSchema = z
     clinicName: z.string().max(120).optional(),
   })
   .superRefine((val, ctx) => {
-    const needsLocation = val.courseType === 'full-course' || val.courseType === 'workshop-upgrade'
+    // Every course type that sells an IN-PERSON seat must carry a nominated
+    // city — the nomination is what feeds Ready-to-Train. 'clinic-workshop-
+    // upgrade' was missing, so a Hub Pack workshop seat could be bought with no
+    // city and shipped as "Workshop Upgrade (TBD)", invisible to the pipeline.
+    const needsLocation =
+      val.courseType === 'full-course' ||
+      val.courseType === 'workshop-upgrade' ||
+      val.courseType === 'clinic-workshop-upgrade'
     if (needsLocation && !val.location) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

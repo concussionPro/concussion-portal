@@ -165,7 +165,12 @@ export async function POST(request: NextRequest) {
     // Create Stripe Checkout Session
     const checkoutSession = await createCourseCheckoutSession({
       courseType: courseType as CourseType,
-      location: (courseType === 'full-course' || courseType === 'workshop-upgrade') ? location : undefined,
+      // Pass the nominated city for every in-person-bearing type (the schema
+      // now requires one) — clinic-workshop-upgrade was dropping it, so the
+      // seat was charged as "(TBD)" and never reached Ready-to-Train.
+      location: (courseType === 'full-course' || courseType === 'workshop-upgrade' || courseType === 'clinic-workshop-upgrade')
+        ? location
+        : undefined,
       preferredCity: courseType === 'online-only' ? preferredCity : undefined,
       customerEmail: sessionEmail || email,
       country,

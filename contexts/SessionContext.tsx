@@ -7,6 +7,14 @@ export interface SessionUser {
   email: string
   name: string
   accessLevel: 'preview' | 'online-only' | 'full-course'
+  /**
+   * Owns the CRM (Concussion Rehab Mastery / EP) course. CRM entitlement lives
+   * in `course_purchases`, NOT `access_level` — the two streams are isolated on
+   * purpose (lib/crm-course.ts). A CRM-only buyer therefore carries
+   * accessLevel 'preview', so anything that gates on accessLevel alone will
+   * render a paying customer as a free user. Check this too.
+   */
+  ownsCrm?: boolean
   stripeCustomerId?: string
   workshopCity?: string
   workshopDate?: string

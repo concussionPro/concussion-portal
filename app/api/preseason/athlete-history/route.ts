@@ -30,12 +30,15 @@ export async function POST(request: Request) {
 
     // Count prior baselines for this exact athlete. Return a count only —
     // no dates, no per-row data — scoped to an exact name (+ dob when given).
+    // Exact DOB when one is supplied — `dob IS NULL OR ...` also counted
+    // same-named athletes with no DOB on file, inflating this athlete's test
+    // number (and matching the serial-comparison query in /submit).
     const { rows } = dob
       ? await sql`
           SELECT COUNT(*)::int AS n FROM preseason_baselines
           WHERE clinic_code = ${normCode}
             AND LOWER(TRIM(athlete_name)) = ${normName}
-            AND (dob IS NULL OR dob = ${dob})
+            AND dob = ${dob}
         `
       : await sql`
           SELECT COUNT(*)::int AS n FROM preseason_baselines

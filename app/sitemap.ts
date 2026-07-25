@@ -9,6 +9,10 @@ const STATIC_PAGES_LAST_MODIFIED = new Date('2026-06-01')
 // (scat6-download canonical fix, workshop-page meta + Sydney interest form).
 const SEO_SWEEP_LAST_MODIFIED = new Date('2026-07-02')
 
+// ESSA accreditation granted 2026-07-24 — the date the CRM stream and the
+// dual-stream chooser became public.
+const ESSA_LIVE_LAST_MODIFIED = new Date('2026-07-24')
+
 // Blog posts carry their own datePublished/dateModified in their schema
 // markup — sitemap lastModified mirrors each post's dateModified.
 const BLOG_POSTS: Array<{ slug: string; dateModified: string; priority: number }> = [
@@ -58,6 +62,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    // CRM (exercise-physiology stream) went live with ESSA accreditation on
+    // 2026-07-24 and renders `index, follow` — but was never added here, so the
+    // newest revenue product was absent from the sitemap. Both pages are gated
+    // on CONFIG.FEATURES.ESSA_ACCREDITED and public while it is true.
+    {
+      url: `${baseUrl}/concussion-rehab-mastery`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/courses/streams`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    // Public Clinical Tools landing (canonical /clinical-suite, indexable).
+    {
+      url: `${baseUrl}/clinical-suite`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/scat-mastery`,

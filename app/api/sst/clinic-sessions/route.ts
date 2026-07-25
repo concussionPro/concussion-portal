@@ -20,6 +20,9 @@ import { getClinic, isRegisteredClinic, verifyViewKey } from '@/lib/sst-trainer/
  */
 type Row = {
   patient_label: string | null
+  /** install UUID from the patient app (payload.patientRef) — the stable
+   *  per-device identity. Null only for builds that predate the field. */
+  patient_ref: string | null
   session_type: string
   hrt_bpm: number | null
   band_low: number | null
@@ -49,21 +52,47 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { rows } = await sql<Row>`
-      SELECT patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
+      SELECT patient_label, payload->>'patientRef' AS patient_ref,
+             session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
       FROM sst_clinic_sessions
       WHERE upper(clinic_code) = ${code}
       ORDER BY created_at ASC
     `
-    const byPatient = new Map<string, { thresholds: Row[]; trainings: Row[] }>()
+    // IDENTITY: group by the install UUID (patientRef) — NOT the display name.
+    // Grouping on patient_label alone merged two same-named patients at one
+    // clinic into a single chart (one HRt trajectory, one session list, one
+    // clearance signal) and collapsed every unnamed device into a shared
+    // "Unidentified" patient. patientRef is the same stable per-device identity
+    // /api/sst/live already keys on. Falls back to the label for pre-patientRef
+    // rows so legacy history still groups the way it always did.
+    const byPatient = new Map<string, { label: string; thresholds: Row[]; trainings: Row[] }>()
     for (const r of rows) {
-      const key = (r.patient_label || 'Unidentified').trim() || 'Unidentified'
-      if (!byPatient.has(key)) byPatient.set(key, { thresholds: [], trainings: [] })
+      const label = (r.patient_label || '').trim() || 'Unidentified'
+      const key = (r.patient_ref || '').trim() || `label:${label}`
+      if (!byPatient.has(key)) byPatient.set(key, { label, thresholds: [], trainings: [] })
       const p = byPatient.get(key)!
+      // Keep the most recent non-placeholder label for this device.
+      if (label !== 'Unidentified') p.label = label
       if (r.session_type === 'threshold') p.thresholds.push(r)
       else p.trainings.push(r)
     }
 
-    const patients = [...byPatient.entries()].map(([name, p]) => {
+    // Two DISTINCT patients can legitimately share a display name. Now that they
+    // no longer merge, disambiguate them for the clinician instead of showing two
+    // identical rows ("James M" / "James M (2)").
+    const labelCounts = new Map<string, number>()
+    for (const p of byPatient.values()) {
+      labelCounts.set(p.label, (labelCounts.get(p.label) ?? 0) + 1)
+    }
+    const labelSeen = new Map<string, number>()
+
+    const patients = [...byPatient.values()].map((p) => {
+      let name = p.label
+      if ((labelCounts.get(p.label) ?? 0) > 1) {
+        const n = (labelSeen.get(p.label) ?? 0) + 1
+        labelSeen.set(p.label, n)
+        if (n > 1) name = `${p.label} (${n})`
+      }
       const latest = p.thresholds[p.thresholds.length - 1]
       const interp = (latest?.payload?.interpretation as string | undefined) ?? null
       return {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, createJWTSession } from '@/lib/jwt-session'
 import { findUserById, isBookOwner } from '@/lib/users'
+import { userOwnsCrm } from '@/lib/crm-course'
 import { DEMO_KEY } from '@/lib/demo-key'
 
 /**
@@ -30,6 +31,10 @@ function getDemoViewerResponse(request: NextRequest): NextResponse | null {
         name: `${demoOrg || 'Partner'} Demo Viewer`,
         accessLevel: 'full-course',
         bookOwner: false,
+        // The demo_key already passes CrmCourseGate, so the dashboard must
+        // match the gate — otherwise a partner sees CRM rendered as locked
+        // while /ep-course lets them straight in.
+        ownsCrm: true,
         workshopLocation: null,
         createdAt: new Date().toISOString(),
         nurtureUnsubscribed: true,
@@ -130,6 +135,10 @@ export async function GET(request: NextRequest) {
           name: user.name,
           accessLevel: user.accessLevel,
           bookOwner: await isBookOwner(user.email),
+          // CRM entitlement lives in course_purchases, NOT access_level (the two
+          // streams are deliberately isolated). The client needs it or a paying
+          // CRM buyer renders as a free 'preview' user.
+          ownsCrm: await userOwnsCrm(user.email),
           workshopLocation: user.workshopLocation || null,
           createdAt: user.createdAt,
           nurtureUnsubscribed: user.nurtureUnsubscribed || false,
@@ -155,6 +164,8 @@ export async function GET(request: NextRequest) {
         email: user.email,
         name: user.name,
         accessLevel: user.accessLevel,
+        // See above — CRM ownership is course_purchases-based, not access_level.
+        ownsCrm: await userOwnsCrm(user.email),
         workshopLocation: user.workshopLocation || null,
         createdAt: user.createdAt,
         nurtureUnsubscribed: user.nurtureUnsubscribed || false,

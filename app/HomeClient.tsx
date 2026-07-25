@@ -75,6 +75,10 @@ const HOME_STREAMS: Array<{
 
 export default function HomeClient() {
   const [stream, setStream] = useState<'ccm' | 'crm'>('ccm')
+  // Wall-clock read ONCE per mount (lazy initialiser), not on every render —
+  // calling Date.now() during render is impure and makes the output depend on
+  // when React happens to re-render. A workshop date can't cross "now" mid-visit.
+  const [renderedAt] = useState(() => Date.now())
 
   // CRM (EP / ESSA stream) is NOT live until ESSA endorsement is actually
   // granted. Until then the homepage presents CCM as the single course — no CRM
@@ -208,13 +212,40 @@ export default function HomeClient() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Status + caption are DERIVED from CONFIG.LOCATIONS, never
+                  hardcoded (date-bearing-copy rule): a hardcoded
+                  "Delivered · Jun 2026" silently becomes a lie the moment the
+                  city's status or date changes in config. Cities listed here are
+                  the ones with hero imagery; anywhere else is covered by the
+                  nomination line + OtherCityInterest below. */}
               {([
-                { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
-                { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
-                { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
-              ] as const).map((loc) => (
-                <LocationInterestCard key={loc.city} {...loc} />
-              ))}
+                { citySlug: 'melbourne', img: '/locations/melbourne.webp' },
+                { citySlug: 'sydney', img: '/locations/sydney.jpg' },
+                { citySlug: 'byron-bay', img: '/locations/byron-bay.jpg' },
+              ] as const).map(({ citySlug, img }) => {
+                const loc = Object.values(CONFIG.LOCATIONS).find((l) => l.slug === citySlug)!
+                const isLive =
+                  loc.status === 'confirmed' && !!loc.dateObj && loc.dateObj.getTime() > renderedAt
+                const delivered = loc.status === 'completed' || (loc.hasRunWorkshop && !isLive)
+                return (
+                  <LocationInterestCard
+                    key={citySlug}
+                    city={loc.city}
+                    citySlug={citySlug}
+                    img={img}
+                    status={isLive ? loc.date : delivered ? 'Delivered · next round open' : 'Registering interest'}
+                    dotClass={isLive ? 'bg-emerald-500' : delivered ? 'bg-slate-400' : 'bg-orange-500 animate-pulse'}
+                    statusTextClass={isLive ? 'text-emerald-700' : delivered ? 'text-slate-600' : 'text-orange-700'}
+                    caption={
+                      isLive
+                        ? `Secure your ${loc.city} seat`
+                        : delivered
+                          ? `Register for the next ${loc.city} round`
+                          : `Be first to know when ${loc.city}'s date is confirmed`
+                    }
+                  />
+                )
+              })}
             </div>
             <p className="mt-5 text-center text-sm text-[var(--muted-foreground)]">
               Somewhere else? The Complete Course is buyable any time — you nominate your city at

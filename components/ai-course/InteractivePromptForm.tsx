@@ -62,7 +62,10 @@ export function InteractivePromptForm({ data }: { data: PromptFormData }) {
     setChecked(new Set())
   }
 
-  const useTextarea = (label: string): boolean => {
+  // NOT a hook — a plain predicate. The `use` prefix made React (and the
+  // rules-of-hooks lint) treat every call inside the field .map() as a
+  // conditionally-called hook. Renamed rather than suppressed.
+  const isTextareaField = (label: string): boolean => {
     const l = label.toLowerCase()
     return (
       l.includes('baseline') ||
@@ -112,7 +115,7 @@ export function InteractivePromptForm({ data }: { data: PromptFormData }) {
             {data.inputs.map((inp) => {
               const key = fieldKey(inp.label)
               return (
-                <div key={key} className={useTextarea(inp.label) || inp.options ? 'sm:col-span-2' : ''}>
+                <div key={key} className={isTextareaField(inp.label) || inp.options ? 'sm:col-span-2' : ''}>
                   <label className="text-[11px] font-semibold text-slate-700 block mb-1">
                     {inp.label}
                     {inp.hint && !inp.options && (
@@ -132,7 +135,7 @@ export function InteractivePromptForm({ data }: { data: PromptFormData }) {
                         </option>
                       ))}
                     </select>
-                  ) : useTextarea(inp.label) ? (
+                  ) : isTextareaField(inp.label) ? (
                     <textarea
                       value={inputValues[key] || ''}
                       onChange={(e) => setInputValues((v) => ({ ...v, [key]: e.target.value }))}

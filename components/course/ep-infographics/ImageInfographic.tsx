@@ -185,10 +185,13 @@ export function ImageInfographic({ id }: { id: string }) {
   const config = INFOGRAPHIC_CONFIG[id]
   // 0 = try png, 1 = try svg, 2 = give up and show placeholder
   const [stage, setStage] = useState<0 | 1 | 2>(0)
+  // Both hooks must run before ANY early return — `useState(zoomed)` used to sit
+  // below the `if (!config)` guard, so the hook count varied with the prop and
+  // React would throw "rendered more hooks than during the previous render".
+  const [zoomed, setZoomed] = useState(false)
 
   if (!config) return null
 
-  const [zoomed, setZoomed] = useState(false)
   const { eyebrow, title, caption } = config
   const src = stage === 0 ? `/infographics/${id}.png` : `/infographics/${id}.svg`
 

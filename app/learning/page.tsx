@@ -47,7 +47,12 @@ function LearningSuiteInner() {
   const freeShortCourseComplete = isModuleComplete(freeShortCourse.id)
 
   const accessLevel = user?.accessLevel || ''
-  const isPreview = accessLevel === 'preview'
+  // CRM ownership is course_purchases-based, NOT access_level (streams are
+  // isolated — lib/crm-course.ts), so a CRM-only buyer carries 'preview'.
+  // Without this they saw the free-tier Learning Suite AND their own paid
+  // course rendered as locked.
+  const ownsCrm = user?.ownsCrm === true
+  const isPreview = accessLevel === 'preview' && !ownsCrm
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
   const studyTime = getTotalStudyTime()
@@ -98,8 +103,11 @@ function LearningSuiteInner() {
       moduleCount: 8,
       cpd: 8,
       completed: 0,
-      accessible: false,
-      href: '/concussion-rehab-mastery',
+      // A CRM owner opens their course; everyone else gets the sales page.
+      // Was hardcoded `accessible: false`, which locked paying EP buyers out of
+      // the card for the course they had just bought.
+      accessible: ownsCrm,
+      href: ownsCrm ? '/ep-course' : '/concussion-rehab-mastery',
       price: null,
     },
     {

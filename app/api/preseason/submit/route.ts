@@ -169,15 +169,12 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText('ATHLETE INFORMATION', margin, y, { fontSize: 12, fontStyle: 'bold' })
   y += 8
 
-  // Calculate age from DOB
-  let ageString = '—'
-  if (data.athlete.dob) {
-    const dob = new Date(data.athlete.dob)
-    if (!isNaN(dob.getTime())) {
-      const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-      ageString = `${age} years`
-    }
-  }
+  // Age from DOB — uses the SAME calendar-accurate helper as the under-16
+  // guardian-consent gate. The old 365.25-day division disagreed with it by a
+  // year around birthdays, so the printed age could contradict the consent
+  // decision made on the same submission.
+  const ageYears = ageFromDob(data.athlete.dob)
+  const ageString = ageYears !== null ? `${ageYears} years` : '—'
 
   const fields = [
     ['Name', data.athlete.name], ['Date of Birth', data.athlete.dob],
@@ -526,7 +523,9 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
 
   for (const [label, score, max] of summaryRows) {
     if (label === '' && score === '') { y += 2; continue }
-    doc.setFillColor(summaryRows.indexOf([label, score, max]) % 2 === 0 ? 250 : 255, 250, 250)
+    // (Removed a dead setFillColor whose `summaryRows.indexOf([...])` built a
+    // fresh array and so always returned -1 — and which was never followed by a
+    // rect, so it painted nothing either way.)
     addText(label, margin + 4, y, { fontSize: 8 })
     addText(score, margin + contentWidth - 40, y, { fontSize: 9, fontStyle: 'bold' })
     addText(max, margin + contentWidth - 22, y, { fontSize: 8 })
@@ -759,7 +758,14 @@ export async function POST(request: Request) {
     // Generate PDF
     const pdfBuffer = generatePdf(body, clinic.clinicName)
 
-    const athleteName = escapeHtml(body.athlete.name || 'Unknown Athlete')
+    // Raw name for non-HTML contexts (email SUBJECT, PDF filename); the escaped
+    // form is used only where it is interpolated into HTML. Escaping once up
+    // front turned every O'Brien into "O&#39;Brien" in the clinician's subject
+    // line and on the attached file.
+    const athleteNameRaw = body.athlete.name || 'Unknown Athlete'
+    const athleteName = escapeHtml(athleteNameRaw)
+    // Filename-safe: collapse whitespace, drop path/reserved characters.
+    const athleteNameFile = athleteNameRaw.replace(/[^\p{L}\p{N}\s'-]/gu, '').trim().replace(/\s+/g, '-') || 'Athlete'
     const date = new Date().toLocaleDateString('en-AU')
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
 
@@ -865,12 +871,18 @@ export async function POST(request: Request) {
       try {
         const normName = (body.athlete.name || 'Unknown').trim().toLowerCase()
         const normCode = body.clinicCode.toUpperCase()
+        // IDENTITY: when this athlete gave a DOB, match on name AND that exact
+        // DOB. The old `(dob IS NULL OR dob = ...)` branch also pulled in any
+        // same-named athlete whose DOB was never recorded, so two same-named
+        // juniors at one club could be folded into a single serial-comparison
+        // PDF — a fabricated recovery curve emailed to the clinician. Rows with
+        // no DOB now only ever match other rows with no DOB (the else branch).
         const { rows: priorRows } = body.athlete.dob
           ? await sql`
               SELECT submitted_at, symptom_count, symptom_severity, cognitive_score, cognitive_max, test_number, payload
               FROM preseason_baselines
               WHERE clinic_code = ${normCode} AND LOWER(TRIM(athlete_name)) = ${normName}
-                AND (dob IS NULL OR dob = ${body.athlete.dob})
+                AND dob = ${body.athlete.dob}
               ORDER BY submitted_at ASC`
           : await sql`
               SELECT submitted_at, symptom_count, symptom_severity, cognitive_score, cognitive_max, test_number, payload
@@ -901,16 +913,16 @@ export async function POST(request: Request) {
     // built (2+ tests), attach it alongside this test's individual report.
     const emailSent = await sendEmailWithAttachment({
       to: clinic.email,
-      subject: `SCAT6 Baseline Report — ${athleteName}${body.testNumber && body.testNumber > 1 ? ` (Test #${body.testNumber})` : ''} (${date})${comparisonBuffer ? ' + Serial Comparison' : ''}`,
+      subject: `SCAT6 Baseline Report — ${athleteNameRaw}${body.testNumber && body.testNumber > 1 ? ` (Test #${body.testNumber})` : ''} (${date})${comparisonBuffer ? ' + Serial Comparison' : ''}`,
       html: emailHtml,
       attachments: [
         {
-          filename: `SCAT6-Baseline-${athleteName.replace(/\s+/g, '-')}-${date.replace(/\//g, '-')}.pdf`,
+          filename: `SCAT6-Baseline-${athleteNameFile}-${date.replace(/\//g, '-')}.pdf`,
           content: pdfBuffer,
         },
         ...(comparisonBuffer
           ? [{
-              filename: `SCAT6-Serial-Comparison-${athleteName.replace(/\s+/g, '-')}-${date.replace(/\//g, '-')}.pdf`,
+              filename: `SCAT6-Serial-Comparison-${athleteNameFile}-${date.replace(/\//g, '-')}.pdf`,
               content: comparisonBuffer,
             }]
           : []),
