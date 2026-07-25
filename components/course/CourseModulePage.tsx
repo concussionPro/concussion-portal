@@ -14,7 +14,7 @@ import { ContentLockedBanner } from '@/components/course/ContentLockedBanner'
 import { SectionStepper, type VirtualSection } from '@/components/course/SectionStepper'
 import { SectionNavButtons } from '@/components/course/SectionNavButtons'
 import { SectionTypeBadge, estimateReadingTime } from '@/components/course/SectionTypeBadge'
-import { useModuleData, type CourseKey } from '@/hooks/useModuleData'
+import { useModuleData, type CourseKey, type InitialModuleData } from '@/hooks/useModuleData'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { CONFIG } from '@/lib/config'
 import type { QuizQuestion, Section } from '@/data/modules'
@@ -189,7 +189,19 @@ function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number;
   )
 }
 
-export function CourseModulePage({ descriptor }: { descriptor: CourseModuleDescriptor }) {
+export function CourseModulePage({
+  descriptor,
+  initialModuleData,
+}: {
+  descriptor: CourseModuleDescriptor
+  /**
+   * Module content the SERVER already resolved for this request (same gating,
+   * lib/module-access.ts). When supplied the page renders content on the FIRST
+   * paint instead of shipping a spinner and chaining session → module fetches.
+   * Omit it and the hook falls back to fetching, unchanged.
+   */
+  initialModuleData?: InitialModuleData
+}) {
   const { backHref, loginPathFor, supportsDemoViewer } = descriptor
   const params = useParams()
   const router = useRouter()
@@ -273,10 +285,10 @@ export function CourseModulePage({ descriptor }: { descriptor: CourseModuleDescr
   }
 
   // Authenticated - render module content
-  return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} isDemoViewer={isDemoViewer} descriptor={descriptor} />
+  return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} isDemoViewer={isDemoViewer} descriptor={descriptor} initialModuleData={initialModuleData} />
 }
 
-function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descriptor }: { moduleId: number; router: AppRouterInstance; userEmail: string; isDemoViewer: boolean; descriptor: CourseModuleDescriptor }) {
+function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descriptor, initialModuleData }: { moduleId: number; router: AppRouterInstance; userEmail: string; isDemoViewer: boolean; descriptor: CourseModuleDescriptor; initialModuleData?: InitialModuleData }) {
   const {
     course,
     NavComponent,
@@ -299,7 +311,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
   const progressId = progressIdFor(moduleId)
 
   // Fetch module content from secure API
-  const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade, allSectionTitles } = useModuleData(moduleId, course)
+  const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade, allSectionTitles } = useModuleData(moduleId, course, initialModuleData)
   const {
     updateQuizScore,
     saveQuizAnswers,

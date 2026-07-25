@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Module } from '@/data/modules'
 
 export interface UseModuleDataResult {
@@ -29,13 +29,38 @@ const COURSE_ENDPOINTS: Record<CourseKey, string> = {
  * (Concussion Rehab Mastery) share this single implementation — only the
  * API endpoint differs. (useEpModuleData is a thin wrapper.)
  */
-export function useModuleData(moduleId: number, course: CourseKey = 'flagship'): UseModuleDataResult {
-  const [module, setModule] = useState<Module | null>(null)
-  const [loading, setLoading] = useState(true)
+/**
+ * Content the SERVER already resolved for this request. When present the hook
+ * skips its initial fetch entirely and renders on the first paint — the module
+ * page used to ship an empty shell and a spinner, then chain
+ * /api/auth/session → /api/modules/N (~65KB) → render before a paying user saw
+ * a single word. The post-checkout re-fetch below still runs, so an upgrade
+ * completed in another tab keeps working.
+ */
+export interface InitialModuleData {
+  module: Module | null
+  accessLevel: 'preview' | 'online-only' | 'full-course' | null
+  needsUpgrade: boolean
+  allSectionTitles: string[] | null
+}
+
+export function useModuleData(
+  moduleId: number,
+  course: CourseKey = 'flagship',
+  initial?: InitialModuleData,
+): UseModuleDataResult {
+  const [module, setModule] = useState<Module | null>(initial?.module ?? null)
+  const [loading, setLoading] = useState(!initial)
   const [error, setError] = useState<string | null>(null)
-  const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
-  const [needsUpgrade, setNeedsUpgrade] = useState(false)
-  const [allSectionTitles, setAllSectionTitles] = useState<string[] | null>(null)
+  const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(
+    initial?.accessLevel ?? null,
+  )
+  const [needsUpgrade, setNeedsUpgrade] = useState(initial?.needsUpgrade ?? false)
+  const [allSectionTitles, setAllSectionTitles] = useState<string[] | null>(
+    initial?.allSectionTitles ?? null,
+  )
+  // Only the FIRST fetch is skippable; refreshes always hit the network.
+  const skipInitialFetch = useRef(!!initial)
 
   const fetchModule = useCallback(async (isRefresh = false) => {
     if (!isRefresh) {
@@ -90,8 +115,12 @@ export function useModuleData(moduleId: number, course: CourseKey = 'flagship'):
     }
   }, [moduleId, course])
 
-  // Initial fetch
+  // Initial fetch — skipped when the server already supplied the content.
   useEffect(() => {
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false
+      return
+    }
     fetchModule()
   }, [fetchModule])
 

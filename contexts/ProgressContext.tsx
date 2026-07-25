@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 
 export interface ModuleProgress {
   moduleId: number
@@ -42,6 +42,9 @@ interface ProgressContextType {
 const ProgressContext = createContext<ProgressContextType | undefined>(undefined)
 
 const STORAGE_KEY = 'concussion-pro-progress'
+// Backoff schedule for a failed progress save (ms). Bounded — after the last
+// attempt we stop and rely on localStorage plus the next progress change.
+const SAVE_RETRY_DELAYS = [2000, 5000, 15000, 45000]
 
 // EP (Concussion Rehab Mastery) modules are namespaced to 201-208 in the shared
 // progress store so they can never collide with flagship modules 1-8.
@@ -165,6 +168,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const syncClearRef = useRef<NodeJS.Timeout | null>(null)
   const progressRef = useRef(progress)
   const hasPendingSaveRef = useRef(false)
+  // Bounded retry for a failed server save. Progress is the one thing in this
+  // app that must not be lost: localStorage always has it, but the SERVER copy
+  // is what drives cross-device resume, the certificate trigger and the CPD
+  // record. A save that fails and is never retried silently desynchronises them.
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const retryAttemptRef = useRef(0)
+  /** Latest attemptSave, so the retry can re-enter without self-referencing. */
+  const attemptSaveRef = useRef<(() => Promise<void>) | null>(null)
 
   // Keep ref in sync for beforeunload handler
   useEffect(() => {
@@ -265,6 +276,87 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  /**
+   * Push the CURRENT progress to the server, retrying a failure with backoff.
+   *
+   * Two rules that were previously broken:
+   *  1. `hasPendingSaveRef` is cleared ONLY on a confirmed 2xx. It used to be
+   *     cleared immediately after the fetch resolved, before checking
+   *     `response.ok` — so an HTTP error also disarmed the pagehide sendBeacon,
+   *     and the save was lost with no retry. (A thrown network error skipped
+   *     that line and kept the flag, so the two failure modes behaved
+   *     differently and the quieter one was the unrecoverable one.)
+   *  2. A failure schedules a bounded retry. Without it, a transient 500 on the
+   *     save carrying "module 8 complete" never reached the server, and the
+   *     next attempt only happened if the user changed something else.
+   *
+   * Always sends progressRef.current, so a retry carries the LATEST state
+   * rather than a stale snapshot from when the failure occurred.
+   */
+  const attemptSave = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
+    }
+    const scheduleRetry = () => {
+      if (retryAttemptRef.current >= SAVE_RETRY_DELAYS.length) return // give up quietly; localStorage still holds it
+      const delay = SAVE_RETRY_DELAYS[retryAttemptRef.current]
+      retryAttemptRef.current += 1
+      // Re-enter through the ref, not the const binding — a `const` arrow
+      // referencing itself is a temporal-dead-zone hazard (and lint error).
+      retryTimeoutRef.current = setTimeout(() => void attemptSaveRef.current?.(), delay)
+    }
+    try {
+      setSyncState('syncing')
+      const response = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progress: progressRef.current }),
+        credentials: 'include',
+      })
+      if (response.ok) {
+        hasPendingSaveRef.current = false
+        retryAttemptRef.current = 0
+        setSyncState('synced')
+        if (syncClearRef.current) clearTimeout(syncClearRef.current)
+        syncClearRef.current = setTimeout(() => setSyncState('idle'), 3000)
+        return
+      }
+      // Not ok — keep the pending flag so pagehide can still beacon it out.
+      console.error('Progress save rejected by server:', response.status)
+      setSyncState('error')
+      scheduleRetry()
+    } catch (error) {
+      console.error('Failed to save progress to backend:', error)
+      setSyncState(navigator.onLine ? 'error' : 'offline')
+      scheduleRetry()
+    }
+  }, [])
+
+  // Keep the ref current in an effect — writing a ref during render is a
+  // React purity violation.
+  useEffect(() => {
+    attemptSaveRef.current = attemptSave
+  }, [attemptSave])
+
+  // Retry a pending save the moment connectivity returns, rather than waiting
+  // out the backoff.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onOnline = () => {
+      if (hasPendingSaveRef.current) {
+        retryAttemptRef.current = 0
+        void attemptSave()
+      }
+    }
+    window.addEventListener('online', onOnline)
+    return () => {
+      window.removeEventListener('online', onOnline)
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current)
+    }
+  }, [attemptSave])
+
   // Debounced save to backend + localStorage
   useEffect(() => {
     if (!isInitialized || typeof window === 'undefined') return
@@ -275,33 +367,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     // Debounce backend save (avoid excessive API calls during active tracking)
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     hasPendingSaveRef.current = true
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        setSyncState('syncing')
-        const response = await fetch('/api/progress', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ progress }),
-          credentials: 'include',
-        })
-        hasPendingSaveRef.current = false
-        if (response.ok) {
-          setSyncState('synced')
-          if (syncClearRef.current) clearTimeout(syncClearRef.current)
-          syncClearRef.current = setTimeout(() => setSyncState('idle'), 3000)
-        } else {
-          setSyncState('error')
-        }
-      } catch (error) {
-        console.error('Failed to save progress to backend:', error)
-        setSyncState(navigator.onLine ? 'error' : 'offline')
-      }
-    }, 2000) // 2-second debounce
+    saveTimeoutRef.current = setTimeout(() => void attemptSave(), 2000) // 2-second debounce
 
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     }
-  }, [progress, isInitialized])
+    // attemptSave is a stable useCallback([]) that always reads progressRef,
+    // so including it can never re-trigger this effect.
+  }, [progress, isInitialized, attemptSave])
 
   const updateQuizScore = (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => {
     setProgress((prev) => {
