@@ -166,7 +166,7 @@ function LoginForm() {
                   <div className="flex items-center gap-2 justify-center">
                     <Shield className="w-3.5 h-3.5 text-slate-400" />
                     <p className="text-xs text-slate-500 text-center">
-                      No password needed. We'll email you a secure login link.
+                      No password needed. We&apos;ll email you a secure login link.
                     </p>
                   </div>
                 </div>
@@ -181,7 +181,7 @@ function LoginForm() {
                     Check your email
                   </h1>
                   <p className="text-sm text-slate-500 mb-6">
-                    We've sent a login link to <strong className="text-slate-900">{email}</strong>
+                    We&apos;ve sent a login link to <strong className="text-slate-900">{email}</strong>
                   </p>
 
                   <div className="bg-slate-50/60 rounded-xl p-5 mb-6 border border-slate-200/50">

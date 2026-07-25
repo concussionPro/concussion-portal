@@ -235,7 +235,7 @@ export function CourseStreams() {
         <div className="mb-7">
           <div className="flex items-center gap-2 mb-3">
             <Wrench className="w-4 h-4 text-accent" strokeWidth={1.8} />
-            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">What's covered</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">What&apos;s covered</h3>
           </div>
           <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2.5">
             {active.covers.map((item) => (

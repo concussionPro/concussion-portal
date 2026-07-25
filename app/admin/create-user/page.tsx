@@ -248,7 +248,7 @@ export default function AdminCreateUser() {
               <li><strong>1.</strong> Receive order notification from Squarespace</li>
               <li><strong>2.</strong> Copy customer email and name</li>
               <li><strong>3.</strong> Select purchase amount (${CONFIG.COURSE.PRICE_ONLINE} or ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()})</li>
-              <li><strong>4.</strong> Click "Create User & Send Email"</li>
+              <li><strong>4.</strong> Click &quot;Create User & Send Email&quot;</li>
               <li><strong>5.</strong> Customer receives login email instantly</li>
             </ol>
           </div>

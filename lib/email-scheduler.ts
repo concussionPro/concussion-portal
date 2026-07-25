@@ -50,7 +50,7 @@ export class EmailScheduler {
     const domainPrev = this.domainNext.get(domain) || 0
 
     // Base time: respect both global and per-domain backoff
-    let base = Math.max(this.globalNext, domainPrev, now)
+    const base = Math.max(this.globalNext, domainPrev, now)
     // Jitter ±JITTER_MS/2 so consecutive sends aren't on round-second boundaries
     const jitter = (Math.random() - 0.5) * JITTER_MS
     let scheduled = base + jitter

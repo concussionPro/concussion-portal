@@ -1473,7 +1473,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                       Stay current with the latest research
                     </p>
                     <p className="text-xs text-slate-600 mb-3 max-w-xs">
-                      Enrolees get access to regularly updated evidence — we add new papers as they're published.
+                      Enrolees get access to regularly updated evidence — we add new papers as they&apos;re published.
                     </p>
                     <a
                       href="/pricing"

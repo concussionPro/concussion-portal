@@ -62,10 +62,10 @@ export default function InPersonTrainingPage() {
               <span className="text-sm font-semibold text-accent">6 CPD hours - AHPRA Aligned · Limited Spots</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-              Master Clinical Assessment <span className="text-gradient">You Can't Learn Online</span>
+              Master Clinical Assessment <span className="text-gradient">You Can&apos;t Learn Online</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              <strong className="text-foreground">Theory isn't enough.</strong> This intensive hands-on workshop gives you the clinical confidence to accurately assess, phenotype, and manage concussions from day one.
+              <strong className="text-foreground">Theory isn&apos;t enough.</strong> This intensive hands-on workshop gives you the clinical confidence to accurately assess, phenotype, and manage concussions from day one.
             </p>
           </div>
 
@@ -105,7 +105,7 @@ export default function InPersonTrainingPage() {
 
           {/* Workshop Focus */}
           <div className="glass rounded-2xl p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-4 text-gradient">Critical Clinical Skills You'll Master</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gradient">Critical Clinical Skills You&apos;ll Master</h2>
             <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
               <p className="text-sm text-amber-900 font-semibold">
                 <strong>Assessment skills require hands-on practice.</strong> This workshop bridges the gap between theoretical knowledge and clinical competence through supervised practice with expert feedback.
@@ -213,7 +213,7 @@ export default function InPersonTrainingPage() {
           {/* What's Provided */}
           <div className="max-w-2xl mx-auto mb-12">
             <div className="glass rounded-xl p-6">
-              <h3 className="text-lg font-bold mb-4">What's Provided</h3>
+              <h3 className="text-lg font-bold mb-4">What&apos;s Provided</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-accent mt-1">•</span>

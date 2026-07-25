@@ -71,7 +71,7 @@ export default function SCAT6vsSCOAT6Page() {
               SCAT6 vs SCOAT6: Which Tool to Use When?
             </h1>
             <p className="text-xl text-red-100 mb-6">
-              Using the wrong assessment tool at the wrong time is inconsistent with current consensus guidance. Here's how to choose correctly.
+              Using the wrong assessment tool at the wrong time is inconsistent with current consensus guidance. Here&apos;s how to choose correctly.
             </p>
             <div className="flex items-center gap-3 text-red-100 text-sm">
               <span>Zac Lewis — Osteopath (AHPRA-registered) — January 31, 2026</span>

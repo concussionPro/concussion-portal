@@ -417,7 +417,7 @@ export default function ChildSCAT6Client() {
           {/* ===== CHILD SYMPTOM REPORT ===== */}
           <SectionHeader id="childSymptoms" title="Child Symptom Report (0-3 Scale)" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-2">
-              <p className="text-sm text-slate-600 mb-4">Ask the child: "Do you have any of these problems right now?" Rate each: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
+              <p className="text-sm text-slate-600 mb-4">Ask the child: &quot;Do you have any of these problems right now?&quot; Rate each: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
 
               {/* Header row */}
               <div className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 mb-2 text-center">
@@ -463,7 +463,7 @@ export default function ChildSCAT6Client() {
 
               {/* Overall rating */}
               <div className="mt-4">
-                <label className={labelClass}>Child Overall Rating: "On a scale of 0-10, how do you feel?" (0 = worst, 10 = best)</label>
+                <label className={labelClass}>Child Overall Rating: &quot;On a scale of 0-10, how do you feel?&quot; (0 = worst, 10 = best)</label>
                 <input type="number" min="0" max="10" value={formData.childOverallRating}
                   onChange={(e) => setFormData(prev => ({ ...prev, childOverallRating: parseInt(e.target.value) || 0 }))}
                   className="w-24 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white" />
@@ -474,7 +474,7 @@ export default function ChildSCAT6Client() {
           {/* ===== PARENT SYMPTOM REPORT ===== */}
           <SectionHeader id="parentSymptoms" title="Parent/Guardian Symptom Report (0-3 Scale)" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-2">
-              <p className="text-sm text-slate-600 mb-4">Ask the parent/guardian to rate the child's symptoms: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
+              <p className="text-sm text-slate-600 mb-4">Ask the parent/guardian to rate the child&apos;s symptoms: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
 
               <div className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 mb-2 text-center">
                 <div></div>

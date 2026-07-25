@@ -136,7 +136,7 @@ export default function CoursePage() {
         <div className="container-lg px-6 md:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-              What's included
+              What&apos;s included
             </h2>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               Complete training package with online learning and practical application

@@ -64,7 +64,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
               <li><strong>Which subsystem(s)</strong> — vestibular, oculomotor (convergence), or both</li>
               <li><strong>What severity</strong> — provoking threshold, symptom intensity, recovery time</li>
               <li><strong>What treatment-responsive</strong> — does sub-threshold exercise produce adaptation, or does it provoke without progress?</li>
-              <li><strong>What's missed</strong> — BPPV, vestibular hypofunction, ocular motor disease unrelated to concussion</li>
+              <li><strong>What&apos;s missed</strong> — BPPV, vestibular hypofunction, ocular motor disease unrelated to concussion</li>
             </ul>
           </Section>
 

@@ -216,7 +216,7 @@ export default function RegisterPage() {
                 <Check className="w-7 h-7 text-green-600" />
               </div>
               <h1 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
-                You're all set!
+                You&apos;re all set!
               </h1>
               <p className="text-sm text-muted-foreground mb-6">
                 Share this link with your sports clubs and teams

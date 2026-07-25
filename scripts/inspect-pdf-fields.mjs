@@ -1,6 +1,8 @@
-// Script to inspect PDF form fields
-const fs = require('fs')
-const { PDFDocument } = require('pdf-lib')
+// Script to inspect PDF form fields.
+// ESM (.mjs) to match every other script in this directory — the package is
+// CommonJS, so a .js file here would have to use require().
+import fs from 'fs'
+import { PDFDocument } from 'pdf-lib'
 
 async function inspectPDF(pdfPath, formName) {
   console.log(`\n${'='.repeat(60)}`)

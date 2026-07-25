@@ -39,7 +39,7 @@ export default function SydneyPage() {
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
-              Master SCAT6, VOMS, and BESS protocols in Sydney's premier concussion management course.
+              Master SCAT6, VOMS, and BESS protocols in Sydney&apos;s premier concussion management course.
               Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours.
             </p>
 
@@ -82,7 +82,7 @@ export default function SydneyPage() {
 
           {/* What's Included */}
           <div className="glass rounded-2xl p-8 mb-12">
-            <h2 className="text-2xl font-bold mb-6 text-center">What's Included in {location.city}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center">What&apos;s Included in {location.city}</h2>
 
             <div className="grid md:grid-cols-2 gap-4">
               {[

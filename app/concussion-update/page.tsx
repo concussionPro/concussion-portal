@@ -290,7 +290,7 @@ export default function ConcussionUpdatePage() {
             <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-6 shadow-lg shadow-slate-200/40">
               <div className="flex items-center gap-2 mb-5">
                 <BookOpen className="w-5 h-5 text-[#5b9aa6]" />
-                <h2 className="font-bold text-slate-900">What you'll learn</h2>
+                <h2 className="font-bold text-slate-900">What you&apos;ll learn</h2>
               </div>
               <ul className="space-y-3.5">
                 {learningPoints.map((point) => (

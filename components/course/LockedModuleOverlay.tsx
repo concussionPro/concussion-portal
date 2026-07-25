@@ -48,7 +48,7 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
           {/* In-Person Note */}
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-left">
             <p className="text-sm text-amber-900 leading-relaxed">
-              <span className="font-semibold">In-Person Component:</span> Workshop dates are announced regularly. Start your online modules today and we'll notify you when new dates are available.
+              <span className="font-semibold">In-Person Component:</span> Workshop dates are announced regularly. Start your online modules today and we&apos;ll notify you when new dates are available.
             </p>
           </div>
 

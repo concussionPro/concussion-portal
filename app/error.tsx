@@ -26,6 +26,11 @@ export default function Error({
           >
             Try Again
           </button>
+          {/* Deliberately a plain <a>, not <Link>: this is the error boundary,
+              so the client tree is already in a bad state. A hard navigation
+              tears it down and boots fresh; a client-side transition would
+              carry the broken state along. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
             className="px-6 py-3 text-slate-700 font-semibold hover:text-slate-900 transition-colors"

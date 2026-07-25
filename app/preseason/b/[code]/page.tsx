@@ -1266,7 +1266,7 @@ export default function AthleteBaselineForm() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold mb-2">What is today's date?</label>
+                    <label className="block text-xs font-semibold mb-2">What is today&apos;s date?</label>
                     <div className="grid grid-cols-7 gap-1">
                       {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                         <button key={d} onClick={() => setOrientDate(String(d))}
@@ -1333,7 +1333,7 @@ export default function AthleteBaselineForm() {
               <div>
                 <h2 className="text-lg font-bold mb-2">Immediate Memory</h2>
                 <p className="text-xs text-muted-foreground mb-4">
-                  You'll be shown 10 words, one at a time. After all words are shown, select the ones you remember.
+                  You&apos;ll be shown 10 words, one at a time. After all words are shown, select the ones you remember.
                 </p>
 
                 {memoryPhase === 'intro' && (
@@ -1420,7 +1420,7 @@ export default function AthleteBaselineForm() {
                     </div>
                     <p className="text-sm font-semibold mb-1">Memory Test Complete</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Your responses have been recorded. You'll be asked to recall these words again at the end of the test.
+                      Your responses have been recorded. You&apos;ll be asked to recall these words again at the end of the test.
                     </p>
 
                     <div className="mt-4">

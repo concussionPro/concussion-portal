@@ -117,7 +117,7 @@ async function main() {
       if (s.status === 'complete') sessions.push(s)
     }
     let provisioned = 0
-    let missingFromDb: string[] = []
+    const missingFromDb: string[] = []
     for (const s of sessions) {
       const email = s.customer_details?.email || s.customer_email
       if (!email) continue

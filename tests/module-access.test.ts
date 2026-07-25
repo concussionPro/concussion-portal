@@ -75,6 +75,47 @@ describe('entitled users get the whole module', () => {
   })
 })
 
+describe('the public trial stays a TRIAL', () => {
+  // The whole commercial model rests on the trial being a taste, not the course.
+  // These are hard ceilings, asserted on the real content — if a change ever
+  // widens the unlock (or a renderer change starts mounting locked sections),
+  // this fails rather than quietly giving the course away.
+  it('unlocks 3 sections of Module 1 and exactly 1 of every other module', async () => {
+    const { getPreviewContent, MODULE_1_PREVIEW_COUNT } = await import('../lib/preview-content')
+    for (const course of ['ccm', 'crm'] as const) {
+      const data = getPreviewContent(course)
+      expect(data.length).toBe(8)
+      for (const m of data) {
+        const limit = m.id === 1 ? MODULE_1_PREVIEW_COUNT : 1
+        expect(m.previewSections.length, `${course} module ${m.id} unlocked too many sections`).toBe(limit)
+        // Every module must still be MOSTLY locked.
+        expect(m.previewSections.length, `${course} module ${m.id} is barely locked`).toBeLessThan(
+          m.totalSections,
+        )
+      }
+    }
+  })
+
+  it('exposes only a small fraction of the paid course', async () => {
+    const { getPreviewContent } = await import('../lib/preview-content')
+    const { getAllModules } = await import('../data/modules')
+    const words = (a: string[]) => a.join(' ').split(/\s+/).filter(Boolean).length
+    const exposed = getPreviewContent('ccm').reduce(
+      (n, m) => n + m.previewSections.reduce((k, s) => k + words(s.content), 0),
+      0,
+    )
+    const total = getAllModules().reduce(
+      (n, m) => n + m.sections.reduce((k, s) => k + words(s.content), 0),
+      0,
+    )
+    const pct = (exposed / total) * 100
+    // Currently ~2.8%. A generous ceiling that still catches "the trial now
+    // serves whole modules" — which is exactly the mistake a rendering change
+    // could introduce without touching the unlock counts.
+    expect(pct, `public trial exposes ${pct.toFixed(1)}% of the paid course`).toBeLessThan(8)
+  })
+})
+
 describe('the free SCAT course stays free', () => {
   it('SCAT modules resolve in FULL for the free tier, answers included', () => {
     for (const id of [101, 102, 103]) {

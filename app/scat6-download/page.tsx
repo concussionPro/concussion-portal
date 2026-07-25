@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   Brain,
   Mail,
@@ -272,7 +273,7 @@ export default function SCAT6DownloadPage() {
                     Downloading now
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Your form{wantScat6 && wantScoat6 ? 's are' : ' is'} downloading — and you're already logged in to your free account.
+                    Your form{wantScat6 && wantScoat6 ? 's are' : ' is'} downloading — and you&apos;re already logged in to your free account.
                   </p>
                 </div>
 
@@ -286,7 +287,7 @@ export default function SCAT6DownloadPage() {
                   <div className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-[#5b9aa6] flex-shrink-0 mt-0.5" strokeWidth={3} />
                     <p className="text-xs text-slate-700">
-                      Your download should start automatically. If it didn't,{' '}
+                      Your download should start automatically. If it didn&apos;t,{' '}
                       <button
                         onClick={triggerDownload}
                         className="text-[#5b9aa6] hover:underline font-semibold"
@@ -309,15 +310,15 @@ export default function SCAT6DownloadPage() {
                         Now learn to score what you just downloaded
                       </p>
                       <p className="text-xs text-slate-600 mb-3 leading-snug">
-                        Your free ~1-hour SCAT6 Mastery course is unlocked — you're logged in, start right now.
+                        Your free ~1-hour SCAT6 Mastery course is unlocked — you&apos;re logged in, start right now.
                       </p>
-                      <a
+                      <Link
                         href="/modules/101"
                         className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#5b9aa6] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#4a8a96]"
                       >
                         Start Module 1 now
                         <ChevronRight className="w-4 h-4" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>

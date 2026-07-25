@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
   const userIpMap = new Map<string, string>()
   for (const user of users) {
     const createdMs = new Date(user.created_at).getTime()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const match = signupEvents.find(
       (e: any) => Math.abs(Number(e.timestamp_ms) - createdMs) < 2 * 60 * 1000
     )

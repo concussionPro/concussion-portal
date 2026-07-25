@@ -60,7 +60,7 @@ export function FillableDoc({
               ([, v]) => typeof v !== 'string' || !/advanced health/i.test(v),
             ),
           )
-          // eslint-disable-next-line react-hooks/set-state-in-effect
+           
           setValues({ ...(defaultValues ?? {}), ...cleaned })
         }
       }

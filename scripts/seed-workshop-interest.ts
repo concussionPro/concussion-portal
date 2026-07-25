@@ -56,7 +56,7 @@ async function seed() {
   `
 
   let inserted = 0
-  let skipped = 0
+  const skipped = 0
 
   for (const entry of seedData) {
     const result = await sql`

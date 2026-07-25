@@ -20,7 +20,13 @@ import type { PromptFormData } from '@/lib/ai-course/prompt-form-extract'
 
 // Match all marker types in a single pass. The marker body runs until
 // the closing `]` on the same paragraph (no nested brackets supported).
-const MARKER_REGEX =
+//
+// Built fresh per call, NOT shared at module scope: a /g regex carries
+// `lastIndex` between uses, so a single shared instance is mutable state
+// shared across every section render. The old code reset `.lastIndex = 0`
+// by hand before each loop — one early return or a re-entrant render between
+// the reset and the loop and sections silently lose content.
+const markerRegex = () =>
   /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS|PROMPT-CARD|PROMPT-FORM-AUTO|QUICK-CHECK|BREAK)(?::\s*([^\]]+))?\]/g
 
 type MarkerKind =
@@ -51,8 +57,8 @@ function SectionBody({ body, promptForms }: { body: string; promptForms?: Prompt
   const parts: Part[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
-  MARKER_REGEX.lastIndex = 0
-  while ((match = MARKER_REGEX.exec(body)) !== null) {
+  const re = markerRegex()
+  while ((match = re.exec(body)) !== null) {
     if (match.index > lastIndex) {
       parts.push({ kind: 'md', value: body.slice(lastIndex, match.index) })
     }

@@ -124,7 +124,7 @@ export default function ResourcesPage() {
                 Download All 5 Resources
               </h2>
               <p className="text-slate-600">
-                Enter your email and we'll send the download links directly.
+                Enter your email and we&apos;ll send the download links directly.
               </p>
             </div>
 
@@ -175,7 +175,7 @@ export default function ResourcesPage() {
                 Download links sent to <span className="font-semibold">{email}</span>
               </p>
               <p className="text-sm text-slate-600">
-                Check your spam folder if you don't see it within a few minutes.
+                Check your spam folder if you don&apos;t see it within a few minutes.
               </p>
             </div>
 

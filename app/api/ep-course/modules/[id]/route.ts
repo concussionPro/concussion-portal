@@ -42,7 +42,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (session) authorized = await userOwnsCrm(session.email)
   }
 
-  const module = getEpModuleById(moduleId)
+  // Named `epModule`, not `module` — `module` is a reserved binding in a
+  // Next.js module scope (@next/next/no-assign-module-variable).
+  const epModule = getEpModuleById(moduleId)
 
   if (!authorized) {
     return NextResponse.json(
@@ -50,19 +52,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         error: 'This course is a private review copy',
         upgrade: true,
         message: 'Access is by ESSA reviewer link only.',
-        allSectionTitles: module?.sections.map((s) => s.title) ?? [],
+        allSectionTitles: epModule?.sections.map((s) => s.title) ?? [],
       },
       { status: 403 },
     )
   }
 
-  if (!module) {
+  if (!epModule) {
     return NextResponse.json({ error: 'Module not found' }, { status: 404 })
   }
 
   return NextResponse.json({
     success: true,
-    module,
+    module: epModule,
     accessLevel: 'full-course',
   })
 }

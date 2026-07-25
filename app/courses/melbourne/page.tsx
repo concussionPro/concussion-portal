@@ -57,7 +57,7 @@ export default function MelbournePage() {
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
-              Master SCAT6, VOMS, and BESS protocols in Melbourne's premier concussion management course.
+              Master SCAT6, VOMS, and BESS protocols in Melbourne&apos;s premier concussion management course.
               Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours.
             </p>
 

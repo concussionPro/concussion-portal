@@ -815,7 +815,7 @@ export default function SCOAT6Client() {
             <div className="space-y-4">
               <div className="bg-green-50 border border-green-300 rounded-lg p-4">
                 <p className="text-sm text-green-900 font-medium">
-                  Please rate your symptoms below based on how you feel now with "1" representing a very mild symptom and "6" representing a severe symptom.
+                  Please rate your symptoms below based on how you feel now with &quot;1&quot; representing a very mild symptom and &quot;6&quot; representing a severe symptom.
                 </p>
               </div>
 
@@ -1287,7 +1287,7 @@ export default function SCOAT6Client() {
                   Months in Reverse Order
                 </h4>
                 <p className="text-sm text-slate-700 bg-blue-50 border border-blue-200 rounded p-3 mb-4">
-                  Say "Now tell me the months of the year in reverse order as QUICKLY and as accurately as possible. Start with the last month and go backward."
+                  Say &quot;Now tell me the months of the year in reverse order as QUICKLY and as accurately as possible. Start with the last month and go backward.&quot;
                   <br/><br/>
                   <strong>1 point if completed in under 30 seconds with 0 errors</strong>
                 </p>
@@ -1856,7 +1856,7 @@ export default function SCOAT6Client() {
                 <div className="mb-4">
                   <h5 className="text-sm font-bold text-slate-700 mb-2">Forward</h5>
                   <p className="text-xs text-slate-600 mb-3 italic">
-                    "Please walk heel-to-toe quickly five steps forward, then continue forward with eyes closed for five steps."
+                    &quot;Please walk heel-to-toe quickly five steps forward, then continue forward with eyes closed for five steps.&quot;
                   </p>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
@@ -1892,7 +1892,7 @@ export default function SCOAT6Client() {
                 <div className="mb-4">
                   <h5 className="text-sm font-bold text-slate-700 mb-2">Backward</h5>
                   <p className="text-xs text-slate-600 mb-3 italic">
-                    "Please walk heel-to-toe again, backwards five steps eyes open, then continue backwards five steps with eyes closed."
+                    &quot;Please walk heel-to-toe again, backwards five steps eyes open, then continue backwards five steps with eyes closed.&quot;
                   </p>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
@@ -2503,7 +2503,7 @@ export default function SCOAT6Client() {
                 ) : (
                   <div className="bg-white border border-slate-300 rounded-lg p-4">
                     <p className="text-sm text-slate-700 mb-3">
-                      <strong>Instruction:</strong> "Do you remember that list of words I read a few times earlier? Tell me as many words from the list as you can remember, in any order."
+                      <strong>Instruction:</strong> &quot;Do you remember that list of words I read a few times earlier? Tell me as many words from the list as you can remember, in any order.&quot;
                     </p>
                     <p className="text-xs text-slate-500 mb-4 italic">
                       Using Word List {formData.wordListUsed}

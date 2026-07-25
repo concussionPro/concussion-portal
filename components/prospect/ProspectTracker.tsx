@@ -39,7 +39,15 @@ export function ProspectTracker({
    */
   endpoint?: string
 }) {
-  const startTimeRef = useRef<number>(Date.now())
+  // Mount time for the dwell measurement. Stamped in an EFFECT, not in the
+  // useRef initialiser: useRef evaluates its argument on every render (unlike
+  // useState's lazy init), so `Date.now()` there is an impure call in the
+  // render path. An effect also measures what we actually want — when the
+  // component mounted in the browser, not when React happened to render it.
+  const startTimeRef = useRef<number>(0)
+  useEffect(() => {
+    if (startTimeRef.current === 0) startTimeRef.current = Date.now()
+  }, [])
   const lastVisibleSectionRef = useRef<string>('hero')
   const sentSectionsRef = useRef<Set<string>>(new Set())
   const exitedRef = useRef(false)
@@ -105,7 +113,9 @@ export function ProspectTracker({
     function emitExit(via: string): void {
       if (exitedRef.current) return
       exitedRef.current = true
-      const dwellMs = Date.now() - startTimeRef.current
+      // 0 means the mount effect hasn't run yet — report no dwell rather than
+      // an absurd "milliseconds since 1970" figure.
+      const dwellMs = startTimeRef.current ? Date.now() - startTimeRef.current : 0
       emitBeacon({
         interactionType: 'exit',
         section: lastVisibleSectionRef.current,

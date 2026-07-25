@@ -221,7 +221,7 @@ export default function SCATCoursePage() {
                   Course Complete — Your Certificate is Ready!
                 </h2>
                 <p className="text-sm text-emerald-800 mb-4">
-                  You've completed the SCAT Mastery course.
+                  You&apos;ve completed the SCAT Mastery course.
                   {certificateStatus === 'sent' && ' Your certificate has been emailed to you.'}
                   {certificateStatus === 'sending' && ' Emailing your certificate now...'}
                   {certificateStatus === 'error' && ' We had trouble emailing your certificate, but you can download it below.'}

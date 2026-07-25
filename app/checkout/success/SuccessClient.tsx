@@ -27,6 +27,9 @@ function CheckoutSuccessContent() {
   const router = useRouter()
   const sessionId = searchParams.get('session_id')
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
+  // Wall-clock read once per mount — Date.now() during render is impure, and a
+  // workshop countdown can't meaningfully change mid-view.
+  const [mountedAt] = useState(() => Date.now())
   // Whether the checkout-session API minted a logged-in session cookie. If it
   // didn't (webhook race — user row not created yet), linking into gated
   // course content would bounce the buyer to /login. Default false until the
@@ -197,7 +200,7 @@ function CheckoutSuccessContent() {
 
           // Confirmed city with date — show countdown
           if (location.dateObj) {
-            const daysUntil = Math.ceil((location.dateObj.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            const daysUntil = Math.ceil((location.dateObj.getTime() - mountedAt) / (1000 * 60 * 60 * 24))
             if (daysUntil <= 0) return null
             return (
               <div className="glass rounded-2xl p-6 md:p-8 mb-6 text-center border border-accent/20">

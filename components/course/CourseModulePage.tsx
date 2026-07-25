@@ -1664,7 +1664,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Complete</h3>
                   <p className="text-[15px] text-slate-700 mb-6 leading-relaxed">
-                    Congratulations! You've met all the requirements for this module.{module.points > 0 ? ` Mark it as complete to earn your ${module.points} CPD hours.` : ''}
+                    Congratulations! You&apos;ve met all the requirements for this module.{module.points > 0 ? ` Mark it as complete to earn your ${module.points} CPD hours.` : ''}
                   </p>
                   <button
                     onClick={handleCompleteModule}

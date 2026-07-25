@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { HeartPulse, ShieldCheck, Info, Clock } from 'lucide-react'
 
 /**
@@ -82,6 +83,7 @@ function nonMeasurableLabel(p: TrajectoryPoint): { label: string; cls: string } 
 }
 
 export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
+  const [mountedAt] = useState(() => Date.now())
   // SPEC 3 — only verified, clinician-gated, real measurements are plottable.
   const plottable = points.filter((p) => p.hrt != null && p.verified === true && p.gated === true)
   // Split the exclusions honestly: a test WITHOUT a measurable HRt
@@ -98,7 +100,11 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
     .map((p) => Date.parse(p.date))
     .filter((n) => !Number.isNaN(n))
     .reduce((a, b) => Math.max(a, b), 0)
-  const daysSinceTest = newestTs > 0 ? Math.floor((Date.now() - newestTs) / 86_400_000) : null
+  // Wall-clock read ONCE per mount, not on every render — calling Date.now()
+  // during render is impure and makes "days since test" depend on when React
+  // happens to re-render. A re-test cadence can't meaningfully cross a day
+  // boundary mid-view.
+  const daysSinceTest = newestTs > 0 ? Math.floor((mountedAt - newestTs) / 86_400_000) : null
   const latestKind = [...points].reverse().find((p) => p.interpretation || p.eventType)
   const latestState = latestKind ? pointKind(latestKind) : null
   const retestDue = daysSinceTest != null && daysSinceTest >= 14 && latestState !== 'no-intolerance' && latestState !== 'red-flag'

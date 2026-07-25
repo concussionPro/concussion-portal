@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Loader2, Sparkles, Check, Lock } from 'lucide-react'
 
 /**
@@ -103,12 +104,12 @@ export function HomepageAiCourseCard() {
       {/* Live CTA once launched; otherwise the waitlist form */}
       {launched ? (
         <div className="relative space-y-2">
-          <a
+          <Link
             href="/courses/ai-in-clinical-practice"
             className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0b6165]"
           >
             <Sparkles className="w-3.5 h-3.5" /> Start the course
-          </a>
+          </Link>
           <p className="text-[10px] text-slate-500 italic">A$99 · 2 CPD hours · certificate on completion.</p>
         </div>
       ) : submitted ? (

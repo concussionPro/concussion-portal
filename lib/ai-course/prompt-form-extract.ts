@@ -109,10 +109,10 @@ export function extractPromptForms(body: string): {
     const promptTemplate = stripBlockquote(promptLines.join('\n')).trim()
 
     // Capture checklist + does-well/poorly if they immediately follow
-    let checklist: string[] = []
+    const checklist: string[] = []
     let doesWell: string | undefined
     let doesPoorly: string | undefined
-    let after = promptEnd
+    const after = promptEnd
 
     // Look ahead for Review checklist + does well/poorly within next 40 lines
     const tailLimit = Math.min(lines.length, after + 60)
@@ -158,7 +158,7 @@ export function extractPromptForms(body: string): {
     }
 
     // Parse inputs from the captured inputs block (if any) in output
-    let inputs: PromptFormInput[] = []
+    const inputs: PromptFormInput[] = []
     if (inputsBlockStartInOutput !== -1) {
       for (let j = inputsBlockStartInOutput + 1; j < output.length; j++) {
         const cur = output[j].trim()

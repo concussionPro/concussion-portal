@@ -518,7 +518,7 @@ export default function SCAT6Client() {
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900 font-medium">
-                  Please rate your symptoms below based on how you feel now with "1" representing a very mild symptom and "6" representing a severe symptom.
+                  Please rate your symptoms below based on how you feel now with &quot;1&quot; representing a very mild symptom and &quot;6&quot; representing a severe symptom.
                 </p>
               </div>
 
@@ -882,7 +882,7 @@ export default function SCAT6Client() {
               <div>
                 <h4 className="font-bold text-slate-900 mb-3">Months in Reverse Order</h4>
                 <p className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded p-3 mb-4">
-                  Say "Now tell me the months of the year in reverse order as QUICKLY and as accurately as possible. Start with the last month and go backward."
+                  Say &quot;Now tell me the months of the year in reverse order as QUICKLY and as accurately as possible. Start with the last month and go backward.&quot;
                   <br/><br/>
                   <strong>1 point if no errors and completion under 30 seconds</strong>
                 </p>
@@ -1324,7 +1324,7 @@ export default function SCAT6Client() {
               ) : (
                 <div className="bg-white border border-slate-300 rounded-lg p-4">
                   <p className="text-sm text-slate-700 mb-3">
-                    <strong>Instruction:</strong> "Do you remember that list of words I read a few times earlier? Tell me as many words from the list as you can remember, in any order."
+                    <strong>Instruction:</strong> &quot;Do you remember that list of words I read a few times earlier? Tell me as many words from the list as you can remember, in any order.&quot;
                   </p>
                   <p className="text-xs text-slate-500 mb-4 italic">
                     Using Word List {formData.wordListUsed}

@@ -52,9 +52,14 @@ export default async function CheckoutSuccessPage({
       redirect('/pricing')
     }
 
-    // Reject stale links (>4h) so refreshes after a day don't re-count
+    // Reject stale links (>4h) so refreshes after a day don't re-count.
+    // This is a SERVER component: it runs once per request, and freshness is
+    // exactly what we're measuring — reading the clock here is correct, not an
+    // impure render. (The lint rule can't distinguish server from client.)
+    // eslint-disable-next-line react-hooks/purity
+    const nowMs = Date.now()
     const createdAtMs = (session.created || 0) * 1000
-    if (Date.now() - createdAtMs > 4 * 60 * 60 * 1000) {
+    if (nowMs - createdAtMs > 4 * 60 * 60 * 1000) {
       redirect('/pricing')
     }
   } catch (err) {
