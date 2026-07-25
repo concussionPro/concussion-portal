@@ -8,7 +8,7 @@ export async function inspectPDFFields(pdfPath: string) {
     const form = pdfDoc.getForm()
     const fields = form.getFields()
 
-    const fieldInfo: any[] = []
+    const fieldInfo: Array<{ index: number; name: string; type: string }> = []
     fields.forEach((field, index) => {
       const name = field.getName()
       const type = field.constructor.name

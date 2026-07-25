@@ -22,8 +22,36 @@ export interface User {
   sstEntitledAt?: string
 }
 
+/**
+ * A raw snake_case row from the `users` table.
+ *
+ * Written out rather than `any` so a column rename or a dropped SELECT field
+ * fails at compile time instead of silently producing `undefined` on a User.
+ * Timestamps come back as Date from the driver but as string from JSON paths,
+ * hence the union — rowToUser normalises both to ISO strings.
+ */
+interface UserRow {
+  id: string
+  email: string
+  name: string
+  access_level: User['accessLevel']
+  created_at: Date | string
+  squarespace_order_id?: string | null
+  stripe_customer_id?: string | null
+  stripe_subscription_id?: string | null
+  workshop_location?: string | null
+  last_login_at?: Date | string | null
+  nurture_unsubscribed?: boolean | null
+  progress_emails_opted_out?: boolean | null
+  signup_source?: User['signupSource'] | null
+  converted_from?: string | null
+  is_test?: boolean | null
+  reference_book_purchased_at?: Date | string | null
+  sst_entitled_at?: Date | string | null
+}
+
 /** Map a snake_case DB row to a camelCase User object */
-function rowToUser(row: any): User {
+function rowToUser(row: UserRow): User {
   return {
     id: row.id,
     email: row.email,
@@ -54,19 +82,19 @@ function rowToUser(row: any): User {
 // Load all users
 export async function loadUsers(): Promise<User[]> {
   await ensureColumns()
-  const { rows } = await sql`SELECT * FROM users ORDER BY created_at DESC`
+  const { rows } = await sql<UserRow>`SELECT * FROM users ORDER BY created_at DESC`
   return rows.map(rowToUser)
 }
 
 // Find user by email
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const { rows } = await sql`SELECT * FROM users WHERE LOWER(email) = LOWER(${email}) LIMIT 1`
+  const { rows } = await sql<UserRow>`SELECT * FROM users WHERE LOWER(email) = LOWER(${email}) LIMIT 1`
   return rows.length > 0 ? rowToUser(rows[0]) : null
 }
 
 // Find user by ID
 export async function findUserById(id: string): Promise<User | null> {
-  const { rows } = await sql`SELECT * FROM users WHERE id = ${id} LIMIT 1`
+  const { rows } = await sql<UserRow>`SELECT * FROM users WHERE id = ${id} LIMIT 1`
   return rows.length > 0 ? rowToUser(rows[0]) : null
 }
 

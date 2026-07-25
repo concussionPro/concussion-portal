@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
 
+interface SurveyRow { email: string; name: string | null; access_level: string; answer: string; answered_at: string | Date }
+
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -23,12 +25,12 @@ export async function GET(request: NextRequest) {
       ORDER BY s.answered_at DESC
     `
     const breakdown: Record<string, number> = {}
-    for (const r of rows as any[]) breakdown[r.answer] = (breakdown[r.answer] || 0) + 1
+    for (const r of rows as SurveyRow[]) breakdown[r.answer] = (breakdown[r.answer] || 0) + 1
     return NextResponse.json({
       surveyKey,
       total: rows.length,
       breakdown,
-      responses: rows.map((r: any) => ({
+      responses: rows.map((r) => (r as SurveyRow)).map((r) => ({
         email: r.email,
         name: r.name,
         accessLevel: r.access_level,

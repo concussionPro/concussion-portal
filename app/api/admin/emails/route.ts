@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Load all progress from Postgres in one query
     const { rows: progressRows } = await sql`SELECT user_id, progress FROM user_progress`
-    const progressMap = new Map<string, any>()
+    const progressMap = new Map<string, Record<string, { completed?: boolean; completedAt?: string; quizScore?: number; quizCompleted?: boolean }> | null>()
     for (const row of progressRows) {
       progressMap.set(row.user_id, row.progress)
     }

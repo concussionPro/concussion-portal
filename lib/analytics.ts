@@ -6,7 +6,7 @@ export interface AnalyticsEvent {
   email: string | null
   timestamp: number
   eventType: string
-  eventData: Record<string, any>
+  eventData: Record<string, unknown>
   sessionId: string
   userAgent: string
   referrer: string
@@ -178,7 +178,7 @@ export function clearIdentity(): void {
 // Client-side analytics tracking
 export async function trackEvent(
   eventType: string,
-  eventData: Record<string, any> = {}
+  eventData: Record<string, unknown> = {}
 ): Promise<void> {
   try {
     // MUST call getVisitNumber() BEFORE creating session ID,
@@ -235,7 +235,7 @@ export async function trackEvent(
 }
 
 // Page view tracker (call on route change)
-export function trackPageView(path: string, additionalData: Record<string, any> = {}) {
+export function trackPageView(path: string, additionalData: Record<string, unknown> = {}) {
   trackEvent(ANALYTICS_EVENTS.PAGE_VIEW, {
     path,
     ...additionalData,
@@ -243,7 +243,7 @@ export function trackPageView(path: string, additionalData: Record<string, any> 
 }
 
 // Shop/conversion tracking — also fires Google Ads conversion
-export function trackShopClick(source: string, additionalData: Record<string, any> = {}) {
+export function trackShopClick(source: string, additionalData: Record<string, unknown> = {}) {
   trackEvent(ANALYTICS_EVENTS.SHOP_CLICK, {
     source,
     timestamp: new Date().toISOString(),
@@ -382,7 +382,7 @@ declare global {
 export function trackModuleProgress(
   moduleId: string,
   action: 'start' | 'complete',
-  additionalData: Record<string, any> = {}
+  additionalData: Record<string, unknown> = {}
 ) {
   const eventType = action === 'start' ? ANALYTICS_EVENTS.MODULE_START : ANALYTICS_EVENTS.MODULE_COMPLETE
   trackEvent(eventType, {
@@ -396,7 +396,7 @@ export function trackModuleProgress(
 export function trackDownload(
   fileName: string,
   category: string,
-  additionalData: Record<string, any> = {}
+  additionalData: Record<string, unknown> = {}
 ) {
   trackEvent(ANALYTICS_EVENTS.TOOLKIT_DOWNLOAD, {
     fileName,
@@ -419,7 +419,7 @@ export function trackSearch(query: string, results: number) {
 export function trackError(
   errorType: string,
   errorMessage: string,
-  additionalData: Record<string, any> = {}
+  additionalData: Record<string, unknown> = {}
 ) {
   trackEvent(ANALYTICS_EVENTS.ERROR, {
     errorType,

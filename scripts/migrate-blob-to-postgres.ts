@@ -150,7 +150,7 @@ async function migrateUsers() {
   }
 
   const res = await fetch(`${userBlobs[0].url}?t=${Date.now()}`, { cache: 'no-store' })
-  const users: any[] = await res.json()
+  const users = (await res.json()) as Array<Record<string, unknown>>
   console.log(`  Found ${users.length} users in Blob.`)
 
   for (const u of users) {
@@ -233,7 +233,7 @@ async function migrateAbandonedCheckouts() {
   }
 
   const res = await fetch(`${acBlobs[0].url}?t=${Date.now()}`, { cache: 'no-store' })
-  const checkouts: any[] = await res.json()
+  const checkouts = (await res.json()) as Array<Record<string, unknown>>
   console.log(`  Found ${checkouts.length} abandoned checkouts.`)
 
   for (const c of checkouts) {

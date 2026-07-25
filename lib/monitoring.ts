@@ -4,7 +4,7 @@ export interface ErrorLog {
   timestamp: number
   error: string
   stack?: string
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   severity: 'critical' | 'error' | 'warning'
   endpoint?: string
   userId?: string
@@ -54,7 +54,7 @@ export async function logAuthFailure(context: {
 // Log critical system errors
 export async function logCriticalError(
   error: Error,
-  context: Record<string, any>
+  context: Record<string, unknown>
 ): Promise<void> {
   await logError({
     timestamp: Date.now(),

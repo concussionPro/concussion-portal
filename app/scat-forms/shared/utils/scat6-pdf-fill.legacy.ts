@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, type PDFForm } from 'pdf-lib'
 import { SCAT6FormData } from '../types/scat6.types'
 import { calculateSymptomNumber, calculateSymptomSeverity } from './scat6-calculations'
 
@@ -295,7 +295,7 @@ export async function exportSCAT6ToFilledPDF(
 
 // ==================== HELPER FUNCTIONS ====================
 
-function setTextField(form: any, fieldName: string, value: string | number): number {
+function setTextField(form: PDFForm, fieldName: string, value: string | number): number {
   try {
     if (value === undefined || value === null || value === '') return 0
 
@@ -307,7 +307,7 @@ function setTextField(form: any, fieldName: string, value: string | number): num
   }
 }
 
-function setCheckBox(form: any, fieldName: string, value: boolean): number {
+function setCheckBox(form: PDFForm, fieldName: string, value: boolean): number {
   try {
     if (value === undefined || value === null) return 0
 
@@ -320,7 +320,10 @@ function setCheckBox(form: any, fieldName: string, value: boolean): number {
       }
       return 1
     } catch (e) {
-      const field = form.getButton(fieldName)
+      // pdf-lib types getButton() as PDFButton (no .select), but these legacy
+      // AcroForm fields are radio groups that DO expose select() at runtime.
+      // Narrow escape rather than a file-wide `any` — see the .legacy suffix.
+      const field = form.getButton(fieldName) as unknown as { select(v: string): void }
       field.select(value ? '/1' : '/0')
       return 1
     }
@@ -333,7 +336,7 @@ function setCheckBox(form: any, fieldName: string, value: boolean): number {
  * Set a symptom radio button (0-6 scale).
  * The PDF radio buttons use /{value} format.
  */
-function setSymptomRadio(form: any, fieldName: string, value: number): number {
+function setSymptomRadio(form: PDFForm, fieldName: string, value: number): number {
   try {
     if (value === undefined || value === null) return 0
 
@@ -343,7 +346,7 @@ function setSymptomRadio(form: any, fieldName: string, value: number): number {
   } catch (error) {
     // Fallback: try as button
     try {
-      const field = form.getButton(fieldName)
+      const field = form.getButton(fieldName) as unknown as { select(v: string): void }
       field.select(`/${value}`)
       return 1
     } catch (e) {
@@ -352,7 +355,7 @@ function setSymptomRadio(form: any, fieldName: string, value: number): number {
   }
 }
 
-function setRadioButtonByValue(form: any, fieldName: string, value: string): number {
+function setRadioButtonByValue(form: PDFForm, fieldName: string, value: string): number {
   try {
     if (!value || value === '') return 0
 
@@ -363,7 +366,7 @@ function setRadioButtonByValue(form: any, fieldName: string, value: string): num
       return 1
     } catch (e) {
       // Fallback to button
-      const field = form.getButton(fieldName)
+      const field = form.getButton(fieldName) as unknown as { select(v: string): void }
       field.select(value)
       return 1
     }

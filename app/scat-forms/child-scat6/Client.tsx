@@ -309,7 +309,7 @@ export default function ChildSCAT6Client() {
                   {(['Male', 'Female', 'Prefer Not To Say', 'Other'] as const).map(option => (
                     <label key={option} className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="sex" value={option} checked={formData.sex === option}
-                        onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as any }))} className="w-4 h-4 text-green-600" />
+                        onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as ChildSCAT6FormData['sex'] }))} className="w-4 h-4 text-green-600" />
                       <span className="text-sm text-slate-700">{option}</span>
                     </label>
                   ))}
@@ -321,7 +321,7 @@ export default function ChildSCAT6Client() {
                   {(['Left', 'Right', 'Ambidextrous'] as const).map(option => (
                     <label key={option} className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="dominantHand" value={option} checked={formData.dominantHand === option}
-                        onChange={(e) => setFormData(prev => ({ ...prev, dominantHand: e.target.value as any }))} className="w-4 h-4 text-green-600" />
+                        onChange={(e) => setFormData(prev => ({ ...prev, dominantHand: e.target.value as ChildSCAT6FormData['dominantHand'] }))} className="w-4 h-4 text-green-600" />
                       <span className="text-sm text-slate-700">{option}</span>
                     </label>
                   ))}
@@ -711,7 +711,7 @@ export default function ChildSCAT6Client() {
                     {(['Left', 'Right'] as const).map(option => (
                       <label key={option} className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="footTested" value={option} checked={formData.footTested === option}
-                          onChange={(e) => setFormData(prev => ({ ...prev, footTested: e.target.value as any }))} className="w-4 h-4 text-green-600" />
+                          onChange={(e) => setFormData(prev => ({ ...prev, footTested: e.target.value as ChildSCAT6FormData['footTested'] }))} className="w-4 h-4 text-green-600" />
                         <span className="text-sm">{option}</span>
                       </label>
                     ))}
@@ -849,7 +849,7 @@ export default function ChildSCAT6Client() {
                   {(['Yes', 'No', 'Deferred'] as const).map(option => (
                     <label key={option} className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="concussion" value={option} checked={formData.concussionDiagnosed === option}
-                        onChange={(e) => setFormData(prev => ({ ...prev, concussionDiagnosed: e.target.value as any }))} className="w-4 h-4 text-green-600" />
+                        onChange={(e) => setFormData(prev => ({ ...prev, concussionDiagnosed: e.target.value as ChildSCAT6FormData['concussionDiagnosed'] }))} className="w-4 h-4 text-green-600" />
                       <span className="text-sm font-medium">{option}</span>
                     </label>
                   ))}

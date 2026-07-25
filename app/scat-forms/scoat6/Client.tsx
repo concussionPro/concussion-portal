@@ -3,7 +3,18 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Download, Save, ChevronDown, ChevronUp, Check } from 'lucide-react'
-import { SCOAT6FormData, getDefaultSCOAT6FormData } from '../shared/types/scoat6.types'
+import {
+  SCOAT6FormData,
+  getDefaultSCOAT6FormData,
+  type Scoat6Sex,
+  type Scoat6DominantHand,
+  type Scoat6NormalAbnormal,
+  type Scoat6DisorderEntry,
+  type Scoat6SymptomRow,
+  type Scoat6SymptomColumn,
+  type Scoat6MvomsRow,
+  type Scoat6ExamResult,
+} from '../shared/types/scoat6.types'
 import { getAllCalculatedScores } from '../shared/utils/scoat6-calculations'
 import { exportSCOAT6ToFlatPDF } from '../shared/utils/scoat6-pdf-flat'
 import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
@@ -279,7 +290,7 @@ export default function SCOAT6Client() {
                         name="sex"
                         value={option}
                         checked={formData.sex === option}
-                        onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as any }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as Scoat6Sex }))}
                         className="w-4 h-4 text-purple-600"
                       />
                       <span className="text-sm text-slate-700">{option}</span>
@@ -298,7 +309,7 @@ export default function SCOAT6Client() {
                         name="dominantHand"
                         value={option}
                         checked={formData.dominantHand === option}
-                        onChange={(e) => setFormData(prev => ({ ...prev, dominantHand: e.target.value as any }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, dominantHand: e.target.value as Scoat6DominantHand }))}
                         className="w-4 h-4 text-purple-600"
                       />
                       <span className="text-sm text-slate-700">{option}</span>
@@ -537,7 +548,7 @@ export default function SCOAT6Client() {
                       </label>
                       <input
                         type="text"
-                        value={(formData.disorders[key as keyof typeof formData.disorders] as any).yearDiagnosed}
+                        value={(formData.disorders[key as keyof typeof formData.disorders] as Scoat6DisorderEntry).yearDiagnosed}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
                           disorders: {
@@ -550,7 +561,7 @@ export default function SCOAT6Client() {
                       />
                       <input
                         type="text"
-                        value={(formData.disorders[key as keyof typeof formData.disorders] as any).management}
+                        value={(formData.disorders[key as keyof typeof formData.disorders] as Scoat6DisorderEntry).management}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
                           disorders: {
@@ -924,12 +935,12 @@ export default function SCOAT6Client() {
                       {(['preInjury', 'dayInjured', 'consult1', 'consult2', 'consult3'] as const).map(col => (
                         <div key={col} className="flex justify-center">
                           <select
-                            value={(formData.symptoms as any)[key][col]}
+                            value={(formData.symptoms as Record<string, Scoat6SymptomRow>)[key][col as Scoat6SymptomColumn]}
                             onChange={(e) => setFormData(prev => ({
                               ...prev,
                               symptoms: {
                                 ...prev.symptoms,
-                                [key]: { ...(prev.symptoms as any)[key], [col]: parseInt(e.target.value) }
+                                [key]: { ...(prev.symptoms as Record<string, Scoat6SymptomRow>)[key], [col]: parseInt(e.target.value) }
                               }
                             }))}
                             className="w-14 px-1 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
@@ -1457,7 +1468,7 @@ export default function SCOAT6Client() {
                     <div className="text-sm font-bold text-slate-700">Results</div>
                     <select
                       value={formData.orthostaticsSupineResult}
-                      onChange={(e) => setFormData(prev => ({ ...prev, orthostaticsSupineResult: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, orthostaticsSupineResult: e.target.value as Scoat6NormalAbnormal }))}
                       className="px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-sm"
                     >
                       <option value="">-</option>
@@ -1466,7 +1477,7 @@ export default function SCOAT6Client() {
                     </select>
                     <select
                       value={formData.orthostaticsStandingResult}
-                      onChange={(e) => setFormData(prev => ({ ...prev, orthostaticsStandingResult: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, orthostaticsStandingResult: e.target.value as Scoat6NormalAbnormal }))}
                       className="px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-sm"
                     >
                       <option value="">-</option>
@@ -1574,7 +1585,7 @@ export default function SCOAT6Client() {
                           <input
                             type="radio"
                             checked={formData.cranialNerves === opt}
-                            onChange={() => setFormData(prev => ({ ...prev, cranialNerves: opt as any }))}
+                            onChange={() => setFormData(prev => ({ ...prev, cranialNerves: opt as Scoat6ExamResult }))}
                             className="w-4 h-4 text-purple-600"
                           />
                           <span className="text-xs">{opt}</span>
@@ -1608,7 +1619,7 @@ export default function SCOAT6Client() {
                             <input
                               type="radio"
                               checked={formData[key as keyof SCOAT6FormData] === opt}
-                              onChange={() => setFormData(prev => ({ ...prev, [key]: opt as any }))}
+                              onChange={() => setFormData(prev => ({ ...prev, [key]: opt as Scoat6ExamResult }))}
                               className="w-4 h-4 text-purple-600"
                             />
                             <span className="text-xs">{opt}</span>
@@ -2111,10 +2122,10 @@ export default function SCOAT6Client() {
                         <div className="flex justify-center">
                           <input
                             type="checkbox"
-                            checked={(formData as any)[key].notTested}
+                            checked={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].notTested}
                             onChange={(e) => setFormData(prev => ({
                               ...prev,
-                              [key]: { ...(prev as any)[key], notTested: e.target.checked }
+                              [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], notTested: e.target.checked }
                             }))}
                             className="w-4 h-4 text-purple-600"
                           />
@@ -2123,10 +2134,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as any)[key].headache}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].headache}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as any)[key], headache: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], headache: parseInt(e.target.value) || 0 }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2134,10 +2145,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as any)[key].dizziness}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].dizziness}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as any)[key], dizziness: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], dizziness: parseInt(e.target.value) || 0 }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2145,10 +2156,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as any)[key].nausea}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].nausea}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as any)[key], nausea: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], nausea: parseInt(e.target.value) || 0 }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2156,10 +2167,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as any)[key].fogginess}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].fogginess}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as any)[key], fogginess: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], fogginess: parseInt(e.target.value) || 0 }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2214,7 +2225,7 @@ export default function SCOAT6Client() {
                             <div key={val} className="flex justify-center">
                               <input
                                 type="radio"
-                                checked={(formData as any)[key] === val}
+                                checked={(formData as unknown as Record<string, number>)[key] === val}
                                 onChange={() => setFormData(prev => ({ ...prev, [key]: val }))}
                                 className="w-4 h-4 text-orange-600"
                               />
@@ -2278,7 +2289,7 @@ export default function SCOAT6Client() {
                             <div key={val} className="flex justify-center">
                               <input
                                 type="radio"
-                                checked={(formData as any)[key] === val}
+                                checked={(formData as unknown as Record<string, number>)[key] === val}
                                 onChange={() => setFormData(prev => ({ ...prev, [key]: val }))}
                                 className="w-4 h-4 text-orange-600"
                               />

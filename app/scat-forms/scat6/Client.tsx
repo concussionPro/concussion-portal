@@ -306,7 +306,7 @@ export default function SCAT6Client() {
                         name="sex"
                         value={option}
                         checked={formData.sex === option}
-                        onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as any }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as SCAT6FormData['sex'] }))}
                         className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm text-slate-700">{option}</span>
@@ -325,7 +325,7 @@ export default function SCAT6Client() {
                         name="dominantHand"
                         value={option}
                         checked={formData.dominantHand === option}
-                        onChange={(e) => setFormData(prev => ({ ...prev, dominantHand: e.target.value as any }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, dominantHand: e.target.value as SCAT6FormData['dominantHand'] }))}
                         className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm text-slate-700">{option}</span>
@@ -1456,7 +1456,7 @@ export default function SCAT6Client() {
                         value={formData.decisionDates.neurologicalExam1}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
-                          decisionDates: { ...prev.decisionDates, neurologicalExam1: e.target.value as any }
+                          decisionDates: { ...prev.decisionDates, neurologicalExam1: e.target.value as SCAT6FormData['decisionDates']['neurologicalExam1'] }
                         }))}
                         className="px-2 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                       >
@@ -1468,7 +1468,7 @@ export default function SCAT6Client() {
                         value={formData.decisionDates.neurologicalExam2}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
-                          decisionDates: { ...prev.decisionDates, neurologicalExam2: e.target.value as any }
+                          decisionDates: { ...prev.decisionDates, neurologicalExam2: e.target.value as SCAT6FormData['decisionDates']['neurologicalExam2'] }
                         }))}
                         className="px-2 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                       >
@@ -1480,7 +1480,7 @@ export default function SCAT6Client() {
                         value={formData.decisionDates.neurologicalExam3}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
-                          decisionDates: { ...prev.decisionDates, neurologicalExam3: e.target.value as any }
+                          decisionDates: { ...prev.decisionDates, neurologicalExam3: e.target.value as SCAT6FormData['decisionDates']['neurologicalExam3'] }
                         }))}
                         className="px-2 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                       >
@@ -1510,7 +1510,7 @@ export default function SCAT6Client() {
                             key={key}
                             type={key.includes('Fastest') ? 'text' : 'number'}
                             min="0"
-                            value={formData.decisionDates[key as keyof typeof formData.decisionDates] as any}
+                            value={formData.decisionDates[key as keyof typeof formData.decisionDates]}
                             onChange={(e) => setFormData(prev => ({
                               ...prev,
                               decisionDates: {

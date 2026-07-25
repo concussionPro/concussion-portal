@@ -21,7 +21,7 @@ export function useAnalytics() {
 }
 
 // Hook to track component mount
-export function useTrackMount(eventType: string, eventData: Record<string, any> = {}) {
+export function useTrackMount(eventType: string, eventData: Record<string, unknown> = {}) {
   useEffect(() => {
     trackEvent(eventType, eventData)
   }, [])

@@ -36,7 +36,7 @@ async function main() {
       signal: AbortSignal.timeout(10000),
     })
     if (r.status === 200) {
-      const d: any = await r.json()
+      const d = (await r.json()) as { profiles?: unknown[] }
       add('INFO', 'Squarespace API', `OK — ${d.profiles?.length ?? 0} profiles fetched`)
     } else {
       const txt = await r.text()
@@ -79,8 +79,9 @@ async function main() {
       signal: AbortSignal.timeout(10000),
     })
     if (!r.ok) return add('CRIT', 'Resend domain', `Domains list HTTP ${r.status}`)
-    const d: any = await r.json()
-    const ours = (d.data || []).find((x: any) => String(x.name).includes('concussion-education-australia'))
+    type ResendDomain = { name: string; status: string; click_tracking: boolean; open_tracking: boolean }
+    const d = (await r.json()) as { data?: ResendDomain[] }
+    const ours = (d.data || []).find((x) => String(x.name).includes('concussion-education-australia'))
     if (!ours) return add('CRIT', 'Resend domain', 'Domain not found in Resend account')
     add('INFO', 'Resend domain', `${ours.name} status=${ours.status} click=${ours.click_tracking ? 'ON' : 'off'} open=${ours.open_tracking ? 'ON' : 'off'}`)
     if (ours.click_tracking) add('WARN', 'Resend domain', 'Click tracking is ON — track.* subdomain blocked by Brave Shields / privacy tools. Disable in dashboard.')
@@ -93,17 +94,17 @@ async function main() {
 
   // ── 6. DB integrity: orphans / missing access levels ───────
   await probe('Users table', async () => {
-    const { rows: missing } = await sql`
+    const { rows: missing } = await sql<{ email: string; signup_source: string | null; created_at: Date }>`
       SELECT email, signup_source, created_at FROM users
       WHERE access_level IS NULL OR access_level = ''
     `
-    if (missing.length > 0) add('CRIT', 'Users table', `${missing.length} users missing access_level: ${missing.slice(0, 5).map((r: any) => r.email).join(', ')}`)
+    if (missing.length > 0) add('CRIT', 'Users table', `${missing.length} users missing access_level: ${missing.slice(0, 5).map((r) => r.email).join(', ')}`)
 
-    const { rows: paidNoLoc } = await sql`
+    const { rows: paidNoLoc } = await sql<{ email: string }>`
       SELECT email FROM users
       WHERE access_level = 'full-course' AND (workshop_location IS NULL OR workshop_location = '')
     `
-    if (paidNoLoc.length > 0) add('WARN', 'Users table', `${paidNoLoc.length} full-course users with no workshop_location: ${paidNoLoc.slice(0, 5).map((r: any) => r.email).join(', ')}`)
+    if (paidNoLoc.length > 0) add('WARN', 'Users table', `${paidNoLoc.length} full-course users with no workshop_location: ${paidNoLoc.slice(0, 5).map((r) => r.email).join(', ')}`)
   })
 
   // ── 7. Recent Stripe activity vs DB ─────────────────────────
@@ -176,7 +177,7 @@ async function main() {
       GROUP BY event_type
     `
     const map: Record<string, number> = {}
-    for (const r of rows as any[]) map[r.event_type] = r.n
+    for (const r of rows as Array<{ event_type: string; n: number }>) map[r.event_type] = r.n
 
     const { rows: lastEvent } = await sql`
       SELECT MAX(created_at) AS latest FROM email_events

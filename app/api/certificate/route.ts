@@ -308,11 +308,20 @@ export async function POST(request: NextRequest) {
 
 // ── Helpers ──────────────────────────────────
 
-async function loadUserProgress(userId: string): Promise<Record<string, any> | null> {
+/** The stored progress blob: module id (as a string key) -> its progress. */
+type StoredProgress = Record<string, {
+  completed?: boolean
+  completedAt?: string
+  quizScore?: number
+  quizCompleted?: boolean
+  quizAnswers?: Record<string, number> | null
+}>
+
+async function loadUserProgress(userId: string): Promise<StoredProgress | null> {
   try {
     const { rows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${userId}`
     if (rows.length > 0 && rows[0].progress) {
-      return rows[0].progress as Record<string, any>
+      return rows[0].progress as StoredProgress
     }
   } catch (error) {
     console.error('Failed to load user progress:', error)
@@ -320,7 +329,7 @@ async function loadUserProgress(userId: string): Promise<Record<string, any> | n
   return null
 }
 
-function getLatestCompletionDate(progress: Record<string, any>, moduleIds: number[]): Date {
+function getLatestCompletionDate(progress: StoredProgress, moduleIds: number[]): Date {
   let latest = new Date(0)
   for (const id of moduleIds) {
     const mod = progress[id]

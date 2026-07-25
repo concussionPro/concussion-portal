@@ -51,8 +51,8 @@ function VerifyContent() {
 
         // Fire gtag page_view and login event before redirecting
         // This fixes 0s sessions and 100% bounce on magic link verify
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'login', {
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'login', {
             method: 'magic_link',
             access_level: data.user.accessLevel,
           })

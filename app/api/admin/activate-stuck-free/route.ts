@@ -20,10 +20,12 @@ import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { FREE_LOGGED_IN_NO_PROGRESS } from '@/lib/email-sequences'
 
+interface StuckFreeRow { id: string; email: string; name: string | null; progress: Record<string, { completed?: boolean }> | null }
+
 export const maxDuration = 60
 
 async function findTargets() {
-  const { rows } = await sql`
+  const { rows } = await sql<StuckFreeRow>`
     SELECT u.id, u.email, u.name, up.progress
     FROM users u
     LEFT JOIN user_progress up ON up.user_id = u.id
@@ -39,7 +41,7 @@ async function findTargets() {
       AND COALESCE(u.nurture_unsubscribed, false) = false
   `
   const targets: Array<{ id: string; email: string; name: string }> = []
-  for (const r of rows as any[]) {
+  for (const r of rows) {
     let done = 0
     if (r.progress) {
       for (const m of [101, 102, 103]) if (r.progress[String(m)]?.completed) done++

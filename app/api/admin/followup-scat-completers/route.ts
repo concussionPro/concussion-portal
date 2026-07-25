@@ -24,10 +24,12 @@ import { isAdminRequest } from '@/lib/require-admin'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { SCAT_COMPLETER_PERSONAL_FOLLOWUP } from '@/lib/email-sequences'
 
+interface CompleterRow { id: string; email: string; name: string | null; progress: Record<string, { completed?: boolean }> | null }
+
 export const maxDuration = 60
 
 async function findTargets() {
-  const { rows } = await sql`
+  const { rows } = await sql<CompleterRow>`
     SELECT u.id, u.email, u.name, up.progress
     FROM users u
     JOIN user_progress up ON up.user_id = u.id
@@ -42,7 +44,7 @@ async function findTargets() {
       AND COALESCE(u.nurture_unsubscribed, false) = false
   `
   const targets: Array<{ id: string; email: string; name: string }> = []
-  for (const r of rows as any[]) {
+  for (const r of rows) {
     let scat = 0
     if (r.progress) {
       for (const m of [101, 102, 103]) if (r.progress[String(m)]?.completed) scat++

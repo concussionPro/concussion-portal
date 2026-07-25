@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     const createdMs = new Date(user.created_at).getTime()
      
     const match = signupEvents.find(
-      (e: any) => Math.abs(Number(e.timestamp_ms) - createdMs) < 2 * 60 * 1000
+      (e) => Math.abs(Number(e.timestamp_ms) - createdMs) < 2 * 60 * 1000
     )
     if (match) {
       userIpMap.set(user.id, match.ip)

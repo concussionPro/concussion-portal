@@ -598,3 +598,18 @@ export const getDefaultSCOAT6FormData = (): SCOAT6FormData => ({
   hcpDate: '',
   hcpSignature: '',
 })
+
+/** Value-union helpers so form handlers can narrow without `as any`.
+ *  Derived from the shapes above — they can never drift from the schema. */
+export type Scoat6Sex = SCOAT6FormData['sex']
+export type Scoat6DominantHand = SCOAT6FormData['dominantHand']
+export type Scoat6NormalAbnormal = SCOAT6FormData['orthostaticsSupineResult']
+/** The per-disorder record (migraine, anxiety, …). `other` additionally has `name`. */
+export type Scoat6DisorderEntry = SCOAT6FormData['disorders']['migraine']
+/** One symptom's 5 rating columns. */
+export type Scoat6SymptomRow = SCOAT6FormData['symptoms']['headaches']
+export type Scoat6SymptomColumn = keyof Scoat6SymptomRow
+/** One mVOMS row (saccades / VOR / VMS …). */
+export type Scoat6MvomsRow = SCOAT6FormData['mvomsSaccadesHorizontal']
+/** Fields whose value is the Normal/Abnormal/Not-tested triad. */
+export type Scoat6ExamResult = SCOAT6FormData['cranialNerves']

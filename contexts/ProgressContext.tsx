@@ -90,7 +90,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
 }
 
 // Parse stored progress, handling migration from old format
-function parseStoredProgress(data: Record<string, any>): Record<number, ModuleProgress> {
+function parseStoredProgress(data: Record<string, ModuleProgress>): Record<number, ModuleProgress> {
   const parsed: Record<number, ModuleProgress> = {}
   Object.keys(data).forEach((key) => {
     const entry = data[key]

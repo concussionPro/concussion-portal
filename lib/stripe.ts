@@ -31,10 +31,17 @@ export function getStripe(): Stripe {
   return _stripe
 }
 
-/** @deprecated Use getStripe() instead — kept for backwards compat */
+/**
+ * @deprecated Use getStripe() instead — kept for backwards compat.
+ *
+ * Forwards every property access to the lazily-constructed client. The indexed
+ * read is genuinely dynamic (the key is whatever the caller asked for), so it
+ * is typed through `Record<string | symbol, unknown>` rather than `any` — the
+ * Proxy's own `Stripe` type still gives call sites full type safety.
+ */
 export const stripe: Stripe = new Proxy({} as Stripe, {
   get(_, prop) {
-    return (getStripe() as any)[prop]
+    return (getStripe() as unknown as Record<string | symbol, unknown>)[prop]
   },
 })
 

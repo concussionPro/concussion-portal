@@ -10,6 +10,20 @@ import { isAdminRequest } from '@/lib/require-admin';
 // Types
 // ---------------------------------------------------------------------------
 
+/** Raw analytics_events row as selected below. */
+interface AnalyticsEventRow {
+  event_type: string
+  event_data: string | Record<string, unknown> | null
+  session_id: string
+  timestamp_ms: string | number
+  user_agent: string | null
+  referrer: string | null
+  path: string
+  search: string | null
+  ip: string | null
+  country: string | null
+}
+
 interface StoredEvent {
   eventType: string;
   eventData: Record<string, unknown>;
@@ -145,24 +159,28 @@ function parsePeriodDays(period: string): number {
 
 async function fetchEventsFromPostgres(startMs: number, endMs: number): Promise<StoredEvent[]> {
   try {
-    const { rows } = await sql`
+    const { rows } = await sql<AnalyticsEventRow>`
       SELECT event_type, event_data, session_id, timestamp_ms, user_agent,
              referrer, path, search, ip, country
       FROM analytics_events
       WHERE timestamp_ms >= ${startMs} AND timestamp_ms < ${endMs}
       ORDER BY timestamp_ms ASC
     `;
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       eventType: r.event_type,
-      eventData: typeof r.event_data === 'string' ? JSON.parse(r.event_data) : (r.event_data || {}),
+      eventData: (typeof r.event_data === 'string'
+        ? JSON.parse(r.event_data)
+        : r.event_data ?? {}) as Record<string, unknown>,
       sessionId: r.session_id,
       timestamp: Number(r.timestamp_ms),
       userAgent: r.user_agent || '',
       referrer: r.referrer || null,
       path: r.path,
       search: r.search || null,
-      ip: r.ip,
-      country: r.country,
+      // StoredEvent uses optional (undefined) rather than nullable — normalise
+      // so a NULL column can't masquerade as a present value downstream.
+      ip: r.ip ?? undefined,
+      country: r.country ?? undefined,
     }));
   } catch (err) {
     console.error('[analytics/data] Postgres read failed:', err);
@@ -273,7 +291,7 @@ const SEARCH_ENGINES = new Set([
 
 function getUtmFromEvent(e: StoredEvent): Record<string, string> {
   // Check eventData.utm first (new format)
-  const ed = e.eventData as Record<string, any>;
+  const ed = e.eventData;
   if (ed?.utm && typeof ed.utm === 'object') return ed.utm as Record<string, string>;
   // Fallback: parse from search string
   if (e.search) {
@@ -350,11 +368,11 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
     const firstEvent = sorted[0];
     const lastEvent = sorted[sorted.length - 1];
     const utm = getUtmFromEvent(firstEvent);
-    const ed = firstEvent.eventData as Record<string, any>;
+    const ed = firstEvent.eventData;
 
     summaries.push({
       sessionId,
-      ip: (firstEvent as any).ip || 'unknown',
+      ip: firstEvent.ip || 'unknown',
       country: firstEvent.country || '',
       events: sorted,
       firstTs: firstEvent.timestamp,

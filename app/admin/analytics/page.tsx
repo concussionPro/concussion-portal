@@ -477,10 +477,11 @@ function countryLabel(code: string): string {
   return `${flag} ${name}`
 }
 
-function normaliseMetrics(data: any): MetricRow[] {
+/** The analytics API returns either a bare array or { data: [...] }. */
+function normaliseMetrics(data: unknown): MetricRow[] {
   if (!data) return []
   if (Array.isArray(data)) return data as MetricRow[]
-  if (Array.isArray(data?.data)) return data.data as MetricRow[]
+  if (Array.isArray((data as { data?: unknown })?.data)) return (data as { data: MetricRow[] }).data
   return []
 }
 
@@ -1303,7 +1304,7 @@ export default function AnalyticsDashboard() {
   const [partialFailure, setPartialFailure] = useState<string | null>(null)
 
   const fetchData = useCallback(
-    async (type: string, extra: Record<string, string> = {}, signal?: AbortSignal): Promise<any> => {
+    async (type: string, extra: Record<string, string> = {}, signal?: AbortSignal): Promise<unknown> => {
       const apiPeriod = period === '24h' ? '1d' : period
       const params = new URLSearchParams({ type, period: apiPeriod, ...extra })
       const res = await fetch(`/api/analytics/data?${params}`, { cache: 'no-store', signal })
@@ -1342,7 +1343,7 @@ export default function AnalyticsDashboard() {
       if (signal.aborted) return
 
       failed += results.filter(r => r.status === 'rejected').length
-      const get = (i: number) => results[i].status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<any>).value : null
+      const get = (i: number) => results[i].status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<unknown>).value : null
 
       if (get(0)) setStats(get(0) as AnalyticsStats)
       if (get(1)) setPageviews(get(1) as AnalyticsPageviews)

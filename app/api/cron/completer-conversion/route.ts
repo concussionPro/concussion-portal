@@ -38,6 +38,8 @@ import {
   COMPLETER_CONVERT_WORKSHOP,
 } from '@/lib/email-sequences'
 
+interface CompleterProgressRow { id: string; email: string; name: string | null; progress: Record<string, { completed?: boolean; quizScore?: number }> | null }
+
 export const maxDuration = 60
 
 const SEND_CAP = 40
@@ -91,7 +93,7 @@ async function findTargets(): Promise<Target[]> {
       )
   `
   const targets: Target[] = []
-  for (const r of rows as any[]) {
+  for (const r of rows as CompleterProgressRow[]) {
     // Completed all 3 SCAT modules
     let scat = 0
     if (r.progress) for (const m of [101, 102, 103]) if (r.progress[String(m)]?.completed) scat++

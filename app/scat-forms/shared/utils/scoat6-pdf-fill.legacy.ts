@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, type PDFForm } from 'pdf-lib'
 import { SCOAT6FormData } from '../types/scoat6.types'
 
 export async function exportSCOAT6ToFilledPDF(
@@ -132,7 +132,7 @@ export async function exportSCOAT6ToFilledPDF(
 }
 
 // Helper functions
-function setTextFieldIfExists(form: any, fieldName: string, value: string | number) {
+function setTextFieldIfExists(form: PDFForm, fieldName: string, value: string | number) {
   try {
     const field = form.getTextField(fieldName)
     if (field && value !== undefined && value !== null && value !== '') {
@@ -142,7 +142,7 @@ function setTextFieldIfExists(form: any, fieldName: string, value: string | numb
   }
 }
 
-function setCheckBoxIfExists(form: any, fieldName: string, value: boolean) {
+function setCheckBoxIfExists(form: PDFForm, fieldName: string, value: boolean) {
   try {
     const field = form.getCheckBox(fieldName)
     if (field && value !== undefined && value !== null) {

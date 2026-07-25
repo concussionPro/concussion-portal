@@ -25,7 +25,7 @@ export function drawText(
   if (!text && text !== '0') return
   const { font, size = 9, color = BLACK, maxWidth } = options
 
-  const drawOptions: any = { x, y, size, color }
+  const drawOptions: Parameters<PDFPage['drawText']>[1] = { x, y, size, color }
   if (font) drawOptions.font = font
   if (maxWidth) drawOptions.maxWidth = maxWidth
 
