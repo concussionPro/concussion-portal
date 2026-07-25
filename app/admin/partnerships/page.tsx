@@ -312,10 +312,16 @@ function ContactInput({
   value: string | null
   onSave: (v: string) => void
 }) {
+  // Controlled-with-local-draft, using React's "adjust state during render"
+  // pattern rather than a sync effect. The old `useEffect(() => setV(value))`
+  // rendered once with the STALE value and then re-rendered — a visible flash of
+  // the previous field content whenever the row's saved value changed.
   const [v, setV] = useState(value ?? '')
-  useEffect(() => {
+  const [lastValue, setLastValue] = useState(value ?? '')
+  if ((value ?? '') !== lastValue) {
+    setLastValue(value ?? '')
     setV(value ?? '')
-  }, [value])
+  }
   const commit = () => {
     if (v !== (value ?? '')) onSave(v)
   }

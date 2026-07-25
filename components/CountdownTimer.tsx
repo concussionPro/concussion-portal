@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useMounted } from '@/hooks/useMounted'
 import { CONFIG } from '@/lib/config'
 import { Clock } from 'lucide-react'
 
@@ -21,10 +22,9 @@ interface TimeRemaining {
  */
 export default function CountdownTimer({ className = '', locationSlug }: { className?: string; locationSlug?: string }) {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useMounted()
 
   useEffect(() => {
-    setMounted(true)
 
     // Early-bird close = confirmed future date − EARLY_BIRD_DAYS_BEFORE.
     const candidates = Object.values(CONFIG.LOCATIONS).filter(

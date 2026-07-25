@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, useSpring, useTransform } from 'framer-motion'
+import { useMounted } from '@/hooks/useMounted'
 import { useEffect, useState } from 'react'
 
 interface ProgressRingProps {
@@ -9,7 +10,7 @@ interface ProgressRingProps {
 }
 
 export function ProgressRing({ progress, total }: ProgressRingProps) {
-  const [mounted, setMounted] = useState(false)
+  const mounted = useMounted()
   const percentage = total > 0 ? (progress / total) * 100 : 0
   const circumference = 2 * Math.PI * 42
 
@@ -26,7 +27,6 @@ export function ProgressRing({ progress, total }: ProgressRingProps) {
   )
 
   useEffect(() => {
-    setMounted(true)
     const timer = setTimeout(() => {
       springProgress.set(percentage)
     }, 300)
