@@ -63,13 +63,28 @@ export async function provisionPlatformForBuyer(
     (await getSstClinicByEmail(cleanEmail)) ??
     (await createSstClinic({ clinicName, contactName, email: cleanEmail }))
 
-  // Lift the trial patient cap for the bundled platform year.
-  await setSstClinicPlan(clinic.code, 'active')
-
-  // Bundled-then-monthly SST subscription (international CRM). Placed BEFORE the
-  // welcome email so a subscription is created even if the email later fails.
+  // Bundled-then-monthly SST subscription (international CRM). Placed BEFORE
+  // the plan flip below so the ONLY route to an uncapped clinic is one that has
+  // a real renewal attached.
+  let subscriptionAttached = false
   if (bundledSubscription) {
-    await createBundledSstSubscription(clinic.code, bundledSubscription)
+    subscriptionAttached = await createBundledSstSubscription(clinic.code, bundledSubscription)
+  }
+
+  // Lift the 3-patient trial cap ONLY when a renewal actually exists.
+  //
+  // This used to run unconditionally, which meant every provisioned buyer got an
+  // UNCAPPED clinic forever, free — including CCM buyers (who never carry a
+  // subscription) the moment bundle provisioning was switched on, and including
+  // international buyers whose subscription creation had silently failed. The
+  // free platform year is deliberate; a free platform *forever* is not.
+  if (subscriptionAttached) {
+    await setSstClinicPlan(clinic.code, 'active')
+  } else {
+    console.warn(
+      `[bundle] clinic ${clinic.code} provisioned WITHOUT a renewal subscription — staying on the trial cap. ` +
+        `Lift it manually (or set STRIPE_SST_SINGLE_PRICE_ID) if this buyer is entitled to an uncapped clinic.`,
+    )
   }
 
   // Reverse-funnel account: grant the SST entitlement (Clinical Testing unlocked;
@@ -117,25 +132,28 @@ export async function provisionPlatformForBuyer(
  *    setSstClinicPlan) manages every plan flip: trialing/active keep the clinic
  *    'active', canceled/unpaid/past_due revert it to 'trial'. No parallel handling.
  *  - IDEMPOTENT: skips if the clinic already carries a stripe_subscription_id.
- *  - Graceful: if STRIPE_SST_SINGLE_PRICE_ID is unset, skip (clinic stays active
- *    on the bundled year) — never throw.
- *  - Fail-soft: any Stripe error → admin alert + return (never lose the sale).
+ *  - If STRIPE_SST_SINGLE_PRICE_ID is unset, skip and return FALSE — the caller
+ *    then leaves the clinic on the trial cap rather than giving away an uncapped
+ *    platform with no renewal behind it.
+ *  - Fail-soft: any Stripe error → admin alert, return false (never lose the sale).
+ *
+ * Returns whether the clinic now has a renewal subscription attached.
  */
-async function createBundledSstSubscription(clinicCode: string, sub: BundledSubscription): Promise<void> {
+async function createBundledSstSubscription(clinicCode: string, sub: BundledSubscription): Promise<boolean> {
   try {
     // Idempotent — never a second subscription for a clinic.
     const existing = await getSstClinicStripeSubscription(clinicCode)
     if (existing) {
       console.log(`[bundle] SST subscription already exists for clinic ${clinicCode} (${existing}) — skipping`)
-      return
+      return true // already has a renewal — the clinic may stay uncapped
     }
 
     const priceId = sstPlanPriceId('single') // STRIPE_SST_SINGLE_PRICE_ID (A$49/mo)
     if (!priceId) {
       console.warn(
-        `[bundle] STRIPE_SST_SINGLE_PRICE_ID unset — clinic ${clinicCode} stays active on the bundled year, no monthly subscription created`,
+        `[bundle] STRIPE_SST_SINGLE_PRICE_ID unset — clinic ${clinicCode} gets NO monthly subscription, so the trial cap stays on`,
       )
-      return
+      return false
     }
 
     const { getStripe } = await import('@/lib/stripe')
@@ -156,6 +174,7 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
 
     await setSstClinicPlan(clinicCode, 'active', { customerId: sub.customerId, subscriptionId: created.id })
     console.log(`[bundle] SST subscription ${created.id} attached to clinic ${clinicCode} (365-day trial → A$49/mo at year 2)`)
+    return true
   } catch (err) {
     console.error(`[bundle] SST subscription creation failed for clinic ${clinicCode}:`, err)
     try {
@@ -167,5 +186,6 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
     } catch (alertErr) {
       console.error('[bundle] SST subscription admin alert failed:', alertErr)
     }
+    return false
   }
 }
