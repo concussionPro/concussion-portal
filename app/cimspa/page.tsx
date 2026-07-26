@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { intlPriceForCountry } from '@/lib/international-pricing'
+import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
 
 /**
  * /cimspa — landing page for UK fitness / active-health professionals via
@@ -10,9 +11,20 @@ import { intlPriceForCountry } from '@/lib/international-pricing'
 
 const CRM_PRICE = intlPriceForCountry('GB') // £275
 
+export const metadata = {
+  alternates: { canonical: '/cimspa' },
+}
+
 export default function CimspaLandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <InternationalCourseSchema
+        name={"Concussion awareness for UK fitness and active-health professionals"}
+        description={"Recognise a concussion on the gym floor and know exactly what to do next — a free awareness course covering recognition, red flags and safe referral, with a certificate of completion."}
+        country="GB"
+        path="/cimspa"
+        roles={['Fitness Professional', 'Exercise Professional']}
+      />
       <main className="max-w-3xl mx-auto px-5 py-14 sm:py-20">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section>

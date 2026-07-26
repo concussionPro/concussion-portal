@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { CONFIG } from '@/lib/config'
+import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
 
 /**
  * /acsm — the ACSM listing landing page (asset A10).
@@ -32,9 +33,20 @@ const MODULES: { n: string; title: string; mins: number }[] = [
 
 const TOTAL_MINS = MODULES.reduce((s, m) => s + m.mins, 0)
 
+export const metadata = {
+  alternates: { canonical: '/acsm' },
+}
+
 export default function AcsmLandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <InternationalCourseSchema
+        name={"Concussion Rehab Mastery — for ACSM-certified Exercise Physiologists"}
+        description={"An 8-module online course teaching exercise physiologists to deliver measured heart-rate-threshold concussion rehabilitation: graded exercise testing, sub-symptom-threshold prescription, phenotype-specific rehab and graded return to activity."}
+        country="US"
+        path="/acsm"
+        roles={['Exercise Physiologist', 'Clinical Exercise Physiologist']}
+      />
       <main className="max-w-3xl mx-auto px-5 py-14 sm:py-20">
         {/* ── Hero: scope, not topic ─────────────────────────────────────── */}
         <section>

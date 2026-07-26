@@ -1,6 +1,6 @@
 # Concussion Education Australia
 
-> Australia's most comprehensive concussion management training for healthcare professionals. AHPRA-aligned CPD courses covering SCAT6 assessment, VOMS, BESS, and return-to-play protocols. Endorsed by Osteopathy Australia. 23 video lessons, 90 quiz questions, 140+ peer-reviewed references.
+> Australia's most comprehensive concussion management training for healthcare professionals. Two accredited streams: Concussion Clinical Mastery (diagnosis and management — physiotherapists, osteopaths, chiropractors; endorsed by Osteopathy Australia) and Concussion Rehab Mastery (exercise rehabilitation — accredited by ESSA for Accredited Exercise Physiologists). Covers SCAT6/SCOAT6 assessment, VOMS, BESS, heart-rate-threshold exercise rehabilitation and return-to-play protocols. Includes clinician-led clinical tools (SST Trainer, Pre-Season Baseline Testing). Available online worldwide. 140+ peer-reviewed references.
 
 ## About
 
@@ -36,6 +36,47 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 - Workshop locations: Melbourne (workshop delivered 13 June 2026 — next round collecting nominations), Sydney and Byron Bay (collecting nominations, dates to be confirmed)
 - URL: https://portal.concussion-education-australia.com/course
 - Pricing: https://portal.concussion-education-australia.com/pricing
+
+### Concussion Rehab Mastery (CRM) — for Exercise Physiologists
+- Cost: A$497 AUD online-only; A$1,190 early-bird for online + the shared in-person practical day (A$1,400 in the final two weeks before a confirmed date)
+- International: US$347 / £275 / €325 / CA$475 / NZ$575 — online only (the practical day is Australia-only)
+- Duration: 8 online modules (8 hours), plus an optional full-day practical
+- Accreditation: ACCREDITED BY ESSA (Exercise & Sports Science Australia) — 8 ESSA CPD points online, 16 total with the practical day
+- Audience: Accredited Exercise Physiologists and Exercise Scientists
+- Covers: graded exercise testing (Buffalo Concussion Treadmill Test), heart-rate-threshold (HRt) exercise prescription, sub-symptom-threshold aerobic rehabilitation, phenotype-specific rehabilitation, graded return to activity and sport, persistent symptoms, scope of practice, documentation and referral
+- URL: https://portal.concussion-education-australia.com/concussion-rehab-mastery
+
+### Concussion Care Has Changed (free awareness short course)
+- Cost: Free
+- Duration: ~1 hour, 12 lessons. Certificate of completion. 0 CPD points (awareness, not clinical method)
+- Covers: why strict rest until symptom-free is obsolete, what a concussion actually is, recognising signs and symptoms, recognise-remove-refer on the sideline, SCAT6 vs SCOAT6, the clinical phenotypes, what modern management involves, return to work/school/play, when symptoms persist
+- Honest scope: this course teaches you to RECOGNISE and REFER. It does not equip you to diagnose, phenotype, prescribe or progress the exercise dose, or make return-to-contact clearance decisions — those require the full courses.
+- URL: https://portal.concussion-education-australia.com/concussion-update
+
+## Clinical tools (included with course enrolment)
+
+### SST Trainer (Sub-Symptom-Threshold Trainer)
+- A clinician-led rehabilitation tool. A guided graded test measures the patient's heart-rate threshold (HRt — the heart rate at which symptoms are provoked); the patient then trains just below it, with live heart rate from their own watch or chest strap, and every session syncs back to the treating clinician.
+- Evidence base: Buffalo Concussion Treadmill Test (Leddy & Willer); sub-symptom-threshold aerobic exercise at 80-90% of HRt, ~20 minutes most days (Leddy et al., JAMA Pediatrics 2019). Published protocol DOI: 10.5281/zenodo.21482634
+- Clinician-led by design: patients access it with a clinic code from their treating clinician.
+- URL: https://portal.concussion-education-australia.com/clinical-suite
+
+### Pre-Season Baseline Testing
+- One link per club: athletes self-complete a SCAT6 baseline in about 5 minutes and a PDF report is emailed to the clinic. Serial comparison reports are generated automatically once an athlete has more than one test on file.
+- Establishes an individual reference point to measure recovery against, rather than judging a person against population averages.
+- URL: https://portal.concussion-education-australia.com/preseason
+
+## International availability
+
+Concussion Education Australia teaches internationally, online only — the in-person practical day is Australia-only, so international enrolments are 8 online modules / 8 hours and never 14.
+
+- United Kingdom (physiotherapists, via CSP): https://portal.concussion-education-australia.com/uk
+- United Kingdom (clinical exercise physiologists): https://portal.concussion-education-australia.com/cep-uk
+- United Kingdom (fitness and active-health professionals, CIMSPA): https://portal.concussion-education-australia.com/cimspa
+- United States (ACSM-certified exercise physiologists): https://portal.concussion-education-australia.com/acsm
+- All international pricing: https://portal.concussion-education-australia.com/pricing-international
+
+Accreditation honesty: ESSA (Australia) accreditation is held. ACSM CECs, CIMSPA and other overseas recognitions are PENDING and are never claimed as held — those pages state hours of learning, which is verifiable, rather than a credit currency that has not been granted.
 
 ## Free Lead Magnets (no cost, email-gated)
 

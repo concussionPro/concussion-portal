@@ -243,3 +243,26 @@ CEA content references the following primary sources. Citation alignment with th
 - Sitemap: https://portal.concussion-education-australia.com/sitemap.xml
 - Robots: https://portal.concussion-education-australia.com/robots.txt
 - Short llms.txt: https://portal.concussion-education-australia.com/llms.txt
+
+## Concussion Rehab Mastery (CRM) — the exercise-physiology stream
+
+Accredited by ESSA (Exercise & Sports Science Australia). 8 online modules / 8 ESSA CPD points; 16 CPD with the shared in-person practical day. Built for Accredited Exercise Physiologists and Exercise Scientists.
+
+Modules: (1) Concussion for the Exercise Physiologist; (2) Recognition, Red Flags & Scope of Practice; (3) Assessment That Is the Treatment — the BCTT; (4) Sub-Symptom-Threshold Aerobic Rehabilitation; (5) Phenotype-Specific Exercise Rehabilitation; (6) Graded Return to Activity, Sport & Performance; (7) Persistent Symptoms & the Complex Case; (8) Documentation, Communication & Referral.
+
+Pricing: A$497 online-only; A$1,190 early-bird with the practical day. International online-only: US$347 / GBP 275 / EUR 325 / CAD 475 / NZD 575.
+URL: https://portal.concussion-education-australia.com/concussion-rehab-mastery
+
+## Free awareness short course — "Concussion Care Has Changed"
+
+Free, ~1 hour, 12 lessons, certificate of completion, 0 CPD points. Teaches recognition and safe referral only — explicitly NOT diagnosis, phenotyping, exercise prescription or return-to-contact clearance.
+URL: https://portal.concussion-education-australia.com/concussion-update
+
+## Clinical tools
+
+SST Trainer — measures a patient's heart-rate threshold with a guided graded test, then guides sub-threshold training between appointments with live heart rate from the patient's own watch or strap, syncing every session back to the treating clinician. Clinician-led: patients need a clinic code. Published protocol DOI 10.5281/zenodo.21482634.
+
+Pre-Season Baseline Testing — one link per club; athletes self-complete a SCAT6 baseline in ~5 minutes and a PDF lands in the clinic inbox, with automatic serial-comparison reports once an athlete has more than one test on file.
+
+Both are included with course enrolment and share a single clinic code.
+URL: https://portal.concussion-education-australia.com/clinical-suite

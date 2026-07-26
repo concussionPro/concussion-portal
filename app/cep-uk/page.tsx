@@ -2,6 +2,7 @@ import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { CONFIG } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
+import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
 
 /**
  * /cep-uk — landing page for UK exercise professionals on the AHCS
@@ -26,9 +27,20 @@ const MODULES: { n: string; title: string; mins: number }[] = [
 
 const TOTAL_MINS = MODULES.reduce((s, m) => s + m.mins, 0)
 
+export const metadata = {
+  alternates: { canonical: '/cep-uk' },
+}
+
 export default function CepUkLandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <InternationalCourseSchema
+        name={"Concussion Rehab Mastery — for UK Clinical Exercise Physiologists"}
+        description={"An 8-module online course teaching clinical exercise physiologists to deliver measured heart-rate-threshold concussion rehabilitation: graded exercise testing, sub-symptom-threshold prescription, phenotype-specific rehab and graded return to activity."}
+        country="GB"
+        path="/cep-uk"
+        roles={['Clinical Exercise Physiologist', 'Exercise Physiologist']}
+      />
       <main className="max-w-3xl mx-auto px-5 py-14 sm:py-20">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section>

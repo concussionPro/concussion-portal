@@ -122,6 +122,10 @@ interface Insight {
 type Period = '24h' | '7d' | '30d' | '90d'
 // 'google-ads' tab removed 2026-07-02 — the Google Ads channel was retired
 // June 2026 (cold B2B outreach is the primary sales channel).
+/** The four consolidated views (plus the report). A legacy ?tab= deep link
+ *  still works — it resolves to whichever group contains that panel. */
+type GroupId = 'decide' | 'traffic' | 'pipeline' | 'people' | 'report'
+
 type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects' | 'sst'
 
 interface ProspectSend {
@@ -1156,7 +1160,15 @@ export default function AnalyticsDashboard() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams?.get('tab') as TabType | null
   const initialTab: TabType = tabFromUrl && VALID_TAB_TYPES.includes(tabFromUrl) ? tabFromUrl : 'insights'
-  const [activeTab, setActiveTab] = useState<TabType>(initialTab)
+  // Which GROUP is on screen. Seeded from any legacy ?tab= deep link so old
+  // bookmarks and the daily-report links keep landing in the right place.
+  const groupForPanel = (panel: TabType): GroupId =>
+    panel === 'report' ? 'report'
+    : (['insights', 'funnel'] as TabType[]).includes(panel) ? 'decide'
+    : (['overview', 'channels', 'flow', 'events'] as TabType[]).includes(panel) ? 'traffic'
+    : (['pool', 'prospects', 'sst', 'preseason'] as TabType[]).includes(panel) ? 'pipeline'
+    : 'people'
+  const [activeGroup, setActiveGroup] = useState<GroupId>(groupForPanel(initialTab))
   const [loading, setLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
@@ -1454,21 +1466,35 @@ export default function AnalyticsDashboard() {
   const avgDuration = stats ? Math.round(stats.totaltime.value / Math.max(stats.uniques.value, 1)) : 0
   const maxPages = topPages[0]?.y ?? 1
 
-  const TABS: { id: TabType; label: string; icon: React.ElementType }[] = [
-    { id: 'insights', label: 'Insights', icon: Lightbulb },
-    { id: 'overview', label: 'Overview', icon: Activity },
-    { id: 'channels', label: 'Channels', icon: Globe },
-    { id: 'flow', label: 'Flow', icon: ArrowRight },
-    { id: 'funnel', label: 'Funnel', icon: BarChart2 },
-    { id: 'events', label: 'Events', icon: Zap },
-    { id: 'retargeting', label: 'Retargeting', icon: Target },
-    { id: 'pool', label: 'Ready to Train', icon: MapPin },
-    { id: 'preseason', label: 'Preseason', icon: Building2 },
-    { id: 'prospects', label: 'B2B Prospects', icon: Building2 },
-    { id: 'sst', label: 'SST Outreach', icon: Activity },
-    { id: 'users', label: 'Users', icon: Mail },
-    { id: 'report', label: 'Daily Report', icon: Newspaper },
+  /**
+   * FOUR VIEWS, NOT THIRTEEN TABS.
+   *
+   * The page had 13 tabs and (owner) about a quarter of them got used. Thirteen
+   * places to look is not more insight — it's a reason not to look at all. The
+   * panels themselves were fine; the navigation was the problem.
+   *
+   * Regrouped around the questions this business actually asks:
+   *   DECIDE   what should I do today?      insights + the three funnels
+   *   TRAFFIC  where is it coming from?     channels, flow, pages, events
+   *   PIPELINE who is close to revenue?     Ready-to-Train, B2B, SST, preseason
+   *   PEOPLE   who is warm right now?       retargeting + users
+   * plus the Daily Report, which is a distinct artifact rather than a view.
+   *
+   * Every panel is preserved — nothing was deleted, and all data still arrives
+   * in ONE batch on load, so grouping costs no extra requests.
+   */
+  const GROUPS: { id: GroupId; label: string; icon: React.ElementType; panels: TabType[]; hint: string }[] = [
+    { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['insights', 'funnel'], hint: 'What to do today' },
+    { id: 'traffic', label: 'Traffic', icon: Globe, panels: ['overview', 'channels', 'flow', 'events'], hint: 'Where it comes from' },
+    { id: 'pipeline', label: 'Pipeline', icon: MapPin, panels: ['pool', 'prospects', 'sst', 'preseason'], hint: 'Close to revenue' },
+    { id: 'people', label: 'People', icon: Mail, panels: ['retargeting', 'users'], hint: 'Warm right now' },
+    { id: 'report', label: 'Daily Report', icon: Newspaper, panels: ['report'], hint: 'Emailed summary' },
   ]
+
+  /** Is this panel part of the active group? */
+  const shows = (panel: TabType) =>
+    (GROUPS.find((g) => g.id === activeGroup)?.panels ?? []).includes(panel)
+
 
   return (
     <div className="min-h-screen dashboard-bg">
@@ -1526,16 +1552,16 @@ export default function AnalyticsDashboard() {
       <div className="container-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* ── Stat cards ────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} onClick={() => setActiveTab('overview')} />
-          <StatCard label="Page Views" value={stats?.pageviews.value ?? 0} prev={stats?.pageviews.prev ?? 0} icon={Eye} loading={loading && !stats} onClick={() => setActiveTab('overview')} />
-          <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} onClick={() => setActiveTab('channels')} invertColor />
-          <StatCard label="Avg. Session" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} onClick={() => setActiveTab('flow')} />
+          <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('overview'))} />
+          <StatCard label="Page Views" value={stats?.pageviews.value ?? 0} prev={stats?.pageviews.prev ?? 0} icon={Eye} loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('overview'))} />
+          <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('channels'))} invertColor />
+          <StatCard label="Avg. Session" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('flow'))} />
         </div>
 
         {/* ── Retargeting summary cards ──────────────────────────────────── */}
         {retargetingData && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('retargeting')} role="button" tabIndex={0}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveGroup(groupForPanel('retargeting'))} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><Target size={16} className="text-[var(--accent)]" /></div>
               </div>
@@ -1545,7 +1571,7 @@ export default function AnalyticsDashboard() {
                 {fmtNum(retargetingData.summary.pricingViewers)} site · {fmtNum(retargetingData.summary.portalPricingViewers ?? 0)} prospect portals
               </p>
             </div>
-            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('funnel')} role="button" tabIndex={0}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveGroup(groupForPanel('funnel'))} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><MousePointer size={16} className="text-[var(--accent)]" /></div>
               </div>
@@ -1553,14 +1579,14 @@ export default function AnalyticsDashboard() {
               <p className="stat-label mt-1">Pricing → Convert</p>
               <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">purchasing IPs ÷ pricing-viewer IPs (page-based)</p>
             </div>
-            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('retargeting')} role="button" tabIndex={0}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveGroup(groupForPanel('retargeting'))} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><Users size={16} className="text-[var(--accent)]" /></div>
               </div>
               <p className="stat-value">{fmtPct(retargetingData.summary.returningRate)}</p>
               <p className="stat-label mt-1">Return Visitors</p>
             </div>
-            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('users')} role="button" tabIndex={0}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveGroup(groupForPanel('users'))} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><CheckCircle2 size={16} className="text-emerald-600" /></div>
               </div>
@@ -1599,25 +1625,29 @@ export default function AnalyticsDashboard() {
         {/* ── Tabs ───────────────────────────────────────────────────── */}
         <div className="card overflow-hidden">
           <div className="flex overflow-x-auto border-b border-[rgba(13,115,119,0.07)] bg-[rgba(13,115,119,0.02)]">
-            {TABS.map(({ id, label, icon: TabIcon }) => (
+            {GROUPS.map(({ id, label, icon: TabIcon, hint }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
-                  activeTab === id
+                onClick={() => setActiveGroup(id)}
+                title={hint}
+                className={`flex items-center gap-2 px-5 py-3 whitespace-nowrap transition-all border-b-2 ${
+                  activeGroup === id
                     ? 'border-[var(--accent)] text-[var(--accent)] bg-white'
                     : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[rgba(13,115,119,0.02)]'
                 }`}
               >
-                <TabIcon size={13} />
-                {label}
+                <TabIcon size={14} />
+                <span className="text-left leading-tight">
+                  <span className="block text-xs font-semibold">{label}</span>
+                  <span className="block text-[10px] opacity-60">{hint}</span>
+                </span>
               </button>
             ))}
           </div>
 
           <div className="p-5">
             {/* ── INSIGHTS ─────────────────────────────────────────── */}
-            {activeTab === 'insights' && (() => {
+            {shows('insights') && (() => {
               const userInsights = buildUserInsights(usersData.filter(u => !u.isTest))
               const allInsights = [...insightsData, ...userInsights]
               const priority: Record<string, number> = { critical: 0, warning: 1, opportunity: 2, positive: 3 }
@@ -1680,7 +1710,7 @@ export default function AnalyticsDashboard() {
             })()}
 
             {/* ── OVERVIEW ─────────────────────────────────────────── */}
-            {activeTab === 'overview' && (
+            {shows('overview') && (
               <div className="space-y-6">
                 <div>
                   <SectionTitle title="Top Pages" subtitle="Most viewed pages" />
@@ -1741,7 +1771,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── CHANNELS ─────────────────────────────────────────── */}
-            {activeTab === 'channels' && (
+            {shows('channels') && (
               <div className="space-y-6">
                 <div>
                   <SectionTitle title="Traffic Channels" subtitle="Sessions grouped by acquisition source. 'Page conv.' = sessions that reached /checkout/success (assisted/page-based attribution — may include refreshes); verified purchases live on the headline card." />
@@ -1846,7 +1876,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── FLOW ──────────────────────────────────────────────── */}
-            {activeTab === 'flow' && (
+            {shows('flow') && (
               <div className="space-y-6">
                 {!flowData ? (
                   <EmptyState icon={ArrowRight} message="No flow data for this period" />
@@ -1919,7 +1949,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── FUNNEL ────────────────────────────────────────────── */}
-            {activeTab === 'funnel' && (
+            {shows('funnel') && (
               <div className="space-y-8">
                 <div>
                   <SectionTitle title="Direct Course Funnel" subtitle="Homepage → Preview → Pricing → Enrol → Checkout" />
@@ -1984,7 +2014,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── EVENTS ────────────────────────────────────────────── */}
-            {activeTab === 'events' && (
+            {shows('events') && (
               <div className="space-y-4">
                 <SectionTitle title="Custom Events" subtitle="All tracked actions excluding pageviews" />
                 {eventsData.length === 0 ? (
@@ -2022,7 +2052,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── RETARGETING ──────────────────────────────────────── */}
-            {activeTab === 'retargeting' && (
+            {shows('retargeting') && (
               <div className="space-y-6">
                 <div>
                   <SectionTitle title="Hot Leads — Pricing Viewers (Not Converted)" subtitle="Visitors who viewed pricing but haven't purchased. Priority retargeting targets." />
@@ -2109,7 +2139,7 @@ export default function AnalyticsDashboard() {
         </div>
 
             {/* ── Ready to Train Pool ──────────────────────────────────────── */}
-            {activeTab === 'pool' && (
+            {shows('pool') && (
               <div className="space-y-6">
                 {!poolData ? (
                   <EmptyState icon={MapPin} message="Loading pool data..." />
@@ -2405,7 +2435,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── Preseason ─────────────────────────────────────────────── */}
-            {activeTab === 'preseason' && (
+            {shows('preseason') && (
               <div className="space-y-6">
                 {/* Summary */}
                 <div className="grid grid-cols-2 gap-3">
@@ -2492,7 +2522,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── Users / Emails ──────────────────────────────────────────── */}
-            {activeTab === 'users' && (
+            {shows('users') && (
               <div className="space-y-6">
                 {usersError && (
                   <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
@@ -2644,9 +2674,9 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── Daily Report ──────────────────────────────────────────── */}
-            {activeTab === 'sst' && <SstOutreachTab />}
+            {shows('sst') && <SstOutreachTab />}
 
-            {activeTab === 'report' && (
+            {shows('report') && (
               <div className="space-y-4">
                 <SectionTitle title="Daily Report" subtitle={`Summary for ${period === '24h' ? 'today' : period === '7d' ? 'the last 7 days' : period === '30d' ? 'the last 30 days' : 'the last 90 days'} · ${new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`} />
                 <div className="rounded-xl border-2 border-[rgba(13,115,119,0.12)] bg-[rgba(13,115,119,0.02)] p-6">
@@ -2699,7 +2729,7 @@ export default function AnalyticsDashboard() {
             )}
 
             {/* ── B2B Prospects ────────────────────────────────────────── */}
-            {activeTab === 'prospects' && (() => {
+            {shows('prospects') && (() => {
               const runBootstrap = async (url: string, label: string, payload?: object) => {
                 setBootstrapBusy(true)
                 setBootstrapMessage(`${label} running…`)
