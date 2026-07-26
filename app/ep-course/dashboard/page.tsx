@@ -31,7 +31,9 @@ import {
   X,
   BadgeCheck,
   ShieldCheck,
+  Stethoscope,
 } from 'lucide-react'
+import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { getEpModulesMeta, epProgressId } from '@/data/ep-modules'
 import { useProgress } from '@/contexts/ProgressContext'
 import { cn } from '@/lib/utils'
@@ -185,6 +187,11 @@ function DashboardContent() {
   const { isModuleComplete, getModuleProgress } = useProgress()
   const modules = getEpModulesMeta()
   const [showCert, setShowCert] = useState(false)
+  // The bundled platform (SST Trainer + Baseline) — provisioning grants the
+  // SST entitlement, so CRM buyers resolve door 'sst'. Surfaced FIRST in the
+  // resources grid: the tool is the differentiator the course sells.
+  const clinicalAccess = useClinicalAccess()
+  const showClinicalTesting = ['owner', 'course', 'sst'].includes(clinicalAccess)
 
   // Meta ids are DISPLAY ids (1-8) for URLs/labels; the shared progress store
   // namespaces EP modules to 201-208 — always read progress via epProgressId.
@@ -432,6 +439,21 @@ function DashboardContent() {
             Resources
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {showClinicalTesting && (
+              <Link
+                href="/clinical-testing"
+                className="group flex items-center gap-3 rounded-xl bg-teal-50/60 border border-teal-200 shadow-sm p-4 transition-all hover:shadow-md hover:border-teal-300 sm:col-span-2"
+              >
+                <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
+                  <Stethoscope className="w-[18px] h-[18px] text-teal-700" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-slate-900">Clinical Testing — SST Trainer &amp; Baseline</div>
+                  <div className="text-xs text-slate-600">Your clinic code, patient app link, prescriptions and live session monitoring</div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-teal-500 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+              </Link>
+            )}
             <Link
               href="/ep-course/references"
               className="group flex items-center gap-3 rounded-xl bg-white border border-slate-200 shadow-sm p-4 transition-all hover:shadow-md hover:border-teal-200"

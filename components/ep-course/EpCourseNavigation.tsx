@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getEpModulesMeta as getModulesMeta, epProgressId } from '@/data/ep-modules'
 import { useProgress } from '@/contexts/ProgressContext'
-import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award, Wrench } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award, Wrench, Stethoscope } from 'lucide-react'
+import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -32,6 +33,13 @@ export function EpCourseNavigation({
   const currentModuleId = params.id ? parseInt(params.id as string) : NaN
   const modules = getModulesMeta()
   const { isModuleComplete, getModuleProgress } = useProgress()
+  // CRM enrolment bundles the clinical platform (SST Trainer + Baseline).
+  // Provisioning grants the SST entitlement, so buyers resolve door 'sst' —
+  // without this link the ONLY route to the tools they paid for was the
+  // welcome email (2026-07-27 sweep: "if a CRM buyer activates today can
+  // they actually use this tool?").
+  const clinicalAccess = useClinicalAccess()
+  const showClinicalTesting = ['owner', 'course', 'sst'].includes(clinicalAccess)
   const [expandedModules, setExpandedModules] = useState<number[]>(
     Number.isNaN(currentModuleId) ? [] : [currentModuleId]
   )
@@ -284,6 +292,16 @@ export function EpCourseNavigation({
         {/* Course resources — the rest of the suite */}
         <div className="px-3 pb-4">
           <p className="px-2 mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Resources</p>
+          {showClinicalTesting && (
+            <Link
+              href="/clinical-testing"
+              className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-semibold text-teal-700 transition-colors hover:bg-teal-50"
+            >
+              <Stethoscope className="h-4 w-4 text-teal-600" />
+              Clinical Testing
+              <span className="ml-auto rounded bg-teal-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-teal-700">SST + Baseline</span>
+            </Link>
+          )}
           <Link
             href="/ep-course/references"
             className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50"
