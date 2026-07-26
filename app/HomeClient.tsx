@@ -120,16 +120,30 @@ export default function HomeClient() {
                 const active = s.id === stream
                 const Icon = s.icon
                 return (
-                  <div key={s.id} className="flex flex-col gap-2.5">
+                  <div key={s.id} className="flex flex-col">
+                    {/* ONE card per stream — tab + endorsement visually JOINED
+                        (2026-07-27, Zac: the old layout rendered tab and badge
+                        as separate sibling cards, so the picker read as four
+                        floating tiles with no clear owner). The container
+                        carries the selection state; the badge is the card's
+                        bottom row; the notch below points at the content the
+                        active tab controls. */}
+                    <div
+                      className={`rounded-2xl border-2 overflow-hidden transition-all ${
+                        active
+                          ? 'border-[var(--accent)] shadow-xl shadow-[rgba(13,115,119,0.25)]'
+                          : 'border-[rgba(13,115,119,0.18)] opacity-85 hover:opacity-100 hover:border-[rgba(13,115,119,0.4)] hover:shadow-md'
+                      }`}
+                    >
                     {/* Compact tab — the clickable stream selector */}
                     <button
                       role="tab"
                       aria-selected={active}
                       onClick={() => setStream(s.id)}
-                      className={`flex items-center gap-3 rounded-2xl px-5 py-4 text-left border-2 transition-all ${
+                      className={`w-full flex items-center gap-3 px-5 py-4 text-left transition-colors ${
                         active
-                          ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-lg shadow-[rgba(13,115,119,0.25)]'
-                          : 'bg-white border-[rgba(13,115,119,0.15)] text-[var(--foreground)] hover:border-[rgba(13,115,119,0.4)] hover:shadow-md'
+                          ? 'bg-[var(--accent)] text-white'
+                          : 'bg-white text-[var(--foreground)]'
                       }`}
                     >
                       <span className={`flex-none w-11 h-11 rounded-xl grid place-items-center ${active ? 'bg-white/15' : 'bg-[rgba(13,115,119,0.08)]'}`}>
@@ -172,7 +186,8 @@ export default function HomeClient() {
                         </>
                       )
                       // Prominent, bordered badge. Clickable when the body publishes a listing.
-                      const cls = `flex items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-colors ${s.endorsePending ? 'border-dashed border-[var(--border)] bg-transparent' : 'border-[var(--border)] bg-white/70 shadow-sm'}`
+                      // Bottom row of the SAME card — border-t joins it to its tab.
+                      const cls = `flex items-center gap-3 border-t px-3.5 py-2.5 transition-colors ${s.endorsePending ? 'border-dashed border-[var(--border)] bg-white/60' : 'border-[var(--border)] bg-white'}`
                       return s.endorseHref && !s.endorsePending ? (
                         <a href={s.endorseHref} target="_blank" rel="noopener noreferrer" className={`${cls} hover:border-[var(--accent)] hover:bg-white cursor-pointer`}>
                           {inner}
@@ -181,10 +196,32 @@ export default function HomeClient() {
                         <span className={cls}>{inner}</span>
                       )
                     })()}
+                    </div>
+
+                    {/* Notch — the active card points at the content it controls:
+                        the clear picker-vs-page divider. */}
+                    {showCrm && (
+                      <span
+                        aria-hidden="true"
+                        className={`mx-auto -mt-2 block h-4 w-4 rotate-45 rounded-[2px] transition-opacity ${active ? 'bg-[var(--accent)] opacity-100' : 'opacity-0'}`}
+                      />
+                    )}
                   </div>
                 )
               })}
             </div>
+
+            {/* The streams are separate ONLINE — the practical day is SHARED.
+                Said explicitly (Zac 2026-07-27): the relationship between the
+                two cards is deliberate, and the multidisciplinary room is a
+                selling point for both. */}
+            {showCrm && (
+              <p className="mt-4 text-center text-[12.5px] leading-relaxed text-[var(--muted-foreground)]">
+                <span className="font-semibold text-[var(--foreground)]">Separate online streams — one shared practical day.</span>{' '}
+                Osteos, physios and exercise physiologists train the hands-on day together, on real cases — the same
+                multidisciplinary team a concussion patient actually moves through.
+              </p>
+            )}
           </div>
         </section>
 

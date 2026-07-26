@@ -35,9 +35,12 @@ const NAV_CARDS = [
     accent: false,
   },
   {
+    // /platform/pricing redirects to the course pricing — say so BEFORE the
+    // click (Zac 2026-07-27: "its not implicit that its bundled"). The platform
+    // isn't sold separately; it comes with enrolment.
     href: '/platform/pricing',
     title: 'Pricing →',
-    body: 'Free for clinics to start. Free for patients.',
+    body: 'Included with course enrolment — every CCM & CRM enrolment ships the full platform. Free for patients.',
     accent: true,
   },
 ]

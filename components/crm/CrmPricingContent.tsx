@@ -195,9 +195,13 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">1<span className="text-base font-semibold">day</span></p>
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Hands-on practical</p>
             </div>
+            {/* SST tile — the platform IS the differentiator; it was absent from
+                the hero entirely (Zac 2026-07-27: "sst trainer is buried").
+                Replaced the ∞/lifetime tile — lifetime access still appears in
+                the pricing-card bullets. */}
             <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
+              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">SST</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Trainer app incl.</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
               <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
@@ -228,6 +232,64 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               enrol CTA above; the same magnet repeats near the page bottom. */}
           <EpLeadCapture variant="hero" location="hero" />
         </div>
+
+        {/* Value intro + instruments — MOVED directly under the hero (2026-07-27,
+            Zac: "sst trainer is buried. it is a huge part of their training").
+            The platform is the practical-relevance proof, and clinician research
+            says practical relevance is the #1 conversion driver — it cannot sit
+            five screens down. */}
+        {/* Value intro — the tools + training emphasis Zac wants front-and-centre */}
+        <div className="text-center max-w-2xl mx-auto mb-2">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-3">Built for you</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
+            Walk out and deliver it <span className="text-gradient">Monday</span>
+          </h2>
+          <p className="text-base text-muted-foreground">
+            You don&rsquo;t just learn the protocol — you leave with the instruments to run it.
+            Every enrolment includes the working clinical platform: the Preseason Baseline &amp;
+            Serial Testing tool, the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator
+            (heart-rate threshold &rarr; prescription) and the full Clinical Toolkit with the
+            NDIS / WorkCover / GP document pack — all built around the exercise-physiology scope
+            of practice.
+          </p>
+        </div>
+
+        {/* ── SST + Baseline instrument visuals — the platform proof. Hidden when
+            embedded (hideNav): the homepage renders its own instruments section
+            below the stream tabs, so it must not repeat here. ── */}
+        {!hideNav && (
+          <div className="max-w-4xl mx-auto mt-8 mb-2">
+            <InstrumentKeyframes />
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
+                <SstWatchVisual />
+                <div className="p-5">
+                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
+                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
+                    A graded test measures each patient&rsquo;s symptom threshold; they train just
+                    under it — live heart rate, verified progression, every session on your dashboard.
+                  </p>
+                  <Link href="/sst-trainer" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                    See the patient app <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+              <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
+                <BaselineLaptopVisual />
+                <div className="p-5">
+                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">Pre-Season Baseline Testing</h3>
+                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
+                    One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a
+                    PDF report lands in your inbox — on file for the day it matters.
+                  </p>
+                  <Link href="/preseason" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
+                    See how clubs use it <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ESSA standards block — the EP trust signal. Hidden when embedded
             (hideNav) — the homepage renders the ESSA endorsement under the stream
@@ -282,59 +344,6 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           </div>
         </div>
 
-        {/* Value intro — the tools + training emphasis Zac wants front-and-centre */}
-        <div className="text-center max-w-2xl mx-auto mb-2">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-3">Built for you</p>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-            Walk out and deliver it <span className="text-gradient">Monday</span>
-          </h2>
-          <p className="text-base text-muted-foreground">
-            You don&rsquo;t just learn the protocol — you leave with the instruments to run it.
-            Every enrolment includes the working clinical platform: the Preseason Baseline &amp;
-            Serial Testing tool, the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator
-            (heart-rate threshold &rarr; prescription) and the full Clinical Toolkit with the
-            NDIS / WorkCover / GP document pack — all built around the exercise-physiology scope
-            of practice.
-          </p>
-        </div>
-
-        {/* ── SST + Baseline instrument visuals — the platform proof. Hidden when
-            embedded (hideNav): the homepage renders its own instruments section
-            below the stream tabs, so it must not repeat here. ── */}
-        {!hideNav && (
-          <div className="max-w-4xl mx-auto mt-8 mb-2">
-            <InstrumentKeyframes />
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
-                <SstWatchVisual />
-                <div className="p-5">
-                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
-                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
-                    A graded test measures each patient&rsquo;s symptom threshold; they train just
-                    under it — live heart rate, verified progression, every session on your dashboard.
-                  </p>
-                  <Link href="/sst-trainer" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
-                    See the patient app <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-              <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
-                <BaselineLaptopVisual />
-                <div className="p-5">
-                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">Pre-Season Baseline Testing</h3>
-                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
-                    One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a
-                    PDF report lands in your inbox — on file for the day it matters.
-                  </p>
-                  <Link href="/preseason" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
-                    See how clubs use it <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Pricing Cards — two tiers, copied from the CCM bento card design */}
         <div id="pricing-cards" className="mt-6">
           <div className="grid md:grid-cols-2 gap-5 pt-2 max-w-4xl mx-auto items-stretch">
@@ -372,6 +381,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
                 {[
                   '8 EP-scoped modules · 8 CPD hours',
+                  'SST Trainer app — your patients train to their prescribed HR band',
                   'Live Baseline & Serial Testing tool',
                   'BCTT calculator + full Clinical Toolkit',
                   'NDIS / WorkCover / GP document pack',
@@ -497,6 +507,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 <tbody>
                   {([
                     ['8 EP-scoped online modules', true, true],
+                    ['SST Trainer app (patient HR-threshold training)', true, true],
                     ['Live Baseline & Serial Testing tool', true, true],
                     ['BCTT calculator + Clinical Toolkit', true, true],
                     ['NDIS / WorkCover / GP document pack', true, true],

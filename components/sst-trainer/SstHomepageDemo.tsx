@@ -126,6 +126,12 @@ function fmt(sec: number) {
 
 export function SstHomepageDemo() {
   const [t, setT] = useState(0)
+  // The play/pause control is REAL (2026-07-27 — Zac: "play button does
+  // nothing"; it was a decorative span). `paused` is the user's pause;
+  // `userPlay` is an explicit play that overrides prefers-reduced-motion —
+  // an explicit click is stronger user intent than the OS preference.
+  const [paused, setPaused] = useState(false)
+  const [userPlay, setUserPlay] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
   // Reduced-motion preference, read without an effect (no hydration mismatch).
@@ -139,8 +145,10 @@ export function SstHomepageDemo() {
     () => false,
   )
 
+  const playing = !paused && (!prefersReduced || userPlay)
+
   useEffect(() => {
-    if (prefersReduced) return
+    if (!playing) return
 
     let iv: ReturnType<typeof setInterval> | null = null
     const start = () => {
@@ -166,11 +174,12 @@ export function SstHomepageDemo() {
       stop()
       io?.disconnect()
     }
-  }, [prefersReduced])
+  }, [playing])
 
   const total = PER * N
-  // Reduced-motion: freeze on the "Live, in-band" frame (most representative).
-  const tt = (prefersReduced ? 3 * PER + 1500 : t) % total
+  // Reduced-motion (and no explicit play): freeze on the "Live, in-band" frame
+  // (most representative).
+  const tt = (prefersReduced && !userPlay ? 3 * PER + 1500 : t) % total
   const fi = Math.floor(tt / PER)
   const tif = tt % PER
   const prev = (fi - 1 + N) % N
@@ -492,12 +501,31 @@ export function SstHomepageDemo() {
 
       {/* player control bar */}
       <div className="flex items-center gap-[14px] border-t border-[#eef4f4] bg-white px-[18px] py-[14px]">
-        <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-[#5b9aa6]">
-          <span
-            className="block"
-            style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '6px 0 6px 10px', borderColor: 'transparent transparent transparent #fff', marginLeft: 2 }}
-          />
-        </span>
+        <button
+          type="button"
+          aria-label={playing ? 'Pause product tour' : 'Play product tour'}
+          onClick={() => {
+            if (playing) {
+              setPaused(true)
+            } else {
+              setPaused(false)
+              setUserPlay(true) // explicit play overrides prefers-reduced-motion
+            }
+          }}
+          className="flex h-[30px] w-[30px] flex-none cursor-pointer items-center justify-center rounded-full border-none bg-[#5b9aa6] transition-transform hover:scale-105"
+        >
+          {playing ? (
+            <span className="flex gap-[3px]">
+              <span className="block h-[10px] w-[3px] rounded-[1px] bg-white" />
+              <span className="block h-[10px] w-[3px] rounded-[1px] bg-white" />
+            </span>
+          ) : (
+            <span
+              className="block"
+              style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '6px 0 6px 10px', borderColor: 'transparent transparent transparent #fff', marginLeft: 2 }}
+            />
+          )}
+        </button>
         <div className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-[#e2ecec]">
           <div className="h-full rounded-[3px] bg-[#5b9aa6]" style={{ width: progressPct }} />
         </div>
@@ -512,7 +540,10 @@ export function SstHomepageDemo() {
           <button
             key={label}
             type="button"
-            onClick={() => setT(i * PER + 520)}
+            onClick={() => {
+              setT(i * PER + 520)
+              setUserPlay(true) // unfreeze the reduced-motion frame so the seek is visible
+            }}
             className="flex flex-1 cursor-pointer flex-col gap-[5px] border-none bg-transparent p-0"
           >
             <span className="h-[3px] rounded-[2px] transition-colors" style={{ background: i <= fi ? '#5b9aa6' : '#dde7e7' }} />
