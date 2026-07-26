@@ -4,6 +4,7 @@ import { FileText, Clock, ArrowRight } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { EmailCaptureInline } from '@/components/EmailCaptureInline'
 import { createFAQSchema, createMedicalWebPageSchema } from '@/lib/schema-markup'
+import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat-forms'
 
@@ -170,6 +171,12 @@ export default function SCATFormsPage() {
         <div className="mt-8">
           <EmailCaptureInline />
         </div>
+
+        {/* The next step. This hub had NO commercial link at all — clinicians
+            used the free form and left. Placed ABOVE the FAQ so it is seen,
+            and it routes to the free-to-read trial rather than another email
+            wall (the free-course capture converts 0%). */}
+        <AfterTheAssessment className="mt-8" />
 
         {/* Crawlable Q&A — mirrored exactly in the FAQPage JSON-LD */}
         <div className="mt-8 space-y-4">

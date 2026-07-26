@@ -457,19 +457,25 @@ export default function SCAT6DownloadPage() {
                     <BookOpen className="w-4 h-4 text-[#5b9aa6]" />
                   </div>
                   <div>
+                    {/* Routes to the free-to-read TRIAL, not the free course.
+                        The free course converts 0 of 46 signups to paid — 17
+                        finished it and none bought — so sending a downloader
+                        there just adds another non-converting email. The trial
+                        shows real paid module content and qualifies. */}
                     <p className="text-sm font-semibold text-slate-900 mb-0.5">
-                      Want to master SCAT6 administration?
+                      The form gives you a score. What do you do with it?
                     </p>
                     <p className="text-xs text-slate-600 mb-2 leading-snug">
-                      Try our free ~1-hour course — instant access.
+                      Read the opening of every module free — phenotypes, VOMS, BESS and
+                      return-to-play reasoning. No signup.
                     </p>
-                    <a
-                      href="/scat-mastery"
+                    <Link
+                      href="/preview"
                       className="inline-flex items-center gap-1 text-xs font-semibold text-[#5b9aa6] hover:text-[#4a8a96] transition-colors"
                     >
-                      Explore the free course
+                      Read the course preview
                       <ChevronRight className="w-3.5 h-3.5" />
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
