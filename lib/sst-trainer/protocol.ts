@@ -395,7 +395,24 @@ export function progressionDecision(
   const flareWindow = recent.slice(-Math.max(cleanNeeded, 3))
   const flares = flareWindow.filter(isFlare)
   if (flares.length >= 2) {
-    return { decision: 'regress', newCeilingBpm: rx.upperBpm - step, message: 'Symptoms are being provoked repeatedly — ease the ceiling back and rebuild. If it keeps happening, re-test or check in with your clinician.' }
+    // FLOOR THE REGRESS. This was `rx.upperBpm - step` with no lower bound, so
+    // repeated regressions walked the band down without limit — and applyCeiling
+    // shifts BOTH bounds by the same delta, so the lower bound descended with it.
+    // The rest rail can't save it: rest needs two CONSECUTIVE flares, while
+    // regress fires on two flares in the last three sessions, so a
+    // flare/clean/flare pattern regresses repeatedly without ever resting.
+    // From a 150 bpm HRt that reaches sub-resting heart rates in ~15 cycles.
+    //
+    // Floored at half the measured HRt — the same bound the watch app uses
+    // (sst-watch/Sources/SSTProtocol.swift), so the two surfaces can't give the
+    // same patient different bands. Below that the dose is no longer a
+    // meaningful stimulus and the answer is a re-test, not a lower ceiling.
+    const floor = Math.round(rx.hrt / 2)
+    return {
+      decision: 'regress',
+      newCeilingBpm: Math.max(floor, rx.upperBpm - step),
+      message: 'Symptoms are being provoked repeatedly — ease the ceiling back and rebuild. If it keeps happening, re-test or check in with your clinician.',
+    }
   }
   // A single recent flare (any source) blocks an advance — hold and rebuild.
   if (flares.length > 0) {

@@ -28,7 +28,7 @@ import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { grantSstEntitlement } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { CONFIG } from '@/lib/config'
-import { sstPlanPriceId } from '@/lib/stripe'
+import { sstPlanPriceId, redactStripeSecrets } from '@/lib/stripe'
 
 /**
  * When a course purchase should carry the bundled-then-monthly SST platform
@@ -176,12 +176,15 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
     console.log(`[bundle] SST subscription ${created.id} attached to clinic ${clinicCode} (365-day trial → A$49/mo at year 2)`)
     return true
   } catch (err) {
-    console.error(`[bundle] SST subscription creation failed for clinic ${clinicCode}:`, err)
+    // Redact first: Stripe echoes an invalid id back inside its error message,
+    // so a misconfigured price env var would otherwise print a live key here.
+    const safeMessage = redactStripeSecrets(err instanceof Error ? err.message : String(err))
+    console.error(`[bundle] SST subscription creation failed for clinic ${clinicCode}: ${safeMessage}`)
     try {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
         subject: `ACTION REQUIRED: bundled SST subscription failed for clinic ${clinicCode}`,
-        html: `<p>An international CRM buyer paid but the <strong>bundled-then-monthly SST subscription failed to create</strong> — course + platform (free year 1) are fine, but no monthly billing is scheduled for year 2.</p><p><strong>Clinic:</strong> ${escapeHtml(clinicCode)}</p><p>Error: ${escapeHtml(err instanceof Error ? err.message : String(err))}</p><p>Create the sst-trainer subscription manually in Stripe (single plan, 365-day trial, metadata product=sst-trainer + clinicCode). The sale is NOT at risk and Stripe will NOT retry.</p>`,
+        html: `<p>An international CRM buyer paid but the <strong>bundled-then-monthly SST subscription failed to create</strong> — course + platform (free year 1) are fine, but no monthly billing is scheduled for year 2.</p><p><strong>Clinic:</strong> ${escapeHtml(clinicCode)}</p><p>Error: ${escapeHtml(safeMessage)}</p><p>Create the sst-trainer subscription manually in Stripe (single plan, 365-day trial, metadata product=sst-trainer + clinicCode). The sale is NOT at risk and Stripe will NOT retry.</p>`,
       })
     } catch (alertErr) {
       console.error('[bundle] SST subscription admin alert failed:', alertErr)

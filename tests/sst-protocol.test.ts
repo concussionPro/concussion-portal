@@ -253,3 +253,39 @@ describe('progressionDecision — rest on two consecutive flares', () => {
     expect(d.decision).toBe('regress')
   })
 })
+
+describe('regression can never walk the band into nonsense', () => {
+  // The regress branch had NO lower bound. applyCeiling shifts both bounds by
+  // the same delta, so repeated regressions dragged the whole band toward (and
+  // past) zero. The rest rail doesn't catch it: rest needs two CONSECUTIVE
+  // flares, regress needs two in the last three — so flare/clean/flare
+  // regresses forever without ever resting.
+  const flare = (n: number) => ({
+    date: `d${n}`, avgHeartRate: 120, peakHeartRate: 130,
+    preSymptom: 1, peakSymptom: 5, completedMinutes: 20, hrVerified: true,
+  })
+
+  it('floors the ceiling at half the measured HRt, however many flares arrive', () => {
+    let rx = computePrescription(150)
+    const floor = Math.round(150 / 2)
+    for (let i = 0; i < 40; i++) {
+      const d = progressionDecision(rx, [flare(i), { ...flare(i), peakSymptom: 1 }, flare(i + 1)])
+      if (d.decision !== 'regress' && d.decision !== 'rest') break
+      const next = d.newCeilingBpm!
+      expect(next, 'ceiling fell below the floor').toBeGreaterThanOrEqual(
+        Math.min(floor, rx.upperBpm),
+      )
+      const delta = next - rx.upperBpm
+      rx = { ...rx, upperBpm: next, lowerBpm: rx.lowerBpm + delta }
+    }
+    expect(rx.upperBpm).toBeGreaterThanOrEqual(floor)
+    expect(rx.lowerBpm, 'lower bound went non-physiological').toBeGreaterThan(0)
+  })
+
+  it('matches the watch app floor (hrt / 2) so both surfaces agree', () => {
+    const rx = { ...computePrescription(200), upperBpm: 102 } // one step above the floor
+    const d = progressionDecision(rx, [flare(1), { ...flare(2), peakSymptom: 1 }, flare(3)])
+    expect(d.decision).toBe('regress')
+    expect(d.newCeilingBpm).toBe(100) // hrt/2, not 97
+  })
+})

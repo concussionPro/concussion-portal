@@ -627,8 +627,41 @@ export const SST_PLANS: Record<SstPlan, { label: string; seats: number; priceId:
   enterprise: { label: 'Enterprise', seats: 15, priceId: process.env.STRIPE_SST_ENTERPRISE_PRICE_ID },
 }
 
+/**
+ * A Stripe Price id, or undefined if the configured value isn't one.
+ *
+ * SHAPE-CHECKED, not just presence-checked. A live secret key was once pasted
+ * into STRIPE_SST_SINGLE_PRICE_ID; a presence check passes that, and the value
+ * then travels into `subscriptions.create({ items: [{ price }] })`, where
+ * Stripe rejects it with "No such price: 'sk_live_…'" — an error message
+ * containing the secret, which was being console.error'd AND emailed to the
+ * owner. Treating a malformed value as absent stops it ever reaching Stripe.
+ */
 export function sstPlanPriceId(plan: SstPlan): string | undefined {
-  return SST_PLANS[plan]?.priceId
+  const id = SST_PLANS[plan]?.priceId
+  if (!id) return undefined
+  if (!isStripePriceId(id)) {
+    console.error(
+      `[stripe] STRIPE_SST_${plan.toUpperCase()}_PRICE_ID is not a Stripe Price id ` +
+        `(expected "price_…", got "${redactStripeSecrets(id.slice(0, 12))}…"). Treating as unset.`,
+    )
+    return undefined
+  }
+  return id
+}
+
+/** Stripe Price ids are `price_` + an alphanumeric handle. */
+export function isStripePriceId(value: string): boolean {
+  return /^price_[A-Za-z0-9]+$/.test(value.trim())
+}
+
+/**
+ * Strip anything that looks like a Stripe credential out of text before it is
+ * logged or emailed. Stripe echoes an invalid id back inside its error message,
+ * so a misconfigured env var can otherwise put a live key in a log line.
+ */
+export function redactStripeSecrets(text: string): string {
+  return text.replace(/\b(sk|rk|pk)_(live|test)_[A-Za-z0-9]+/g, '$1_$2_[REDACTED]')
 }
 
 export function sstSubscriptionsConfigured(): boolean {

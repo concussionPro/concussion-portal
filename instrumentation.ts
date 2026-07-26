@@ -39,8 +39,21 @@ export async function register() {
    * must not be possible to ship the flag on without the price.
    */
   const { CONFIG } = await import('@/lib/config')
-  if (CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE && !process.env.STRIPE_SST_SINGLE_PRICE_ID) {
+  const { isStripePriceId } = await import('@/lib/stripe')
+  const singlePrice = process.env.STRIPE_SST_SINGLE_PRICE_ID
+  if (CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE && !singlePrice) {
     missing.push('STRIPE_SST_SINGLE_PRICE_ID (required while CRM_INTERNATIONAL_LIVE is true — without it the year-2 renewal is never created and the platform is given away permanently)')
+  }
+
+  // SHAPE, not just presence. A live secret key was once pasted into this var;
+  // a presence check accepts that, and the value then reaches Stripe, which
+  // rejects it with an error message CONTAINING the key. Validate the prefix so
+  // the misconfiguration is caught at boot instead of at the first sale.
+  for (const key of ['STRIPE_SST_SINGLE_PRICE_ID', 'STRIPE_SST_CLINIC_PRICE_ID', 'STRIPE_SST_ENTERPRISE_PRICE_ID'] as const) {
+    const val = process.env[key]
+    if (val && !isStripePriceId(val)) {
+      missing.push(`${key} is not a Stripe Price id — it must start with "price_" (a secret key or product id here will be rejected by Stripe, and Stripe echoes the value back in the error)`)
+    }
   }
 
   if (missing.length || missingGroups.length) {
