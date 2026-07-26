@@ -183,6 +183,15 @@ export const CONFIG = {
   // SST Trainer iOS app — the ONLY canonical store link. Renders nowhere until
   // FEATURES.SST_IOS_APP_LIVE flips true on Apple approval.
   SST_APP_STORE_URL: 'https://apps.apple.com/au/app/id6792171738',
+  // TestFlight PUBLIC link — the pre-store native-iOS path for patients
+  // (Safari has no Web Bluetooth, so live HR on iPhone needs the native app).
+  // EMPTY until the founder creates the External Testing public link in App
+  // Store Connect and Beta App Review clears — paste it here (format
+  // https://testflight.apple.com/join/XXXXXXXX). Surfaces are CLINICIAN-FACING
+  // only (welcome email + clinic card), keeping the clinician-led posture; all
+  // of them auto-retire in favour of the App Store link once SST_IOS_APP_LIVE
+  // flips.
+  SST_TESTFLIGHT_URL: '',
 
   // Feature Flags
   FEATURES: {

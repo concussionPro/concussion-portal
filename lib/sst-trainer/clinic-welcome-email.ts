@@ -8,6 +8,35 @@ import { escapeHtml } from '@/lib/resend-client'
 // training band → sessions sync to the hub, live in-session view). No outcome
 // claims.
 // ─────────────────────────────────────────────────────────────────────────────
+/**
+ * iPhone-patients block. Safari has no Web Bluetooth, so live HR pairing on
+ * iPhone needs the NATIVE app. Three states, in priority order:
+ *   - App Store live → store link (canonical);
+ *   - TestFlight public link set → beta install instructions (pre-store bridge);
+ *   - neither → nothing (the web link above still works, manual HR entry).
+ * Clinician-facing by design: the clinician hands this to their iPhone
+ * patients — it is never marketed publicly (clinician-led posture).
+ */
+function iosBlock(code: string): string {
+  if (CONFIG.FEATURES.SST_IOS_APP_LIVE) {
+    return `
+        <div class="link-block">
+          <p class="label">iPhone patients — native app</p>
+          <a href="${escapeHtml(CONFIG.SST_APP_STORE_URL)}">${escapeHtml(CONFIG.SST_APP_STORE_URL)}</a>
+          <p class="note">iPhone patients should install the SST Trainer app from the App Store, then enter your clinic code <strong>${code}</strong> — the native app pairs Bluetooth heart-rate devices live, which iPhone browsers cannot.</p>
+        </div>`
+  }
+  if (CONFIG.SST_TESTFLIGHT_URL) {
+    return `
+        <div class="link-block">
+          <p class="label">iPhone patients — native app (beta)</p>
+          <a href="${escapeHtml(CONFIG.SST_TESTFLIGHT_URL)}">${escapeHtml(CONFIG.SST_TESTFLIGHT_URL)}</a>
+          <p class="note">iPhone patients: install Apple's free TestFlight app, open this link, then enter your clinic code <strong>${code}</strong>. The native app pairs Bluetooth heart-rate devices live, which iPhone browsers cannot. (App Store release is in review — this beta is the same app.)</p>
+        </div>`
+  }
+  return ''
+}
+
 export function buildWelcomeEmail(args: {
   contactName: string
   clinicName: string
@@ -79,6 +108,7 @@ export function buildWelcomeEmail(args: {
           <a href="${patientUrl}">${patientUrl}</a>
           <p class="note">This is the link you give patients — text or email it, or have them type it in the clinic. It carries your clinic code, so their graded test and training sessions flow straight to your hub.</p>
         </div>
+        ${iosBlock(code)}
 
         <div class="steps">
           <p style="font-weight: 700; margin-top: 0;">Getting started:</p>

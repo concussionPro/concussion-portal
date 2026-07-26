@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { CONFIG } from '@/lib/config'
 import { SstPatientQrCard } from '@/components/sst-trainer/SstPatientQrCard'
 import {
   ArrowRight,
@@ -253,6 +254,26 @@ export function SstClinicCard() {
         </button>
         <CopyButton text={clinic.code} label="Copy code" />
       </div>
+
+      {/* iPhone patients — native path. Store link once live; TestFlight
+          public link as the pre-store bridge; nothing when neither exists
+          (the web link works everywhere, manual HR entry on iPhone). */}
+      {(CONFIG.FEATURES.SST_IOS_APP_LIVE || CONFIG.SST_TESTFLIGHT_URL) && (
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+          <p className="m-0 text-[12.5px] leading-relaxed text-slate-600">
+            <strong className="text-slate-800">iPhone patients:</strong>{' '}
+            {CONFIG.FEATURES.SST_IOS_APP_LIVE ? (
+              <>install the native app from the{' '}
+                <a href={CONFIG.SST_APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-700 underline">App Store</a>,{' '}
+                then enter your clinic code — the native app pairs Bluetooth HR devices live, which iPhone browsers cannot.</>
+            ) : (
+              <>install via the{' '}
+                <a href={CONFIG.SST_TESTFLIGHT_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-700 underline">TestFlight beta</a>{' '}
+                (needs Apple&rsquo;s free TestFlight app), then enter your clinic code — the native app pairs Bluetooth HR devices live, which iPhone browsers cannot. App Store release is in review.</>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* email the link straight to a patient */}
       <div className="mt-5 border-t border-slate-100 pt-4">
