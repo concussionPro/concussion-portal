@@ -365,12 +365,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // Bundle: CCM enrolment includes the working clinical platform (SST Trainer +
-  // Baseline). Provision it for online-only / full-course buyers. Gated behind
-  // CRM_INTERNATIONAL_LIVE so it stays fully inert until the owner flips the one
-  // go-live switch (see config). Best-effort — a provisioning hiccup must never
-  // lose the sale or cause endless Stripe retries; it can NEVER downgrade access.
+  // Baseline). Provision it for online-only / full-course buyers.
+  //
+  // Gated on CCM_PLATFORM_BUNDLE_LIVE — its OWN flag since 2026-07-26. This used
+  // to hang off CRM_INTERNATIONAL_LIVE, so the homepage promise on the flagship
+  // product was withheld by a switch named for an unrelated market.
+  //
+  // Best-effort — a provisioning hiccup must never lose the sale or cause
+  // endless Stripe retries; it can NEVER downgrade access.
   if (
-    CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE &&
+    CONFIG.FEATURES.CCM_PLATFORM_BUNDLE_LIVE &&
     (accessLevel === 'online-only' || accessLevel === 'full-course')
   ) {
     await provisionPlatformBestEffort(customerEmail, customerName, `CCM ${courseType}`)

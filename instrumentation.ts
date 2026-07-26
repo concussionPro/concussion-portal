@@ -41,7 +41,7 @@ export async function register() {
   const { CONFIG } = await import('@/lib/config')
   const { isStripePriceId } = await import('@/lib/stripe')
   const singlePrice = process.env.STRIPE_SST_SINGLE_PRICE_ID
-  if (CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE && !singlePrice) {
+  if ((CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE || CONFIG.FEATURES.CCM_PLATFORM_BUNDLE_LIVE) && !singlePrice) {
     missing.push('STRIPE_SST_SINGLE_PRICE_ID (required while CRM_INTERNATIONAL_LIVE is true — without it the year-2 renewal is never created and the platform is given away permanently)')
   }
 

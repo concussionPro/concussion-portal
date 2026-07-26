@@ -184,14 +184,28 @@ export const CONFIG = {
     // GRANTED 2026-07-24 — ESSA accredited CRM (Concussion Rehab for EP's),
     // 8 online + 8 F2F = 16 CPDs. Real ESSA badge in public/essa-endorsed.png.
     ESSA_ACCREDITED: true,
-    // International CRM live commerce (online-only, geo-priced) + the bundled
-    // platform provisioning + the US$99/yr renewal subscription. FALSE = fully
-    // inert: no international live checkout, no bundle-provisioning on ANY course
-    // purchase, no subscription creation. Flipping to TRUE is the single go-live
-    // switch for the whole international CRM sales+fulfilment model — VERIFY IN
-    // STRIPE TEST MODE FIRST (esp. the year-2 renewal charge). See
-    // /api/crm/checkout-international + handleCrmPurchase/handleCheckoutCompleted.
-    CRM_INTERNATIONAL_LIVE: false,
+    // International CRM live commerce: online-only, geo-priced checkout, the
+    // bundled platform, and the year-2 renewal subscription.
+    // LIVE 2026-07-26 — the three STRIPE_SST_*_PRICE_ID vars now hold real
+    // Price ids, which is what the renewal depends on. instrumentation.ts
+    // refuses to boot production with this true and those unset/malformed, so
+    // the "sells, but never schedules a renewal" failure can't recur.
+    // See /api/crm/checkout-international + handleCrmPurchase.
+    CRM_INTERNATIONAL_LIVE: true,
+    // Whether a CCM purchase provisions the bundled clinical platform
+    // (SST Trainer + Baseline) for the buyer.
+    //
+    // SPLIT OUT of CRM_INTERNATIONAL_LIVE 2026-07-26. One flag was gating two
+    // unrelated things, so the homepage's "Included with your enrolment —
+    // enrol and your clinic code activates both instruments" was withheld from
+    // every CCM buyer by a switch named for an international CRM launch. That
+    // is the promise on the flagship product; it should never have depended on
+    // an unrelated market going live.
+    //
+    // Buyers land on the 3-patient trial cap: the cap now lifts only where a
+    // renewal subscription exists (lib/sst-trainer/bundle.ts), and CCM does not
+    // carry one. The free platform year is deliberate; free forever is not.
+    CCM_PLATFORM_BUNDLE_LIVE: true,
     // HPCSA (South Africa) CEU accreditation of the CRM. FALSE until the
     // accreditation number is issued. HARD COMPLIANCE GATE: since 1 Nov 2024 no
     // SA practitioner may enrol in a CPD activity before it is accredited, the
