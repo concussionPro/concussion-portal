@@ -79,6 +79,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.85,
     },
+    // Per-module trial pages. These carry the SAME unlocked sections the
+    // /preview page shows (Module 1: 3 sections, others: 1) — no extra content,
+    // just one URL per module so each can rank for its own clinical intent.
+    ...Array.from({ length: 8 }, (_, i) => ({
+      url: `${baseUrl}/preview/${i + 1}`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly' as const,
+      priority: i === 0 ? 0.8 : 0.7,
+    })),
     // Public Clinical Tools landing (canonical /clinical-suite, indexable).
     {
       url: `${baseUrl}/clinical-suite`,

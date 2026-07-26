@@ -130,3 +130,21 @@ describe('the free SCAT course stays free', () => {
     }
   })
 })
+
+describe('per-module trial pages carry no extra content', () => {
+  // /preview/[module] renders straight from getPreviewContent, so it can only
+  // ever show what the hub page and the API already expose. This asserts the
+  // page adds URLS, never CONTENT — the exact thing a "make it more indexable"
+  // change could get wrong.
+  it('each module page would render only that module’s unlocked sections', async () => {
+    const { getPreviewContent, MODULE_1_PREVIEW_COUNT } = await import('../lib/preview-content')
+    for (const course of ['ccm', 'crm'] as const) {
+      const data = getPreviewContent(course)
+      for (let id = 1; id <= 8; id++) {
+        const m = data.find((x) => x.id === id)
+        expect(m, `${course} module ${id} missing`).toBeTruthy()
+        expect(m!.previewSections.length).toBe(id === 1 ? MODULE_1_PREVIEW_COUNT : 1)
+      }
+    }
+  })
+})

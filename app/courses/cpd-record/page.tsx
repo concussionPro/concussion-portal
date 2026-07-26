@@ -7,6 +7,8 @@ import { COURSES, findCourse, findProvider } from '@/lib/ai-course/provider-cata
 import { getCourseCertificate } from '@/lib/course-certificates'
 import { getUserCertificate } from '@/lib/ai-course/certificate'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { reflectionsByModule } from '@/lib/course-notes'
+import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { Check, AlertCircle, Award } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -48,6 +50,31 @@ export default async function CpdRecordPage() {
     const sessionCookie = (await cookies()).get('session')?.value
     const session = sessionCookie ? verifySessionToken(sessionCookie) : null
     email = session?.email ?? null
+  }
+
+  // Module reflections, keyed by the SHARED progress-store module id
+  // (1-8 = CCM, 101-103 = free SCAT, 201-208 = CRM/EP).
+  type Reflection = { moduleId: number; displayId: number; courseLabel: string; moduleTitle: string | null; body: string }
+  const reflections: Reflection[] = []
+  {
+    const sessionCookie = (await cookies()).get('session')?.value
+    const session = sessionCookie ? verifySessionToken(sessionCookie) : null
+    if (session) {
+      const byModule = await reflectionsByModule(session.userId).catch(() => ({}))
+      const ccm = getModulesMeta()
+      const scat = getSCATModulesMeta()
+      for (const [key, body] of Object.entries(byModule)) {
+        const id = Number(key)
+        if (id >= 201) {
+          reflections.push({ moduleId: id, displayId: id - 200, courseLabel: 'Rehab Mastery (EP)', moduleTitle: null, body })
+        } else if (id >= 101) {
+          reflections.push({ moduleId: id, displayId: id - 100, courseLabel: 'SCAT6 Mastery', moduleTitle: scat.find((m) => m.id === id)?.title ?? null, body })
+        } else {
+          reflections.push({ moduleId: id, displayId: id, courseLabel: 'Clinical Mastery', moduleTitle: ccm.find((m) => m.id === id)?.title ?? null, body })
+        }
+      }
+      reflections.sort((a, b) => a.moduleId - b.moduleId)
+    }
   }
 
   const earned: EarnedCert[] = []
@@ -192,8 +219,36 @@ export default async function CpdRecordPage() {
               </table>
             </div>
 
+            {/* Reflections the learner wrote inside each module. AHPRA wants a
+                reflection recorded against every CPD activity — this page used
+                to just TELL them to write one. Surfacing what they already
+                wrote makes the record audit-ready instead of a homework note. */}
+            {reflections.length > 0 && (
+              <section className="mt-8">
+                <h2 className="text-base font-bold text-foreground mb-1">Your reflections</h2>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Written as you worked through each module. Copy these into your AHPRA log alongside
+                  the hours above.
+                </p>
+                <ul className="space-y-3">
+                  {reflections.map((r) => (
+                    <li key={r.moduleId} className="rounded-xl border border-slate-200 bg-white p-4">
+                      <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {r.courseLabel} · Module {r.displayId}
+                        {r.moduleTitle ? ` — ${r.moduleTitle}` : ''}
+                      </p>
+                      <p className="m-0 mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                        {r.body}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             <p className="text-xs text-muted-foreground mt-6 leading-relaxed">
-              <strong>Logging with AHPRA:</strong> record each activity with the course name, provider (Concussion Education Australia), hours, completion date, certificate ID, and a brief reflection on relevance to your practice.
+              <strong>Logging with AHPRA:</strong> record each activity with the course name, provider (Concussion Education Australia), hours, completion date, certificate ID
+              {reflections.length > 0 ? ', and the reflection above.' : ', and a brief reflection on relevance to your practice — you can write one inside each module and it will appear here.'}
             </p>
           </>
         )}

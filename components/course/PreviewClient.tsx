@@ -246,6 +246,17 @@ export function PreviewClient({
                                   </div>
                                 ))}
                               </div>
+                              {/* Deep link to this module's own indexable page —
+                                  same unlocked content, its own URL, so each
+                                  module can rank for its own clinical intent. */}
+                              <div className="px-4 pb-2">
+                                <Link
+                                  href={`/preview/${module.id}${isCrm ? '?course=crm' : ''}`}
+                                  className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#5b8d96] hover:underline"
+                                >
+                                  Open Module {module.id} preview on its own page →
+                                </Link>
+                              </div>
                               <div className="p-4 pt-2 border-t border-slate-100">
                                 <Link
                                   href="/pricing"

@@ -1,5 +1,5 @@
 /*
- * SST Trainer service worker.
+ * Service worker — SST Trainer app shell + offline course reading.
  *
  * A minimal, REAL offline layer (upgraded from the old no-op passthrough):
  *  - Precache the app shell route (/sst-trainer) + manifest + icons at install.
@@ -21,8 +21,10 @@
  *
  * Bump CACHE on any strategy change so old caches are dropped at activate.
  */
-const CACHE = 'sst-v3'
+const CACHE = 'sst-v4'
 const APP_SHELL = '/sst-trainer'
+// Course routes cached for offline STUDY (see the /modules handler below).
+const COURSE_PREFIXES = ['/modules/', '/ep-course/modules/', '/learning']
 // Cache sentinel + in-memory flag marking this a native (Capacitor) shell.
 const NATIVE_FLAG = '/__sst_native_shell__'
 let nativeShell = false
@@ -100,6 +102,43 @@ self.addEventListener('fetch', (event) => {
             return res
           }),
       ),
+    )
+    return
+  }
+
+  // Course navigations: network-first, falling back to the last page the
+  // learner actually visited. The course is what people work through on a
+  // commute or between patients, on hospital wifi — losing the page to a
+  // dropped connection is the failure that matters here. Progress itself is
+  // never at risk (ProgressContext writes localStorage immediately and retries
+  // the server save), so this only has to keep the CONTENT readable.
+  //
+  // Network-first, never cache-first: a stale clinical module must never be
+  // served to someone who is online.
+  if (req.mode === 'navigate' && COURSE_PREFIXES.some((p) => url.pathname.startsWith(p))) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone()
+            caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {})
+          }
+          return res
+        })
+        .catch(() =>
+          caches.match(req).then(
+            (hit) =>
+              hit ||
+              new Response(
+                '<!doctype html><meta charset="utf-8"><title>Offline</title>' +
+                  '<div style="font-family:system-ui;padding:3rem;text-align:center;color:#334155">' +
+                  '<h1 style="font-size:1.1rem">You are offline</h1>' +
+                  '<p style="font-size:.9rem">Modules you have already opened stay available. ' +
+                  'Reconnect to load this one.</p></div>',
+                { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+              ),
+          ),
+        ),
     )
     return
   }

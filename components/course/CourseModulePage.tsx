@@ -13,6 +13,8 @@ import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
 import { ContentLockedBanner } from '@/components/course/ContentLockedBanner'
 import { SectionStepper, type VirtualSection } from '@/components/course/SectionStepper'
 import { SectionNavButtons } from '@/components/course/SectionNavButtons'
+import { ModuleNotes } from '@/components/course/ModuleNotes'
+import { CoursePwaRegister } from '@/components/course/CoursePwaRegister'
 import { SectionTypeBadge, estimateReadingTime } from '@/components/course/SectionTypeBadge'
 import { useModuleData, type CourseKey, type InitialModuleData } from '@/hooks/useModuleData'
 import { Sidebar } from '@/components/dashboard/Sidebar'
@@ -1744,6 +1746,9 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
             return null
           })()}
 
+          {/* Offline reading for modules already visited (shared SW). */}
+          <CoursePwaRegister />
+
           {/* Section Navigation Buttons */}
           <SectionNavButtons
             virtualSections={virtualSections}
@@ -1751,6 +1756,13 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
             lockedAfterIndex={lockedAfterIndex}
             onNavigate={navigateSection}
           />
+
+          {/* Notes + CPD reflection. Entitled learners only — a free-tier user
+              looking at a truncated Module 1 is being sold to, not studying,
+              and the notes API is session-scoped anyway. */}
+          {!needsUpgrade && accessLevel !== 'preview' && (
+            <ModuleNotes moduleId={progressId} moduleTitle={module?.title} />
+          )}
         </div>
       </main>
     </div>

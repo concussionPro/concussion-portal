@@ -1,6 +1,7 @@
 'use client'
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
+import { CourseSearch } from '@/components/course/CourseSearch'
 import { CheckCircle2, Clock, Award, Lock, ArrowRight, Loader2, Sparkles, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -151,6 +152,14 @@ function LearningSuiteInner() {
           </div>
 
           <div className="px-4 sm:px-6 md:px-8 py-6 max-w-[1400px] relative z-10">
+            {/* Cross-course search. Sits above the fold because "find the thing
+                I half-remember" is what brings a clinician back between
+                patients — the retention behaviour the reference positioning
+                promises. Results are entitlement-scoped server-side. */}
+            <div className="mb-5">
+              <CourseSearch />
+            </div>
+
             {/* Header Card */}
             <div className="glass rounded-xl p-6 mb-5 border-l-4 border-[#64a8b0]">
               <div className="border-b border-slate-200/50 pb-4 mb-4">
