@@ -49,10 +49,11 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
-    const { email, name, location } = body as {
+    const { email, name, location, utm } = body as {
       email?: string
       name?: string
       location?: string
+      utm?: Record<string, string>
     }
 
     // Lead attribution — which surface hosted the capture form (e.g. 'acsm',
@@ -99,7 +100,21 @@ export async function POST(request: NextRequest) {
         INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
         VALUES (
           'ep_lead_capture',
-          ${JSON.stringify({ name: userName, isExisting: !!existingUser, location: captureLocation })}::jsonb,
+          ${JSON.stringify({
+            name: userName,
+            isExisting: !!existingUser,
+            location: captureLocation,
+            // Placement attribution — lets a paid ACSM/CSP advertorial be
+            // judged on leads produced, not just sessions delivered.
+            ...(utm && typeof utm === 'object'
+              ? Object.fromEntries(
+                  Object.entries(utm)
+                    .filter(([k]) => k.startsWith('utm_'))
+                    .slice(0, 5)
+                    .map(([k, v]) => [k, String(v).slice(0, 80)]),
+                )
+              : {}),
+          })}::jsonb,
           ${'server_' + Date.now()},
           ${Date.now()},
           ${request.headers.get('user-agent') || 'unknown'},

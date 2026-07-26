@@ -45,7 +45,25 @@ export default function EpLeadCapture({
       const res = await fetch('/api/ep-lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, name: name.trim() || undefined, location }),
+        body: JSON.stringify({
+          email: cleanEmail,
+          name: name.trim() || undefined,
+          location,
+          // WHICH placement sent them. `location` only says which PAGE the form
+          // sat on; for a paid ACSM Bulletin advertorial we need to know that
+          // this lead came from THAT ad, not from organic /acsm traffic —
+          // otherwise the spend can't be judged. Read at submit time so it
+          // survives the visitor scrolling before converting.
+          utm: typeof window !== 'undefined' ? (() => {
+            const q = new URLSearchParams(window.location.search)
+            const out: Record<string, string> = {}
+            for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+              const v = q.get(k)
+              if (v) out[k] = v.slice(0, 80)
+            }
+            return Object.keys(out).length ? out : undefined
+          })() : undefined,
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.success) {
