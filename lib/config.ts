@@ -180,6 +180,10 @@ export const CONFIG = {
     DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules (8 CPD hours) + optional practical day (up to 14 CPD hours). Endorsed by Osteopathy Australia.',
   },
 
+  // SST Trainer iOS app — the ONLY canonical store link. Renders nowhere until
+  // FEATURES.SST_IOS_APP_LIVE flips true on Apple approval.
+  SST_APP_STORE_URL: 'https://apps.apple.com/au/app/id6792171738',
+
   // Feature Flags
   FEATURES: {
     SHOW_COUNTDOWN: true,
@@ -216,6 +220,11 @@ export const CONFIG = {
     // renewal subscription exists (lib/sst-trainer/bundle.ts), and CCM does not
     // carry one. The free platform year is deliberate; free forever is not.
     CCM_PLATFORM_BUNDLE_LIVE: true,
+    // SST Trainer iOS app — Apple ID 6792171738, v1.0 submitted ~18 Jul 2026,
+    // WAITING FOR REVIEW as of 27 Jul (release set to automatic-on-approval).
+    // Flip TRUE the day Apple approves. While false, no App Store badge or
+    // link renders anywhere — same discipline as every other unheld claim.
+    SST_IOS_APP_LIVE: false,
     // ACSM Approved Provider status for the CRM (the US$600 application).
     // FALSE until the approval letter arrives. Same discipline as ESSA: while
     // false, /acsm may state HOURS of learning (verifiable) but must never

@@ -86,4 +86,15 @@ describe('the flags themselves stay honest', () => {
     expect(gate).toMatch(/country === 'ZA'/)
     expect(gate).toMatch(/HPCSA_ACCREDITED/)
   })
+
+  it('the App Store link renders only behind SST_IOS_APP_LIVE (no badge before Apple approves)', () => {
+    // Same discipline as ESSA/ACSM: a store listing is not ours to claim until
+    // Apple grants it. The canonical URL lives in ONE place and every render
+    // site is flag-gated.
+    expect(CONFIG.SST_APP_STORE_URL).toMatch(/^https:\/\/apps\.apple\.com\/au\/app\/id\d+$/)
+    const platform = readFileSync(join(REPO, 'app/platform/page.tsx'), 'utf8')
+    expect(platform).toMatch(/SST_IOS_APP_LIVE/)
+    // The URL must never appear hardcoded outside config.
+    expect(platform).not.toContain('apps.apple.com')
+  })
 })

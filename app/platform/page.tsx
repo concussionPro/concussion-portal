@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CONFIG } from '@/lib/config'
 import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/PlatformChrome'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,7 +65,11 @@ const FEATURES = [
 ]
 
 // Honest install CTA — no store badges until the listings are actually live.
+// When SST_IOS_APP_LIVE flips (Apple ID 6792171738, auto-release on approval)
+// the App Store link appears and the browser-install copy stops claiming "no
+// app store needed" — the two claims must never coexist.
 function InstallCta() {
+  const iosLive = CONFIG.FEATURES.SST_IOS_APP_LIVE
   return (
     <div className="mt-1 flex flex-wrap items-center gap-3">
       <Link
@@ -72,8 +77,19 @@ function InstallCta() {
         className="rounded-[14px] px-[22px] py-[15px] text-[15px] font-bold text-white transition-transform hover:-translate-y-0.5"
         style={{ background: PLATFORM.navy }}
       >
-        Install in 60 seconds — no app store needed
+        {iosLive ? 'Install in 60 seconds — Android & desktop' : 'Install in 60 seconds — no app store needed'}
       </Link>
+      {iosLive && (
+        <a
+          href={CONFIG.SST_APP_STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-[14px] px-[22px] py-[15px] text-[15px] font-bold text-white transition-transform hover:-translate-y-0.5"
+          style={{ background: '#000' }}
+        >
+           Download on the App Store
+        </a>
+      )}
       <Link
         href="/platform/clinicians"
         className="rounded-[14px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[14px] text-[15px] font-bold transition-colors hover:border-slate-400"
@@ -400,8 +416,10 @@ export default function PlatformHome() {
             </span>
             <span className="text-[14px] font-normal leading-[1.45] text-[#a7c2c5]">
               Garmin, Polar, WHOOP, Suunto, Coros and more stream live heart rate via their heart-rate
-              broadcast mode — or pair any Bluetooth chest strap. On Android and desktop today; no clinic
-              hardware.
+              broadcast mode — or pair any Bluetooth chest strap.{' '}
+              {CONFIG.FEATURES.SST_IOS_APP_LIVE
+                ? 'iPhone (App Store), Android and desktop; no clinic hardware.'
+                : 'On Android and desktop today; no clinic hardware.'}
             </span>
           </div>
 
