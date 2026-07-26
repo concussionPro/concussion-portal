@@ -1,3 +1,4 @@
+import { CONFIG } from '@/lib/config'
 /**
  * Provider abstraction for the CPD marketplace surface.
  *
@@ -221,14 +222,20 @@ export const COURSES: CourseCatalogueEntry[] = [
     providerId: 'cea',
     // Online tier = 8 CPD hours; complete (with the shared practical day) = 14.
     cpdHours: 8,
-    cpdRecognition: ['Designed to ESSA CPD standards', 'ESSA accreditation pending'],
+    // ESSA accreditation GRANTED 2026-07-24. Derived from the same flag every
+    // other ESSA claim obeys, so this entry can never contradict the live copy.
+    cpdRecognition: CONFIG.FEATURES.ESSA_ACCREDITED
+      ? ['Accredited by ESSA', '8 ESSA CPD points online (16 with the practical day)']
+      : ['Designed to ESSA CPD standards', 'ESSA accreditation pending'],
     description: 'The EP-scoped concussion-rehab stream for Accredited Exercise Physiologists & Exercise Scientists — BCTT/HRt, sub-symptom-threshold prescription, graded return-to-activity, plus the live clinical tools. 8 online modules · 8 CPD (14 with the shared practical day).',
     route: '/concussion-rehab-mastery',
     priceAUD: 497,
-    // Display/landing only — no EP Stripe flow yet; landing captures interest.
+    // CRM has its OWN checkout (/api/crm/checkout), not the generic short-course
+    // flow this flag drives — so false is correct and does not mean "unbuyable".
     purchasableViaCheckout: false,
-    // PREVIEW: gated + noindex, shown on /courses to admin/demo only until launch.
-    status: 'preview',
+    // Live since ESSA approval. Was left at 'preview', which hid the stream from
+    // /courses for everyone but admin/demo while it was selling.
+    status: CONFIG.FEATURES.ESSA_ACCREDITED ? 'live' : 'preview',
     tags: ['concussion', 'rehab', 'exercise-physiology', 'essa', 'aep'],
   },
   // Placeholder partner cards removed — they were demo-shells with
