@@ -440,9 +440,18 @@ export default function PlatformHome() {
               </span>
             ))}
           </div>
+          {/* NEVER offer manual HR entry as the iPhone path (owner directive
+              2026-07-27) — a self-reported number mid-exercise is exactly what
+              the measured-threshold product exists to replace. iPhone = the
+              native app: store link when live, clinician-distributed beta
+              until then. (Manual entry survives ONLY as an in-app fallback
+              whose sessions can never plot as verified.) */}
           <p className="mt-[13px] text-[11.5px] font-normal leading-[1.4] text-[#7c9598]">
-            Chest strap = most accurate · iPhone: manual entry today — native iPhone app in development ·
-            phone-camera pulse check for resting measurements.
+            Chest strap = most accurate ·{' '}
+            {CONFIG.FEATURES.SST_IOS_APP_LIVE
+              ? 'iPhone: native app on the App Store'
+              : 'iPhone: native app in App Store review — beta access through your clinician'}{' '}
+            · phone-camera pulse check for resting measurements.
           </p>
 
           {/* Nav cards */}
