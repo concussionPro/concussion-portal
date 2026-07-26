@@ -1,5 +1,6 @@
 import { modules } from '@/data/modules'
 import { scatModules } from '@/data/scat-modules'
+import { epModules } from '@/data/ep-modules'
 
 /**
  * Server-side quiz verification (2026-07-05 audit fix).
@@ -19,12 +20,21 @@ export interface QuizVerification {
 }
 
 const PASS_THRESHOLD = 0.75
+// EP (CRM) modules 201-208 pass at 80% — must match the on-screen copy and
+// ProgressContext.quizPassThreshold for the namespaced ids.
+const EP_PASS_THRESHOLD = 0.8
+
+function isEpModuleId(moduleId: number): boolean {
+  return moduleId >= 201 && moduleId <= 208
+}
 
 function answerKeyFor(moduleId: number): Map<string, number> | null {
   const source =
     moduleId >= 101 && moduleId <= 104
       ? scatModules.find((m) => m.id === moduleId)
-      : modules.find((m) => m.id === moduleId)
+      : isEpModuleId(moduleId)
+        ? epModules.find((m) => m.id === moduleId)
+        : modules.find((m) => m.id === moduleId)
   if (!source || !source.quiz?.length) return null
   return new Map(source.quiz.map((q) => [q.id, q.correctAnswer]))
 }
@@ -41,6 +51,7 @@ export function verifyModuleQuiz(
   for (const [qid, correct] of key) {
     if (answers[qid] === correct) score += 1
   }
-  const ok = key.size > 0 && score / key.size >= PASS_THRESHOLD
+  const threshold = isEpModuleId(moduleId) ? EP_PASS_THRESHOLD : PASS_THRESHOLD
+  const ok = key.size > 0 && score / key.size >= threshold
   return { ok, score, total: key.size, reason: ok ? 'pass' : 'below-threshold' }
 }

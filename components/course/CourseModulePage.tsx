@@ -643,8 +643,32 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
     )
   }
 
-  // Show upgrade offer if preview user tries to access paid module
+  // Show upgrade offer if preview user tries to access paid module.
+  // STREAM-CORRECT: the EP course must sell CRM (ESSA-accredited, 16 CPD,
+  // /concussion-rehab-mastery), never the flagship CCM pitch — a blocked EP
+  // prospect being offered "14 CPD hours" at the CCM checkout is the wrong
+  // course for their profession.
   if (needsUpgrade) {
+    const isEp = descriptor.course === 'ep'
+    const offer = isEp
+      ? {
+          blurb: <>This module is part of <strong className="text-white">Concussion Rehab Mastery</strong> — the complete 8-module rehab course for exercise physiologists. Enrol for instant access to all modules and <strong className="text-white">{CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online</strong> ({CONFIG.COURSE.ONLINE_CPD_POINTS * 2} CPD hours with the practical day).</>,
+          statHours: `Up to ${CONFIG.COURSE.ONLINE_CPD_POINTS * 2}`,
+          statBreakdown: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + practical day`,
+          badge: 'ESSA Accredited',
+          href: '/concussion-rehab-mastery',
+          cta: `Enrol Now — from $${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}`,
+          priceLine: `Online $${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Complete with practical day from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird`,
+        }
+      : {
+          blurb: <>This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours</strong>.</>,
+          statHours: `Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS}`,
+          statBreakdown: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.TOTAL_CPD_POINTS - CONFIG.COURSE.ONLINE_CPD_POINTS} workshop`,
+          badge: 'AHPRA Aligned',
+          href: CONFIG.SHOP_URL,
+          cta: `Upgrade Now — from $${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}`,
+          priceLine: `Online from $${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Full course with workshop from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird`,
+        }
     return (
       <div className="flex min-h-screen bg-slate-50">
         <NavComponent />
@@ -661,7 +685,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 Unlock Full Course Access
               </h1>
               <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-                This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 CPD hours</strong>.
+                {offer.blurb}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -670,25 +694,25 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                   <div className="text-sm text-slate-300">Complete Modules</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                  <div className="text-3xl font-bold text-amber-400 mb-1">Up to 14</div>
-                  <div className="text-sm text-slate-300">8 online + 6 workshop</div>
+                  <div className="text-3xl font-bold text-amber-400 mb-1">{offer.statHours}</div>
+                  <div className="text-sm text-slate-300">{offer.statBreakdown}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                   <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />
-                  <div className="text-sm text-slate-300">AHPRA Aligned</div>
+                  <div className="text-sm text-slate-300">{offer.badge}</div>
                 </div>
               </div>
 
               <a
-                href={CONFIG.SHOP_URL}
+                href={offer.href}
                 className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
-                Upgrade Now — from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}
+                {offer.cta}
                 <ArrowRight className="w-5 h-5" />
               </a>
 
               <p className="text-slate-400 text-sm mt-6">
-                Online from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Full course with workshop from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
+                {offer.priceLine}
               </p>
 
               <button

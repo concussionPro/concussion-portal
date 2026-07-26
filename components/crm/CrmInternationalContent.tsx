@@ -41,7 +41,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'What accreditation does it carry?',
-    a: 'The course is built to ACSM CEC standards and the Approved-Provider application is in progress; the course is ESSA-accredited (16 CPDs), independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
+    a: 'The course is built to ACSM CEC standards and the Approved-Provider application is in progress; the course is ESSA-accredited — 8 ESSA CPD points for the online course — independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
   },
   {
     q: 'Is there an ongoing cost?',

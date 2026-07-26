@@ -26,7 +26,7 @@ export interface CertificateData {
   cpdPoints: number
   completionDate: Date
   learningOutcomes: string[]
-  courseType: 'scat-mastery' | 'online-course' | 'full-course' | 'recognition-referral'
+  courseType: 'scat-mastery' | 'online-course' | 'full-course' | 'recognition-referral' | 'crm-online'
 }
 
 interface CertificateResult {
@@ -46,6 +46,7 @@ function generateCertificateId(email: string, courseType: string, date: Date): s
     courseType === 'scat-mastery' ? 'SCAT'
     : courseType === 'full-course' ? 'FULL'
     : courseType === 'recognition-referral' ? 'RR'
+    : courseType === 'crm-online' ? 'CRM'
     : 'ONL'
   return `CEA-${prefix}-${year}-${hash}`
 }
@@ -107,6 +108,11 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   const isOaEndorsed = data.courseType === 'online-course' || data.courseType === 'full-course'
   if (isOaEndorsed) {
     doc.text('Endorsed by Osteopathy Australia', centerX, y, { align: 'center' })
+  }
+  // CRM is ESSA-accredited (approved 24 July 2026, 8 CPD points online). The
+  // line prints ONLY on the CRM certificate — same false-claim rule as OA above.
+  if (data.courseType === 'crm-online') {
+    doc.text('Accredited by Exercise & Sports Science Australia (ESSA)', centerX, y, { align: 'center' })
   }
 
   // ── Certificate Title ──────────────────────────────────
@@ -341,6 +347,29 @@ export function getRecognitionReferralCertificateData(participantName: string, p
       'Understand which recognition tool (SCAT6 vs SCOAT6) applies and when, and the boundary between awareness and clinical method',
     ],
     courseType: 'recognition-referral',
+  }
+}
+
+// CRM (Concussion Rehab Mastery, EP stream) — online course certificate.
+// ESSA-accredited: 8 CPD points for the online course (approved 24 July 2026).
+// The practical-day (16 CPD total) certificate is issued at the workshop, same
+// as the CCM full-course rule.
+export function getCrmCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
+  return {
+    participantName,
+    participantEmail,
+    courseTitle: 'Concussion Rehab Mastery',
+    courseDescription: '8-module online course for exercise physiologists and clinical exercise practitioners: concussion pathophysiology and the neurometabolic cascade, recognition and red flags within EP scope, graded exercise testing and heart-rate-threshold determination, sub-symptom-threshold aerobic prescription, phenotype-specific exercise rehabilitation, graded return to activity and sport, persistent symptoms, and documentation and referral.',
+    cpdPoints: 8,
+    completionDate,
+    learningOutcomes: [
+      'Explain the neurometabolic cascade and why sub-symptom-threshold aerobic exercise is first-line treatment',
+      'Recognise red flags and scope boundaries, and refer appropriately within the concussion care team',
+      'Determine an individualised heart-rate threshold from graded exercise testing and prescribe against it',
+      'Design and progress phenotype-specific exercise rehabilitation programs',
+      'Deliver graded return-to-activity and return-to-sport progressions with documented, measured milestones',
+    ],
+    courseType: 'crm-online',
   }
 }
 

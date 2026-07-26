@@ -49,9 +49,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!authorized) {
     return NextResponse.json(
       {
-        error: 'This course is a private review copy',
+        // CRM is LIVE — a non-owner gets the enrolment prompt, not the stale
+        // "private ESSA review copy" copy from the pre-approval era.
+        error: 'This module requires Concussion Rehab Mastery enrolment',
         upgrade: true,
-        message: 'Access is by ESSA reviewer link only.',
+        message: 'Enrol in Concussion Rehab Mastery to unlock the full course.',
         allSectionTitles: epModule?.sections.map((s) => s.title) ?? [],
       },
       { status: 403 },

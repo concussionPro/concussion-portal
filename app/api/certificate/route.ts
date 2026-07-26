@@ -8,7 +8,9 @@ import {
   getOnlineCourseCertificateData,
   getFullCourseCertificateData,
   getRecognitionReferralCertificateData,
+  getCrmCertificateData,
 } from '@/lib/certificate'
+import { userOwnsCrm } from '@/lib/crm-course'
 import { getResend, sendEmail, sendEmailWithAttachment, escapeHtml as sharedEscapeHtml } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
@@ -21,12 +23,21 @@ const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
 // Module 104 — free standalone "Concussion Care Has Changed" awareness course.
 // Its completion certificate (recognition-referral) is gated on module 104 alone.
 const RECOGNITION_REFERRAL_MODULE_IDS = [104]
+// CRM (EP stream) progress lives at the NAMESPACED ids 201-208 (epProgressId)
+// — never 1-8, which are the flagship's.
+const CRM_MODULE_IDS = [201, 202, 203, 204, 205, 206, 207, 208]
 
 /** Which module ids gate a given certificate type. */
 function moduleIdsForCertType(courseType: string): number[] {
   if (courseType === 'scat-mastery') return SCAT_MODULE_IDS
   if (courseType === 'recognition-referral') return RECOGNITION_REFERRAL_MODULE_IDS
+  if (courseType === 'crm') return CRM_MODULE_IDS
   return PAID_MODULE_IDS
+}
+
+/** Quiz pass mark per cert type — CRM (EP) passes at 80%, everything else 75%. */
+function passMarkPercentFor(courseType: string): number {
+  return courseType === 'crm' ? 80 : 75
 }
 
 /**
@@ -64,6 +75,11 @@ export async function GET(request: NextRequest) {
     if (courseType === 'online-course' && (!user || user.accessLevel === 'preview')) {
       return NextResponse.json({ error: 'Online course access required' }, { status: 403 })
     }
+    // CRM entitlement lives in course_purchases, NOT access_level (streams are
+    // isolated — CRM buyers carry 'preview').
+    if (courseType === 'crm' && !(await userOwnsCrm(sessionData.email))) {
+      return NextResponse.json({ error: 'Concussion Rehab Mastery enrolment required' }, { status: 403 })
+    }
 
     // Load user progress to verify completion
     const progress = await loadUserProgress(sessionData.userId)
@@ -92,8 +108,10 @@ export async function GET(request: NextRequest) {
       return !v.ok
     })
     if (failedModules.length > 0) {
+      // Report the DISPLAY module numbers (CRM ids are namespaced 201-208).
+      const displayIds = failedModules.map(id => (courseType === 'crm' ? id - 200 : id))
       return NextResponse.json(
-        { error: `You need at least 75% on all quizzes, verified from your saved answers. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')} (answers save automatically when you submit a quiz).` },
+        { error: `You need at least ${passMarkPercentFor(courseType)}% on all quizzes, verified from your saved answers. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${displayIds.join(', ')} (answers save automatically when you submit a quiz).` },
         { status: 403 }
       )
     }
@@ -113,6 +131,8 @@ export async function GET(request: NextRequest) {
       certData = getFullCourseCertificateData(participantName, sessionData.email, completionDate)
     } else if (courseType === 'recognition-referral') {
       certData = getRecognitionReferralCertificateData(participantName, sessionData.email, completionDate)
+    } else if (courseType === 'crm') {
+      certData = getCrmCertificateData(participantName, sessionData.email, completionDate)
     } else {
       certData = getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
     }
@@ -177,6 +197,11 @@ export async function POST(request: NextRequest) {
     if (courseType === 'online-course' && (!userCheck || userCheck.accessLevel === 'preview')) {
       return NextResponse.json({ error: 'Online course access required' }, { status: 403 })
     }
+    // CRM entitlement lives in course_purchases, NOT access_level (streams are
+    // isolated — CRM buyers carry 'preview').
+    if (courseType === 'crm' && !(await userOwnsCrm(sessionData.email))) {
+      return NextResponse.json({ error: 'Concussion Rehab Mastery enrolment required' }, { status: 403 })
+    }
 
     // Load user progress to verify completion
     const progress = await loadUserProgress(sessionData.userId)
@@ -205,8 +230,9 @@ export async function POST(request: NextRequest) {
       return !v.ok
     })
     if (failedModules.length > 0) {
+      const displayIds = failedModules.map(id => (courseType === 'crm' ? id - 200 : id))
       return NextResponse.json(
-        { error: `You need at least 75% on all quizzes, verified from your saved answers. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')} (answers save automatically when you submit a quiz).` },
+        { error: `You need at least ${passMarkPercentFor(courseType)}% on all quizzes, verified from your saved answers. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${displayIds.join(', ')} (answers save automatically when you submit a quiz).` },
         { status: 403 }
       )
     }
@@ -224,6 +250,8 @@ export async function POST(request: NextRequest) {
       certData = getFullCourseCertificateData(participantName, sessionData.email, completionDate)
     } else if (courseType === 'recognition-referral') {
       certData = getRecognitionReferralCertificateData(participantName, sessionData.email, completionDate)
+    } else if (courseType === 'crm') {
+      certData = getCrmCertificateData(participantName, sessionData.email, completionDate)
     } else {
       certData = getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
     }
@@ -278,6 +306,7 @@ export async function POST(request: NextRequest) {
         certificateId,
         pdfBuffer,
         userAccessLevel: resolvedUser?.accessLevel,
+        courseType,
       })
 
       // After scat-mastery certificate: fire the completion upsell email
@@ -350,6 +379,12 @@ async function sendCertificateEmail(opts: {
   pdfBuffer: Buffer
   /** access_level so we dont pitch the workshop to someone who already owns it */
   userAccessLevel?: 'preview' | 'online-only' | 'full-course'
+  /**
+   * Certificate type — CRM buyers carry access_level 'preview' (isolated
+   * streams), so WITHOUT this the CRM cert email fell into the free-tier
+   * branch and pitched the CCM flagship to a paying EP customer.
+   */
+  courseType?: string
 }): Promise<boolean> {
   // 0-CPD activities (the free awareness module) are completion certificates,
   // not CPD certificates — keep the framing honest.
@@ -419,7 +454,20 @@ async function sendCertificateEmail(opts: {
 
                 <!-- What's next — tailored to access level so we dont pitch
                      the workshop to someone who already owns full-course. -->
-                ${opts.userAccessLevel === 'full-course' ? `
+                ${opts.courseType === 'crm' ? `
+                <!-- CRM (EP stream) graduate — pitch the CRM practical day, NEVER the CCM flagship. -->
+                <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
+                    Whats next — the practical day
+                  </p>
+                  <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
+                    Youve completed the online course — 8 ESSA CPD points banked. Add the supervised practical day to take it to 16 CPD hours: hands-on graded exercise testing, threshold determination and progression decisions with real cases.
+                  </p>
+                  <a href="https://portal.concussion-education-australia.com/concussion-rehab-mastery?utm_source=email&utm_medium=email&utm_campaign=crm-certificate-upsell&utm_content=practical-day" style="display: inline-block; padding: 9px 18px; background: #0d9488; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                    Add the practical day →
+                  </a>
+                </div>
+                ` : opts.userAccessLevel === 'full-course' ? `
                 <!-- Full-course buyer — they already own online + workshop. No upsell. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">

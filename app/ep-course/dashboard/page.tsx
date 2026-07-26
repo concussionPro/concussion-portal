@@ -95,7 +95,11 @@ export default function EpCourseDashboard() {
           if (data.success && data.user) {
             // Preview users have no access to the paid EP course — route them to
             // Module 1, which serves a truncated preview just like the module page.
-            if (data.user.accessLevel === 'preview') {
+            // CRM buyers ALSO carry accessLevel 'preview' (streams are isolated —
+            // a CRM purchase never touches users.access_level), so ownership is
+            // what admits them here, not the level. Without the ownsCrm check
+            // every paying CRM customer was bounced off their own dashboard.
+            if (data.user.accessLevel === 'preview' && !data.user.ownsCrm) {
               router.push('/ep-course/modules/1')
               return
             }
@@ -297,16 +301,25 @@ function DashboardContent() {
           )}
 
           {allComplete && (
-            <div className="mb-9 rounded-2xl bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 p-6 flex items-center gap-5">
+            <div className="mb-9 rounded-2xl bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 p-6 flex flex-col sm:flex-row sm:items-center gap-5">
               <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-teal-500 flex items-center justify-center shadow-sm">
                 <Sparkles className="w-6 h-6 text-white" strokeWidth={2} />
               </div>
-              <div>
+              <div className="flex-1">
                 <div className="text-base sm:text-lg font-bold text-slate-900">Course complete</div>
                 <div className="text-sm text-slate-600 mt-0.5">
-                  You&apos;ve finished all {totalModules} modules and earned {totalCPD} CPD hours. Your certificate is on its way.
+                  You&apos;ve finished all {totalModules} modules and earned {totalCPD} CPD hours.
                 </div>
               </div>
+              {/* Real ESSA CPD certificate — generated + verified server-side
+                  (/api/certificate?type=crm recomputes every quiz from saved
+                  answers before issuing). */}
+              <a
+                href="/api/certificate?type=crm"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm flex-shrink-0"
+              >
+                Download CPD certificate
+              </a>
             </div>
           )}
 
