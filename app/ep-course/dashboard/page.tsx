@@ -221,7 +221,9 @@ function DashboardContent() {
                 </span>
               </div>
               <span className="text-[11px] font-medium text-slate-400 pl-3.5">
-                ESSA endorsement pending — under review by two ESSA-appointed reviewers; no endorsement is currently held or claimed.
+                {CONFIG.FEATURES.ESSA_ACCREDITED
+                  ? `Accredited by ESSA — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online, ${CONFIG.COURSE.ONLINE_CPD_POINTS * 2} with the practical day.`
+                  : 'ESSA endorsement pending — under review by two ESSA-appointed reviewers; no endorsement is currently held or claimed.'}
               </span>
             </div>
             <div className="flex items-start gap-4">

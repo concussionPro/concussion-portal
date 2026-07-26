@@ -206,6 +206,15 @@ export const CONFIG = {
     // renewal subscription exists (lib/sst-trainer/bundle.ts), and CCM does not
     // carry one. The free platform year is deliberate; free forever is not.
     CCM_PLATFORM_BUNDLE_LIVE: true,
+    // ACSM Approved Provider status for the CRM (the US$600 application).
+    // FALSE until the approval letter arrives. Same discipline as ESSA: while
+    // false, /acsm may state HOURS of learning (verifiable) but must never
+    // claim CECs — a credit currency is not ours to assert until ACSM grants it.
+    // Flip to true AND set ACSM_CEC_HOURS from the approval letter, which is the
+    // number ACSM specifies (do not infer it from our own hours count).
+    ACSM_ACCREDITED: false,
+    /** CECs named in the ACSM approval letter. Null until one exists. */
+    ACSM_CEC_HOURS: null as number | null,
     // HPCSA (South Africa) CEU accreditation of the CRM. FALSE until the
     // accreditation number is issued. HARD COMPLIANCE GATE: since 1 Nov 2024 no
     // SA practitioner may enrol in a CPD activity before it is accredited, the

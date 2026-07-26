@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
+import { CONFIG } from '@/lib/config'
 
 /**
  * /cimspa — landing page for UK fitness / active-health professionals via
@@ -143,10 +144,11 @@ export default function CimspaLandingPage() {
             <strong>Endorsement status:</strong> Concussion Education Australia is
             pursuing CIMSPA endorsement of the free awareness course. The awareness
             course carries a Certificate of Completion and awards no CPD points.
-            Concussion Rehab Mastery has been independently reviewed by two
-            reviewers appointed by Exercise &amp; Sports Science Australia (ESSA);
-            that endorsement is pending. We don&rsquo;t claim accreditation we
-            don&rsquo;t hold — this page updates the day each is confirmed.
+            {CONFIG.FEATURES.ESSA_ACCREDITED
+              ? 'Concussion Rehab Mastery is accredited by Exercise & Sports Science Australia (ESSA), following independent review by two ESSA-appointed reviewers.'
+              : 'Concussion Rehab Mastery has been independently reviewed by two reviewers appointed by Exercise & Sports Science Australia (ESSA); that endorsement is pending.'}{' '}
+            We don&rsquo;t claim accreditation we don&rsquo;t hold — this page updates
+            the day each is confirmed.
           </p>
         </section>
 

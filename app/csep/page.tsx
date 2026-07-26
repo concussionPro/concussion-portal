@@ -42,8 +42,9 @@ export default function CsepLandingPage() {
       <main className="max-w-3xl mx-auto px-5 py-14 sm:py-20">
         {/* ── Preview banner ───────────────────────────────────────────────── */}
         <div className="mb-8 rounded-xl border border-slate-300 bg-slate-900 px-4 py-3 text-[12.5px] font-semibold text-white">
-          Preview · CSEP recognition pathway — pending ESSA endorsement
-          (equivalency route). Not yet open for enrolment in Canada.
+          {CONFIG.FEATURES.ESSA_ACCREDITED
+            ? 'Preview · CSEP recognition pathway — ESSA accreditation now held; the equivalency application can proceed. Not yet open for enrolment in Canada.'
+            : 'Preview · CSEP recognition pathway — pending ESSA endorsement (equivalency route). Not yet open for enrolment in Canada.'}
         </div>
 
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -189,13 +190,24 @@ export default function CsepLandingPage() {
         {/* ── Honesty gate ─────────────────────────────────────────────────── */}
         <section className="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
-            <strong>Recognition status:</strong> The{' '}
-            <strong>CSEP recognition pathway is pending ESSA endorsement
-            (equivalency route)</strong> and is not yet open. The course has been
-            independently reviewed by two reviewers appointed by Exercise &amp;
-            Sports Science Australia (ESSA); that endorsement is pending and not yet
-            held. We don&rsquo;t claim accreditation we don&rsquo;t hold — this page
-            updates the day the Canadian route confirms.
+            <strong>Recognition status:</strong>{' '}
+            {CONFIG.FEATURES.ESSA_ACCREDITED ? (
+              <>
+                The course is <strong>accredited by Exercise &amp; Sports Science Australia
+                (ESSA)</strong>, which is the prerequisite for the CSEP equivalency route — that
+                application can now proceed. <strong>CSEP recognition is not yet held</strong> and
+                the pathway is not yet open for enrolment in Canada.
+              </>
+            ) : (
+              <>
+                The <strong>CSEP recognition pathway is pending ESSA endorsement (equivalency
+                route)</strong> and is not yet open. The course has been independently reviewed by
+                two reviewers appointed by Exercise &amp; Sports Science Australia (ESSA); that
+                endorsement is pending and not yet held.
+              </>
+            )}{' '}
+            We don&rsquo;t claim accreditation we don&rsquo;t hold — this page updates the day the
+            Canadian route confirms.
           </p>
         </section>
 

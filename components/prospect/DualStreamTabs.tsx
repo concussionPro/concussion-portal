@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { GraduationCap, HeartPulse, Activity, ClipboardList, Stethoscope, Check, Lock, Clock } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 /** Metadata-only module shape (mirrors data/module-meta ModuleMeta). */
 export type StreamModule = { id: number; title: string; subtitle: string; duration: string; points: number; description: string }
@@ -49,8 +50,10 @@ const STREAMS: Record<StreamId, {
     audience: 'For exercise physiologists',
     tagline: 'The exercise-rehab pathway',
     cpd: '8 CPD hours online',
-    accredBody: 'ESSA endorsement pending',
-    accredNote: 'CRM has been submitted to ESSA for CPD endorsement — approval pending',
+    accredBody: CONFIG.FEATURES.ESSA_ACCREDITED ? 'Accredited by ESSA' : 'ESSA endorsement pending',
+    accredNote: CONFIG.FEATURES.ESSA_ACCREDITED
+      ? `Accredited by Exercise & Sports Science Australia — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online`
+      : 'CRM has been submitted to ESSA for CPD endorsement — approval pending',
     icon: HeartPulse,
     modules: [
       'Concussion for the Exercise Physiologist',

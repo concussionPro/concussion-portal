@@ -196,17 +196,55 @@ export default function AcsmLandingPage() {
           </p>
         </section>
 
-        {/* ── Continuing-education status — the honesty gate ──────────────── */}
-        <section className="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5">
-          <p className="text-[13.5px] text-amber-900 leading-relaxed">
-            <strong>Continuing-education status:</strong> Concussion Education
-            Australia has applied to become an ACSM Approved Provider for this
-            course. <strong>ACSM CECs are not yet held</strong>, and no CEC value is
-            claimed until an approval letter specifies one. The course has been
-            independently reviewed by two reviewers appointed by Exercise &amp; Sports
-            Science Australia (ESSA) through its professional development endorsement
-            process; that endorsement is pending. We don&rsquo;t claim accreditation we
-            don&rsquo;t hold — this page updates the day each is confirmed.
+        {/* ── Continuing-education status — the honesty gate ────────────────
+            BOTH claims are flag-driven so approval day is one flip in
+            lib/config.ts, never a hunt through hand-edited copy. ESSA flipped
+            2026-07-25; this block had still said "pending" the day after. */}
+        <section
+          className={`mt-10 rounded-xl border p-5 ${
+            CONFIG.FEATURES.ACSM_ACCREDITED
+              ? 'border-emerald-200 bg-emerald-50'
+              : 'border-amber-200 bg-amber-50'
+          }`}
+        >
+          <p
+            className={`text-[13.5px] leading-relaxed ${
+              CONFIG.FEATURES.ACSM_ACCREDITED ? 'text-emerald-900' : 'text-amber-900'
+            }`}
+          >
+            <strong>Continuing-education status:</strong>{' '}
+            {CONFIG.FEATURES.ACSM_ACCREDITED ? (
+              <>
+                Concussion Education Australia is an <strong>ACSM Approved Provider</strong> for
+                this course
+                {CONFIG.FEATURES.ACSM_CEC_HOURS
+                  ? <> — it carries <strong>{CONFIG.FEATURES.ACSM_CEC_HOURS} ACSM CECs</strong></>
+                  : null}
+                .
+              </>
+            ) : (
+              <>
+                Concussion Education Australia has applied to become an ACSM Approved Provider for
+                this course. <strong>ACSM CECs are not yet held</strong>, and no CEC value is
+                claimed until an approval letter specifies one — the course is {CONFIG.COURSE.ONLINE_CPD_POINTS}{' '}
+                hours of learning, which is verifiable either way.
+              </>
+            )}{' '}
+            {CONFIG.FEATURES.ESSA_ACCREDITED ? (
+              <>
+                The course is <strong>accredited by Exercise &amp; Sports Science Australia
+                (ESSA)</strong>, carrying {CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online,
+                following independent review by two ESSA-appointed reviewers.
+              </>
+            ) : (
+              <>
+                The course has been independently reviewed by two reviewers appointed by Exercise
+                &amp; Sports Science Australia (ESSA) through its professional development
+                endorsement process; that endorsement is pending.
+              </>
+            )}{' '}
+            We don&rsquo;t claim accreditation we don&rsquo;t hold — this page updates the day each
+            is confirmed.
           </p>
         </section>
 
