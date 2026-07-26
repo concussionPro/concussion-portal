@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
 import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
+import { CompetencyGapEvidence } from '@/components/clinical/CompetencyGapEvidence'
 
 /**
  * SST Trainer — TARGET-facing pitch pages (distinct from the patient landing).
@@ -246,6 +247,16 @@ export default function SstPitch({ variant }: { variant: SstPitchVariant }) {
           </h2>
           <p className="m-0 max-w-[760px] text-[15px] leading-[1.6] text-slate-600">{c.painBody}</p>
         </div>
+      </section>
+
+      {/* WHY THE TEAM LAYER IS PART OF IT — published competency gap.
+          Sits between the pain and the solution: the buyer has just accepted
+          there is a problem, and this is the moment they ask "why isn't our
+          existing team enough?". Answering that with citations rather than
+          assertion is the only way to raise it without insulting their
+          clinicians. */}
+      <section className="mx-auto max-w-[1180px] px-6 pb-[60px] md:px-8">
+        <CompetencyGapEvidence />
       </section>
 
       {/* THE SOLUTION (mapped to the pain) */}

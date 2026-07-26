@@ -23,6 +23,7 @@ import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import CrmCheckoutButton from '@/components/crm/CrmCheckoutButton'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
+import { createFAQSchema } from '@/lib/schema-markup'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — pricing/landing content.
@@ -123,6 +124,19 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* FAQPage schema, mirroring the VISIBLE accordion below 1:1 (Google
+          requires exact parity, and the answers are already flag-aware so the
+          schema can never claim an accreditation the page doesn't).
+          Research-driven: Q&A/answer-first is the format LLM retrievers cite
+          most, and this — the ESSA stream's own sales page — had none. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            createFAQSchema(FAQS.map((f) => ({ question: f.q, answer: f.a }))),
+          ),
+        }}
+      />
       {!hideNav && <SiteNav />}
 
       {/* When embedded (hideNav — e.g. under the homepage stream tabs) the page

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
 import { CONFIG } from '@/lib/config'
 import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
+import { CompetencyGapEvidence } from '@/components/clinical/CompetencyGapEvidence'
 
 /**
  * NOT INDEXABLE.
@@ -193,6 +194,11 @@ export default function AccSupplierPage() {
           ACC885 is Did Not Attend — not progress. Jurisdiction is enforced in software: an
           Australian code cannot emit an ACC form.
         </p>
+      </section>
+
+      {/* ── WHY THE TEAM LAYER IS PART OF THIS — published competency gap ──── */}
+      <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
+        <CompetencyGapEvidence heading="Why documented team competency is part of the deliverable" />
       </section>
 
       {/* ── WHAT ACC MEASURES — table ──────────────────────────────────────── */}
