@@ -21,11 +21,6 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import { trackLeadConversion } from '@/lib/analytics'
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void
-  }
-}
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat6-download'
 

@@ -5,6 +5,7 @@ import { sendEmail } from '@/lib/resend-client'
 import {
   createSstClinic,
   getSstClinicByEmail,
+  adoptExistingClinicForEmail,
   getClinicUsage,
   type SstClinic,
 } from '@/lib/sst-trainer/clinic-registry'
@@ -53,7 +54,8 @@ export async function GET(req: NextRequest) {
   if (!process.env.KV_REST_API_URL) {
     return NextResponse.json({ error: 'Clinic service not configured' }, { status: 503 })
   }
-  const clinic = await getSstClinicByEmail(session.email)
+  const clinic =
+    (await getSstClinicByEmail(session.email)) ?? (await adoptExistingClinicForEmail(session.email))
   if (!clinic) return NextResponse.json({ clinic: null })
   const usage = await getClinicUsage(clinic.code)
   return NextResponse.json({ clinic: serialise(clinic), usage })
@@ -75,7 +77,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Idempotent: an existing clinic for this email always wins (no second code).
-  let clinic = await getSstClinicByEmail(session.email)
+  // Check the SST mirror first, then adopt a PRESEASON clinic if this clinician
+  // registered for baseline testing before ever opening the portal — otherwise
+  // they'd be minted a second code and their patients would split across the
+  // two (and the preseason code would keep accepting SST writes nobody could
+  // read, for want of a viewKey).
+  let clinic = (await getSstClinicByEmail(session.email)) ?? (await adoptExistingClinicForEmail(session.email))
   let created = false
   if (!clinic) {
     if (clinicName.length < 2) {

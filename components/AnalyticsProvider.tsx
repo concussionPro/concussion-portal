@@ -115,11 +115,6 @@ async function sendEvent(
 // Google Ads conversion tracking helper
 // ---------------------------------------------------------------------------
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void;
-  }
-}
 
 function trackGtagConversion(
   conversionId: string,

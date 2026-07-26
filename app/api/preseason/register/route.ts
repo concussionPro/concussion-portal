@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
+import nodeCrypto from 'crypto'
 import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
@@ -67,12 +68,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unable to generate unique code. Please try again.' }, { status: 500 })
     }
 
-    // Store clinic data
+    // Store clinic data.
+    //
+    // A `viewKey` is minted HERE even though the baseline tool never reads it.
+    // The `clinic:{code}` namespace is SHARED with the SST Trainer, and every
+    // SST clinician read requires a stored viewKey — so a preseason-only code
+    // used to accept SST patient writes while failing every read, leaving that
+    // clinic's threshold tests and sessions unreadable. Minting it up front
+    // means one code genuinely serves both tools from birth.
+    const viewKey = nodeCrypto.randomBytes(18).toString('base64url')
     await kv.set(`clinic:${code}`, {
       clinicName,
       contactName,
       email: email.toLowerCase(),
       createdAt: new Date().toISOString(),
+      viewKey,
     })
 
     // Rate limit already incremented atomically above

@@ -4,6 +4,15 @@ import { CONFIG } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 
 /**
+ * NOT INDEXABLE.
+ * SESNZ recognition is pending and this is interest-capture only.
+ * (Unlisted-but-crawlable was the worst of both: no sitemap entry, no
+ * noindex — discoverable by accident and managed by nobody.)
+ */
+export const metadata = { robots: 'noindex, nofollow' } as const
+
+
+/**
  * /sesnz — landing page for NZ exercise scientists via SESNZ.
  * Angle: listing/recognition of BOTH the free awareness course and the paid
  * Concussion Rehab Mastery course. There is no dedicated CRM review route for

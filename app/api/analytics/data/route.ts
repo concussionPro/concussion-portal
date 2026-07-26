@@ -346,6 +346,8 @@ interface SessionSummary {
   visitNumber: number;
   hasConversion: boolean;
   hasPricingView: boolean;
+  /** Landed on a CRM (exercise-physiology stream) sales surface. */
+  hasCrmView: boolean;
   hasPreseasonRegister: boolean;
   hasPreseasonSubmit: boolean;
   hasEnrollClick: boolean;
@@ -390,7 +392,21 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
       isBounce: pvEvents.length <= 1,
       visitNumber: typeof ed?.visitNumber === 'number' ? ed.visitNumber : 1,
       hasConversion: sorted.some((e) => e.path?.startsWith('/checkout/success')),
-      hasPricingView: sorted.some((e) => e.path === '/pricing' || e.path === '/pricing-international'),
+      // Every page whose job is to present a price. /concussion-rehab-mastery
+      // and /courses/streams are the CRM (EP) stream's pricing surfaces — they
+      // were missing, so an ESSA-stream buyer's journey showed no pricing view
+      // at all and the whole CRM funnel was invisible in these numbers.
+      hasPricingView: sorted.some(
+        (e) =>
+          e.path === '/pricing' ||
+          e.path === '/pricing-international' ||
+          e.path === '/concussion-rehab-mastery' ||
+          e.path === '/courses/streams' ||
+          e.path === '/uk',
+      ),
+      hasCrmView: sorted.some(
+        (e) => e.path === '/concussion-rehab-mastery' || e.path?.startsWith('/ep-course'),
+      ),
       hasPreseasonRegister: sorted.some((e) => e.eventType === 'preseason_clinic_register'),
       hasPreseasonSubmit: sorted.some((e) => e.eventType === 'preseason_baseline_submit'),
       hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click' || e.eventType === 'enrol_click' || e.eventType === 'checkout_start' || e.eventType === 'shop_click'),
@@ -533,8 +549,22 @@ function buildSessionFlow(sessions: SessionSummary[]) {
  * EXCLUDED — it's a $-small side product and was inflating course-funnel
  * conversion counts. It's reported separately via countBookPurchases().
  */
-function countVerifiedPurchases(rawEvents: StoredEvent[]): number {
-  return rawEvents.filter((e) => e.eventType === 'purchase_complete').length;
+/**
+ * Server-verified purchases in the window — `purchase_complete` events written
+ * by the Stripe webhook, not /checkout/success pageviews (refreshes and
+ * bookmarked success URLs inflated the old count).
+ *
+ * `stream` narrows to one course stream: the CCM and CRM webhook paths both
+ * emit purchase_complete, and the CRM path stamps stream='crm', so the two can
+ * be counted separately without double-counting the total.
+ */
+function countVerifiedPurchases(rawEvents: StoredEvent[], stream?: 'ccm' | 'crm'): number {
+  return rawEvents.filter((e) => {
+    if (e.eventType !== 'purchase_complete') return false
+    if (!stream) return true
+    const s = (e.eventData as { stream?: unknown })?.stream
+    return stream === 'crm' ? s === 'crm' : s !== 'crm'
+  }).length;
 }
 
 /** Verified reference-book purchases in the window (reported separately). */
@@ -696,7 +726,19 @@ function buildExpandedFunnel(sessions: SessionSummary[], rawEvents: StoredEvent[
     { label: 'Converted (page-based)', count: sessions.filter((s) => (s.hasPreseasonRegister || s.hasPreseasonSubmit) && s.hasConversion).length },
   ];
 
-  return { directFunnel, preseasonFunnel };
+  // CRM (exercise-physiology) funnel. The ESSA stream is a live product with
+  // its own landing page and checkout, but every funnel here was CCM-shaped, so
+  // its traffic and drop-off were unmeasurable.
+  const crmSessions = sessions.filter((s) => s.hasCrmView);
+  const crmFunnel = [
+    { label: 'Streams / EP Landing', count: sessions.filter((s) => s.pages.some((p) => p === '/courses/streams' || p === '/concussion-rehab-mastery')).length },
+    { label: 'CRM Sales Page', count: sessions.filter((s) => s.pages.includes('/concussion-rehab-mastery')).length },
+    { label: 'Enrol Click', count: crmSessions.filter((s) => s.hasEnrollClick).length },
+    // Server-verified purchases carry stream='crm' from the CRM webhook path.
+    { label: 'Purchases (verified)', count: countVerifiedPurchases(rawEvents, 'crm') },
+  ];
+
+  return { directFunnel, preseasonFunnel, crmFunnel };
 }
 
 // ---------------------------------------------------------------------------

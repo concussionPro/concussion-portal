@@ -371,6 +371,75 @@ export async function createSstClinic(args: {
   return { code, clinicName, contactName, email, viewKey, createdAt }
 }
 
+/**
+ * Adopt an existing clinic code for this email — used before minting a new one.
+ *
+ * THE PROBLEM THIS SOLVES: preseason (`/api/preseason/register`) and the portal
+ * (`/api/clinical-testing/clinic`) both mint into the SHARED `clinic:{code}`
+ * namespace, but only the portal path wrote a `viewKey`. A clinic that
+ * registered for baseline testing first therefore ended up with a code that:
+ *   - ACCEPTS SST patient writes (isRegisteredClinic only checks existence), but
+ *   - FAILS every SST clinician read (verifyViewKey needs a stored key).
+ * Their patients' threshold tests and sessions went in and could never be read
+ * back — a silent clinical-data blackhole.
+ *
+ * And because the portal path keyed idempotency off `sst_clinics` only, the same
+ * clinician logging into the portal later was minted a SECOND code, splitting
+ * their patients across two codes.
+ *
+ * So: find the preseason clinic for this email, give it a viewKey if it has
+ * none, mirror it into `sst_clinics`, and hand it back. One clinic, one code,
+ * both tools.
+ */
+export async function adoptExistingClinicForEmail(rawEmail: string): Promise<SstClinic | null> {
+  const email = rawEmail.trim().toLowerCase()
+  if (!email) return null
+
+  let code: string | null = null
+  try {
+    const { rows } = await sql<{ code: string; clinic_name: string; contact_name: string }>`
+      SELECT code, clinic_name, contact_name FROM preseason_clinics
+      WHERE LOWER(email) = ${email}
+      ORDER BY id ASC LIMIT 1
+    `
+    if (!rows.length) return null
+    code = normaliseClinicCode(rows[0].code)
+  } catch {
+    return null // preseason table absent — nothing to adopt
+  }
+  if (!code) return null
+
+  const rec = await getClinic(code)
+  if (!rec) return null // KV entry gone; let the caller mint fresh
+
+  const viewKey = rec.viewKey ?? crypto.randomBytes(18).toString('base64url')
+  const createdAt = rec.createdAt ?? new Date().toISOString()
+  const clinicName = rec.clinicName || 'Clinic'
+  const contactName = rec.contactName || email.split('@')[0]
+
+  if (!rec.viewKey) {
+    // Additive only — preseason readers look at clinicName/contactName/email
+    // and are unaffected by the extra fields.
+    await kv.set(`clinic:${code}`, { ...rec, viewKey, product: 'sst' })
+  }
+
+  // Mirror into sst_clinics so the normal email-idempotency path finds it next
+  // time, and make sure the session table this clinic will now write to exists.
+  try {
+    await ensureSstClinicsTable()
+    await ensureSstClinicSessionsTable()
+    await sql`
+      INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, created_at)
+      VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${createdAt})
+      ON CONFLICT (code) DO UPDATE SET view_key = EXCLUDED.view_key
+    `
+  } catch (err) {
+    console.error('[sst-registry] adopt mirror failed (KV grant still applied):', err)
+  }
+
+  return { code, clinicName, contactName, email, viewKey, createdAt }
+}
+
 /** Admin listing (newest first). Empty array when the table doesn't exist yet. */
 export async function listSstClinics(): Promise<SstClinic[]> {
   try {

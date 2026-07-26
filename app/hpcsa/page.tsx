@@ -4,6 +4,17 @@ import { CONFIG } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 
 /**
+ * NOT INDEXABLE.
+ * HPCSA CEUs are not held and SA buyers are BLOCKED from checkout by a hard
+ * compliance gate — an indexed page inviting SA practitioners would contradict
+ * the very rule that gate exists to honour.
+ * (Unlisted-but-crawlable was the worst of both: no sitemap entry, no
+ * noindex — discoverable by accident and managed by nobody.)
+ */
+export const metadata = { robots: 'noindex, nofollow' } as const
+
+
+/**
  * /hpcsa — landing page for South African biokineticists via HPCSA / BASA.
  * Angle: CEU accreditation of the rehab-exercise concussion course.
  * Interest capture only while the global market review runs.

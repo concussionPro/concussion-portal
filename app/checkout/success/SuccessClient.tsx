@@ -7,11 +7,6 @@ import { CheckCircle2, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } fro
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackPurchaseConversion, trackEvent } from '@/lib/analytics'
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void
-  }
-}
 
 interface SessionData {
   customerName: string

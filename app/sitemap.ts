@@ -88,6 +88,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: i === 0 ? 0.8 : 0.7,
     })),
+    // International acquisition landings that are genuinely LIVE and honest
+    // about what is/isn't accredited. These were crawlable but in no sitemap —
+    // discoverable by accident, managed by nobody. The on-hold ones (/csep,
+    // /hpcsa, /sesnz) and the ACC supplier pitch are noindex instead.
+    {
+      url: `${baseUrl}/uk`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/acsm`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    },
+    {
+      url: `${baseUrl}/cimspa`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/cep-uk`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    // The free awareness short course — a real standalone acquisition asset.
+    {
+      url: `${baseUrl}/concussion-update`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
     // Public Clinical Tools landing (canonical /clinical-suite, indexable).
     {
       url: `${baseUrl}/clinical-suite`,

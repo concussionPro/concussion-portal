@@ -4,6 +4,16 @@ import { CONFIG } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 
 /**
+ * NOT INDEXABLE.
+ * CSEP recognition is ON HOLD pending ESSA equivalency — nothing here is
+ * offerable yet, so it must not be discoverable.
+ * (Unlisted-but-crawlable was the worst of both: no sitemap entry, no
+ * noindex — discoverable by accident and managed by nobody.)
+ */
+export const metadata = { robots: 'noindex, nofollow' } as const
+
+
+/**
  * /csep — preview page for Canadian exercise physiologists via CSEP.
  * The CSEP recognition route is ON HOLD pending ESSA endorsement (equivalency
  * route), so this page reads as a coming-soon/preview, NOT an active sale.

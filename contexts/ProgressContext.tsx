@@ -78,8 +78,13 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
   for (let i = 1; i <= 8; i++) {
     defaults[i] = createDefaultModuleProgress(i)
   }
-  // SCAT free modules 101-103
-  for (let i = 101; i <= 103; i++) {
+  // Free modules 101-104. 101-103 are the SCAT6 Mastery course (the 3-module
+  // free certificate); 104 is the standalone "Concussion Care Has Changed"
+  // awareness short course, which is separately free and separately surfaced.
+  // 104 was previously missing here, so its progress had no default entry —
+  // the accessors are defensive enough that nothing crashed, but the free short
+  // course was the one module the store didn't know existed.
+  for (let i = 101; i <= 104; i++) {
     defaults[i] = createDefaultModuleProgress(i)
   }
   // EP course modules 201-208 (namespaced — see EP_MODULE_ID_OFFSET)

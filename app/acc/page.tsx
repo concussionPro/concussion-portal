@@ -4,6 +4,17 @@ import { CONFIG } from '@/lib/config'
 import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
 
 /**
+ * NOT INDEXABLE.
+ * This is a SUPPLIER NEGOTIATION document for ACC contract holders, not
+ * marketing — it is reached by a direct link, and indexing a pitch aimed at one
+ * counterparty is a positioning risk.
+ * (Unlisted-but-crawlable was the worst of both: no sitemap entry, no
+ * noindex — discoverable by accident and managed by nobody.)
+ */
+export const metadata = { robots: 'noindex, nofollow' } as const
+
+
+/**
  * /acc — the NZ ACC Concussion Services supplier pitch.
  *
  * BUYER: an organisation holding an ACC Concussion Services contract — a

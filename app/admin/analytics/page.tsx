@@ -103,7 +103,7 @@ interface RetargetingData {
 }
 
 interface FunnelStep { label: string; count: number }
-interface FunnelData { directFunnel: FunnelStep[]; preseasonFunnel: FunnelStep[] }
+interface FunnelData { directFunnel: FunnelStep[]; preseasonFunnel: FunnelStep[]; crmFunnel?: FunnelStep[] }
 
 interface EventGroup {
   eventType: string; count: number
@@ -1934,6 +1934,28 @@ export default function AnalyticsDashboard() {
                           index={i}
                           total={funnelData.directFunnel[0]?.count || 1}
                           isLast={i === funnelData.directFunnel.length - 1}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-[rgba(13,115,119,0.08)] pt-6">
+                  <SectionTitle
+                    title="CRM (Exercise Physiology) Funnel"
+                    subtitle="ESSA stream — streams chooser / EP landing → enrol → verified purchase"
+                  />
+                  {!funnelData?.crmFunnel?.length ? (
+                    <EmptyState icon={BarChart2} message="No CRM funnel data" />
+                  ) : (
+                    <div className="space-y-0">
+                      {funnelData.crmFunnel.map((step, i) => (
+                        <FunnelStepRow
+                          key={step.label}
+                          step={step}
+                          index={i}
+                          total={funnelData.crmFunnel![0]?.count || 1}
+                          isLast={i === funnelData.crmFunnel!.length - 1}
                         />
                       ))}
                     </div>
