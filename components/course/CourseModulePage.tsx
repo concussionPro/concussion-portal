@@ -652,8 +652,8 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
     const isEp = descriptor.course === 'ep'
     const offer = isEp
       ? {
-          blurb: <>This module is part of <strong className="text-white">Concussion Rehab Mastery</strong> — the complete 8-module rehab course for exercise physiologists. Enrol for instant access to all modules and <strong className="text-white">{CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online</strong> ({CONFIG.COURSE.ONLINE_CPD_POINTS * 2} CPD hours with the practical day).</>,
-          statHours: `Up to ${CONFIG.COURSE.ONLINE_CPD_POINTS * 2}`,
+          blurb: <>This module is part of <strong className="text-white">Concussion Rehab Mastery</strong> — the complete 8-module rehab course for exercise physiologists. Enrol for instant access to all modules and <strong className="text-white">{CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online</strong> ({CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD hours with the practical day).</>,
+          statHours: `Up to ${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS}`,
           statBreakdown: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + practical day`,
           badge: 'ESSA Accredited',
           href: '/concussion-rehab-mastery',

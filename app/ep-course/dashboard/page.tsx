@@ -226,7 +226,7 @@ function DashboardContent() {
               </div>
               <span className="text-[11px] font-medium text-slate-400 pl-3.5">
                 {CONFIG.FEATURES.ESSA_ACCREDITED
-                  ? `Accredited by ESSA — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online, ${CONFIG.COURSE.ONLINE_CPD_POINTS * 2} with the practical day.`
+                  ? `Accredited by ESSA — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online, ${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} with the practical day.`
                   : 'ESSA endorsement pending — under review by two ESSA-appointed reviewers; no endorsement is currently held or claimed.'}
               </span>
             </div>

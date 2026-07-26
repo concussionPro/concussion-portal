@@ -10,9 +10,19 @@ export const CONFIG = {
   // Course Details
   COURSE: {
     TOTAL_MODULES: 8,
+    // CPD TOTALS DIFFER BY BODY — this is a RULING, not a bug. The SAME shared
+    // practical day is rated 6 hrs by OA (educational contact time only → CCM
+    // = 8 + 6 = 14) and 8 hrs by ESSA (full structured day incl. breaks → CRM
+    // = 8 + 8 = 16). Each stream quotes ONLY its own body's number; never
+    // cross-claim. If OA re-rates the day to 8 (asked 2026-07-27, citing
+    // ESSA's assessment), flip TOTAL_CPD_POINTS to 16 and IN_PERSON to 8.
     TOTAL_CPD_POINTS: 14,
     ONLINE_CPD_POINTS: 8,
     IN_PERSON_CPD_POINTS: 6,
+    // CRM (EP stream) total under ESSA's ruling — a STATED fact, not derived
+    // arithmetic (was ONLINE_CPD_POINTS * 2 in three surfaces, which read as
+    // coincidence and invited "fixing" the CCM/CRM asymmetry).
+    CRM_TOTAL_CPD_POINTS: 16,
     CPD_BADGE_TEXT: 'Up to 14 CPD hours - AHPRA Aligned, Endorsed by Osteopathy Australia',
     PRICE_ONLINE: 497,
     // PRICING MODEL (owner decision 2026-07-02):
