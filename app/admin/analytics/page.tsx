@@ -1168,7 +1168,14 @@ export default function AnalyticsDashboard() {
     : (['overview', 'channels', 'flow', 'events'] as TabType[]).includes(panel) ? 'traffic'
     : (['pool', 'prospects', 'sst', 'preseason'] as TabType[]).includes(panel) ? 'pipeline'
     : 'people'
-  const [activeGroup, setActiveGroup] = useState<GroupId>(groupForPanel(initialTab))
+  const [activeGroup, setActiveGroupRaw] = useState<GroupId>(groupForPanel(initialTab))
+  // Which panel within the group. Seeded from any legacy ?tab= deep link so an
+  // old bookmark still lands on the exact panel it used to.
+  const [panelOverride, setPanelOverride] = useState<TabType | null>(initialTab)
+  const setActiveGroup = (g: GroupId) => {
+    setActiveGroupRaw(g)
+    setPanelOverride(null) // land on the group's first panel
+  }
   const [loading, setLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
@@ -1491,9 +1498,29 @@ export default function AnalyticsDashboard() {
     { id: 'report', label: 'Daily Report', icon: Newspaper, panels: ['report'], hint: 'Emailed summary' },
   ]
 
-  /** Is this panel part of the active group? */
-  const shows = (panel: TabType) =>
-    (GROUPS.find((g) => g.id === activeGroup)?.panels ?? []).includes(panel)
+  const PANEL_LABEL: Record<TabType, string> = {
+    insights: 'Insights', funnel: 'Funnels', overview: 'Overview', channels: 'Channels',
+    flow: 'Flow', events: 'Events', pool: 'Ready to Train', prospects: 'B2B Prospects',
+    sst: 'SST Outreach', preseason: 'Preseason', retargeting: 'Retargeting',
+    users: 'Users', report: 'Daily Report',
+  }
+
+  const panelsInGroup = GROUPS.find((g) => g.id === activeGroup)?.panels ?? []
+
+  /**
+   * Which panel is on screen.
+   *
+   * The group nav alone was a REGRESSION: consolidating 13 tabs into 5 groups
+   * removed the ability to jump straight to a named panel, so "B2B Prospects"
+   * became something you had to know was inside "Pipeline". Groups organise;
+   * this row restores direct access. One panel at a time, as before.
+   */
+  const activePanel: TabType = panelsInGroup.includes(panelOverride as TabType)
+    ? (panelOverride as TabType)
+    : panelsInGroup[0]
+
+  /** Is this the panel currently on screen? */
+  const shows = (panel: TabType) => panel === activePanel
 
 
   return (
@@ -1644,6 +1671,27 @@ export default function AnalyticsDashboard() {
               </button>
             ))}
           </div>
+
+          {/* Panels within the active group. Restores direct access to a named
+              panel — grouping should organise the page, not hide things inside
+              it. Hidden when a group holds a single panel. */}
+          {panelsInGroup.length > 1 && (
+            <div className="flex flex-wrap gap-1.5 border-b border-[rgba(13,115,119,0.07)] bg-white px-4 py-2.5">
+              {panelsInGroup.map((panel) => (
+                <button
+                  key={panel}
+                  onClick={() => setPanelOverride(panel)}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
+                    activePanel === panel
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'bg-[rgba(13,115,119,0.05)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[rgba(13,115,119,0.09)]'
+                  }`}
+                >
+                  {PANEL_LABEL[panel]}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="p-5">
             {/* ── INSIGHTS ─────────────────────────────────────────── */}
