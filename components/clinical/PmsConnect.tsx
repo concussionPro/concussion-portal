@@ -10,7 +10,7 @@ import { Plug, CheckCircle2, Loader2, Unplug } from 'lucide-react'
  * and searches now, with report WRITES unlocking on first-partner validation
  * (the API explains this when asked to file).
  */
-export function PmsConnect({ code, viewKey }: { code: string; viewKey: string }) {
+export function PmsConnect({ code, viewKey, demo = false }: { code: string; viewKey: string; demo?: boolean }) {
   const [status, setStatus] = useState<{ connected: boolean; kind: string | null } | null>(null)
   const [kind, setKind] = useState<'cliniko' | 'gensolve'>('cliniko')
   const [apiKey, setApiKey] = useState('')
@@ -20,11 +20,15 @@ export function PmsConnect({ code, viewKey }: { code: string; viewKey: string })
   const auth = `code=${encodeURIComponent(code)}&k=${encodeURIComponent(viewKey)}`
 
   const load = useCallback(() => {
+    if (demo) {
+      setStatus({ connected: true, kind: 'gensolve' })
+      return
+    }
     void fetch(`/api/sst/pms/connection?${auth}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setStatus({ connected: !!d.connected, kind: d.kind }))
       .catch(() => {})
-  }, [auth])
+  }, [auth, demo])
   useEffect(load, [load])
 
   const connect = async () => {
@@ -77,6 +81,7 @@ export function PmsConnect({ code, viewKey }: { code: string; viewKey: string })
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" /> {status.kind} connected
+            {demo && <span className="rounded bg-amber-50 border border-amber-200 px-1 text-[9px] font-bold text-amber-700">DEMO</span>}
           </span>
           {status.kind === 'gensolve' && (
             <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
@@ -85,8 +90,8 @@ export function PmsConnect({ code, viewKey }: { code: string; viewKey: string })
           )}
           <button
             type="button"
-            onClick={disconnect}
-            disabled={busy}
+            onClick={demo ? undefined : disconnect}
+            disabled={busy || demo}
             className="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
           >
             <Unplug className="w-3.5 h-3.5" /> Disconnect

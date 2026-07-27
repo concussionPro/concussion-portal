@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { DEMO_KEY } from '@/lib/demo-key'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { hasClinicalAccess } from '@/lib/sst-trainer/access'
 import { sendEmail } from '@/lib/resend-client'
@@ -49,6 +50,14 @@ function serialise(clinic: SstClinic) {
 }
 
 export async function GET(req: NextRequest) {
+  // Demo viewers get the synthetic DEMO00 clinic — the workspace fully
+  // populated, keyless, nothing real behind it.
+  if (req.cookies.get('demo_key')?.value === DEMO_KEY) {
+    return NextResponse.json({
+      clinic: { code: 'DEMO00', clinicName: 'Demo Clinic', viewKey: '' },
+      usage: { plan: 'active', patientCount: 4, cap: null, canAddPatient: true },
+    })
+  }
   const session = await clinicalSession(req)
   if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   if (!process.env.KV_REST_API_URL) {

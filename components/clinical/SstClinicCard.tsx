@@ -100,9 +100,15 @@ export function SstClinicCard() {
     }
   }, [clinicName])
 
+  const isDemoClinic = clinic?.code === 'DEMO00'
+
   const invite = useCallback(async () => {
     setInviteState('sending')
     setInviteError('')
+    if (isDemoClinic) {
+      setTimeout(() => { setInviteState('sent'); setPatientEmail(''); setTimeout(() => setInviteState('idle'), 2500) }, 500)
+      return
+    }
     try {
       const res = await fetch('/api/clinical-testing/invite', {
         method: 'POST',
@@ -121,7 +127,7 @@ export function SstClinicCard() {
       setInviteError(e instanceof Error ? e.message : 'Send failed.')
       setInviteState('error')
     }
-  }, [patientEmail, patientName])
+  }, [patientEmail, patientName, isDemoClinic])
 
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://portal.concussion-education-australia.com'
@@ -277,7 +283,7 @@ export function SstClinicCard() {
       )}
 
       {/* PMS plugin — connect the clinic's own Gensolve/Cliniko tenant */}
-      {clinic && <PmsConnect code={clinic.code} viewKey={clinic.viewKey} />}
+      {clinic && <PmsConnect code={clinic.code} viewKey={clinic.viewKey} demo={isDemoClinic} />}
 
       {/* email the link straight to a patient */}
       <div className="mt-5 border-t border-slate-100 pt-4">

@@ -115,6 +115,7 @@ export default function AccSupplierPage() {
               '17 → 13 days median recovery (Leddy 2019)',
               'Threshold measured, never estimated',
               'ACC884 compiles as care happens',
+              'Reports file into Gensolve',
             ].map((c) => (
               <span key={c} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-500">
                 <span className="h-[6px] w-[6px] rounded-full" style={{ background: ACCENT }} />
@@ -134,15 +135,15 @@ export default function AccSupplierPage() {
               See a sample ACC884
             </Link>
             <Link
-              href="/clinical-hub?clinic=DEMO00"
+              href="/demo/clinic"
               className="flex items-center rounded-[13px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[15px] text-[15px] font-bold leading-none text-slate-900 transition-transform active:scale-[0.98]"
             >
-              Explore the demo dashboard
+              Tour the clinician workspace
             </Link>
           </div>
           <p className="m-0 text-[12.5px] font-medium text-slate-500">
-            Live demos, no sign-in — every patient shown is fabricated. Your team won&rsquo;t live in
-            this dashboard either:{' '}
+            Live demos, no sign-in — every patient shown is fabricated. The workspace tour is the
+            real product surface, Gensolve connection included; and{' '}
             <a href="#workflow" className="font-bold underline" style={{ color: ACCENT }}>
               reports file into the PMS you already run
             </a>
