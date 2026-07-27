@@ -31,9 +31,60 @@ All prices NZD excl GST. "Delivering clinicians" = clinicians actually running c
 Year-1 per delivering clinician (tool $588/yr + seat): **$1,483** small · $1,283 · $1,138 · **$1,013** enterprise. Ongoing = $588/clinician/yr.
 **Floor: minimum 3 billed clinicians ($147/mo)** — keeps two-person shops from pricing at pocket change. *(proposed)*
 
+## 2b. Education access tiers — online AND on-site (added 2026-07-27)
+
+The seat ladder above prices ONLINE access only (8 CPD, per-clinician certificate).
+The practical layer for NZ orgs is delivered ON-SITE — their teams cannot attend AU
+practical days, so the day travels to them. This mirrors the AU complete tier:
+online seat + on-site day ≈ NZ$1,350/clinician all-in, right beside the AU
+complete price (A$1,190–1,400) — coherent, defensible, no new price logic.
+
+| Tier | What | Price *(proposed)* |
+|---|---|---|
+| **Online seat** | CCM or CRM online, 8 CPD, certificate per clinician | $895 → $425 ladder (§2) |
+| **Private on-site practical day** | Zac delivers the CCM practical day at THEIR clinic — graded exercise testing, VOMS/BESS, cervical/vestibular; hands-on, equipment-free (the ESSA-amended format). Up to 12 clinicians | **NZ$5,500/day** (+$395/head 13–16; $5,000/day at 3+ days) + travel at cost |
+| **Shared regional day** | Open workshop day (Christchurch, New Plymouth, Tauranga…) for small orgs — per-head | **NZ$495/head** |
+
+Why on-site beats sending staff out (the selling line): a clinic sending 10 clinicians
+to an external course loses 10 billable days plus travel; the on-site day costs
+$5,500 flat, standardises the whole team at once, and the org keeps the certificates
+in its Cl. 15.2 quality file. **Never book rival orgs into the same private day**
+(Cl. 13.4 sensitivity); the shared regional day is for non-competing smalls or
+mixed disciplines.
+
+## 2c. Why they buy — per product (the rationale that survives procurement)
+
+| Product | The buyer's reason, in their terms |
+|---|---|
+| **SST Trainer** | The contract obliges exercise-tolerance assessment (Cl. 5.8.2.1.2) that no mandated discipline is trained at entry to deliver (5.2.1). Every hour writing ACC884s is unbillable (5.10/5.13.6) — SST compiles it as care happens. Their recovery-duration numbers are shared non-anonymised with competitors (13.4) and the 2028 extension is performance-conditional (1.2.2): a measured HRt trajectory is the defensible evidence. Between-visit telemetry means funded hours aren't spent asking "how did the week go?" |
+| **Baseline** | "Entered Stage 1 within two weeks" is a scored measure — baseline-engaged athletes present early. One club link = a referral front door with zero appointment cost: every baseline athlete who later presents is a funded episode (~$2,265 blended) they'd otherwise never see. Club relationships compound. |
+| **Education (online seats)** | Documented competency for the Cl. 15.2 quality file — per-clinician, accredited (OA + ESSA PDNF26077), auditable. Their staff have CPD requirements and budgets anyway; this points existing spend at the contract's weakest competency. |
+| **On-site practical day** | Graded exercise testing is a hands-on skill — video alone doesn't make a team consistent across sites. On-site costs less than the lost billable days of sending staff away, and standardises everyone in one pass. |
+| **The package logic** | Instruments without competency produce reports a clinician can't defend; competency without instruments produces trained clinicians who still can't see the treatment. One clinic code, filed into Gensolve. |
+
 ## 3. Per-target map — all 25
 
-D = estimated delivering clinicians (validate on the call). Y1 = seats + tool, year one. Ongoing = tool only.
+D = estimated delivering clinicians (validate on the call). Y1 = ONLINE seats + tool, year one. Ongoing = tool only.
+
+**Full-stack Y1 (seats + tool + on-site practical days)** — the number to have in your head walking into each call:
+
+| Target | Days on-site | Full-stack Y1 | Ongoing/yr |
+|---|---|---|---|
+| Active+ | 4–5 (regional) | **$61k–86k** | $24–35k |
+| Habit Health | 3–4 (regional) | $49k–71k | $18–29k |
+| TBI Health · ABI+Proactive (each) | 3 | $43k–56k | $15–24k |
+| APM Workcare | 2 | $24k–37k | $6–12k |
+| LFBIT | 2 | $26k–37k | $7–12k |
+| Focus on Potential · Axis · Rope Neuro | 1–2 | $18k–30k | $6–9k |
+| SRS | 1–2 | $17k–26k | $5–7k |
+| Geneva · Bay Rehab · Body In Motion | 1 | $14k–18k | $3.5–6k |
+| Align Health | 1 | $13k–17k | $3–5k |
+| WEIT | 1 | $11k–17k | $2.4–4.7k |
+| Astech · Motus · Advantage South | 1 (or shared ChCh/Sth day) | $11k–14k | $2.4–3.5k |
+| Coastal Rehab | shared BoP day @ $495/head | $6k–10k | $1.8–2.9k |
+| Hemisphere · Tui · Rehab Taranaki · APT | shared day @ $495/head (New Plymouth day serves both Taranaki orgs — but they're rivals: separate sessions or public format) | $4k–8k | $1.2–2.4k |
+
+Route economics: one NZ trip = 4–6 on-site days back-to-back (Auckland → Tauranga → New Plymouth → Christchurch) = $22k–33k of training revenue per trip on top of subscriptions.
 
 ### Tier 1 — enterprise (negotiate; anchor high, annual invoice, procurement-shaped)
 
