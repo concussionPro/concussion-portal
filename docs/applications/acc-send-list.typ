@@ -65,7 +65,7 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 #v(3pt)
 #block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 4pt, bottom: 4pt))[
   #set text(size: 9.5pt)
-  #text(weight: "bold")[Subject: 17 days → 13 — when sub-threshold rehab is measured]
+  #text(weight: "bold")[Subject: Concussion team training + the tool that measures exercise tolerance and writes your ACC884s]
   #v(4pt)
   Hi \[Name\],
   #v(3pt)
