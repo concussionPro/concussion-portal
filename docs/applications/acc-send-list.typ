@@ -61,25 +61,39 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 
 #v(10pt)
 // ── MASTER PITCH ─────────────────────────────────────────────────────────
-#text(size: 12.5pt, weight: "bold")[Master pitch — founder voice (all variants share this intro)]
+#text(size: 12.5pt, weight: "bold")[The opener — doctrine form: <80 words, zero links, interest CTA]
 #v(3pt)
 #block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
-  #set text(size: 9pt)
-  #text(weight: "bold")[Subject: Measured exercise tolerance for concussion — how I solved it in my own clinic]
+  #set text(size: 9.5pt)
+  #text(weight: "bold")[Subject: measuring exercise tolerance — concussion]
   #v(4pt)
   Hi [Name],
   #v(3pt)
-  I'm a clinician — I run a concussion caseload, and I hit the same wall I suspect your team knows well: the guidelines moved to prescribed sub-symptom-threshold aerobic exercise (Amsterdam consensus — Patricios 2023), but there was no practical way to measure a patient's threshold, keep them in-band at home, or get any of it into the report without hours of admin.
+  I'm a clinician — I train concussion clinicians across Australia and run my own caseload. Since the guidelines moved to prescribed sub-symptom aerobic exercise, the hard part is measuring the threshold and evidencing it in the ACC884. I built a tool that does both, and the training behind it (OA-endorsed, ESSA-accredited). I've worked in NZ and know ACC.
   #v(3pt)
-  So I built the fix for my own practice. SST Trainer runs the guided graded test, measures the heart-rate threshold, paces every home session on the patient's own watch — verified, not self-reported — and writes the report as care happens (protocol published: DOI 10.5281/zenodo.21482634). For an ACC concussion service, the report it compiles is the ACC884.
+  Want a look at a sample ACC884 it produces?
   #v(3pt)
-  These days I also train other clinicians to run it. The course is endorsed by Osteopathy Australia and ESSA-accredited (No. PDNF26077), written for the physios and OTs already delivering concussion services: graded exercise testing and threshold derivation, sub-symptom prescription and progression, return to work and sport, persistent symptoms, and the documentation that goes with it — compliant and proficient, in that order.
+  Zac Lewis · Osteopath
+]
+#v(6pt)
+#text(size: 9pt, fill: muted)[74 words. The reply is the win. Everything else — demo links, course content, contract clauses, evidence — goes in the REPLY email below, where it reads as service, not pitch.]
+
+#v(8pt)
+#text(size: 12.5pt, weight: "bold")[The reply email — sent only when they answer yes]
+#v(3pt)
+#block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
+  #set text(size: 9pt)
+  [Name] — here it is.
   #v(3pt)
-  I've worked in New Zealand and know the ACC environment. You can see the whole thing without a call — sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
+  Sample ACC884, compiled from a demonstration episode (fabricated data), plus the working dashboard — no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
   #v(3pt)
-  If it looks useful, I'd value 20 minutes with you or your clinical lead.
+  How it works: a guided graded test measures the client's heart-rate threshold; home sessions run in-band on their own watch, verified rather than self-reported; the ACC884 content compiles as care is delivered instead of being rebuilt from notes at the six-monthly deadline. Protocol published: DOI 10.5281/zenodo.21482634.
   #v(3pt)
-  Zac Lewis — Registered Osteopath (AHPRA) · Concussion Education Australia
+  The training behind it is written for the physios and OTs already on your team — graded exercise testing, threshold prescription and progression, return to work and sport, persistent symptoms, documentation. Endorsed by Osteopathy Australia; ESSA-accredited (No. PDNF26077). It also gives you documented team competency for the quality file.
+  #v(3pt)
+  If it maps to what your service is carrying, 20 minutes with you or your clinical lead and I'll walk a full episode end to end.
+  #v(3pt)
+  Zac
 ]
 
 #v(8pt)
