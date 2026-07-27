@@ -61,7 +61,7 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 
 #v(10pt)
 // ── MASTER PITCH ─────────────────────────────────────────────────────────
-#text(size: 12.5pt, weight: "bold")[THE OPENER — final. Zero links (doctrine). Personalise \[Name\] + nothing else.]
+#text(size: 12.5pt, weight: "bold")[THE OPENER — final. Demo + calendar links included (named-B2B lane; the zero-link rule is the bulk-engine doctrine, not this one).]
 #v(3pt)
 #block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 4pt, bottom: 4pt))[
   #set text(size: 9.5pt)
@@ -75,12 +75,14 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
   #v(3pt)
   Behind it sits the only Australian concussion training endorsed by Osteopathy Australia and accredited by ESSA — so your physios and OTs run it properly, not just own it.
   #v(3pt)
-  If a trained team and standardised, self-writing ACC884s across your service is worth 20 minutes, I'll walk you through the whole workflow — or just reply "show me" and I'll send the live demo first.
+  You can see the whole thing without a call — a sample ACC884 and the working clinician dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
+  #v(3pt)
+  And if a trained team and standardised, self-writing ACC884s across your service is worth 20 minutes: #text(weight: "bold")[cal.com/zac-lewis-so8zjs/30min]
   #v(3pt)
   Zac Lewis · Osteopath — Concussion Education Australia
 ]
 #v(4pt)
-#text(size: 9pt, fill: muted)[NO links, NO attachments in the opener — deliverability and doctrine. Two-ramp close: call-ready targets book; curious ones reply "show me". Every reply is a win.]
+#text(size: 9pt, fill: muted)[Two links, no attachments. 19 of 22 route via admin inboxes — the demo link survives the forwarding chain where a reply-CTA dies. Booking link converts the ready ones without a round-trip.]
 
 #v(10pt)
 #text(size: 12.5pt, weight: "bold")[THE REPLY — sent the moment anyone answers. Carries everything.]
