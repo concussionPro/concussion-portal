@@ -126,94 +126,48 @@ export default function HomeClient() {
                 const Icon = s.icon
                 return (
                   <div key={s.id} className="flex flex-col">
-                    {/* ONE card per stream — tab + endorsement visually JOINED
-                        (2026-07-27, Zac: the old layout rendered tab and badge
-                        as separate sibling cards, so the picker read as four
-                        floating tiles with no clear owner). The container
-                        carries the selection state; the badge is the card's
-                        bottom row; the notch below points at the content the
-                        active tab controls. */}
-                    <div
-                      className={`rounded-2xl border-2 overflow-hidden transition-all ${
-                        active
-                          ? 'border-[var(--accent)] shadow-xl shadow-[rgba(13,115,119,0.25)]'
-                          : 'border-[rgba(13,115,119,0.18)] opacity-85 hover:opacity-100 hover:border-[rgba(13,115,119,0.4)] hover:shadow-md'
-                      }`}
-                    >
-                    {/* Compact tab — the clickable stream selector */}
+                    {/* WIDE pill tab (2026-07-28, Zac: the /courses/streams
+                        pills beat the "short fat" joined cards) — generous
+                        radius, roomy padding; the body stamps live in ONE
+                        strip UNDER the pair, not glued to each card. */}
                     <button
                       role="tab"
                       aria-selected={active}
                       onClick={() => setStream(s.id)}
-                      className={`w-full flex items-center gap-3 px-5 py-4 text-left transition-colors ${
+                      className={`w-full flex items-center gap-4 rounded-[26px] px-6 py-6 text-left transition-all ${
                         active
-                          ? 'bg-[var(--accent)] text-white'
-                          : 'bg-white text-[var(--foreground)]'
+                          ? 'bg-[var(--accent)] text-white shadow-xl shadow-[rgba(13,115,119,0.3)]'
+                          : 'bg-white text-[var(--foreground)] border border-[rgba(13,115,119,0.14)] shadow-sm opacity-90 hover:opacity-100 hover:shadow-md'
                       }`}
                     >
-                      <span className={`flex-none w-11 h-11 rounded-xl grid place-items-center ${active ? 'bg-white/15' : 'bg-[rgba(13,115,119,0.08)]'}`}>
+                      <span className={`flex-none w-12 h-12 rounded-full grid place-items-center ${active ? 'bg-white/15' : 'bg-[rgba(13,115,119,0.08)]'}`}>
                         <Icon className={`w-6 h-6 ${active ? 'text-white' : 'text-[var(--accent)]'}`} strokeWidth={1.8} />
                       </span>
                       <span className="min-w-0">
                         <span className={`block text-[10px] font-bold tracking-[0.14em] ${active ? 'text-white/70' : 'text-[var(--accent)]'}`}>{s.code}</span>
-                        <span className="block text-[15px] font-bold leading-tight">{s.name}</span>
-                        <span className={`block text-[12px] leading-tight mt-0.5 ${active ? 'text-white/85' : 'text-[var(--muted-foreground)]'}`}>{s.audience}</span>
+                        <span className="block text-[16px] font-bold leading-tight">{s.name}</span>
+                        <span className={`block text-[12.5px] leading-tight mt-0.5 ${active ? 'text-white/85' : 'text-[var(--muted-foreground)]'}`}>{s.audience}</span>
                       </span>
-                    </button>
-
-                    {/* Endorsement sits BELOW the tab (not nested inside it) — the
-                        #1 trust signal, but light. OA under CCM, ESSA under CRM.
-                        Only rendered here on the home page; the in-content badge is
-                        hidden when embedded so it never repeats. */}
-                    {(() => {
-                      // Both endorsements render IDENTICALLY: compact logo + label at
-                      // the same height. OA = square shield; ESSA = compact starburst+
-                      // wordmark mark (cropped from its lockup to match). Only the verb
-                      // differs — OA endorses, ESSA accredits.
-                      const accredits = s.endorseImg === '/essa-accredited-pd.png'
-                      const verb = s.endorsePending ? 'Endorsement pending' : (accredits ? 'Accredited by' : 'Endorsed by')
-                      // SLIM single-line strip (2026-07-27, Zac: "too bulky").
-                      // The ESSA lockup is self-describing, so the logo runs
-                      // small and the text is one muted 12px line — no stacked
-                      // kicker, no 48px logo, no wrapping org name fighting the
-                      // external-link glyph.
-                      const inner = (
-                        <>
-                          {!s.endorsePending && (
-                            <Image src={s.endorseImg} alt={`${verb} ${s.endorseOrg}`} width={268} height={100} className={`${accredits ? 'h-6' : 'h-7'} w-auto flex-none`} />
-                          )}
-                          <span className="min-w-0 text-left text-[12px] font-semibold text-[var(--muted-foreground)] leading-snug">
-                            {verb}{' '}
-                            <span className="text-[var(--foreground)]">{s.endorseOrg}</span>
-                            {s.endorseHref && !s.endorsePending && (
-                              <ExternalLink className="inline-block w-3 h-3 ml-1 -mt-0.5 opacity-50" strokeWidth={2.2} />
-                            )}
-                          </span>
-                        </>
-                      )
-                      // Bottom row of the SAME card — border-t joins it to its tab.
-                      const cls = `flex items-center gap-2.5 border-t px-3.5 py-2 transition-colors ${s.endorsePending ? 'border-dashed border-[var(--border)] bg-white/60' : 'border-[var(--border)] bg-white'}`
-                      return s.endorseHref && !s.endorsePending ? (
-                        <a href={s.endorseHref} target="_blank" rel="noopener noreferrer" className={`${cls} hover:border-[var(--accent)] hover:bg-white cursor-pointer`}>
-                          {inner}
-                        </a>
-                      ) : (
-                        <span className={cls}>{inner}</span>
-                      )
-                    })()}
-                    </div>
-
-                    {/* Notch — the active card points at the content it controls:
-                        the clear picker-vs-page divider. */}
-                    {showCrm && (
-                      <span
-                        aria-hidden="true"
-                        className={`mx-auto -mt-[7px] block h-3 w-3 rotate-45 rounded-[1px] transition-opacity ${active ? 'bg-[var(--accent)] opacity-100' : 'opacity-0'}`}
-                      />
-                    )}
-                  </div>
+                    </button>                  </div>
                 )
               })}
+            </div>
+
+            {/* Body stamps — ONE strip under the pair (2026-07-28). OA endorses
+                CCM, ESSA accredits CRM; both link out. */}
+            <div className={`mt-4 flex flex-wrap items-center justify-center ${showCrm ? 'gap-x-8' : ''} gap-y-2`}>
+              {visibleStreams.map((s) =>
+                s.endorseHref && !s.endorsePending ? (
+                  <a key={s.id} href={s.endorseHref} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 group">
+                    <Image src={s.endorseImg} alt={`${s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'} ${s.endorseOrg}`} width={268} height={100} className={`${s.endorseImg === '/essa-accredited-pd.png' ? 'h-6' : 'h-7'} w-auto flex-none`} />
+                    <span className="text-[12px] font-semibold text-[var(--muted-foreground)] leading-snug group-hover:text-[var(--foreground)] transition-colors">
+                      {s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'}{' '}
+                      <span className="text-[var(--foreground)]">{s.endorseOrg}</span>
+                      <ExternalLink className="inline-block w-3 h-3 ml-1 -mt-0.5 opacity-50" strokeWidth={2.2} />
+                    </span>
+                  </a>
+                ) : null,
+              )}
             </div>
 
             {/* The streams are separate ONLINE — the practical day is SHARED.

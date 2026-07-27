@@ -15,6 +15,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { CONFIG, afterpayInstalment, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
+import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
@@ -412,6 +413,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 `Enrol Now — $${onlinePrice}`
               )}
             </button>
+            <PaymentMethodsStrip />
             <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
               &ldquo;Relevant, applicable and easy to absorb&rdquo; — Sarah, Physio
             </p>
@@ -517,6 +519,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 `Enrol Now — $${fullCoursePrice.toLocaleString()}`
               )}
             </button>
+            <PaymentMethodsStrip />
 
             {!hasLiveDate && (
               <p className="text-[10px] text-[var(--muted-foreground)] mt-2 leading-snug">

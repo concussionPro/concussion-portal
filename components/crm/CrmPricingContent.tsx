@@ -22,6 +22,7 @@ import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import CrmCheckoutButton from '@/components/crm/CrmCheckoutButton'
+import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { createFAQSchema } from '@/lib/schema-markup'
 
@@ -419,6 +420,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                   label={accredited ? 'Enrol — CRM Online' : 'Register for online'}
                   className="w-full py-3 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-2"
                 />
+                <PaymentMethodsStrip price={CONFIG.COURSE.PRICE_ONLINE} />
               </div>
             </div>
 
@@ -476,6 +478,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                   label={accredited ? 'Enrol — CRM Complete' : 'Register for the complete package'}
                   className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
                 />
+                <PaymentMethodsStrip price={CONFIG.COURSE.PRICE_EARLY_BIRD} />
               </div>
             </div>
           </div>
