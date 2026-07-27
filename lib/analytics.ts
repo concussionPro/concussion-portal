@@ -176,6 +176,24 @@ export function clearIdentity(): void {
 }
 
 // Client-side analytics tracking
+// Persistent anonymous visitor id — survives across sessions so multi-visit
+// journeys (the norm for a considered B2B purchase) can be stitched into ONE
+// funnel entrant instead of 3 unrelated "sessions". Attribution then reads
+// "cold email → returned direct 4 days later → bought" rather than crediting
+// the sale to Direct.
+function getVisitorId(): string {
+  try {
+    let v = localStorage.getItem('cea_visitor_id')
+    if (!v) {
+      v = `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+      localStorage.setItem('cea_visitor_id', v)
+    }
+    return v
+  } catch {
+    return 'v-unknown'
+  }
+}
+
 export async function trackEvent(
   eventType: string,
   eventData: Record<string, unknown> = {}
@@ -206,6 +224,7 @@ export async function trackEvent(
       eventData: {
         ...eventData,
         visitNumber,
+        visitorId: getVisitorId(),
         ...(firstReferrer ? { firstReferrer } : {}),
         ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
         ...(Object.keys(firstUtm).length > 0 ? { firstUtm } : {}),

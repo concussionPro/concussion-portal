@@ -309,17 +309,36 @@ function getUtmFromEvent(e: StoredEvent): Record<string, string> {
 }
 
 function classifyChannel(e: StoredEvent): string {
-  const utm = getUtmFromEvent(e);
+  // FIRST-TOUCH backfill (2026-07-27): a returning visitor's session carries
+  // no utm and no referrer, so every considered multi-visit journey was
+  // classified "Direct" and the originating channel got zero credit. The
+  // client persists first-touch utm/referrer in localStorage and sends them
+  // on every event — use them whenever the session itself is silent.
+  const ed = e.eventData || {};
+  const firstUtm = (ed.firstUtm && typeof ed.firstUtm === 'object' ? ed.firstUtm : {}) as Record<string, string>;
+  const utm = { ...firstUtm, ...getUtmFromEvent(e) };
   if (utm.gclid || utm.utm_medium === 'cpc' || utm.utm_medium === 'paidsearch') return 'Paid Search';
   if (utm.fbclid) return 'Social';
   if (utm.utm_medium === 'email') return 'Email';
   if (utm.utm_medium === 'social' || utm.utm_medium === 'paidsocial') return 'Social';
   if (utm.utm_source) return 'Referral';
-  const refDomain = extractReferrerDomain(e.referrer);
+  let refDomain = extractReferrerDomain(e.referrer);
+  if (refDomain === '(direct)' && typeof ed.firstReferrer === 'string' && ed.firstReferrer) {
+    refDomain = extractReferrerDomain(ed.firstReferrer);
+  }
   if (refDomain === '(direct)') return 'Direct';
+  if (AI_REFERRERS.some((d) => refDomain === d || refDomain.endsWith('.' + d))) return 'AI / LLM';
   if (SEARCH_ENGINES.has(refDomain)) return 'Organic Search';
   return 'Referral';
 }
+
+// Human clicks arriving FROM an AI assistant (GEO working). Crawler visits by
+// the AI bots themselves never run client JS and are invisible here — that
+// visibility lives in Vercel/Cloudflare logs, not this table.
+const AI_REFERRERS = [
+  'chatgpt.com', 'chat.openai.com', 'perplexity.ai', 'claude.ai',
+  'gemini.google.com', 'copilot.microsoft.com', 'poe.com', 'you.com',
+];
 
 // ---------------------------------------------------------------------------
 // Session analysis helpers
@@ -327,6 +346,11 @@ function classifyChannel(e: StoredEvent): string {
 
 interface SessionSummary {
   sessionId: string;
+  /** Persistent cross-session visitor id (localStorage) — falls back to the
+   *  session id for pre-rollout events so old data still aggregates. */
+  visitorId: string;
+  /** Stitched identity: first known email in the session, if any. */
+  email: string | null;
   ip: string;
   country: string;
   events: StoredEvent[];
@@ -374,6 +398,11 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
 
     summaries.push({
       sessionId,
+      visitorId: typeof ed?.visitorId === 'string' && ed.visitorId ? (ed.visitorId as string) : `s:${sessionId}`,
+      email:
+        (sorted
+          .map((e) => (typeof e.eventData?.userEmail === 'string' ? (e.eventData.userEmail as string) : null))
+          .find((v) => v && v.includes('@')) as string | null) ?? null,
       ip: firstEvent.ip || 'unknown',
       country: firstEvent.country || '',
       events: sorted,

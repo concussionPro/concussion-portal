@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
 import { createJWTSession, verifySessionToken } from '@/lib/jwt-session'
 import { CLINIC_DEMO_USER_ID, CLINIC_DEMO_EMAIL } from '@/lib/demo-session'
+import { sql } from '@/lib/db'
+
+/** Server-side tour-entry event — the /acc → demo conversion signal for the
+ *  ACC outreach. Client tracking can't see this redirect, and the referrer
+ *  header here is the only place we learn WHERE the prospect came from. */
+async function logTourStart(req: NextRequest) {
+  try {
+    await sql`
+      INSERT INTO analytics_events
+        (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
+      VALUES
+        ('demo_tour_start', '{}'::jsonb, ${'server_demo_' + Date.now()}, ${Date.now()},
+         ${req.headers.get('user-agent') || ''}, ${req.headers.get('referer') || null},
+         '/demo/clinic', ${req.nextUrl.search || null},
+         ${req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null},
+         ${req.headers.get('x-vercel-ip-country') || null})
+    `
+  } catch (err) {
+    console.error('[demo/clinic] tour-start log failed:', err)
+  }
+}
 
 /**
  * /demo/clinic — the supplier-prospect demo entry (the /acc CTA).
@@ -25,7 +46,8 @@ import { CLINIC_DEMO_USER_ID, CLINIC_DEMO_EMAIL } from '@/lib/demo-session'
  * NEVER the reviewer DEMO_KEY — that cookie opens paid course content and
  * is not for prospects.
  */
-export function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
+  await logTourStart(req)
   const res = NextResponse.redirect(new URL('/clinical-testing', req.url))
   const maxAge = 30 * 24 * 60 * 60
   const cookieOpts = {

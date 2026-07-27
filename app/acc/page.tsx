@@ -3,6 +3,7 @@ import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
 import { CONFIG } from '@/lib/config'
 import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
 import { CompetencyGapEvidence } from '@/components/clinical/CompetencyGapEvidence'
+import { TrackedOutbound } from '@/components/TrackedOutbound'
 
 /**
  * NOT INDEXABLE.
@@ -148,9 +149,9 @@ export default function AccSupplierPage() {
               reports file into the PMS you already run
             </a>
             . Ready to talk?{' '}
-            <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: ACCENT }}>
+            <TrackedOutbound href="https://cal.com/zac-lewis-so8zjs/30min" event="cal_click" source="acc-hero" className="font-bold underline" style={{ color: ACCENT }}>
               Book 20 minutes
-            </a>.
+            </TrackedOutbound>.
           </p>
         </div>
         <div className="flex min-w-0 flex-1 basis-[520px] justify-center">
@@ -415,15 +416,15 @@ export default function AccSupplierPage() {
               one clinician, a few real episodes, end to end.
             </p>
           </div>
-          <a
+          <TrackedOutbound
             href="https://cal.com/zac-lewis-so8zjs/30min"
-            target="_blank"
-            rel="noopener noreferrer"
+            event="cal_click"
+            source="acc-commercials"
             className="flex cursor-pointer items-center rounded-[13px] px-[22px] py-[14px] text-[14.5px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
             style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
           >
             Scope it in 20 minutes
-          </a>
+          </TrackedOutbound>
         </div>
       </section>
 
@@ -441,15 +442,15 @@ export default function AccSupplierPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <a
+            <TrackedOutbound
               href="https://cal.com/zac-lewis-so8zjs/30min"
-              target="_blank"
-              rel="noopener noreferrer"
+              event="cal_click"
+              source="acc-close"
               className="cursor-pointer rounded-[13px] px-6 py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
               style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
             >
               Book 20 minutes
-            </a>
+            </TrackedOutbound>
             <a
               href={MAILTO}
               className="cursor-pointer rounded-[13px] border-[1.5px] border-slate-600 px-6 py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
