@@ -129,7 +129,18 @@ type Period = '24h' | '7d' | '30d' | '90d'
  *  still works — it resolves to whichever group contains that panel. */
 type GroupId = 'decide' | 'traffic' | 'pipeline' | 'people' | 'report'
 
-type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects' | 'sst'
+interface WorkOrder {
+  key: string
+  severity: number
+  title: string
+  evidence: string
+  proposed_change: string
+  status: string
+  first_seen: string
+  last_seen: string
+}
+
+type TabType = 'actions' | 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects' | 'sst'
 
 interface ProspectSend {
   id: number
@@ -1156,18 +1167,18 @@ function DeviceIcon({ device }: { device: string }) {
 }
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
-const VALID_TAB_TYPES: TabType[] = ['overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'prospects']
+const VALID_TAB_TYPES: TabType[] = ['actions', 'overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'prospects']
 
 export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState<Period>('7d')
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams?.get('tab') as TabType | null
-  const initialTab: TabType = tabFromUrl && VALID_TAB_TYPES.includes(tabFromUrl) ? tabFromUrl : 'insights'
+  const initialTab: TabType = tabFromUrl && VALID_TAB_TYPES.includes(tabFromUrl) ? tabFromUrl : 'actions'
   // Which GROUP is on screen. Seeded from any legacy ?tab= deep link so old
   // bookmarks and the daily-report links keep landing in the right place.
   const groupForPanel = (panel: TabType): GroupId =>
     panel === 'report' ? 'report'
-    : (['insights', 'funnel'] as TabType[]).includes(panel) ? 'decide'
+    : (['actions', 'insights', 'funnel'] as TabType[]).includes(panel) ? 'decide'
     : (['overview', 'channels', 'flow', 'events'] as TabType[]).includes(panel) ? 'traffic'
     : (['pool', 'prospects', 'sst', 'preseason'] as TabType[]).includes(panel) ? 'pipeline'
     : 'people'
@@ -1196,6 +1207,24 @@ export default function AnalyticsDashboard() {
   const [funnelData, setFunnelData] = useState<FunnelData | null>(null)
   const [eventsData, setEventsData] = useState<EventGroup[]>([])
   const [insightsData, setInsightsData] = useState<Insight[]>([])
+  // Work orders — the self-cleaning findings queue (the page's front door).
+  const [workOrders, setWorkOrders] = useState<WorkOrder[] | null>(null)
+  const [workMoney, setWorkMoney] = useState<{ purchases: number; checkoutClicks: number; calClicks: number; demoTours: number } | null>(null)
+  const [workBusy, setWorkBusy] = useState(false)
+  const runReview = useCallback(async () => {
+    setWorkBusy(true)
+    try {
+      const res = await fetch('/api/admin/analytics-findings', { method: 'POST', credentials: 'include' })
+      if (res.ok) {
+        const d = await res.json()
+        setWorkOrders(d.findings ?? [])
+        setWorkMoney(d.money ?? null)
+      }
+    } catch { /* leave prior state */ } finally {
+      setWorkBusy(false)
+    }
+  }, [])
+  useEffect(() => { void runReview() }, [runReview])
 
   // Ready-to-train pool data
   const [poolData, setPoolData] = useState<{
@@ -1497,7 +1526,7 @@ export default function AnalyticsDashboard() {
    * in ONE batch on load, so grouping costs no extra requests.
    */
   const GROUPS: { id: GroupId; label: string; icon: React.ElementType; panels: TabType[]; hint: string }[] = [
-    { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['insights', 'funnel'], hint: 'What to do today' },
+    { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['actions', 'insights', 'funnel'], hint: 'What to do today' },
     { id: 'traffic', label: 'Traffic', icon: Globe, panels: ['overview', 'channels', 'flow', 'events'], hint: 'Where it comes from' },
     { id: 'pipeline', label: 'Pipeline', icon: MapPin, panels: ['pool', 'prospects', 'sst', 'preseason'], hint: 'Close to revenue' },
     { id: 'people', label: 'People', icon: Mail, panels: ['retargeting', 'users'], hint: 'Warm right now' },
@@ -1505,7 +1534,7 @@ export default function AnalyticsDashboard() {
   ]
 
   const PANEL_LABEL: Record<TabType, string> = {
-    insights: 'Insights', funnel: 'Funnels', overview: 'Overview', channels: 'Channels',
+    actions: 'Work orders', insights: 'Insights', funnel: 'Funnels', overview: 'Overview', channels: 'Channels',
     flow: 'Flow', events: 'Events', pool: 'Ready to Train', prospects: 'B2B Prospects',
     sst: 'SST Outreach', preseason: 'Preseason', retargeting: 'Retargeting',
     users: 'Users', report: 'Daily Report',
@@ -1718,6 +1747,69 @@ export default function AnalyticsDashboard() {
           )}
 
           <div className="p-5">
+            {/* ── WORK ORDERS (default) — the self-cleaning optimisation queue.
+                THE POINT OF THE SITE IS SALES: this panel shows only money
+                numbers and the open change orders the weekly review produced.
+                Zac's action is one sentence to Claude, not reading charts. */}
+            {shows('actions') && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <SectionTitle title="Optimisation work orders" subtitle="Money-anchored, last 14 days, self-cleaning — resolved automatically when the data clears" />
+                  <button
+                    onClick={() => void runReview()}
+                    disabled={workBusy}
+                    className="px-4 py-2 rounded-lg text-xs font-bold bg-[#0d7377] text-white hover:opacity-90 disabled:opacity-50 transition"
+                  >
+                    {workBusy ? 'Analysing…' : 'Re-run review now'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    ['Purchases', workMoney?.purchases, 'verified, both streams'],
+                    ['Checkout clicks', workMoney?.checkoutClicks, 'enrol / checkout intent'],
+                    ['Call bookings clicked', workMoney?.calClicks, 'cal.com CTAs on /acc'],
+                    ['Demo tours', workMoney?.demoTours, '/demo/clinic entries'],
+                  ].map(([label, v, hint]) => (
+                    <div key={label as string} className="card p-4">
+                      <p className="m-0 text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
+                      <p className="m-0 mt-1 text-2xl font-extrabold text-slate-900">{v ?? '—'}</p>
+                      <p className="m-0 mt-0.5 text-[11px] text-slate-400">{hint}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {workOrders === null ? (
+                  <Skeleton className="h-40 w-full rounded-xl" />
+                ) : workOrders.length === 0 ? (
+                  <div className="card p-6 text-center">
+                    <p className="m-0 text-sm font-bold text-emerald-700">No open work orders</p>
+                    <p className="m-0 mt-1 text-[12.5px] text-slate-500">No measured leak between traffic and money this window. Orders appear here the moment the data shows one.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {workOrders.map((f) => (
+                      <div key={f.key} className="card p-4 border-l-4" style={{ borderLeftColor: f.severity === 1 ? '#dc2626' : f.severity === 2 ? '#d97706' : '#0284c7' }}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${f.severity === 1 ? 'bg-red-100 text-red-700' : f.severity === 2 ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700'}`}>
+                            {f.severity === 1 ? 'MONEY LEAK' : f.severity === 2 ? 'PIPELINE GAP' : 'SIGNAL'}
+                          </span>
+                          <span className="text-[10px] text-slate-400">open since {new Date(f.first_seen).toLocaleDateString('en-AU')}</span>
+                        </div>
+                        <p className="m-0 text-sm font-bold text-slate-900">{f.title}</p>
+                        <p className="m-0 mt-0.5 text-[12.5px] text-slate-500">{f.evidence}</p>
+                        <p className="m-0 mt-1.5 text-[12.5px] font-medium text-teal-700">→ {f.proposed_change}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <p className="m-0 text-[12px] text-slate-400">
+                  To action the queue: tell Claude <strong className="text-slate-600">&ldquo;run the analytics pass&rdquo;</strong> — it reads these orders and ships the changes. The weekly review (Mon AM) emails this same queue.
+                </p>
+              </div>
+            )}
+
             {/* ── INSIGHTS ─────────────────────────────────────────── */}
             {shows('insights') && (() => {
               const userInsights = buildUserInsights(usersData.filter(u => !u.isTest))
