@@ -61,42 +61,47 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 
 #v(10pt)
 // ── MASTER PITCH ─────────────────────────────────────────────────────────
-#text(size: 12.5pt, weight: "bold")[Master pitch — Variant B (contract-literate suppliers)]
+#text(size: 12.5pt, weight: "bold")[Master pitch — founder voice (all variants share this intro)]
 #v(3pt)
 #block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
   #set text(size: 9pt)
-  #text(weight: "bold")[Subject: The exercise-tolerance assessment your contract asks for — measured, and it writes the ACC884]
+  #text(weight: "bold")[Subject: Measured exercise-tolerance assessment for your ACC concussion service]
   #v(4pt)
-  [Name],
+  Hi [Name],
   #v(3pt)
-  Your Concussion Services contract obliges "assessment of exercise tolerance and/or functional capacity" (Cl. 5.8.2.1.2) — and none of the five mandated team disciplines is trained at entry to deliver graded exercise testing. Meanwhile the measures behind the 2028 extension are recovery-duration and return-to-work, scored from ACC's data and shared non-anonymised with every other supplier.
+  I'm a clinician and educator — I run Concussion Education Australia, where I manage concussion patients and train the clinicians who do. I built the SST Trainer for my own caseload: it runs the graded test that measures each patient's heart-rate threshold, then paces every home session inside the prescribed band on the patient's own watch — and writes the report at the end (protocol published: DOI 10.5281/zenodo.21482634). I've worked in New Zealand and know the ACC reporting environment; for your team the report it compiles is the ACC884. The course that sits behind it is ESSA-accredited (16 CPD, No. PDNF26077) — the education layer that makes sure the tool is used as it was designed.
   #v(3pt)
-  We close that gap with training rather than a hire. SST is a heart-rate-threshold trainer built on the Buffalo protocol (published method, DOI 10.5281/zenodo.21482634): a guided graded test measures each client's threshold, home sessions run against the prescribed band on the client's own wearable, and the serial measured threshold becomes a functional outcome — with the ACC884 Client Summary content compiling as care is delivered, not reconstructed at the six-monthly deadline. The team training behind it is ESSA-accredited (16 CPD, No. PDNF26077) — documented competency for the quality file.
+  I'm writing because the published gap between concussion guidelines and practice is large, and it lands directly on the measures your contract is scored on:
+  #v(2pt)
+  #set text(size: 8.8pt)
+  • Sub-symptom-threshold aerobic exercise is the #text(weight: "bold")[consensus first-line treatment] (Patricios et al., #emph[Br J Sports Med] 2023) — yet in the largest survey of rehab clinicians, #text(weight: "bold")[only \~35% prescribed it], and it did not appear in the top five treatments used (Dobney & Gagnon, #emph[Physiotherapy Canada] 2021; n=555).
+  #v(1pt)
+  • Even #text(weight: "bold")[trained] clinicians report #text(weight: "bold")[return-to-play as their least-confident decision] (Yorke et al., #emph[Physical Therapy] 2016; n=1,272, 70% already concussion-trained).
+  #v(1pt)
+  • The cost of the gap is measurable: prescribed individualised sub-threshold exercise shortened median recovery #text(weight: "bold")[from 17 to 13 days] in the pivotal RCT (Leddy et al., #emph[JAMA Pediatrics] 2019).
+  #v(1pt)
+  • And the thresholds driving it are still mostly #text(weight: "bold")[estimated from age formulas rather than measured] — which is the difference between an opinion and an outcome in an ACC884.
   #v(3pt)
-  The evidence is one line: sub-symptom-threshold aerobic exercise is the consensus first-line treatment (Patricios et al., BJSM 2023), it shortened median recovery 17→13 days in the pivotal RCT (Leddy et al., JAMA Pediatrics 2019), and published surveys show roughly two-thirds of rehab clinicians still don't prescribe it (Dobney & Gagnon, Physiotherapy Canada 2021). ACC's own January guideline endorses the treatment — and leaves the method to you.
+  #set text(size: 9pt)
+  Your contract already obliges "assessment of exercise tolerance and/or functional capacity" (Cl. 5.8.2.1.2) — while none of the five mandated disciplines is trained at entry to deliver it. Tool plus training closes that as a workflow, not a hire.
   #v(3pt)
-  Sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
+  You can see all of it without a call — sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
   #v(3pt)
   Worth 20 minutes with you or your clinical lead?
   #v(3pt)
-  Zac Lewis — Registered Osteopath (AHPRA) · Concussion Education Australia
+  Zac Lewis — Registered Osteopath (AHPRA) · Founder, Concussion Education Australia
 ]
 
 #v(8pt)
-#text(size: 11pt, weight: "bold")[Variant A — "third row": holds the contract, publishes no concussion capability]
+#text(size: 11pt, weight: "bold")[Variant swaps — replace the "I'm writing because…" lead-in sentence only]
 #v(2pt)
-#text(size: 9pt)[Open on #emph[standing the service up], never on deficiency. Swap paragraph 1 for:]
 #block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
   #set text(size: 9pt)
-  "[Org] holds a Concussion Services contract, and the hardest part of that service to staff is the one the schedule obliges: assessment of exercise tolerance (5.8.2.1.2) — a competency none of the five mandated team disciplines carries at entry. We solve that with training rather than a hire…"
-]
-#v(5pt)
-#text(size: 11pt, weight: "bold")[Variant C — markets concussion, never mentions ACC]
-#v(2pt)
-#text(size: 9pt)[Open on differentiation:]
-#block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
-  #set text(size: 9pt)
-  "In a market where every supplier's numbers are visible to every other supplier (Cl. 13.4), the one with a measured recovery trajectory per client reads differently at extension time…"
+  #text(weight: "bold")[A — holds the contract, publishes no concussion capability:] "I'm writing because the hardest part of the Concussion Services contract to staff is the one it obliges — exercise-tolerance assessment (5.8.2.1.2) — and the published gap between guidelines and practice explains why:"
+  #v(3pt)
+  #text(weight: "bold")[B — contract-literate (default):] as written above.
+  #v(3pt)
+  #text(weight: "bold")[C — markets concussion, never mentions ACC:] "I'm writing because in a market where every supplier's performance is visible to every other supplier (Cl. 13.4), the published gap between guidelines and practice is the differentiation opportunity:"
 ]
 #v(5pt)
 #text(size: 9pt)[#text(weight: "bold")[Cover line for every referral-inbox route:] "Could you please pass this to [name / role] — it concerns [Org]'s ACC Concussion Services contract. Thank you."]
