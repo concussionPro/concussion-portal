@@ -157,11 +157,11 @@ export default function HomeClient() {
                 CCM, ESSA accredits CRM; both link out. */}
             {/* #1 TRUST SIGNAL (Zac 2026-07-28: "accreditation too small") —
                 big marks, card-weight presentation, full org names bold. */}
-            <div className={`mt-5 flex flex-wrap items-stretch justify-center ${showCrm ? 'gap-3' : ''} gap-y-3`}>
+            <div className={showCrm ? 'mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3' : 'mt-3 flex justify-center'}>
               {visibleStreams.map((s) =>
                 s.endorseHref && !s.endorsePending ? (
                   <a key={s.id} href={s.endorseHref} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-3.5 rounded-2xl border border-[rgba(13,115,119,0.14)] bg-white px-5 py-3.5 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all group">
+                    className="flex w-full items-center justify-center gap-3.5 rounded-2xl border border-[rgba(13,115,119,0.14)] bg-white px-5 py-4 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all group">
                     <Image src={s.endorseImg} alt={`${s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'} ${s.endorseOrg}`} width={268} height={100} className={`${s.endorseImg === '/essa-accredited-pd.png' ? 'h-10' : 'h-12'} w-auto flex-none`} />
                     <span className="text-[13px] leading-snug text-[var(--muted-foreground)]">
                       {s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'}
@@ -180,7 +180,7 @@ export default function HomeClient() {
                 two cards is deliberate, and the multidisciplinary room is a
                 selling point for both. */}
             {showCrm && (
-              <p className="mt-4 text-center text-[12.5px] leading-relaxed text-[var(--muted-foreground)]">
+              <p className="mt-6 text-center text-[12.5px] leading-relaxed text-[var(--muted-foreground)]">
                 <span className="font-semibold text-[var(--foreground)]">Separate online streams — one shared practical day.</span>{' '}
                 Osteos, physios and exercise physiologists train the hands-on day together, on real cases — the same
                 multidisciplinary team a concussion patient actually moves through.
