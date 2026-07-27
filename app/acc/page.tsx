@@ -423,26 +423,55 @@ export default function AccSupplierPage() {
           </div>
         </div>
 
-        {/* COMMERCIALS — negotiated per organisation (owner 2026-07-27: no
-            published pricing bentos; every agreement is its own negotiation). */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-5 rounded-[18px] border border-slate-200 bg-white px-6 py-5">
-          <div className="min-w-[260px] flex-1">
-            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Commercials</p>
-            <p className="m-0 mt-1.5 text-[14.5px] leading-[1.55] text-slate-700">
-              Agreed per organisation, on the clinicians <strong>delivering the concussion
-              service</strong> — never headcount. The pilot is free for the first two organisations:
-              one clinician, a few real episodes, end to end.
-            </p>
+        {/* COMMERCIALS + MOVE-FORWARD (owner 2026-07-28: "they look at the
+            tools and think 'great, now what'"). Indicative per-clinician rates
+            — the decided card, NZ-ACC-PRICING-MODEL.md — plus the explicit
+            path. Final commercials still negotiated per organisation. */}
+        <div className="mt-6 overflow-hidden rounded-[18px] border border-slate-200 bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+            <div className="p-6">
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Indicative commercials</p>
+              <p className="m-0 mt-2 text-[22px] font-extrabold tracking-tight text-slate-900">NZ$49<span className="text-[13px] font-semibold text-slate-500"> / delivering clinician / month</span></p>
+              <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-slate-600">
+                Both instruments, Gensolve filing, org licence. Counted on clinicians{' '}
+                <strong>delivering the concussion service</strong> — never headcount.
+              </p>
+              <p className="m-0 mt-3 text-[13.5px] font-bold text-slate-800">Training seats NZ$895<span className="font-semibold text-slate-500"> → $425 at 40+</span></p>
+              <p className="m-0 mt-0.5 text-[12.5px] leading-[1.5] text-slate-600">
+                One-off per clinician — 16 CPD, ESSA-accredited, certificate for the Cl. 15.2 quality
+                file. On-site practical days available for whole teams.
+              </p>
+            </div>
+            <div className="p-6">
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">How this moves forward</p>
+              <ol className="m-0 mt-2 list-none space-y-2.5 p-0">
+                {[
+                  ['1', 'Tour the workspace and open the sample ACC884 — no login, on this page.'],
+                  ['2', 'A 30-minute scoping call: your caseload, your team, and the funding question — supplier margin or within the funded service.'],
+                  ['3', 'Pilot: one clinician, a few real episodes end to end. Free for the first two organisations.'],
+                ].map(([n, t]) => (
+                  <li key={n} className="flex gap-2.5 text-[13px] leading-[1.5] text-slate-700">
+                    <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: ACCENT }}>{n}</span>
+                    {t}
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="flex flex-col items-start justify-center gap-3 p-6" style={{ background: '#f0fdfa' }}>
+              <p className="m-0 text-[14px] font-bold leading-[1.4] tracking-tight text-slate-900">
+                Final commercials are agreed per organisation — sized to your service, not a rate card.
+              </p>
+              <TrackedOutbound
+                href="https://cal.com/zac-lewis-so8zjs/30min"
+                event="cal_click"
+                source="acc-commercials"
+                className="flex cursor-pointer items-center rounded-[13px] px-[22px] py-[14px] text-[14.5px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
+                style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
+              >
+                Scope it in 30 minutes
+              </TrackedOutbound>
+            </div>
           </div>
-          <TrackedOutbound
-            href="https://cal.com/zac-lewis-so8zjs/30min"
-            event="cal_click"
-            source="acc-commercials"
-            className="flex cursor-pointer items-center rounded-[13px] px-[22px] py-[14px] text-[14.5px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
-            style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
-          >
-            Scope it in 30 minutes
-          </TrackedOutbound>
         </div>
       </section>
 
