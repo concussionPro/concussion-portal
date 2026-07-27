@@ -17,23 +17,26 @@ const SKINS: Array<[string, string]> = [
   ['acc884', 'ACC884 (NZ)'],
 ]
 
-export function PmsFileButton({ clinicCode, viewKey, patientName }: {
+export function PmsFileButton({ clinicCode, viewKey, patientName, demo = false }: {
   clinicCode: string
   viewKey: string
   patientName: string
+  /** DEMO00 showcase: full Gensolve filing flow, clearly labelled, writes nothing. */
+  demo?: boolean
 }) {
-  const [pms, setPms] = useState<string | null>(null)
+  const [pms, setPms] = useState<string | null>(demo ? 'gensolve' : null)
   const [open, setOpen] = useState(false)
 
   const auth = `code=${encodeURIComponent(clinicCode)}&k=${encodeURIComponent(viewKey)}`
   useEffect(() => {
+    if (demo) return
     let alive = true
     void fetch(`/api/sst/pms/connection?${auth}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (alive && d?.connected) setPms(d.kind) })
       .catch(() => {})
     return () => { alive = false }
-  }, [auth])
+  }, [auth, demo])
 
   if (!pms) return null
   return (
@@ -52,6 +55,7 @@ export function PmsFileButton({ clinicCode, viewKey, patientName }: {
           viewKey={viewKey}
           patientName={patientName}
           pms={pms}
+          demo={demo}
           onClose={() => setOpen(false)}
         />
       )}
@@ -59,12 +63,13 @@ export function PmsFileButton({ clinicCode, viewKey, patientName }: {
   )
 }
 
-function FileModal({ auth, clinicCode, viewKey, patientName, pms, onClose }: {
+function FileModal({ auth, clinicCode, viewKey, patientName, pms, demo = false, onClose }: {
   auth: string
   clinicCode: string
   viewKey: string
   patientName: string
   pms: string
+  demo?: boolean
   onClose: () => void
 }) {
   const [q, setQ] = useState(patientName)
@@ -79,6 +84,12 @@ function FileModal({ auth, clinicCode, viewKey, patientName, pms, onClose }: {
   const search = async () => {
     setSearching(true)
     setResults([])
+    if (demo) {
+      // Fixture match — the same patient "found" in Gensolve. No API touched.
+      setResults([{ id: 'demo-1', name: patientName, dob: null }])
+      setSearching(false)
+      return
+    }
     try {
       const r = await fetch(`/api/sst/pms/patients?${auth}&q=${encodeURIComponent(q.trim())}`)
       const d = await r.json()
@@ -96,6 +107,13 @@ function FileModal({ auth, clinicCode, viewKey, patientName, pms, onClose }: {
     if (!picked) return
     setBusy(true)
     setResult(null)
+    if (demo) {
+      setTimeout(() => {
+        setResult({ ok: true, msg: `Filed to ${picked.name}'s record in Gensolve (demo — nothing written).` })
+        setBusy(false)
+      }, 600)
+      return
+    }
     try {
       const r = await fetch('/api/sst/pms/file', {
         method: 'POST',
@@ -120,7 +138,10 @@ function FileModal({ auth, clinicCode, viewKey, patientName, pms, onClose }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="m-0 text-sm font-bold text-slate-900">File report to {pms}</h3>
+          <h3 className="m-0 text-sm font-bold text-slate-900">
+            File report to {pms}
+            {demo && <span className="ml-2 rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 align-middle">DEMO</span>}
+          </h3>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
         </div>
 

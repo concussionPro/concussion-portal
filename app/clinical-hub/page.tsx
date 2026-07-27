@@ -977,7 +977,13 @@ export default function ClinicalHubPage() {
                       product" — owner). Authorises via the same code+viewKey
                       this hub carries; the server validates each skin against
                       its jurisdiction. Real synced patients only. */}
-                  {clinicCode !== '' && viewKey && p.id.startsWith('real-') && (
+                  {/* Reports + PMS filing render on REAL synced patients AND on
+                      the DEMO00 fixtures — the demo dashboard is the pitch
+                      surface; hiding the product's best features from it was
+                      the mistake (owner, 2026-07-27). DEMO00's report API is
+                      keyless by design and the loader synthesises a coherent
+                      episode for any patient label. */}
+                  {((clinicCode !== '' && viewKey && p.id.startsWith('real-')) || isDemo) && (
                     <>
                       {([
                         ['gp-report', 'GP report'],
@@ -987,7 +993,7 @@ export default function ClinicalHubPage() {
                       ] as const).map(([skin, label]) => (
                         <a
                           key={skin}
-                          href={`/api/sst/report?code=${encodeURIComponent(clinicCode)}&k=${encodeURIComponent(viewKey)}&patient=${encodeURIComponent(p.name)}&skin=${skin}`}
+                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(p.name)}&skin=${skin}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
@@ -995,7 +1001,7 @@ export default function ClinicalHubPage() {
                           <FileText className="w-3.5 h-3.5" /> {label} <ArrowUpRight className="w-3.5 h-3.5" />
                         </a>
                       ))}
-                      <PmsFileButton clinicCode={clinicCode} viewKey={viewKey} patientName={p.name} />
+                      <PmsFileButton clinicCode={isDemo ? 'DEMO00' : clinicCode} viewKey={viewKey ?? ''} patientName={p.name} demo={isDemo} />
                     </>
                   )}
                 </div>
