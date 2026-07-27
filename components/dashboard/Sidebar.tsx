@@ -60,7 +60,7 @@ export function Sidebar() {
   ).length
   const { user: sessionUser } = useSession()
   const clinicalAccess = useClinicalAccess()
-  const showClinicalTesting = ['owner', 'course', 'sst'].includes(clinicalAccess)
+  const showClinicalTesting = ['owner', 'course', 'sst', 'demo'].includes(clinicalAccess)
   const user = sessionUser ? {
     id: sessionUser.id || '1',
     email: sessionUser.email || '',

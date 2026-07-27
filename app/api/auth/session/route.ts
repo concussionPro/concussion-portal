@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, createJWTSession } from '@/lib/jwt-session'
 import { findUserById, isBookOwner } from '@/lib/users'
 import { userOwnsCrm } from '@/lib/crm-course'
-import { DEMO_KEY } from '@/lib/demo-key'
+import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 /**
  * Synthetic "demo viewer" user — returned when the partner-preview
@@ -35,6 +35,32 @@ function getDemoViewerResponse(request: NextRequest): NextResponse | null {
         // match the gate — otherwise a partner sees CRM rendered as locked
         // while /ep-course lets them straight in.
         ownsCrm: true,
+        workshopLocation: null,
+        createdAt: new Date().toISOString(),
+        nurtureUnsubscribed: true,
+        progressEmailsOptedOut: true,
+        isDemo: true,
+      },
+    })
+  }
+  // Clinic-prospect demo (/demo/clinic — the ACC/supplier pitch surface):
+  // a synthetic PREVIEW-level user, so the whole portal renders the existing
+  // free-tier sell — CCM/CRM visible but locked, Module 1 trial + free
+  // courses open, Clinical Testing in demo mode (DEMO00). No session cookie
+  // is ever issued, so every session-authed mutation (progress writes,
+  // account changes, certificates) stays naturally blocked. Real sessions
+  // are checked BEFORE this fallback — demo is a floor, never a downgrade.
+  const clinicDemo = request.cookies.get('clinic_demo')?.value
+  if (clinicDemo && clinicDemo === CLINIC_DEMO_KEY) {
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: 'demo-viewer-clinic',
+        email: 'demo@clinic-preview.local',
+        name: 'Clinic Demo',
+        accessLevel: 'preview',
+        bookOwner: false,
+        ownsCrm: false,
         workshopLocation: null,
         createdAt: new Date().toISOString(),
         nurtureUnsubscribed: true,

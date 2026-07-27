@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { detectCountry, isInternational, isHomeCountry } from '@/lib/geo'
+import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 // Edge-compatible constant-time string comparison
 // Pads shorter string to prevent leaking length via timing
@@ -334,6 +335,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   if (protectedPrefixes.some(p => pathname.startsWith(p))) {
+    // Demo viewers browse the portal WITHOUT a session: the reviewer demo
+    // (demo_key) and the clinic-prospect demo (clinic_demo → synthetic
+    // preview session from /api/auth/session) both pass this gate. Content
+    // gating stays with the pages/APIs — a prospect sees the free-tier sell
+    // (CCM/CRM locked, Module 1 trial + free courses open), and every
+    // session-authed API still 401s without a real session cookie.
+    if (
+      request.cookies.get('demo_key')?.value === DEMO_KEY ||
+      request.cookies.get('clinic_demo')?.value === CLINIC_DEMO_KEY
+    ) {
+      return NextResponse.next()
+    }
     const sessionToken = request.cookies.get('session')?.value
     if (!sessionToken) {
       const loginUrl = request.nextUrl.clone()
