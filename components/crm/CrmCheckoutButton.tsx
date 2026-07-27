@@ -41,9 +41,11 @@ export default function CrmCheckoutButton({
   const [city, setCity] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Online tier has no practical day → no city. Complete/upgrade CAN nominate a
-  // city, but it's optional — you may buy now and nominate later.
-  const needsCity = tier !== 'online'
+  // EVERY tier nominates a city — the API requires it (owner: nominations
+  // feed the shared CCM/CRM Ready-to-Train demand). The client previously
+  // skipped the field for 'online', so the API's 400 made the CRM online
+  // checkout unbuyable end-to-end (found by checkout walk, 2026-07-27).
+  const needsCity = true
 
   // Pending ESSA → interest capture only, never a live checkout.
   if (!accredited) {
@@ -57,6 +59,7 @@ export default function CrmCheckoutButton({
   async function start() {
     setError(null)
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setError('Enter a valid email.'); return }
+    if (!city) { setError('Nominate your city — it sets where the practical day launches.'); return }
     setBusy(true)
     try {
       const res = await fetch('/api/crm/checkout', {
@@ -87,7 +90,7 @@ export default function CrmCheckoutButton({
   return (
     <div className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left">
       <p className="text-[13px] font-bold text-slate-800 mb-2">
-        {needsCity ? 'Your details — nominate a city now, or decide later' : 'Enter your email to continue'}
+        Your details — your nominated city sets practical-day demand
       </p>
       <input
         type="email"
@@ -103,7 +106,7 @@ export default function CrmCheckoutButton({
           onChange={(e) => setCity(e.target.value)}
           className="w-full mb-3 rounded-lg border border-slate-300 px-3 py-2 text-[14px] bg-white"
         >
-          <option value="">I&rsquo;ll nominate my city later</option>
+          <option value="">Nominate your city (required)</option>
           {CITIES.map((c) => (
             <option key={c.slug} value={c.slug}>{c.label}</option>
           ))}

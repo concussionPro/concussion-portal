@@ -272,6 +272,21 @@ export default function AccSupplierPage() {
           ACC885 is Did Not Attend — not progress. Jurisdiction is enforced in software: an
           Australian code cannot emit an ACC form.
         </p>
+        {/* Work order 2026-07-27 (acc-no-tour): repeat the tour CTA at the
+            moment the sample report has just made the case. */}
+        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-[16px] border border-slate-200 bg-white px-6 py-5" style={{ boxShadow: '0 16px 36px -28px rgba(15,23,42,.35)' }}>
+          <p className="m-0 flex-1 basis-[320px] text-[14px] leading-[1.5] text-slate-600">
+            That report compiled itself from the workspace your clinicians would run.
+            <strong className="text-slate-900"> Walk through it yourself</strong> — no sign-in, every patient fabricated.
+          </p>
+          <Link
+            href="/demo/clinic"
+            className="rounded-[12px] px-5 py-3 text-[14px] font-bold leading-none text-white"
+            style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
+          >
+            Tour the clinician workspace →
+          </Link>
+        </div>
       </section>
 
       {/* ── WHY THE TEAM LAYER IS PART OF THIS — published competency gap ──── */}
