@@ -438,8 +438,9 @@ export default function AccSupplierPage() {
               </p>
               <p className="m-0 mt-3 text-[13.5px] font-bold text-slate-800">Training seats NZ$895<span className="font-semibold text-slate-500"> → $425 at 40+</span></p>
               <p className="m-0 mt-0.5 text-[12.5px] leading-[1.5] text-slate-600">
-                One-off per clinician — 16 CPD, ESSA-accredited, certificate for the Cl. 15.2 quality
-                file. On-site practical days available for whole teams.
+                One-off per clinician, across the whole allied team — physios, osteos and OTs
+                (OA-endorsed) and exercise physiologists (ESSA-accredited, 16 CPD) — each
+                certificated for the Cl. 15.2 quality file. On-site practical days available.
               </p>
             </div>
             <div className="p-6">
