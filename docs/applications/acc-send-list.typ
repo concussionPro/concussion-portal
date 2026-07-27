@@ -1,0 +1,147 @@
+#set page(paper: "a4", margin: (x: 1.9cm, y: 2.0cm), footer: context [
+  #set text(size: 8pt, fill: rgb("#94a3b8"))
+  Concussion Education Australia Pty Ltd · ABN 74 688 155 508 · INTERNAL — send list & pitch pack
+  #h(1fr) Page #counter(page).display() of #counter(page).final().first()
+])
+#set text(font: "Helvetica Neue", size: 9.5pt, fill: rgb("#0f172a"))
+#set par(leading: 0.62em)
+
+#let accent = rgb("#0d9488")
+#let slate = rgb("#475569")
+#let muted = rgb("#64748b")
+
+#let tag(t, c) = box(fill: c.lighten(82%), stroke: 0.5pt + c, radius: 3pt, inset: (x: 5pt, y: 2.5pt), text(size: 7.5pt, weight: "bold", fill: c.darken(20%), t))
+
+#let org(n, name, tier, variant, to, contact, note) = block(breakable: false, spacing: 8pt)[
+  #block(fill: rgb("#f8fafc"), stroke: 0.5pt + rgb("#e2e8f0"), radius: 6pt, inset: 10pt, width: 100%)[
+    #grid(columns: (1fr, auto), align: (left, right),
+      [#text(weight: "bold", size: 10.5pt)[#n. #name] #h(4pt) #tag("TIER " + tier, slate) #h(2pt) #tag("VARIANT " + variant, accent)],
+      [])
+    #v(3pt)
+    #text(size: 9pt)[#text(weight: "bold", fill: accent)[To:] #raw(to)]
+    #v(1pt)
+    #text(size: 9pt)[#text(weight: "bold")[Contact:] #contact]
+    #v(1pt)
+    #text(size: 8.5pt, fill: muted)[#note]
+  ]
+]
+
+// ── TITLE ────────────────────────────────────────────────────────────────
+#block[
+  #text(size: 20pt, weight: "bold", tracking: -0.3pt)[ACC Concussion Services — Supplier Outreach]
+  #v(2pt)
+  #text(size: 10.5pt, fill: muted)[Complete send list · verified addresses · citation-backed pitch — compiled 27 July 2026]
+]
+#v(4pt)
+#line(length: 100%, stroke: 2pt + accent)
+#v(8pt)
+
+// ── THE PLAY ─────────────────────────────────────────────────────────────
+#text(size: 12.5pt, weight: "bold")[The play, in one paragraph]
+#v(3pt)
+The contract obliges every supplier to deliver #text(weight: "bold")["assessment of exercise tolerance and/or functional capacity" (Cl. 5.8.2.1.2)] — while mandating a team (medical, neuropsych, psychology, OT, physio — #text(weight: "bold")[Cl. 5.2.1]) in which no discipline is trained at entry in graded exercise testing. Performance is scored from ACC's own data, #text(weight: "bold")[shared non-anonymised with every other supplier (Cl. 13.4)], and the one-year extension to 2028 is #text(weight: "bold")[conditional on ACC being satisfied (Cl. 1.2.2)]. #text(fill: accent, weight: "bold")[SST delivers the measured functional outcome and compiles the ACC884 as care happens; ESSA-accredited training (No. PDNF26077, 16 CPD) puts documented competency in the Cl. 15.2 quality file.]
+
+#v(6pt)
+#block(fill: rgb("#f0fdfa"), stroke: 0.5pt + accent, radius: 6pt, inset: 10pt, width: 100%)[
+  #text(size: 9pt, weight: "bold", fill: accent.darken(15%))[EVIDENCE LINE — cite, never paraphrase]
+  #v(3pt)
+  #set text(size: 8.7pt)
+  • Sub-symptom-threshold aerobic exercise is the consensus first-line treatment — Patricios et al., #emph[Br J Sports Med] 2023 (Amsterdam 6th Consensus). \
+  • Median recovery 13 vs 17 days in the pivotal RCT — Leddy et al., #emph[JAMA Pediatrics] 2019 (n=103, adolescents; population caveat stays on /acc, not in the email). \
+  • \~Two-thirds of rehab clinicians don't prescribe it — Dobney & Gagnon, #emph[Physiotherapy Canada] 2021 (n=555). \
+  • ACC's January 2026 sport-concussion guideline endorses aerobic exercise — the funder endorsed the treatment and left the method open. Never pitch ACC as behind the evidence. \
+  • Protocol: DOI 10.5281/zenodo.21482634 · Demo estate: portal.concussion-education-australia.com/acc
+]
+
+#v(6pt)
+#block(fill: rgb("#fff7ed"), stroke: 0.5pt + rgb("#f59e0b"), radius: 6pt, inset: 9pt, width: 100%)[
+  #set text(size: 8.7pt)
+  #text(weight: "bold", fill: rgb("#92400e"))[STANDING RULES:] never "renewal point" (term runs to 30 June 2027 — a National Manager will catch it) · never imply ACC is behind the evidence · referral inboxes get the pass-to cover line, never the bare pitch · one follow-up at +7 business days, no third touch · replies are the only metric · the first call that lands gets THE question: #text(weight: "bold")[who pays — supplier margin, or recoverable within the funded service?]
+]
+
+#v(10pt)
+// ── MASTER PITCH ─────────────────────────────────────────────────────────
+#text(size: 12.5pt, weight: "bold")[Master pitch — Variant B (contract-literate suppliers)]
+#v(3pt)
+#block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
+  #set text(size: 9pt)
+  #text(weight: "bold")[Subject: The exercise-tolerance assessment your contract asks for — measured, and it writes the ACC884]
+  #v(4pt)
+  [Name],
+  #v(3pt)
+  Your Concussion Services contract obliges "assessment of exercise tolerance and/or functional capacity" (Cl. 5.8.2.1.2) — and none of the five mandated team disciplines is trained at entry to deliver graded exercise testing. Meanwhile the measures behind the 2028 extension are recovery-duration and return-to-work, scored from ACC's data and shared non-anonymised with every other supplier.
+  #v(3pt)
+  We close that gap with training rather than a hire. SST is a heart-rate-threshold trainer built on the Buffalo protocol (published method, DOI 10.5281/zenodo.21482634): a guided graded test measures each client's threshold, home sessions run against the prescribed band on the client's own wearable, and the serial measured threshold becomes a functional outcome — with the ACC884 Client Summary content compiling as care is delivered, not reconstructed at the six-monthly deadline. The team training behind it is ESSA-accredited (16 CPD, No. PDNF26077) — documented competency for the quality file.
+  #v(3pt)
+  The evidence is one line: sub-symptom-threshold aerobic exercise is the consensus first-line treatment (Patricios et al., BJSM 2023), it shortened median recovery 17→13 days in the pivotal RCT (Leddy et al., JAMA Pediatrics 2019), and published surveys show roughly two-thirds of rehab clinicians still don't prescribe it (Dobney & Gagnon, Physiotherapy Canada 2021). ACC's own January guideline endorses the treatment — and leaves the method to you.
+  #v(3pt)
+  Sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
+  #v(3pt)
+  Worth 20 minutes with you or your clinical lead?
+  #v(3pt)
+  Zac Lewis — Registered Osteopath (AHPRA) · Concussion Education Australia
+]
+
+#v(8pt)
+#text(size: 11pt, weight: "bold")[Variant A — "third row": holds the contract, publishes no concussion capability]
+#v(2pt)
+#text(size: 9pt)[Open on #emph[standing the service up], never on deficiency. Swap paragraph 1 for:]
+#block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
+  #set text(size: 9pt)
+  "[Org] holds a Concussion Services contract, and the hardest part of that service to staff is the one the schedule obliges: assessment of exercise tolerance (5.8.2.1.2) — a competency none of the five mandated team disciplines carries at entry. We solve that with training rather than a hire…"
+]
+#v(5pt)
+#text(size: 11pt, weight: "bold")[Variant C — markets concussion, never mentions ACC]
+#v(2pt)
+#text(size: 9pt)[Open on differentiation:]
+#block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
+  #set text(size: 9pt)
+  "In a market where every supplier's numbers are visible to every other supplier (Cl. 13.4), the one with a measured recovery trajectory per client reads differently at extension time…"
+]
+#v(5pt)
+#text(size: 9pt)[#text(weight: "bold")[Cover line for every referral-inbox route:] "Could you please pass this to [name / role] — it concerns [Org]'s ACC Concussion Services contract. Thank you."]
+
+#pagebreak()
+
+// ── WAVE 1 ───────────────────────────────────────────────────────────────
+#text(size: 13pt, weight: "bold")[WAVE 1 — send this week]
+#v(5pt)
+#org("1", "What Ever It Takes", "2", "A", "charmeyne@whateverittakes.co.nz  ·  brad@whateverittakes.co.nz   [DIRECT — published on own site]", [#text(weight: "bold")[Charmeyne Te Nana-Williams — Director] · Brad Takai — Clinical Manager], "Holds the contract across Auckland/BoP/Waikato and publishes ZERO concussion content — the sharpest capability gap with a DIRECT decision-maker address. The best send on this list.")
+#org("2", "Hemisphere Health", "3", "A", "referrals@hemispherehealth.co.nz   [inbox + cover to the Newburns]", [#text(weight: "bold")[Dr Scott Newburn — Occupational Medicine Specialist & Director] · Gemma Newburn — Physiotherapist & Director], "7 staff, husband-and-wife owner-operators, Nelson contract, no concussion content, no procurement layer. Highest-probability fast close. RTW metrics are Scott's native professional language — add the line: 'for a two-director practice, the ACC884 compiling itself is your own hours back each cycle.'")
+#org("3", "Geneva Healthcare", "1", "A", "info@genevahealth.com   [cover to Shane Rossiter]", [#text(weight: "bold")[Shane Rossiter — ACC & Specialist Team Manager]], "Contract held via NZ Health Group (2025 GETS awardee); no concussion service marketed anywhere. Frame as capability STAND-UP — greenfield, nothing displaced, 11 regions of upside.")
+#org("4", "Bay Rehab", "2", "B", "admin@bayrehab.co.nz   [cover to Joss McDougall]", [#text(weight: "bold")[Joss McDougall — Managing Director, Physiotherapist]], "~75 staff, Tauranga. Decision-maker and clinician are the SAME PERSON — the master pitch lands without translation. Explicit ACC concussion service.")
+#org("5", "Rope Neuro Rehabilitation", "2", "B", "admin@ropeneurorehab.co.nz   [cover to Julie Rope]", [#text(weight: "bold")[Julie Rope — Director & Senior Clinical Practitioner]], "22 clinicians, pure neuro specialisation, founder-led, contract-literate (ACC883 pathway described on site). Excellent early independent-reference candidate for Auckland.")
+
+#v(8pt)
+// ── WAVE 2 ───────────────────────────────────────────────────────────────
+#text(size: 13pt, weight: "bold")[WAVE 2 — +2 business days]
+#v(5pt)
+#org("6", "Axis Sports Medicine", "1", "B†", "info@axissportsmedicine.co.nz   [cover to Dr Fulcher]", [#text(weight: "bold")[Dr Mark Fulcher — Managing Director] · Dr Dan Exeter — Clinical Director], "† PEER REGISTER — they know Leddy; never explain the rationale. Sell the between-visit telemetry, cross-site consistency (8 sites incl. Queenstown) and clean data export. Use the Axis-specific copy in SENDS-2026-07-27.md.")
+#org("7", "Active+", "1", "B", "headoffice@activeplus.co.nz   [cover to Dr Pauline Penny]", [#text(weight: "bold")[Dr Pauline Penny — Head of Service Delivery, Multidisciplinary Community Rehab]], "THE ANCHOR: 17/17 regions, 1,400+ clinicians, self-described 25% of all ACC concussion programmes. Angle = one measured standard across every region + documented competency at scale. Long procurement cycle — run in parallel, never wait on it.")
+#org("8", "Laura Fergusson Brain Injury Trust", "2", "B", "hello@lfbit.co.nz   [cover to Pat Hopkins]", [#text(weight: "bold")[Pat Hopkins — Clinical Manager, Community Rehab] · Kathryn Jones — CEO], "220+ employees; a dedicated brain-injury CHARITY — the highest mission-alignment on the list. Warm the tone; the most detailed ACC concussion presentation of any supplier (ACC883 + ACC7412 pathways published).")
+#org("9", "Align Health", "2", "B", "contracts@alignhealth.co.nz   [the only contracts@ on the list — lowest-friction door]", [Olivia Monaghan Johnson — Director (per Companies Office; site names nobody)], "8 sites, ~30 physios, Waikato. Explicit 'fully funded ACC pathway' page. The contracts@ address means the pitch lands on a desk that thinks in contract terms — lead with Cl. 5.8.2.1.2.")
+#org("10", "Body In Motion Physio & Rehab", "2", "B", "admin@bodyinmotion.co.nz   [cover to the Concussion Service lead]", [Leadership unpublished — cover-line to role, not name], "~11 sites across BoP/Taranaki/Waikato; quotes the contract language verbatim on its own concussion page. Physio-led and contract-literate.")
+
+#v(8pt)
+// ── WAVE 3 ───────────────────────────────────────────────────────────────
+#text(size: 13pt, weight: "bold")[WAVE 3 — next week (apply wave-1 learnings first)]
+#v(5pt)
+#org("11", "Tui Allied Health", "3", "A", "referrals@tuialliedhealth.co.nz   [inbox]", [Leadership unpublished — Companies Office lookup pending], "8 staff, Hamilton, newly contracted in the 2025 round, no concussion content. Strong DESIGN-PARTNER profile — offer the pilot explicitly.")
+#org("12", "Focus on Potential", "2", "C", "performance@focusonpotential.com   [cover to Cassandra Hopkins]", [#text(weight: "bold")[Cassandra Hopkins — Founder & Director]], "200+ clinicians (part of Access Community Health) — Tier 1 by size. Lists a concussion service, never says ACC.")
+#org("13", "Rehab Taranaki", "3", "C", "admin@rehabtaranaki.co.nz   [cover to the Concussion/Neuro Physiotherapist]", [No owner named — one staffer titled Concussion/Neuro Physiotherapist], "Self-identifies as 'the leading provider of concussion services in Taranaki' — the warmest Tier 3 lead. Differentiation frame: their local rival is #14.")
+#org("14", "Assessment Providers Taranaki", "3", "C", "admin@aptrehab.co.nz   [cover to the directors]", [#text(weight: "bold")[Dianne Mains & Helen Poppelwell — Directors since 2000] (Companies Office ✓)], "Two owner-directors, est. 2000, competing with Rehab Taranaki in the same small market — the Cl. 13.4 visibility argument lands hardest where two rivals share one region.")
+#org("15", "Astech SRS", "2", "C", "mail@astechnz.com   [cover to Lynda Strathdee]", [#text(weight: "bold")[Lynda Strathdee — Founder] (Lorraine Grundy — advisory)], "Team of 23, Christchurch. Concussion mentioned only inside general TBI copy.")
+#org("16", "APM Workcare", "1", "B", "nzreferrals@apmworkcare.co.nz   [cover to Emma Davidson]", [#text(weight: "bold")[Emma Davidson — Head of Clinical Excellence]], "Global parent, 15 regions, explicit ACC concussion service. Clinical-excellence title = the right desk for the measured-outcome argument.")
+#org("17", "Habit Health", "1", "B", "via habit.health contact form   [to Mark Shirley — no email published]", [#text(weight: "bold")[Mark Shirley — Chief Innovation Officer] · Lauren Kilkolly — GM Regional Performance], "Largest by footprint: 125 locations, 2,500+ clinicians. New-capability pitch to the innovation desk; Kilkolly owns the performance metrics if Shirley doesn't bite.")
+#org("18", "Advantage South", "2", "C", "referrals@advantagesouth.co.nz   [inbox]", [No leadership named — Companies Office lookup pending], "Dunedin/Timaru/Cromwell/Invercargill — covers Queenstown-Lakes; the Cromwell site is ~45 min from Queenstown. Relevant to the design-partner geography.")
+#org("19", "Motus Health", "2", "C", "merivale@motushealth.co.nz  or  sportshub@motushealth.co.nz   [cover]", [Unverified — site blocks automation (403)], "A dedicated concussion-services URL exists; per-clinic addresses recovered. The sportshub@ address suggests the right clinical culture.")
+#org("20", "Coastal Rehab Services", "2", "A", "admin@coastalrehabservices.co.nz   [inbox]", [⚠ Names surfaced in search are UNCONFIRMED — do not use any name], "Directory-described concussion/mTBI rehab across BoP; own site unverifiable (TLS broken). Role-addressed cover only.")
+
+#v(8pt)
+// ── HELD ─────────────────────────────────────────────────────────────────
+#text(size: 13pt, weight: "bold")[HELD — deliberate handling]
+#v(5pt)
+#org("21", "ABI Rehabilitation + Proactive Rehab — ONE GROUP", "1", "B", "enquiry@abi-rehab.co.nz  ·  enquiries@proactivehealthcare.co.nz", [Dr Christine Howard-Brown — CE (covers BOTH) · Michelle Wilkinson — GM (BOTH) · Dr Hamish Reid — Medical Director], "Shared executives — a pitch to one is visible to the other. ONE deliberate approach after wave-1 learnings; never two independent emails.")
+#org("22", "TBI Health Group", "1", "—", "tbireferrals@tbihealth.co.nz   [HOLD]", [Unverified — site blocks all automated checks], "Likely the most clinically sophisticated Tier 1 and the hardest to impress. Founder does a manual browser pass on leadership before any send.")
+#org("23", "Specialist Rehab Services", "2", "—", "referrals@srsltd.co.nz   [HOLD]", [Snippet-named founders are LOW-CONFIDENCE — do not use], "Widest Tier 2 footprint (5 regions). Site returns corrupted content; manual check first.")
+#org("24", "Canterbury DHB (legacy entity)", "—", "—", "braininjuryrehab@cdhb.health.nz   [DEPRIORITISED]", [Entity folded into Te Whatu Ora — contracting arrangement unverified], "Public-sector procurement, no training budget, uncertain entity. A credibility reference later, not outreach now.")
