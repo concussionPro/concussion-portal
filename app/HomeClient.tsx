@@ -155,7 +155,7 @@ export default function HomeClient() {
                     {s.endorseHref && !s.endorsePending && (
                       <a href={s.endorseHref} target="_blank" rel="noopener noreferrer"
                         className="mt-3 flex h-[96px] w-full items-center justify-center gap-3.5 rounded-2xl border border-[rgba(13,115,119,0.14)] bg-white px-4 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all">
-                        <Image src={s.endorseImg} alt={`${s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'} ${s.endorseOrg}`} width={268} height={100} className={`${s.endorseImg === '/essa-accredited-pd.png' ? 'h-10' : 'h-[68px]'} w-auto flex-none`} />
+                        <Image src={s.endorseImg} alt={`${s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'} ${s.endorseOrg}`} width={268} height={100} className={`${s.endorseImg === '/essa-accredited-pd.png' ? 'h-10' : 'h-16'} w-auto flex-none`} />
                         <span className="min-w-0 text-[13px] leading-snug text-[var(--muted-foreground)]">
                           {s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'}
                           <span className="block text-[15px] font-bold text-[var(--foreground)]">
