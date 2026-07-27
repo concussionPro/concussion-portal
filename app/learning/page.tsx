@@ -122,7 +122,10 @@ function LearningSuiteInner() {
       // the card for the course they had just bought.
       accessible: ownsCrm,
       href: ownsCrm ? '/ep-course' : '/concussion-rehab-mastery',
-      price: null,
+      // Same sticker as CCM — crmPriceCents('online') IS PRICE_ONLINE (owner:
+      // "everything identical except the content"). The card previously showed
+      // a price-less "Explore", underselling a buyable course.
+      price: CONFIG.COURSE.PRICE_ONLINE,
     },
     {
       key: 'scat',
