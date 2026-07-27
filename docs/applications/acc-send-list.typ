@@ -69,11 +69,11 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
   #v(4pt)
   Hi \[Name\],
   #v(3pt)
-  Concussion rehab now lives or dies on sub-symptom aerobic exercise — but it happens at home, at intensities nobody measured, and come reporting time you're proving outcomes to ACC from notes.
+  Prescribed sub-symptom aerobic exercise cuts median concussion recovery from 17 days to 13 (Leddy 2019, #emph[JAMA Pediatrics]) — but that rehab happens at home, at intensities nobody measured, and come reporting time you're proving outcomes to ACC from notes.
   #v(3pt)
   That bugged me enough in my own caseload that I built the fix: a guided test measures each patient's heart-rate threshold, their own watch verifies every home session, and the ACC884 compiles itself as care happens.
   #v(3pt)
-  Behind it sits the only Australian concussion training endorsed by Osteopathy Australia and accredited by ESSA — so your physios and OTs run it properly, not just own it. (It's the method that cut median recovery from 17 to 13 days — Leddy, #emph[JAMA Pediatrics].)
+  Behind it sits the only Australian concussion training endorsed by Osteopathy Australia and accredited by ESSA — so your physios and OTs run it properly, not just own it.
   #v(3pt)
   If a trained team and standardised, self-writing ACC884s across your service is worth 20 minutes, I'll walk you through the whole workflow — or just reply "show me" and I'll send the live demo first.
   #v(3pt)
