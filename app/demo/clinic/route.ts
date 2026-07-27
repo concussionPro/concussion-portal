@@ -7,14 +7,14 @@
  * live hub one click away.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { DEMO_KEY } from '@/lib/demo-key'
+import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   const dest = new URL('/clinical-testing', request.url)
   const res = NextResponse.redirect(dest)
-  res.cookies.set('demo_key', DEMO_KEY, {
+  res.cookies.set('clinic_demo', CLINIC_DEMO_KEY, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',

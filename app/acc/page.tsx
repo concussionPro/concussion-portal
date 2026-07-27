@@ -166,21 +166,32 @@ export default function AccSupplierPage() {
               One package — sold together, because neither works alone
             </p>
             <p className="m-0 mt-1 text-[clamp(18px,2.2vw,24px)] font-extrabold leading-[1.15] tracking-[-0.02em]">
-              The instrument that delivers and evidences the service, and the accredited
-              training that makes your team compliant to run it.
+              Two instruments — one that engages athletes before the injury, one that delivers
+              and evidences the funded episode — plus the accredited training that makes your
+              team compliant to run them. Documentation automated, filed into Gensolve.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-3">
             <div className="border-t border-slate-200 p-6 md:border-r">
-              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The delivery + evidence layer</p>
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Instrument 1 — the funded episode</p>
               <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">SST Trainer</p>
               <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
                 Measured threshold, verified home sessions, the ACC884 compiling as care happens —
                 the obliged exercise-tolerance assessment (Cl.&nbsp;5.8.2.1.2), self-documenting.
               </p>
             </div>
+            <div className="border-t border-slate-200 p-6 md:border-r">
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Instrument 2 — the front door</p>
+              <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">Baseline testing</p>
+              <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
+                One link engages a whole club — athletes self-complete in ~5 minutes, no
+                appointment, baseline on file. Engaged athletes present <em>early</em> — and
+                &ldquo;entered Stage&nbsp;1 within two weeks of injury&rdquo; is a measure
+                you&rsquo;re scored on.
+              </p>
+            </div>
             <div className="border-t border-slate-200 p-6">
-              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The compliance layer</p>
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The competency layer</p>
               <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">Accredited team training</p>
               <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
                 For the physios and OTs your contract already mandates — OA-endorsed,
@@ -190,9 +201,10 @@ export default function AccSupplierPage() {
             </div>
           </div>
           <p className="m-0 border-t border-slate-200 bg-slate-50 px-6 py-3 text-[12.5px] leading-[1.5] text-slate-500">
-            The licence without competency produces reports a clinician can&rsquo;t defend.
-            Competency without the instrument produces trained clinicians who still can&rsquo;t see
-            the treatment. That&rsquo;s why it&rsquo;s one package.
+            The instruments without competency produce reports a clinician can&rsquo;t defend;
+            competency without the instruments produces trained clinicians who still can&rsquo;t
+            see the treatment; and both run on one clinic code, filing into the PMS you already
+            use. That&rsquo;s why it&rsquo;s one package.
           </p>
         </div>
       </section>

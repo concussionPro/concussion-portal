@@ -21,3 +21,13 @@
  */
 export const DEMO_KEY =
   process.env.HEIDI_DEMO_KEY || 'cea-rev-9f3a7c2e8b1d40566a9e7f2c1b8d3e6a'
+
+/**
+ * CLINIC-WORKSPACE demo key — /demo/clinic (ACC/partner pitch tours).
+ * DELIBERATELY a different token from DEMO_KEY: the reviewer key opens the
+ * private course copies (EP/AI/RTP), which a supplier prospect must NEVER
+ * see. This key opens the Clinical Testing workspace in demo mode and
+ * NOTHING else. Rotate via CLINIC_DEMO_KEY env.
+ */
+export const CLINIC_DEMO_KEY =
+  process.env.CLINIC_DEMO_KEY || 'cea-clinic-4d8b2f1a9c3e60577b0f8d3c2a9e4f7b'

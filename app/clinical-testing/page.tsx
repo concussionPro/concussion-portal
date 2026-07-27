@@ -8,6 +8,7 @@ import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { SstClinicCard } from '@/components/clinical/SstClinicCard'
 import { ClinicProfileCard } from '@/components/clinical/ClinicProfileCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
+import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 import { Lock, ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
@@ -203,7 +204,7 @@ function Shell() {
               body="One link covers a whole club: athletes self-complete the SCAT6 baseline in ~5 minutes, a PDF report reaches your inbox per athlete, and the record is on file for the day you need it."
               cta="Open Baseline Testing"
               href="/clinical-testing/baseline"
-              visual={<BaselineLaptopVisual />}
+              visual={<BaselineLaptopAnimation />}
               variant="light"
             />
           </div>
