@@ -448,7 +448,7 @@ export default function AccSupplierPage() {
                 {[
                   ['1', 'Tour the workspace and open the sample ACC884 — no login, on this page.'],
                   ['2', 'A 30-minute scoping call: your caseload, your team, and the funding question — supplier margin or within the funded service.'],
-                  ['3', 'Pilot: one clinician, a few real episodes end to end. Free for the first two organisations.'],
+                  ['3', 'Full onboarding: your team trained and certificated, both instruments live on your clinic code, Gensolve connected — delivering funded episodes from week one.'],
                 ].map(([n, t]) => (
                   <li key={n} className="flex gap-2.5 text-[13px] leading-[1.5] text-slate-700">
                     <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: ACCENT }}>{n}</span>

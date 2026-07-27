@@ -254,8 +254,8 @@ function Shell() {
                 </div>
                 <div className="flex flex-col items-start justify-center gap-2.5 p-5 bg-teal-50/60">
                   <p className="m-0 text-[13px] font-bold leading-snug text-slate-900">
-                    Next: a 30-minute scoping call, then a pilot — one clinician, a few real episodes.
-                    Free for the first two organisations.
+                    Next: a 30-minute scoping call, then full onboarding — team trained and certificated,
+                    instruments live on your clinic code, Gensolve connected.
                   </p>
                   <TrackedOutbound
                     href="https://cal.com/zac-lewis-so8zjs/30min"
