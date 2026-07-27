@@ -124,17 +124,28 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
   const hi = max + 8
   const span = Math.max(1, hi - lo)
 
-  const W = 280
-  const H = 96
-  const padX = 10
-  const innerW = W - padX * 2
+  // Chart geometry — a labelled instrument, not floating dots: value labels
+  // above each point, dates on the x-axis, bpm gridlines, soft area fill.
+  const W = 560
+  const H = 150
+  const padL = 34
+  const padR = 16
+  const padT = 22
+  const padB = 26
+  const innerW = W - padL - padR
+  const innerH = H - padT - padB
   const xy = (p: TrajectoryPoint, i: number) => {
-    const x = plottable.length === 1 ? W / 2 : padX + (i / (plottable.length - 1)) * innerW
-    const y = H - 8 - ((p.hrt as number) - lo) / span * (H - 24)
+    const x = plottable.length === 1 ? W / 2 : padL + (i / (plottable.length - 1)) * innerW
+    const y = padT + (1 - ((p.hrt as number) - lo) / span) * innerH
     return { x, y }
   }
   const pts = plottable.map((p, i) => ({ ...xy(p, i), p }))
   const path = pts.map((q, i) => `${i === 0 ? 'M' : 'L'} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' ')
+  const areaPath = pts.length > 1
+    ? `${path} L ${pts[pts.length - 1].x.toFixed(1)} ${(H - padB).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(H - padB).toFixed(1)} Z`
+    : ''
+  const gridVals = [lo + 4, (lo + hi) / 2, hi - 4].map((v) => Math.round(v))
+  const gy = (v: number) => padT + (1 - (v - lo) / span) * innerH
   const latest = plottable[plottable.length - 1]
   const first = plottable[0]
   const delta = latest && first ? (latest.hrt as number) - (first.hrt as number) : null
@@ -172,53 +183,46 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
         </p>
       ) : (
         <>
-          <div className="flex items-end gap-3">
-            <svg viewBox={`0 0 ${W} ${H}`} className="flex-1 w-full overflow-visible" role="img" aria-label="Measured HRt trajectory">
-              {/* connecting trend line */}
-              {pts.length > 1 && <path d={path} fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />}
-              {/* points coloured by source tier (SPEC 1) */}
-              {pts.map((q, i) => {
-                const t = tier(q.p.source)
-                return (
-                  <g key={i}>
-                    <circle cx={q.x} cy={q.y} r={4.5} className={t.accurate ? 'fill-emerald-500' : 'fill-amber-500'} stroke="white" strokeWidth={1.5} />
-                    {!t.accurate && <circle cx={q.x} cy={q.y} r={7.5} className="fill-none stroke-amber-400" strokeWidth={1} strokeDasharray="2 2" />}
-                  </g>
-                )
-              })}
-            </svg>
-            <div className="flex flex-col items-end flex-shrink-0">
-              <span className="text-2xl font-bold tabular-nums text-foreground leading-none">{latest?.hrt}<span className="text-xs font-medium text-muted-foreground"> bpm</span></span>
-              <span className="text-[10px] text-muted-foreground">latest HRt</span>
-              {delta != null && delta !== 0 && (
-                <span className={`text-[11px] font-semibold mt-1 ${delta > 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                  {delta > 0 ? '+' : ''}{delta} bpm since first
-                </span>
-              )}
-            </div>
+          {/* Latest stat — in-flow, not floating in dead space */}
+          <div className="flex items-baseline justify-end gap-2 mb-1">
+            <span className="text-xl font-bold tabular-nums text-foreground leading-none">{latest?.hrt}<span className="text-[11px] font-medium text-muted-foreground"> bpm latest</span></span>
+            {delta != null && delta !== 0 && (
+              <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${delta > 0 ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'}`}>
+                {delta > 0 ? '+' : ''}{delta} since first
+              </span>
+            )}
           </div>
-
-          {/* per-point provenance ledger (SPEC 1) */}
-          <div className="mt-4 space-y-1">
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full overflow-visible" role="img" aria-label="Measured HRt trajectory">
+            {/* bpm gridlines */}
+            {gridVals.map((v) => (
+              <g key={v}>
+                <line x1={padL} x2={W - padR} y1={gy(v)} y2={gy(v)} stroke="#e2e8f0" strokeWidth={1} strokeDasharray="3 4" />
+                <text x={padL - 6} y={gy(v) + 3} textAnchor="end" fontSize={8.5} fill="#94a3b8">{v}</text>
+              </g>
+            ))}
+            {/* soft area under the trend */}
+            {areaPath && <path d={areaPath} fill="var(--accent)" opacity={0.06} />}
+            {/* trend line */}
+            {pts.length > 1 && <path d={path} fill="none" stroke="var(--accent)" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" opacity={0.75} />}
+            {/* points: value above, date below, latest emphasised */}
             {pts.map((q, i) => {
-              const t = tier(q.p.source)
-              const pct = q.p.verifiedReadingPct
+              const isLast = i === pts.length - 1
               return (
-                <div key={i} className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[11px]">
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${t.dot}`} />
-                  <span className="text-muted-foreground w-12 flex-shrink-0">{fmtDate(q.p.date)}</span>
-                  <span className="font-mono font-semibold text-foreground w-14 flex-shrink-0">{q.p.hrt} bpm</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${t.cls}`}>{t.label}</span>
-                  {q.p.modality && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600 capitalize">{q.p.modality}</span>
-                  )}
-                  {pct != null && Number.isFinite(pct) && (
-                    <span className="text-[10px] text-muted-foreground">{Math.round(pct)}% live-verified</span>
-                  )}
-                  {!t.accurate && <span className="text-[10px] text-amber-600">lower accuracy — exercise PPG error</span>}
-                </div>
+                <g key={i}>
+                  {isLast && <circle cx={q.x} cy={q.y} r={8} fill="none" stroke="var(--accent)" strokeWidth={1.25} opacity={0.45} />}
+                  <circle cx={q.x} cy={q.y} r={4.5} fill="var(--accent)" stroke="white" strokeWidth={1.5} />
+                  <text x={q.x} y={q.y - 10} textAnchor="middle" fontSize={isLast ? 12 : 10.5} fontWeight={700} fill="#0f172a">{q.p.hrt}</text>
+                  <text x={q.x} y={H - 8} textAnchor="middle" fontSize={9} fill="#94a3b8">{fmtDate(q.p.date)}</text>
+                </g>
               )
             })}
+          </svg>
+
+          {/* provenance summary — one line; the per-point detail now lives ON
+              the chart, so a row-per-point ledger would just repeat it */}
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            {plottable.length} graded test{plottable.length === 1 ? '' : 's'} plotted — all paired-sensor, clinician-gated
           </div>
         </>
       )}

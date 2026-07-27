@@ -174,20 +174,17 @@ export default function AccSupplierPage() {
               <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The delivery + evidence layer</p>
               <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">SST Trainer</p>
               <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
-                Measures each client&rsquo;s threshold by guided graded test, verifies every home
-                session on the client&rsquo;s own wearable, and compiles the ACC884 as care is
-                delivered. The obliged exercise-tolerance assessment (Cl.&nbsp;5.8.2.1.2), measured
-                and self-documenting.
+                Measured threshold, verified home sessions, the ACC884 compiling as care happens —
+                the obliged exercise-tolerance assessment (Cl.&nbsp;5.8.2.1.2), self-documenting.
               </p>
             </div>
             <div className="border-t border-slate-200 p-6">
               <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The compliance layer</p>
               <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">Accredited team training</p>
               <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
-                Written for the physios and OTs your contract already mandates — endorsed by
-                Osteopathy Australia, with an ESSA-accredited rehab stream. Certificated per
-                clinician, dated and named: the documented competency Cl.&nbsp;15.2 quality systems
-                must evidence, and ACC may request.
+                For the physios and OTs your contract already mandates — OA-endorsed,
+                ESSA-accredited, certificated per clinician: the documented competency
+                Cl.&nbsp;15.2 requires.
               </p>
             </div>
           </div>
@@ -268,32 +265,6 @@ export default function AccSupplierPage() {
         <CompetencyGapEvidence heading="Why documented team competency is part of the deliverable" />
       </section>
 
-      {/* ── WHAT ACC MEASURES — table ──────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
-        <h2 className="mb-4 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
-          Scored from ACC&rsquo;s data, not your write-ups
-        </h2>
-        <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
-          <div className="grid grid-cols-[1fr] sm:grid-cols-[minmax(130px,0.7fr)_1fr_1.2fr]">
-            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 sm:block">Measure</div>
-            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 sm:block">How ACC scores it</div>
-            <div className="hidden bg-slate-50 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] sm:block" style={{ color: ACCENT }}>What your record evidences</div>
-            {MEASURES_TBL.map((m) => (
-              <div key={m.measure} className="contents">
-                <div className="border-t border-slate-100 px-5 pb-1 pt-4 text-[13px] font-bold text-slate-900 sm:py-4">{m.measure}</div>
-                <div className="px-5 pb-1 text-[13.5px] leading-[1.5] text-slate-500 sm:border-t sm:border-slate-100 sm:py-4">{m.source}</div>
-                <div className="px-5 pb-4 text-[13.5px] font-medium leading-[1.5] text-slate-800 sm:border-t sm:border-slate-100 sm:py-4">{m.record}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="mt-3 text-[12.5px] leading-[1.5] text-slate-500">
-          Benchmarked at &ldquo;National Average or one deviation higher&rdquo;. No renewal is pending
-          — the term runs to 30 June 2027 — which is the point: the record written now is the record
-          the Cl.&nbsp;1.2.2 extension decision rests on.
-        </p>
-      </section>
-
       {/* ── THE CONTRACT — bento, not a text block ────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
         <h2 className="mb-1 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
@@ -371,72 +342,8 @@ export default function AccSupplierPage() {
         </p>
       </section>
 
-      {/* ── WHAT YOU GET — value first, product name second ────────────────── */}
+      {/* ── WORKFLOW + COMMERCIALS ─────────────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
-        <h2 className="mb-5 mt-0 text-[clamp(22px,2.6vw,30px)] font-extrabold leading-[1.1] tracking-[-0.02em]">
-          What you actually get
-        </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-white p-[26px]">
-            <p className="m-0 text-[20px] font-extrabold leading-[1.25] text-slate-900">
-              An ACC884 your clinician can defend, built from measured data
-            </p>
-            <p className="m-0 mt-2 text-[13.5px] leading-[1.5] text-slate-500">
-              Not a symptom score written up at exit — a physiological record captured as care was
-              delivered.
-            </p>
-            <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
-              {[
-                'Threshold measured by guided graded test — never age-estimated',
-                'Home sessions observed on the client’s own wearable',
-                'Only live-wearable sessions advance the prescription',
-                'Serial re-testing is the outcome measure',
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-[13.5px] leading-[1.5] text-slate-600">
-                  <span className="mt-[7px] h-[5px] w-[5px] flex-none rounded-full" style={{ background: ACCENT }} />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <p className="m-0 mt-auto pt-4 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
-              SST Trainer · licensed per clinician
-            </p>
-          </div>
-
-          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-white p-[26px]">
-            <p className="m-0 text-[20px] font-extrabold leading-[1.25] text-slate-900">
-              Team competency you can put in the contract file
-            </p>
-            <p className="m-0 mt-2 text-[13.5px] leading-[1.5] text-slate-500">
-              Cl.&nbsp;15.2 requires quality systems that monitor competency and training needs, and
-              ACC may request verification — including &ldquo;documentation of any additional
-              certifications or specialised training completed&rdquo;. This produces exactly that
-              record.
-            </p>
-            <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
-              {[
-                'Written for the physiotherapists and OTs already on your team',
-                'Graded exertion testing, threshold derivation, prescription, progression',
-                'Certificated per clinician — dated and named',
-                'Endorsed by Osteopathy Australia · ESSA-accredited rehab stream',
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-[13.5px] leading-[1.5] text-slate-600">
-                  <span className="mt-[7px] h-[5px] w-[5px] flex-none rounded-full" style={{ background: ACCENT }} />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <p className="m-0 mt-auto pt-4 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
-              Concussion Clinical Mastery · per-seat
-            </p>
-          </div>
-        </div>
-        <p className="mt-4 max-w-[820px] text-[13px] leading-[1.55] text-slate-500">
-          <strong className="text-slate-700">Sold together.</strong> The licence without competency
-          produces reports a clinician can&rsquo;t defend; competency without the instrument produces
-          trained clinicians who still can&rsquo;t see the treatment.
-        </p>
-
         {/* WORKFLOW — how it wires into what they already run. Gensolve covers
             90%+ of NZ allied health (gensolve.com/nz — 1,000+ practices, native
             ACC billing), so "not another PMS" is the wiring story, not a
@@ -458,8 +365,8 @@ export default function AccSupplierPage() {
               Reports land in the patient record
             </p>
             <p className="m-0 mt-1.5 text-[13px] leading-[1.5] text-slate-600">
-              The ACC884 content and clinical reports render as documents your team drops straight
-              into Gensolve — or whichever PMS you run. Nothing to migrate, nobody re-keys data.
+              ACC884 content and clinical reports render as documents for Gensolve — or whichever
+              PMS you run. Nothing migrates, nobody re-keys.
             </p>
           </div>
           <div className="rounded-[18px] border border-slate-200 bg-white p-5">
@@ -468,8 +375,8 @@ export default function AccSupplierPage() {
               Direct Gensolve write-back
             </p>
             <p className="m-0 mt-1.5 text-[13px] leading-[1.5] text-slate-600">
-              The adapter that files the report into the patient&rsquo;s Gensolve record is built;
-              validating it against a live tenant is part of the first partner engagement.
+              The adapter that files reports into the patient&rsquo;s Gensolve record is built —
+              validated with the first partner tenant.
             </p>
           </div>
           <div className="rounded-[18px] border border-slate-200 bg-white p-5">
@@ -478,8 +385,8 @@ export default function AccSupplierPage() {
               Patients need no clinic hardware
             </p>
             <p className="m-0 mt-1.5 text-[13px] leading-[1.5] text-slate-600">
-              Home sessions run on the patient&rsquo;s own watch or strap; the clinician view is a
-              browser. No devices to buy, manage or clean.
+              Home sessions run on the patient&rsquo;s own watch; the clinician view is a browser.
+              Nothing to buy or manage.
             </p>
           </div>
         </div>
