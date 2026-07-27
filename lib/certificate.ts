@@ -109,10 +109,16 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   if (isOaEndorsed) {
     doc.text('Endorsed by Osteopathy Australia', centerX, y, { align: 'center' })
   }
-  // CRM is ESSA-accredited (approved 24 July 2026, 8 CPD points online). The
-  // line prints ONLY on the CRM certificate — same false-claim rule as OA above.
+  // CRM is ESSA-accredited (letter 27 Jul 2026): PDNF26077 (Online), 8 CPD
+  // points, valid to 24 Jul 2027. The line prints ONLY on the CRM certificate —
+  // same false-claim rule as OA above. The mandated ESSA statement (with the
+  // accreditation number) prints as a second line, per the letter's terms.
   if (data.courseType === 'crm-online') {
-    doc.text('Accredited by Exercise & Sports Science Australia (ESSA)', centerX, y, { align: 'center' })
+    doc.text('Accredited by Exercise & Sports Science Australia (ESSA) — Accreditation No. PDNF26077 (Online)', centerX, y, { align: 'center' })
+    y += 4
+    doc.setFontSize(7)
+    doc.text('The ESSA Professional Development Committee certifies that this Professional Development offering meets the criteria for 8 Continuing Professional Development (CPD) Points.', centerX, y, { align: 'center' })
+    doc.setFontSize(8)
   }
 
   // ── Certificate Title ──────────────────────────────────

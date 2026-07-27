@@ -121,3 +121,32 @@ describe('EP dashboard delivers the certificate', () => {
     expect(dash).toMatch(/accessLevel === 'preview' && !data\.user\.ownsCrm/)
   })
 })
+
+describe('ESSA accreditation terms (letter of 27 Jul 2026)', () => {
+  it('config carries the formal terms as the single source', async () => {
+    const { CONFIG } = await import('@/lib/config')
+    expect(CONFIG.ESSA_ACCREDITATION.NUMBER).toBe('PDNF26077')
+    expect(CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS).toBe(8)
+    expect(CONFIG.ESSA_ACCREDITATION.PRACTICAL_POINTS).toBe(8)
+    expect(CONFIG.ESSA_ACCREDITATION.VALID_UNTIL).toBe('2027-07-24')
+    // ESSA's mandated wording, verbatim with the points substituted.
+    expect(CONFIG.ESSA_ACCREDITATION.statement(8)).toBe(
+      'The ESSA Professional Development Committee certifies that this Professional Development offering meets the criteria for 8 Continuing Professional Development (CPD) Points.',
+    )
+  })
+
+  it('the CRM certificate prints the accreditation number and mandated statement', () => {
+    const src = read('lib/certificate.ts')
+    expect(src).toContain('Accreditation No. PDNF26077 (Online)')
+    expect(src).toContain('meets the criteria for 8 Continuing Professional Development (CPD) Points')
+  })
+
+  it('accreditation is not yet expired (re-accredit before 24 Jul 2027)', async () => {
+    const { CONFIG } = await import('@/lib/config')
+    if (CONFIG.FEATURES.ESSA_ACCREDITED) {
+      // This test starts failing near expiry by DESIGN — it is the renewal alarm.
+      const daysLeft = (new Date(CONFIG.ESSA_ACCREDITATION.VALID_UNTIL).getTime() - Date.now()) / 86_400_000
+      expect(daysLeft, 'ESSA accreditation expires within 60 days — start re-accreditation NOW or flip ESSA_ACCREDITED off').toBeGreaterThan(60)
+    }
+  })
+})

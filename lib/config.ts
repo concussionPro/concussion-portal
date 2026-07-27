@@ -180,6 +180,26 @@ export const CONFIG = {
     DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules (8 CPD hours) + optional practical day (up to 14 CPD hours). Endorsed by Osteopathy Australia.',
   },
 
+  // ESSA accreditation — FORMAL TERMS from the accreditation letter
+  // (27 Jul 2026, Steve Irwin, PD Coordinator). Single source for the number,
+  // validity and the MANDATED statement wording. Rules from the letter:
+  //  - unlimited deliveries during the period, provided the PDO changes <20%
+  //    (formatting, reference updates and minor corrections are fine);
+  //  - presenter change requires CV + letter to the PD Committee;
+  //  - ESSA may revoke if delivery differs from the application;
+  //  - EXPIRES 24 Jul 2027 — re-accredit BEFORE then or every ESSA claim
+  //    portal-wide goes false (flip ESSA_ACCREDITED off if lapsed).
+  ESSA_ACCREDITATION: {
+    NUMBER: 'PDNF26077',
+    ONLINE_POINTS: 8,
+    PRACTICAL_POINTS: 8,
+    VALID_UNTIL: '2027-07-24',
+    /** ESSA's mandated statement — use verbatim with the points filled in. */
+    statement(points: number): string {
+      return `The ESSA Professional Development Committee certifies that this Professional Development offering meets the criteria for ${points} Continuing Professional Development (CPD) Points.`
+    },
+  },
+
   // SST Trainer iOS app — the ONLY canonical store link. Renders nowhere until
   // FEATURES.SST_IOS_APP_LIVE flips true on Apple approval.
   SST_APP_STORE_URL: 'https://apps.apple.com/au/app/id6792171738',
@@ -202,8 +222,10 @@ export const CONFIG = {
     // pending" and NEVER "accredited"; when true → "ESSA-accredited · 8 ESSA
     // CPD points". Flip to true ONLY on real approval. Bundled to the client
     // (not secret). This is the one switch that takes the EP stream live.
-    // GRANTED 2026-07-24 — ESSA accredited CRM (Concussion Rehab for EP's),
-    // 8 online + 8 F2F = 16 CPDs. Real ESSA badge in public/essa-endorsed.png.
+    // GRANTED 2026-07-24, letter received 2026-07-27 — ESSA accredited CRM
+    // (Concussion Rehab Mastery), 8 online + 8 practical = 16 CPDs. Real ESSA
+    // badge in public/essa-endorsed.png (ESSA rebranded — verify asset matches
+    // their new brand file). Formal terms in CONFIG.ESSA_ACCREDITATION below.
     ESSA_ACCREDITED: true,
     // International CRM live commerce: online-only, geo-priced checkout, the
     // bundled platform, and the year-2 renewal subscription.

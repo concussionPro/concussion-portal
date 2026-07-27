@@ -306,9 +306,16 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {accredited
-                ? '8 ESSA CPD points online · ESSA Code & NASRHP aligned · up to 16 CPD hours'
+                ? `8 ESSA CPD points online · 16 with the practical day · Accreditation No. ${CONFIG.ESSA_ACCREDITATION.NUMBER}`
                 : 'Accreditation pending · ESSA Code & NASRHP aligned · up to 16 CPD hours'}
             </p>
+            {accredited && (
+              // ESSA's MANDATED statement, verbatim per the accreditation
+              // letter — the wording is theirs, not ours to paraphrase.
+              <p className="text-[11px] text-muted-foreground/80 mt-1.5 italic leading-snug">
+                &ldquo;{CONFIG.ESSA_ACCREDITATION.statement(CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS)}&rdquo; (Online)
+              </p>
+            )}
           </div>
         </div>
         )}
