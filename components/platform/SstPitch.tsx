@@ -124,7 +124,7 @@ const CONFIG: Record<SstPitchVariant, VariantConfig> = {
       { icon: '✔', title: 'Outcomes reviewed across delivery', body: 'Every graded re-test is a review point; the report shows outcome measures were reviewed across the service, not reconstructed at discharge.' },
       { icon: '⤴', title: 'Reviewed between visits, on your dashboard', body: 'Home sessions stream to the clinician via a service code, so the review is continuous and visible — not reconstructed at discharge.' },
     ],
-    proof: ['Designed to ESSA standards', 'ACC884 content compiled from delivery data, ready to transcribe', 'Send to a clinical or service lead — this is a workflow, not a referral'],
+    proof: ['Team training ESSA-accredited (No. PDNF26077)', 'ACC884 content compiled from delivery data, ready to transcribe', 'Send to a clinical or service lead — this is a workflow, not a referral'],
     closingTitle: 'The functional measure your evaluation said was missing.',
     closingBody: 'Fifteen minutes with a clinical lead and I’ll walk the ACC884 Client Summary Report and the outcome-review evidence on a sample episode.',
   },

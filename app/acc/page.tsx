@@ -424,8 +424,9 @@ export default function AccSupplierPage() {
           nothing is submitted to ACC. Client data is stored in Australia (NZ/AU residency per
           Cl.&nbsp;14.1). Concussion Clinical Mastery is endorsed by Osteopathy Australia; that
           endorsement belongs to that course. The programmes are authored by a registered osteopath
-          — no exercise physiologist authored them. An ESSA endorsement of CEA&rsquo;s separate
-          exercise-physiology product is pending and not claimed. The director&rsquo;s mTBI
+          — no exercise physiologist authored them. CEA&rsquo;s exercise-physiology program
+          (Concussion Rehab Mastery) is accredited by Exercise &amp; Sports Science Australia
+          (Accreditation No. PDNF26077, valid to 24 July 2027). The director&rsquo;s mTBI
           manuscript is prepared for submission — not peer reviewed, unpublished. CEA holds no New
           Zealand accreditation.
         </p>
