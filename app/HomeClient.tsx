@@ -172,27 +172,27 @@ export default function HomeClient() {
                       // differs — OA endorses, ESSA accredits.
                       const accredits = s.endorseImg === '/essa-accredited-pd.png'
                       const verb = s.endorsePending ? 'Endorsement pending' : (accredits ? 'Accredited by' : 'Endorsed by')
+                      // SLIM single-line strip (2026-07-27, Zac: "too bulky").
+                      // The ESSA lockup is self-describing, so the logo runs
+                      // small and the text is one muted 12px line — no stacked
+                      // kicker, no 48px logo, no wrapping org name fighting the
+                      // external-link glyph.
                       const inner = (
                         <>
                           {!s.endorsePending && (
-                            <Image src={s.endorseImg} alt={`${verb} ${s.endorseOrg}`} width={268} height={100} className="h-[42px] sm:h-[48px] w-auto flex-none" />
+                            <Image src={s.endorseImg} alt={`${verb} ${s.endorseOrg}`} width={268} height={100} className={`${accredits ? 'h-6' : 'h-7'} w-auto flex-none`} />
                           )}
-                          <span className="min-w-0 text-left">
-                            <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-                              {verb}
-                            </span>
-                            <span className="flex items-center gap-1 text-[14.5px] font-bold text-[var(--foreground)] leading-tight">
-                              {s.endorseOrg}
-                              {s.endorseHref && !s.endorsePending && (
-                                <ExternalLink className="w-3.5 h-3.5 opacity-50 flex-none" strokeWidth={2.2} />
-                              )}
-                            </span>
+                          <span className="min-w-0 text-left text-[12px] font-semibold text-[var(--muted-foreground)] leading-snug">
+                            {verb}{' '}
+                            <span className="text-[var(--foreground)]">{s.endorseOrg}</span>
+                            {s.endorseHref && !s.endorsePending && (
+                              <ExternalLink className="inline-block w-3 h-3 ml-1 -mt-0.5 opacity-50" strokeWidth={2.2} />
+                            )}
                           </span>
                         </>
                       )
-                      // Prominent, bordered badge. Clickable when the body publishes a listing.
                       // Bottom row of the SAME card — border-t joins it to its tab.
-                      const cls = `flex items-center gap-3 border-t px-3.5 py-2.5 transition-colors ${s.endorsePending ? 'border-dashed border-[var(--border)] bg-white/60' : 'border-[var(--border)] bg-white'}`
+                      const cls = `flex items-center gap-2.5 border-t px-3.5 py-2 transition-colors ${s.endorsePending ? 'border-dashed border-[var(--border)] bg-white/60' : 'border-[var(--border)] bg-white'}`
                       return s.endorseHref && !s.endorsePending ? (
                         <a href={s.endorseHref} target="_blank" rel="noopener noreferrer" className={`${cls} hover:border-[var(--accent)] hover:bg-white cursor-pointer`}>
                           {inner}
@@ -208,7 +208,7 @@ export default function HomeClient() {
                     {showCrm && (
                       <span
                         aria-hidden="true"
-                        className={`mx-auto -mt-2 block h-4 w-4 rotate-45 rounded-[2px] transition-opacity ${active ? 'bg-[var(--accent)] opacity-100' : 'opacity-0'}`}
+                        className={`mx-auto -mt-[7px] block h-3 w-3 rotate-45 rounded-[1px] transition-opacity ${active ? 'bg-[var(--accent)] opacity-100' : 'opacity-0'}`}
                       />
                     )}
                   </div>
