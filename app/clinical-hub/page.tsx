@@ -969,18 +969,32 @@ export default function ClinicalHubPage() {
                   <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
                     Stage {p.stage.n} — {p.stage.label}
                   </span>
-                  {/* GP / referrer episode report — the API (gp-report) authorises via
-                      the same code+viewKey this hub link carries. Real synced patients
-                      only: fixture roster entries have no episode data behind them. */}
+                  {/* Episode reports — the SKINNED report API (/api/sst/report),
+                      which until 2026-07-27 had NO real-clinic UI consumer: a
+                      genuine NZ supplier could not produce the ACC884 the /acc
+                      pitch sells without hand-crafting a URL ("shell of a
+                      product" — owner). Authorises via the same code+viewKey
+                      this hub carries; the server validates each skin against
+                      its jurisdiction. Real synced patients only. */}
                   {clinicCode !== '' && viewKey && p.id.startsWith('real-') && (
-                    <a
-                      href={`/api/sst/gp-report?code=${encodeURIComponent(clinicCode)}&k=${encodeURIComponent(viewKey)}&patient=${encodeURIComponent(p.name)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
-                    >
-                      <FileText className="w-3.5 h-3.5" /> GP report <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
+                    <>
+                      {([
+                        ['gp-report', 'GP report'],
+                        ['rtp-clearance', 'RTP data'],
+                        ['medicolegal', 'Clinical record'],
+                        ['acc884', 'ACC884 (NZ)'],
+                      ] as const).map(([skin, label]) => (
+                        <a
+                          key={skin}
+                          href={`/api/sst/report?code=${encodeURIComponent(clinicCode)}&k=${encodeURIComponent(viewKey)}&patient=${encodeURIComponent(p.name)}&skin=${skin}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
+                        >
+                          <FileText className="w-3.5 h-3.5" /> {label} <ArrowUpRight className="w-3.5 h-3.5" />
+                        </a>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>

@@ -108,29 +108,91 @@ export default function AccSupplierPage() {
             which records the objective outcome as it goes. Your six-monthly becomes
             review-and-transcribe instead of reconstruct-from-notes.
           </p>
+          {/* Evidence chips — the email leads 17→13; the page must echo it
+              above the fold, not bury it in the legal footnote. */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            {[
+              '17 → 13 days median recovery (Leddy 2019)',
+              'Threshold measured, never estimated',
+              'ACC884 compiles as care happens',
+            ].map((c) => (
+              <span key={c} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-500">
+                <span className="h-[6px] w-[6px] rounded-full" style={{ background: ACCENT }} />
+                {c}
+              </span>
+            ))}
+          </div>
+          {/* Arrival context: they clicked from an email OFFERING the sample
+              ACC884 — the artifact is the primary CTA, the dashboard second,
+              booking one click away. Never "email me" as the first ask. */}
           <div className="flex flex-wrap gap-3">
-            <a
-              href={MAILTO}
+            <Link
+              href="/demo/acc"
               className="flex cursor-pointer items-center rounded-[13px] px-[22px] py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
               style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.7)' }}
             >
-              Start a conversation
-            </a>
+              See a sample ACC884
+            </Link>
             <Link
               href="/clinical-hub?clinic=DEMO00"
               className="flex items-center rounded-[13px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[15px] text-[15px] font-bold leading-none text-slate-900 transition-transform active:scale-[0.98]"
             >
-              See the caseload view
+              Explore the demo dashboard
             </Link>
           </div>
           <p className="m-0 text-[12.5px] font-medium text-slate-500">
-            Live demos, no sign-in. Every patient and episode shown is fabricated for illustration — a full example caseload from intake to discharge.
+            Live demos, no sign-in — every patient shown is fabricated. Ready to talk?{' '}
+            <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: ACCENT }}>
+              Book 20 minutes
+            </a>.
           </p>
         </div>
         <div className="flex min-w-0 flex-1 basis-[520px] justify-center">
           <SstTrainerDemo />
         </div>
       </header>
+
+      {/* ── THE PACKAGE — one offer, two halves, visually joined ──────────── */}
+      <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
+        <div className="overflow-hidden rounded-[20px] border-2" style={{ borderColor: ACCENT }}>
+          <div className="px-6 py-4" style={{ background: '#f0fdfa' }}>
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>
+              One package — sold together, because neither works alone
+            </p>
+            <p className="m-0 mt-1 text-[clamp(18px,2.2vw,24px)] font-extrabold leading-[1.15] tracking-[-0.02em]">
+              The instrument that delivers and evidences the service, and the accredited
+              training that makes your team compliant to run it.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="border-t border-slate-200 p-6 md:border-r">
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The delivery + evidence layer</p>
+              <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">SST Trainer</p>
+              <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
+                Measures each client&rsquo;s threshold by guided graded test, verifies every home
+                session on the client&rsquo;s own wearable, and compiles the ACC884 as care is
+                delivered. The obliged exercise-tolerance assessment (Cl.&nbsp;5.8.2.1.2), measured
+                and self-documenting.
+              </p>
+            </div>
+            <div className="border-t border-slate-200 p-6">
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The compliance layer</p>
+              <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">Accredited team training</p>
+              <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
+                Written for the physios and OTs your contract already mandates — endorsed by
+                Osteopathy Australia, with an ESSA-accredited rehab stream. Certificated per
+                clinician, dated and named: the documented competency Cl.&nbsp;15.2 quality systems
+                must evidence, and ACC may request.
+              </p>
+            </div>
+          </div>
+          <p className="m-0 border-t border-slate-200 bg-slate-50 px-6 py-3 text-[12.5px] leading-[1.5] text-slate-500">
+            The licence without competency produces reports a clinician can&rsquo;t defend.
+            Competency without the instrument produces trained clinicians who still can&rsquo;t see
+            the treatment. That&rsquo;s why it&rsquo;s one package.
+          </p>
+        </div>
+      </section>
 
       {/* ── THE SHIFT — before/after strip ─────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-14 md:px-8">
@@ -351,7 +413,7 @@ export default function AccSupplierPage() {
                 'Written for the physiotherapists and OTs already on your team',
                 'Graded exertion testing, threshold derivation, prescription, progression',
                 'Certificated per clinician — dated and named',
-                'Endorsed by Osteopathy Australia',
+                'Endorsed by Osteopathy Australia · ESSA-accredited rehab stream',
               ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-[13.5px] leading-[1.5] text-slate-600">
                   <span className="mt-[7px] h-[5px] w-[5px] flex-none rounded-full" style={{ background: ACCENT }} />
@@ -370,31 +432,48 @@ export default function AccSupplierPage() {
           trained clinicians who still can&rsquo;t see the treatment.
         </p>
 
-        {/* Pricing — deliberately NOT a % of their ACC revenue. We cannot
-            verify any supplier's concussion volume, so any percentage would be
-            invented precision. Priced instead on what comparable clinical
-            software costs per clinician, which is checkable and is the number a
-            practice manager already has a feel for. */}
-        <div className="mt-6 rounded-[18px] border border-slate-200 bg-white p-[26px]">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[32px] font-extrabold leading-none tracking-tight text-slate-900">
-              NZ$49
-            </span>
-            <span className="text-[14px] font-semibold text-slate-500">
-              per clinician, per month
-            </span>
+        {/* Pricing — deliberately NOT a % of their ACC revenue (unverifiable =
+            invented precision). The unit is the DELIVERING clinician at every
+            scale: a 2,500-clinician national supplier with 40 concussion-active
+            clinicians licenses 40, not 2,500. That single rule is what makes the
+            model make sense from a 7-person Nelson practice to Active+. */}
+        {/* Commercials — per-ORGANISATION annual packages. Procurement budgets
+            a fixed annual line, not a per-head variable (the pricing doc's own
+            reasoning); the unit underneath stays the owner-approved
+            per-DELIVERING-clinician rate, so a 2,500-headcount supplier with 40
+            concussion-active clinicians is priced on 40. */}
+        <h3 className="mb-1 mt-8 text-[clamp(18px,2vw,22px)] font-extrabold leading-[1.15] tracking-[-0.02em]">
+          Commercials — per organisation, per year
+        </h3>
+        <p className="mb-4 max-w-[680px] text-[13.5px] leading-[1.5] text-slate-600">
+          Licensed on the clinicians <strong>delivering the concussion service</strong>, never
+          organisational headcount. NZD, excl. GST, annual.
+        </p>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-white p-6">
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Practice</p>
+            <p className="m-0 mt-2 text-[26px] font-extrabold leading-none tracking-tight text-slate-900">from NZ$3,500<span className="text-[14px] font-semibold text-slate-500"> /yr</span></p>
+            <p className="m-0 mt-2 text-[13px] leading-[1.5] text-slate-600">Up to 8 delivering clinicians. Team trained and the service live inside a fortnight.</p>
+            <p className="m-0 mt-auto pt-3 text-[12px] text-slate-400">Licence + per-clinician certification</p>
           </div>
-          <p className="m-0 mt-3 max-w-[620px] text-[13.5px] leading-[1.55] text-slate-600">
-            Counted on the clinicians actually delivering the service, not your headcount — a team
-            of six is NZ$3,528 a year. It sits in the same range as the practice software your
-            clinicians already use, which is the comparison a practice manager will make.
-          </p>
-          <p className="m-0 mt-3 max-w-[620px] text-[13px] leading-[1.55] text-slate-500">
-            Competency training is a separate one-off per clinician — NZ$895, falling to $425 at
-            volume. The pilot is free for the first two organisations we work with: one clinician, a
-            few real episodes, end to end.
-          </p>
+          <div className="flex flex-col rounded-[18px] border-2 bg-white p-6" style={{ borderColor: ACCENT }}>
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>Service</p>
+            <p className="m-0 mt-2 text-[26px] font-extrabold leading-none tracking-tight text-slate-900">from NZ$11,000<span className="text-[14px] font-semibold text-slate-500"> /yr</span></p>
+            <p className="m-0 mt-2 text-[13px] leading-[1.5] text-slate-600">Multi-site services to ~25 delivering clinicians. Volume certification rate; rollout site-by-site, first clinic proving the workflow.</p>
+            <p className="m-0 mt-auto pt-3 text-[12px] text-slate-400">Licence + cohort certification</p>
+          </div>
+          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-slate-900 p-6">
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">National supplier</p>
+            <p className="m-0 mt-2 text-[26px] font-extrabold leading-none tracking-tight text-white">By agreement</p>
+            <p className="m-0 mt-2 text-[13px] leading-[1.5] text-slate-300">Delivering-team licensing across every region — 40 concussion-active clinicians in a 2,500-person organisation is 40 licences, not 2,500. Cohort training, one measured standard nationwide.</p>
+            <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener noreferrer" className="mt-auto pt-3 text-[13px] font-bold" style={{ color: '#5eead4' }}>Scope it in 20 minutes →</a>
+          </div>
         </div>
+        <p className="mt-3 max-w-[820px] text-[12.5px] leading-[1.55] text-slate-500">
+          Unit pricing beneath every package: NZ$49 per delivering clinician per month; certification
+          NZ$895 per clinician, falling to $425 at volume. The pilot is free for the first two
+          organisations — one clinician, a few real episodes, end to end.
+        </p>
       </section>
 
       {/* ── CLOSE ─────────────────────────────────────────────────────────── */}
@@ -410,13 +489,23 @@ export default function AccSupplierPage() {
               the natural pilot is one clinician and a few real episodes end to end.
             </p>
           </div>
-          <a
-            href={MAILTO}
-            className="cursor-pointer rounded-[13px] px-6 py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
-            style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
-          >
-            Email Zac
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="https://cal.com/zac-lewis-so8zjs/30min"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer rounded-[13px] px-6 py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
+              style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
+            >
+              Book 20 minutes
+            </a>
+            <a
+              href={MAILTO}
+              className="cursor-pointer rounded-[13px] border-[1.5px] border-slate-600 px-6 py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
+            >
+              Email Zac
+            </a>
+          </div>
         </div>
         <p className="mt-5 text-center text-[11.5px] leading-[1.6] text-slate-400">
           Clinician-directed: the tool presents measured data and paces a published protocol — no
