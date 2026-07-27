@@ -50,6 +50,7 @@ import {
   Sparkles,
   Send,
   Info,
+  GitBranch,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import type { PipelineStage, StageMatrix } from '@/lib/prospect/stage'
@@ -96,6 +97,8 @@ interface RetargetingData {
   summary: {
     totalVisitors: number; returningVisitors: number; returningRate: number
     pricingViewers: number; portalPricingViewers?: number; pricingToConversion: number; converters: number
+    /** Stream split — distinct sessions touching CCM vs CRM surfaces ('intl' = the mixed two-tab page). */
+    ccmSessions?: number; crmSessions?: number; intlSessions?: number
     /** Verified reference-book (Clinical Reference Text) purchases in the
      *  window — reported separately, never counted as course conversions. */
     bookPurchases?: number
@@ -1591,6 +1594,24 @@ export default function AnalyticsDashboard() {
         {/* ── Retargeting summary cards ──────────────────────────────────── */}
         {retargetingData && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Stream split — CCM vs CRM sessions (ESSA launch week ask):
+                which course's surfaces the period's traffic actually touched. */}
+            <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="icon-container w-9 h-9"><GitBranch size={16} className="text-[var(--accent)]" /></div>
+              </div>
+              <p className="stat-value">
+                {fmtNum(retargetingData.summary.ccmSessions ?? 0)}
+                <span className="text-[13px] font-semibold text-[var(--muted-foreground)]"> CCM</span>
+                <span className="mx-1.5 text-[13px] text-[var(--muted-foreground)]">·</span>
+                {fmtNum(retargetingData.summary.crmSessions ?? 0)}
+                <span className="text-[13px] font-semibold text-teal-600"> CRM</span>
+              </p>
+              <p className="stat-label mt-1">Stream Sessions</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                sessions touching each stream · {fmtNum(retargetingData.summary.intlSessions ?? 0)} on the intl two-tab page
+              </p>
+            </div>
             <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveGroup(groupForPanel('retargeting'))} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><Target size={16} className="text-[var(--accent)]" /></div>
@@ -2608,6 +2629,9 @@ export default function AnalyticsDashboard() {
             {/* ── Users / Emails ──────────────────────────────────────────── */}
             {shows('users') && (
               <div className="space-y-6">
+                {/* Signups by discipline — INFERRED (stream ownership + email
+                    keywords); real capture is a future signup-form field. */}
+                <DisciplineBreakdown />
                 {usersError && (
                   <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
                     <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -6026,6 +6050,44 @@ function SstOutreachTab() {
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Signups by discipline (INFERRED) ─────────────────────────────────────────
+// Stream ownership + email-keyword inference (see /api/admin/signup-disciplines
+// for the priority order). Labelled "inferred" in the UI because profession is
+// not yet captured at signup — never present these counts as declared data.
+function DisciplineBreakdown() {
+  const [rows, setRows] = useState<Array<{ discipline: string; total: number; paid: number; free: number }> | null>(null)
+  const [error, setError] = useState(false)
+  useEffect(() => {
+    let alive = true
+    void fetch('/api/admin/signup-disciplines', { credentials: 'include', cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => { if (alive && d.success) setRows(d.disciplines) })
+      .catch(() => { if (alive) setError(true) })
+    return () => { alive = false }
+  }, [])
+  if (error) return null
+  return (
+    <div>
+      <SectionTitle
+        title="Signups by Discipline (inferred)"
+        subtitle="Stream ownership + email keywords — profession isn't captured at signup yet, so treat as directional"
+      />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {(rows ?? []).map((r) => (
+          <div key={r.discipline} className="glass rounded-xl p-4">
+            <p className="text-xs font-bold text-[var(--foreground)] mb-1.5">{r.discipline}</p>
+            <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums leading-none">{r.total}</p>
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-1.5">{r.paid} paid · {r.free} free</p>
+          </div>
+        ))}
+        {rows === null && (
+          <div className="glass rounded-xl p-4 col-span-2 text-xs text-[var(--muted-foreground)]">Loading…</div>
+        )}
       </div>
     </div>
   )

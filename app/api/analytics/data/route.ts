@@ -650,6 +650,24 @@ async function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEve
 
   const totalVisitors = ipData.size;
   const returningVisitors = Array.from(ipData.values()).filter((d) => d.sessions.length > 1).length;
+
+  // ── CCM vs CRM stream split (owner ask 2026-07-27, ESSA launch week) ──
+  // Distinct sessions whose pageviews touched each stream's surfaces. A
+  // session can count in both (stream-toggle browsing); 'intl' is the mixed
+  // two-tab international page, reported separately rather than guessed into
+  // a stream.
+  const isCrmPath = (p: string) => p.startsWith('/concussion-rehab-mastery') || p.startsWith('/ep-course');
+  const isCcmPath = (p: string) =>
+    p === '/pricing' || p.startsWith('/pricing?') || p.startsWith('/modules') ||
+    p.startsWith('/learning') || p.startsWith('/preview') || p.startsWith('/scat-mastery');
+  const isIntlPath = (p: string) => p.startsWith('/pricing-international');
+  let ccmSessions = 0, crmSessions = 0, intlSessions = 0;
+  for (const s of sessions) {
+    const pages = s.pages.filter(Boolean);
+    if (pages.some(isCrmPath)) crmSessions++;
+    if (pages.some(isCcmPath)) ccmSessions++;
+    if (pages.some(isIntlPath)) intlSessions++;
+  }
   const pricingViewerEntries = Array.from(ipData.values()).filter((d) => d.pricingViews > 0);
   const pricingViewers = pricingViewerEntries.length;
   // Pricing → conversion is a same-unit rate: IPs that viewed pricing AND
@@ -693,6 +711,11 @@ async function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEve
       // Same-unit rate: purchasing pricing-viewer IPs ÷ pricing-viewer IPs.
       // Success-page based per IP (server purchases can't be joined to IPs).
       pricingToConversion: pricingViewers > 0 ? convertedPricingViewers / pricingViewers : 0,
+      // Stream split — distinct sessions touching each stream's surfaces
+      // (a session can browse both; intl is the mixed two-tab page).
+      ccmSessions,
+      crmSessions,
+      intlSessions,
       converters,
       // Reference-book sales in the window — reported separately, never
       // mixed into course conversion counts.
