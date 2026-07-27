@@ -53,7 +53,7 @@ const REPORT_URL =
 const MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
   'ACC Concussion Services — exercise tolerance assessment and ACC884 reporting',
 )}&body=${encodeURIComponent(
-  'Hi Zac — I hold (or support) an ACC Concussion Services contract and would like 20 minutes to look at the ACC884 output and the competency component.\n\nOrganisation:\nRole:\nBest time:',
+  'Hi Zac — I hold (or support) an ACC Concussion Services contract and would like 30 minutes to look at the ACC884 output and the competency component.\n\nOrganisation:\nRole:\nBest time:',
 )}`
 
 /** ACC's own performance measures -> what an episode record can evidence. */
@@ -153,7 +153,7 @@ export default function AccSupplierPage() {
             </a>
             . Ready to talk?{' '}
             <TrackedOutbound href="https://cal.com/zac-lewis-so8zjs/30min" event="cal_click" source="acc-hero" className="font-bold underline" style={{ color: ACCENT }}>
-              Book 20 minutes
+              Book 30 minutes
             </TrackedOutbound>.
           </p>
         </div>
@@ -441,7 +441,7 @@ export default function AccSupplierPage() {
             className="flex cursor-pointer items-center rounded-[13px] px-[22px] py-[14px] text-[14.5px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
             style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
           >
-            Scope it in 20 minutes
+            Scope it in 30 minutes
           </TrackedOutbound>
         </div>
       </section>
@@ -451,7 +451,7 @@ export default function AccSupplierPage() {
         <div className="flex flex-wrap items-center justify-between gap-8 rounded-[22px] bg-slate-900 px-9 py-[32px]">
           <div className="flex-1 basis-[420px]">
             <h2 className="m-0 mb-2.5 text-[clamp(21px,2.3vw,28px)] font-extrabold leading-[1.12] tracking-[-0.02em] text-white">
-              Twenty minutes, and one commercial question
+              Thirty minutes, and one commercial question
             </h2>
             <p className="m-0 max-w-[540px] text-[14.5px] leading-[1.55] text-slate-300">
               A scoping conversation with your clinical lead — nothing sold in it. Test whether this
@@ -467,7 +467,7 @@ export default function AccSupplierPage() {
               className="cursor-pointer rounded-[13px] px-6 py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
               style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
             >
-              Book 20 minutes
+              Book 30 minutes
             </TrackedOutbound>
             <a
               href={MAILTO}

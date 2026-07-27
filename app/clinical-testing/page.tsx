@@ -190,7 +190,7 @@ function Shell() {
                 source="demo-workspace"
                 className="rounded-xl bg-teal-700 px-5 py-2.5 text-[13px] font-bold leading-none text-white hover:bg-teal-800 transition-colors"
               >
-                Book 20 minutes
+                Book 30 minutes
               </TrackedOutbound>
             </div>
           )}
