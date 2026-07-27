@@ -402,7 +402,7 @@ export default function AccSupplierPage() {
             </p>
           </div>
           <div className="rounded-[18px] border border-slate-200 bg-white p-5">
-            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">With the pilot partner</p>
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">With the first partner tenant</p>
             <p className="m-0 mt-1.5 text-[14.5px] font-bold leading-[1.4] text-slate-800">
               Direct Gensolve write-back
             </p>
@@ -485,8 +485,8 @@ export default function AccSupplierPage() {
             </h2>
             <p className="m-0 max-w-[540px] text-[14.5px] leading-[1.55] text-slate-300">
               A scoping conversation with your clinical lead — nothing sold in it. Test whether this
-              gap matches the one you&rsquo;re carrying, and settle the funding question. From there
-              the natural pilot is one clinician and a few real episodes end to end.
+              gap matches the one you&rsquo;re carrying, and settle the funding question. From there,
+              onboarding is fast: team trained, instruments live on your clinic code, Gensolve connected.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
