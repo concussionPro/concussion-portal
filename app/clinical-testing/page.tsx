@@ -8,6 +8,7 @@ import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { SstClinicCard } from '@/components/clinical/SstClinicCard'
 import { ClinicProfileCard } from '@/components/clinical/ClinicProfileCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
+import { TrackedOutbound } from '@/components/TrackedOutbound'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 import { Lock, ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -173,6 +174,26 @@ function Shell() {
       <InstrumentKeyframes />
       <main className="flex-1 ml-0 md:ml-64 p-6 sm:p-8">
         <div className="mx-auto max-w-4xl">
+          {/* Demo orientation (ACC prospects, 2026-07-28): say what they're
+              looking at and give the tour an ending — the booking. Closes the
+              tour-no-booking gap before the sends land. */}
+          {access === 'demo' && (
+            <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-teal-200 bg-teal-50/80 px-5 py-4">
+              <p className="m-0 flex-1 basis-[300px] text-[13.5px] leading-snug text-slate-700">
+                <strong className="text-slate-900">This is the live clinician workspace</strong> — the
+                product your team would run, on fabricated data. Start with the SST Trainer tile;
+                the sample ACC884 compiles from what you&rsquo;ll see.
+              </p>
+              <TrackedOutbound
+                href="https://cal.com/zac-lewis-so8zjs/30min"
+                event="cal_click"
+                source="demo-workspace"
+                className="rounded-xl bg-teal-700 px-5 py-2.5 text-[13px] font-bold leading-none text-white hover:bg-teal-800 transition-colors"
+              >
+                Book 20 minutes
+              </TrackedOutbound>
+            </div>
+          )}
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">

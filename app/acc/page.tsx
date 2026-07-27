@@ -107,7 +107,10 @@ export default function AccSupplierPage() {
             The instrument for delivering the consensus first-line treatment — aerobic
             exercise prescribed from a <strong>measured</strong> heart-rate threshold —
             which records the objective outcome as it goes. Your six-monthly becomes
-            review-and-transcribe instead of reconstruct-from-notes.
+            review-and-transcribe instead of reconstruct-from-notes.{' '}
+            <strong className="text-slate-800">And your team trained and certificated to run it</strong> —
+            the only Australian concussion training endorsed by Osteopathy Australia and
+            accredited by ESSA.
           </p>
           {/* Evidence chips — the email leads 17→13; the page must echo it
               above the fold, not bury it in the legal footnote. */}
