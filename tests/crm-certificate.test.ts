@@ -150,3 +150,38 @@ describe('ESSA accreditation terms (letter of 27 Jul 2026)', () => {
     }
   })
 })
+
+describe('PMS plugin (2026-07-27 build) — the rails that keep it safe', () => {
+  const tenant = read('lib/sst-trainer/pms/tenant.ts')
+  const fileRoute = read('app/api/sst/pms/file/route.ts')
+  const connRoute = read('app/api/sst/pms/connection/route.ts')
+  const patientsRoute = read('app/api/sst/pms/patients/route.ts')
+
+  it('credentials are stored AES-GCM encrypted, never plaintext', () => {
+    expect(tenant).toContain('aes-256-gcm')
+    expect(tenant).toMatch(/encryptCred\(args\.apiKey\)/)
+  })
+
+  it('every route authorises via code + viewKey', () => {
+    for (const src of [fileRoute, connRoute, patientsRoute]) {
+      expect(src).toContain('verifyViewKey')
+    }
+  })
+
+  it('Gensolve writes stay behind the first-partner validation gate', () => {
+    expect(tenant).toContain("GENSOLVE_UPLOAD_CONFIRMED === 'true'")
+    expect(fileRoute).toMatch(/gensolve' && !gensolveWritesConfirmed\(\)/)
+  })
+
+  it('filing enforces the jurisdiction rule like the report viewer', () => {
+    expect(fileRoute).toMatch(/acc884' \|\| skin === 'acc885' \? 'NZ' : 'AU'/)
+    expect(fileRoute).toContain('getReportSkins(jurisdiction).includes(skin)')
+  })
+
+  it('crypto roundtrip works', async () => {
+    process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'test-secret-for-roundtrip'
+    const { encryptCred, decryptCred } = await import('@/lib/sst-trainer/pms/tenant')
+    const secret = 'MS-abc123-apikey-xyz'
+    expect(decryptCred(encryptCred(secret))).toBe(secret)
+  })
+})

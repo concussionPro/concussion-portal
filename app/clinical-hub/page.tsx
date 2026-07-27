@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SstLivePanel } from '@/components/sst-trainer/SstLivePanel'
+import { PmsFileButton } from '@/components/clinical/PmsFileButton'
 import { SstTrajectory, type TrajectoryPoint } from '@/components/sst-trainer/SstTrajectory'
 import { SESSION_STOP_RISE } from '@/lib/sst-trainer/protocol'
 import {
@@ -994,6 +995,7 @@ export default function ClinicalHubPage() {
                           <FileText className="w-3.5 h-3.5" /> {label} <ArrowUpRight className="w-3.5 h-3.5" />
                         </a>
                       ))}
+                      <PmsFileButton clinicCode={clinicCode} viewKey={viewKey} patientName={p.name} />
                     </>
                   )}
                 </div>

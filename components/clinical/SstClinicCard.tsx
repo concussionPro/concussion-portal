@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { SstPatientQrCard } from '@/components/sst-trainer/SstPatientQrCard'
+import { PmsConnect } from '@/components/clinical/PmsConnect'
 import {
   ArrowRight,
   Copy,
@@ -274,6 +275,9 @@ export function SstClinicCard() {
           </p>
         </div>
       )}
+
+      {/* PMS plugin — connect the clinic's own Gensolve/Cliniko tenant */}
+      {clinic && <PmsConnect code={clinic.code} viewKey={clinic.viewKey} />}
 
       {/* email the link straight to a patient */}
       <div className="mt-5 border-t border-slate-100 pt-4">
