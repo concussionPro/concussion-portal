@@ -18,6 +18,7 @@ import {
   MapPin,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
@@ -651,6 +652,22 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* EXIT-POINT CTA (work order 2026-07-28: /pricing is the last page
+            money-path sessions die on). The FAQ has just answered the
+            objections — restate the offer where the reader is about to leave. */}
+        <div className="max-w-2xl mx-auto mt-14 rounded-2xl bg-[var(--foreground)] px-7 py-8 text-center">
+          <h2 className="m-0 text-xl font-extrabold tracking-tight text-white">
+            {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours, OA-endorsed, start tonight
+          </h2>
+          <p className="m-0 mt-2 text-[13.5px] leading-relaxed text-white/75">
+            Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete with your practical day from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} · 7-day money-back guarantee.
+          </p>
+          <a href="#pricing-cards" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-[var(--foreground)] hover:bg-slate-100 transition-colors">
+            Choose your plan <ArrowRight className="w-4 h-4" />
+          </a>
+          <div className="mt-4 flex justify-center"><PaymentMethodsStrip className="!mt-0" /></div>
         </div>
 
       </div>

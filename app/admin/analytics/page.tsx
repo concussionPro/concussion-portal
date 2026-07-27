@@ -1526,7 +1526,7 @@ export default function AnalyticsDashboard() {
    * in ONE batch on load, so grouping costs no extra requests.
    */
   const GROUPS: { id: GroupId; label: string; icon: React.ElementType; panels: TabType[]; hint: string }[] = [
-    { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['actions', 'insights', 'funnel'], hint: 'What to do today' },
+    { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['actions', 'funnel'], hint: 'What to do today' },
     { id: 'traffic', label: 'Traffic', icon: Globe, panels: ['overview', 'channels', 'flow', 'events'], hint: 'Where it comes from' },
     { id: 'pipeline', label: 'Pipeline', icon: MapPin, panels: ['pool', 'prospects', 'sst', 'preseason'], hint: 'Close to revenue' },
     { id: 'people', label: 'People', icon: Mail, panels: ['retargeting', 'users'], hint: 'Warm right now' },

@@ -220,7 +220,10 @@ export function analyze(events: Ev[]): Finding[] {
     const entry = pvs[0].path || '?'
     const l = landers.get(entry) || { entries: 0, bounced: 0 }
     l.entries++
-    if (new Set(pvs.map((p) => p.path)).size <= 1) l.bounced++
+    // Self-contained landers (tabs, in-page checkout) produce ONE pageview by
+    // design — any interaction event means the visitor engaged, not bounced.
+    const interacted = evs.some((e) => !isPv(e))
+    if (new Set(pvs.map((p) => p.path)).size <= 1 && !interacted) l.bounced++
     landers.set(entry, l)
   }
   // App/tool surfaces are NOT funnel pages — a patient running /sst-trainer or
