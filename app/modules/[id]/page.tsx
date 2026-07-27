@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
 import { resolveModuleForAccess, type AccessLevel } from '@/lib/module-access'
 import type { InitialModuleData } from '@/hooks/useModuleData'
 import FlagshipModuleClient from './FlagshipModuleClient'
@@ -33,10 +34,15 @@ export default async function ModulePage({
   const token = cookieStore.get('session')?.value
   const session = token ? verifySessionToken(token) : null
 
+  // Clinic-prospect demo (/demo/clinic) carries no session — the clinic_demo
+  // cookie maps to PREVIEW scope, mirroring /api/modules/[id].
+  const clinicDemo = cookieStore.get('clinic_demo')?.value === CLINIC_DEMO_KEY
   // DEV-ONLY review bypass, mirroring the API route so localhost review of the
   // whole course keeps working without a login. Production is untouched.
   const accessLevel: AccessLevel | null =
-    session?.accessLevel ?? (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
+    session?.accessLevel ??
+    (clinicDemo ? 'preview' : null) ??
+    (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
 
   let initialModuleData: InitialModuleData | undefined
   if (Number.isFinite(moduleId) && accessLevel) {

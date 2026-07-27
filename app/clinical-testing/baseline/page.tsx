@@ -94,13 +94,16 @@ function Shell() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    if (isPreview) return
+    // Demo viewers ARE preview-level, but the clinic API serves them the
+    // synthetic DEMO00 clinic — without this the card sat on "Loading your
+    // clinic…" forever (2026-07-27).
+    if (isPreview && access !== 'demo') return
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setClinic(d?.clinic ?? null))
       .catch(() => {})
       .finally(() => setLoaded(true))
-  }, [isPreview])
+  }, [isPreview, access])
 
   if (isLoading || access === 'loading') {
     return (

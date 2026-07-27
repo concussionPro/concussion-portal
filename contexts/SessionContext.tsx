@@ -15,6 +15,9 @@ export interface SessionUser {
    * render a paying customer as a free user. Check this too.
    */
   ownsCrm?: boolean
+  /** Synthetic demo identity (reviewer preview or /demo/clinic prospect) —
+   *  nothing persists; UI hides account affordances (sync, sign-out, settings). */
+  isDemo?: boolean
   stripeCustomerId?: string
   workshopCity?: string
   workshopDate?: string

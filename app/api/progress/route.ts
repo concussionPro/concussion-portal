@@ -3,6 +3,7 @@ import { verifySessionToken } from '@/lib/jwt-session'
 import { sql } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { progressSchema } from '@/lib/schemas'
+import { isDemoUserId } from '@/lib/demo-session'
 
 // GET - Load user progress
 export async function GET(request: NextRequest) {
@@ -60,6 +61,10 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    if (isDemoUserId(sessionData.userId)) {
+      return NextResponse.json({ success: true, demo: true })
+    }
+
     await sql`DELETE FROM user_progress WHERE user_id = ${sessionData.userId}`
 
     return NextResponse.json({ success: true })
@@ -90,6 +95,14 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid session' },
         { status: 401 }
       )
+    }
+
+    // Demo viewers read like their tier but never write: acknowledge the
+    // save (in-page progress works for the visit) without persisting —
+    // demo ids have no users row and rows would be shared across every
+    // prospect. Also what keeps the sidebar sync line clean.
+    if (isDemoUserId(sessionData.userId)) {
+      return NextResponse.json({ success: true, demo: true })
     }
 
     const rl = await rateLimit({ key: `progress:${sessionData.userId}`, limit: 60, windowSec: 60 })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { resolveModuleForAccess, type AccessLevel } from '@/lib/module-access'
+import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 /**
  * Secure Module Content API
@@ -34,8 +35,16 @@ export async function GET(
     // DEV-ONLY review bypass: on localhost, serve ANY module (free or paid) with
     // full access so the whole course can be reviewed without login. Production
     // keeps every gate untouched.
+    // Clinic-prospect demo (/demo/clinic): no session cookie exists, but the
+    // clinic_demo cookie entitles PREVIEW scope — Module 1 trial truncated,
+    // paid modules refused with the upgrade CTA. Same resolver, same limits
+    // as any free-tier user; the trial died with "Authentication required"
+    // without this (2026-07-27).
+    const clinicDemo =
+      request.cookies.get('clinic_demo')?.value === CLINIC_DEMO_KEY
     const accessLevel: AccessLevel | null =
       sessionData?.accessLevel ??
+      (clinicDemo ? 'preview' : null) ??
       (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
 
     const result = resolveModuleForAccess(moduleId, accessLevel)

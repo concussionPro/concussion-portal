@@ -136,6 +136,27 @@ export async function GET(request: NextRequest) {
     const user = await findUserById(sessionData.userId)
 
     if (!user) {
+      // Demo identities carry a REAL preview JWT but have NO users row —
+      // return the synthetic user instead of nuking their session (the
+      // /demo/clinic prospect flow; see lib/demo-session.ts).
+      if (sessionData.userId.startsWith('demo-viewer')) {
+        return NextResponse.json({
+          success: true,
+          user: {
+            id: sessionData.userId,
+            email: sessionData.email,
+            name: sessionData.name,
+            accessLevel: sessionData.accessLevel,
+            bookOwner: false,
+            ownsCrm: false,
+            workshopLocation: null,
+            createdAt: new Date().toISOString(),
+            nurtureUnsubscribed: true,
+            progressEmailsOptedOut: true,
+            isDemo: true,
+          },
+        })
+      }
       // User was deleted from DB — invalidate session
       const response = NextResponse.json(
         { error: 'User not found' },

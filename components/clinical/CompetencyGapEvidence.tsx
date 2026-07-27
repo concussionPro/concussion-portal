@@ -21,10 +21,13 @@ export function CompetencyGapEvidence({
   heading?: string
   className?: string
 }) {
+  // CONTRAST RULE (owner 2026-07-27: table was gray-on-gray): dark header
+  // band, slate-900 finding text, solid badges — nothing lighter than
+  // slate-600 carries meaning.
   const answers: Record<string, { label: string; cls: string }> = {
-    education: { label: 'Training layer', cls: 'bg-teal-50 text-teal-800 border-teal-200' },
-    tooling: { label: 'Measured data', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
-    both: { label: 'Both layers', cls: 'bg-slate-100 text-slate-700 border-slate-300' },
+    education: { label: 'Training layer', cls: 'bg-teal-700 text-white' },
+    tooling: { label: 'Measured data', cls: 'bg-amber-600 text-white' },
+    both: { label: 'Both layers', cls: 'bg-slate-800 text-white' },
   }
 
   return (
@@ -32,35 +35,35 @@ export function CompetencyGapEvidence({
       <h2 id="competency-gap" className="text-xl font-extrabold tracking-tight text-slate-900">
         {heading}
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600">{COMPETENCY_HEADLINE}</p>
+      <p className="mt-2 text-sm leading-relaxed text-slate-700">{COMPETENCY_HEADLINE}</p>
 
-      <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+      <div className="mt-5 overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_16px_36px_-24px_rgba(15,23,42,0.35)]">
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              <th scope="col" className="px-4 py-2.5">Published finding</th>
-              <th scope="col" className="hidden px-4 py-2.5 sm:table-cell">What it means for a supplier</th>
-              <th scope="col" className="px-4 py-2.5 whitespace-nowrap">Closed by</th>
+            <tr className="bg-slate-900 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-200">
+              <th scope="col" className="px-5 py-3">Published finding</th>
+              <th scope="col" className="hidden px-5 py-3 sm:table-cell">What it means for a supplier</th>
+              <th scope="col" className="px-5 py-3 whitespace-nowrap text-right sm:text-left">Closed by</th>
             </tr>
           </thead>
           <tbody>
             {COMPETENCY_FINDINGS.map((f, i) => {
               const a = answers[f.answeredBy]
               return (
-                <tr key={i} className="border-t border-slate-100 align-top">
-                  <td className="px-4 py-3">
-                    <p className="m-0 text-[13px] font-semibold leading-snug text-slate-800">{f.stat}</p>
-                    <p className="m-0 mt-1 text-[11px] text-slate-500">
+                <tr key={i} className={`border-t border-slate-200 align-top ${i % 2 === 1 ? 'bg-slate-50/70' : 'bg-white'}`}>
+                  <td className="px-5 py-4">
+                    <p className="m-0 text-[13.5px] font-bold leading-snug text-slate-900">{f.stat}</p>
+                    <p className="m-0 mt-1.5 text-[11.5px] font-medium text-slate-500">
                       {f.citation.authors} ({f.citation.year}){' '}
                       <span className="italic">{f.citation.journal}</span> {f.citation.detail}
                     </p>
-                    <p className="m-0 mt-1 text-[12.5px] leading-snug text-slate-600 sm:hidden">{f.framing}</p>
+                    <p className="m-0 mt-2 text-[13px] leading-relaxed text-slate-700 sm:hidden">{f.framing}</p>
                   </td>
-                  <td className="hidden px-4 py-3 text-[12.5px] leading-snug text-slate-600 sm:table-cell">
+                  <td className="hidden px-5 py-4 text-[13px] leading-relaxed text-slate-700 sm:table-cell">
                     {f.framing}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold ${a.cls}`}>
+                  <td className="px-5 py-4 text-right sm:text-left">
+                    <span className={`inline-block whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-bold tracking-wide ${a.cls}`}>
                       {a.label}
                     </span>
                   </td>
@@ -71,24 +74,24 @@ export function CompetencyGapEvidence({
         </table>
       </div>
 
-      <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
-        <p className="m-0 text-[11px] font-bold uppercase tracking-wide text-slate-500">Sources</p>
-        <ul className="m-0 mt-1.5 list-none space-y-1 p-0">
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white px-5 py-4">
+        <p className="m-0 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-900">Sources</p>
+        <ul className="m-0 mt-2 list-none space-y-1.5 p-0">
           {competencyCitations().map((c) => (
-            <li key={c.doi} className="text-[11.5px] leading-snug text-slate-600">
+            <li key={c.doi} className="text-[12px] leading-snug text-slate-700">
               {c.authors} ({c.year}). {c.title}. <span className="italic">{c.journal}</span>, {c.detail}.{' '}
               <a
                 href={c.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-teal-700 underline underline-offset-2"
+                className="font-bold text-teal-700 underline underline-offset-2"
               >
                 doi:{c.doi}
               </a>
             </li>
           ))}
         </ul>
-        <p className="m-0 mt-2 text-[11px] leading-snug text-slate-500">
+        <p className="m-0 mt-2.5 border-t border-slate-100 pt-2.5 text-[12px] leading-snug text-slate-600">
           These surveys describe a workforce whose training predates the current evidence — not a
           failure of diligence. That is precisely why competency has to be evidenced at the
           organisation level rather than assumed.

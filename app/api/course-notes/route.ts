@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { rateLimit } from '@/lib/rate-limit'
 import { listNotes, saveNote, deleteNote, NOTE_MAX_CHARS } from '@/lib/course-notes'
+import { isDemoUserId } from '@/lib/demo-session'
 
 /**
  * Learner notes + CPD reflections.
@@ -37,6 +38,27 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = sessionOf(request)
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
+  // Demo viewers never persist (no users row; state would be shared across
+  // prospects). Echo an ephemeral note so the editor behaves for the visit.
+  if (isDemoUserId(session.userId)) {
+    let demoBody: Record<string, unknown> = {}
+    try {
+      demoBody = await request.json()
+    } catch { /* ignore */ }
+    return NextResponse.json({
+      success: true,
+      demo: true,
+      note: {
+        id: Number(demoBody.id) || Date.now(),
+        moduleId: Number(demoBody.moduleId) || 0,
+        sectionId: typeof demoBody.sectionId === 'string' ? demoBody.sectionId : null,
+        kind: demoBody.kind === 'reflection' ? 'reflection' : 'note',
+        body: typeof demoBody.body === 'string' ? demoBody.body : '',
+        updatedAt: new Date().toISOString(),
+      },
+    })
+  }
 
   const rl = await rateLimit({ key: `notes:${session.userId}`, limit: 120, windowSec: 60 })
   if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

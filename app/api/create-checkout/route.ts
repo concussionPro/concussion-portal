@@ -6,6 +6,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
 import { createCheckoutSchema } from '@/lib/schemas'
 import { isBookOwner } from '@/lib/users'
+import { isDemoEmail } from '@/lib/demo-session'
 import { detectCountry } from '@/lib/geo'
 import { CONFIG } from '@/lib/config'
 
@@ -97,7 +98,10 @@ export async function POST(request: NextRequest) {
       const sessionCookie = request.cookies.get('session')?.value
       if (sessionCookie) {
         const session = verifySessionToken(sessionCookie)
-        if (session?.email) {
+        // Demo viewers (synthetic *.local identity) check out as anonymous
+        // buyers — Stripe collects their real email. Never prefill the
+        // placeholder address.
+        if (session?.email && !isDemoEmail(session.email)) {
           // Prefer the session email over any passed-in email so discounts
           // can't be applied to a different account
           sessionEmail = session.email

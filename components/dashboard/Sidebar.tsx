@@ -61,6 +61,10 @@ export function Sidebar() {
   const { user: sessionUser } = useSession()
   const clinicalAccess = useClinicalAccess()
   const showClinicalTesting = ['owner', 'course', 'sst', 'demo'].includes(clinicalAccess)
+  // Demo viewers (/demo/clinic prospects, reviewer previews): browsing is
+  // real, identity is synthetic — hide account affordances (sync line,
+  // sign-out, Settings) and show a clean demo card instead.
+  const isDemo = sessionUser?.isDemo === true
   const user = sessionUser ? {
     id: sessionUser.id || '1',
     email: sessionUser.email || '',
@@ -170,7 +174,7 @@ export function Sidebar() {
         )}
 
         {/* CPD Progress Ring */}
-        <div className="mb-8">
+        <div className="mb-8 shrink-0">
           <ProgressRing
             progress={isCcmPaid ? completedModules : ownsCrm ? crmCompletedModules : scatCompletedModules}
             total={isFreeTier ? 3 : 8}
@@ -188,7 +192,9 @@ export function Sidebar() {
           {navItems.filter((item) =>
             (!item.ownerOnly || isOwnerEmail(sessionUser?.email)) &&
             (!item.clinicalGated || showClinicalTesting) &&
-            (!item.crmOnly || ownsCrm)
+            (!item.crmOnly || ownsCrm) &&
+            // No account to configure in a demo — Settings is noise there.
+            !(isDemo && item.href === '/settings')
           ).map((item) => {
             const isActive =
               pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
@@ -256,7 +262,7 @@ export function Sidebar() {
           <Link
             href="/pricing"
             onClick={closeMobileMenu}
-            className="mt-3 block rounded-xl bg-gradient-to-br from-accent to-accent-dark p-3.5 text-white shadow-md shadow-accent/20 hover:shadow-lg hover:scale-[1.02] transition-all group"
+            className="mt-3 block shrink-0 rounded-xl bg-gradient-to-br from-accent to-accent-dark p-3.5 text-white shadow-md shadow-accent/20 hover:shadow-lg hover:scale-[1.02] transition-all group"
           >
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-4 h-4" strokeWidth={2} />
@@ -282,7 +288,7 @@ export function Sidebar() {
           <Link
             href="/upgrade"
             onClick={closeMobileMenu}
-            className="mt-3 block rounded-xl border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white p-3.5 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all group"
+            className="mt-3 block shrink-0 rounded-xl border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white p-3.5 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all group"
           >
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-4 h-4 text-amber-700" strokeWidth={2} />
@@ -302,8 +308,20 @@ export function Sidebar() {
         )}
 
         {/* Footer */}
-        <div className="pt-5 border-t border-white/30 space-y-3">
-          {user && (
+        <div className="shrink-0 pt-5 border-t border-white/30 space-y-3">
+          {user && isDemo ? (
+            /* Demo identity: no email, no sync, no sign-out — a clean badge
+               that says what this is and where it leads. */
+            <div className="glass-premium rounded-xl p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="inline-flex h-2 w-2 rounded-full bg-teal-500" />
+                <p className="text-sm font-bold text-foreground m-0">Demo access</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-snug m-0">
+                Explore freely — nothing you do here is saved.
+              </p>
+            </div>
+          ) : user ? (
             <div className="glass-premium rounded-xl p-3">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
@@ -326,7 +344,7 @@ export function Sidebar() {
                 Sign Out
               </button>
             </div>
-          )}
+          ) : null}
 
           <div className="px-1">
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
