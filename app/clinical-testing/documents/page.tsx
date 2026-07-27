@@ -94,7 +94,7 @@ function Shell() {
     return <Frame><p className="text-sm text-muted-foreground">Loading…</p></Frame>
   }
   if (access === 'unreleased') return <ClinicalTestingComingSoon />
-  if (access === 'locked') {
+  if (access === 'locked' || access === 'demo') {
     return (
       <Frame>
         <div className="mx-auto max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">

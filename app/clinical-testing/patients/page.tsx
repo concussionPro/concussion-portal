@@ -244,7 +244,7 @@ function Shell() {
     return <ClinicalTestingComingSoon />
   }
 
-  if (access === 'locked') {
+  if (access === 'locked' || access === 'demo') {
     return (
       <div className="flex min-h-screen dashboard-bg">
         <Sidebar />

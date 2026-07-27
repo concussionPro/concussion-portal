@@ -218,13 +218,15 @@ export function SstClinicCard() {
           )}
         </div>
         <div className="flex flex-none flex-wrap gap-2">
-          <Link
-            href="/clinical-testing/patients"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"
-          >
-            <Users className="w-3.5 h-3.5" />
-            Patients
-          </Link>
+          {!isDemoClinic && (
+            <Link
+              href="/clinical-testing/patients"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Patients
+            </Link>
+          )}
           <Link
             href={hubUrl}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors"
@@ -232,13 +234,15 @@ export function SstClinicCard() {
             <LayoutDashboard className="w-3.5 h-3.5" />
             Live hub
           </Link>
-          <Link
-            href="/clinical-testing/documents"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            Documents
-          </Link>
+          {!isDemoClinic && (
+            <Link
+              href="/clinical-testing/documents"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Documents
+            </Link>
+          )}
         </div>
       </div>
 

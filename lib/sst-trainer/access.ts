@@ -16,7 +16,11 @@ import { hasSstEntitlement } from '@/lib/users'
  *   'unreleased'     → pre-launch (flag off), non-owner → "in final testing".
  *   'locked'         → launched but this visitor isn't entitled → show-then-sell.
  */
-export type ClinicalAccess = 'owner' | 'course' | 'sst' | 'locked' | 'unreleased'
+// 'demo' — the scoped /demo/clinic tour: workspace + SST + baseline demos
+// ONLY; documents/patients/billing stay locked (owner: "MUST LOCK ALL ASSETS
+// except the clinical trainer demos/trial"). Granted by the access ROUTE from
+// the clinic_demo cookie — resolveClinicalAccess never returns it.
+export type ClinicalAccess = 'owner' | 'course' | 'sst' | 'demo' | 'locked' | 'unreleased'
 
 export async function resolveClinicalAccess(session: {
   email: string

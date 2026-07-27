@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     req.cookies.get('demo_key')?.value === DEMO_KEY ||
     req.cookies.get('clinic_demo')?.value === CLINIC_DEMO_KEY
   ) {
-    return NextResponse.json({ access: 'sst', demo: true })
+    return NextResponse.json({ access: 'demo' })
   }
   const token = req.cookies.get('session')?.value
   const session = token ? verifySessionToken(token) : null
