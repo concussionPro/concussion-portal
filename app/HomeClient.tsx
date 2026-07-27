@@ -120,7 +120,7 @@ export default function HomeClient() {
                 Two CPD streams — choose yours
               </p>
             )}
-            <div role="tablist" aria-label="Choose your course stream" className={showCrm ? 'grid grid-cols-2 gap-3' : 'max-w-md mx-auto'}>
+            <div role="tablist" aria-label="Choose your course stream" className={showCrm ? 'grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3' : 'max-w-md mx-auto'}>
               {visibleStreams.map((s) => {
                 const active = s.id === stream
                 const Icon = s.icon
