@@ -65,31 +65,25 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 #v(3pt)
 #block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
   #set text(size: 9pt)
-  #text(weight: "bold")[Subject: Measured exercise-tolerance assessment for your ACC concussion service]
+  #text(weight: "bold")[Subject: The part of your concussion contract nobody's trained to deliver]
   #v(4pt)
   Hi [Name],
   #v(3pt)
-  I'm a clinician and educator — I run Concussion Education Australia, managing concussion patients and training the clinicians who do.
+  I'm a clinician and educator — I run Concussion Education Australia, managing concussion patients and training the clinicians who do. I've worked in New Zealand and know the ACC environment.
   #v(3pt)
-  I built the SST Trainer for my own caseload. A guided graded test measures each patient's heart-rate threshold; every home session is paced inside the prescribed band on the patient's own watch; the report writes itself at the end (protocol: DOI 10.5281/zenodo.21482634). I've worked in New Zealand and know the ACC environment — for your team, that report is the ACC884.
+  #text(weight: "bold")[Here's the problem I think your service is carrying.] Your contract obliges "assessment of exercise tolerance and/or functional capacity" — but the mandated team (medical, neuropsych, psychology, OT, physio) contains no discipline trained at entry to run graded exercise testing. So the consensus first-line treatment gets prescribed on estimates or not at all, the six-monthly ACC884 is rebuilt from notes at the deadline, and the outcomes ACC benchmarks — against every other supplier, from ACC's own data — ride on both.
   #v(3pt)
-  The training behind it is endorsed by Osteopathy Australia and ESSA-accredited (No. PDNF26077) — the education layer that makes sure the tool is used as designed.
-  #v(3pt)
-  I'm writing because the published gap between concussion guidelines and practice is large, and it lands directly on the measures your contract is scored on:
+  I solve it in two parts, and I built both:
   #v(2pt)
-  #set text(size: 8.8pt)
-  • Sub-symptom-threshold aerobic exercise is the #text(weight: "bold")[consensus first-line treatment] (Patricios et al., #emph[Br J Sports Med] 2023) — yet in the largest survey of rehab clinicians, #text(weight: "bold")[only \~35% prescribed it], and it did not appear in the top five treatments used (Dobney & Gagnon, #emph[Physiotherapy Canada] 2021; n=555).
-  #v(1pt)
-  • Even #text(weight: "bold")[trained] clinicians report #text(weight: "bold")[return-to-play as their least-confident decision] (Yorke et al., #emph[Physical Therapy] 2016; n=1,272, 70% already concussion-trained).
-  #v(1pt)
-  • The cost of the gap is measurable: prescribed individualised sub-threshold exercise shortened median recovery #text(weight: "bold")[from 17 to 13 days] in the pivotal RCT (Leddy et al., #emph[JAMA Pediatrics] 2019).
-  #v(1pt)
-  • And the thresholds driving it are still mostly #text(weight: "bold")[estimated from age formulas rather than measured] — which is the difference between an opinion and an outcome in an ACC884.
+  #set text(size: 8.9pt)
+  #text(weight: "bold", fill: accent)[The tool.] SST Trainer — built for my own caseload. A guided graded test measures each client's heart-rate threshold; home sessions run in-band on the client's own watch, verified not self-reported; the ACC884 content compiles as care is delivered. Protocol published: DOI 10.5281/zenodo.21482634.
+  #v(2pt)
+  #text(weight: "bold", fill: accent)[The training.] Eight online modules plus a practical day, written for the physios and OTs already on your team: graded exercise testing and threshold derivation · sub-symptom-threshold prescription and progression · phenotype-specific rehab · graded return to work and sport · persistent symptoms · documentation and reporting. Endorsed by Osteopathy Australia, ESSA-accredited (No. PDNF26077) — documented team competency for the Cl. 15.2 quality file. The education layer that makes sure the tool is used as designed.
   #v(3pt)
   #set text(size: 9pt)
-  Your contract already obliges "assessment of exercise tolerance and/or functional capacity" (Cl. 5.8.2.1.2) — while none of the five mandated disciplines is trained at entry to deliver it. Tool plus training closes that as a workflow, not a hire.
+  The evidence in one line: sub-symptom aerobic exercise is the consensus first-line treatment (Patricios 2023, #emph[BJSM]) and shortened median recovery 17→13 days in the pivotal RCT (Leddy 2019, #emph[JAMA Pediatrics]) — yet \~two-thirds of surveyed rehab clinicians still don't prescribe it (Dobney 2021, #emph[Physiotherapy Canada]).
   #v(3pt)
-  You can see all of it without a call — sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
+  See all of it without a call — sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
   #v(3pt)
   Worth 20 minutes with you or your clinical lead?
   #v(3pt)
