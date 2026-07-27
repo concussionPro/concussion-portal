@@ -185,13 +185,11 @@ export const CONFIG = {
   SST_APP_STORE_URL: 'https://apps.apple.com/au/app/id6792171738',
   // TestFlight PUBLIC link — the pre-store native-iOS path for patients
   // (Safari has no Web Bluetooth, so live HR on iPhone needs the native app).
-  // EMPTY until the founder creates the External Testing public link in App
-  // Store Connect and Beta App Review clears — paste it here (format
-  // https://testflight.apple.com/join/XXXXXXXX). Surfaces are CLINICIAN-FACING
-  // only (welcome email + clinic card), keeping the clinician-led posture; all
-  // of them auto-retire in favour of the App Store link once SST_IOS_APP_LIVE
+  // Public link created 2026-07-27. Surfaces are CLINICIAN-FACING only
+  // (welcome email + clinic card), keeping the clinician-led posture; all of
+  // them auto-retire in favour of the App Store link once SST_IOS_APP_LIVE
   // flips.
-  SST_TESTFLIGHT_URL: '',
+  SST_TESTFLIGHT_URL: 'https://testflight.apple.com/join/9YmTFQW9',
 
   // Feature Flags
   FEATURES: {
