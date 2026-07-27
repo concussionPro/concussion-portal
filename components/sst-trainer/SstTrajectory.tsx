@@ -84,14 +84,21 @@ function nonMeasurableLabel(p: TrajectoryPoint): { label: string; cls: string } 
 
 export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
   const [mountedAt] = useState(() => Date.now())
-  // SPEC 3 — only verified, clinician-gated, real measurements are plottable.
-  const plottable = points.filter((p) => p.hrt != null && p.verified === true && p.gated === true)
+  // SPEC 3 — only verified, clinician-gated, PAIRED-SENSOR measurements are
+  // plottable. Camera-PPG is invalid during exercise (documented launch-review
+  // ruling) and a graded test IS exercise — so a camera-derived HRt never
+  // joins the recovery trajectory, however it's badged. It is surfaced in the
+  // excluded ledger with its reason, never silently dropped. Manual entry is
+  // not a live measurement and is excluded for the same reason.
+  const plottable = points.filter((p) => p.hrt != null && p.verified === true && p.gated === true && p.source === 'bluetooth')
+  // Readings WITH an HRt that fail the trajectory rule — listed with reasons.
+  const lowerTier = points.filter((p) => p.hrt != null && !(p.verified === true && p.gated === true && p.source === 'bluetooth'))
   // Split the exclusions honestly: a test WITHOUT a measurable HRt
   // (no-intolerance / red-flag / aborted / invalid) is a clinical event, not an
   // integrity failure — list it in the ledger. Only readings that HAVE an HRt
   // but failed the verified/gated gate count as excluded readings.
   const nonMeasurable = points.filter((p) => p.hrt == null)
-  const excluded = points.length - plottable.length - nonMeasurable.length
+  const excluded = lowerTier.length
 
   // Re-test cadence hint — serial measurement is the whole instrument. Based on
   // the newest test of ANY kind; suppressed once the patient has recovered
@@ -140,7 +147,7 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
           <h3 className="text-sm font-bold text-foreground">Measured HR-threshold over time</h3>
         </div>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-          <ShieldCheck className="w-3 h-3" /> verified · clinician-gated
+          <ShieldCheck className="w-3 h-3" /> paired sensor · clinician-gated
         </span>
       </div>
       {/* SPEC 2 — a trend to interpret, NOT a recovery verdict */}
@@ -161,7 +168,7 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
       {plottable.length === 0 ? (
         <p className="text-xs text-muted-foreground leading-relaxed py-6 text-center">
           No verified, clinician-gated threshold tests yet. The curve plots a point only when a graded test is
-          administered under your clinic code with a live, signal-quality-passed reading.
+          administered under your clinic code with a live paired-sensor reading.
         </p>
       ) : (
         <>
@@ -237,14 +244,35 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
         </div>
       )}
 
-      {/* SPEC 3 — excluded ungated/unverified readings are surfaced, never silently dropped */}
-      {excluded > 0 && (
-        <div className="mt-3 flex items-start gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-2">
-          <Info className="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
-          <p className="text-[10.5px] text-slate-500 leading-snug">
-            {excluded} reading{excluded === 1 ? '' : 's'} excluded — not from a verified, clinician-gated graded test.
-            The trajectory only plots provenance-verified, clinician-overseen measurements.
-          </p>
+      {/* SPEC 3 — excluded readings are ITEMISED with their reason, never
+          silently dropped and never drawn on the line. */}
+      {lowerTier.length > 0 && (
+        <div className={`space-y-1 ${plottable.length || nonMeasurable.length ? 'mt-3 pt-3 border-t border-black/5' : 'mt-1'}`}>
+          {lowerTier.map((q, i) => {
+            const why =
+              q.source === 'camera'
+                ? 'camera-PPG — invalid during exercise; not plotted'
+                : q.source === 'manual'
+                  ? 'manual entry — not a live measurement; not plotted'
+                  : !q.gated
+                    ? 'not clinician-gated; not plotted'
+                    : 'unverified signal; not plotted'
+            return (
+              <div key={i} className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[11px] opacity-80">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-slate-300" />
+                <span className="text-muted-foreground w-12 flex-shrink-0">{fmtDate(q.date)}</span>
+                <span className="font-mono text-muted-foreground w-14 flex-shrink-0 line-through decoration-slate-300">{q.hrt} bpm</span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-500">{why}</span>
+              </div>
+            )
+          })}
+          <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-2">
+            <Info className="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+            <p className="text-[10.5px] text-slate-500 leading-snug">
+              The trajectory plots paired-sensor, clinician-gated graded tests only. Excluded readings are
+              listed above with their reason — surfaced, never drawn.
+            </p>
+          </div>
         </div>
       )}
     </div>

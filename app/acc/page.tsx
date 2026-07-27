@@ -432,48 +432,74 @@ export default function AccSupplierPage() {
           trained clinicians who still can&rsquo;t see the treatment.
         </p>
 
-        {/* Pricing — deliberately NOT a % of their ACC revenue (unverifiable =
-            invented precision). The unit is the DELIVERING clinician at every
-            scale: a 2,500-clinician national supplier with 40 concussion-active
-            clinicians licenses 40, not 2,500. That single rule is what makes the
-            model make sense from a 7-person Nelson practice to Active+. */}
-        {/* Commercials — per-ORGANISATION annual packages. Procurement budgets
-            a fixed annual line, not a per-head variable (the pricing doc's own
-            reasoning); the unit underneath stays the owner-approved
-            per-DELIVERING-clinician rate, so a 2,500-headcount supplier with 40
-            concussion-active clinicians is priced on 40. */}
+        {/* WORKFLOW — how it wires into what they already run. Gensolve covers
+            90%+ of NZ allied health (gensolve.com/nz — 1,000+ practices, native
+            ACC billing), so "not another PMS" is the wiring story, not a
+            disclaimer. CLAIM DISCIPLINE: the Gensolve write-back adapter is
+            BUILT but never validated against a live tenant (no public sandbox;
+            per-tenant key + IP whitelist) — say "validated with our first
+            partner", never "integrated" or "certified". */}
         <h3 className="mb-1 mt-8 text-[clamp(18px,2vw,22px)] font-extrabold leading-[1.15] tracking-[-0.02em]">
-          Commercials — per organisation, per year
+          Not another PMS — it feeds the one you run
         </h3>
         <p className="mb-4 max-w-[680px] text-[13.5px] leading-[1.5] text-slate-600">
-          Licensed on the clinicians <strong>delivering the concussion service</strong>, never
-          organisational headcount. NZD, excl. GST, annual.
+          Your team keeps working where they already work. SST is the measured-data layer
+          underneath — education, the instrument, and the reporting convenience.
         </p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-white p-6">
-            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Practice</p>
-            <p className="m-0 mt-2 text-[26px] font-extrabold leading-none tracking-tight text-slate-900">from NZ$3,500<span className="text-[14px] font-semibold text-slate-500"> /yr</span></p>
-            <p className="m-0 mt-2 text-[13px] leading-[1.5] text-slate-600">Up to 8 delivering clinicians. Team trained and the service live inside a fortnight.</p>
-            <p className="m-0 mt-auto pt-3 text-[12px] text-slate-400">Licence + per-clinician certification</p>
+          <div className="rounded-[18px] border border-slate-200 bg-white p-5">
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Today</p>
+            <p className="m-0 mt-1.5 text-[14.5px] font-bold leading-[1.4] text-slate-800">
+              Reports land in the patient record
+            </p>
+            <p className="m-0 mt-1.5 text-[13px] leading-[1.5] text-slate-600">
+              The ACC884 content and clinical reports render as documents your team drops straight
+              into Gensolve — or whichever PMS you run. Nothing to migrate, nobody re-keys data.
+            </p>
           </div>
-          <div className="flex flex-col rounded-[18px] border-2 bg-white p-6" style={{ borderColor: ACCENT }}>
-            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>Service</p>
-            <p className="m-0 mt-2 text-[26px] font-extrabold leading-none tracking-tight text-slate-900">from NZ$11,000<span className="text-[14px] font-semibold text-slate-500"> /yr</span></p>
-            <p className="m-0 mt-2 text-[13px] leading-[1.5] text-slate-600">Multi-site services to ~25 delivering clinicians. Volume certification rate; rollout site-by-site, first clinic proving the workflow.</p>
-            <p className="m-0 mt-auto pt-3 text-[12px] text-slate-400">Licence + cohort certification</p>
+          <div className="rounded-[18px] border border-slate-200 bg-white p-5">
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">With the pilot partner</p>
+            <p className="m-0 mt-1.5 text-[14.5px] font-bold leading-[1.4] text-slate-800">
+              Direct Gensolve write-back
+            </p>
+            <p className="m-0 mt-1.5 text-[13px] leading-[1.5] text-slate-600">
+              The adapter that files the report into the patient&rsquo;s Gensolve record is built;
+              validating it against a live tenant is part of the first partner engagement.
+            </p>
           </div>
-          <div className="flex flex-col rounded-[18px] border border-slate-200 bg-slate-900 p-6">
-            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">National supplier</p>
-            <p className="m-0 mt-2 text-[26px] font-extrabold leading-none tracking-tight text-white">By agreement</p>
-            <p className="m-0 mt-2 text-[13px] leading-[1.5] text-slate-300">Delivering-team licensing across every region — 40 concussion-active clinicians in a 2,500-person organisation is 40 licences, not 2,500. Cohort training, one measured standard nationwide.</p>
-            <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener noreferrer" className="mt-auto pt-3 text-[13px] font-bold" style={{ color: '#5eead4' }}>Scope it in 20 minutes →</a>
+          <div className="rounded-[18px] border border-slate-200 bg-white p-5">
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Always</p>
+            <p className="m-0 mt-1.5 text-[14.5px] font-bold leading-[1.4] text-slate-800">
+              Patients need no clinic hardware
+            </p>
+            <p className="m-0 mt-1.5 text-[13px] leading-[1.5] text-slate-600">
+              Home sessions run on the patient&rsquo;s own watch or strap; the clinician view is a
+              browser. No devices to buy, manage or clean.
+            </p>
           </div>
         </div>
-        <p className="mt-3 max-w-[820px] text-[12.5px] leading-[1.55] text-slate-500">
-          Unit pricing beneath every package: NZ$49 per delivering clinician per month; certification
-          NZ$895 per clinician, falling to $425 at volume. The pilot is free for the first two
-          organisations — one clinician, a few real episodes, end to end.
-        </p>
+
+        {/* COMMERCIALS — negotiated per organisation (owner 2026-07-27: no
+            published pricing bentos; every agreement is its own negotiation). */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-5 rounded-[18px] border border-slate-200 bg-white px-6 py-5">
+          <div className="min-w-[260px] flex-1">
+            <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Commercials</p>
+            <p className="m-0 mt-1.5 text-[14.5px] leading-[1.55] text-slate-700">
+              Agreed per organisation, on the clinicians <strong>delivering the concussion
+              service</strong> — never headcount. The pilot is free for the first two organisations:
+              one clinician, a few real episodes, end to end.
+            </p>
+          </div>
+          <a
+            href="https://cal.com/zac-lewis-so8zjs/30min"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex cursor-pointer items-center rounded-[13px] px-[22px] py-[14px] text-[14.5px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
+            style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
+          >
+            Scope it in 20 minutes
+          </a>
+        </div>
       </section>
 
       {/* ── CLOSE ─────────────────────────────────────────────────────────── */}

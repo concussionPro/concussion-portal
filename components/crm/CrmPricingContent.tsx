@@ -231,6 +231,16 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           {/* Email capture — the not-ready-to-buy majority. Secondary to the
               enrol CTA above; the same magnet repeats near the page bottom. */}
           <EpLeadCapture variant="hero" location="hero" />
+
+          {/* Practical-day cities — surfaced at the TOP (owner 2026-07-27:
+              "locations are buried… too much scroll"). Cities derive from
+              CONFIG.LOCATIONS; no dates are named here, so the date-copy rule
+              is satisfied while the geography is instantly visible. */}
+          <p className="mt-4 text-[13px] text-muted-foreground">
+            <span className="font-semibold text-foreground">Practical-day cities:</span>{' '}
+            {Object.values(CONFIG.LOCATIONS).map((l) => l.city).join(' · ')} —{' '}
+            <a href="#pricing-cards" className="font-semibold text-accent underline">nominate yours at enrolment</a>
+          </p>
         </div>
 
         {/* Value intro + instruments — MOVED directly under the hero (2026-07-27,
@@ -485,6 +495,13 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-[13px] hover:bg-slate-50 transition-colors"
               />
             </div>
+          </div>
+
+          {/* Quick signup — directly under the payment cards (owner
+              2026-07-27): the not-ready-to-decide majority gets a one-field
+              path that keeps them, instead of scrolling away. */}
+          <div className="mt-6">
+            <EpLeadCapture variant="hero" location="under-pricing" />
           </div>
 
           {/* Trust Signals */}
