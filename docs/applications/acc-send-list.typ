@@ -65,29 +65,21 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 #v(3pt)
 #block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
   #set text(size: 9pt)
-  #text(weight: "bold")[Subject: The part of your concussion contract nobody's trained to deliver]
+  #text(weight: "bold")[Subject: Measured exercise tolerance for concussion — how I solved it in my own clinic]
   #v(4pt)
   Hi [Name],
   #v(3pt)
-  I'm a clinician and educator — I run Concussion Education Australia, managing concussion patients and training the clinicians who do. I've worked in New Zealand and know the ACC environment.
+  I'm a clinician — I run a concussion caseload, and I hit the same wall I suspect your team knows well: the guidelines moved to prescribed sub-symptom-threshold aerobic exercise (Amsterdam consensus — Patricios 2023), but there was no practical way to measure a patient's threshold, keep them in-band at home, or get any of it into the report without hours of admin.
   #v(3pt)
-  #text(weight: "bold")[Here's the problem I think your service is carrying.] Your contract obliges "assessment of exercise tolerance and/or functional capacity" — but the mandated team (medical, neuropsych, psychology, OT, physio) contains no discipline trained at entry to run graded exercise testing. So the consensus first-line treatment gets prescribed on estimates or not at all, the six-monthly ACC884 is rebuilt from notes at the deadline, and the outcomes ACC benchmarks — against every other supplier, from ACC's own data — ride on both.
+  So I built the fix for my own practice. SST Trainer runs the guided graded test, measures the heart-rate threshold, paces every home session on the patient's own watch — verified, not self-reported — and writes the report as care happens (protocol published: DOI 10.5281/zenodo.21482634). For an ACC concussion service, the report it compiles is the ACC884.
   #v(3pt)
-  I solve it in two parts, and I built both:
-  #v(2pt)
-  #set text(size: 8.9pt)
-  #text(weight: "bold", fill: accent)[The tool.] SST Trainer — built for my own caseload. A guided graded test measures each client's heart-rate threshold; home sessions run in-band on the client's own watch, verified not self-reported; the ACC884 content compiles as care is delivered. Protocol published: DOI 10.5281/zenodo.21482634.
-  #v(2pt)
-  #text(weight: "bold", fill: accent)[The training.] Eight online modules plus a practical day, written for the physios and OTs already on your team: graded exercise testing and threshold derivation · sub-symptom-threshold prescription and progression · phenotype-specific rehab · graded return to work and sport · persistent symptoms · documentation and reporting. Endorsed by Osteopathy Australia, ESSA-accredited (No. PDNF26077) — documented team competency for the Cl. 15.2 quality file. The education layer that makes sure the tool is used as designed.
+  These days I also train other clinicians to run it. The course is endorsed by Osteopathy Australia and ESSA-accredited (No. PDNF26077), written for the physios and OTs already delivering concussion services: graded exercise testing and threshold derivation, sub-symptom prescription and progression, return to work and sport, persistent symptoms, and the documentation that goes with it — compliant and proficient, in that order.
   #v(3pt)
-  #set text(size: 9pt)
-  The evidence in one line: sub-symptom aerobic exercise is the consensus first-line treatment (Patricios 2023, #emph[BJSM]) and shortened median recovery 17→13 days in the pivotal RCT (Leddy 2019, #emph[JAMA Pediatrics]) — yet \~two-thirds of surveyed rehab clinicians still don't prescribe it (Dobney 2021, #emph[Physiotherapy Canada]).
+  I've worked in New Zealand and know the ACC environment. You can see the whole thing without a call — sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
   #v(3pt)
-  See all of it without a call — sample ACC884 and a working dashboard, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
+  If it looks useful, I'd value 20 minutes with you or your clinical lead.
   #v(3pt)
-  Worth 20 minutes with you or your clinical lead?
-  #v(3pt)
-  Zac Lewis — Registered Osteopath (AHPRA) · Founder, Concussion Education Australia
+  Zac Lewis — Registered Osteopath (AHPRA) · Concussion Education Australia
 ]
 
 #v(8pt)
