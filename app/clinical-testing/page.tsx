@@ -235,6 +235,40 @@ function Shell() {
           </div>
 
           <SstClinicCard />
+
+          {/* Demo viewers ONLY (owner 2026-07-28): the tour's "now what" —
+              indicative commercials + the path, mirroring /acc. Paying users
+              never see this: their tools are included with enrolment. */}
+          {access === 'demo' && (
+            <div className="mt-6 overflow-hidden rounded-2xl border border-teal-200 bg-white">
+              <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                <div className="p-5">
+                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Indicative commercials</p>
+                  <p className="m-0 mt-1.5 text-xl font-extrabold tracking-tight text-slate-900">
+                    NZ$49<span className="text-[12px] font-semibold text-slate-500"> / delivering clinician / month</span>
+                  </p>
+                  <p className="m-0 mt-1 text-[12px] leading-snug text-slate-600">
+                    Both instruments, Gensolve filing, org licence. Training seats NZ$895 → $425 at 40+
+                    (one-off, 16 CPD, ESSA-accredited). Final commercials sized per organisation.
+                  </p>
+                </div>
+                <div className="flex flex-col items-start justify-center gap-2.5 p-5 bg-teal-50/60">
+                  <p className="m-0 text-[13px] font-bold leading-snug text-slate-900">
+                    Next: a 30-minute scoping call, then a pilot — one clinician, a few real episodes.
+                    Free for the first two organisations.
+                  </p>
+                  <TrackedOutbound
+                    href="https://cal.com/zac-lewis-so8zjs/30min"
+                    event="cal_click"
+                    source="demo-workspace-pricing"
+                    className="rounded-xl bg-teal-700 px-5 py-2.5 text-[13px] font-bold leading-none text-white hover:bg-teal-800 transition-colors"
+                  >
+                    Book 30 minutes
+                  </TrackedOutbound>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
