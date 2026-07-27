@@ -141,7 +141,12 @@ export default function AccSupplierPage() {
             </Link>
           </div>
           <p className="m-0 text-[12.5px] font-medium text-slate-500">
-            Live demos, no sign-in — every patient shown is fabricated. Ready to talk?{' '}
+            Live demos, no sign-in — every patient shown is fabricated. Your team won&rsquo;t live in
+            this dashboard either:{' '}
+            <a href="#workflow" className="font-bold underline" style={{ color: ACCENT }}>
+              reports file into the PMS you already run
+            </a>
+            . Ready to talk?{' '}
             <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: ACCENT }}>
               Book 20 minutes
             </a>.
@@ -439,7 +444,7 @@ export default function AccSupplierPage() {
             BUILT but never validated against a live tenant (no public sandbox;
             per-tenant key + IP whitelist) — say "validated with our first
             partner", never "integrated" or "certified". */}
-        <h3 className="mb-1 mt-8 text-[clamp(18px,2vw,22px)] font-extrabold leading-[1.15] tracking-[-0.02em]">
+        <h3 id="workflow" className="mb-1 mt-8 scroll-mt-24 text-[clamp(18px,2vw,22px)] font-extrabold leading-[1.15] tracking-[-0.02em]">
           Not another PMS — it feeds the one you run
         </h3>
         <p className="mb-4 max-w-[680px] text-[13.5px] leading-[1.5] text-slate-600">
