@@ -1205,6 +1205,8 @@ export default function AnalyticsDashboard() {
     paidNoLocation?: { count: number; registrants: Array<{ name: string; email: string; createdAt: string }> }
     interest?: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; source: string; createdAt: string }> }>
     interestTotal?: number
+    /** One-click date votes from the announce email — the pre-venue fill signal. */
+    dateVotes?: Array<{ city: string; votes: Array<{ email: string; createdAt: string }> }>
   } | null>(null)
   const [deletingInterest, setDeletingInterest] = useState<Set<string>>(new Set())
 
@@ -1401,6 +1403,7 @@ export default function AnalyticsDashboard() {
             paidNoLocation: poolJson.paidNoLocation,
             interest: poolJson.interest ?? [],
             interestTotal: poolJson.interestTotal ?? 0,
+            dateVotes: poolJson.dateVotes ?? [],
           })
         } else {
           failed++
@@ -2307,6 +2310,39 @@ export default function AnalyticsDashboard() {
                             </div>
                           )
                         ))}
+                      </>
+                    )}
+
+                    {/* Date votes — one-click nominations from the date-announce
+                        email (workshop_date_votes). The PRE-VENUE fill signal:
+                        book the room when a city shows numbers, not before. */}
+                    {(poolData.dateVotes?.length ?? 0) > 0 && (
+                      <>
+                        <SectionTitle
+                          title="Date Votes (from announce email)"
+                          subtitle="One-click 'I'd come' nominations — book venues on these numbers"
+                        />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                          {poolData.dateVotes!.map((cv) => (
+                            <div key={cv.city} className="rounded-xl border border-[var(--border)] bg-white p-4">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                                {cv.city === 'none' ? 'No date suits' : cv.city.replace('-', ' ')}
+                              </p>
+                              <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums mt-1">{cv.votes.length}</p>
+                              <details className="mt-2">
+                                <summary className="text-[11px] text-[var(--muted-foreground)] cursor-pointer">names</summary>
+                                <ul className="mt-1.5 space-y-1">
+                                  {cv.votes.map((v, i) => (
+                                    <li key={i} className="text-[11px] text-[var(--foreground)] truncate" title={v.email}>
+                                      {v.email}
+                                      <span className="text-[var(--muted-foreground)]"> · {new Date(v.createdAt).toLocaleDateString('en-AU')}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </details>
+                            </div>
+                          ))}
+                        </div>
                       </>
                     )}
 

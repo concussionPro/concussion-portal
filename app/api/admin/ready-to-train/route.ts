@@ -157,6 +157,25 @@ export async function GET(request: NextRequest) {
     }
     interest.sort((a, b) => b.count - a.count)
 
+    // 4. Date votes — one-click nominations from the date-announce email
+    // (workshop_date_votes). The pre-venue fill signal: names per city, so
+    // venues get booked on numbers, not hope.
+    let dateVotes: Array<{ city: string; votes: Array<{ email: string; createdAt: string }> }> = []
+    try {
+      const { listVotes } = await import('@/lib/workshop-votes')
+      const votes = await listVotes()
+      const byCity = new Map<string, Array<{ email: string; createdAt: string }>>()
+      for (const v of votes) {
+        if (!byCity.has(v.city)) byCity.set(v.city, [])
+        byCity.get(v.city)!.push({ email: v.email, createdAt: v.created_at })
+      }
+      dateVotes = Array.from(byCity.entries())
+        .map(([city, vs]) => ({ city, votes: vs }))
+        .sort((a, b) => b.votes.length - a.votes.length)
+    } catch (err) {
+      console.error('[ready-to-train] date-votes load failed (non-fatal):', err)
+    }
+
     return NextResponse.json({
       success: true,
       paidEnrollments,
@@ -166,6 +185,7 @@ export async function GET(request: NextRequest) {
       readyTotal,
       interest,
       interestTotal,
+      dateVotes,
     })
   } catch (error) {
     console.error('Admin ready-to-train API error:', error)
