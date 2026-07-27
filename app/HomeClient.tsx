@@ -155,15 +155,20 @@ export default function HomeClient() {
 
             {/* Body stamps — ONE strip under the pair (2026-07-28). OA endorses
                 CCM, ESSA accredits CRM; both link out. */}
-            <div className={`mt-4 flex flex-wrap items-center justify-center ${showCrm ? 'gap-x-8' : ''} gap-y-2`}>
+            {/* #1 TRUST SIGNAL (Zac 2026-07-28: "accreditation too small") —
+                big marks, card-weight presentation, full org names bold. */}
+            <div className={`mt-5 flex flex-wrap items-stretch justify-center ${showCrm ? 'gap-3' : ''} gap-y-3`}>
               {visibleStreams.map((s) =>
                 s.endorseHref && !s.endorsePending ? (
-                  <a key={s.id} href={s.endorseHref} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 group">
-                    <Image src={s.endorseImg} alt={`${s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'} ${s.endorseOrg}`} width={268} height={100} className={`${s.endorseImg === '/essa-accredited-pd.png' ? 'h-6' : 'h-7'} w-auto flex-none`} />
-                    <span className="text-[12px] font-semibold text-[var(--muted-foreground)] leading-snug group-hover:text-[var(--foreground)] transition-colors">
-                      {s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'}{' '}
-                      <span className="text-[var(--foreground)]">{s.endorseOrg}</span>
-                      <ExternalLink className="inline-block w-3 h-3 ml-1 -mt-0.5 opacity-50" strokeWidth={2.2} />
+                  <a key={s.id} href={s.endorseHref} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3.5 rounded-2xl border border-[rgba(13,115,119,0.14)] bg-white px-5 py-3.5 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all group">
+                    <Image src={s.endorseImg} alt={`${s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'} ${s.endorseOrg}`} width={268} height={100} className={`${s.endorseImg === '/essa-accredited-pd.png' ? 'h-10' : 'h-12'} w-auto flex-none`} />
+                    <span className="text-[13px] leading-snug text-[var(--muted-foreground)]">
+                      {s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'}
+                      <span className="block text-[15px] font-bold text-[var(--foreground)]">
+                        {s.endorseOrg}
+                        <ExternalLink className="inline-block w-3.5 h-3.5 ml-1.5 -mt-0.5 opacity-50" strokeWidth={2.2} />
+                      </span>
                     </span>
                   </a>
                 ) : null,
