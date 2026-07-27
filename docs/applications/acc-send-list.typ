@@ -69,7 +69,11 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
   #v(4pt)
   Hi [Name],
   #v(3pt)
-  I'm a clinician and educator — I run Concussion Education Australia, where I manage concussion patients and train the clinicians who do. I built the SST Trainer for my own caseload: it runs the graded test that measures each patient's heart-rate threshold, then paces every home session inside the prescribed band on the patient's own watch — and writes the report at the end (protocol published: DOI 10.5281/zenodo.21482634). I've worked in New Zealand and know the ACC reporting environment; for your team the report it compiles is the ACC884. The course that sits behind it is ESSA-accredited (16 CPD, No. PDNF26077) — the education layer that makes sure the tool is used as it was designed.
+  I'm a clinician and educator — I run Concussion Education Australia, managing concussion patients and training the clinicians who do.
+  #v(3pt)
+  I built the SST Trainer for my own caseload. A guided graded test measures each patient's heart-rate threshold; every home session is paced inside the prescribed band on the patient's own watch; the report writes itself at the end (protocol: DOI 10.5281/zenodo.21482634). I've worked in New Zealand and know the ACC environment — for your team, that report is the ACC884.
+  #v(3pt)
+  The training behind it is endorsed by Osteopathy Australia and ESSA-accredited (No. PDNF26077) — the education layer that makes sure the tool is used as designed.
   #v(3pt)
   I'm writing because the published gap between concussion guidelines and practice is large, and it lands directly on the measures your contract is scored on:
   #v(2pt)
