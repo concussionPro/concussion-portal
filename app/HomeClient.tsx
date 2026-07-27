@@ -58,6 +58,8 @@ const HOME_STREAMS: Array<{
     // navy variant for light backgrounds; white variant also in /public).
     endorseImg: '/essa-accredited-pd.png',
     endorseOrg: 'Exercise & Sports Science Australia',
+    // ESSA's external-PD listings page — where a verifying EP finds the PDO.
+    endorseHref: 'https://www.essa.org.au/Web/PD/PD-opportunities/external-pd.aspx',
     endorsePending: !ESSA_APPROVED,
     endorseSub: ESSA_APPROVED
       ? `8 ESSA CPD points online · up to 16 CPD hours`
