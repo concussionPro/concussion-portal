@@ -223,9 +223,10 @@ export const CONFIG = {
     // CPD points". Flip to true ONLY on real approval. Bundled to the client
     // (not secret). This is the one switch that takes the EP stream live.
     // GRANTED 2026-07-24, letter received 2026-07-27 — ESSA accredited CRM
-    // (Concussion Rehab Mastery), 8 online + 8 practical = 16 CPDs. Real ESSA
-    // badge in public/essa-endorsed.png (ESSA rebranded — verify asset matches
-    // their new brand file). Formal terms in CONFIG.ESSA_ACCREDITATION below.
+    // (Concussion Rehab Mastery), 8 online + 8 practical = 16 CPDs. Official
+    // "ESSA Accredited PD" lockup (rebrand pack, 27 Jul 2026) in
+    // public/essa-accredited-pd.png (+ -white variant for dark backgrounds).
+    // Formal terms in CONFIG.ESSA_ACCREDITATION below.
     ESSA_ACCREDITED: true,
     // International CRM live commerce: online-only, geo-priced checkout, the
     // bundled platform, and the year-2 renewal subscription.

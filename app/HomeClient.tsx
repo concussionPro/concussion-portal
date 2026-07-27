@@ -53,7 +53,10 @@ const HOME_STREAMS: Array<{
   {
     id: 'crm', code: 'CRM', name: 'Concussion Rehab Mastery',
     audience: 'Exercise physiologists', icon: HeartPulse, href: '/concussion-rehab-mastery',
-    endorseImg: '/essa-endorsed.png',
+    // OFFICIAL "ESSA Accredited PD" lockup from ESSA's marketing pack
+    // (letter 27 Jul 2026 — usage licensed for accredited PDOs; ESSA rebrand,
+    // navy variant for light backgrounds; white variant also in /public).
+    endorseImg: '/essa-accredited-pd.png',
     endorseOrg: 'Exercise & Sports Science Australia',
     endorsePending: !ESSA_APPROVED,
     endorseSub: ESSA_APPROVED
@@ -165,12 +168,12 @@ export default function HomeClient() {
                       // the same height. OA = square shield; ESSA = compact starburst+
                       // wordmark mark (cropped from its lockup to match). Only the verb
                       // differs — OA endorses, ESSA accredits.
-                      const accredits = s.endorseImg === '/essa-endorsed.png'
+                      const accredits = s.endorseImg === '/essa-accredited-pd.png'
                       const verb = s.endorsePending ? 'Endorsement pending' : (accredits ? 'Accredited by' : 'Endorsed by')
                       const inner = (
                         <>
                           {!s.endorsePending && (
-                            <Image src={s.endorseImg} alt={`${verb} ${s.endorseOrg}`} width={200} height={100} className="h-[42px] sm:h-[48px] w-auto flex-none" />
+                            <Image src={s.endorseImg} alt={`${verb} ${s.endorseOrg}`} width={268} height={100} className="h-[42px] sm:h-[48px] w-auto flex-none" />
                           )}
                           <span className="min-w-0 text-left">
                             <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
