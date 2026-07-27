@@ -61,54 +61,49 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 
 #v(10pt)
 // ── MASTER PITCH ─────────────────────────────────────────────────────────
-#text(size: 12.5pt, weight: "bold")[The opener — doctrine form: <80 words, zero links, interest CTA]
+#text(size: 12.5pt, weight: "bold")[THE OPENER — final. Zero links (doctrine). Personalise \[Name\] + nothing else.]
 #v(3pt)
-#block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
+#block(stroke: (left: 2.5pt + accent), inset: (left: 10pt, top: 4pt, bottom: 4pt))[
   #set text(size: 9.5pt)
-  #text(weight: "bold")[Subject: measuring exercise tolerance — concussion]
+  #text(weight: "bold")[Subject: 17 days → 13 — when sub-threshold rehab is measured]
   #v(4pt)
-  Hi [Name],
+  Hi \[Name\],
   #v(3pt)
-  I'm a clinician — I train concussion clinicians across Australia and run my own caseload. Since the guidelines moved to prescribed sub-symptom aerobic exercise, the hard part is measuring the threshold and evidencing it in the ACC884. I built a tool that does both, and the training behind it (OA-endorsed, ESSA-accredited). I've worked in NZ and know ACC.
+  Concussion rehab now lives or dies on sub-symptom aerobic exercise — but it happens at home, at intensities nobody measured, and come reporting time you're proving outcomes to ACC from notes.
   #v(3pt)
-  Want a look at a sample ACC884 it produces?
+  That bugged me enough in my own caseload that I built the fix: a guided test measures each patient's heart-rate threshold, their own watch verifies every home session, and the ACC884 compiles itself as care happens.
   #v(3pt)
-  Zac Lewis · Osteopath
+  Behind it sits the only Australian concussion training endorsed by Osteopathy Australia and accredited by ESSA — so your physios and OTs run it properly, not just own it. (It's the method that cut median recovery from 17 to 13 days — Leddy, #emph[JAMA Pediatrics].)
+  #v(3pt)
+  If a trained team and standardised, self-writing ACC884s across your service is worth 20 minutes, I'll walk you through the whole workflow — or just reply "show me" and I'll send the live demo first.
+  #v(3pt)
+  Zac Lewis · Osteopath — Concussion Education Australia
 ]
-#v(6pt)
-#text(size: 9pt, fill: muted)[74 words. The reply is the win. Everything else — demo links, course content, contract clauses, evidence — goes in the REPLY email below, where it reads as service, not pitch.]
+#v(4pt)
+#text(size: 9pt, fill: muted)[NO links, NO attachments in the opener — deliverability and doctrine. Two-ramp close: call-ready targets book; curious ones reply "show me". Every reply is a win.]
 
-#v(8pt)
-#text(size: 12.5pt, weight: "bold")[The reply email — sent only when they answer yes]
+#v(10pt)
+#text(size: 12.5pt, weight: "bold")[THE REPLY — sent the moment anyone answers. Carries everything.]
 #v(3pt)
-#block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
+#block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 4pt, bottom: 4pt))[
   #set text(size: 9pt)
-  [Name] — here it is.
+  \[Name\] — here it is.
   #v(3pt)
-  Sample ACC884, compiled from a demonstration episode (fabricated data), plus the working dashboard — no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc]
+  Everything is live, no login: #text(weight: "bold")[portal.concussion-education-australia.com/acc] — a sample ACC884 compiled from a demonstration episode, the clinician dashboard on an example caseload, and the patient app itself. Click through in any order.
   #v(3pt)
-  How it works: a guided graded test measures the client's heart-rate threshold; home sessions run in-band on their own watch, verified rather than self-reported; the ACC884 content compiles as care is delivered instead of being rebuilt from notes at the six-monthly deadline. Protocol published: DOI 10.5281/zenodo.21482634.
+  How it hangs together: a guided graded test measures the client's heart-rate threshold; home sessions run in-band on the client's own watch — verified, never self-reported; the ACC884 content compiles as care is delivered instead of being rebuilt from notes at the deadline. Protocol published: DOI 10.5281/zenodo.21482634.
   #v(3pt)
-  The training behind it is written for the physios and OTs already on your team — graded exercise testing, threshold prescription and progression, return to work and sport, persistent symptoms, documentation. Endorsed by Osteopathy Australia; ESSA-accredited (No. PDNF26077). It also gives you documented team competency for the quality file.
+  The training is written for the physios and OTs already on your team — graded exercise testing, threshold prescription and progression, return to work and sport, persistent symptoms, and the documentation. Endorsed by Osteopathy Australia; ESSA-accredited. It doubles as documented team competency for your quality file.
   #v(3pt)
-  If it maps to what your service is carrying, 20 minutes with you or your clinical lead and I'll walk a full episode end to end.
+  Easiest next step — grab any time that suits: #text(weight: "bold")[cal.com/zac-lewis-so8zjs/30min]
   #v(3pt)
   Zac
 ]
+#v(4pt)
+#text(size: 9pt, fill: muted)[The reply carries: /acc (demo estate — sample ACC884 + DEMO00 dashboard + patient app) and the cal.com booking link. NO attachments, ever — everything lives at the link. The pricing question ("who pays — supplier margin or recoverable within the funded service?") is asked ON the call, never in writing first.]
 
 #v(8pt)
-#text(size: 11pt, weight: "bold")[Variant swaps — replace the "I'm writing because…" lead-in sentence only]
-#v(2pt)
-#block(stroke: (left: 2.5pt + slate), inset: (left: 10pt, top: 2pt, bottom: 2pt))[
-  #set text(size: 9pt)
-  #text(weight: "bold")[A — holds the contract, publishes no concussion capability:] "I'm writing because the hardest part of the Concussion Services contract to staff is the one it obliges — exercise-tolerance assessment (5.8.2.1.2) — and the published gap between guidelines and practice explains why:"
-  #v(3pt)
-  #text(weight: "bold")[B — contract-literate (default):] as written above.
-  #v(3pt)
-  #text(weight: "bold")[C — markets concussion, never mentions ACC:] "I'm writing because in a market where every supplier's performance is visible to every other supplier (Cl. 13.4), the published gap between guidelines and practice is the differentiation opportunity:"
-]
-#v(5pt)
-#text(size: 9pt)[#text(weight: "bold")[Cover line for every referral-inbox route:] "Could you please pass this to [name / role] — it concerns [Org]'s ACC Concussion Services contract. Thank you."]
+#text(size: 9.5pt)[#text(weight: "bold")[Cover line for every inbox-routed address:] "Could you please pass this to \[name / role\] — it concerns \[Org\]'s ACC Concussion Services contract. Thank you." #h(6pt) #text(weight: "bold")[Follow-up:] one, at +7 business days, quoting the original — no new links, no third touch.]
 
 #pagebreak()
 
