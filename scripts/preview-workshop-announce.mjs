@@ -32,18 +32,18 @@ function voteRow(email) {
     <p style="margin:22px 0 4px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0f172a;text-align:center;">One click — which date would you come to?</p>
     <p style="margin:0 0 8px;font-size:12.5px;color:#64748b;text-align:center;">Not a booking — it just tells us your numbers so dates lock in.</p>
     <p style="text-align:center;margin:0;">
-      ${btn('melbourne', 'Melbourne · Sat 31 Oct', '#0d9488')}
-      ${btn('byron-bay', 'Byron Bay · Sat 7 Nov', '#0f766e')}
-      ${btn('sydney', 'Sydney · Sat 14 Nov', '#115e59')}
+      ${btn('melbourne', 'Melbourne · Sat 7 Nov', '#0d9488')}
+      ${btn('byron-bay', 'Byron Bay · Sat 14 Nov', '#0f766e')}
+      ${btn('sydney', 'Sydney · Sat 21 Nov', '#115e59')}
     </p>
     <p style="text-align:center;margin:8px 0 0;"><a href="${voteLink(email, 'none')}" style="font-size:12.5px;color:#64748b;text-decoration:underline;">None of these work — keep me posted</a></p>`
 }
 
 // ⚠ PLANNED dates — placeholders for review. The live send derives from CONFIG.LOCATIONS.
 const DATES = [
-  { city: 'Melbourne', date: 'Saturday 31 October', note: 'early-bird to 17 Oct' },
-  { city: 'Byron Bay', date: 'Saturday 21 November', note: 'early-bird to 7 Nov' },
-  { city: 'Sydney', date: 'announced at the OA Conference (17 Oct)', note: 'nominations open' },
+  { city: 'Melbourne', date: 'Saturday 7 November', note: '$1,190 early-bird until Fri 24 Oct' },
+  { city: 'Byron Bay', date: 'Saturday 14 November', note: '$1,190 early-bird until Fri 31 Oct' },
+  { city: 'Sydney', date: 'Saturday 21 November', note: '$1,190 early-bird until Fri 7 Nov' },
 ]
 
 const utm = (content) => `utm_source=resend&utm_medium=email&utm_campaign=nov-dates-2026&utm_content=${content}`
@@ -59,7 +59,7 @@ const shared = {
   credStrip: `<p style="margin:18px 0 0;font-size:12.5px;color:#64748b;text-align:center;">Endorsed by Osteopathy Australia &middot; ESSA-accredited rehab stream &mdash; the one concussion program accredited across both professions.</p>`,
   dayBlock: `
     <p style="margin:20px 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0f172a;">The practical day</p>
-    <p style="margin:0;font-size:14.5px;color:#334155;line-height:1.6;">Supervised hands-on assessment on real cases &mdash; SCAT6, VOMS, BESS, cervical and oculomotor &mdash; plus return-to-play decision pathways, finishing with OSCE-assessed competency. You leave signed off, not just informed.</p>`,
+    <p style="margin:0;font-size:14.5px;color:#334155;line-height:1.6;">Supervised hands-on assessment on real cases &mdash; SCAT6, VOMS, BESS, cervical and oculomotor &mdash; plus return-to-play decision pathways, finishing with OSCE-assessed competency. You leave signed off, not just informed. <strong>Each day is capped at 12</strong> &mdash; that&rsquo;s the supervised format, not a marketing number.</p>`,
   platformBlock: `
     <p style="margin:18px 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0f172a;">Included with enrolment</p>
     <p style="margin:0;font-size:14.5px;color:#334155;line-height:1.6;">The working clinical platform: the <strong>SST Trainer</strong> (measured heart-rate-threshold rehab your patients run on their own phone) and <strong>Preseason Baseline &amp; Serial Testing</strong> &mdash; the instruments to deliver what the course teaches, from day one.</p>`,
@@ -119,7 +119,8 @@ const variants = [
       <p style="font-size:15px;color:#334155;line-height:1.65;">You asked to be told when a practical day was scheduled. Two are now locked, with Sydney announced at the OA Conference:</p>
       ${dateTableHtml}
       ${voteRow(PREVIEW_TO)}
-      <p style="font-size:14.5px;color:#334155;line-height:1.6;"><strong>$1,190 early-bird</strong> until 14 days before each date, then $1,400. The Complete course is the full 8-module online program (start today) plus your practical day &mdash; 14 CPD hours all up.</p>
+      <p style="font-size:14.5px;color:#334155;line-height:1.6;"><strong>$1,190 early-bird</strong> until the date shown for each city, then $1,400 in the final fortnight. The Complete course is the full 8-module online program (start today) plus your practical day &mdash; 14 CPD hours all up. <strong>These are the last practical days of 2026</strong> &mdash; the next round is next year.</p>
+      <p style="font-size:14.5px;color:#334155;line-height:1.6;">One more thing worth saying plainly: every region ends up with a clinic GPs send concussion to. The clinician who can show a measured heart-rate-threshold recovery &mdash; not an estimate &mdash; and a documented return-to-play record tends to become that clinic. That capability is what the course and the included SST Trainer are for.</p>
       ${shared.dayBlock}
       ${shared.platformBlock}
       <p style="text-align:center;margin:26px 0 0;">
