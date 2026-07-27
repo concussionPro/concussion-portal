@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
+import { trackEvent } from '@/lib/analytics'
 
 /**
  * CRM purchase control. Watertight-per-stream on the client too:
@@ -65,6 +66,7 @@ export default function CrmCheckoutButton({
       })
       const data = await res.json()
       if (!res.ok || !data.url) { setError(data.error || 'Could not start checkout.'); setBusy(false); return }
+      void trackEvent('checkout_start', { stream: 'crm', tier, userEmail: email })
       window.location.href = data.url
     } catch {
       setError('Network error — please try again.')
@@ -73,8 +75,10 @@ export default function CrmCheckoutButton({
   }
 
   if (!open) {
+    // Without the enroll_button_click event the CRM funnel read a structural
+    // ZERO enrol clicks (2026-07-27) — the stream's buying intent was invisible.
     return (
-      <button type="button" onClick={() => setOpen(true)} className={className}>
+      <button type="button" onClick={() => { void trackEvent('enroll_button_click', { stream: 'crm', tier }); setOpen(true) }} className={className}>
         {label} <ArrowRight className="w-4 h-4" />
       </button>
     )

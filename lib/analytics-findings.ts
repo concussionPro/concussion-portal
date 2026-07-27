@@ -223,8 +223,12 @@ export function analyze(events: Ev[]): Finding[] {
     if (new Set(pvs.map((p) => p.path)).size <= 1) l.bounced++
     landers.set(entry, l)
   }
+  // App/tool surfaces are NOT funnel pages — a patient running /sst-trainer or
+  // an athlete on a baseline link "bounces" by design. Flagging them was a
+  // false positive (owner-confirmed 2026-07-27).
+  const APP_SURFACES = ['/sst-trainer', '/clinical-hub', '/preseason/b/', '/demo/', '/clinical-testing']
   for (const [page, l] of landers) {
-    if (l.entries >= 8 && l.bounced === l.entries && !page.startsWith('/preseason/b/')) {
+    if (l.entries >= 8 && l.bounced === l.entries && !APP_SURFACES.some((p) => page.startsWith(p))) {
       findings.push({
         key: `lander-dead-${page}`,
         severity: 2,

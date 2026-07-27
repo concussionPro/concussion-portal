@@ -1787,26 +1787,29 @@ export default function AnalyticsDashboard() {
                     <p className="m-0 mt-1 text-[12.5px] text-slate-500">No measured leak between traffic and money this window. Orders appear here the moment the data shows one.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  /* One line per order: WHAT WILL CHANGE on the site. The
+                     diagnostics live behind the expander — they are Claude's
+                     working notes, not Zac's reading (owner, 2026-07-27). */
+                  <div className="card divide-y divide-slate-100">
+                    <p className="m-0 px-4 py-3 text-[13px] font-bold text-slate-900">
+                      {workOrders.length} change{workOrders.length > 1 ? 's' : ''} queued — say <span className="text-teal-700">&ldquo;run the analytics pass&rdquo;</span> to Claude to ship them
+                    </p>
                     {workOrders.map((f) => (
-                      <div key={f.key} className="card p-4 border-l-4" style={{ borderLeftColor: f.severity === 1 ? '#dc2626' : f.severity === 2 ? '#d97706' : '#0284c7' }}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${f.severity === 1 ? 'bg-red-100 text-red-700' : f.severity === 2 ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700'}`}>
-                            {f.severity === 1 ? 'MONEY LEAK' : f.severity === 2 ? 'PIPELINE GAP' : 'SIGNAL'}
-                          </span>
-                          <span className="text-[10px] text-slate-400">open since {new Date(f.first_seen).toLocaleDateString('en-AU')}</span>
+                      <details key={f.key} className="group">
+                        <summary className="flex cursor-pointer items-center gap-2.5 px-4 py-2.5 list-none">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${f.severity === 1 ? 'bg-red-500' : f.severity === 2 ? 'bg-amber-500' : 'bg-sky-500'}`} />
+                          <span className="flex-1 text-[13px] text-slate-800">{f.proposed_change.split(/[.:—]/)[0]}</span>
+                          <span className="text-[10px] text-slate-300 group-open:rotate-90 transition-transform">▸</span>
+                        </summary>
+                        <div className="px-4 pb-3 pl-9">
+                          <p className="m-0 text-[12px] font-semibold text-slate-600">{f.title}</p>
+                          <p className="m-0 mt-0.5 text-[11.5px] text-slate-400">{f.evidence} · open since {new Date(f.first_seen).toLocaleDateString('en-AU')}</p>
+                          <p className="m-0 mt-1 text-[12px] text-slate-500">{f.proposed_change}</p>
                         </div>
-                        <p className="m-0 text-sm font-bold text-slate-900">{f.title}</p>
-                        <p className="m-0 mt-0.5 text-[12.5px] text-slate-500">{f.evidence}</p>
-                        <p className="m-0 mt-1.5 text-[12.5px] font-medium text-teal-700">→ {f.proposed_change}</p>
-                      </div>
+                      </details>
                     ))}
                   </div>
                 )}
-
-                <p className="m-0 text-[12px] text-slate-400">
-                  To action the queue: tell Claude <strong className="text-slate-600">&ldquo;run the analytics pass&rdquo;</strong> — it reads these orders and ships the changes. The weekly review (Mon AM) emails this same queue.
-                </p>
               </div>
             )}
 
