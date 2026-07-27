@@ -155,26 +155,6 @@ export default function HomeClient() {
 
             {/* Body stamps — ONE strip under the pair (2026-07-28). OA endorses
                 CCM, ESSA accredits CRM; both link out. */}
-            {/* #1 TRUST SIGNAL (Zac 2026-07-28: "accreditation too small") —
-                big marks, card-weight presentation, full org names bold. */}
-            <div className={showCrm ? 'mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3' : 'mt-3 flex justify-center'}>
-              {visibleStreams.map((s) =>
-                s.endorseHref && !s.endorsePending ? (
-                  <a key={s.id} href={s.endorseHref} target="_blank" rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-3.5 rounded-2xl border border-[rgba(13,115,119,0.14)] bg-white px-5 py-4 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all group">
-                    <Image src={s.endorseImg} alt={`${s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'} ${s.endorseOrg}`} width={268} height={100} className={`${s.endorseImg === '/essa-accredited-pd.png' ? 'h-10' : 'h-12'} w-auto flex-none`} />
-                    <span className="text-[13px] leading-snug text-[var(--muted-foreground)]">
-                      {s.endorseImg === '/essa-accredited-pd.png' ? 'Accredited by' : 'Endorsed by'}
-                      <span className="block text-[15px] font-bold text-[var(--foreground)]">
-                        {s.endorseOrg}
-                        <ExternalLink className="inline-block w-3.5 h-3.5 ml-1.5 -mt-0.5 opacity-50" strokeWidth={2.2} />
-                      </span>
-                    </span>
-                  </a>
-                ) : null,
-              )}
-            </div>
-
             {/* The streams are separate ONLINE — the practical day is SHARED.
                 Said explicitly (Zac 2026-07-27): the relationship between the
                 two cards is deliberate, and the multidisciplinary room is a
