@@ -108,7 +108,7 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 #pagebreak()
 
 // ── WAVE 1 ───────────────────────────────────────────────────────────────
-#text(size: 13pt, weight: "bold")[WAVE 1 — send this week]
+#text(size: 13pt, weight: "bold")[SEND LIST — all go out together. Order below is expected-value only.]
 #v(5pt)
 #org("1", "What Ever It Takes", "2", "A", "charmeyne@whateverittakes.co.nz  ·  brad@whateverittakes.co.nz   [DIRECT — published on own site]", [#text(weight: "bold")[Charmeyne Te Nana-Williams — Director] · Brad Takai — Clinical Manager], "Holds the contract across Auckland/BoP/Waikato and publishes ZERO concussion content — the sharpest capability gap with a DIRECT decision-maker address. The best send on this list.")
 #org("2", "Hemisphere Health", "3", "A", "referrals@hemispherehealth.co.nz   [inbox + cover to the Newburns]", [#text(weight: "bold")[Dr Scott Newburn — Occupational Medicine Specialist & Director] · Gemma Newburn — Physiotherapist & Director], "7 staff, husband-and-wife owner-operators, Nelson contract, no concussion content, no procurement layer. Highest-probability fast close. RTW metrics are Scott's native professional language — add the line: 'for a two-director practice, the ACC884 compiling itself is your own hours back each cycle.'")
@@ -116,20 +116,14 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 #org("4", "Bay Rehab", "2", "B", "admin@bayrehab.co.nz   [cover to Joss McDougall]", [#text(weight: "bold")[Joss McDougall — Managing Director, Physiotherapist]], "~75 staff, Tauranga. Decision-maker and clinician are the SAME PERSON — the master pitch lands without translation. Explicit ACC concussion service.")
 #org("5", "Rope Neuro Rehabilitation", "2", "B", "admin@ropeneurorehab.co.nz   [cover to Julie Rope]", [#text(weight: "bold")[Julie Rope — Director & Senior Clinical Practitioner]], "22 clinicians, pure neuro specialisation, founder-led, contract-literate (ACC883 pathway described on site). Excellent early independent-reference candidate for Auckland.")
 
-#v(8pt)
-// ── WAVE 2 ───────────────────────────────────────────────────────────────
-#text(size: 13pt, weight: "bold")[WAVE 2 — +2 business days]
-#v(5pt)
+
 #org("6", "Axis Sports Medicine", "1", "B†", "info@axissportsmedicine.co.nz   [cover to Dr Fulcher]", [#text(weight: "bold")[Dr Mark Fulcher — Managing Director] · Dr Dan Exeter — Clinical Director], "† PEER REGISTER — they know Leddy; never explain the rationale. Sell the between-visit telemetry, cross-site consistency (8 sites incl. Queenstown) and clean data export. Use the Axis-specific copy in SENDS-2026-07-27.md.")
 #org("7", "Active+", "1", "B", "headoffice@activeplus.co.nz   [cover to Dr Pauline Penny]", [#text(weight: "bold")[Dr Pauline Penny — Head of Service Delivery, Multidisciplinary Community Rehab]], "THE ANCHOR: 17/17 regions, 1,400+ clinicians, self-described 25% of all ACC concussion programmes. Angle = one measured standard across every region + documented competency at scale. Long procurement cycle — run in parallel, never wait on it.")
 #org("8", "Laura Fergusson Brain Injury Trust", "2", "B", "hello@lfbit.co.nz   [cover to Pat Hopkins]", [#text(weight: "bold")[Pat Hopkins — Clinical Manager, Community Rehab] · Kathryn Jones — CEO], "220+ employees; a dedicated brain-injury CHARITY — the highest mission-alignment on the list. Warm the tone; the most detailed ACC concussion presentation of any supplier (ACC883 + ACC7412 pathways published).")
 #org("9", "Align Health", "2", "B", "contracts@alignhealth.co.nz   [the only contracts@ on the list — lowest-friction door]", [Olivia Monaghan Johnson — Director (per Companies Office; site names nobody)], "8 sites, ~30 physios, Waikato. Explicit 'fully funded ACC pathway' page. The contracts@ address means the pitch lands on a desk that thinks in contract terms — lead with Cl. 5.8.2.1.2.")
 #org("10", "Body In Motion Physio & Rehab", "2", "B", "admin@bodyinmotion.co.nz   [cover to the Concussion Service lead]", [Leadership unpublished — cover-line to role, not name], "~11 sites across BoP/Taranaki/Waikato; quotes the contract language verbatim on its own concussion page. Physio-led and contract-literate.")
 
-#v(8pt)
-// ── WAVE 3 ───────────────────────────────────────────────────────────────
-#text(size: 13pt, weight: "bold")[WAVE 3 — next week (apply wave-1 learnings first)]
-#v(5pt)
+
 #org("11", "Tui Allied Health", "3", "A", "referrals@tuialliedhealth.co.nz   [inbox]", [Leadership unpublished — Companies Office lookup pending], "8 staff, Hamilton, newly contracted in the 2025 round, no concussion content. Strong DESIGN-PARTNER profile — offer the pilot explicitly.")
 #org("12", "Focus on Potential", "2", "C", "performance@focusonpotential.com   [cover to Cassandra Hopkins]", [#text(weight: "bold")[Cassandra Hopkins — Founder & Director]], "200+ clinicians (part of Access Community Health) — Tier 1 by size. Lists a concussion service, never says ACC.")
 #org("13", "Rehab Taranaki", "3", "C", "admin@rehabtaranaki.co.nz   [cover to the Concussion/Neuro Physiotherapist]", [No owner named — one staffer titled Concussion/Neuro Physiotherapist], "Self-identifies as 'the leading provider of concussion services in Taranaki' — the warmest Tier 3 lead. Differentiation frame: their local rival is #14.")
@@ -143,9 +137,9 @@ The contract obliges every supplier to deliver #text(weight: "bold")["assessment
 
 #v(8pt)
 // ── HELD ─────────────────────────────────────────────────────────────────
-#text(size: 13pt, weight: "bold")[HELD — deliberate handling]
+#text(size: 13pt, weight: "bold")[EXCEPTIONS]
 #v(5pt)
 #org("21", "ABI Rehabilitation + Proactive Rehab — ONE GROUP", "1", "B", "enquiry@abi-rehab.co.nz  ·  enquiries@proactivehealthcare.co.nz", [Dr Christine Howard-Brown — CE (covers BOTH) · Michelle Wilkinson — GM (BOTH) · Dr Hamish Reid — Medical Director], "Shared executives — a pitch to one is visible to the other. ONE deliberate approach after wave-1 learnings; never two independent emails.")
-#org("22", "TBI Health Group", "1", "—", "tbireferrals@tbihealth.co.nz   [HOLD]", [Unverified — site blocks all automated checks], "Likely the most clinically sophisticated Tier 1 and the hardest to impress. Founder does a manual browser pass on leadership before any send.")
-#org("23", "Specialist Rehab Services", "2", "—", "referrals@srsltd.co.nz   [HOLD]", [Snippet-named founders are LOW-CONFIDENCE — do not use], "Widest Tier 2 footprint (5 regions). Site returns corrupted content; manual check first.")
+#org("22", "TBI Health Group", "1", "—", "tbireferrals@tbihealth.co.nz   [cover to the clinical lead — role-addressed]", [Unverified — site blocks all automated checks], "Likely the most clinically sophisticated Tier 1 and the hardest to impress. Founder does a manual browser pass on leadership before any send.")
+#org("23", "Specialist Rehab Services", "2", "—", "referrals@srsltd.co.nz   [cover to the clinical lead — role-addressed]", [Snippet-named founders are LOW-CONFIDENCE — do not use], "Widest Tier 2 footprint (5 regions). Site returns corrupted content; manual check first.")
 #org("24", "Canterbury DHB (legacy entity)", "—", "—", "braininjuryrehab@cdhb.health.nz   [DEPRIORITISED]", [Entity folded into Te Whatu Ora — contracting arrangement unverified], "Public-sector procurement, no training budget, uncertain entity. A credibility reference later, not outreach now.")
