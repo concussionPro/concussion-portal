@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { SiteNav } from '@/components/SiteNav'
 import { createAuthorSchema, organizationSchema } from '@/lib/schema-markup'
 import { GraduationCap, ShieldCheck, BookOpen, Activity, Stethoscope, Users } from 'lucide-react'
@@ -155,10 +156,14 @@ export default function ZacLewisAboutPage() {
                     Members-logo art from the SMA portal lands at
                     /public/sma-member-logo.png (flip the flag below). */}
                 <li className="flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
+                  {/* White org logo needs a dark chip; the "Member," text
+                      beside it keeps the claim exactly what it is. */}
+                  <span className="flex h-10 w-[72px] shrink-0 items-center justify-center rounded-lg bg-slate-900 px-2">
+                    <Image src="/sma-logo-white.png" alt="Sports Medicine Australia" width={377} height={151} className="h-6 w-auto" />
+                  </span>
                   <div>
                     <p className="font-semibold text-slate-900">Member, Sports Medicine Australia</p>
-                    <p className="text-xs text-slate-600">Australia&apos;s peak multidisciplinary sports medicine body.</p>
+                    <p className="text-xs text-slate-600">Australia&apos;s peak multidisciplinary sports medicine body. Member ID 179899.</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
