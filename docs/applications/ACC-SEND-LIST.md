@@ -93,3 +93,8 @@
 - referrals@abi-rehab.co.nz — Dr Howard-Brown's own published contact (upgraded from enquiry@)
 - Apollo 0-results (stay on inbox+cover): Bay Rehab (Joss), Axis (Fulcher/Exeter), Geneva (Rossiter), Astech (Lynda), SRS, BIM, Tui, Motus, Coastal, Advantage Sth, Rehab Taranaki
 - All 23 drafts send FROM info@concussion-education-australia.com
+
+## ROUND 1 FIRED 2026-07-28 (staggered, ~11:54–13:20 NZT-adjacent)
+- 24 sends total: 23 targets − brad@ (HARD BOUNCE 550, departed WEIT — suppress) + jolene@whateverittakes.co.nz (replacement, Strategy/Innovation Mgr, address Apollo-confirmed)
+- Actual From: zac@concussion-education-australia.com (Gmail rewrote info@ — not a verified send-as alias; add in Gmail settings before follow-up round if info@ wanted)
+- Follow-up due +7 BD ≈ Aug 6. Habit Health = contact form, manual.
