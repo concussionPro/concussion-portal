@@ -6,14 +6,19 @@ import { CompetencyGapEvidence } from '@/components/clinical/CompetencyGapEviden
 import { TrackedOutbound } from '@/components/TrackedOutbound'
 
 /**
- * /clinics — the AU neurorehab/concussion-clinic pitch (the 'aus neuro'
- * outreach stream). /acc reworked for Australia: NO ACC884, no NZ$ — the
- * argument is the measured-threshold wedge, defensible RTP documentation,
- * and CCM-enrolled team competency. /acc stays untouched for NZ suppliers.
+ * /clinics — the AU neurorehab/vestibular/concussion-clinic pitch (the
+ * 'aus neuro' outreach stream). /acc reworked for the AUSTRALIAN model —
+ * /acc itself stays untouched for NZ ACC suppliers.
  *
- * Same disciplines as /acc: STRUCTURE not prose; live artifacts; no outcome
- * claims (trial cited once with population limits); clinician-led always
- * (TGA — never self-directed).
+ * THE AU BUYER'S WORLD (what compliance means here — NOT ACC):
+ *  - NDIS progress reports that must evidence capacity-building against goals
+ *  - CTP / workers-comp insurer approvals — objective progress measures keep
+ *    treatment funding flowing (AHTR-style justifications)
+ *  - AHPRA record-keeping standards + medicolegal RTP defensibility
+ *  - Cliniko as the PMS — where our report write-back is tenant-validated
+ *
+ * Disciplines as /acc: STRUCTURE not prose; live artifacts; trial cited once
+ * with population limits; no outcome claims; clinician-led always (TGA).
  */
 export const metadata = { robots: 'noindex, nofollow' } as const
 
@@ -21,6 +26,33 @@ const hanken = Hanken_Grotesk({ subsets: ['latin'] })
 const ACCENT = '#0d9488'
 const CAL = 'https://cal.com/zac-lewis-so8zjs/30min'
 const RTP_SAMPLE = '/api/sst/report?code=DEMO00&patient=Demo%20Patient&skin=rtp-clearance&first=Alex&last=Demo&clinician=Reviewing%20Clinician'
+const GP_SAMPLE = '/api/sst/report?code=DEMO00&patient=Demo%20Patient&skin=gp-report&first=Alex&last=Demo&clinician=Reviewing%20Clinician'
+
+/** Funder/obligation → what the episode record evidences. The AU compliance map. */
+const FUNDERS = [
+  {
+    k: 'Insurer-funded care (CTP · workers comp)',
+    need: 'Case managers approve further treatment on objective progress evidence and clear clinical justification.',
+    ans: 'A serial measured threshold is exactly that — a physiological trajectory, session by session, attached to your treatment request instead of a symptom narrative.',
+  },
+  {
+    k: 'NDIS progress reporting',
+    need: 'Reports must evidence capacity-building against plan goals, from auditable records.',
+    ans: 'Every home session is recorded against the prescribed band — dose, adherence and progression documented as they happen, ready to draw into the progress report.',
+  },
+  {
+    k: 'AHPRA records + medicolegal',
+    need: 'Records that stand up: what was prescribed, what was done, what changed — especially behind a return-to-play decision.',
+    ans: 'The structured episode record (threshold, band, minutes, symptom deltas, progressions) is clinician-signed and exportable — the file a defensible RTP call stands on.',
+  },
+]
+
+/** The workflow shift — before/after, mirroring /acc's SHIFT table. */
+const SHIFT = [
+  { step: 'Between appointments', before: 'Home program adherence unknown — you find out what happened at the next visit', after: 'Every session verified on the patient’s own watch; flare-ups visible the day they happen' },
+  { step: 'Progress-report time', before: 'Reconstruct the episode from appointment notes', after: 'Draw from the structured record — GP report and RTP summary render from the episode data' },
+  { step: 'Filing', before: 'Write, export, attach, upload to the PMS', after: 'Reports file into the patient’s Cliniko record as clinical notes — no re-keying' },
+]
 
 const PACKAGE = [
   {
@@ -40,12 +72,6 @@ const PACKAGE = [
   },
 ]
 
-const WHY = [
-  { k: 'Measured, never estimated', body: 'Age-formula HR targets miss the individual. The graded test finds each patient’s actual threshold, and progression follows the measurement — the consensus first-line treatment, delivered as prescribed.' },
-  { k: 'Verified between visits', body: 'Home rehab happens at intensities nobody sees. SST verifies every session against the band on the patient’s own wearable — dose and adherence observed, not assumed.' },
-  { k: 'Defensible documentation', body: 'Return-to-play is the decision clinicians report least confidence in. A measured trajectory and a structured episode record are what a defensible RTP call — and a medicolegal file — stand on.' },
-]
-
 export default function AuClinicsPage() {
   return (
     <div
@@ -57,24 +83,26 @@ export default function AuClinicsPage() {
         <div className="flex flex-1 basis-[420px] flex-col gap-5">
           <span className="flex items-center gap-2 self-start rounded-full px-[13px] py-[7px] text-[12px] font-bold leading-none" style={{ background: '#ccfbf1', color: '#0f766e' }}>
             <span className="h-[7px] w-[7px] rounded-full" style={{ background: ACCENT }} />
-            For Australian concussion &amp; neurorehab clinics
+            For Australian neuro, vestibular &amp; concussion clinics
           </span>
           <h1 className="m-0 text-[clamp(32px,4.2vw,52px)] font-extrabold leading-[1.04] tracking-[-0.03em]">
-            Concussion rehab, <span style={{ color: ACCENT }}>measured.</span>
+            The rehab happens at home.{' '}
+            <span style={{ color: ACCENT }}>Now it&rsquo;s measured.</span>
           </h1>
           <p className="m-0 max-w-[520px] text-[clamp(15px,1.4vw,17.5px)] leading-[1.55] text-slate-600">
-            The instrument for delivering the consensus first-line treatment — aerobic exercise
-            prescribed from a <strong>measured</strong> heart-rate threshold, verified on the
-            patient&rsquo;s own watch between visits.{' '}
+            Sub-symptom-threshold aerobic exercise is the consensus first-line treatment for
+            concussion — prescribed here from a <strong>measured</strong> heart-rate threshold and
+            verified on the patient&rsquo;s own watch between visits, with the reports your funders
+            ask for drawing straight from the episode record.{' '}
             <strong className="text-slate-800">And your team trained and certificated to run it</strong> —
-            the only Australian concussion training endorsed by Osteopathy Australia and accredited by ESSA.
+            OA-endorsed, ESSA-accredited.
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1.5">
             {[
               '17 → 13 days median recovery (Leddy 2019)',
               'Threshold measured, never estimated',
               'Every home session verified',
-              'Structured episode record, clinician-signed',
+              'Reports file into Cliniko',
             ].map((c) => (
               <span key={c} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-500">
                 <span className="h-[6px] w-[6px] rounded-full" style={{ background: ACCENT }} />
@@ -105,16 +133,59 @@ export default function AuClinicsPage() {
         </div>
       </header>
 
-      {/* ── WHY MEASURED ─────────────────────────────────────────────────── */}
+      {/* ── COMPLIANCE: funder → evidence map ───────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-12 md:px-8">
+        <h2 className="m-0 mb-1.5 text-[clamp(22px,2.6vw,30px)] font-extrabold tracking-[-0.02em]">
+          What your funders ask for — and what the episode record answers
+        </h2>
+        <p className="m-0 mb-5 max-w-[760px] text-[14.5px] leading-[1.55] text-slate-600">
+          Neuro caseloads run on funded care, and funded care runs on evidence of progress. The
+          measured episode is that evidence, compiled as care is delivered.
+        </p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {WHY.map((w) => (
-            <div key={w.k} className="rounded-[18px] border border-slate-200 bg-white p-5">
-              <p className="m-0 text-[14.5px] font-bold text-slate-900">{w.k}</p>
-              <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-slate-600">{w.body}</p>
+          {FUNDERS.map((f) => (
+            <div key={f.k} className="rounded-[18px] border border-slate-200 bg-white p-5">
+              <p className="m-0 text-[14.5px] font-bold text-slate-900">{f.k}</p>
+              <p className="m-0 mt-1.5 text-[12.5px] leading-[1.5] text-slate-500">{f.need}</p>
+              <p className="m-0 mt-2 border-t border-slate-100 pt-2 text-[13px] leading-[1.55] text-slate-700">{f.ans}</p>
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ── WORKFLOW SHIFT ───────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1180px] px-6 pb-12 md:px-8">
+        <h2 className="m-0 mb-5 text-[clamp(22px,2.6vw,30px)] font-extrabold tracking-[-0.02em]">
+          The workflow, before and after
+        </h2>
+        <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="bg-slate-900 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-200">
+                <th className="px-5 py-3">Step</th>
+                <th className="px-5 py-3">Today</th>
+                <th className="px-5 py-3">With SST Trainer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SHIFT.map((r, i) => (
+                <tr key={r.step} className={`border-t border-slate-200 align-top ${i % 2 === 1 ? 'bg-slate-50/70' : ''}`}>
+                  <td className="px-5 py-4 text-[13px] font-bold text-slate-900">{r.step}</td>
+                  <td className="px-5 py-4 text-[13px] leading-[1.5] text-slate-500">{r.before}</td>
+                  <td className="px-5 py-4 text-[13px] leading-[1.5] text-slate-800">{r.after}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-[12.5px] text-slate-500">
+          Report set for Australian practice:{' '}
+          <a href={GP_SAMPLE} target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: ACCENT }}>GP report</a>,{' '}
+          <a href={RTP_SAMPLE} target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: ACCENT }}>RTP data summary</a>{' '}
+          and a full clinical record — each rendered from the episode and filed into the
+          patient&rsquo;s Cliniko record as a clinical note. Your clinician reviews and signs;
+          the software never decides.
+        </p>
       </section>
 
       {/* ── ONE PACKAGE ──────────────────────────────────────────────────── */}
@@ -162,9 +233,9 @@ export default function AuClinicsPage() {
               <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">How this moves forward</p>
               <ol className="m-0 mt-2 list-none space-y-2.5 p-0">
                 {[
-                  ['1', 'Tour the workspace and open the sample report — no login, on this page.'],
-                  ['2', 'A 30-minute call: your caseload, your team, your referral pathways.'],
-                  ['3', 'Full onboarding: clinicians enrolled, instruments live on your clinic code.'],
+                  ['1', 'Tour the workspace and open the sample reports — no login, on this page.'],
+                  ['2', 'A 30-minute call: your caseload, your funders, your referral pathways.'],
+                  ['3', 'Full onboarding: clinicians enrolled, instruments live on your clinic code, Cliniko connected.'],
                 ].map(([n, t]) => (
                   <li key={n} className="flex gap-2.5 text-[13px] leading-[1.5] text-slate-700">
                     <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: ACCENT }}>{n}</span>
