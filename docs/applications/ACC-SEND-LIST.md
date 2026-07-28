@@ -98,3 +98,6 @@
 - 24 sends total: 23 targets − brad@ (HARD BOUNCE 550, departed WEIT — suppress) + jolene@whateverittakes.co.nz (replacement, Strategy/Innovation Mgr, address Apollo-confirmed)
 - Actual From: zac@concussion-education-australia.com (Gmail rewrote info@ — not a verified send-as alias; add in Gmail settings before follow-up round if info@ wanted)
 - Follow-up due +7 BD ≈ Aug 6. Habit Health = contact form, manual.
+
+## REPLIES
+- 2026-07-28 (same day, hours after send): **ABI Rehab — DECLINED** via "ABI Community" (the referrals inbox, form response — near-certainly gatekeeper, not Dr Howard-Brown). Status: CLOSED for round 1. NO Aug-6 follow-up. Covers Proactive too (one group). Revisit later as phone-first/relationship target only. Deliverability signal: landing in inboxes and being read.
