@@ -57,7 +57,9 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
 ]
 
-export default function CcmInternationalContent({ price, hideNav = false }: { price: IntlPriceView; hideNav?: boolean }) {
+export default function CcmInternationalContent({ price, hideNav = false, uk = false }: { price: IntlPriceView; hideNav?: boolean;
+  /** /uk (CSP directory arrivals): acknowledge the listing + lead with UK CPD relevance. */
+  uk?: boolean }) {
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
   const [enrolling, setEnrolling] = useState(false)
   const [enrolError, setEnrolError] = useState<string | null>(null)
@@ -116,7 +118,7 @@ export default function CcmInternationalContent({ price, hideNav = false }: { pr
         <div className="text-center mb-8">
           <div className="badge mb-5 inline-flex">
             <Award className="w-3.5 h-3.5 mr-1.5" />
-            International · For Physiotherapists, Osteopaths &amp; Chiropractors
+            {uk ? <>For UK Physiotherapists — as listed in the CSP course directory</> : <>International · For Physiotherapists, Osteopaths &amp; Chiropractors</>}
           </div>
 
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
@@ -202,7 +204,7 @@ export default function CcmInternationalContent({ price, hideNav = false }: { pr
               Endorsed by Osteopathy Australia
               <ExternalLink className="w-3.5 h-3.5 opacity-50" strokeWidth={2.2} />
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">8 CPD hours · certificate on completion · self-recorded for UK/overseas CPD</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{uk ? '8 CPD hours · fits the CSP\u2019s self-recorded CPD model — certificate and hours statement provided for your portfolio' : '8 CPD hours · certificate on completion · self-recorded for UK/overseas CPD'}</p>
           </div>
         </a>
 

@@ -20,5 +20,5 @@ export const metadata: Metadata = {
 
 export default async function UkCoursePage() {
   const price = intlPriceForCountry(detectCountry(await headers()))
-  return <CcmInternationalContent price={{ display: price.display, code: price.code }} />
+  return <CcmInternationalContent price={{ display: price.display, code: price.code }} uk />
 }
