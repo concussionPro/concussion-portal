@@ -637,7 +637,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             />
             <div>
               <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
-              <p className="text-sm text-accent font-medium mb-1">Registered Osteopath · Concussion Researcher</p>
+              <p className="text-sm text-accent font-medium mb-1">Registered Osteopath · Member, Sports Medicine Australia</p>
               <p className="text-xs text-muted-foreground mb-3">B.Clin.Sci, M.Ost.Med</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Concussion rehab is, by its nature, an exercise-physiology problem — a functional,

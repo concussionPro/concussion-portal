@@ -148,6 +148,19 @@ export default function ZacLewisAboutPage() {
                     <p className="text-xs text-slate-600">Postgraduate clinical qualification.</p>
                   </div>
                 </li>
+                {/* SMA MEMBER (joined 2026-07-29, ID 179899) — personal
+                    credential ONLY: lives in bio/credential blocks, NEVER in
+                    the course-accreditation stamp rows (would imply SMA
+                    endorses the course — it does not). Logo renders once the
+                    Members-logo art from the SMA portal lands at
+                    /public/sma-member-logo.png (flip the flag below). */}
+                <li className="flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-slate-900">Member, Sports Medicine Australia</p>
+                    <p className="text-xs text-slate-600">Australia&apos;s peak multidisciplinary sports medicine body.</p>
+                  </div>
+                </li>
                 <li className="flex items-start gap-3">
                   <GraduationCap className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
                   <div>

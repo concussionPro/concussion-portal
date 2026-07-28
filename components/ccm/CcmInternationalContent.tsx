@@ -425,7 +425,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             <Image src="/zac-lewis-headshot.jpg" alt="Zac Lewis — Osteopath, Concussion Researcher" width={96} height={96} className="w-24 h-24 rounded-full object-cover flex-shrink-0 border-2 border-accent/20" />
             <div>
               <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
-              <p className="text-sm text-accent font-medium mb-1">Registered Osteopath (AHPRA) · Concussion Researcher</p>
+              <p className="text-sm text-accent font-medium mb-1">Registered Osteopath (AHPRA) · Member, Sports Medicine Australia</p>
               <p className="text-xs text-muted-foreground mb-3">B.Clin.Sci, M.Ost.Med</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Zac has over a decade of clinical experience in neurological health and concussion
