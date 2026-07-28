@@ -129,6 +129,20 @@ type Period = '24h' | '7d' | '30d' | '90d'
  *  still works — it resolves to whichever group contains that panel. */
 type GroupId = 'decide' | 'traffic' | 'pipeline' | 'people' | 'report'
 
+interface AusNeuroClinic {
+  name: string
+  city: string | null
+  state: string | null
+  contact_first_name: string | null
+  contact_full_name: string | null
+  contact_role: string | null
+  contact_email: string | null
+  status: string
+  verification_status: string | null
+  replied_at: string | null
+  clinic_website_url: string | null
+}
+
 interface WorkOrder {
   key: string
   severity: number
@@ -140,7 +154,7 @@ interface WorkOrder {
   last_seen: string
 }
 
-type TabType = 'actions' | 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects' | 'sst'
+type TabType = 'actions' | 'ausneuro' | 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects' | 'sst'
 
 interface ProspectSend {
   id: number
@@ -1167,7 +1181,7 @@ function DeviceIcon({ device }: { device: string }) {
 }
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
-const VALID_TAB_TYPES: TabType[] = ['actions', 'overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'prospects']
+const VALID_TAB_TYPES: TabType[] = ['actions', 'ausneuro', 'overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'prospects']
 
 export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState<Period>('7d')
@@ -1180,7 +1194,7 @@ export default function AnalyticsDashboard() {
     panel === 'report' ? 'report'
     : (['actions', 'insights', 'funnel'] as TabType[]).includes(panel) ? 'decide'
     : (['overview', 'channels', 'flow', 'events'] as TabType[]).includes(panel) ? 'traffic'
-    : (['pool', 'prospects', 'sst', 'preseason'] as TabType[]).includes(panel) ? 'pipeline'
+    : (['pool', 'prospects', 'sst', 'ausneuro', 'preseason'] as TabType[]).includes(panel) ? 'pipeline'
     : 'people'
   const [activeGroup, setActiveGroupRaw] = useState<GroupId>(groupForPanel(initialTab))
   // Which panel within the group. Seeded from any legacy ?tab= deep link so an
@@ -1211,6 +1225,14 @@ export default function AnalyticsDashboard() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[] | null>(null)
   const [workMoney, setWorkMoney] = useState<{ purchases: number; checkoutClicks: number; calClicks: number; demoTours: number } | null>(null)
   const [workBusy, setWorkBusy] = useState(false)
+  // Aus Neuro stream — SST-specific AU neuro/vestibular/concussion clinics
+  const [ausNeuro, setAusNeuro] = useState<AusNeuroClinic[] | null>(null)
+  useEffect(() => {
+    void fetch('/api/admin/aus-neuro', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setAusNeuro(d?.clinics ?? []))
+      .catch(() => setAusNeuro([]))
+  }, [])
   const runReview = useCallback(async () => {
     setWorkBusy(true)
     try {
@@ -1528,7 +1550,7 @@ export default function AnalyticsDashboard() {
   const GROUPS: { id: GroupId; label: string; icon: React.ElementType; panels: TabType[]; hint: string }[] = [
     { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['actions', 'funnel'], hint: 'What to do today' },
     { id: 'traffic', label: 'Traffic', icon: Globe, panels: ['overview', 'channels', 'flow', 'events'], hint: 'Where it comes from' },
-    { id: 'pipeline', label: 'Pipeline', icon: MapPin, panels: ['pool', 'prospects', 'sst', 'preseason'], hint: 'Close to revenue' },
+    { id: 'pipeline', label: 'Pipeline', icon: MapPin, panels: ['pool', 'prospects', 'sst', 'ausneuro', 'preseason'], hint: 'Close to revenue' },
     { id: 'people', label: 'People', icon: Mail, panels: ['retargeting', 'users'], hint: 'Warm right now' },
     { id: 'report', label: 'Daily Report', icon: Newspaper, panels: ['report'], hint: 'Emailed summary' },
   ]
@@ -1536,7 +1558,7 @@ export default function AnalyticsDashboard() {
   const PANEL_LABEL: Record<TabType, string> = {
     actions: 'Work orders', insights: 'Insights', funnel: 'Funnels', overview: 'Overview', channels: 'Channels',
     flow: 'Flow', events: 'Events', pool: 'Ready to Train', prospects: 'B2B Prospects',
-    sst: 'SST Outreach', preseason: 'Preseason', retargeting: 'Retargeting',
+    sst: 'SST Outreach', ausneuro: 'Aus Neuro', preseason: 'Preseason', retargeting: 'Retargeting',
     users: 'Users', report: 'Daily Report',
   }
 
@@ -1810,6 +1832,57 @@ export default function AnalyticsDashboard() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── AUS NEURO — the SST-specific AU clinic stream ────── */}
+            {shows('ausneuro') && (
+              <div className="space-y-4">
+                <SectionTitle
+                  title="Aus Neuro — SST stream"
+                  subtitle="AU neuro / vestibular / concussion clinics tagged stream='aus-neuro' — separate cadence + /clinics pitch, never mixed with generic lanes"
+                />
+                {ausNeuro === null ? (
+                  <Skeleton className="h-40 w-full rounded-xl" />
+                ) : ausNeuro.length === 0 ? (
+                  <EmptyState icon={MapPin} message="No clinics tagged aus-neuro yet" />
+                ) : (
+                  <div className="card overflow-x-auto">
+                    <table className="w-full border-collapse text-left text-[12.5px]">
+                      <thead>
+                        <tr className="text-[10px] font-bold uppercase tracking-wide text-slate-400 border-b border-slate-100">
+                          <th className="px-3 py-2">Clinic</th>
+                          <th className="px-3 py-2">Where</th>
+                          <th className="px-3 py-2">Contact</th>
+                          <th className="px-3 py-2">Email</th>
+                          <th className="px-3 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ausNeuro.map((c) => (
+                          <tr key={c.name} className="border-b border-slate-50 align-top">
+                            <td className="px-3 py-2 font-semibold text-slate-800">
+                              {c.clinic_website_url ? (
+                                <a href={c.clinic_website_url} target="_blank" rel="noopener noreferrer" className="hover:underline">{c.name}</a>
+                              ) : c.name}
+                            </td>
+                            <td className="px-3 py-2 text-slate-500">{[c.city, c.state].filter(Boolean).join(' ') || '—'}</td>
+                            <td className="px-3 py-2 text-slate-600">{c.contact_full_name || c.contact_first_name || '—'}<span className="block text-[10.5px] text-slate-400">{c.contact_role || ''}</span></td>
+                            <td className="px-3 py-2 text-slate-600">{c.contact_email || '—'}</td>
+                            <td className="px-3 py-2">
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${c.replied_at ? 'bg-emerald-100 text-emerald-700' : c.status === 'approved' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-600'}`}>
+                                {c.replied_at ? 'replied' : c.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <p className="m-0 text-[12px] text-slate-400">
+                  Pitch surface: <a href="/clinics" target="_blank" className="underline">/clinics</a> — AU model (funders + Cliniko), no ACC content. {ausNeuro?.length ?? 0} clinics in stream.
+                </p>
               </div>
             )}
 
