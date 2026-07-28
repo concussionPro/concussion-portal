@@ -79,3 +79,17 @@
 **Cover-line template for every `[inbox]` route:** *"Could you please pass this to [name/role] — it concerns [Org]'s ACC Concussion Services contract. Thank you."*
 
 **Follow-up cadence:** one follow-up at +7 business days, reply-quote style, no new links. No third touch — the engine's cadence rules apply (never compress on engagement).
+
+---
+
+## VERIFIED DIRECT ADDRESSES (2026-07-28 — Apollo UI reveals + open-web finds; batch re-addressed)
+
+- jessica.lange@tbihealth.co.nz — Head of Compliance & Clinical Performance (Apollo)
+- pauline.penney@activeplus.co.nz — Head of Service Delivery (Apollo; mailbox spells PENNEY, site bio "Penny")
+- scott@hemispherehealth.co.nz — Director (Apollo)
+- emma.davidson@apmworkcare.co.nz — Head of Clinical Excellence (Apollo)
+- kathryn.jones@lfbit.co.nz — CEO (open web, published in full)
+- julie@ropeneurorehab.co.nz — Director (open web, published in full)
+- referrals@abi-rehab.co.nz — Dr Howard-Brown's own published contact (upgraded from enquiry@)
+- Apollo 0-results (stay on inbox+cover): Bay Rehab (Joss), Axis (Fulcher/Exeter), Geneva (Rossiter), Astech (Lynda), SRS, BIM, Tui, Motus, Coastal, Advantage Sth, Rehab Taranaki
+- All 23 drafts send FROM info@concussion-education-australia.com
