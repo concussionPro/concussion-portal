@@ -648,7 +648,8 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 Leddy / Buffalo evidence base and the Amsterdam 2023 consensus, translated specifically for the
                 exercise-physiology scope of practice.
               </p>
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <span className="text-[11px] font-medium text-muted-foreground">Member, Sports Medicine Australia</span>
                 <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-8 w-auto opacity-90" />
               </div>
             </div>
