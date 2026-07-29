@@ -101,3 +101,8 @@
 
 ## REPLIES
 - 2026-07-28 (same day, hours after send): **ABI Rehab — DECLINED** via "ABI Community" (the referrals inbox, form response — near-certainly gatekeeper, not Dr Howard-Brown). Status: CLOSED for round 1. NO Aug-6 follow-up. Covers Proactive too (one group). Revisit later as phone-first/relationship target only. Deliverability signal: landing in inboxes and being read.
+
+---
+
+## AUS-NEURO ROUND 1 — FIRED 2026-07-30 ~12:49 AEST (staggered, ~80 min)
+18 bespoke sends (subject "Measured sub-threshold concussion rehab", from info@→zac@ rewrite): 15 direct-named + 3 ATTN'd generic (MSC/Paul-ImPACT-gap, Concussion Central/7-sites, MDBC/vestibular). Each hook site-verified. Stream=19 (Prahran held, no email). 3 unfit untagged (Neurofrontiers=psych, Neurosensory=audiology, NeuroRehabSC=botox). Pitch=/clinics · lane=Aus Neuro panel. Follow-up +7BD ≈ Aug 8. DO-NOT-SEND standing: SMA/Archie draft is Zac's manual send.
