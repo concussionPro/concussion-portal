@@ -262,12 +262,12 @@ function Shell() {
                 <div className="p-5">
                   <p className="m-0 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Indicative commercials</p>
                   <p className="m-0 mt-1.5 text-xl font-extrabold tracking-tight text-slate-900">
-                    NZ$49<span className="text-[12px] font-semibold text-slate-500"> / delivering clinician / month</span>
+                    $49<span className="text-[12px] font-semibold text-slate-500"> / delivering clinician / month · AUD (NZD for NZ suppliers)</span>
                   </p>
                   <p className="m-0 mt-1 text-[12px] leading-snug text-slate-600">
-                    Both instruments, Gensolve filing, org licence. Training seats NZ$895 → $425 at 40+, one-off,
-                    across the allied team — physios, osteos and OTs (OA-endorsed) and exercise physiologists
-                    (ESSA-accredited, 16 CPD). Final commercials sized per organisation.
+                    Both instruments, PMS filing (Cliniko live · Gensolve for NZ), org licence. Optional training
+                    seats across the allied team — physios, osteos and OTs (OA-endorsed) and exercise
+                    physiologists (ESSA-accredited, 16 CPD). Final commercials sized per organisation.
                   </p>
                 </div>
                 <div className="flex flex-col items-start justify-center gap-2.5 p-5 bg-teal-50/60">
