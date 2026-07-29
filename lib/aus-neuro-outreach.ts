@@ -37,11 +37,15 @@ const SUBJECT_WIDE = 'Measured graded return-to-activity — on the patient’s 
 const INTRO =
   'I run Concussion Education Australia — our goals are to help clinicians deliver the best concussion care to their patients possible.'
 
-const CORE_CONCUSSION = `Prescribing takes one clinic code: your patient runs the guided threshold test on their phone, then trains to their prescribed band on the watch they already own — Garmin, Polar, or any heart-rate strap.
+const CORE_CONCUSSION = `SST Trainer is a patient app plus a clinician dashboard for measured sub-threshold rehab.
+
+Prescribing takes one clinic code: your patient runs the guided threshold test on their phone, then trains to their prescribed band on the watch they already own — Garmin, Polar, or any heart-rate strap.
 
 You get every home session verified as it happens, the live recovery trajectory on your dashboard, and the GP report and RTP data summary rendering straight from the episode — filed into the patient's Cliniko file.`
 
-const CORE_WIDE = `Across a neuro caseload the aerobic dose is the therapy — post-stroke conditioning, Parkinson's intensity programs, MS pacing — and at home it runs unverified. SST puts the prescription on the patient's own watch — Garmin, Polar, or any heart-rate strap: you set the band, every session verifies live, and the trajectory and reports build themselves.
+const CORE_WIDE = `SST Trainer is a patient app plus a clinician dashboard for heart-rate-dosed rehab.
+
+Across a neuro caseload the aerobic dose is the therapy — post-stroke conditioning, Parkinson's intensity programs, MS pacing — and at home it runs unverified. SST puts the prescription on the patient's own watch — Garmin, Polar, or any heart-rate strap: you set the band, every session verifies live, and the trajectory and reports build themselves.
 
 The concussion protocol — guided symptom-threshold testing, sub-threshold training, RTP documentation — ships with it.`
 
