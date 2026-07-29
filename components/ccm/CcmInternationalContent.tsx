@@ -426,7 +426,9 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             <div>
               <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
               <p className="text-sm text-accent font-medium mb-1">Registered Osteopath (AHPRA) · Member, Sports Medicine Australia</p>
-              <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="mb-2 h-8 w-auto" />
+              <span className="mb-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
+              </span>
               <p className="text-xs text-muted-foreground mb-3">B.Clin.Sci, M.Ost.Med</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Zac has over a decade of clinical experience in neurological health and concussion
