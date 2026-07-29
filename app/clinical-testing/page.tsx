@@ -101,6 +101,23 @@ function Shell() {
     )
   }
 
+  // NO-LOGIN ACCESS (owner 2026-07-29: "/clinical-testing accessible without
+  // login and locks all other sections"): a session-less visitor is routed
+  // through the demo door, which mints the scoped demo access — workspace
+  // open, every other section locked by the demo model. Logged-in free users
+  // keep the upgrade view below.
+  if (!user && ((access as string) === 'none' || access === 'locked')) {
+    if (typeof window !== 'undefined') window.location.replace('/demo/clinic')
+    return (
+      <div className="flex min-h-screen dashboard-bg">
+        <Sidebar />
+        <main className="flex-1 ml-0 md:ml-64 p-8">
+          <p className="text-sm text-muted-foreground">Opening the demo workspace…</p>
+        </main>
+      </div>
+    )
+  }
+
   // PRE-RELEASE (owner directive 2026-07-05): only the owner's test dash
   // sees the suite until the subscription launch — regardless of tier.
   if (access === 'unreleased') {
