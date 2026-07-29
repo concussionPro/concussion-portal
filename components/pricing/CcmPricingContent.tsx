@@ -602,7 +602,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             />
             <div>
               <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
-              <p className="text-sm text-accent font-medium mb-1">Osteopath · Member, Sports Medicine Australia</p>
+              <p className="text-sm text-accent font-medium mb-1">Osteopath · Founder, Concussion Education Australia</p>
               <p className="text-xs text-muted-foreground mb-2">B.Clin.Sci, M.Ost.Med</p>
               
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
@@ -617,10 +617,8 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 See all facilitators
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
-              <div className="mt-4">
-                <span className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                  <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
-                </span>
+              <div className="mt-4 flex justify-end">
+                <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-8 w-auto opacity-90" />
               </div>
             </div>
           </div>
