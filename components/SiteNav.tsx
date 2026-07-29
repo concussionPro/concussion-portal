@@ -6,14 +6,15 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
-// 'Courses' points at the DUAL-STREAM chooser, not straight at CCM pricing.
+// 'Courses' → /pricing (owner 2026-07-29: the old /courses/streams chooser
+// was retired as a homepage duplicate, leaving the tab a pointless reload).
 // Until this changed, the ESSA-accredited CRM (exercise-physiology) stream had
 // no route from the global nav at all: an EP landing on a blog post, /scat-forms
 // or /clinical-suite had no path to their own product, and "Pricing" led only to
 // the physio/osteo/chiro course.
 const BASE_NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
-  { label: 'Courses', path: '/courses/streams', accent: false },
+  { label: 'Courses', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Clinical Tools', path: '/clinical-suite', accent: false },
   { label: 'Blog', path: '/blog', accent: false },
