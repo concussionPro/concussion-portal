@@ -342,9 +342,11 @@ export default function CoursePage() {
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Zac is a registered Osteopath with over a decade of clinical experience specialising in neurological health, rehabilitation, and concussion management. His career includes work with national and professional ice hockey leagues across New Zealand and Canada, where he developed deep expertise in acute and long-term concussion care. An experienced clinical mentor, Zac has supervised numerous early-career clinicians in applying evidence-based neurological and musculoskeletal care. His current research focuses on developing improved diagnostic and prognostic tools for concussion management.
                   </p>
-              <span className="mt-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
-              </span>
+              <div className="mt-4">
+                <span className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                  <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
+                </span>
+              </div>
                 </div>
               </div>
             </div>

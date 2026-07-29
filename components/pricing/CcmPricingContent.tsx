@@ -617,9 +617,11 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 See all facilitators
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
-              <span className="mt-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
-              </span>
+              <div className="mt-4">
+                <span className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                  <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
+                </span>
+              </div>
             </div>
           </div>
         </div>

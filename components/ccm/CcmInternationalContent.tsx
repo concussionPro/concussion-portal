@@ -434,9 +434,11 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 (Lewis &amp; Baker). The course is grounded in the SCAT6/Amsterdam consensus and the
                 Leddy / Buffalo evidence base, translated for the assessing clinician.
               </p>
-              <span className="mt-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
-              </span>
+              <div className="mt-4">
+                <span className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                  <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
+                </span>
+              </div>
             </div>
           </div>
         </div>
