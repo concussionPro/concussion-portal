@@ -602,7 +602,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             />
             <div>
               <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
-              <p className="text-sm text-accent font-medium mb-1">Osteopath · Founder, Concussion Education Australia</p>
+              <p className="text-sm text-accent font-medium mb-1">Osteopath · Founder</p>
               <p className="text-xs text-muted-foreground mb-2">B.Clin.Sci, M.Ost.Med</p>
               
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">

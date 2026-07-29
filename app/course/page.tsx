@@ -337,7 +337,7 @@ export default function CoursePage() {
                 <div>
                   <h3 className="text-lg font-bold text-foreground mb-1 tracking-tight text-center sm:text-left">Zac Lewis</h3>
                   <p className="text-sm font-semibold text-accent mb-3 text-center sm:text-left">
-                    Registered Osteopath, B.Clin.Sci., M.Ost.Med &middot; Founder, Concussion Education Australia
+                    Osteopath · Founder
                   </p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Zac is a registered Osteopath with over a decade of clinical experience specialising in neurological health, rehabilitation, and concussion management. His career includes work with national and professional ice hockey leagues across New Zealand and Canada, where he developed deep expertise in acute and long-term concussion care. An experienced clinical mentor, Zac has supervised numerous early-career clinicians in applying evidence-based neurological and musculoskeletal care. His current research focuses on developing improved diagnostic and prognostic tools for concussion management.
