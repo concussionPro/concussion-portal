@@ -222,7 +222,7 @@ export async function createCourseCheckoutSession({
     currency = 'aud'
     productName = 'Concussion Hub Pack — Extra Online Seat'
     // ONLINE seat (COURSE_ACCESS_MAP → 'online-only') = ONLINE_CPD_POINTS only.
-    // This said "14 CPD hours" — the online+in-person total — on the Stripe
+    // This said "16 CPD hours" — the online+in-person total — on the Stripe
     // checkout page and the customer's receipt, for a seat that carries no
     // in-person day.
     productDescription = `Adds 1 online seat for a clinician beyond the ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} included in the Hub Pack base · ${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours · OA endorsed · Lifetime access`
@@ -238,8 +238,8 @@ export async function createCourseCheckoutSession({
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `Concussion Education Australia — Complete Course (${locationLabel})`
     productDescription = workshopScheduled
-      ? `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD hours · AHPRA aligned · All materials included`
-      : `8 online modules (start today) + full-day in-person workshop (${locationLabel} — date launches as your city fills, min ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice) · 14 CPD hours · AHPRA aligned`
+      ? `8 online modules + full-day in-person workshop (${locationLabel}) · 16 CPD hours · AHPRA aligned · All materials included`
+      : `8 online modules (start today) + full-day in-person workshop (${locationLabel} — date launches as your city fills, min ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice) · 16 CPD hours · AHPRA aligned`
   }
 
   // Hub Pack base price already includes 5 seats — never let a promo code stack

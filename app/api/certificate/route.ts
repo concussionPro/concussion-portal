@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     const courseType = request.nextUrl.searchParams.get('type') || 'scat-mastery'
 
-    // The full-course (14 CPD) certificate is issued manually by the workshop instructor.
+    // The full-course (16 CPD) certificate is issued manually by the workshop instructor.
     // scat-mastery (1 CPD). online-course (8 CPD). Both are auto-generated.
     if (courseType === 'full-course') {
       return NextResponse.json({ error: 'Full course certificates are issued at your workshop' }, { status: 403 })
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const courseType = body.type || 'scat-mastery'
 
-    // The full-course (14 CPD) certificate is issued manually by the workshop instructor.
+    // The full-course (16 CPD) certificate is issued manually by the workshop instructor.
     if (courseType === 'full-course') {
       return NextResponse.json({ error: 'Full course certificates are issued at your workshop' }, { status: 403 })
     }
@@ -487,7 +487,7 @@ async function sendCertificateEmail(opts: {
                     Whats next — workshop upgrade
                   </p>
                   <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
-                    Youve completed the online modules. Add the in-person workshop to bank the full 14 CPD hours + hands-on practice.
+                    Youve completed the online modules. Add the in-person workshop to bank the full 16 CPD hours + hands-on practice.
                   </p>
                   <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
                     <div style="font-size: 11px; font-weight: 700; color: #a16207; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
@@ -495,7 +495,7 @@ async function sendCertificateEmail(opts: {
                     </div>
                     <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 17px;">Concussion Clinical Mastery — workshop add-on</h3>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569; line-height: 1.5;">
-                      Full-day hands-on practice: VOMS, oculomotor, BESS, cervical, return-to-play decision pathways. Runs city-by-city as each hits its threshold — nominate yours at upgrade. Brings your total to 14 CPD hours.
+                      Full-day hands-on practice: VOMS, oculomotor, BESS, cervical, return-to-play decision pathways. Runs city-by-city as each hits its threshold — nominate yours at upgrade. Brings your total to 16 CPD hours.
                     </p>
                     <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=workshop-add-on" style="display: inline-block; padding: 9px 18px; background: #a16207; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
                       Add the workshop →
@@ -515,7 +515,7 @@ async function sendCertificateEmail(opts: {
                   <!-- Flagship -->
                   <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
                     <div style="font-size: 11px; font-weight: 700; color: #a16207; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
-                      Flagship · 14 CPD hours · workshop included
+                      Flagship · 16 CPD hours · workshop included
                     </div>
                     <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 17px;">Concussion Clinical Mastery</h3>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569; line-height: 1.5;">

@@ -3,6 +3,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { getClientIp } from '@/lib/get-client-ip';
+import { verifySessionToken } from '@/lib/jwt-session';
+import { isOwnerEmail } from '@/lib/owner';
 
 // Rate limiting (in-memory, per serverless instance)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -44,6 +46,11 @@ function isAllowedOrigin(request: NextRequest): boolean {
 }
 
 const BOT_PATTERNS = [
+  // Email-security link scanners + previewers (2026-07-30: cold rounds made
+  // Singapore/US sandbox detonations the top GA 'city' — they execute JS):
+  'safelinks', 'mimecast', 'proofpoint', 'barracuda', 'forcepoint',
+  'googleimageproxy', 'expanse', 'bitsight', 'urlscan', 'checkmarknetworks',
+  'office 365', 'microsoft office', 'slackbot', 'skypeuripreview',
   'bot', 'crawler', 'spider', 'headless', 'phantom', 'puppeteer',
   'selenium', 'googlebot', 'bingbot', 'yandex', 'baidu', 'duckduckbot',
   'slurp', 'ia_archiver', 'facebookexternalhit', 'twitterbot',
@@ -95,6 +102,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Filter bots
   const ua = (payload.userAgent || '').toLowerCase();
+// OWNER TRAFFIC (2026-07-30): Zac's own logged-in browsing polluted every
+  // funnel (design reviews read as 20-visit sessions). Accept and drop.
+  try {
+    const tok = request.cookies.get('session')?.value
+    if (tok) {
+      const sess = verifySessionToken(tok)
+      if (sess && isOwnerEmail(sess.email)) {
+        return NextResponse.json({ success: true, skipped: 'owner' });
+      }
+    }
+  } catch { /* fall through to normal handling */ }
+
   if (BOT_PATTERNS.some(p => ua.includes(p))) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }

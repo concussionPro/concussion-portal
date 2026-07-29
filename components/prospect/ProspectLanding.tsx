@@ -84,7 +84,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
       ? {
           label: cityUnknown ? `On-site day · your team of ${clinical}, in your clinic` : `On-site day at ${clinic.city} · your team of ${clinical}`,
           value: 'Your whole team assessing and managing concussion off one protocol — trained on your own cases.',
-          price: 'From A$8,000 + GST · 8 hrs online + 1 day on-site = 14 CPD hrs · OA-endorsed',
+          price: 'From A$8,000 + GST · 8 hrs online + 1 day on-site = 16 CPD hrs · OA-endorsed',
           primaryLabel: 'Book a 15-min call',
           primaryHref: calBookUrl,
           primaryExternal: true,
@@ -338,7 +338,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                   On-site Practical Skills · your team trained on your own cases
                 </h3>
                 <p className="text-sm text-white/85 leading-relaxed">
-                  Full practical day in-clinic · <span className="font-bold text-white">from A$8,000 + GST</span>. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
+                  Full practical day in-clinic · <span className="font-bold text-white">from A$8,000 + GST</span>. 8 hrs online pre-work + 1 day on-site = 16 CPD hrs · OA-endorsed.
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-300 text-slate-900 px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
@@ -713,7 +713,7 @@ function IndividualPricingCard({ slug }: { slug: string }) {
           </div>
           <ul className="space-y-1.5 text-[12.5px] text-foreground/85 leading-snug mb-4">
             <li>Everything online, plus a hands-on practical workshop day</li>
-            <li>14 CPD hours total (8 online + the in-person day)</li>
+            <li>16 CPD hours total (8 online + the in-person day)</li>
             <li>Nominate your city at enrolment — the workshop day is scheduled as your city&rsquo;s cohort fills</li>
           </ul>
           <div className="pt-3 border-t border-accent/10 flex items-center justify-between gap-2 text-accent">

@@ -100,7 +100,7 @@ describe('createCourseSchema', () => {
     const s = createCourseSchema({
       name: 'Concussion Clinical Mastery',
       description: 'Flagship CPD course',
-      cpdHours: 14,
+      cpdHours: 16,
     })
     expect(Array.isArray(s.hasCourseInstance)).toBe(true)
     expect(s.hasCourseInstance.length).toBe(1)
@@ -122,7 +122,7 @@ describe('createCourseSchema', () => {
     const s = createCourseSchema({
       name: 'Concussion Clinical Mastery — Melbourne',
       description: 'Hybrid course with Melbourne workshop',
-      cpdHours: 14,
+      cpdHours: 16,
       instances: [{
         courseMode: 'blended',
         startDate: '2026-06-13T08:00:00+10:00',
@@ -151,13 +151,13 @@ describe('createCourseSchema', () => {
   })
 
   it('recognises Osteopathy Australia (never AHPRA — AHPRA does not accredit CPD)', () => {
-    const s = createCourseSchema({ name: 'X', description: 'Y', cpdHours: 14 })
+    const s = createCourseSchema({ name: 'X', description: 'Y', cpdHours: 16 })
     expect(s.educationalCredentialAwarded.recognizedBy.name).toBe('Osteopathy Australia')
     expect(JSON.stringify(s.educationalCredentialAwarded.recognizedBy)).not.toContain('AHPRA')
   })
 
   it('declares en-AU on top-level Course', () => {
-    const s = createCourseSchema({ name: 'X', description: 'Y', cpdHours: 14 })
+    const s = createCourseSchema({ name: 'X', description: 'Y', cpdHours: 16 })
     expect(s.inLanguage).toBe('en-AU')
   })
 })

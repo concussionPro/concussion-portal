@@ -453,7 +453,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <span className="text-[10px] text-slate-400">AUD</span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 CPD hours (8 online + 6 in-person)</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 16 CPD hours (8 online + 8 in-person)</p>
               {earlyBird && (
                 <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
                   Standard ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before each scheduled workshop.
@@ -495,7 +495,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
                 'Everything in Online, plus:',
-                'Full-day workshop (6 CPD hours)',
+                'Full-day workshop (8 CPD hours)',
                 'Hands-on oculomotor + cranial nerve exam',
                 CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
                   ? 'More AU cities added when demand hits'
@@ -769,7 +769,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Full-day workshop',
               'SCAT6, VOMS, BESS',
               '1:1 expert feedback',
-              '14 CPD (8 online + 6 in-person)',
+              '16 CPD (8 online + 8 in-person)',
               'AU locations',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">

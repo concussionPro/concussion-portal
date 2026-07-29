@@ -72,7 +72,7 @@ export default async function ProspectLearningSuite({
             Learning Suite
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            8 modules · 14 CPD hrs · AHPRA-aligned · Osteopathy Australia endorsed. Module 1 is open as a trial — Modules 2-8 unlock with the Hub Program.
+            8 modules · 16 CPD hrs · AHPRA-aligned · Osteopathy Australia endorsed. Module 1 is open as a trial — Modules 2-8 unlock with the Hub Program.
           </p>
 
           {/* M1 — TRIAL OPEN */}
@@ -184,7 +184,7 @@ function ProspectSidebar() {
 
       <div className="pt-5 border-t border-white/30">
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
+        <p className="text-[10px] text-muted-foreground">OA Endorsed · 16 CPD hrs</p>
       </div>
     </div>
   )

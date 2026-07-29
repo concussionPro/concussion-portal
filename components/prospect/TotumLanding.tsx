@@ -475,7 +475,7 @@ function Format() {
           <ShieldCheck className="w-[18px] h-[18px] text-emerald-700" strokeWidth={2} />
         </div>
         <p className="text-[13px] text-foreground/85 leading-relaxed">
-          Certificate + 14 CPD hours (8 online + the on-site practical day). Accredited in Australia
+          Certificate + 16 CPD hours (8 online + the on-site practical day). Accredited in Australia
           (Osteopathy Australia–endorsed) — a standard comparable to or exceeding Canadian CPD requirements.
         </p>
       </div>

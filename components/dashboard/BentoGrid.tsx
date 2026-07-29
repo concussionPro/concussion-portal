@@ -795,7 +795,7 @@ function WorkshopCard({
         {isFullCourse && !allModulesComplete
           ? 'Complete your online modules to nominate your workshop city.'
           : isOnlineOnly
-          ? 'Add the hands-on workshop to earn all 14 CPD hours. SCAT6, VOMS & BESS with expert feedback.'
+          ? 'Add the hands-on workshop to earn all 16 CPD hours. SCAT6, VOMS & BESS with expert feedback.'
           : 'Hands-on training with standardised assessments, sideline protocols, and case studies.'}
       </p>
     </Card>

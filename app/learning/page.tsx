@@ -438,7 +438,7 @@ function LearningSuiteInner() {
                     <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-foreground mb-1">Complete your 14 CPD hours — add the workshop</h3>
+                    <h3 className="text-sm font-bold text-foreground mb-1">Complete your 16 CPD hours — add the workshop</h3>
                     <p className="text-xs text-muted-foreground mb-3">
                       Your online modules teach the theory. The full-day workshop is where you practice SCAT6 administration, VOMS testing &amp; BESS scoring with expert feedback — the skills you can&apos;t learn from a screen.
                     </p>

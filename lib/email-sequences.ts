@@ -455,10 +455,10 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 
-  // WEEK 3 (Day 14) - Introduce full course: 14 CPD hours breakdown
+  // WEEK 3 (Day 14) - Introduce full course: 16 CPD hours breakdown
   {
     day: 14,
-    subject: '14 CPD hours — here\'s the full breakdown',
+    subject: '16 CPD hours — here\'s the full breakdown',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>The SCAT6 Mastery course covers the essentials. If you want to go deeper, here's what the full Concussion Management course covers:</p>
@@ -473,7 +473,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>Rehabilitation pathways by phenotype &mdash; targeted treatment strategies</li>
         <li>Legal, ethical, communication &amp; documentation</li>
       </ol>
-      <p><strong>+ Full-day hands-on workshop (6 CPD hours):</strong></p>
+      <p><strong>+ Full-day hands-on workshop (8 CPD hours):</strong></p>
       <ul>
         <li>Administer SCAT6, VOMS, and BESS on real subjects with expert feedback</li>
         <li>Clinical case discussions with other practitioners</li>
@@ -511,7 +511,7 @@ export const SCAT_MASTERY_SEQUENCE = [
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;"><s style="color:#94a3b8;">$${CONFIG.COURSE.PRICE_ONLINE}</s> $${CONFIG.COURSE.PRICE_ONLINE - 50}</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
-          <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 14 CPD hours</span></td>
+          <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 16 CPD hours</span></td>
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</td>
         </tr>
       </table>
@@ -531,7 +531,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>Last email in this series — your options for the full course, in one place:</p>
       <ul>
         <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access — the full workflow beyond the SCAT6: VOMS, BESS, staged return-to-play, phenotype-based rehab.</li>
-        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}):</strong> everything online, plus a hands-on full-day workshop — 14 CPD hours.</li>
+        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}):</strong> everything online, plus a hands-on full-day workshop — 16 CPD hours.</li>
       </ul>
       <p>Both include the clinical toolkit, reference repository, and CPD certificate. Tax invoice provided — most clinicians pay $0 out of pocket. 7-day money-back guarantee.</p>
       ${nextWorkshopCallout()}
@@ -796,7 +796,7 @@ export const ONLINE_UPGRADE_SEQUENCE = [
         <li>Practice VOMS and BESS scoring — the assessments clinicians find hardest to learn from text alone</li>
         <li>Work through clinical scenarios with other clinicians</li>
       </ul>
-      <p>You can lock in the workshop upgrade whenever you're ready &mdash; pay the difference to the A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird rate, nominate your city, and your date launches once enough clinicians register there. That caps off your 14 CPD hours.</p>
+      <p>You can lock in the workshop upgrade whenever you're ready &mdash; pay the difference to the A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird rate, nominate your city, and your date launches once enough clinicians register there. That caps off your 16 CPD hours.</p>
       ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'upgrade_nudge', 'see_workshop')}" class="cta-btn">See Workshop Options</a></center>
       <p style="font-size: 13px; color: #64748b; text-align: center;">6 extra CPD hours · Small group (max 12) · Upgrade anytime</p>
@@ -968,9 +968,9 @@ export const COMPLETER_CONVERT_WORKSHOP = {
     <ul>
       <li><strong>8 hours online pre-work</strong> — the full course, done at your own pace (8 CPD hours)</li>
       <li><strong>1 day in person</strong> — the practical skills day (6 more CPD hours)</li>
-      <li><strong>= up to 14 CPD hours</strong> total, Osteopathy Australia endorsed</li>
+      <li><strong>= up to 16 CPD hours</strong> total, Osteopathy Australia endorsed</li>
     </ul>
-    <p>You're already on the list for your city, so you'll be first to hear when the date is confirmed. In the meantime you can start the online pre-work now — it's the same course either way, and it counts toward the 14 hours.</p>
+    <p>You're already on the list for your city, so you'll be first to hear when the date is confirmed. In the meantime you can start the online pre-work now — it's the same course either way, and it counts toward the 16 hours.</p>
     <center><a href="${utm(pricingLink, 'completer_convert_workshop', 'start_prework')}" class="cta-btn">Start the online course</a></center>
     <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">A$${CONFIG.COURSE.PRICE_ONLINE} online &middot; add the in-person day later for the difference</p>
     <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
@@ -1203,10 +1203,10 @@ export const MELBOURNE_EARLY_BIRD_LAST_CALL = {
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
     <p>Quick heads-up since you&rsquo;ve been engaging with our content &mdash; the Melbourne Concussion Clinical Mastery workshop is locked in for <strong>Saturday 13 June 2026, Melbourne CBD (Rydges Exhibition St)</strong>.</p>
     <div class="callout">
-      <strong>A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')} all-in</strong> &mdash; online course + full-day workshop, 14 CPD hours.
+      <strong>A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')} all-in</strong> &mdash; online course + full-day workshop, 16 CPD hours.
     </div>
     <ul>
-      <li>14 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>16 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
       <li>Full day, 8am&ndash;4pm, buffet lunch included</li>
       <li>Capped at 12 clinicians for hands-on practice time</li>
       <li>25% off Rydges accommodation for attendees travelling in</li>
@@ -1236,7 +1236,7 @@ export const MELBOURNE_WORKSHOP_PUSH = {
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
     <p>The hands-on Concussion Clinical Mastery workshop day runs city by city &mdash; you can enrol in the complete course now, nominate Melbourne, and the date launches once enough clinicians register there.</p>
     <ul>
-      <li>14 CPD hours (8 online + 6 in-person), AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>16 CPD hours (8 online + 8 in-person), AHPRA-aligned, Osteopathy Australia endorsed</li>
       <li>Full day, capped at 12 clinicians for hands-on practice time</li>
       <li><strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</strong> early-bird &mdash; it applies now and holds until 14 days before your city&rsquo;s confirmed date (then A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')})</li>
     </ul>
@@ -1253,7 +1253,7 @@ export const MELBOURNE_WORKSHOP_PUSH = {
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
     <p>The next Concussion Clinical Mastery workshop in Melbourne is confirmed for <strong>${escapeHtml(mel.date)}</strong>.</p>
     <ul>
-      <li>14 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>16 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
       <li>Full day 8am&ndash;4pm, catered lunch included</li>
       <li>Capped at 12 clinicians for hands-on practice time</li>
     </ul>
@@ -1508,7 +1508,7 @@ export const ALMOST_DONE_EMAIL = {
 // TRUTH GATE: every ESSA claim reads CONFIG.FEATURES.ESSA_ACCREDITED at send
 // time via essaCpdLine(). When the flag is FALSE we say "designed to ESSA CPD
 // standards (accreditation pending)" and NEVER "ESSA-accredited". CPD is 8 CPD
-// for the online course; 14 hours only WITH the practical day — never 14 for
+// for the online course; 16 hours only WITH the practical day — never 14 for
 // the online line.
 
 /**
@@ -1568,7 +1568,7 @@ export const EP_NURTURE_SEQUENCE = [
   },
 
   // DAY 14 — CPD + reimbursement. Removes the time + cost objections. Online
-  // line is 8 CPD — never 14 (14 hours only with the practical day).
+  // line is 8 CPD — never 14 (16 hours only with the practical day).
   {
     day: 14,
     subject: 'Half your annual CPD, on your own schedule',
@@ -1579,7 +1579,7 @@ export const EP_NURTURE_SEQUENCE = [
         ? '8 CPD points, fully online and self-paced &mdash; roughly half your annual ESSA Further-Education requirement in one course'
         : '8 CPD hours, fully online and self-paced &mdash; ESSA CPD-point mapping is pending accreditation'}, done on your schedule rather than a fixed workshop date.</p>
       <p><strong>Cost.</strong> At $${CONFIG.COURSE.PRICE_ONLINE} the online course is employer-reimbursable &mdash; you get a tax invoice and a certificate on completion, so it goes straight to your PD budget.</p>
-      <p>${essaCpdLine()}. If you later want the hands-on practical day as well, you can add it and take the total to 14 hours &mdash; but the online course on its own is 8 CPD.</p>
+      <p>${essaCpdLine()}. If you later want the hands-on practical day as well, you can add it and take the total to 16 hours &mdash; but the online course on its own is 8 CPD.</p>
       <center><a href="${utm(courseLink, 'ep_nurture_day14', 'cpd_reimbursement')}" class="cta-btn">See what's included</a></center>
       <div class="sig">
         Zac Lewis<br>

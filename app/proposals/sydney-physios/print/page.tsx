@@ -31,7 +31,7 @@ function TopBar() {
         <span style={{ color: ACCENT, fontWeight: 600 }}>· Concussion Clinical Mastery</span>
       </span>
       <span className="text-right">
-        Endorsed by Osteopathy Australia · AHPRA-aligned · 14 CPD hours
+        Endorsed by Osteopathy Australia · AHPRA-aligned · 16 CPD hours
       </span>
     </div>
   )
@@ -123,7 +123,7 @@ function PageOne() {
   const stats = [
     { big: '1 day', label: 'Full practical day delivered in-clinic in Sydney' },
     { big: '8 hrs', label: 'Online pre-work modules, completed before the day' },
-    { big: '14 CPD', label: 'Accredited hours per clinician, certificate issued' },
+    { big: '16 CPD', label: 'Accredited hours per clinician, certificate issued' },
   ]
   const chips = [
     'Rugby & league clubs',
@@ -235,7 +235,7 @@ function PageTwo() {
     { t: 'Full assessment battery', d: 'SCAT6 & SCOAT6 plus VOMS, BESS and oculomotor screening' },
     { t: 'Targeted neuro rehab', d: 'progressive oculomotor, vestibular (VOMS) and balance (BESS), acute through PCS' },
     { t: 'Return-to-sport, work & learn', d: 'graded progression frameworks and discharge protocols' },
-    { t: '14 CPD hours + certification', d: 'accredited certificate, endorsed by Osteopathy Australia' },
+    { t: '16 CPD hours + certification', d: 'accredited certificate, endorsed by Osteopathy Australia' },
   ]
   const roles = [
     {
@@ -448,7 +448,7 @@ function PageThree() {
 
       <p className="text-[10.5px] mt-3 leading-snug" style={{ color: INK_SOFT }}>
         Every tier includes the 8-hour online modules, the full practical day on-site, all clinical
-        materials and toolkit, and 14 CPD hours per clinician.
+        materials and toolkit, and 16 CPD hours per clinician.
       </p>
 
       <div
@@ -494,7 +494,7 @@ function PageThree() {
         className="text-[10px] text-center font-medium mt-5 py-2.5 rounded-lg"
         style={{ background: '#f8fafc', color: INK_SOFT, border: `1px solid ${LINE}` }}
       >
-        Endorsed by Osteopathy Australia · 14 CPD hours each · Certificate of completion · AHPRA-aligned
+        Endorsed by Osteopathy Australia · 16 CPD hours each · Certificate of completion · AHPRA-aligned
       </div>
 
       {/* Next step */}

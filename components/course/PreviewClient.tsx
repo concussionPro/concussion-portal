@@ -429,7 +429,7 @@ export function PreviewClient({
               </div>
               <div className="space-y-3">
                 {[
-                  { label: '14 CPD Hours', desc: '8 online + 6 workshop' },
+                  { label: '16 CPD Hours', desc: '8 online + 6 workshop' },
                   { label: 'Lifetime Access', desc: 'Content updated regularly' },
                   { label: 'Clinical Toolkit', desc: 'Flowcharts, templates, forms' },
                   { label: 'Flexible Dates', desc: 'Workshop dates launch city-by-city as rounds fill' },

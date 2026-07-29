@@ -79,7 +79,7 @@ function buildEmail(firstName: string): string {
       <ul>
         <li>SCAT6, VOMS &amp; BESS administration with expert coaching</li>
         <li>Practice on real subjects with immediate feedback</li>
-        <li>6 CPD hours on top of the full online course <strong>(14 CPD hours total)</strong></li>
+        <li>6 CPD hours on top of the full online course <strong>(16 CPD hours total)</strong></li>
         <li>Small group &mdash; capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} per session</li>
       </ul>
 

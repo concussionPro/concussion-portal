@@ -110,7 +110,7 @@ export function ClinicianMockDashboard() {
                 Concussion Clinical Mastery
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mb-1">
-                14 CPD hours · A${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} · OA-endorsed
+                16 CPD hours · A${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} · OA-endorsed
               </p>
               <p className="text-[10px] text-accent leading-snug">
                 Matches sports-medicine case patterns

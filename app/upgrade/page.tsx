@@ -208,7 +208,7 @@ function UpgradeContent() {
               <span className="text-muted-foreground">AUD</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Adds the full-day workshop (6 CPD hours) to your online course
+              Adds the full-day workshop (8 CPD hours) to your online course
             </p>
             {upgradeEarlyBird && (
               <p className="text-xs text-muted-foreground mt-1">

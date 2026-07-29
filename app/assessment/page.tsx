@@ -196,7 +196,7 @@ export default function AssessmentPage() {
             <div className="glass rounded-2xl p-6 md:p-8 text-center bg-gradient-to-br from-[#5b9aa6]/5 to-[#6b9da8]/5">
               <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">
                 <span className="text-gradient">
-                  Master These Skills — 14 CPD Hours
+                  Master These Skills — 16 CPD Hours
                 </span>
               </h2>
               <p className="text-sm md:text-base text-muted-foreground mb-3 max-w-2xl mx-auto leading-relaxed">

@@ -100,13 +100,13 @@ describe('certificate API serves the CRM stream', () => {
 })
 
 describe('CPD totals are body-specific rulings, never equalised', () => {
-  it('CCM = 14 (OA: 6-hr day) and CRM = 16 (ESSA: 8-hr day) — same day, different counting rules', async () => {
+  it('CCM = 16 and CRM = 16 — OA re-rated the practical day to 8 hrs (Dominic Buchta email, 2026-07-30)', async () => {
     const { CONFIG } = await import('@/lib/config')
-    expect(CONFIG.COURSE.TOTAL_CPD_POINTS).toBe(14)
+    expect(CONFIG.COURSE.TOTAL_CPD_POINTS).toBe(16)
     expect(CONFIG.COURSE.CRM_TOTAL_CPD_POINTS).toBe(16)
     expect(CONFIG.COURSE.ONLINE_CPD_POINTS).toBe(8)
-    // If OA re-rates the practical day to 8, TOTAL_CPD_POINTS legitimately
-    // becomes 16 — update this test WITH the OA paperwork, not before.
+    expect(CONFIG.COURSE.IN_PERSON_CPD_POINTS).toBe(8)
+    // Any future change here needs the accrediting body's paperwork first.
   })
 })
 

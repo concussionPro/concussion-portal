@@ -77,7 +77,7 @@ export function InvestmentLadder() {
       forWho: 'Hub clinics whose clinicians want the practical, hands-on day.',
       includes: [
         'A seat at a public full-day workshop — supervised SCAT6, VOMS, BESS & cervical assessment',
-        'OSCE competency check + the extra 6 CPD hours (14 total)',
+        'OSCE competency check + the extra 8 CPD hours (16 total)',
         `About half the A$${eb.toLocaleString()} solo price — your team already has the online bundle`,
       ],
       priceDetail: `+A$${upgrade} per clinician who attends · added to full clinic access`,
@@ -92,7 +92,7 @@ export function InvestmentLadder() {
       forWho: 'Larger teams (8–12 clinicians) who want a private day on their own cases.',
       includes: [
         'A full practical day delivered in your clinic, on your own patients',
-        '8 hours online pre-work + 1 day on-site = 14 CPD hours, OA-endorsed',
+        '8 hours online pre-work + 1 day on-site = 16 CPD hours, OA-endorsed',
         'Tiered per head for 8, 10 or 12 clinicians — we quote on a quick call',
       ],
       priceDetail: 'from A$8,000 · private full day for 8–12 clinicians (+ travel)',

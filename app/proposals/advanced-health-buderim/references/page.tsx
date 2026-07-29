@@ -293,7 +293,7 @@ function ProspectSidebar() {
 
       <div className="pt-5 border-t border-white/30">
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
+        <p className="text-[10px] text-muted-foreground">OA Endorsed · 16 CPD hrs</p>
       </div>
     </div>
   )

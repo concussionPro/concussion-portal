@@ -89,7 +89,7 @@ export default function TeamTrainingLanding() {
               <li className="flex gap-3">
                 <BookOpen className="w-4 h-4 text-teal-700 mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-semibold text-slate-900">Concussion Clinical Mastery (full program — 14 CPD hours)</p>
+                  <p className="font-semibold text-slate-900">Concussion Clinical Mastery (full program — 16 CPD hours)</p>
                   <p className="text-xs text-slate-600 leading-relaxed">8 online modules + full-day hands-on workshop covering SCAT6, SCOAT6, VOMS, BESS, return-to-play protocols. AHPRA-aligned, Osteopathy Australia endorsed.</p>
                 </div>
               </li>

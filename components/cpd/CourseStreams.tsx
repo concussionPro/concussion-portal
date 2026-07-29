@@ -65,7 +65,7 @@ const STREAMS: Record<StreamId, Stream> = {
     whoFor:
       'Osteopaths, physiotherapists, chiropractors and allied-health clinicians managing concussion in multidisciplinary teams.',
     format: '8 online modules, self-paced, plus an optional full-day hands-on workshop.',
-    cpd: '8 CPD hours online · 14 CPD hours with the workshop',
+    cpd: '8 CPD hours online · 16 CPD hours with the workshop',
     credential: 'Endorsed by Osteopathy Australia · AHPRA-aligned',
     covers: [
       'SCAT6 & SCOAT6 assessment',

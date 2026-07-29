@@ -144,7 +144,7 @@ function ProspectSidebar() {
 
       <div className="pt-5 border-t border-white/30">
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
+        <p className="text-[10px] text-muted-foreground">OA Endorsed · 16 CPD hrs</p>
       </div>
     </div>
   )
@@ -256,7 +256,7 @@ function StartHereHero() {
             Module 1 Trial · What is a Concussion?
           </h3>
           <p className="text-sm text-white/85 leading-relaxed">
-            First sections + interactive quiz checkpoint, open for your team. 14 CPD hrs total across 8 modules.
+            First sections + interactive quiz checkpoint, open for your team. 16 CPD hrs total across 8 modules.
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
@@ -282,7 +282,7 @@ function ProspectBento() {
         label="Learning Suite"
         title="Concussion Clinical Mastery"
         stat="8"
-        statSuffix="modules · 14 CPD hrs"
+        statSuffix="modules · 16 CPD hrs"
         badge={{ text: 'Trial open', tone: 'emerald' }}
         span2
         accent
@@ -379,7 +379,7 @@ function OnsiteHubHeadline() {
             On-site Practical Skills · your team trained on your own cases
           </h3>
           <p className="text-sm text-white/85 leading-relaxed">
-            Full practical day in-clinic. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
+            Full practical day in-clinic. 8 hrs online pre-work + 1 day on-site = 16 CPD hrs · OA-endorsed.
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-300 text-slate-900 px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
@@ -765,7 +765,7 @@ const FAQS = [
   },
   {
     q: 'What if our team is smaller than 10?',
-    a: 'For under-10 cohorts, the cleanest path is enrolling the team in the full course — same 14 CPD hours, same content, no on-site travel logistics for sub-minimum numbers. Workshop days are scheduled city by city as clinics enrol (the Melbourne round ran in June 2026), and your team nominates its preferred city at enrolment. We can map the timing on the scoping call.',
+    a: 'For under-10 cohorts, the cleanest path is enrolling the team in the full course — same 16 CPD hours, same content, no on-site travel logistics for sub-minimum numbers. Workshop days are scheduled city by city as clinics enrol (the Melbourne round ran in June 2026), and your team nominates its preferred city at enrolment. We can map the timing on the scoping call.',
   },
   {
     q: 'We have two locations — how does the on-site day work?',
@@ -834,7 +834,7 @@ function SocialProofFooter() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
           <Credential headline="500+" label="SCAT6 forms downloaded by AU clinicians" />
           <Credential headline="OA" label="Endorsed by Osteopathy Australia" />
-          <Credential headline="14 hrs" label="AHPRA-aligned CPD per clinician" />
+          <Credential headline="16 hrs" label="AHPRA-aligned CPD per clinician" />
           <Credential headline="120" label="Peer-reviewed references in the library" />
         </div>
         <div className="pt-5 border-t border-accent/10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
@@ -916,7 +916,7 @@ function RiskReversal() {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <Guarantee
-          headline="14 CPD or refund"
+          headline="16 CPD or refund"
           detail="Every clinician walks away with an AHPRA-aligned certificate. If your team doesn't, full refund."
         />
         <Guarantee

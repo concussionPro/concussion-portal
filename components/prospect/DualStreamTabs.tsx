@@ -289,7 +289,7 @@ export function DualStreamTabs({
       </div>
 
       <p className="text-[11px] text-muted-foreground mt-4 inline-flex items-center gap-1.5">
-        <Lock className="w-3 h-3" /> Preview of the live clinic portal · two streams, one Concussion Clinical Mastery practical day. Each stream is 8 hrs online CPD; the shared practical day adds 6 — 14 CPD hours total.
+        <Lock className="w-3 h-3" /> Preview of the live clinic portal · two streams, one Concussion Clinical Mastery practical day. Each stream is 8 hrs online CPD; the shared practical day adds 6 — 16 CPD hours total.
       </p>
     </section>
   )

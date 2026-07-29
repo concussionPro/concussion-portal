@@ -289,7 +289,7 @@ function buildUpgradeEmail(opts: UpgradeEmailOpts): { subject: string; html: str
   const html = `${EMAIL_WRAP_TOP}
   <p style="margin: 0 0 16px;">Hi ${escapeHtml(opts.firstName)},</p>
 
-  <p style="margin: 0 0 16px;">You own the online course &mdash; 8 CPD hours, done at your pace. The hands-on day that completes the full 14 CPD hours now runs city by city: each city's date launches once enough clinicians are ready.</p>
+  <p style="margin: 0 0 16px;">You own the online course &mdash; 8 CPD hours, done at your pace. The hands-on day that completes the full 16 CPD hours now runs city by city: each city's date launches once enough clinicians are ready.</p>
 
   <p style="margin: 0 0 16px;">First step: nominate your city from your dashboard. Nominating costs nothing, counts toward launching your city's date, and you get first notice the moment it's scheduled.</p>
 

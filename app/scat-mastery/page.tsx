@@ -31,7 +31,7 @@ const FREE_SIGNUP_CONVERSION = 'AW-17984048021/TVzUCLHT0IccEJWXu_9C'
 const courseSchema = createCourseSchema({
   name: 'Concussion Clinical Mastery',
   description:
-    'Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. 8 CPD hours online, up to 14 CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.',
+    'Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. 8 CPD hours online, up to 16 CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.',
   cpdHours: 8,
   priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
 })
@@ -464,7 +464,7 @@ export default function SCATMasteryPage() {
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                Want more than SCAT6? Get up to 14 CPD hours (8 online + optional in-person day).
+                Want more than SCAT6? Get up to 16 CPD hours (8 online + optional in-person day).
               </h2>
               <p className="text-sm text-slate-500">
                 The complete course covers everything the free training doesn&apos;t.

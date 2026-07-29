@@ -69,7 +69,7 @@ export function SiteFooter() {
             &copy; {new Date().getFullYear()} Concussion Education Australia. ABN 74 688 155 508. All rights reserved.
           </p>
           <p className="text-xs">
-            Endorsed by Osteopathy Australia &middot; For all AHPRA clinicians &middot; 14 CPD Hours
+            Endorsed by Osteopathy Australia &middot; For all AHPRA clinicians &middot; 16 CPD Hours
           </p>
         </div>
       </div>

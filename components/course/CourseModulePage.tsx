@@ -646,7 +646,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
   // Show upgrade offer if preview user tries to access paid module.
   // STREAM-CORRECT: the EP course must sell CRM (ESSA-accredited, 16 CPD,
   // /concussion-rehab-mastery), never the flagship CCM pitch — a blocked EP
-  // prospect being offered "14 CPD hours" at the CCM checkout is the wrong
+  // prospect being offered "16 CPD hours" at the CCM checkout is the wrong
   // course for their profession.
   if (needsUpgrade) {
     const isEp = descriptor.course === 'ep'

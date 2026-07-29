@@ -7,8 +7,13 @@ import { sql } from '@/lib/db'
 /** Server-side tour-entry event — the /acc → demo conversion signal for the
  *  ACC outreach. Client tracking can't see this redirect, and the referrer
  *  header here is the only place we learn WHERE the prospect came from. */
+const SCANNER_UA = /bot|crawler|spider|headless|safelinks|mimecast|proofpoint|barracuda|googleimageproxy|expanse|urlscan|preview|scan/i
+
 async function logTourStart(req: NextRequest) {
   try {
+    // Email-security sandboxes follow the tour link from cold sends — a
+    // 'tour' that fires within the scanner's detonation is not a prospect.
+    if (SCANNER_UA.test(req.headers.get('user-agent') || '')) return
     await sql`
       INSERT INTO analytics_events
         (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)

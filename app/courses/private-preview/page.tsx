@@ -142,7 +142,7 @@ export default async function PreviewPage() {
                 Concussion Clinical Mastery
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                8 online modules + full-day workshop · up to 14 CPD hours (8 online-only) · SCAT6 + SCOAT6 · Osteopathy Australia–endorsed.
+                8 online modules + full-day workshop · up to 16 CPD hours (8 online-only) · SCAT6 + SCOAT6 · Osteopathy Australia–endorsed.
               </p>
             </div>
             <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">

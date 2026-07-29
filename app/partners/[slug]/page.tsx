@@ -159,7 +159,7 @@ export default async function PartnerPage({ params }: PageProps) {
                 We train Australia&rsquo;s clinicians in concussion management.
               </p>
               <p className="text-xs sm:text-sm text-foreground/65 mt-0.5">
-                Concussion Clinical Mastery &mdash; 14 CPD hours, Osteopathy Australia endorsed.
+                Concussion Clinical Mastery &mdash; 16 CPD hours, Osteopathy Australia endorsed.
                 {RESEARCH_LINE ? ` ${RESEARCH_LINE}.` : ''}
                 {SPEAKING_LINE ? ` ${SPEAKING_LINE}.` : ''}
               </p>

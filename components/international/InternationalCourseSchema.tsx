@@ -21,7 +21,7 @@ const MARKETING_URL = 'https://concussion-education-australia.com'
  *    hasn't granted them. ESSA is the only accreditation asserted, and only
  *    while CONFIG.FEATURES.ESSA_ACCREDITED is true.
  *  - International = 8 online modules only. The in-person day is AU-only, so
- *    these pages must never imply 14 hours.
+ *    these pages must never imply 16 hours.
  *  - Price comes from lib/international-pricing (the same source the page
  *    displays and Stripe charges), so schema can't drift from the real offer.
  */

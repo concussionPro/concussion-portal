@@ -264,7 +264,7 @@ export default function AHPRACPDPage() {
                   <div>
                     <strong className="text-slate-900">Efficient CPD coverage:</strong>{' '}
                     <span className="text-slate-600">
-                      A structured concussion course can cover 8 hours of your annual requirement online &mdash; or up to 14 hours with an added in-person workshop day &mdash; in a single, cohesive learning activity, rather than cobbling together unrelated webinars.
+                      A structured concussion course can cover 8 hours of your annual requirement online &mdash; or up to 16 hours with an added in-person workshop day &mdash; in a single, cohesive learning activity, rather than cobbling together unrelated webinars.
                     </span>
                   </div>
                 </div>
@@ -297,7 +297,7 @@ export default function AHPRACPDPage() {
                 <ul className="space-y-2 text-sm">
                   <li><strong>Activity type:</strong> Educational Activity &mdash; Reviewing &amp; Reflecting</li>
                   <li><strong>Category:</strong> Formal learning (for accredited/structured courses with assessment)</li>
-                  <li><strong>Hours:</strong> As per course certificate (e.g., 8 hours for online, 14 hours for online + workshop)</li>
+                  <li><strong>Hours:</strong> As per course certificate (e.g., 8 hours for online, 16 hours for online + workshop)</li>
                   <li><strong>Evidence:</strong> Certificate of completion with CPD hours, certificate ID, and completion date</li>
                   <li><strong>Retention:</strong> Keep certificates in your CPD portfolio for at least 5 years</li>
                 </ul>

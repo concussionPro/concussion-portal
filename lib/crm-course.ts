@@ -84,7 +84,7 @@ export function crmInvoiceDescription(tier: CrmTier, location?: string | null): 
     case 'online':
       return 'Concussion Rehab Mastery (CRM) — Online course · exercise-physiology stream · 8 CPD hours · lifetime access'
     case 'complete':
-      return `Concussion Rehab Mastery (CRM) — Complete · 8 online CPD hours + full-day practical workshop${city} · 14 CPD hours total`
+      return `Concussion Rehab Mastery (CRM) — Complete · 8 online CPD hours + full-day practical workshop${city} · 16 CPD hours total`
     case 'upgrade':
       return `Concussion Rehab Mastery (CRM) — Practical Day workshop upgrade${city} · 6 additional CPD hours`
   }

@@ -47,8 +47,8 @@ function displayClinicName(name: string): string {
  *
  * Approved facts ONLY (never fabricate claims/deadlines/discounts):
  * Concussion Clinical Mastery; Osteopathy Australia endorsed; AHPRA-aligned;
- * online course = 8 CPD hours; 14 CPD hours ONLY combined with the in-person
- * workshop (8 online + 6 in-person) — NEVER claim 14 for an online-only pitch;
+ * online course = 8 CPD hours; 16 CPD hours ONLY combined with the in-person
+ * workshop (8 online + 8 in-person) — NEVER claim 14 for an online-only pitch;
  * SCAT6/SCOAT6, VOMS, oculomotor,
  * BESS, cervical, RTP protocols; on-site full-day team training; Hub Pack
  * (team online + clinic-branded clinical doc pack); online course A$497;
@@ -377,7 +377,7 @@ export function mergeTemplate(
   // reference docs; then ONE tier-matched line — on-site for large (≥6),
   // Hub Pack for medium (2-5), self-paced course for solo (≤1) — + clean link.
   const tierLine = isOnSiteTarget
-    ? `For a team your size, the natural step is an on-site practical day — your clinicians trained on your own cases, ready to manage concussion in-house. 14 CPD hours each, Osteopathy Australia endorsed.`
+    ? `For a team your size, the natural step is an on-site practical day — your clinicians trained on your own cases, ready to manage concussion in-house. 16 CPD hours each, Osteopathy Australia endorsed.`
     : isIndividualTarget
       ? `The course is self-paced online — everything you need to manage concussion, 8 CPD hours, Osteopathy Australia endorsed.`
       : `For a team your size, the Hub Pack trains everyone online and gives you your own clinic-branded toolkit. 8 CPD hours each, Osteopathy Australia endorsed.`
@@ -435,7 +435,7 @@ export function mergeTemplate(
     // the buy button / booking now lives) and offers a reply. Value-framed, not
     // surveillance: never references their behaviour.
     t2SecondPara = isOnSiteTarget
-      ? `<p>If you're weighing it up for ${safeShortName}, the most direct next step is to lock in a date for the on-site day — your whole team trained on your own cases, 14 CPD hours each. Reply and I'll sort the details, or it's all set up on your page: ${FREE_LINK}</p>`
+      ? `<p>If you're weighing it up for ${safeShortName}, the most direct next step is to lock in a date for the on-site day — your whole team trained on your own cases, 16 CPD hours each. Reply and I'll sort the details, or it's all set up on your page: ${FREE_LINK}</p>`
       : isIndividualTarget
         ? `<p>If you'd like to get started, the course is ready whenever you are — reply and I'll point you to the quickest way in, or jump in here: ${FREE_LINK}</p>`
         : `<p>If you'd like the whole clinic trained, the Hub Pack does it online — no travel, everyone in, 8 CPD hours each. You can set ${safeShortName} up straight from your page: ${FREE_LINK} — or reply and I'll get it sorted.</p>`

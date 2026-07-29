@@ -379,7 +379,7 @@ export function getCrmCertificateData(participantName: string, participantEmail:
   }
 }
 
-// Full course certificate data (14 CPD hours — online + in-person workshop)
+// Full course certificate data (16 CPD hours — online + in-person workshop)
 export function getFullCourseCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
   return {
     participantName,

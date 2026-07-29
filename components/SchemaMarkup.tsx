@@ -89,7 +89,7 @@ export function buildCourseSchema(
       name: 'Concussion Education Australia',
       url: CONFIG.SEO.SITE_URL,
     },
-    educationalCredentialAwarded: 'Up to 14 CPD hours (8 online + 6 in-person) - AHPRA Aligned, Endorsed by Osteopathy Australia',
+    educationalCredentialAwarded: 'Up to 16 CPD hours (8 online + 8 in-person) - AHPRA Aligned, Endorsed by Osteopathy Australia',
     timeRequired: 'P2W',
     offers: {
       '@type': 'Offer',

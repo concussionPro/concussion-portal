@@ -541,7 +541,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">In-Person Workshop</div>
-                        <div className="text-xs text-slate-600 mt-1">Full-day practical training (6 CPD hours)</div>
+                        <div className="text-xs text-slate-600 mt-1">Full-day practical training (8 CPD hours)</div>
                       </div>
                       {isFullCourse ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">

@@ -14,7 +14,7 @@
  * drive the displayed price so display and charge always match.
  *
  * International = 8 online modules / 8 hours of learning only (overseas buyers
- * cannot attend the in-person workshop, so never 14 CPD hours).
+ * cannot attend the in-person workshop, so never 16 CPD hours).
  *
  * To PPP-adjust a market (e.g. discount South Africa for local buying power),
  * change that row's `amount` here — display and charge both follow.

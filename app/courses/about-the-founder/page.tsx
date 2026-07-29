@@ -72,7 +72,7 @@ export default async function AboutFounderPage() {
               {
                 icon: BookOpen,
                 title: 'Concussion Clinical Mastery (CCM)',
-                body: `Flagship product. 14 CPD hours. Osteopathy Australia endorsed. A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}. Live AU clinician subscriber base. Trading at concussion-education-australia.com.`,
+                body: `Flagship product. 16 CPD hours. Osteopathy Australia endorsed. A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}. Live AU clinician subscriber base. Trading at concussion-education-australia.com.`,
                 evidence: 'concussion-education-australia.com',
               },
               {

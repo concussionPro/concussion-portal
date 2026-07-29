@@ -228,6 +228,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(dest, 302)
   }
 
+  // ─── Geo-routing: homepage → intl surface for overseas HUMANS ─────────────
+  // (owner 2026-07-30: CSP visitors clicking Home from /uk were scrolling AU
+  // workshop locations — international is online-only; they must never see AU
+  // cities/pricing.) Bots stay for SEO; logged-in users stay (they chose AU);
+  // GB gets the CSP-aware /uk, other known-intl gets /pricing-international.
+  if (pathname === '/') {
+    const country = detectCountry(request.headers)
+    const ua = request.headers.get('user-agent') || ''
+    const hasSession = !!request.cookies.get('session')?.value
+    if (!hasSession && !BOT_UA_PATTERN.test(ua) && isInternational(country)) {
+      const intlUrl = request.nextUrl.clone()
+      intlUrl.pathname = country === 'GB' ? '/uk' : '/pricing-international'
+      return NextResponse.redirect(intlUrl, 302)
+    }
+  }
+
   // ─── Geo-routing: /pricing → /pricing-international for non-AU/NZ ─────────
   if (pathname === '/pricing') {
     // Country from the shared detector (cf-ipcountry first — Cloudflare proxies
@@ -408,6 +424,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/pricing',
     '/international',
     '/CourseContent_2026.pdf',

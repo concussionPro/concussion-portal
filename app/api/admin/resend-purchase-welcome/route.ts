@@ -30,7 +30,7 @@ type CourseType = typeof COURSE_TYPES[number]
 
 function labelForCourse(courseType: CourseType, accessLevel: string): string {
   switch (courseType) {
-    case 'full-course': return 'Complete Concussion Course (online + workshop) — 14 CPD hours'
+    case 'full-course': return 'Complete Concussion Course (online + workshop) — 16 CPD hours'
     case 'online-only': return 'Online Concussion Course — 8 CPD hours'
     case 'workshop-upgrade': return 'Workshop Upgrade — hands-on training + 6 additional CPD hours'
     case 'international-online': return 'Online Concussion Course (International) — 8 CPD hours'

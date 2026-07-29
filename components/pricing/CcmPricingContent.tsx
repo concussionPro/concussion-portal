@@ -184,7 +184,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: 'How much time does the course take?',
-      a: 'The online modules take approximately 8 hours total (8 CPD hours), completed at your own pace with no deadline. The hands-on workshop is a single full day (6 hours, 6 CPD hours). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
+      a: 'The online modules take approximately 8 hours total (8 CPD hours), completed at your own pace with no deadline. The hands-on workshop is a single full day (8 CPD hours). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
     },
     {
       q: 'Is this course only for osteopaths?',

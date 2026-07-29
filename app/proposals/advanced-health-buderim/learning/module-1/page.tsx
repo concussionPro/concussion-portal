@@ -47,7 +47,7 @@ const PREVIEW_PRINT_CSS = `
   @media print {
     body * { visibility: hidden !important; }
     body::before {
-      content: "Module 1 trial preview — full Concussion Clinical Mastery (8 modules, 14 CPD hrs) activates with the Hub Program. portal.concussion-education-australia.com";
+      content: "Module 1 trial preview — full Concussion Clinical Mastery (8 modules, 16 CPD hrs) activates with the Hub Program. portal.concussion-education-australia.com";
       visibility: visible !important;
       display: block !important;
       padding: 24px !important;
@@ -404,7 +404,7 @@ function ProspectSidebar() {
 
       <div className="pt-5 border-t border-white/30">
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
+        <p className="text-[10px] text-muted-foreground">OA Endorsed · 16 CPD hrs</p>
       </div>
     </div>
   )

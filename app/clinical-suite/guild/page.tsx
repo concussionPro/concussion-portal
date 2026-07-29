@@ -235,7 +235,7 @@ export default function GuildPartnerPage() {
             </p>
             <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
               {[
-                'Concussion Clinical Mastery — endorsed by Osteopathy Australia, up to 14 CPD hours',
+                'Concussion Clinical Mastery — endorsed by Osteopathy Australia, up to 16 CPD hours',
                 `Concussion Rehab Mastery — ESSA-accredited (No. ${CONFIG.ESSA_ACCREDITATION.NUMBER}), up to 16 CPD hours`,
                 'Assessment, graded return-to-play and documentation taught to the current consensus',
                 'Member-discount campaign ready to run each quarter',
