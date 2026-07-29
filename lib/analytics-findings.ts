@@ -40,7 +40,7 @@ interface Ev {
   path: string | null
 }
 
-const MONEY_PAGES = ['/pricing', '/pricing-international', '/concussion-rehab-mastery', '/acc', '/uk']
+const MONEY_PAGES = ['/pricing', '/pricing-international', '/concussion-rehab-mastery', '/acc', '/uk', '/clinics']
 const AI_DOMAINS = ['chatgpt.com', 'chat.openai.com', 'perplexity.ai', 'claude.ai', 'gemini.google.com', 'copilot.microsoft.com', 'poe.com', 'you.com']
 
 function domainOf(ref: string | null): string {

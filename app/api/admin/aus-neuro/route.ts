@@ -18,5 +18,16 @@ export async function GET(request: NextRequest) {
     WHERE stream = 'aus-neuro'
     ORDER BY (status = 'approved') DESC, name ASC
   `
-  return NextResponse.json({ clinics: rows })
+  // Stream traffic lane (14d): the /clinics funnel — visits, tour entries,
+  // and auneuro-tagged cal clicks — so the panel reports outreach yield.
+  const since = Date.now() - 14 * 24 * 3600 * 1000
+  const { rows: traffic } = await sql`
+    SELECT
+      COUNT(*) FILTER (WHERE event_type = 'page_view' AND path = '/clinics')::int AS visits,
+      COUNT(*) FILTER (WHERE event_type = 'demo_tour_start')::int AS tours,
+      COUNT(*) FILTER (WHERE event_type = 'cal_click' AND event_data->>'source' LIKE 'auneuro%')::int AS cal_clicks
+    FROM analytics_events
+    WHERE timestamp_ms > ${since}
+  `
+  return NextResponse.json({ clinics: rows, traffic: traffic[0] })
 }

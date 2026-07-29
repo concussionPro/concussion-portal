@@ -1227,10 +1227,11 @@ export default function AnalyticsDashboard() {
   const [workBusy, setWorkBusy] = useState(false)
   // Aus Neuro stream — SST-specific AU neuro/vestibular/concussion clinics
   const [ausNeuro, setAusNeuro] = useState<AusNeuroClinic[] | null>(null)
+  const [ausNeuroTraffic, setAusNeuroTraffic] = useState<{ visits: number; tours: number; cal_clicks: number } | null>(null)
   useEffect(() => {
     void fetch('/api/admin/aus-neuro', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setAusNeuro(d?.clinics ?? []))
+      .then((d) => { setAusNeuro(d?.clinics ?? []); setAusNeuroTraffic(d?.traffic ?? null) })
       .catch(() => setAusNeuro([]))
   }, [])
   const runReview = useCallback(async () => {
@@ -1842,6 +1843,16 @@ export default function AnalyticsDashboard() {
                   title="Aus Neuro — SST stream"
                   subtitle="AU neuro / vestibular / concussion clinics tagged stream='aus-neuro' — separate cadence + /clinics pitch, never mixed with generic lanes"
                 />
+                {ausNeuroTraffic && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {[['/clinics visits', ausNeuroTraffic.visits], ['Demo tours', ausNeuroTraffic.tours], ['Call clicks', ausNeuroTraffic.cal_clicks]].map(([l, v]) => (
+                      <div key={l as string} className="card p-3 text-center">
+                        <p className="m-0 text-xl font-extrabold text-slate-900">{v}</p>
+                        <p className="m-0 text-[10px] font-bold uppercase tracking-wide text-slate-400">{l}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {ausNeuro === null ? (
                   <Skeleton className="h-40 w-full rounded-xl" />
                 ) : ausNeuro.length === 0 ? (
