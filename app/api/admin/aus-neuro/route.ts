@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/require-admin'
 import { sql } from '@/lib/db'
+import { sendDueAusNeuro } from '@/lib/aus-neuro-outreach'
 
 /** GET /api/admin/aus-neuro — the 'aus neuro' outreach stream (owner
  *  2026-07-28): SST-specific AU neuro/vestibular/concussion clinics, tagged
@@ -30,4 +31,19 @@ export async function GET(request: NextRequest) {
     WHERE timestamp_ms > ${since}
   `
   return NextResponse.json({ clinics: rows, traffic: traffic[0] })
+}
+
+/** POST — { action: 'send', limit? }: fire due aus-neuro sends via Resend.
+ *  Suppression fail-closed; bespoke-hook required; approved→sent one-way. */
+export async function POST(request: NextRequest) {
+  if (!(await isAdminRequest(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  let body: { action?: string; limit?: number } = {}
+  try { body = await request.json() } catch { /* empty ok */ }
+  if (body.action !== 'send') {
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
+  }
+  const result = await sendDueAusNeuro(Math.min(body.limit ?? 10, 25))
+  return NextResponse.json(result)
 }

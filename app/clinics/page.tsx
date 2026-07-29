@@ -208,6 +208,24 @@ export default function AuClinicsPage() {
         </div>
       </section>
 
+      {/* ── BEYOND CONCUSSION — the same engine across the neuro caseload ── */}
+      <section className="mx-auto max-w-[1180px] px-6 pb-12 md:px-8">
+        <div className="rounded-[18px] border border-slate-200 bg-white p-6">
+          <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Beyond concussion</p>
+          <p className="m-0 mt-1.5 max-w-[860px] text-[14.5px] leading-[1.55] text-slate-700">
+            The engine is condition-agnostic: <strong>you set the band, the watch verifies the dose.</strong>{' '}
+            Post-stroke aerobic conditioning, Parkinson&rsquo;s intensity programs and MS pacing all run on
+            prescribed heart-rate zones — and all run at home, unverified. SST carries the prescription,
+            verifies every session, and documents the trajectory. The concussion protocol — guided
+            symptom-threshold testing included — is the flagship; the delivery layer serves the caseload.
+          </p>
+          <p className="m-0 mt-2 text-[11.5px] leading-[1.5] text-slate-400">
+            Dose fidelity and verification claims only — treatment prescriptions remain the clinician&rsquo;s,
+            anchored to their own guidelines. Clinician-directed decision support throughout.
+          </p>
+        </div>
+      </section>
+
       {/* ── COMPETENCY EVIDENCE ──────────────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-6 pb-12 md:px-8">
         <CompetencyGapEvidence heading="Why the training layer is part of the package" />

@@ -1891,9 +1891,23 @@ export default function AnalyticsDashboard() {
                     </table>
                   </div>
                 )}
-                <p className="m-0 text-[12px] text-slate-400">
-                  Pitch surface: <a href="/clinics" target="_blank" className="underline">/clinics</a> — AU model (funders + Cliniko), no ACC content. {ausNeuro?.length ?? 0} clinics in stream.
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="m-0 text-[12px] text-slate-400">
+                    Pitch surface: <a href="/clinics" target="_blank" className="underline">/clinics</a> — AU model (funders + Cliniko). {ausNeuro?.length ?? 0} in stream · {ausNeuro?.filter(c => c.status === 'approved').length ?? 0} due.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Send all due aus-neuro emails via Resend now?')) return
+                      const r = await fetch('/api/admin/aus-neuro', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'send' }) })
+                      const d = await r.json()
+                      alert(`Sent: ${d.sent?.length ?? 0}\nSkipped: ${(d.skipped ?? []).join(', ') || 'none'}`)
+                      location.reload()
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0d7377] text-white hover:opacity-90"
+                  >
+                    Send due (Resend)
+                  </button>
+                </div>
               </div>
             )}
 
