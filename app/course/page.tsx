@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Award,
   Calendar,
@@ -338,6 +339,7 @@ export default function CoursePage() {
                   <p className="text-sm font-semibold text-accent mb-3 text-center sm:text-left">
                     Registered Osteopath, B.Clin.Sci., M.Ost.Med &middot; Member, Sports Medicine Australia
                   </p>
+                  <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="mt-1.5 h-8 w-auto" />
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Zac is a registered Osteopath with over a decade of clinical experience specialising in neurological health, rehabilitation, and concussion management. His career includes work with national and professional ice hockey leagues across New Zealand and Canada, where he developed deep expertise in acute and long-term concussion care. An experienced clinical mentor, Zac has supervised numerous early-career clinicians in applying evidence-based neurological and musculoskeletal care. His current research focuses on developing improved diagnostic and prognostic tools for concussion management.
                   </p>
