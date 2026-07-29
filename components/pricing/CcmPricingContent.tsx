@@ -604,9 +604,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
               <p className="text-sm text-accent font-medium mb-1">Osteopath · Member, Sports Medicine Australia</p>
               <p className="text-xs text-muted-foreground mb-2">B.Clin.Sci, M.Ost.Med</p>
-              <span className="mb-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
-              </span>
+              
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 With over a decade of clinical experience, Zac has managed concussion across national and professional ice hockey in New Zealand and Canada. He now leads Concussion Education Australia, combining clinical mentorship with the latest evidence to train the next generation of concussion-confident clinicians.
               </p>
@@ -619,6 +617,9 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 See all facilitators
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
+              <span className="mt-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={99} className="h-10 w-auto" />
+              </span>
             </div>
           </div>
         </div>
