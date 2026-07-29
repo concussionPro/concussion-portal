@@ -156,11 +156,9 @@ export default function ZacLewisAboutPage() {
                     Members-logo art from the SMA portal lands at
                     /public/sma-member-logo.png (flip the flag below). */}
                 <li className="flex items-start gap-3">
-                  {/* White org logo needs a dark chip; the "Member," text
-                      beside it keeps the claim exactly what it is. */}
-                  <span className="flex h-10 w-[72px] shrink-0 items-center justify-center rounded-lg bg-slate-900 px-2">
-                    <Image src="/sma-logo-white.png" alt="Sports Medicine Australia" width={377} height={151} className="h-6 w-auto" />
-                  </span>
+                  {/* Official SMA MEMBER 2026 badge — the members logo proper,
+                      light-background variant, no chip needed. */}
+                  <Image src="/sma-member-2026.png" alt="Sports Medicine Australia — Member 2026" width={225} height={92} className="h-10 w-auto shrink-0" />
                   <div>
                     <p className="font-semibold text-slate-900">Member, Sports Medicine Australia</p>
                     <p className="text-xs text-slate-600">Australia&apos;s peak multidisciplinary sports medicine body. Member ID 179899.</p>
