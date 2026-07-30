@@ -172,7 +172,7 @@ function fireRemarketingEvent(pathname: string): void {
 // Scroll depth tracking — fires at 50% and 90% on key pages
 // ---------------------------------------------------------------------------
 
-const SCROLL_TRACKED_PAGES = ['/pricing', '/pricing-international', '/course', '/preview', '/scat-mastery'];
+const SCROLL_TRACKED_PAGES = ['/pricing', '/pricing-international', '/course', '/preview', '/scat-mastery', '/concussion-rehab-mastery', '/uk', '/clinics'];
 
 function useScrollDepthTracking(pathname: string): void {
   const firedRef = useRef<Set<number>>(new Set());

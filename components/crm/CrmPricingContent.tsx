@@ -33,7 +33,8 @@ import { createFAQSchema } from '@/lib/schema-markup'
 // page) adapted for the EP-scoped course: same hero → stat bento → trust block
 // → workshop photo → two-tier pricing cards → compare table → testimonials →
 // instructor → FAQ. Differences from CCM:
-//   • No live Stripe checkout (EP checkout not wired) — CTAs capture interest.
+//   • Stripe checkout LIVE since ESSA approval 2026-07-24 (CrmCheckoutButton);
+//     EpLeadCapture remains the not-ready-to-buy path.
 //   • Two tiers (Online $497 / Complete $1,400) — the practical day is the SAME
 //     shared workshop every clinician attends; CRM online is the only EP-only
 //     difference.
@@ -42,7 +43,7 @@ import { createFAQSchema } from '@/lib/schema-markup'
 // Rendered behind the gate by the server page (noindex, admin/demo only).
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Interest capture — no live checkout. A mailto keeps this self-contained.
+// Interest mailto — CrmCheckoutButton's fallback if checkout can't start.
 const INTEREST_HREF =
   'mailto:zac@concussion-education-australia.com?subject=Concussion%20Rehab%20Mastery%20%E2%80%94%20Register%20my%20interest&body=Hi%20Zac%2C%20I%27d%20like%20to%20register%20my%20interest%20in%20Concussion%20Rehab%20Mastery.%0A%0AName%3A%0AProfession%20(AEP%20%2F%20AES)%3A%0AESSA%20number%20(optional)%3A%0APreferred%20option%20(Online%20%2F%20Complete)%3A%0A'
 
