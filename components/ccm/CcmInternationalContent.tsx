@@ -8,6 +8,7 @@ import {
   LineChart, Award, ChevronDown, ChevronUp, Building2, Stethoscope, ExternalLink, FileText,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { trackEvent } from '@/lib/analytics'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 
 /**
@@ -57,6 +58,73 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
 ]
 
+/**
+ * Low-commitment capture — the missing middle step (2026-07-30 UK-lane audit:
+ * engaged readers spent 2–13 minutes on the page, then left with nothing
+ * captured, because the only action was the full-price Enrol). Posts to
+ * /api/intl-syllabus which emails the real 8-module syllabus + demo links.
+ */
+function SyllabusCapture({ uk, price }: { uk: boolean; price: IntlPriceView }) {
+  const [email, setEmail] = useState('')
+  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (state === 'sending' || state === 'done') return
+    setState('sending')
+    trackEvent('intl_syllabus_submit', { location: uk ? 'uk' : 'international' })
+    try {
+      const res = await fetch('/api/intl-syllabus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, location: uk ? 'uk' : 'international', priceDisplay: price.display }),
+      })
+      setState(res.ok ? 'done' : 'error')
+    } catch {
+      setState('error')
+    }
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto mb-6 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5">
+      {state === 'done' ? (
+        <div className="flex items-center gap-2.5">
+          <Check className="w-5 h-5 text-teal-600 flex-shrink-0" strokeWidth={2.5} />
+          <p className="text-sm font-semibold text-foreground">Sent — the full syllabus is on its way to your inbox.</p>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm font-bold text-foreground">Not ready to enrol today?</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Get the full syllabus by email — all 8 modules, the included clinical tools and the published protocol.
+          </p>
+          <form onSubmit={submit} className="mt-3 flex flex-col sm:flex-row gap-2">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={uk ? 'you@nhs.net' : 'your@email.com'}
+              className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+            />
+            <button
+              type="submit"
+              disabled={state === 'sending'}
+              className="btn-primary rounded-lg px-5 py-2.5 text-sm font-semibold inline-flex items-center justify-center gap-1.5 disabled:opacity-60"
+            >
+              {state === 'sending' ? 'Sending…' : 'Email me the syllabus'}
+              {state !== 'sending' && <ArrowRight className="w-3.5 h-3.5" />}
+            </button>
+          </form>
+          {state === 'error' && (
+            <p className="text-xs text-red-600 mt-2">Something went wrong — please try again.</p>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function CcmInternationalContent({ price, hideNav = false, uk = false }: { price: IntlPriceView; hideNav?: boolean;
   /** /uk (CSP directory arrivals): acknowledge the listing + lead with UK CPD relevance. */
   uk?: boolean }) {
@@ -70,6 +138,11 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
     if (enrolling) return
     setEnrolling(true)
     setEnrolError(null)
+    trackEvent('checkout_start', {
+      courseType: 'international-online',
+      source: uk ? 'uk-page' : 'international-page',
+      currency: price.code,
+    })
     try {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
@@ -157,8 +230,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">OA</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Endorsed</p>
+              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">{uk ? 'CSP' : 'OA'}</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">{uk ? 'Directory listed' : 'Endorsed'}</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
               <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
@@ -183,30 +256,84 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           </div>
         </div>
 
-        {/* Standards / endorsement — OA is HELD. Real logo, links to the OA
-            endorsed-courses register (the public listing of CCM's endorsement). */}
-        <a
-          href="https://osteopathy.org.au/Web/Web/cpd/endorsed-courses.aspx?hkey=3c85c306-c65a-4a5d-90f1-782a78dedd86"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4 transition-colors hover:border-teal-300 hover:bg-teal-50/80"
-        >
-          <Image
-            src="/osteopathy-australia-endorsed.png"
-            alt="Endorsed by Osteopathy Australia"
-            width={80}
-            height={72}
-            className="h-12 sm:h-14 w-auto flex-shrink-0"
-          />
-          <div className="text-left">
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Endorsed CPD</p>
-            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight inline-flex items-center gap-1.5">
-              Endorsed by Osteopathy Australia
-              <ExternalLink className="w-3.5 h-3.5 opacity-50" strokeWidth={2.2} />
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">{uk ? '8 CPD hours · fits the CSP\u2019s self-recorded CPD model — certificate and hours statement provided for your portfolio' : '8 CPD hours · certificate on completion · self-recorded for UK/overseas CPD'}</p>
+        {/* Standards / endorsement. For /uk the authority stack is FLIPPED
+            (2026-07-30 UK-lane audit: every CSP session was read-and-leave —
+            an Australian osteopathy endorsement is a foreign, other-profession
+            credential to a UK physio, so CSP/portfolio relevance and the
+            published protocol lead, and OA becomes the supporting line). */}
+        {uk ? (
+          <div className="max-w-3xl mx-auto mb-6 space-y-3">
+            <div className="flex items-start justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
+              <ShieldCheck className="w-9 h-9 text-accent flex-shrink-0 mt-0.5" strokeWidth={1.8} />
+              <div className="text-left">
+                <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">UK CPD</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">Listed in the CSP course directory</p>
+                <p className="text-xs text-muted-foreground mt-0.5">8 hours of structured, assessed CPD for your HCPC / CSP portfolio — certificate and hours statement provided on completion.</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <a
+                href="https://doi.org/10.5281/zenodo.21482634"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:border-teal-300 hover:bg-teal-50/40"
+              >
+                <FileText className="w-6 h-6 text-accent flex-shrink-0 mt-0.5" strokeWidth={1.8} />
+                <div className="text-left">
+                  <p className="text-sm font-bold text-foreground leading-tight inline-flex items-center gap-1.5">
+                    Published clinical protocol
+                    <ExternalLink className="w-3 h-3 opacity-50" strokeWidth={2.2} />
+                  </p>
+                  <p className="text-[11.5px] text-muted-foreground mt-0.5">Open-access, peer-reviewable — DOI 10.5281/zenodo.21482634</p>
+                </div>
+              </a>
+              <a
+                href="https://osteopathy.org.au/Web/Web/cpd/endorsed-courses.aspx?hkey=3c85c306-c65a-4a5d-90f1-782a78dedd86"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:border-teal-300 hover:bg-teal-50/40"
+              >
+                <Image
+                  src="/osteopathy-australia-endorsed.png"
+                  alt="Endorsed by Osteopathy Australia"
+                  width={80}
+                  height={72}
+                  className="h-9 w-auto flex-shrink-0"
+                />
+                <div className="text-left">
+                  <p className="text-sm font-bold text-foreground leading-tight inline-flex items-center gap-1.5">
+                    Endorsed by Osteopathy Australia
+                    <ExternalLink className="w-3 h-3 opacity-50" strokeWidth={2.2} />
+                  </p>
+                  <p className="text-[11.5px] text-muted-foreground mt-0.5">Australia&rsquo;s peak osteopathy body</p>
+                </div>
+              </a>
+            </div>
           </div>
-        </a>
+        ) : (
+          <a
+            href="https://osteopathy.org.au/Web/Web/cpd/endorsed-courses.aspx?hkey=3c85c306-c65a-4a5d-90f1-782a78dedd86"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4 transition-colors hover:border-teal-300 hover:bg-teal-50/80"
+          >
+            <Image
+              src="/osteopathy-australia-endorsed.png"
+              alt="Endorsed by Osteopathy Australia"
+              width={80}
+              height={72}
+              className="h-12 sm:h-14 w-auto flex-shrink-0"
+            />
+            <div className="text-left">
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Endorsed CPD</p>
+              <p className="text-lg sm:text-xl font-bold text-foreground leading-tight inline-flex items-center gap-1.5">
+                Endorsed by Osteopathy Australia
+                <ExternalLink className="w-3.5 h-3.5 opacity-50" strokeWidth={2.2} />
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">8 CPD hours · certificate on completion · self-recorded for UK/overseas CPD</p>
+            </div>
+          </a>
+        )}
 
         {/* Training photo */}
         <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
@@ -237,6 +364,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice + certificate emailed on completion.</p>
           </div>
         </div>
+
+        <SyllabusCapture uk={uk} price={price} />
 
         {/* Value intro */}
         <div className="text-center max-w-2xl mx-auto mb-2">
