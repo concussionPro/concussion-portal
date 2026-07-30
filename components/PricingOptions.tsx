@@ -313,6 +313,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         body: JSON.stringify({
           courseType,
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
+          ...(courseType === 'online-only' && selectedLocation ? { preferredCity: selectedLocation } : {}),
           ...(promoCode ? { promoCode } : {}),
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
           attribution: getAttribution(),
@@ -393,7 +394,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 'Same 8 online modules as the full CCM',
                 'Own pace — no deadlines',
                 'Clinical Toolkit & resources',
-                'Upgrade to add the workshop anytime',
+                'Everything you pay counts toward the Complete course — upgrade for just the difference when your city\u2019s date launches',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -632,7 +633,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM Online</h3>
           <p className="text-[12px] text-slate-500 mb-2 font-medium">Online component of Concussion Clinical Mastery — no workshop</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Same 8 modules as the full CCM, at your own pace. Add the hands-on workshop anytime to upgrade.
+            Same 8 modules as the full CCM, at your own pace. Your payment counts toward the Complete course — upgrade for the difference when your city&rsquo;s date launches.
           </p>
 
           {/* Visual: CCM Online course preview screenshot */}
