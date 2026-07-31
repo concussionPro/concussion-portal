@@ -78,6 +78,10 @@
     {
       "path": "/api/cron/analytics-review",
       "schedule": "0 21 * * 0"
+    },
+    {
+      "path": "/api/cron/sst-trial-checkins",
+      "schedule": "45 22 * * *"
     }
   ]
 }
