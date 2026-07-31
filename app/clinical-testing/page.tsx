@@ -265,7 +265,7 @@ function Shell() {
                     $49<span className="text-[12px] font-semibold text-slate-500"> / delivering clinician / month · AUD (NZD for NZ suppliers)</span>
                   </p>
                   <p className="m-0 mt-1 text-[12px] leading-snug text-slate-600">
-                    Both instruments, PMS filing (Cliniko live · Gensolve for NZ), org licence. Optional training
+                    Both instruments, PMS filing (<a href="/integrations/cliniko" className="underline">Cliniko live</a> · Gensolve for NZ), org licence. Optional training
                     seats across the allied team — physios, osteos and OTs (OA-endorsed) and exercise
                     physiologists (ESSA-accredited, 16 CPD). Final commercials sized per organisation.
                   </p>

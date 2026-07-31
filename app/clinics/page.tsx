@@ -183,7 +183,9 @@ export default function AuClinicsPage() {
           <a href={GP_SAMPLE} target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: ACCENT }}>GP report</a>,{' '}
           <a href={RTP_SAMPLE} target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: ACCENT }}>RTP data summary</a>{' '}
           and a full clinical record — each rendered from the episode and filed into the
-          patient&rsquo;s Cliniko record as a clinical note. Your clinician reviews and signs;
+          patient&rsquo;s{' '}
+          <a href="/integrations/cliniko" className="font-semibold underline" style={{ color: ACCENT }}>Cliniko record</a>{' '}
+          as a clinical note. Your clinician reviews and signs;
           the software never decides.
         </p>
       </section>
