@@ -90,7 +90,7 @@ export interface PmsAdapter {
 }
 
 /** Which PMS an adapter targets. Extend the union to add an integration. */
-export type PmsKind = 'cliniko' | 'gensolve'
+export type PmsKind = 'cliniko' | 'gensolve' | 'pracsuite' | 'coreplus'
 
 /**
  * Connection config. Region/shard is encoded differently per PMS (Cliniko folds
@@ -110,6 +110,8 @@ export interface PmsAdapterConfig {
 
 import { ClinikoAdapter } from './cliniko'
 import { GensolveAdapter } from './gensolve'
+import { PracsuiteAdapter } from './pracsuite'
+import { CoreplusAdapter } from './coreplus'
 
 /**
  * Adapter registry — the ONE place that knows the concrete adapters. A new PMS
@@ -121,6 +123,13 @@ export function getAdapter(kind: PmsKind, config: PmsAdapterConfig): PmsAdapter 
       return new ClinikoAdapter(config)
     case 'gensolve':
       return new GensolveAdapter(config)
+    // NOT yet surfaced in PmsConnect — validate every VERIFY marker on a
+    // sandbox/trial tenant first (feedback: never declare a path clean from
+    // idealized tests).
+    case 'pracsuite':
+      return new PracsuiteAdapter(config)
+    case 'coreplus':
+      return new CoreplusAdapter(config)
     default: {
       // Exhaustiveness guard — a new PmsKind without a case is a compile error.
       const _never: never = kind
