@@ -49,6 +49,17 @@ Across a neuro caseload the aerobic dose is the therapy — post-stroke conditio
 
 The concussion protocol — guided symptom-threshold testing, sub-threshold training, RTP documentation — ships with it.`
 
+/** EP reconditioning frame (ep-recon) — return-to-work / graded return-to-exercise
+ *  clinics. DRAFT copy pending owner approval (2026-07-31) — rows carrying this
+ *  frame stay status='researching' until he signs the copy off. */
+const CORE_EP = `SST Trainer is a patient app plus a clinician dashboard for heart-rate-dosed reconditioning.
+
+You set the band from a measured threshold; your client trains to it on the watch they already own — Garmin, Polar, or any heart-rate strap — and every session at home verifies as it happens.
+
+The trajectory and progress documentation build themselves — objective evidence of functional capacity for insurers and referrers, rendered straight from the episode.`
+
+const SUBJECT_EP = 'Measured reconditioning — on the client\u2019s own watch'
+
 const CLOSE = `See it exactly as your patient would — the trainer, the workspace and sample reports, no login:
 
 portal.concussion-education-australia.com/clinics
@@ -57,12 +68,13 @@ Zac Lewis · Osteopath · Member, Sports Medicine Australia
 Founder, Concussion Education Australia`
 
 export function buildAusNeuroEmail(c: AusNeuroClinic): { subject: string; text: string } {
-  const wide = c.frame === 'neuro-wide'
   const greet = c.contact_first_name && c.contact_first_name !== 'there' ? `Hi ${c.contact_first_name},` : 'Hi team,'
+  const core = c.frame === 'neuro-wide' ? CORE_WIDE : c.frame === 'ep-recon' ? CORE_EP : CORE_CONCUSSION
+  const subject = c.frame === 'neuro-wide' ? SUBJECT_WIDE : c.frame === 'ep-recon' ? SUBJECT_EP : SUBJECT
   const parts = [greet, '', INTRO]
   if (c.bespoke_hook) parts.push('', c.bespoke_hook)
-  parts.push('', wide ? CORE_WIDE : CORE_CONCUSSION, '', CLOSE)
-  return { subject: wide ? SUBJECT_WIDE : SUBJECT, text: parts.join('\n') }
+  parts.push('', core, '', CLOSE)
+  return { subject, text: parts.join('\n') }
 }
 
 /** Plain-text-styled HTML (cold notes must not look designed). */
