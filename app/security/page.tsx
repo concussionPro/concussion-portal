@@ -1,0 +1,97 @@
+import type { Metadata } from 'next'
+import { ShieldCheck, Lock, Server, KeyRound, FileText, Users, AlertTriangle, Globe } from 'lucide-react'
+import { SiteNav } from '@/components/SiteNav'
+
+/**
+ * /security — public security & data-handling statement.
+ *
+ * Exists because every PMS vetting process we've triggered (Cliniko listing,
+ * PracSuite vendor key, Coreplus product review, Jane's "The Jane 10") asks
+ * the same questions; this page answers them once, publicly, and is linked
+ * from applications. Claims here are LOAD-BEARING for those reviews — keep
+ * every statement literally true of the running system.
+ */
+export const metadata: Metadata = {
+  title: 'Security & Data Handling | Concussion Education Australia',
+  description:
+    'How Concussion Education Australia and SST Trainer handle clinical data: encryption, Australian data residency, per-clinic credentials, write-back-only PMS integrations, and our subprocessor list.',
+  alternates: { canonical: '/security' },
+}
+
+const SECTIONS = [
+  {
+    icon: Lock,
+    title: 'Encryption',
+    body: 'All data is encrypted in transit (TLS 1.2+) and at rest (AES-256). There are no unencrypted transport paths to our services.',
+  },
+  {
+    icon: Globe,
+    title: 'Data residency',
+    body: 'Application processing and data storage run in Australia (Sydney — AWS ap-southeast-2 via our hosting providers). This satisfies AU/NZ residency requirements including NZ ACC supplier obligations for client information held in New Zealand and/or Australia.',
+  },
+  {
+    icon: KeyRound,
+    title: 'PMS integrations are write-back-shaped',
+    body: 'Practice-management integrations use per-clinic credentials supplied by the clinic, removable at any time. We match the patient and file finished clinical documents (notes, PDF reports) to the record. We never touch scheduling, billing, calendars or other patients’ records; we never ask for login credentials, never bypass two-factor authentication, and use no browser extensions or scraping.',
+  },
+  {
+    icon: Users,
+    title: 'Access control',
+    body: 'Clinic workspaces are isolated per clinic code. Administrative access is restricted to named individuals with multi-factor authentication on all infrastructure accounts, on a least-privilege basis.',
+  },
+  {
+    icon: AlertTriangle,
+    title: 'Incidents',
+    body: 'We maintain an incident-response process and commit to notifying affected clinics of any data breach affecting their information promptly after detection, with a full account of scope and remediation.',
+  },
+  {
+    icon: Server,
+    title: 'Subprocessors',
+    body: 'Vercel (application hosting), Neon (Postgres database), Stripe (payments — card data never touches our servers), Resend (transactional email), Cloudflare (DNS/edge). Each is engaged under its own security and privacy terms.',
+  },
+  {
+    icon: FileText,
+    title: 'Clinical boundaries',
+    body: 'SST Trainer supports clinician prescriptions and documentation. The software never diagnoses and never makes clearance decisions — clinicians review and sign every report. The clinical protocol it delivers is published open-access (DOI 10.5281/zenodo.21482634).',
+  },
+]
+
+export default function SecurityPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteNav />
+      <div className="max-w-3xl mx-auto px-6 pb-16 pt-[120px]">
+        <div className="text-center mb-10">
+          <div className="badge mb-5 inline-flex">
+            <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+            Security &amp; data handling
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
+            How we handle clinical data
+          </h1>
+          <p className="text-muted-foreground">
+            The standing answers to the questions clinics, partners and platform reviews ask us.
+            Questions or security documentation requests:{' '}
+            <a href="mailto:zac@concussion-education-australia.com" className="text-accent font-semibold hover:underline">
+              zac@concussion-education-australia.com
+            </a>
+          </p>
+        </div>
+        <div className="space-y-4">
+          {SECTIONS.map((s) => (
+            <div key={s.title} className="rounded-2xl border border-slate-200 bg-white p-5 flex items-start gap-4">
+              <s.icon className="w-6 h-6 text-accent flex-shrink-0 mt-0.5" strokeWidth={1.8} />
+              <div>
+                <p className="text-sm font-bold text-foreground mb-1">{s.title}</p>
+                <p className="text-[13.5px] text-muted-foreground leading-relaxed">{s.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground text-center mt-8">
+          Concussion Education Australia (CEA Pty Ltd) · ABN 74 688 155 508 · Last reviewed July 2026
+        </p>
+      </div>
+    </div>
+  )
+}
