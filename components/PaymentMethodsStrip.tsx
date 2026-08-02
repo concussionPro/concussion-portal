@@ -21,6 +21,11 @@ export function PaymentMethodsStrip({ price, className = '' }: { price?: number;
         <span className={`${chip} bg-[#ffb3c7] text-black`}>Klarna</span>
         <span className={`${chip} bg-[#b2fce4] text-black`}>afterpay</span>
         <span className={`${chip} bg-[#211a33] text-white`}>Zip</span>
+      </div>
+      {/* Commitment-point reassurance (2026-08-03 checkout work order): the
+          three objections buyers carry into Stripe, answered where they click. */}
+      <div className="mt-1.5 text-center text-[11px] text-[var(--muted-foreground)]">
+        Assessed CPD hours &middot; tax invoice emailed &middot; 7-day money-back guarantee
         <span className={`${chip} border border-slate-200 bg-white text-[#1434cb] italic`}>VISA</span>
         <span className={`${chip} border border-slate-200 bg-white`} aria-label="Mastercard">
           <span className="h-2.5 w-2.5 rounded-full bg-[#eb001b]" />

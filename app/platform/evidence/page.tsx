@@ -29,7 +29,7 @@ const STEPS = [
   {
     n: 1,
     title: 'Find the threshold (the Buffalo test)',
-    body: 'The Buffalo Concussion Treadmill/Bike Test adapts a cardiac stress test to stress the brain instead of the heart. Effort is raised by the minute while heart rate and symptoms are tracked; the heart rate at which symptoms first intensify is the Heart-Rate threshold (HRt) — a validated measure of exercise tolerance after concussion.',
+    body: 'The Buffalo Concussion Treadmill/Bike Test adapts a cardiac stress test to stress the brain instead of the heart. Effort is raised by the minute while heart rate and symptoms are tracked; the heart rate at which symptoms first intensify is the Heart-Rate threshold (HRt) — a validated measure of exercise tolerance after concussion. A free BCTT calculator is available at portal.concussion-education-australia.com/tools/bctt-calculator.',
     callout: 'a guided per-minute ramp captures your HRt automatically, and stops the test at the +3-point symptom rise.',
   },
   {
