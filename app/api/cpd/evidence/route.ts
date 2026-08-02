@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { cpdSession, trackCpdEvent } from '@/lib/cpd/session'
-import { addEvidence, getEvidence, EVIDENCE_MAX_BYTES, EVIDENCE_MIME_ALLOWLIST } from '@/lib/cpd/store'
+import {
+  addEvidence,
+  getEvidence,
+  listCredentialDocs,
+  EVIDENCE_MAX_BYTES,
+  EVIDENCE_MIME_ALLOWLIST,
+  EVIDENCE_KINDS,
+  type EvidenceKind,
+} from '@/lib/cpd/store'
 import { rateLimit } from '@/lib/rate-limit'
 
 /**
@@ -29,15 +37,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File too large (5 MB max).' }, { status: 400 })
   }
   const activityId = Number.isInteger(Number(b?.activityId)) ? Number(b.activityId) : null
+  const kind: EvidenceKind = EVIDENCE_KINDS.includes(b?.kind) ? b.kind : 'activity'
+  const expiryDate =
+    typeof b?.expiryDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(b.expiryDate)
+      ? b.expiryDate
+      : null
   const sha256 = crypto.createHash('sha256').update(Buffer.from(dataBase64, 'base64')).digest('hex')
-  const id = await addEvidence(session.email, { activityId, filename, mime, sha256, dataBase64 })
-  await trackCpdEvent(req, 'cpd_evidence_uploaded', { bytes: approxBytes, mime })
+  const id = await addEvidence(session.email, {
+    activityId: kind === 'activity' ? activityId : null,
+    filename,
+    mime,
+    sha256,
+    dataBase64,
+    kind,
+    expiryDate,
+  })
+  await trackCpdEvent(req, 'cpd_evidence_uploaded', { bytes: approxBytes, mime, kind })
   return NextResponse.json({ success: true, id })
 }
 
 export async function GET(req: NextRequest) {
   const session = cpdSession(req)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // ?list=credentials → the standalone credential-file inventory (metadata only)
+  if (req.nextUrl.searchParams.get('list') === 'credentials') {
+    return NextResponse.json({ documents: await listCredentialDocs(session.email) })
+  }
   const id = Number(req.nextUrl.searchParams.get('id'))
   if (!Number.isInteger(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
   const file = await getEvidence(session.email, id)

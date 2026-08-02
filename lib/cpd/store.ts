@@ -14,6 +14,23 @@ import { sql } from '@/lib/db'
 export const EVIDENCE_MAX_BYTES = 5 * 1024 * 1024
 export const EVIDENCE_MIME_ALLOWLIST = ['application/pdf', 'image/jpeg', 'image/png']
 
+/**
+ * Evidence kinds — the credential file (owner research 2026-08-03): the
+ * audit pack schemes actually ask for is per-practitioner registration +
+ * indemnity + CPD + orientation/training + supervision records, not a CPD
+ * dashboard. 'activity' = CPD evidence attached to a logged activity; the
+ * rest are standalone credential documents in the same vault.
+ */
+export const EVIDENCE_KINDS = [
+  'activity',
+  'registration-cert',
+  'indemnity',
+  'orientation',
+  'training',
+  'supervision',
+] as const
+export type EvidenceKind = (typeof EVIDENCE_KINDS)[number]
+
 let tablesReady = false
 
 export async function ensureCpdTables(): Promise<void> {
@@ -59,6 +76,9 @@ export async function ensureCpdTables(): Promise<void> {
     )
   `
   await sql`CREATE INDEX IF NOT EXISTS cpd_evidence_user_idx ON cpd_evidence_files (user_email)`
+  // Credential-file columns (additive; repo ALTER-IF-NOT-EXISTS pattern).
+  await sql`ALTER TABLE cpd_evidence_files ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'activity'`
+  await sql`ALTER TABLE cpd_evidence_files ADD COLUMN IF NOT EXISTS expiry_date DATE`
   tablesReady = true
 }
 
@@ -173,16 +193,52 @@ export async function deleteActivity(email: string, id: number): Promise<boolean
 
 export async function addEvidence(
   email: string,
-  f: { activityId: number | null; filename: string; mime: string; sha256: string; dataBase64: string },
+  f: {
+    activityId: number | null
+    filename: string
+    mime: string
+    sha256: string
+    dataBase64: string
+    kind?: EvidenceKind
+    expiryDate?: string | null
+  },
 ): Promise<number> {
   await ensureCpdTables()
   const sizeBytes = Math.floor((f.dataBase64.length * 3) / 4)
   const { rows } = await sql`
-    INSERT INTO cpd_evidence_files (user_email, activity_id, filename, mime, size_bytes, sha256, data_base64)
-    VALUES (${email}, ${f.activityId}, ${f.filename}, ${f.mime}, ${sizeBytes}, ${f.sha256}, ${f.dataBase64})
+    INSERT INTO cpd_evidence_files (user_email, activity_id, filename, mime, size_bytes, sha256, data_base64, kind, expiry_date)
+    VALUES (${email}, ${f.activityId}, ${f.filename}, ${f.mime}, ${sizeBytes}, ${f.sha256}, ${f.dataBase64},
+            ${f.kind ?? 'activity'}, ${f.expiryDate ?? null})
     RETURNING id
   `
   return rows[0].id
+}
+
+export interface CredentialDocRow {
+  id: number
+  kind: EvidenceKind
+  filename: string
+  expiryDate: string | null
+  createdAt: string
+}
+
+/** Standalone credential documents (everything except activity-attached CPD
+ *  evidence) — the per-practitioner credential file. */
+export async function listCredentialDocs(email: string): Promise<CredentialDocRow[]> {
+  await ensureCpdTables()
+  const { rows } = await sql`
+    SELECT id, kind, filename, expiry_date::text AS expiry_date, created_at::text AS created_at
+    FROM cpd_evidence_files
+    WHERE user_email = ${email} AND kind <> 'activity'
+    ORDER BY kind, created_at DESC
+  `
+  return rows.map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    filename: r.filename,
+    expiryDate: r.expiry_date,
+    createdAt: r.created_at,
+  }))
 }
 
 export async function getEvidence(

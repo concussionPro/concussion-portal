@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cpdSession, trackCpdEvent } from '@/lib/cpd/session'
 import { getPack, type CpdPack } from '@/lib/cpd/packs'
 import { computeStatus, type RegistrationStatus } from '@/lib/cpd/rules'
-import { listActivities, listRegistrations, type CpdActivityRow } from '@/lib/cpd/store'
+import {
+  listActivities,
+  listRegistrations,
+  listCredentialDocs,
+  type CpdActivityRow,
+  type CredentialDocRow,
+} from '@/lib/cpd/store'
 import { renderReportContentToHtml } from '@/lib/sst-trainer/reports/render'
 import type { ReportContent, ReportSection } from '@/lib/sst-trainer/reports/skins'
 import { rateLimit } from '@/lib/rate-limit'
@@ -26,10 +32,19 @@ function fmt(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(1)
 }
 
+const CREDENTIAL_LABELS: Record<string, string> = {
+  'registration-cert': 'Registration certificate',
+  indemnity: 'Professional indemnity (certificate of currency)',
+  orientation: 'Orientation / induction records',
+  training: 'Role-specific training records',
+  supervision: 'Supervision records',
+}
+
 function buildExport(
   pack: CpdPack,
   status: RegistrationStatus,
   activities: CpdActivityRow[],
+  credentials: CredentialDocRow[],
   who: { name: string; email: string; regNumber: string | null },
   generatedOn: string,
 ): ReportContent {
@@ -90,6 +105,18 @@ function buildExport(
       })),
       body: inWindow.length === 0 ? ['No confirmed activities recorded in this period.'] : undefined,
     },
+    ...(credentials.length > 0
+      ? [
+          {
+            heading: 'Credential file',
+            kind: 'audit' as const,
+            fields: credentials.map((c) => ({
+              label: CREDENTIAL_LABELS[c.kind] ?? c.kind,
+              value: `${c.filename}${c.expiryDate ? ` — valid to ${c.expiryDate}` : ''} (uploaded ${c.createdAt.slice(0, 10)})`,
+            })),
+          },
+        ]
+      : []),
     {
       heading: 'Declaration',
       kind: 'outcome',
@@ -112,9 +139,10 @@ export async function GET(req: NextRequest) {
   const pack = getPack(req.nextUrl.searchParams.get('pack') ?? '')
   if (!pack) return NextResponse.json({ error: 'Unknown board' }, { status: 400 })
 
-  const [regs, activities] = await Promise.all([
+  const [regs, activities, credentials] = await Promise.all([
     listRegistrations(session.email),
     listActivities(session.email),
+    listCredentialDocs(session.email),
   ])
   const reg = regs.find((r) => r.packId === pack.id)
   if (!reg) return NextResponse.json({ error: 'Add this board on your records page first.' }, { status: 400 })
@@ -136,6 +164,7 @@ export async function GET(req: NextRequest) {
     pack,
     status,
     activities,
+    credentials,
     { name: session.name, email: session.email, regNumber: reg.regNumber },
     today,
   )

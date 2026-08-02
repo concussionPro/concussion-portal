@@ -112,6 +112,7 @@ function Records() {
               {regs.map((r) => r.pack && r.status && <StatusCard key={r.id} reg={r} />)}
               <QuickAdd regs={regs} onAdded={load} />
               <ActivityList activities={activities} onChanged={load} />
+              <CredentialFile />
               <AddBoard packs={packs} existing={regs.map((r) => r.packId)} onDone={load} />
             </>
           )}
@@ -423,6 +424,131 @@ function ActivityList({ activities, onChanged }: { activities: Activity[]; onCha
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+const CREDENTIAL_KINDS: { id: string; label: string; hint: string; expires: boolean }[] = [
+  { id: 'registration-cert', label: 'Registration certificate', hint: 'Your current registration record', expires: true },
+  { id: 'indemnity', label: 'Professional indemnity', hint: 'Current certificate of currency', expires: true },
+  { id: 'orientation', label: 'Orientation / induction', hint: 'e.g. NDIS worker orientation module', expires: false },
+  { id: 'training', label: 'Role-specific training', hint: 'Mandatory + refresher training records', expires: false },
+  { id: 'supervision', label: 'Supervision records', hint: 'Supervision notes / agreements', expires: false },
+]
+
+interface CredentialDoc { id: number; kind: string; filename: string; expiryDate: string | null }
+
+/**
+ * The credential file (owner research 2026-08-03): the documents an
+ * NDIS/DVA/ACC auditor — and the owner's own AHPRA employer obligations —
+ * actually ask for, kept beside the CPD record in the same vault. This is
+ * the practitioner-side half; the clinic roster view arrives with the paid
+ * tiers.
+ */
+function CredentialFile() {
+  const [docs, setDocs] = useState<CredentialDoc[]>([])
+  const [err, setErr] = useState<string | null>(null)
+  const [pendingKind, setPendingKind] = useState<string | null>(null)
+  const [expiry, setExpiry] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const load = useCallback(async () => {
+    const r = await fetch('/api/cpd/evidence?list=credentials', { credentials: 'include' })
+    const d = await r.json().catch(() => ({}))
+    setDocs(d.documents ?? [])
+  }, [])
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  async function onFile(file: File) {
+    if (!pendingKind) return
+    setErr(null)
+    const buf = await file.arrayBuffer()
+    const b64 = btoa(new Uint8Array(buf).reduce((s, b) => s + String.fromCharCode(b), ''))
+    const res = await fetch('/api/cpd/evidence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ kind: pendingKind, filename: file.name, mime: file.type, dataBase64: b64, expiryDate: expiry || null }),
+    })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok) setErr(d?.error || 'Upload failed.')
+    setPendingKind(null)
+    setExpiry('')
+    void load()
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const soon = new Date(Date.now() + 60 * 86_400_000).toISOString().slice(0, 10)
+
+  return (
+    <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-6">
+      <h3 className="m-0 text-[15px] font-extrabold" style={{ color: NAVY }}>Credential file</h3>
+      <p className="m-0 mt-1 text-[12.5px] text-slate-500">
+        The documents audits actually ask for — kept beside your CPD record, included in your export.
+      </p>
+      {err && <p className="m-0 mt-2 text-[12.5px] font-semibold text-red-600">{err}</p>}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        className="hidden"
+        onChange={(e) => e.target.files?.[0] && void onFile(e.target.files[0])}
+      />
+      <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        {CREDENTIAL_KINDS.map((k) => {
+          const latest = docs.find((d) => d.kind === k.id)
+          const expired = latest?.expiryDate ? latest.expiryDate < today : false
+          const expiring = latest?.expiryDate ? !expired && latest.expiryDate <= soon : false
+          return (
+            <div key={k.id} className="flex items-center justify-between gap-2 rounded-[12px] border border-slate-100 bg-slate-50/60 px-4 py-3">
+              <div className="min-w-0">
+                <p className="m-0 text-[13px] font-bold text-slate-800">{k.label}</p>
+                <p className="m-0 truncate text-[11.5px] text-slate-500">
+                  {latest ? (
+                    <>
+                      <a href={`/api/cpd/evidence?id=${latest.id}`} className="font-semibold underline" style={{ color: ACCENT }}>{latest.filename}</a>
+                      {latest.expiryDate && (
+                        <span className={`ml-1.5 font-bold ${expired ? 'text-red-600' : expiring ? 'text-amber-600' : 'text-emerald-600'}`}>
+                          {expired ? `expired ${latest.expiryDate}` : `to ${latest.expiryDate}`}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    k.hint
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-none items-center gap-1.5">
+                {k.expires && pendingKind === k.id && (
+                  <input
+                    type="date"
+                    value={expiry}
+                    onChange={(e) => setExpiry(e.target.value)}
+                    className="rounded-[8px] border border-slate-200 px-2 py-1.5 text-[11px]"
+                    title="Expiry date (optional)"
+                  />
+                )}
+                <button
+                  onClick={() => {
+                    if (pendingKind === k.id) {
+                      fileRef.current?.click()
+                    } else {
+                      setPendingKind(k.id)
+                      setExpiry('')
+                      if (!k.expires) setTimeout(() => fileRef.current?.click(), 0)
+                    }
+                  }}
+                  className="rounded-[8px] border border-slate-200 bg-white px-2.5 py-1.5 text-[11.5px] font-bold text-slate-600 hover:text-slate-900"
+                >
+                  {pendingKind === k.id && k.expires ? 'Choose file' : latest ? 'Update' : 'Upload'}
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
