@@ -87,7 +87,7 @@ function SstTab() {
             patient trains in it between appointments. SST Trainer is the delivery layer: you prescribe
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/sst-trainer">Try it live →</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/clinical-suite/start">Start free trial →</Cta><Cta variant="ghost" href="/sst-trainer">Try it live</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
@@ -147,7 +147,7 @@ function BaselineTab() {
             any computer, report to your clinic inbox. When an injury happens mid-season, you’re the clinic
             holding their baseline, and the rehab that follows.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow →</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/clinical-suite/start">Start free trial →</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="One link per club · ~5 min per athlete · report to your clinic" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center">
@@ -245,6 +245,7 @@ function SharedPricing() {
               <p className="m-0 mt-3"><s className="text-[16px] font-semibold text-slate-300">{t.full}</s> <span className="ml-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">half price</span></p>
               <p className="m-0 mt-0.5 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}<span className="text-[14px] font-semibold text-slate-400"> / month</span></p>
               <Link href="/pricing" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Get with the course</Link>
+              <Link href="/clinical-suite/start" className="mt-2 text-center text-[13px] font-bold underline-offset-2 hover:underline" style={{ color: ACCENT }}>or start a free trial →</Link>
               <ul className="mt-5 flex flex-col gap-2.5 p-0">
                 {t.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.45] text-slate-600">
