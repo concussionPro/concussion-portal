@@ -341,6 +341,17 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Become the concussion expert in your practice — advanced clinical skill for Australian clinicians.
               </p>
+              {/* GEO citation pattern (2026-08-03 work order): clear claim +
+                  named source + date on the money page, for AI-assistant
+                  citation and E-E-A-T. */}
+              <p className="text-[12px] text-muted-foreground max-w-2xl mx-auto mt-2">
+                Curriculum aligned to the Amsterdam International Consensus on Concussion in Sport (2023)
+                and the SCAT6/SCOAT6 standard &middot; taught by Zac Lewis, Osteopath &middot; protocol published
+                open-access:{' '}
+                <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                  DOI 10.5281/zenodo.21482634
+                </a>
+              </p>
               {/* Skill chips — inline pills, no text-block. Captures the
                   6 actual clinical capabilities in scannable visual form. */}
               <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
