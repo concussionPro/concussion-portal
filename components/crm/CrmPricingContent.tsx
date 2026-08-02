@@ -211,6 +211,17 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             </div>
           </div>
 
+          {/* Evidence strip — claim, proof, tool in one line ABOVE the ~50%
+              scroll stall (2026-08-03: ESSA traffic read the first-line claim
+              in the hero but the receipts sat at the bottom of the page). */}
+          <div className="max-w-3xl mx-auto mt-5 rounded-xl border border-teal-200 bg-teal-50/50 px-4 py-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[12.5px]">
+            <span className="font-semibold text-foreground">First-line treatment per the Amsterdam 2023 consensus</span>
+            <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
+              Published protocol — DOI 10.5281/zenodo.21482634
+            </a>
+            <span className="text-muted-foreground">Delivered &amp; documented by SST Trainer — included</span>
+          </div>
+
           {/* One-line "why EPs" strap under the stats */}
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
             A new, referral-worthy service line — GPs, physios and clinics need someone to deliver

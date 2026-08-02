@@ -84,6 +84,8 @@ async function findTargets(): Promise<Target[]> {
       )
       AND COALESCE(u.nurture_unsubscribed, false) = false
       AND NOT EXISTS (SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(u.email))
+      -- register-quiet (2026-08-03): workshop-interest registrants wait for a date, not drip
+      AND NOT EXISTS (SELECT 1 FROM workshop_interest wi WHERE LOWER(wi.email) = LOWER(u.email))
       AND u.created_at <= NOW() - (${MIN_AGE_DAYS} || ' days')::interval
       AND NOT EXISTS (
         SELECT 1 FROM email_audit_log l

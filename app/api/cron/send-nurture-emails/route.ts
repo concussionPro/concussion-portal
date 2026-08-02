@@ -173,9 +173,24 @@ export async function GET(request: Request) {
       )
     }
 
-    // Single global suppression gate for every nurture/lifecycle lane.
+    // Register-quiet (owner 2026-08-03: "those nurtures are f***ing annoying
+    // for someone who's already registered"): anyone on the workshop-interest
+    // register is date-waiting — their next touch is the date announcement,
+    // not drip marketing. FAIL CLOSED like suppression.
+    let registerEmails: Set<string>
+    try {
+      const { rows: regRows } = await sql<{ email: string }>`
+        SELECT DISTINCT LOWER(email) AS email FROM workshop_interest
+      `
+      registerEmails = new Set(regRows.map(r => r.email))
+    } catch (err) {
+      console.error('[Nurture] workshop_interest load failed — ABORTING (fail closed):', err)
+      return NextResponse.json({ error: 'register load failed — run aborted' }, { status: 503 })
+    }
+
+    // Single global gate for every nurture/lifecycle lane: suppression + register-quiet.
     const users = alumniFilteredUsers.filter(
-      (u) => !suppressedEmails.has(u.email.toLowerCase())
+      (u) => !suppressedEmails.has(u.email.toLowerCase()) && !registerEmails.has(u.email.toLowerCase())
     )
 
     // Stagger nurture sends across ~30-45 min with per-domain throttling so

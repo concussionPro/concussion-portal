@@ -116,6 +116,10 @@ export async function GET(request: Request) {
     try {
       const { rows } = await sql<{ email: string }>`SELECT LOWER(email) AS email FROM email_suppression`
       suppressedEmails = new Set(rows.map((r) => r.email))
+      // register-quiet (2026-08-03): workshop-interest registrants are
+      // date-waiting — no drip; their next touch is the date announcement.
+      const { rows: regRows } = await sql<{ email: string }>`SELECT DISTINCT LOWER(email) AS email FROM workshop_interest`
+      for (const r of regRows) suppressedEmails.add(r.email)
     } catch (err) {
       console.error('[EP Nurture] Failed to load email_suppression — ABORTING run (fail closed):', err)
       return NextResponse.json(
