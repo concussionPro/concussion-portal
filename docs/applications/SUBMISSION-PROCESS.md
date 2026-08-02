@@ -14,14 +14,14 @@ Product map: **CRM** (Concussion Rehab Mastery — exercise/rehab, 8 modules, 8 
 | **CEP-UK / AHCS** | `/cep-uk` | `/demo/review-cep-uk` → `/ep-course/dashboard` | `CEP-UK-OUTREACH-PACK.md`, `CEP-UK-FRAMEWORK-VERIFIED.md` | No application fee (recognition enquiry); registrant CRM price £275 | **SEND TODAY** (to interim CPD inbox) |
 | **CASES** | `/cases` | `/demo/review-cases` → `/ep-course/dashboard` | `CASES-SUBMISSION-PACK.md` | Enquiry requests it (NOT the £1,800+VAT CUES figure); annual | **SEND TODAY** (enquiry) |
 | **CIMSPA** | `/cimspa` | `/concussion-update` (free course = endorsed product) | `CIMSPA-SUBMISSION-PACK.md` | £140+VAT admin fee; ~£700+VAT year-one total | **SEND TODAY** (window enquiry) |
-| **CSEP** | `/csep` | `/demo/review-csep` → `/ep-course/dashboard` | `CSEP-SUBMISSION-PACK.md` | Route 2 fee unpublished (enquiry); Route 1 free | **HOLD until ESSA** (Route 1 self-report works today) |
+| **CSEP** | `/csep` | `/demo/review-csep` → `/ep-course/dashboard` | `CSEP-SUBMISSION-PACK.md` | Route 2 fee unpublished (enquiry); Route 1 free | **EMAIL 1 SENT 2026-08-02** (ESSA granted 07-24; Resend b121906d; awaiting fee/process reply → Email 2) |
 | **SESNZ** | `/sesnz` | listing only (link `/sesnz`; `/demo/review-cases` if a login-free view is wanted) | `SESNZ-SUBMISSION-PACK.md` | Expected free (listing request) | **SEND TODAY** (to natmanager) |
 | **HPCSA (South Africa)** | `/hpcsa` | `/demo/review-hpcsa` → `/ep-course/dashboard` | `SOUTH-AFRICA-HPCSA-SUBMISSION-PACK.md` | R1,380 UCT benchmark (short course), capped R2,750 — confirm with accreditor | **SEND TODAY** (enquiry) |
 | **NZ-ACC** | `/acc` | `/acc` (funder/product demo, not a CRM reviewer link) | `NZ-ACC-SUPPLIER-PACK.md` + `NZ-ACC-PRICING-MODEL.md`, `NZ-ACC-PROCUREMENT-REALITY.md`, `NZ-ACC-TARGET-LIST.md`, `ACC-AS-BUYER.md`, `ACC-FUNDER-PACK.md` | Not an accreditation fee — commercial supplier/procurement deal (CCM in AUD, SST A$49/99/149/mo) | **SEND TODAY — verify ACC clauses first** |
 
 Shared operator sheets: `OUTREACH-FINAL.md` (verbatim send copy), `SEND-SHEET.md` (copy-paste, ready-to-send), `CONTROL-SHEET.md`, `DO-TODAY.md`, `TARGET-NEEDS-MATRIX.md`, `TARGET-SITE-COURSE-FORMATS.md`. Protocol deposit: `ZENODO-DEPOSIT.md`.
 
-**SEND TODAY: 7** (ACSM, CEP-UK, CASES, CIMSPA, SESNZ, HPCSA, NZ-ACC). **HOLD: 1** (CSEP, until ESSA).
+**SEND TODAY: 7** (ACSM, CEP-UK, CASES, CIMSPA, SESNZ, HPCSA, NZ-ACC). **CSEP: Email 1 SENT 2026-08-02** (ESSA trigger fired 07-24).
 
 ---
 
@@ -60,14 +60,14 @@ Shared operator sheets: `OUTREACH-FINAL.md` (verbatim send copy), `SEND-SHEET.md
 - **Doc:** `CIMSPA-SUBMISSION-PACK.md`. **Landing:** `/cimspa`. **Portal:** `/concussion-update` (free endorsed product).
 - **STATUS: SEND TODAY** (window enquiry).
 
-## CSEP — Route 2 accreditation (CRM)  ·  HOLD until ESSA
+## CSEP — Route 2 accreditation (CRM)  ·  EMAIL 1 SENT 2026-08-02
 
 - **Process:** two routes. **Route 1** = free member self-report (works today, no submission). **Route 2** = formal CSEP accreditation via `info@csep.ca`; Email 1 is a process + fee enquiry (fee unpublished). Email 2 (formal application) needs the Canadian annex and a confirmed fee.
 - **ACTION: the enquiry email requests the accreditation fee** — record it (or delete the fee line if none) after CSEP replies.
 - **Sequencing:** the highest-leverage addition is ESSA endorsement; **hold Route 2 until ESSA lands**, then update the pack to state it as granted. Canadian CRM price = **CA$475**.
 - **Attach (Email 2):** sections 1–13, Canadian annex (**DONE — `docs/applications/ANNEX-CANADA.md`, HOLD banner intact**), reviewer view `/demo/review-csep`.
 - **Doc:** `CSEP-SUBMISSION-PACK.md`. **Landing:** `/csep`. **Portal:** `https://portal.concussion-education-australia.com/demo/review-csep`.
-- **STATUS: HOLD** (Route 1 self-report is available now; Route 2 waits on ESSA).
+- **STATUS: EMAIL 1 SENT 2026-08-02** (Resend id b121906d-fa70-4d9c-a5c6-91643a1d0874, from zac@, ESSA-granted version with reviewer link). Awaiting fee/process reply → record fee, then go/no-go on Email 2 (weigh fee vs market-reality note). Pack + annex already updated to ESSA-granted.
 
 ## SESNZ — CPD Opportunities listing (Free course + CRM)  ·  SEND TODAY
 

@@ -2,8 +2,8 @@
  * GET /demo/review-csep — reviewer link for the csep accreditation review of
  * "Concussion Rehabilitation for Exercise Physiologists" (CRM). Clone of
  * /demo/essa: sets the demo_key cookie server-side and drops the reviewer into
- * the private, gated, unlisted course. ESSA endorsement is disclosed as pending
- * on the course pages — do not represent it as held.
+ * the private, gated, unlisted course. ESSA endorsement GRANTED 2026-07-24
+ * (course pages self-upgraded via CONFIG.FEATURES.ESSA_ACCREDITED).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { DEMO_KEY } from '@/lib/demo-key'

@@ -36,9 +36,9 @@
 | 6 | **CASES** | CRM (CPD Endorsement fee enquiry) | `education@cases.org.uk` | `/demo/review-cases` | **SEND TODAY** (enquiry) |
 | 7 | **SESNZ** | Free course + CRM (listing) | `natmanager@sesnz.org.nz` CC **ACTION: confirm CEPNZ address (omit if unconfirmed)** | `/demo/review-cases` (n/a — listing) | **SEND TODAY** (to natmanager; add CC when confirmed) |
 | 8 | **CIMSPA** | **FREE course** (endorsed product); CRM upsell | `trainingpartners@cimspa.co.uk` + `info@cimspa.co.uk` | `/concussion-update` (free course) | **SEND TODAY** (window enquiry) |
-| 9 | **CSEP** | CRM (Route 2) | `info@csep.ca` | `/demo/review-csep` | **HOLD until ESSA** (Route 1 free works today) |
+| 9 | **CSEP** | CRM (Route 2) | `info@csep.ca` | `/demo/review-csep` | **EMAIL 1 SENT 2026-08-02** (awaiting fee/process reply) |
 
-**SEND TODAY: 8** (CEP-UK, ACSM, NZ ACC, SEPNZ+OTNZ-WNA, South Africa, CASES, SESNZ, CIMSPA). **HOLD: 1** (CSEP).
+**SEND TODAY: 8** (CEP-UK, ACSM, NZ ACC, SEPNZ+OTNZ-WNA, South Africa, CASES, SESNZ, CIMSPA). **CSEP: Email 1 SENT 2026-08-02.**
 
 ---
 
@@ -379,14 +379,14 @@ zac@concussion-education-australia.com · +61 449 186 579 · concussion-educatio
 
 ---
 
-# 9 — CSEP  ·  HOLD until ESSA
+# 9 — CSEP  ·  EMAIL 1 SENT 2026-08-02
 
 - **TARGET:** CSEP Route 2 formal accreditation for CRM (8 PDCs; CSEP-CEP and CSEP-CPT members).
 - **AUDIENCE:** Canadian exercise physiologists.
 - **WHAT WE PITCH (when unheld):** **CRM.**
 - **REVIEWER LINK (for when it sends):** `https://portal.concussion-education-australia.com/demo/review-csep`
 - **TO:** `info@csep.ca`
-- **STATUS:** **HOLD.** CSEP's whole angle is ESSA equivalency (CSEP already recognises ESSA's AEP/AES credentials), so the Route 2 case is materially weaker until ESSA endorsement lands. Mark low-priority; **fire Route 2 the day ESSA is confirmed.**
+- **STATUS:** **EMAIL 1 SENT 2026-08-02** (Resend b121906d-fa70-4d9c-a5c6-91643a1d0874; ESSA granted 07-24, claimed in the email with reviewer link). Awaiting CSEP's fee/process reply; Email 2 (pack §1–13 + Canadian annex) goes after fee confirmed + go/no-go vs market-reality note.
 - **ROUTE 1 WORKS TODAY (no action, free):** a CSEP member can already self-report CRM as PDCs through the PDC Tracker without any application from us. If a Canadian member asks, point them at `https://portal.concussion-education-australia.com/pricing-international` (USD $347) and Route 1 self-reporting — no accreditation needed.
 - **DOCS FOR THE ROUTE 2 SEND:** ESSA endorsement confirmed (the only real blocker); the **Canadian annex — DONE** (`docs/applications/ANNEX-CANADA.md`, HOLD banner intact); fee confirmed by CSEP's reply; CAD pricing **RESOLVED at CA$475** (geo-derived live checkout, single source `lib/international-pricing.ts`).
 

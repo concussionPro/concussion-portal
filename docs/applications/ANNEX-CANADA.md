@@ -2,13 +2,13 @@
 
 ## Concussion Rehab Mastery (CRM) · accompanies the CSEP Route 2 accreditation submission
 
-> ## STATUS: HOLD until ESSA endorsement lands.
-> The CSEP Route 2 route rests on CSEP's existing **ESSA equivalency** (CSEP already grants professional equivalency to ESSA's AEP and AES credentials). CRM's ESSA professional-development endorsement is currently **PENDING**. This annex is **prepared but not for submission yet** — it is drafted so it is ready the day ESSA lands. Route 1 (free CSEP member self-report via the PDC Tracker) works today and needs no submission; Route 2 waits on ESSA.
+> ## STATUS: CLEARED FOR SUBMISSION — ESSA endorsement GRANTED 24 July 2026.
+> The CSEP Route 2 route rests on CSEP's existing **ESSA equivalency** (CSEP already grants professional equivalency to ESSA's AEP and AES credentials). CRM's ESSA professional-development endorsement was **GRANTED on 24 July 2026** (16 CPD points: 8 for the online course submitted here, 8 for the optional face-to-face practical component). Email 1 (fee/process enquiry) sent 2 Aug 2026; this annex goes with Email 2 once CSEP confirms process and fee.
 
 **Provider:** Concussion Education Australia Pty Ltd, trading as Concussion Education Australia (CEA) — ACN 688 155 508 · **ABN 74 688 155 508** · D-U-N-S 889691346 (incorporated 18 June 2025)
 **Author:** Zac Lewis — Registered Osteopath (AHPRA **OST0001852866**) · B.Clin.Sci, M.Ost.Med · Director and founder
 **Correspondence:** 2 Wordsworth St, Byron Bay NSW 2481, Australia · zac@concussion-education-australia.com · +61 449 186 579
-**Date:** **ACTION: insert submission date on send (not before ESSA endorsement is granted).**
+**Date:** **ACTION: insert submission date when this annex goes out with Email 2.**
 
 **Parent submission:** `CSEP-SUBMISSION-PACK.md` (this annex is the Canadian annex offered to reviewers in §9 of that pack). Audience: CSEP-CEP (primary) and CSEP-CPT members; kinesiologists (incl. Ontario R.Kin), athletic therapists, S&C practitioners.
 **Landing page:** `/csep` · **Reviewer view:** `https://portal.concussion-education-australia.com/demo/review-csep` → `/ep-course/dashboard`
@@ -30,7 +30,7 @@ Canada is not short of concussion education. Established Canadian concussion tra
 
 The supporting evidence is the international spine: early prescribed sub-symptom-threshold aerobic exercise shortened median recovery from 17 to 13 days (Leddy et al., *JAMA Pediatrics*, 2019, https://doi.org/10.1001/jamapediatrics.2018.4397; n=103, P=.009) and reduces persisting symptoms (Leddy et al., *Lancet Child Adolesc Health*, 2021, https://doi.org/10.1016/S2352-4642(21)00267-4; Leddy et al., *BJSM* meta-analysis, 2023, https://doi.org/10.1136/bjsports-2022-106676). The wider point is not that practitioners are undertrained — concussion knowledge predates the 2022 shift; CRM is the update to the layer that moved.
 
-That differentiating layer is now a published, citable standard rather than a course claim: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, Z., 2026; Zenodo; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634), which specifies exactly the exercise-prescription layer assessment-oriented training omits. The SST Trainer is the tool a CSEP-CEP uses to deliver it — running the graded exercise test, capturing the **measured** heart-rate threshold, issuing and monitoring the sub-symptom-threshold prescription, and producing a measured HR-threshold trajectory with standardised reporting (demo: `/sst-trainer?clinic=DEMO00`). This strengthens the equivalency case but does not change the sequence: the protocol and tool sit inside the ESSA AEP scope CSEP already recognises, and **Route 2 is still held until the ESSA endorsement is granted** (§4).
+That differentiating layer is now a published, citable standard rather than a course claim: *A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mild Traumatic Brain Injury)* (Lewis, Z., 2026; Zenodo; open access, CC-BY-4.0; https://doi.org/10.5281/zenodo.21482634), which specifies exactly the exercise-prescription layer assessment-oriented training omits. The SST Trainer is the tool a CSEP-CEP uses to deliver it — running the graded exercise test, capturing the **measured** heart-rate threshold, issuing and monitoring the sub-symptom-threshold prescription, and producing a measured HR-threshold trajectory with standardised reporting (demo: `/sst-trainer?clinic=DEMO00`). This strengthens the equivalency case directly: the protocol and tool sit inside the ESSA AEP scope CSEP already recognises, and **that ESSA endorsement is now held** (§4).
 
 ---
 
@@ -42,14 +42,12 @@ CRM claims **8 PDCs** at one credit per assessed instructional hour (480 minutes
 
 ---
 
-## 4. How ESSA endorsement (once held) supports the equivalency argument
+## 4. How the ESSA endorsement (held) supports the equivalency argument
 
-This is the load-bearing reason the annex is held until ESSA lands. **CSEP already grants professional equivalency to ESSA's Accredited Exercise Physiologist (AEP) and Accredited Exercise Scientist (AES) credentials.** CRM is written to the ESSA AEP scope of practice, so the competency boundaries it teaches — implement graded exertion, never diagnose, never grant return-to-contact clearance — already sit inside a framework CSEP has recognised as equivalent to its own. CSEP is not asked to accept an unfamiliar scope model; it is asked to accept content written to one it has already assessed.
+This is the load-bearing card in this application. **CSEP already grants professional equivalency to ESSA's Accredited Exercise Physiologist (AEP) and Accredited Exercise Scientist (AES) credentials.** CRM is written to the ESSA AEP scope of practice, so the competency boundaries it teaches — implement graded exertion, never diagnose, never grant return-to-contact clearance — already sit inside a framework CSEP has recognised as equivalent to its own. CSEP is not asked to accept an unfamiliar scope model; it is asked to accept content written to one it has already assessed.
 
-- **Today:** CRM's ESSA professional-development endorsement is **PENDING** — independently reviewed by two ESSA-appointed reviewers; the endorsement decision has not issued. CEA does not claim it in the interim.
-- **Once granted:** the ESSA endorsement is the single highest-leverage addition to this application precisely because of the equivalency relationship — it becomes the most directly relevant external check available on the course, from the very body whose credentials CSEP already recognises. On grant, §8 and §11 of the parent pack are updated to state it as held, and this annex is cleared for submission.
-
-Until then: **do not submit Route 2.** Route 1 self-report remains available to members at no cost.
+- **Held:** ESSA granted its professional development endorsement of CRM on **24 July 2026**, following independent review by two ESSA-appointed reviewers. The endorsement credits **16 CPD points** across the stream — **8 for the online course submitted to CSEP** (matching the 8 PDCs claimed at one credit per contact hour) and 8 for the optional face-to-face practical component.
+- **Why it matters here:** because of the equivalency relationship, this is the most directly relevant external check available on the course — issued by the very body whose credentials CSEP already recognises. §8 and §11 of the parent pack state it as held.
 
 ---
 
@@ -78,13 +76,13 @@ The Australian instrument in the delivered content is presented as the worked ex
 ## 7. Recognition and endorsement discipline (stated honestly)
 
 - **Independent review.** CRM has been independently reviewed by two reviewers appointed by ESSA through its professional-development endorsement process — the most directly relevant external check given CSEP's ESSA equivalency.
-- **ESSA endorsement is PENDING** — review undertaken, decision not issued. CEA does not claim it in the interim. (This annex is held until it lands — see STATUS.)
+- **ESSA endorsement GRANTED 24 July 2026** — 16 CPD points (8 online + 8 face-to-face practical). The online course submitted to CSEP corresponds to the 8-point online component.
 - **Not endorsed elsewhere for this product.** CRM is **not** Osteopathy Australia-endorsed (that applies only to CEA's separate in-person clinical programme); CEA holds **no** ACSM Continuing Education Credits for any product.
 - **Authorship, stated plainly.** CRM was authored solely by a registered osteopath. No exercise physiologist authored or clinically validated it; CEA makes no such claim. Its external check is the ESSA-appointed independent review above.
 
 ---
 
 ## ACTION lines in this annex
-- Insert submission date on send — **not before ESSA endorsement is granted** (header / §4).
+- Insert submission date when the annex goes out with Email 2 (header).
 - Record the Route 2 process, documentation, fee, turnaround and term from CSEP's reply to the enquiry email (§3).
 - Confirm the current published titles/versions of the Parachute Canada guideline and the cited provincial instruments; align to any CSEP-preferred structure (§5).
