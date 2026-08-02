@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider } from '@/contexts/SessionContext'
 import { ChevronLeft, Paperclip, Trash2, FileText, Plus } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 /**
  * /clinical-testing/cpd — the CPD Tracker "My records" page (spec §6: a
@@ -54,6 +55,11 @@ const CHIP: Record<RegStatus['overall'], { bg: string; fg: string; label: string
 }
 
 export default function CpdTrackerPage() {
+  // PARKED (owner 2026-08-03) — flip CONFIG.FEATURES.CPD_TRACKER_LIVE to restore.
+  if (!CONFIG.FEATURES.CPD_TRACKER_LIVE) {
+    if (typeof window !== 'undefined') window.location.replace('/clinical-testing')
+    return null
+  }
   return (
     <SessionProvider>
       <ProtectedRoute>

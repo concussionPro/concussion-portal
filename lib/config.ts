@@ -227,6 +227,12 @@ export const CONFIG = {
     // public/essa-accredited-pd.png (+ -white variant for dark backgrounds).
     // Formal terms in CONFIG.ESSA_ACCREDITATION below.
     ESSA_ACCREDITED: true,
+    // CPD Tracker — PARKED (owner 2026-08-03: "park this for now. hide/remove
+    // any public page"). Build is complete and live-tested (P1 + credential
+    // file, commits 9633c52/db91770); flipping this true restores the
+    // /clinical-testing tile, the records page and the /api/cpd/* routes.
+    // Data (registrations/activities/evidence) persists while parked.
+    CPD_TRACKER_LIVE: false,
     // International CRM live commerce: online-only, geo-priced checkout, the
     // bundled platform, and the year-2 renewal subscription.
     // LIVE 2026-07-26 — the three STRIPE_SST_*_PRICE_ID vars now hold real

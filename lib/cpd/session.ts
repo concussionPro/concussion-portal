@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { sql } from '@/lib/db'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { CONFIG } from '@/lib/config'
 
 /**
  * CPD auth: the tracker is FREE for any signed-in portal user by design
@@ -8,6 +9,9 @@ import { verifySessionToken } from '@/lib/jwt-session'
  * surface). No course purchase, no SST entitlement, no tier gate in v1.
  */
 export function cpdSession(req: NextRequest): { email: string; name: string } | null {
+  // PARKED (owner 2026-08-03): while CPD_TRACKER_LIVE is false every /api/cpd/*
+  // route answers as absent. Data persists; flip the flag to restore.
+  if (!CONFIG.FEATURES.CPD_TRACKER_LIVE) return null
   const token = req.cookies.get('session')?.value
   const data = token ? verifySessionToken(token) : null
   if (!data) return null

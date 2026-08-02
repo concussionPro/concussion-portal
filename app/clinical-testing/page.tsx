@@ -226,8 +226,8 @@ function Shell() {
             </p>
           </div>
 
-          {/* the three tools, side by side, each its own baked-in portal */}
-          <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
+          {/* the tools, side by side, each its own baked-in portal */}
+          <div className={`mb-5 grid grid-cols-1 gap-5 ${CONFIG.FEATURES.CPD_TRACKER_LIVE ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
             <InstrumentTile
               tag="Exercise rehab · measured threshold"
               title="SST Trainer"
@@ -245,15 +245,17 @@ function Shell() {
               visual={<BaselineLaptopAnimation />}
               variant="light"
             />
-            <InstrumentTile
-              tag="Registration CPD · audit-ready · free"
-              title="CPD Tracker"
-              body="Pick your board and your requirements, cycle dates and renewal countdown fill themselves. Log activities in 60 seconds, attach evidence, and export the audit bundle in one click."
-              cta="Open the CPD Tracker"
-              href="/clinical-testing/cpd"
-              visual={<CpdRingVisual />}
-              variant="light"
-            />
+            {CONFIG.FEATURES.CPD_TRACKER_LIVE && (
+              <InstrumentTile
+                tag="Registration CPD · audit-ready · free"
+                title="CPD Tracker"
+                body="Pick your board and your requirements, cycle dates and renewal countdown fill themselves. Log activities in 60 seconds, attach evidence, and export the audit bundle in one click."
+                cta="Open the CPD Tracker"
+                href="/clinical-testing/cpd"
+                visual={<CpdRingVisual />}
+                variant="light"
+              />
+            )}
           </div>
 
           <div className="mb-5">
