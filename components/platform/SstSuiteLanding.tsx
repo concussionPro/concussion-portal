@@ -88,7 +88,7 @@ function SstTab() {
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
           <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/clinical-suite/start">Start free trial →</Cta><Cta variant="ghost" href="/sst-trainer">Try it live</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
-          <FreeBadge note="Buffalo-protocol graded test · their own wearable" />
+          <FreeBadge note="Buffalo-protocol graded test · their own wearable · integrates with Cliniko" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
       </Section>

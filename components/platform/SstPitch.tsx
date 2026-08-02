@@ -16,11 +16,14 @@ import { CompetencyGapEvidence } from '@/components/clinical/CompetencyGapEviden
  * ESSA is "designed to ESSA standards" (pending, never "accredited"); no
  * efficacy/diagnostic claim; papers are NOT referenced (not submitted).
  *
- * NO PMS WRITE-BACK CLAIM, in any form. This previously said Cliniko/Gensolve
- * filing was "in certification" — it is not. The adapter is gated off
- * (PMS_WRITEBACK_ENABLED), carries unvalidated field shapes, and has never run
- * against a live tenant, so there is no certification in progress to describe.
- * /acc states the same rule. Do not reintroduce it in either place.
+ * PMS WRITE-BACK CLAIMS (updated 2026-08-03, was a blanket ban):
+ *  - CLINIKO: claimable — validated against a live tenant 2026-07-20, writes
+ *    allowed, live integration guide at /integrations/cliniko.
+ *  - PRACSUITE: "in onboarding" claimable only AFTER Smartsoft issue the
+ *    vendor key (application in ISO27001-pathway review, Aug 2026).
+ *  - GENSOLVE: still NO claim, in any form — adapter writes are gated off
+ *    until first live-tenant validation (no public sandbox).
+ * ESSA note above is also historical: accreditation GRANTED 2026-07-24.
  */
 
 const hanken = Hanken_Grotesk({
