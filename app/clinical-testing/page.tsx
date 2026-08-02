@@ -7,7 +7,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { SstClinicCard } from '@/components/clinical/SstClinicCard'
 import { ClinicProfileCard } from '@/components/clinical/ClinicProfileCard'
-import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
+import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes, CpdRingVisual } from '@/components/clinical/InstrumentVisuals'
 import { TrackedOutbound } from '@/components/TrackedOutbound'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 import { Lock, ArrowRight } from 'lucide-react'
@@ -226,8 +226,8 @@ function Shell() {
             </p>
           </div>
 
-          {/* the two instruments, side by side, each its own baked-in portal */}
-          <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {/* the three tools, side by side, each its own baked-in portal */}
+          <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
             <InstrumentTile
               tag="Exercise rehab · measured threshold"
               title="SST Trainer"
@@ -243,6 +243,15 @@ function Shell() {
               cta="Open Baseline Testing"
               href="/clinical-testing/baseline"
               visual={<BaselineLaptopAnimation />}
+              variant="light"
+            />
+            <InstrumentTile
+              tag="Registration CPD · audit-ready · free"
+              title="CPD Tracker"
+              body="Pick your board and your requirements, cycle dates and renewal countdown fill themselves. Log activities in 60 seconds, attach evidence, and export the audit bundle in one click."
+              cta="Open the CPD Tracker"
+              href="/clinical-testing/cpd"
+              visual={<CpdRingVisual />}
               variant="light"
             />
           </div>

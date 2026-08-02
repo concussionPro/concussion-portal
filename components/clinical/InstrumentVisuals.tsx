@@ -81,3 +81,44 @@ export function BaselineLaptopVisual() {
 export function InstrumentKeyframes() {
   return null
 }
+
+/** CPD Tracker tile visual — a records card: requirement bars + renewal
+ *  countdown, mirroring the real status card on /clinical-testing/cpd. */
+export function CpdRingVisual() {
+  const bars = [
+    { label: 'Total CPD', pct: 78, done: false },
+    { label: 'Mandated topics', pct: 100, done: true },
+    { label: 'Evidence on file', pct: 100, done: true },
+  ]
+  return (
+    <div className="relative flex h-full min-h-[290px] flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#eef4f4] to-[#dde8e8] px-6">
+      <span className="absolute right-3 top-2.5 z-20 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
+        Every board · one export
+      </span>
+      <div className="z-10 w-full max-w-[300px] rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_16px_34px_-16px_rgba(51,65,85,.45)]">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Registration CPD</span>
+          <span className="rounded-full bg-emerald-100 px-2 py-[3px] text-[9px] font-bold text-emerald-700">On track</span>
+        </div>
+        {bars.map((b) => (
+          <div key={b.label} className="mb-2.5">
+            <div className="mb-1 flex justify-between text-[9.5px] font-semibold text-slate-600">
+              <span>{b.label}</span>
+              <span className={b.done ? 'text-emerald-600' : 'text-slate-400'}>{b.done ? '✓' : `${b.pct}%`}</span>
+            </div>
+            <div className="h-[6px] overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${b.pct}%`, background: b.done ? '#10b981' : '#0d9488' }}
+              />
+            </div>
+          </div>
+        ))}
+        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
+          <span className="text-[9.5px] font-semibold text-slate-500">Renews 30 Nov</span>
+          <span className="rounded-[7px] bg-[#16243f] px-2.5 py-[5px] text-[9px] font-bold text-white">Audit export</span>
+        </div>
+      </div>
+    </div>
+  )
+}
