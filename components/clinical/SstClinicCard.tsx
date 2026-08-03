@@ -269,22 +269,45 @@ export function SstClinicCard() {
       {/* iPhone patients — native path. Store link once live; TestFlight
           public link as the pre-store bridge; nothing when neither exists
           (the web link works everywhere, manual HR entry on iPhone). */}
-      {(CONFIG.FEATURES.SST_IOS_APP_LIVE || CONFIG.SST_TESTFLIGHT_URL) && (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-          <p className="m-0 text-[12.5px] leading-relaxed text-slate-600">
-            <strong className="text-slate-800">iPhone patients:</strong>{' '}
+      {/* Patient devices — every load path, per platform. Prescription-only
+          framing throughout: patients get in with YOUR code, no other door. */}
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+        <p className="m-0 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
+          Getting the trainer onto patient devices
+        </p>
+        <ul className="m-0 mt-1.5 flex list-none flex-col gap-1.5 p-0 text-[12.5px] leading-relaxed text-slate-600">
+          <li>
+            <strong className="text-slate-800">iPhone:</strong>{' '}
             {CONFIG.FEATURES.SST_IOS_APP_LIVE ? (
-              <>install the native app from the{' '}
-                <a href={CONFIG.SST_APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-700 underline">App Store</a>,{' '}
-                then enter your clinic code — the native app pairs Bluetooth HR devices live, which iPhone browsers cannot.</>
+              <>the{' '}
+                <a href={CONFIG.SST_APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-700 underline">App Store app</a>{' '}
+                — pairs Bluetooth HR live (iPhone browsers can&rsquo;t), then your clinic code.</>
             ) : (
-              <>install via the{' '}
+              <>the{' '}
                 <a href={CONFIG.SST_TESTFLIGHT_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-700 underline">TestFlight beta</a>{' '}
-                (needs Apple&rsquo;s free TestFlight app), then enter your clinic code — the native app pairs Bluetooth HR devices live, which iPhone browsers cannot. App Store release is in review.</>
+                (via Apple&rsquo;s free TestFlight app) — pairs Bluetooth HR live, then your clinic code. App Store release in review; your QR and patient link route iPhones here automatically.</>
             )}
-          </p>
-        </div>
-      )}
+          </li>
+          <li>
+            <strong className="text-slate-800">Android:</strong> no install needed — your patient link
+            opens in Chrome with live HR pairing, and Chrome&rsquo;s menu offers &ldquo;Install app&rdquo;
+            to put it on their home screen.
+          </li>
+          <li>
+            <strong className="text-slate-800">Desktop / laptop:</strong> the same patient link in
+            Chrome or Edge — live pairing works there too (treadmill + laptop setups).
+          </li>
+          <li>
+            <strong className="text-slate-800">Wearables:</strong> live pairing with anything that
+            broadcasts heart rate (Garmin, Polar, Wahoo, chest straps). Apple Watch and Fitbit
+            don&rsquo;t broadcast — those patients type each reading, which the flow supports.
+          </li>
+        </ul>
+        <p className="m-0 mt-1.5 text-[11.5px] text-slate-400">
+          Access is by your clinic code only — patients can&rsquo;t use the trainer without your
+          prescription.
+        </p>
+      </div>
 
       {/* PMS plugin — connect the clinic's own Gensolve/Cliniko tenant */}
       {clinic && <PmsConnect code={clinic.code} viewKey={clinic.viewKey} demo={isDemoClinic} />}
