@@ -273,6 +273,14 @@ export default function AuClinicsPage() {
                 style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}>
                 Book 30 minutes
               </TrackedOutbound>
+              {/* Self-serve trial door (2026-08-04 readiness sweep: this page had
+                  NO path to /clinical-suite/start — influx traffic dead-ended at
+                  the demo + a call link). */}
+              <a href="/clinical-suite/start"
+                className="text-[13px] font-bold underline"
+                style={{ color: ACCENT }}>
+                Or start now — 3 patients free, no card, no call
+              </a>
             </div>
           </div>
         </div>

@@ -80,9 +80,12 @@ export default function ClinikoIntegrationPage() {
             summary, treatment notes — straight into the patient&rsquo;s Cliniko record.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/clinics" className="btn-primary inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm">
-              See it live &mdash; no login
+            <Link href="/clinical-suite/start" className="btn-primary inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm">
+              Start free &mdash; 3 patients, no card
               <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link href="/clinics" className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-300 font-semibold text-sm text-foreground hover:bg-slate-50">
+              See it live &mdash; no login
             </Link>
             <Link href="/clinical-testing" className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-300 font-semibold text-sm text-foreground hover:bg-slate-50">
               Clinician workspace
