@@ -37,6 +37,16 @@ const ONLY = onlyArg > -1 ? process.argv[onlyArg + 1].split(',') : null
 const FROM = 'Zac Lewis — Concussion Education Australia <zac@concussion-education-australia.com>'
 const REPLY_TO = 'zac@concussion-education-australia.com'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// OWNER DIRECTIVE 2026-08-03: "DO NOT SEND THE OTHERS BY RESEND."
+// This lane is CLOSED for new enterprise first-touches. The two entries below
+// are retained as a RECORD of what was sent on 2026-08-03 only. All remaining
+// enterprise emails (Habit, Healthia, Gensolve, any future target) are drafted
+// into Zac's Mac Mail for his personal edit + send — never through this script.
+// The live-send path below is disabled.
+// ─────────────────────────────────────────────────────────────────────────────
+const LANE_CLOSED = true
+
 const SENDS = {
   proactive: {
     to: 'nick.m@pro-active.com.au',
@@ -64,20 +74,7 @@ Zac Lewis
 Osteopath · Founder, Concussion Education Australia
 zac@concussion-education-australia.com · +61 449 186 579`,
   },
-  habit: {
-    // HOLD until 2026-08-06 (ACC round-1 follow-up slot — this IS Habit's escalation)
-    to: 'julie.cameron@habit.health',
-    subject: 'Current-consensus concussion care across your ACC Concussion Service',
-    text: `Julie — Habit delivers the ACC Concussion Service nationwide, which makes one 2022 shift directly yours: first-line treatment is now measured sub-symptom exercise prescription, and published surveys show only ~1 in 3 rehab clinicians prescribe it.
-
-We certify clinical teams in the updated protocol (published, open-access) and license the delivery platform — measured thresholds, monitored sessions, and ACC-format reporting (884/885) generated from real data.
-
-Worth 20 minutes with you or your concussion service lead?
-
-Zac Lewis
-Osteopath · Founder, Concussion Education Australia
-zac@concussion-education-australia.com · +61 449 186 579`,
-  },
+  // habit: REMOVED 2026-08-03 — drafted into Zac's Mac Mail instead (owner sends personally).
 }
 
 const textToHtml = (t) =>
@@ -86,6 +83,10 @@ const textToHtml = (t) =>
   '</div>'
 
 async function main() {
+  if (LANE_CLOSED && LIVE) {
+    console.error('LANE CLOSED (owner directive 2026-08-03): enterprise sends go via Mac Mail drafts only. Refusing to send.')
+    process.exit(1)
+  }
   const keys = Object.keys(SENDS).filter((k) => !ONLY || ONLY.includes(k))
   const sql = neon(env.POSTGRES_URL)
   for (const k of keys) {
