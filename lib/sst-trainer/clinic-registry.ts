@@ -324,7 +324,22 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
       ORDER BY created_at ASC
       LIMIT 1
     `
-    const r = rows[0]
+    let r = rows[0]
+    if (!r) {
+      // Member fallback (2026-08-04 seats build): named practitioners log in
+      // with their own email and resolve to the clinic that seated them.
+      try {
+        const { rows: viaMember } = await sql`
+          SELECT c.code, c.clinic_name, c.contact_name, c.email, c.view_key, c.created_at
+          FROM sst_clinic_members m
+          JOIN sst_clinics c ON c.code = m.clinic_code
+          WHERE m.email = ${email.toLowerCase()} AND m.revoked_at IS NULL
+          ORDER BY m.created_at ASC
+          LIMIT 1
+        `
+        r = viaMember[0]
+      } catch { /* members table may not exist yet */ }
+    }
     if (!r) return null
     return {
       code: r.code,
@@ -489,5 +504,25 @@ export async function listSstClinics(): Promise<SstClinic[]> {
     }))
   } catch {
     return []
+  }
+}
+
+/** Resolve the acting clinician's display name for a portal email at a clinic —
+ *  owner name if it's the owner, else the seated member's name. Used to stamp
+ *  report filing with WHO acted (2026-08-04 seats build). */
+export async function resolveActingClinician(email: string, code: string): Promise<string | null> {
+  const lower = email.toLowerCase()
+  try {
+    const { rows: owner } = await sql`
+      SELECT contact_name FROM sst_clinics WHERE code = ${code} AND email = ${lower} LIMIT 1
+    `
+    if (owner[0]?.contact_name) return owner[0].contact_name
+    const { rows: member } = await sql`
+      SELECT name FROM sst_clinic_members
+      WHERE clinic_code = ${code} AND email = ${lower} AND revoked_at IS NULL LIMIT 1
+    `
+    return member[0]?.name ?? null
+  } catch {
+    return null
   }
 }

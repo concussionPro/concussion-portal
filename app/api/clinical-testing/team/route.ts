@@ -27,6 +27,9 @@ import { sql } from '@/lib/db'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { hasClinicalAccess } from '@/lib/sst-trainer/access'
 import { getSstClinicByEmail, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
+import { grantSstEntitlement } from '@/lib/users'
+import { createMagicToken } from '@/lib/magic-link-jwt'
+import { sendEmail, escapeHtml } from '@/lib/resend-client'
 
 const SEAT_ALLOWANCE: Record<string, number> = { single: 1, clinic: 5, enterprise: 15 }
 
@@ -116,6 +119,33 @@ export async function POST(req: NextRequest) {
     INSERT INTO sst_clinic_members (id, clinic_code, name, email, member_key)
     VALUES (${id}, ${clinic.code}, ${name}, ${email || null}, ${memberKey})
   `
+
+  // Seated member with an email → their own portal login (SST entitlement +
+  // 7-day magic link). getSstClinicByEmail resolves members to this clinic,
+  // so their session opens the same workspace under their own identity —
+  // which is what report attribution stamps.
+  if (email) {
+    try {
+      // suppression fail-closed on every send lane
+      const { rows: sup } = await sql`
+        SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email} LIMIT 1`
+      if (sup.length === 0) {
+        const userId = await grantSstEntitlement(email, name)
+        const token = createMagicToken(userId, email, name, 'preview', 7 * 24 * 60 * 60 * 1000)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+        const loginUrl = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent('/clinical-testing')}`
+        await sendEmail({
+          to: email,
+          subject: `You've been added to ${clinic.clinicName} on SST Trainer`,
+          html: `<p style="margin:0 0 1em 0;">Hi ${escapeHtml(name)},</p><p style="margin:0 0 1em 0;">${escapeHtml(clinic.contactName)} added you as a practitioner at ${escapeHtml(clinic.clinicName)} on SST Trainer. Your clinic workspace — patients, live sessions and reports — is here:</p><p style="margin:0 0 1em 0;"><a href="${loginUrl}">Open your clinic workspace</a> (link valid 7 days; after that, log in at ${baseUrl}/login with this email)</p><p style="margin:0;">Zac Lewis<br/>Concussion Education Australia</p>`,
+          tags: [{ name: 'type', value: 'sst-member-invite' }],
+        })
+      }
+    } catch (err) {
+      console.error('[team] member invite failed (seat still created):', err)
+    }
+  }
+
   return NextResponse.json({ ok: true, id, name })
 }
 

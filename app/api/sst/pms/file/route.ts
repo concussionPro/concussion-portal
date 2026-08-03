@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifySessionToken } from '@/lib/jwt-session'
+import { resolveActingClinician } from '@/lib/sst-trainer/clinic-registry'
 import { verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
 import { resolveTenantAdapter, gensolveWritesConfirmed, markPmsOk } from '@/lib/sst-trainer/pms/tenant'
 import { deliverReport } from '@/lib/sst-trainer/pms/deliver'
@@ -67,7 +69,19 @@ export async function POST(request: NextRequest) {
   try {
     const input = await loadReportInput(code, patient, jurisdiction, {
       patient: body.claim?.trim() ? { claimRef: body.claim.trim() } : undefined,
-      clinician: body.clinician?.trim() ? { name: body.clinician.trim() } : undefined,
+      clinician: await (async () => {
+        if (body.clinician?.trim()) return { name: body.clinician.trim() }
+        // Attribution fallback (2026-08-04 seats build): resolve WHO is acting
+        // from the portal session — owner or seated member — so filed notes
+        // carry a real name even when the UI didn't pass one.
+        const tok = request.cookies.get('session')?.value
+        const sess = tok ? verifySessionToken(tok) : null
+        if (sess?.email) {
+          const name = await resolveActingClinician(sess.email, String(body.code || '').toUpperCase())
+          if (name) return { name }
+        }
+        return undefined
+      })(),
     })
     if (!input) return NextResponse.json({ error: 'No episode data found for that patient label' }, { status: 404 })
     const content = renderSkin(skin, input)
