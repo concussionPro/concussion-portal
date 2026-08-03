@@ -52,7 +52,8 @@ export function buildWelcomeEmail(args: {
   const clinicName = escapeHtml(args.clinicName)
   const code = escapeHtml(args.code)
   const loginUrl = args.loginUrl ? escapeHtml(args.loginUrl) : null
-  const patientUrl = `${baseUrl}/sst-trainer?clinic=${encodeURIComponent(args.code)}`
+  // /j/CODE — platform-smart join (iPhone → app chooser, else web app direct)
+  const patientUrl = `${baseUrl}/j/${encodeURIComponent(args.code)}`
 
   return `<!DOCTYPE html>
 <html>

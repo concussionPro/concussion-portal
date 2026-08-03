@@ -33,7 +33,9 @@ export function SstPatientQrCard({
   variant?: 'patient' | 'clinician'
 }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://portal.concussion-education-australia.com'
-  const url = `${origin}/sst-trainer?clinic=${encodeURIComponent(code)}`
+  // /j/CODE = platform-smart join (iPhone → native-app chooser, else straight
+  // into the web app). Shorter URL also means a lighter, faster-scanning QR.
+  const url = `${origin}/j/${encodeURIComponent(code)}`
   const hubUrl =
     variant === 'clinician' && viewKey
       ? `${origin}/clinical-hub?clinic=${encodeURIComponent(code)}&k=${encodeURIComponent(viewKey)}`

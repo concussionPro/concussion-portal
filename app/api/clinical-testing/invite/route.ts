@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
-  const patientUrl = `${baseUrl}/sst-trainer?clinic=${encodeURIComponent(clinic.code)}`
+  // /j/CODE — platform-smart join (iPhone → app chooser, else web app direct)
+  const patientUrl = `${baseUrl}/j/${encodeURIComponent(clinic.code)}`
   const greeting = patientName ? `Hi ${escapeHtml(patientName)},` : 'Hi,'
   const clinicName = escapeHtml(clinic.clinicName)
 

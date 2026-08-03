@@ -131,7 +131,7 @@ export function SstClinicCard() {
 
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://portal.concussion-education-australia.com'
-  const patientUrl = clinic ? `${origin}/sst-trainer?clinic=${encodeURIComponent(clinic.code)}` : ''
+  const patientUrl = clinic ? `${origin}/j/${encodeURIComponent(clinic.code)}` : ''
   const hubUrl = clinic
     ? `/clinical-hub?clinic=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}`
     : ''
