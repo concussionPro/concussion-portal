@@ -47,23 +47,33 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
           <p className="m-0 font-mono text-[30px] font-extrabold tracking-[0.14em] text-[#16243f]">{code}</p>
         </div>
         <p className="m-0 mt-4 text-[13.5px] leading-[1.55] text-slate-600">
-          On iPhone, the <strong>SST Trainer app</strong> pairs your watch or heart-rate strap live —
-          which iPhone browsers can&rsquo;t do. Install it, then enter your clinic code.
+          {CONFIG.FEATURES.SST_IOS_APP_LIVE ? (
+            <>On iPhone, the <strong>SST Trainer app</strong> pairs your watch or heart-rate strap live —
+            which iPhone browsers can&rsquo;t do. Install it, then enter your clinic code.</>
+          ) : (
+            <>Start in your browser now — no install. You&rsquo;ll type your heart rate during
+            sessions (iPhone browsers can&rsquo;t pair a watch live).</>
+          )}
         </p>
+        {/* Pre-App-Store (2026-08-04 audit P1-4): TestFlight demands installing
+            an installer and beta builds expire — wrong PRIMARY door for an
+            unknown public patient. Browser leads until the store build is live. */}
         <a
-          href={appHref}
+          href={CONFIG.FEATURES.SST_IOS_APP_LIVE ? appHref : webUrl}
           className="mt-4 block rounded-[13px] bg-[#16243f] px-5 py-[15px] text-center text-[15px] font-bold text-white"
         >
-          {appLabel}
+          {CONFIG.FEATURES.SST_IOS_APP_LIVE ? appLabel : 'Start in the browser'}
         </a>
         <a
-          href={webUrl}
+          href={CONFIG.FEATURES.SST_IOS_APP_LIVE ? webUrl : appHref}
           className="mt-2.5 block rounded-[13px] border border-slate-300 px-5 py-[13px] text-center text-[13.5px] font-bold text-[#16243f]"
         >
-          Continue in the browser instead
+          {CONFIG.FEATURES.SST_IOS_APP_LIVE ? 'Continue in the browser instead' : 'Or try the beta app (TestFlight)'}
         </a>
         <p className="m-0 mt-2.5 text-center text-[11.5px] leading-snug text-slate-400">
-          The browser version works too — you&rsquo;ll type your heart rate each minute instead of live pairing.
+          {CONFIG.FEATURES.SST_IOS_APP_LIVE
+            ? <>The browser version works too — you&rsquo;ll type your heart rate each minute instead of live pairing.</>
+            : <>The app pairs your watch live once it launches — your clinic code works in both.</>}
         </p>
       </div>
     </main>
