@@ -7,8 +7,6 @@ import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble, MapPin, Grad
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { CourseSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
-import CcmPricingContent from '@/components/pricing/CcmPricingContent'
-import CrmPricingContent from '@/components/crm/CrmPricingContent'
 import { OtherCityInterest } from '@/components/OtherCityInterest'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
@@ -79,7 +77,6 @@ const HOME_STREAMS: Array<{
 ]
 
 export default function HomeClient() {
-  const [stream, setStream] = useState<'ccm' | 'crm'>('ccm')
   // Wall-clock read ONCE per mount (lazy initialiser), not on every render —
   // calling Date.now() during render is impure and makes the output depend on
   // when React happens to re-render. A workshop date can't cross "now" mid-visit.
@@ -122,7 +119,6 @@ export default function HomeClient() {
             )}
             <div role="tablist" aria-label="Choose your course stream" className={showCrm ? 'grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3' : 'max-w-md mx-auto'}>
               {visibleStreams.map((s) => {
-                const active = s.id === stream
                 const Icon = s.icon
                 return (
                   <div key={s.id} className="flex flex-col">
@@ -130,25 +126,24 @@ export default function HomeClient() {
                         pills beat the "short fat" joined cards) — generous
                         radius, roomy padding; the body stamps live in ONE
                         strip UNDER the pair, not glued to each card. */}
-                    <button
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setStream(s.id)}
-                      className={`w-full flex h-[108px] items-center gap-4 rounded-[26px] px-6 text-left transition-all ${
-                        active
-                          ? 'bg-[var(--accent)] text-white shadow-xl shadow-[rgba(13,115,119,0.3)]'
-                          : 'bg-white text-[var(--foreground)] border border-[rgba(13,115,119,0.14)] shadow-sm opacity-90 hover:opacity-100 hover:shadow-md'
-                      }`}
+                    {/* ROUTER card (2026-08-04, owner: "home page and /courses
+                        are identical — what is the point"): the homepage no
+                        longer renders the full landing bodies; each pill now
+                        routes into /courses with its tab preselected. */}
+                    <Link
+                      href={`/courses?stream=${s.id}`}
+                      className="w-full flex h-[108px] items-center gap-4 rounded-[26px] px-6 text-left transition-all bg-white text-[var(--foreground)] border border-[rgba(13,115,119,0.14)] shadow-sm hover:shadow-md hover:border-[var(--accent)]"
                     >
-                      <span className={`flex-none w-12 h-12 rounded-full grid place-items-center ${active ? 'bg-white/15' : 'bg-[rgba(13,115,119,0.08)]'}`}>
-                        <Icon className={`w-6 h-6 ${active ? 'text-white' : 'text-[var(--accent)]'}`} strokeWidth={1.8} />
+                      <span className="flex-none w-12 h-12 rounded-full grid place-items-center bg-[rgba(13,115,119,0.08)]">
+                        <Icon className="w-6 h-6 text-[var(--accent)]" strokeWidth={1.8} />
                       </span>
-                      <span className="min-w-0">
-                        <span className={`block text-[10px] font-bold tracking-[0.14em] ${active ? 'text-white/70' : 'text-[var(--accent)]'}`}>{s.code}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[10px] font-bold tracking-[0.14em] text-[var(--accent)]">{s.code}</span>
                         <span className="block text-[16px] font-bold leading-tight">{s.name}</span>
-                        <span className={`block text-[12.5px] leading-tight mt-0.5 ${active ? 'text-white/85' : 'text-[var(--muted-foreground)]'}`}>{s.audience}</span>
+                        <span className="block text-[12.5px] leading-tight mt-0.5 text-[var(--muted-foreground)]">{s.audience}</span>
                       </span>
-                    </button>
+                      <ArrowRight className="w-4 h-4 flex-none text-[var(--accent)]" />
+                    </Link>
 
                     {/* #1 TRUST SIGNAL — stamp in the SAME grid cell as its
                         tab: OA under CCM, ESSA under CRM, alignment structural. */}
@@ -184,12 +179,6 @@ export default function HomeClient() {
           </div>
         </section>
 
-        {/* Active stream landing — the full pricing-page design, swapped by tab.
-            hideNav so the homepage owns the single SiteNav; noPadTop trims the
-            landing's own top offset since the tabs already provide it. */}
-        <div className="relative z-10">
-          {!showCrm || stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
-        </div>
 
         {/* ── Workshop locations ───────────────────────────── */}
         <section id="locations" className="section-padding relative z-10">

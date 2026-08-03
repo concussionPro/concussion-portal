@@ -20,7 +20,13 @@ export const metadata: Metadata = {
  * now owns the page. The short-course marketplace (AI / Vagus, early access,
  * vetting links) renders below the streams.
  */
-export default async function CoursesIndexPage() {
+export default async function CoursesIndexPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ stream?: string }>
+}) {
+  const sp = await searchParams
+  const initialStream = sp?.stream === 'crm' ? 'crm' as const : 'ccm' as const
   // Short courses only — the two flagship streams are owned by the tabs above.
   const shortCourses = COURSES.filter(
     (c) =>
@@ -34,7 +40,7 @@ export default async function CoursesIndexPage() {
 
   return (
     <>
-      <CourseStreamsClient />
+      <CourseStreamsClient initial={initialStream} />
 
       {/* ── Short-course marketplace strip ─────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 pb-20">
