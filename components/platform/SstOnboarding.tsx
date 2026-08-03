@@ -348,6 +348,11 @@ export default function SstOnboarding({
           {codeStatus === 'idle' && (
             <span className="text-[10.5px] leading-snug text-(--sst-ghost)">
               Your clinic gives you this code — ask your practitioner if you don&rsquo;t have it yet.
+              {' '}Clinician without a code?{' '}
+              <a href="/clinical-suite/start?src=sst-trainer" className="font-semibold underline">
+                Set up your clinic
+              </a>
+              .
             </span>
           )}
 
