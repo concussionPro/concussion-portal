@@ -213,7 +213,7 @@ export async function GET(request: Request) {
           await sendEmail({
             to: 'zac@concussion-education-australia.com',
             subject: `SST tier fit — ${over.length} clinic(s) above their plan's caseload`,
-            html: toHtml(`These active clinics look under-tiered (soft check — nothing was blocked):\n\n${lines}\n\nAllowances: single ≤15 active/30d · clinic ≤60 · enterprise unlimited.`, '#'),
+            html: toHtml(`Caseload anomaly signal (seats are the enforcement; this is the smell test — nothing was blocked):\n\n${lines}\n\nAllowances: single ≤15 active/30d · clinic ≤60 · enterprise unlimited.`, '#'),
             tags: [{ name: 'type', value: 'sst-tierfit' }],
           })
         }

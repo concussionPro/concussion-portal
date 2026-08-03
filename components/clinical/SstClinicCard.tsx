@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { SstPatientQrCard } from '@/components/sst-trainer/SstPatientQrCard'
 import { PmsConnect } from '@/components/clinical/PmsConnect'
+import { SstTeamSection } from '@/components/clinical/SstTeamSection'
 import {
   ArrowRight,
   Copy,
@@ -209,6 +210,7 @@ export function SstClinicCard() {
               Subscribed · unlimited patients
             </p>
           )}
+          <SstTeamSection demo={isDemoClinic} />
         </div>
         <div className="flex flex-none flex-wrap gap-2">
           {!isDemoClinic && (
