@@ -382,6 +382,18 @@ export default function HomeClient() {
                       Free SCAT Forms
                     </Link>
                   </div>
+                  {/* Second free course (module 104) — built + live at
+                      /concussion-update but never surfaced publicly until
+                      2026-08-04; homepage showed SCAT6 only. */}
+                  <div className="mt-3 pt-3 border-t border-[rgba(13,115,119,0.15)]">
+                    <Link href="/concussion-update" className="group inline-flex items-start gap-2 text-left">
+                      <ArrowRight className="w-3.5 h-3.5 mt-[3px] text-[var(--accent)] shrink-0 transition-transform group-hover:translate-x-0.5" />
+                      <span className="text-[13px] leading-snug text-[var(--foreground)]">
+                        <span className="font-semibold">Also free: Concussion Care Has Changed</span>
+                        <span className="text-[var(--muted-foreground)]"> — the ~1-hour update on the new first-line treatment every clinician needs.</span>
+                      </span>
+                    </Link>
+                  </div>
                 </div>
                 <div className="hidden md:flex flex-col gap-2.5 shrink-0 w-[200px]">
                   {[

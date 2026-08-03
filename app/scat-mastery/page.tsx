@@ -500,6 +500,20 @@ export default function SCATMasteryPage() {
           </div>
         </div>
 
+        {/* ── The OTHER free course — was invisible from every public surface
+            until 2026-08-04 ── */}
+        <div className="mt-12 max-w-2xl mx-auto rounded-2xl border border-teal-200 bg-teal-50/50 p-6 text-center">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700 mb-1.5">Second free course</p>
+          <h3 className="text-lg font-bold text-slate-900 mb-1.5">Concussion Care Has Changed</h3>
+          <p className="text-sm text-slate-600 mb-4 max-w-md mx-auto">
+            The ~1-hour update on the new first-line treatment — rest is out, measured sub-symptom-threshold
+            exercise is in. Free, no card.
+          </p>
+          <Link href="/concussion-update" className="btn-primary inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold">
+            Start the free update →
+          </Link>
+        </div>
+
         {/* ── Regulatory context — blog links ── */}
         <div className="mt-12 max-w-2xl mx-auto">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Further reading</p>
