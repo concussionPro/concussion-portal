@@ -161,13 +161,6 @@ export function SstClinicCard() {
         <div className="flex flex-wrap gap-2">
           <input
             type="text"
-            value={patientName}
-            onChange={(e) => setPatientName(e.target.value)}
-            placeholder="Patient first name (optional)"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] outline-none focus:border-[var(--accent)]"
-          />
-          <input
-            type="text"
             value={clinicName}
             onChange={(e) => setClinicName(e.target.value)}
             placeholder="Clinic or practice name"

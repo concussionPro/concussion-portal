@@ -19,7 +19,9 @@ function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no I/1/O/0 confusion
   let code = ''
   for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)]
+    // crypto-strong (2026-08-04 audit: Math.random codes are guessable and
+    // this mints records in the shared clinic:{code} namespace)
+    code += chars[nodeCrypto.randomInt(chars.length)]
   }
   return code
 }
@@ -42,6 +44,20 @@ export async function POST(request: Request) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
+    }
+
+    // Per-IP limit (2026-08-04 audit: email-only limiting is bypassed with
+    // random addresses; each mint creates KV + user + email send)
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    const ipKey = `rate:preseason-ip:${ip}:${new Date().toISOString().slice(0, 10)}`
+    const ipCount = await kv.incr(ipKey)
+    if (ipCount === 1) await kv.expire(ipKey, 86400)
+    if (ipCount > 10) {
+      return NextResponse.json(
+        { error: 'Too many registrations from this connection today.' },
+        { status: 429 }
+      )
     }
 
     // Rate limit: 3 registrations per email per day

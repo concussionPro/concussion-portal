@@ -457,24 +457,12 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
                   <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                     Prescribe heart-rate-paced, sub-symptom-threshold exercise rehab and track your patients&apos; recovery. Manage sessions right here in your dashboard.
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => startSstCheckout('monthly')}
-                      disabled={sstLoading !== null}
-                      className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg bg-accent text-white hover:opacity-90 transition disabled:opacity-60"
-                    >
-                      {sstLoading === 'monthly' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                      Subscribe monthly
-                    </button>
-                    <button
-                      onClick={() => startSstCheckout('annual')}
-                      disabled={sstLoading !== null}
-                      className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg border border-accent/30 text-accent hover:bg-accent/5 transition disabled:opacity-60"
-                    >
-                      {sstLoading === 'annual' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                      Annual — save 2 months
-                    </button>
-                  </div>
+                  {/* 2026-08-04 audit P1-2: the old monthly/annual plan buttons
+                      posted a plan the API no longer accepts and swallowed the
+                      400 silently. Route to the live tier page instead. */}
+                  <a href="/clinical-testing/subscribe" className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg bg-accent text-white hover:opacity-90 transition">
+                    View clinic plans — from A$49/month
+                  </a>
                 </div>
               </div>
             </Card>

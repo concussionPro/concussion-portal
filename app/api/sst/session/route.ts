@@ -66,14 +66,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Trial-cap ADMISSION gate (server-side — the UI gate in onboarding is a
-    // crafted-client bypass otherwise). A genuinely NEW patient can't be admitted
-    // past a full free trial; an ALREADY-COUNTED patient is NEVER blocked, so
-    // mid-treatment data always syncs (clinical-safety rule). DEMO + unnamed
-    // writes are exempt (can't attribute an unnamed session to a distinct patient).
-    if (clinicCode !== 'DEMO00' && patientLabel) {
+    // crafted-client bypass otherwise). Identity = the install UUID
+    // (payload.patientRef) first, label as fallback — the SAME identity the
+    // clinic hub groups by (2026-08-04 audit B1: keying the cap on label alone
+    // let label-reuse and unlabeled writes mint unlimited free patients while
+    // the hub happily charted them as distinct people). An ALREADY-SEEN
+    // patient is NEVER blocked, so mid-treatment data always syncs
+    // (clinical-safety rule).
+    const patientRef =
+      typeof (payload as Record<string, unknown>).patientRef === 'string'
+        ? String((payload as Record<string, unknown>).patientRef).trim().slice(0, 64)
+        : ''
+    if (clinicCode !== 'DEMO00') {
       const { rows: seen } = await sql<{ one: number }>`
         SELECT 1 AS one FROM sst_clinic_sessions
-        WHERE upper(clinic_code) = ${clinicCode} AND trim(patient_label) = ${patientLabel}
+        WHERE upper(clinic_code) = ${clinicCode}
+          AND (
+            (${patientRef} <> '' AND payload->>'patientRef' = ${patientRef})
+            OR (${patientLabel ?? ''} <> '' AND trim(patient_label) = ${patientLabel ?? ''})
+          )
         LIMIT 1
       `
       if (seen.length === 0) {
@@ -146,6 +157,14 @@ export async function POST(request: NextRequest) {
         storedBandLow = null
         storedBandHigh = null
       }
+    }
+
+    // DEMO00 never persists (2026-08-04 audit B2: the world-writable demo row
+    // set defaced the dataset every prospect opens, and was an uncapped
+    // anonymous INSERT lane). The demo patient flow completes client-side;
+    // demo clinician reads serve a curated fixture.
+    if (clinicCode === 'DEMO00') {
+      return NextResponse.json({ ok: true, demo: true })
     }
 
     await sql`

@@ -3,6 +3,7 @@ import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { getClientIp } from '@/lib/get-client-ip'
+import { rateLimit } from '@/lib/rate-limit'
 import {
   createSstClinic,
   getSstClinicByEmail,
@@ -62,6 +63,13 @@ async function ensureTable(): Promise<void> {
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request)
+    // KV-backed limit (2026-08-04 audit: the in-memory Map is per-instance and
+    // resets on cold start — near-no limiting under distributed influx). The
+    // Map stays as a same-instance fast path; KV is the real gate.
+    const kvLimit = await rateLimit({ key: `sst-start:${ip}`, limit: 10, windowSec: 900 })
+    if (!kvLimit.ok) {
+      return NextResponse.json({ error: 'Too many requests — please try again shortly.' }, { status: 429 })
+    }
     if (!checkRateLimit(`ip:${ip}`, 10)) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again in a few minutes.' },

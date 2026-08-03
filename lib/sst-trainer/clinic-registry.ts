@@ -73,7 +73,10 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
   let patientCount = 0
   try {
     const { rows } = await sql<{ n: number }>`
-      SELECT COUNT(DISTINCT NULLIF(trim(coalesce(patient_label, '')), ''))::int AS n
+      SELECT COUNT(DISTINCT COALESCE(
+        NULLIF(trim(coalesce(payload->>'patientRef', '')), ''),
+        NULLIF(trim(coalesce(patient_label, '')), '')
+      ))::int AS n
       FROM sst_clinic_sessions
       WHERE upper(clinic_code) = ${code}
     `
@@ -124,8 +127,33 @@ export async function setSstClinicPlan(
 ): Promise<void> {
   const code = normaliseClinicCode(rawCode)
   if (!code || code === DEMO_CLINIC_CODE) return
-  const rec = await getClinic(code)
-  if (!rec) return
+  let rec = await getClinic(code)
+  if (!rec) {
+    // 2026-08-04 audit P1-3: a missing/blipped KV record made this a silent
+    // no-op — money taken, cap kept, webhook 200'd so Stripe never retried.
+    // The PG row is the durable source; reconstruct the KV record from it.
+    try {
+      const { rows } = await sql`
+        SELECT clinic_name, contact_name, email, view_key, created_at
+        FROM sst_clinics WHERE code = ${code} LIMIT 1
+      `
+      if (rows[0]) {
+        rec = {
+          clinicName: rows[0].clinic_name,
+          contactName: rows[0].contact_name,
+          email: rows[0].email,
+          viewKey: rows[0].view_key,
+          createdAt: rows[0].created_at,
+        } as NonNullable<typeof rec>
+      }
+    } catch (err) {
+      console.error('[clinic-registry] PG fallback failed in setSstClinicPlan:', err)
+    }
+  }
+  if (!rec) {
+    console.error(`[clinic-registry] setSstClinicPlan: no record for ${code} — plan change LOST`)
+    return
+  }
   const prev = rec as unknown as Record<string, unknown>
   await kv.set(`clinic:${code}`, {
     ...rec,

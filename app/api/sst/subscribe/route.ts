@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       clinicCode: clinic.code,
       customerEmail: session.email,
       successUrl: `${origin}/clinical-testing?subscribed=1`,
-      cancelUrl: `${origin}/platform/pricing`,
+      cancelUrl: `${origin}/clinical-testing/subscribe`,
     })
     return NextResponse.json({ url: checkout.url })
   } catch (err) {

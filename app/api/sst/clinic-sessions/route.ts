@@ -32,6 +32,45 @@ type Row = {
   created_at: string
 }
 
+/** Curated demo dataset for DEMO00 — three believable patients at different
+ *  episode stages. Days are relative so the demo always looks current. */
+function demoFixtureRows(): Row[] {
+  const day = (n: number) => new Date(Date.now() - n * 86400000).toISOString()
+  const mk = (
+    ref: string, label: string, type: 'threshold' | 'training', daysAgo: number,
+    hrt: number | null, low: number | null, high: number | null,
+    extra: Record<string, unknown> = {},
+  ): Row => ({
+    patient_label: label,
+    patient_ref: ref,
+    session_type: type,
+    hrt_bpm: hrt,
+    band_low: low,
+    band_high: high,
+    condition: 'concussion',
+    payload: { patientRef: ref, hrVerified: true, hrSource: 'bluetooth', ...extra },
+    created_at: day(daysAgo),
+  } as unknown as Row)
+  return [
+    // Alex — mid-episode, progressing cleanly
+    mk('demo-alex', 'Alex D', 'threshold', 12, 142, 114, 128, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-alex', 'Alex D', 'training', 10, null, 114, 128, { minutesInBand: 19 }),
+    mk('demo-alex', 'Alex D', 'training', 8, null, 114, 128, { minutesInBand: 20 }),
+    mk('demo-alex', 'Alex D', 'training', 6, null, 118, 132, { minutesInBand: 20 }),
+    mk('demo-alex', 'Alex D', 'threshold', 3, 156, 125, 140, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-alex', 'Alex D', 'training', 1, null, 125, 140, { minutesInBand: 20 }),
+    // Sam — fresh episode, first test done
+    mk('demo-sam', 'Sam K', 'threshold', 2, 131, 105, 118, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-sam', 'Sam K', 'training', 1, null, 105, 118, { minutesInBand: 17 }),
+    // Jordan — late episode, near clearance
+    mk('demo-jordan', 'Jordan P', 'threshold', 20, 138, 110, 124, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-jordan', 'Jordan P', 'training', 17, null, 110, 124, { minutesInBand: 20 }),
+    mk('demo-jordan', 'Jordan P', 'training', 14, null, 116, 130, { minutesInBand: 20 }),
+    mk('demo-jordan', 'Jordan P', 'threshold', 9, 171, 137, 154, { interpretation: 'no-intolerance', terminationReason: 'exhaustion' }),
+    mk('demo-jordan', 'Jordan P', 'training', 5, null, 137, 154, { minutesInBand: 20 }),
+  ]
+}
+
 export async function GET(request: NextRequest) {
   const code = (request.nextUrl.searchParams.get('code') || '').trim().toUpperCase()
   if (!code || code.length < 3) {
@@ -51,13 +90,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Clinician key required' }, { status: 401 })
   }
   try {
-    const { rows } = await sql<Row>`
+    // DEMO00: curated fixture, never the DB (2026-08-04 audit B2 — real rows
+    // here meant one anonymous POST could deface every prospect's demo).
+    const rows: Row[] = code === 'DEMO00' ? demoFixtureRows() : (await sql<Row>`
       SELECT patient_label, payload->>'patientRef' AS patient_ref,
              session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
       FROM sst_clinic_sessions
       WHERE upper(clinic_code) = ${code}
       ORDER BY created_at ASC
-    `
+    `).rows
     // IDENTITY: group by the install UUID (patientRef) — NOT the display name.
     // Grouping on patient_label alone merged two same-named patients at one
     // clinic into a single chart (one HRt trajectory, one session list, one

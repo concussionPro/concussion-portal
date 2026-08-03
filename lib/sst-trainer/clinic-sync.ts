@@ -114,7 +114,18 @@ async function post(url: string, body: Record<string, unknown>): Promise<boolean
       keepalive: true, // survive navigation away from the session screen
     })
     // 4xx = the server rejected it (bad code etc) — retrying will never help,
-    // so treat as "handled" and don't queue. 5xx/network → retry later.
+    // so treat as "handled" and don't queue. EXCEPTION (2026-08-04 audit):
+    // 402 trial-full is TEMPORARY — the clinic can upgrade, at which point the
+    // same write becomes valid. Dropping it silently lost the patient's whole
+    // episode. Queue it for retry AND flag the state so the app can tell the
+    // patient their spot isn't active yet.
+    if (res.status === 402) {
+      try { localStorage.setItem('sst:trial-full', String(Date.now())) } catch { /* private mode */ }
+      return false // → caller queues for later resync
+    }
+    if (res.ok) {
+      try { localStorage.removeItem('sst:trial-full') } catch { /* private mode */ }
+    }
     return res.ok || (res.status >= 400 && res.status < 500)
   } catch {
     return false

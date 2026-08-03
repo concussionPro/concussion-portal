@@ -218,12 +218,12 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
               Register your clinic in a minute and get your code: patients onboard with it, and every
               graded test and training session lands in your Clinical Hub — measured thresholds,
               verified sessions, flags for review. At episode end, the app writes the GP report
-              for you: trajectory, symptom data, and the clearance-or-extend recommendation,
+              for you: trajectory, symptom data, and the measured evidence summary for the clinician’s decision,
               ready to sign.
             </p>
             <div className="mt-[18px] flex flex-wrap gap-3">
               <Link
-                href="/pricing"
+                href="/clinical-suite/start"
                 className="rounded-[12px] bg-slate-900 px-5 py-[14px] text-[14px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
               >
                 Get your clinic code

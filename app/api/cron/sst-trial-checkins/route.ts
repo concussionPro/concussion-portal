@@ -66,7 +66,7 @@ function capEmail(c: ClinicRow): { subject: string; text: string } {
 
 You've got ${c.patients} patients running through SST at ${c.clinic_name} — keen to hear how the first episodes have gone, and whether the reports are landing the way your team needs.
 
-Your trial includes 3 patients. When you're ready to open it up, the clinic plan is A$49 per delivering clinician per month (cancel anytime) — you can upgrade from your workspace, or just reply and I'll set it up with you.
+Your trial includes 3 patients. When you're ready to open it up, clinic plans start at A$49/month flat (cancel anytime) — you can upgrade from your workspace, or just reply and I'll set it up with you.
 
 If a walkthrough for the rest of the team would help, happy to do that too.
 

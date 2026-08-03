@@ -20,7 +20,7 @@ import { SiteNav } from '@/components/SiteNav'
 export const metadata: Metadata = {
   title: 'SST Trainer + Cliniko — concussion rehab reports filed straight into the patient record',
   description:
-    'Connect SST Trainer to Cliniko: measured sub-threshold concussion rehab with every home session verified, and the GP report and return-to-play summary filed into the patient’s Cliniko record automatically.',
+    'Connect SST Trainer to Cliniko: measured sub-threshold concussion rehab with every home session verified, and the GP report and return-to-play summary filed into the patient’s Cliniko record in one click.',
   alternates: { canonical: '/integrations/cliniko' },
 }
 
@@ -37,8 +37,8 @@ const STEPS = [
   },
   {
     icon: FileText,
-    title: 'Reports file themselves',
-    body: 'SST matches the patient in your Cliniko, then files the episode documentation against their record — no copy-paste, no PDF juggling.',
+    title: 'Reports file in one click',
+    body: 'SST matches the patient in your Cliniko, and your clinician files the episode documentation to their record in one click — no copy-paste, no PDF juggling.',
   },
 ]
 
