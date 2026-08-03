@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { GraduationCap, HeartPulse } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
@@ -19,9 +20,9 @@ import { trackEvent } from '@/lib/analytics'
 
 type Stream = 'ccm' | 'crm'
 
-const STREAMS: Array<{ id: Stream; code: string; name: string; audience: string; icon: typeof GraduationCap }> = [
-  { id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery', audience: 'Physiotherapists & allied health', icon: GraduationCap },
-  { id: 'crm', code: 'CRM', name: 'Concussion Rehab Mastery', audience: 'Exercise physiologists', icon: HeartPulse },
+const STREAMS: Array<{ id: Stream; code: string; name: string; audience: string; icon: typeof GraduationCap; badgeImg: string; badgeAlt: string; badgeClass: string }> = [
+  { id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery', audience: 'Physiotherapists & allied health', icon: GraduationCap, badgeImg: '/osteopathy-australia-endorsed.png', badgeAlt: 'Endorsed by Osteopathy Australia', badgeClass: 'h-12' },
+  { id: 'crm', code: 'CRM', name: 'Concussion Rehab Mastery', audience: 'Exercise physiologists', icon: HeartPulse, badgeImg: '/essa-accredited-pd.png', badgeAlt: 'Accredited by ESSA', badgeClass: 'h-9' },
 ]
 
 export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Stream }) {
@@ -71,7 +72,7 @@ export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Str
                   >
                     <Icon className={`w-7 h-7 ${active ? 'text-white' : 'text-accent'}`} strokeWidth={1.8} />
                   </span>
-                  <span className="min-w-0">
+                  <span className="min-w-0 flex-1">
                     <span className={`block text-[11px] font-bold tracking-[0.14em] mb-0.5 ${active ? 'text-white/70' : 'text-accent/70'}`}>
                       {s.code}
                     </span>
@@ -79,6 +80,12 @@ export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Str
                     <span className={`block text-sm leading-tight mt-0.5 ${active ? 'text-white/85' : 'text-muted-foreground'}`}>
                       {s.audience}
                     </span>
+                  </span>
+                  {/* Accreditation badge — same assets/verbs as the homepage
+                      streams (OA "Endorsed by" / ESSA "Accredited by"). White
+                      plate so both read on the active teal. */}
+                  <span className={`hidden sm:grid flex-none place-items-center rounded-xl px-2.5 py-2 ${active ? 'bg-white' : 'bg-slate-50 border border-slate-200/70'}`}>
+                    <Image src={s.badgeImg} alt={s.badgeAlt} width={268} height={100} className={`${s.badgeClass} w-auto`} />
                   </span>
                 </button>
               )
