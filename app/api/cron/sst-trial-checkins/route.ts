@@ -180,6 +180,48 @@ export async function GET(request: Request) {
       }
     }
 
+    // ── Tier-fit watchdog (2026-08-04: tiers were honor-system — a
+    // 15-clinician clinic could pay $49 forever). SOFT enforcement: active
+    // patients in the last 30 days proxy the caseload a tier honestly covers
+    // (single ≈ one practitioner ≈ ≤15 active; clinic ≤60; enterprise ∞).
+    // NEVER blocks writes (clinical-safety rule) — reports to Zac monthly;
+    // he decides who gets the tier conversation.
+    try {
+      const TIER_ACTIVE_ALLOWANCE: Record<string, number> = { single: 15, clinic: 60 }
+      const { rows: activeClinics } = await sql`
+        SELECT c.code, c.clinic_name, c.email, c.tier,
+          (SELECT COUNT(DISTINCT COALESCE(
+             NULLIF(trim(coalesce(s.payload->>'patientRef','')), ''),
+             NULLIF(trim(coalesce(s.patient_label,'')), '')))
+           FROM sst_clinic_sessions s
+           WHERE s.clinic_code = c.code AND s.created_at > NOW() - INTERVAL '30 days') AS active_patients
+        FROM sst_clinics c WHERE c.plan = 'active'
+      `
+      const over = (activeClinics as { code: string; clinic_name: string; tier: string | null; active_patients: number }[])
+        .filter((c) => {
+          const allowance = TIER_ACTIVE_ALLOWANCE[c.tier || 'single']
+          return allowance !== undefined && Number(c.active_patients) > allowance
+        })
+      if (over.length > 0) {
+        const monthKey = new Date().toISOString().slice(0, 7)
+        const { rowCount: fresh } = await sql`
+          INSERT INTO email_audit_log (audit_key, sent_at)
+          VALUES (${'sst_tierfit_' + monthKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (fresh) {
+          const lines = over.map((c) =>
+            `- ${c.clinic_name} (${c.code}): tier=${c.tier || 'single'}, ${c.active_patients} active patients / 30d`).join('\n')
+          await sendEmail({
+            to: 'zac@concussion-education-australia.com',
+            subject: `SST tier fit — ${over.length} clinic(s) above their plan's caseload`,
+            html: toHtml(`These active clinics look under-tiered (soft check — nothing was blocked):\n\n${lines}\n\nAllowances: single ≤15 active/30d · clinic ≤60 · enterprise unlimited.`, '#'),
+            tags: [{ name: 'type', value: 'sst-tierfit' }],
+          })
+        }
+      }
+    } catch (err) {
+      console.error('[sst-checkins] tier-fit watchdog failed (non-fatal):', err)
+    }
+
     return NextResponse.json({ sent, skipped })
   } catch (err) {
     console.error('[sst-checkins] error:', err)

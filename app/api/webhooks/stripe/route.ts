@@ -266,6 +266,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await setSstClinicPlan(clinicCode, 'active', {
         customerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
         subscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
+        tier: session.metadata?.plan,
       })
       console.log(`SST subscription active for clinic ${clinicCode}`)
     } else {
@@ -1554,6 +1555,7 @@ async function handleSstSubscriptionChange(sub: Stripe.Subscription) {
   await setSstClinicPlan(clinicCode, active ? 'active' : 'trial', {
     customerId: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id,
     subscriptionId: sub.id,
+    tier: sub.metadata?.plan,
   })
   console.log(`SST clinic ${clinicCode} → ${active ? 'active' : 'trial'} (sub ${sub.status})`)
 }

@@ -195,8 +195,10 @@ function rememberValidCode(code: string, clinicName: string | null) {
   if (typeof window === 'undefined') return
   try {
     const raw = window.localStorage.getItem(VALID_CODE_CACHE)
-    const map = raw ? (JSON.parse(raw) as Record<string, string>) : {}
-    map[code] = clinicName ?? ''
+    const map = raw ? (JSON.parse(raw) as Record<string, string | { n: string; t: number }>) : {}
+    // TTL'd entry (2026-08-04 audit P2-8: cached codes lived forever — a
+    // deactivated clinic's patients could re-enrol offline indefinitely)
+    map[code] = { n: clinicName ?? '', t: Date.now() }
     window.localStorage.setItem(VALID_CODE_CACHE, JSON.stringify(map))
   } catch {
     /* storage full / disabled — non-fatal */
@@ -208,8 +210,15 @@ function recallValidCode(code: string): ClinicValidation | null {
   try {
     const raw = window.localStorage.getItem(VALID_CODE_CACHE)
     if (!raw) return null
-    const map = JSON.parse(raw) as Record<string, string>
-    if (code in map) return { valid: true, clinicName: map[code] || null }
+    const map = JSON.parse(raw) as Record<string, string | { n: string; t: number }>
+    const hit = map[code]
+    if (hit !== undefined) {
+      // Legacy string entries have no timestamp — honour once, they'll be
+      // rewritten with one on the next successful validation.
+      if (typeof hit === 'string') return { valid: true, clinicName: hit || null }
+      if (Date.now() - hit.t < 7 * 86400000) return { valid: true, clinicName: hit.n || null }
+      return null // expired — force a live check
+    }
   } catch {
     /* ignore */
   }

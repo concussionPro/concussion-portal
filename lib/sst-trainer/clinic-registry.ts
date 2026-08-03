@@ -123,7 +123,7 @@ export async function isExistingPatient(rawCode: unknown, label: string): Promis
 export async function setSstClinicPlan(
   rawCode: unknown,
   plan: 'trial' | 'active',
-  stripe?: { customerId?: string; subscriptionId?: string },
+  stripe?: { customerId?: string; subscriptionId?: string; tier?: string },
 ): Promise<void> {
   const code = normaliseClinicCode(rawCode)
   if (!code || code === DEMO_CLINIC_CODE) return
@@ -158,15 +158,18 @@ export async function setSstClinicPlan(
   await kv.set(`clinic:${code}`, {
     ...rec,
     plan,
+    tier: stripe?.tier ?? prev.tier,
     stripeCustomerId: stripe?.customerId ?? prev.stripeCustomerId,
     stripeSubscriptionId: stripe?.subscriptionId ?? prev.stripeSubscriptionId,
   })
   try {
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
+    await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS tier TEXT`
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`
     await sql`
       UPDATE sst_clinics SET plan = ${plan},
+        tier = COALESCE(${stripe?.tier ?? null}, tier),
         stripe_customer_id = COALESCE(${stripe?.customerId ?? null}, stripe_customer_id),
         stripe_subscription_id = COALESCE(${stripe?.subscriptionId ?? null}, stripe_subscription_id)
       WHERE code = ${code}

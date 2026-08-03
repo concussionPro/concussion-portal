@@ -224,6 +224,12 @@ export default function TrainingSession({
   const hrValue = heartRate.trim() === '' ? null : Number(heartRate)
   // Physiologic plausibility cap — a fat-finger must not drive the zone gauge.
   const hrValid = hrValue !== null && Number.isFinite(hrValue) && hrValue >= 30 && hrValue <= 240
+  // Manual-entry freshness (2026-08-04 audit P2-6): a number typed once at
+  // minute 2 was re-counted every second for the whole session — 18 minutes of
+  // synthetic "in band" in the clinician's record. A typed reading now counts
+  // for 90s, then accrual pauses until the patient re-enters.
+  const lastEntryAtRef = useRef<number>(Date.now())
+  useEffect(() => { lastEntryAtRef.current = Date.now() }, [hrValue])
   const gaugeHr = hrValid ? (hrValue as number) : null
 
   // zone off the current reading — 'limit' = at/over the measured HRt
@@ -282,6 +288,8 @@ export default function TrainingSession({
     const iv = setInterval(() => {
       const d = latestRef.current
       if (!d.hrValid || d.hrValue === null) return
+      // Stale-manual guard: non-streaming readings older than 90s don't accrue.
+      if (d.hrStatus !== 'streaming' && Date.now() - lastEntryAtRef.current > 90_000) return
       readingsRef.current.push({
         bpm: d.hrValue,
         verified: isVerifiedReading(d.hrValue, d.liveHr ?? null, d.hrStatus === 'streaming'),

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { kv } from '@vercel/kv'
 import { sql } from '@/lib/db'
+import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
 import { getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
@@ -165,6 +166,37 @@ export async function POST(request: NextRequest) {
     // demo clinician reads serve a curated fixture.
     if (clinicCode === 'DEMO00') {
       return NextResponse.json({ ok: true, demo: true })
+    }
+
+    // Red-flag self-clear (2026-08-04 audit P2-7): the lock is self-clearable
+    // by design ("my clinician has cleared me"), but the clinician had no
+    // real-time signal. Email the clinic the moment the event lands, keyed
+    // per patient/day so repeats don't spam.
+    const eventType = String((payload as Record<string, unknown>).eventType || '')
+    if (eventType === 'red-flag-cleared') {
+      try {
+        const { rows: clin } = await sql<{ email: string; clinic_name: string }>`
+          SELECT email, clinic_name FROM sst_clinics WHERE code = ${clinicCode} LIMIT 1`
+        const to = clin[0]?.email
+        if (to) {
+          const dayKey = new Date().toISOString().slice(0, 10)
+          const who = patientLabel || patientRef || 'a patient'
+          const { rowCount: fresh } = await sql`
+            INSERT INTO email_audit_log (audit_key, sent_at)
+            VALUES (${`sst_redflag_clear_${clinicCode}_${who}_${dayKey}`}, NOW())
+            ON CONFLICT (audit_key) DO NOTHING`
+          if (fresh) {
+            await sendEmail({
+              to,
+              subject: `SST alert: ${who} resumed after a red-flag hold`,
+              html: `<p style="margin:0 0 1em 0;">${escapeHtml(String(who))} at ${escapeHtml(clin[0].clinic_name)} tapped &ldquo;my clinician has cleared me&rdquo; after a red-flag hold and has resumed activity in SST Trainer.</p><p style="margin:0 0 1em 0;">If you did not clear this patient, contact them now. The event is logged in your Clinical Hub.</p>`,
+              tags: [{ name: 'type', value: 'sst-redflag-alert' }],
+            })
+          }
+        }
+      } catch (err) {
+        console.error('[sst-session] red-flag alert failed (non-fatal):', err)
+      }
     }
 
     await sql`
