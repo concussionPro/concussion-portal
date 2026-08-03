@@ -12,12 +12,11 @@ import { CONFIG } from '@/lib/config'
 // no route from the global nav at all: an EP landing on a blog post, /scat-forms
 // or /clinical-suite had no path to their own product, and "Pricing" led only to
 // the physio/osteo/chiro course.
-// 2026-08-04 routing fix (owner): "Free Training" showed only SCAT6 and
-// "Courses" led to the CCM-only pricing page while the tabbed CCM⇄CRM hub
-// lived unlinked at /courses. Free Training → the two-course hub; Courses →
-// the dual-stream hub.
+// 2026-08-04 routing fix (owner): "Courses" led to the CCM-only pricing page
+// while the tabbed CCM⇄CRM hub lived unlinked at /courses. Free Training stays
+// on /scat-mastery, which carries BOTH free courses (CCHC block near the top).
 const BASE_NAV_ITEMS = [
-  { label: 'Free Training', path: '/free-training', accent: true },
+  { label: 'Free Training', path: '/scat-mastery', accent: true },
   { label: 'Courses', path: '/courses', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Clinical Tools', path: '/clinical-suite', accent: false },

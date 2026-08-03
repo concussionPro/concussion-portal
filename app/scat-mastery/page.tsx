@@ -459,6 +459,37 @@ export default function SCATMasteryPage() {
           </div>
         </div>
 
+        {/* ── The OTHER free course — CCHC, equal billing right under the hero
+            (owner 2026-08-04: revert the /free-training hub; CCHC lives HERE) ── */}
+        <div className="mt-14 md:mt-16">
+          <div className="rounded-2xl border border-teal-300/40 bg-gradient-to-br from-[#0d5c63] via-[#0f766e] to-[#155e75] p-7 md:p-8 shadow-lg shadow-teal-900/20">
+            <div className="flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
+              <div className="flex-1 min-w-0">
+                <p className="inline-flex items-center rounded-full bg-amber-300/95 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-amber-950 mb-3">
+                  Also free · second course
+                </p>
+                <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+                  Concussion Care Has Changed
+                </h2>
+                <p className="mt-1.5 text-sm text-teal-50/90 leading-relaxed max-w-2xl">
+                  Rest is out — measured sub-symptom-threshold exercise is now first-line treatment.
+                  The ~1-hour update on the paradigm shift, the evidence behind it, and what modern
+                  management involves. Free, no credit card.
+                </p>
+              </div>
+              <div className="shrink-0">
+                <Link
+                  href="/concussion-update"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#0f766e] hover:bg-teal-50 transition-colors"
+                >
+                  Start the free update
+                  <span aria-hidden>→</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ── Upgrade CTA Card ── */}
         <div className="mt-20 md:mt-24">
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
@@ -498,20 +529,6 @@ export default function SCATMasteryPage() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* ── The OTHER free course — was invisible from every public surface
-            until 2026-08-04 ── */}
-        <div className="mt-12 max-w-2xl mx-auto rounded-2xl border border-teal-200 bg-teal-50/50 p-6 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700 mb-1.5">Second free course</p>
-          <h3 className="text-lg font-bold text-slate-900 mb-1.5">Concussion Care Has Changed</h3>
-          <p className="text-sm text-slate-600 mb-4 max-w-md mx-auto">
-            The ~1-hour update on the new first-line treatment — rest is out, measured sub-symptom-threshold
-            exercise is in. Free, no card.
-          </p>
-          <Link href="/concussion-update" className="btn-primary inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold">
-            Start the free update →
-          </Link>
         </div>
 
         {/* ── Regulatory context — blog links ── */}
