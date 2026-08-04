@@ -106,6 +106,22 @@ function SstTab() {
         <p className="mt-4 text-center text-[12px] text-slate-400">Recovery figures describe compliance with the exercise protocol, not the app — SST Trainer makes that compliance measurable.</p>
       </Section>
 
+      <Section className="pb-14">
+        <div className="mx-auto max-w-[860px]">
+          <h2 className="mb-5 text-center text-[clamp(24px,2.8vw,32px)] font-extrabold leading-[1.05] tracking-[-0.02em]">See it in 60 seconds</h2>
+          <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
+            <iframe
+              className="aspect-video w-full"
+              src="https://www.youtube-nocookie.com/embed/qFy2P15f6Kc"
+              title="SST demo — measured graded exertion rehab with the documentation built in"
+              loading="lazy"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      </Section>
+
       <Section className="pb-16">
         <h2 className="mb-[26px] text-center text-[clamp(26px,3vw,36px)] font-extrabold leading-[1.05] tracking-[-0.02em]">The clinician loop</h2>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
