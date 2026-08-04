@@ -42,7 +42,7 @@
 
 ---
 
-# 1 — CEP-UK / AHCS  ·  SEND TODAY (Email 1)
+# 1 — CEP-UK / AHCS  ·  EMAIL 1 SENT 2026-08-04 (Lynne.Smith@ahcs.ac.uk, CC registration@ahcs.ac.uk, via Mail; ESSA-granted wording + reviewer link, attachments offered on request)
 
 - **TARGET:** CEP-UK / AHCS — UK Clinical Exercise Physiologist register operator; portfolio / equivalence route closes **31 December 2026**. 164 registrants (AHCS-verified). Highest-value target on the deadline.
 - **AUDIENCE:** UK clinical exercise physiologists (portfolio / equivalence registrants).
