@@ -51,13 +51,11 @@ export async function GET(request: NextRequest) {
   if (!(await verifyViewKey(code, sp.get('k')))) {
     return NextResponse.json({ error: 'Clinician key required' }, { status: 401 })
   }
-  // PREMIUM: documents are the paid tier (DEMO exempt) — mirrors gp-report.
-  if (code !== 'DEMO00') {
-    const usage = await getClinicUsage(code)
-    if (usage.plan !== 'active') {
-      return NextResponse.json({ error: 'Clinic documents are a premium feature — subscribe to unlock.' }, { status: 402 })
-    }
-  }
+  // TRIAL clinics render documents for their (≤3) trial patients WITH a
+  // trial watermark — the report IS the conversion moment ("the paperwork
+  // writes itself"); a 402 here was the pitch contradicting the product
+  // (2026-08-05 sweep). Subscribing removes the watermark.
+  const isTrial = code !== 'DEMO00' && (await getClinicUsage(code)).plan !== 'active' 
 
   // Request-scoped identity (never persisted). Blank fields simply fall back to
   // the de-identified label, so an omitted identity degrades gracefully.
@@ -100,7 +98,13 @@ export async function GET(request: NextRequest) {
               'DEMONSTRATION ONLY — fabricated example data. This is not a real client, not a real health record, and must not be filed with ACC.',
             watermarkText: 'DEMO',
           }
-        : {}),
+        : isTrial
+          ? {
+              draftBanner:
+                'FREE-TRIAL DOCUMENT — generated on the SST free trial. Subscribe from your clinic workspace to issue reports without this notice.',
+              watermarkText: 'TRIAL',
+            }
+          : {}),
     })
     return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   } catch (err) {

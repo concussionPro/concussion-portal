@@ -5,6 +5,7 @@ import { CONFIG } from '@/lib/config'
 import { getClientIp } from '@/lib/get-client-ip'
 import { rateLimit } from '@/lib/rate-limit'
 import {
+  adoptExistingClinicForEmail,
   createSstClinic,
   getSstClinicByEmail,
   type SstClinic,
@@ -126,6 +127,10 @@ export async function POST(request: NextRequest) {
       try {
         clinic =
           (await getSstClinicByEmail(cleanEmail)) ??
+          // A preseason-baseline clinic signing up for the trial keeps its
+          // existing code — minting a second one splits their patients
+          // across codes (2026-08-05 sweep #5; same guard as the portal path).
+          (await adoptExistingClinicForEmail(cleanEmail)) ??
           (await createSstClinic({
             clinicName: cleanClinic,
             contactName: cleanClinician,
@@ -140,7 +145,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Note to Zac (best effort — lead already persisted).
+    // Note to Zac (best effort — lead already persisted). Suppression not
+    // checked here BY DECISION (2026-08-05 sweep #9): owner notification +
+    // the welcome below are transactional responses to a form the person
+    // just submitted — fresh consent, not marketing.
     try {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,

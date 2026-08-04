@@ -18,12 +18,18 @@ import { STORE_KEY } from '@/lib/sst-trainer/store'
  */
 export default function SstEntry() {
   const [view, setView] = useState<'deciding' | 'landing' | 'app'>('deciding')
+  const [trialFull, setTrialFull] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     let hasState = false
     try {
       hasState = !!window.localStorage.getItem(STORE_KEY)
+      // Set by clinic-sync on a 402 (clinic's free trial at capacity, this
+      // patient not yet admitted); cleared on the next successful sync. The
+      // flag was write-only — the patient trained on silently while every
+      // event queued (2026-08-05 sweep #8). Tell them.
+      setTrialFull(!!window.localStorage.getItem('sst:trial-full'))
     } catch {
       /* storage blocked → treat as new visitor */
     }
@@ -38,7 +44,23 @@ export default function SstEntry() {
   if (view === 'deciding') return null
   // publicSurface: patients enter with their clinic's code — the full
   // self-guided version lives only on the gated /platform/app surface.
-  if (view === 'app') return <PlatformApp publicSurface />
+  if (view === 'app') {
+    return (
+      <>
+        {trialFull && (
+          <div
+            role="status"
+            style={{ background: '#7c2d12', color: '#fff7ed', padding: '10px 16px', fontSize: 13.5, lineHeight: 1.45, textAlign: 'center' }}
+          >
+            Your clinic&rsquo;s free trial is at capacity, so your sessions aren&rsquo;t reaching your
+            clinician yet — they&rsquo;re saved on this device and will send automatically once your
+            clinic opens a spot. Mention it at your next appointment.
+          </div>
+        )}
+        <PlatformApp publicSurface />
+      </>
+    )
+  }
   return (
     <SstLanding
       onStart={() => {

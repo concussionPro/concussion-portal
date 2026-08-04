@@ -6,6 +6,7 @@ import { createJWTSession, verifySessionToken, type SessionData } from '@/lib/jw
 import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
 import { sql } from '@/lib/db'
 import { userOwnsCrm } from '@/lib/crm-course'
+import { hasSstEntitlement } from '@/lib/users'
 
 /** Ensure the used_magic_tokens table exists (runs once per cold start) */
 let tableEnsured = false
@@ -52,16 +53,27 @@ async function resolveLandingTarget(
   email: string,
   redirect: string | null,
 ): Promise<string> {
-  const isFreeTier = accessLevel === 'preview' && !(await userOwnsCrm(email))
-  let target = accessLevel === 'preview'
-    ? (isFreeTier ? '/modules/101' : '/ep-course')
-    : '/dashboard'
-  // Free-tier users may deep-link ONLY into module content; a CRM buyer may
-  // also deep-link into their own course.
+  // Two preview-level ownership doors, resolved independently:
+  //  - CRM (EP stream) buyers → their paid course.
+  //  - SST-entitled clinics (trial signups, seated members) → the Clinical
+  //    Testing workspace their welcome/invite emails deep-link to. Without
+  //    this door the self-serve funnel's first login dropped every trial
+  //    clinician onto the free SCAT course.
+  const isPreview = accessLevel === 'preview'
+  const ownsCrm = isPreview && (await userOwnsCrm(email))
+  const isSstClinic = isPreview && (await hasSstEntitlement(email))
+  let target = !isPreview
+    ? '/dashboard'
+    : ownsCrm ? '/ep-course'
+    : isSstClinic ? '/clinical-testing'
+    : '/modules/101'
+  // Preview users may deep-link only into surfaces they own: module content
+  // (everyone), their own course (CRM buyers), the clinical workspace (SST).
   if (redirect && isValidRedirect(redirect) &&
-      (accessLevel !== 'preview' ||
+      (!isPreview ||
         redirect.startsWith('/modules/') ||
-        (!isFreeTier && redirect.startsWith('/ep-course')))) {
+        (ownsCrm && redirect.startsWith('/ep-course')) ||
+        (isSstClinic && redirect.startsWith('/clinical-testing')))) {
     target = redirect
   }
   return target

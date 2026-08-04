@@ -1,5 +1,4 @@
 import { CONFIG } from '@/lib/config'
-import { SST_PRICING } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,7 +101,10 @@ export function buildWelcomeEmail(args: {
         ${loginUrl ? `<div style="text-align:center;margin:24px 0">
           <a href="${loginUrl}" style="display:inline-block;background:#0d9488;color:#fff;font-weight:700;font-size:15px;padding:14px 30px;border-radius:12px;text-decoration:none">Log in to your portal</a>
           <p style="margin:10px 0 0;font-size:12.5px;color:#64748b">Your Clinical Testing suite — patient list, live sessions, and one-click reports — lives in your CEA portal. This link signs you in (valid 7 days). Everything else in the portal stays locked unless you enrol in the course.</p>
-        </div>` : ''}
+        </div>` : `<div style="text-align:center;margin:24px 0">
+          <a href="${baseUrl}/login" style="display:inline-block;background:#0d9488;color:#fff;font-weight:700;font-size:15px;padding:14px 30px;border-radius:12px;text-decoration:none">Log in to your portal</a>
+          <p style="margin:10px 0 0;font-size:12.5px;color:#64748b">Log in with this email address — your Clinical Testing suite (patient list, live sessions, one-click reports) is inside your CEA portal.</p>
+        </div>`}
 
         <div class="link-block">
           <p class="label">Patient app link</p>
@@ -115,7 +117,7 @@ export function buildWelcomeEmail(args: {
           <p style="font-weight: 700; margin-top: 0;">Getting started:</p>
           <div class="step">
             <div class="step-num">1</div>
-            <div><strong>Open your Clinical Hub</strong> using the private link above and bookmark it — it's where every patient's threshold, training band and session history lives.</div>
+            <div><strong>Log in to your portal</strong> with the button above — your Clinical Testing workspace is where every patient's threshold, training band, session history and reports live.</div>
           </div>
           <div class="step">
             <div class="step-num">2</div>
@@ -130,7 +132,7 @@ export function buildWelcomeEmail(args: {
         <p style="font-size: 14px; color: #475569;">The graded test is clinician-distributed — patients can only reach it through a registered clinic code like yours, so you stay in control of who runs it and when.</p>
 
         <div class="founding">
-          <p style="margin: 0;"><strong>Founding clinic terms:</strong> Free during the founding period. When paid plans launch, founding clinics lock their rate for life — from A$${SST_PRICING.FOUNDING_FROM}/month (standard plans from A$${SST_PRICING.STANDARD_SOLO}).</p>
+          <p style="margin: 0;"><strong>Your free trial:</strong> 3 patients, full features, no card. When you're ready to open it up, plans start at A$49/month (cancel anytime) — upgrade from your workspace.</p>
         </div>
 
         <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions, or want a hand onboarding your first patient? Just hit reply — I read every message.</p>

@@ -52,12 +52,18 @@ async function authedClinic(req: NextRequest) {
   const token = req.cookies.get('session')?.value
   const session = token ? verifySessionToken(token) : null
   if (!session || !(await hasClinicalAccess({ email: session.email, accessLevel: session.accessLevel }))) return null
-  return getSstClinicByEmail(session.email.toLowerCase())
+  const clinic = await getSstClinicByEmail(session.email.toLowerCase())
+  if (!clinic) return null
+  // Seat ADMINISTRATION is owner-only — a seated member resolves to the
+  // clinic (member fallback) for workspace access, but must not add/revoke
+  // colleagues or consume seats (2026-08-05 sweep #6).
+  return { clinic, isOwner: clinic.email.toLowerCase() === session.email.toLowerCase() }
 }
 
 export async function GET(req: NextRequest) {
-  const clinic = await authedClinic(req)
-  if (!clinic) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const auth = await authedClinic(req)
+  if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const { clinic } = auth
   await ensureTable()
   const { rows } = await sql`
     SELECT id, name, email, created_at FROM sst_clinic_members
@@ -65,7 +71,7 @@ export async function GET(req: NextRequest) {
     ORDER BY created_at ASC
   `
   const usage = await getClinicUsage(clinic.code)
-  const tier = (clinic as unknown as { tier?: string }).tier || (usage.plan === 'active' ? 'single' : 'trial')
+  const tier = clinic.tier || (usage.plan === 'active' ? 'single' : 'trial')
   const allowance = usage.plan === 'active' ? (SEAT_ALLOWANCE[tier] ?? 1) : 1
   return NextResponse.json({
     members: rows,
@@ -73,12 +79,15 @@ export async function GET(req: NextRequest) {
     seatsUsed: rows.length + 1,
     seatAllowance: allowance,
     tier: usage.plan === 'active' ? tier : 'trial',
+    isOwner: auth.isOwner,
   })
 }
 
 export async function POST(req: NextRequest) {
-  const clinic = await authedClinic(req)
-  if (!clinic) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const auth = await authedClinic(req)
+  if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!auth.isOwner) return NextResponse.json({ error: 'Only the clinic owner can manage seats.' }, { status: 403 })
+  const { clinic } = auth
   let name = '', email = ''
   try {
     const body = await req.json()
@@ -98,7 +107,7 @@ export async function POST(req: NextRequest) {
   const seatsUsed = (existing[0]?.n ?? 0) + 1 // + owner
 
   const usage = await getClinicUsage(clinic.code)
-  const tier = (clinic as unknown as { tier?: string }).tier || 'single'
+  const tier = clinic.tier || 'single'
   const allowance = usage.plan === 'active' ? (SEAT_ALLOWANCE[tier] ?? 1) : 1
   if (seatsUsed >= allowance) {
     return NextResponse.json(
@@ -150,8 +159,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const clinic = await authedClinic(req)
-  if (!clinic) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const auth = await authedClinic(req)
+  if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!auth.isOwner) return NextResponse.json({ error: 'Only the clinic owner can manage seats.' }, { status: 403 })
+  const { clinic } = auth
   let id = ''
   try {
     const body = await req.json()

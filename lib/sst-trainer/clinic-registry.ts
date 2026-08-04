@@ -69,16 +69,37 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
     return { plan: 'active', patientCount: 0, cap: null, canAddPatient: true }
   }
   const clinic = await getClinic(code)
-  const plan: 'trial' | 'active' = clinic?.plan === 'active' ? 'active' : 'trial'
+  let plan: 'trial' | 'active' = clinic?.plan === 'active' ? 'active' : 'trial'
+  if (!clinic) {
+    // KV blip must not demote a PAYING clinic to trial at the admission gate
+    // (2026-08-05 sweep #11) — the PG row is the durable billing source.
+    try {
+      const { rows } = await sql<{ plan: string }>`
+        SELECT plan FROM sst_clinics WHERE code = ${code} LIMIT 1
+      `
+      if (rows[0]?.plan === 'active') plan = 'active'
+    } catch { /* table absent → stay trial */ }
+  }
   let patientCount = 0
   try {
+    // One human = one identity. A patient can appear as ref'd rows (watch
+    // app) AND label-only rows (older/web client) — plain
+    // COALESCE-distinct double-counted them toward the cap (2026-08-05
+    // sweep #4). Count refs, plus labels (case-folded) that never co-occur
+    // with any ref'd row.
     const { rows } = await sql<{ n: number }>`
-      SELECT COUNT(DISTINCT COALESCE(
-        NULLIF(trim(coalesce(payload->>'patientRef', '')), ''),
-        NULLIF(trim(coalesce(patient_label, '')), '')
-      ))::int AS n
-      FROM sst_clinic_sessions
-      WHERE upper(clinic_code) = ${code}
+      WITH s AS (
+        SELECT NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref,
+               NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl
+        FROM sst_clinic_sessions
+        WHERE upper(clinic_code) = ${code}
+      )
+      SELECT (
+        (SELECT COUNT(DISTINCT ref) FROM s WHERE ref IS NOT NULL) +
+        (SELECT COUNT(DISTINCT lbl) FROM s
+          WHERE ref IS NULL AND lbl IS NOT NULL
+            AND lbl NOT IN (SELECT lbl FROM s WHERE ref IS NOT NULL AND lbl IS NOT NULL))
+      )::int AS n
     `
     patientCount = rows[0]?.n ?? 0
   } catch {
@@ -105,7 +126,7 @@ export async function isExistingPatient(rawCode: unknown, label: string): Promis
     const { rows } = await sql<{ n: number }>`
       SELECT COUNT(*)::int AS n FROM sst_clinic_sessions
       WHERE upper(clinic_code) = ${code}
-        AND trim(coalesce(patient_label, '')) = ${trimmed}
+        AND lower(trim(coalesce(patient_label, ''))) = ${trimmed.toLowerCase()}
       LIMIT 1
     `
     return (rows[0]?.n ?? 0) > 0
@@ -271,6 +292,10 @@ export async function ensureSstClinicsTable(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `
+  // Billing columns are read unconditionally (getSstClinicByEmail, cron
+  // watchdog) — self-heal on environments created before they existed.
+  await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
+  await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS tier TEXT`
 }
 
 /**
@@ -309,6 +334,10 @@ export interface SstClinic {
   email: string
   viewKey: string
   createdAt: string
+  /** billing state mirrored from PG — 'trial' | 'active' */
+  plan: string
+  /** paid tier ('single' | 'clinic' | 'enterprise') — null until first subscription */
+  tier: string | null
 }
 
 /**
@@ -318,7 +347,7 @@ export interface SstClinic {
 export async function getSstClinicByEmail(email: string): Promise<SstClinic | null> {
   try {
     const { rows } = await sql`
-      SELECT code, clinic_name, contact_name, email, view_key, created_at
+      SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier
       FROM sst_clinics
       WHERE email = ${email.toLowerCase()}
       ORDER BY created_at ASC
@@ -330,7 +359,7 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
       // with their own email and resolve to the clinic that seated them.
       try {
         const { rows: viaMember } = await sql`
-          SELECT c.code, c.clinic_name, c.contact_name, c.email, c.view_key, c.created_at
+          SELECT c.code, c.clinic_name, c.contact_name, c.email, c.view_key, c.created_at, c.plan, c.tier
           FROM sst_clinic_members m
           JOIN sst_clinics c ON c.code = m.clinic_code
           WHERE m.email = ${email.toLowerCase()} AND m.revoked_at IS NULL
@@ -348,6 +377,8 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
       email: r.email,
       viewKey: r.view_key,
       createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+      plan: r.plan || 'trial',
+      tier: r.tier || null,
     }
   } catch {
     return null // table may not exist yet — treat as "not provisioned"
@@ -414,7 +445,7 @@ export async function createSstClinic(args: {
     throw err
   }
 
-  return { code, clinicName, contactName, email, viewKey, createdAt }
+  return { code, clinicName, contactName, email, viewKey, createdAt, plan: 'trial', tier: null }
 }
 
 /**
@@ -483,14 +514,14 @@ export async function adoptExistingClinicForEmail(rawEmail: string): Promise<Sst
     console.error('[sst-registry] adopt mirror failed (KV grant still applied):', err)
   }
 
-  return { code, clinicName, contactName, email, viewKey, createdAt }
+  return { code, clinicName, contactName, email, viewKey, createdAt, plan: 'trial', tier: null }
 }
 
 /** Admin listing (newest first). Empty array when the table doesn't exist yet. */
 export async function listSstClinics(): Promise<SstClinic[]> {
   try {
     const { rows } = await sql`
-      SELECT code, clinic_name, contact_name, email, view_key, created_at
+      SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier
       FROM sst_clinics
       ORDER BY created_at DESC
     `
@@ -501,6 +532,8 @@ export async function listSstClinics(): Promise<SstClinic[]> {
       email: r.email,
       viewKey: r.view_key,
       createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+      plan: r.plan || 'trial',
+      tier: r.tier || null,
     }))
   } catch {
     return []

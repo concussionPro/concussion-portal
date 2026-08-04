@@ -79,12 +79,15 @@ export async function POST(request: NextRequest) {
         ? String((payload as Record<string, unknown>).patientRef).trim().slice(0, 64)
         : ''
     if (clinicCode !== 'DEMO00') {
+      // (Red-flag clinic alerts below send without a suppression check BY
+      // DECISION — clinical-safety notifications to the treating clinic are
+      // not marketing; 2026-08-05 sweep #9.)
       const { rows: seen } = await sql<{ one: number }>`
         SELECT 1 AS one FROM sst_clinic_sessions
         WHERE upper(clinic_code) = ${clinicCode}
           AND (
             (${patientRef} <> '' AND payload->>'patientRef' = ${patientRef})
-            OR (${patientLabel ?? ''} <> '' AND trim(patient_label) = ${patientLabel ?? ''})
+            OR (${patientLabel ?? ''} <> '' AND lower(trim(coalesce(patient_label, ''))) = ${(patientLabel ?? '').toLowerCase()})
           )
         LIMIT 1
       `
