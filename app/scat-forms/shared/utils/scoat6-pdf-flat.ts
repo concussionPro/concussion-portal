@@ -26,6 +26,9 @@ import {
   drawFilledCircle,
   drawWrappedText,
   drawYesNo,
+  drawNotAdministered,
+  notAdministeredMark,
+  anyProvided,
   embedStandardFonts,
   loadFlatPDF,
   savePDFAndDownload,
@@ -52,6 +55,98 @@ export async function exportSCOAT6ToFlatPDF(
     const fsm = 8   // small
     const fsl = 10  // large
     const H = 841.89 // A4 page height
+
+    // ========================================================================
+    // "WAS THIS SECTION ADMINISTERED?" — clinical-record integrity gate
+    // ========================================================================
+    // Booleans default false and numbers default 0, so an untouched subtest is
+    // indistinguishable from a subtest scored zero. For each scored section we
+    // derive `administered` = "any field in the section differs from its
+    // default", and the explicit not-done flags the SCOAT6 model already
+    // carries (gad7NotDone / phq2NotDone / sleepNotDone / mvoms*.notTested)
+    // FORCE the not-administered path regardless of any other value.
+    // Unadministered sections draw no item marks and print a dash in their
+    // score box; administered sections print their real value, including 0.
+    const na = notAdministeredMark(font)
+
+    const immediateMemoryAdministered = anyProvided(
+      formData.wordListUsed,
+      formData.immediateMemoryTimeCompleted,
+      ...formData.immediateMemoryTrial1,
+      ...formData.immediateMemoryTrial2,
+      ...formData.immediateMemoryTrial3,
+    )
+
+    const digitsAdministered = anyProvided(
+      formData.digitListUsed,
+      formData.digitsBackward,
+    )
+
+    const monthsAdministered = anyProvided(
+      formData.monthsReverseTime,
+      formData.monthsReverseErrors,
+    )
+
+    // Concentration /5 aggregates digits + months — needs both halves.
+    const concentrationAdministered = digitsAdministered && monthsAdministered
+
+    // Word list is shared with immediate memory, so it is not evidence here.
+    const delayedRecallAdministered = anyProvided(
+      formData.delayedRecallStartTime,
+      formData.delayedRecallMinutesSinceImmediate,
+      ...formData.delayedRecall,
+    )
+
+    const balanceAdministered = anyProvided(
+      formData.footTested,
+      formData.mBessDoubleErrors,
+      formData.mBessTandemErrors,
+      formData.mBessSingleErrors,
+    )
+
+    const complexTandemAdministered = anyProvided(
+      formData.complexTandemForwardEyesOpen,
+      formData.complexTandemForwardEyesClosed,
+      formData.complexTandemBackwardEyesOpen,
+      formData.complexTandemBackwardEyesClosed,
+    )
+
+    const dualTaskAdministered = anyProvided(
+      formData.dualTaskCognitiveTask,
+      formData.dualTaskTrialsAttempted,
+      formData.dualTaskTrialsCorrect,
+      formData.dualTaskAverageTime,
+    )
+
+    // mVOMS baseline has no not-tested flag of its own; treat the whole mVOMS
+    // block as run if the baseline has any rating or ANY sub-test was tested.
+    const mvomsRows = [
+      formData.mvomsSmoothPursuits,
+      formData.mvomsSaccadesHorizontal,
+      formData.mvomsVORHorizontal,
+      formData.mvomsVMS,
+    ]
+    const mvomsBaselineAdministered = anyProvided(
+      formData.mvomsBaseline.headache,
+      formData.mvomsBaseline.dizziness,
+      formData.mvomsBaseline.nausea,
+      formData.mvomsBaseline.fogginess,
+    ) || mvomsRows.some(r => !r.notTested && anyProvided(
+      r.headache, r.dizziness, r.nausea, r.fogginess, r.comments,
+    ))
+
+    // Explicit not-done flags win outright.
+    const gad7Administered = !formData.gad7NotDone && anyProvided(
+      formData.gad7_1, formData.gad7_2, formData.gad7_3, formData.gad7_4,
+      formData.gad7_5, formData.gad7_6, formData.gad7_7,
+    )
+    const phq2Administered = !formData.phq2NotDone && anyProvided(
+      formData.phq2_1, formData.phq2_2,
+    )
+    const sleepAdministered = !formData.sleepNotDone && anyProvided(
+      formData.sleep1, formData.sleep2, formData.sleep3,
+      formData.sleep4, formData.sleep5,
+    )
 
     // ==================== PAGE 1 (index 0): DEMOGRAPHICS ====================
     const p1 = pages[0]
@@ -268,17 +363,21 @@ export async function exportSCOAT6ToFlatPDF(
       formData.immediateMemoryTrial3,
     ]
 
-    imTrials.forEach((trial, t) => {
-      trial.forEach((correct, w) => {
-        const y = imTrialStartY - (w * imRowH)
-        if (correct) {
-          drawCheckmark(p5, imTrialXPositions[t], y, 8)
-        }
+    if (immediateMemoryAdministered) {
+      imTrials.forEach((trial, t) => {
+        trial.forEach((correct, w) => {
+          const y = imTrialStartY - (w * imRowH)
+          if (correct) {
+            drawCheckmark(p5, imTrialXPositions[t], y, 8)
+          }
+        })
       })
-    })
 
-    // Immediate Memory Score
-    drawText(p5, 350, H - 720, calculateImmediateMemory(formData).toString(), { font: fontBold, size: fsl })
+      // Immediate Memory Score
+      drawText(p5, 350, H - 720, calculateImmediateMemory(formData).toString(), { font: fontBold, size: fsl })
+    } else {
+      drawNotAdministered(p5, 350, H - 720, { font: fontBold, size: fsl })
+    }
     drawText(p5, 400, H - 720, formData.immediateMemoryTimeCompleted, { font, size: fs })
 
     // ==================== PAGE 6 (index 5): ALTERNATE WORD LIST + DIGITS + MONTHS ====================
@@ -294,14 +393,26 @@ export async function exportSCOAT6ToFlatPDF(
     if (formData.digitListUsed === 'B') drawCheckmark(p6, 180, H - 250, 10)
     if (formData.digitListUsed === 'C') drawCheckmark(p6, 220, H - 250, 10)
 
-    drawText(p6, 430, H - 340, formData.digitsBackward.toString(), { font: fontBold, size: fsl })
+    if (digitsAdministered) {
+      drawText(p6, 430, H - 340, formData.digitsBackward.toString(), { font: fontBold, size: fsl })
+    } else {
+      drawNotAdministered(p6, 430, H - 340, { font: fontBold, size: fsl })
+    }
 
     // Months in reverse
     drawText(p6, 300, H - 430, formData.monthsReverseTime, { font, size: fs })
-    drawText(p6, 430, H - 430, formData.monthsReverseErrors.toString(), { font, size: fs })
+    if (monthsAdministered) {
+      drawText(p6, 430, H - 430, formData.monthsReverseErrors.toString(), { font, size: fs })
+    } else {
+      drawNotAdministered(p6, 430, H - 430, { font, size: fs })
+    }
 
-    // Concentration Score
-    drawText(p6, 430, H - 460, calculateConcentration(formData).toString(), { font: fontBold, size: fsl })
+    // Concentration Score (Digits + Months) — needs BOTH halves.
+    if (concentrationAdministered) {
+      drawText(p6, 430, H - 460, calculateConcentration(formData).toString(), { font: fontBold, size: fsl })
+    } else {
+      drawNotAdministered(p6, 430, H - 460, { font: fontBold, size: fsl })
+    }
 
     // ==================== PAGE 7 (index 6): ORTHOSTATIC + CERVICAL ====================
     const p7 = pages[6]
@@ -369,10 +480,18 @@ export async function exportSCOAT6ToFlatPDF(
     if (formData.footTested === 'Left') drawFilledCircle(p8, 200, H - 310, 3.5)
     if (formData.footTested === 'Right') drawFilledCircle(p8, 260, H - 310, 3.5)
 
-    drawText(p8, 400, H - 350, formData.mBessDoubleErrors.toString(), { font, size: fs })
-    drawText(p8, 400, H - 370, formData.mBessTandemErrors.toString(), { font, size: fs })
-    drawText(p8, 400, H - 390, formData.mBessSingleErrors.toString(), { font, size: fs })
-    drawText(p8, 400, H - 410, calculateMBESS(formData).toString(), { font: fontBold, size: fs })
+    if (balanceAdministered) {
+      drawText(p8, 400, H - 350, formData.mBessDoubleErrors.toString(), { font, size: fs })
+      drawText(p8, 400, H - 370, formData.mBessTandemErrors.toString(), { font, size: fs })
+      drawText(p8, 400, H - 390, formData.mBessSingleErrors.toString(), { font, size: fs })
+      drawText(p8, 400, H - 410, calculateMBESS(formData).toString(), { font: fontBold, size: fs })
+    } else {
+      // 0 errors of 30 = a PERFECT balance result. Never assert it by default.
+      drawNotAdministered(p8, 400, H - 350, { font, size: fs })
+      drawNotAdministered(p8, 400, H - 370, { font, size: fs })
+      drawNotAdministered(p8, 400, H - 390, { font, size: fs })
+      drawNotAdministered(p8, 400, H - 410, { font: fontBold, size: fs })
+    }
 
     if (formData.mBessFoamDoubleErrors !== null) {
       drawText(p8, 490, H - 350, (formData.mBessFoamDoubleErrors ?? '').toString(), { font, size: fs })
@@ -398,23 +517,40 @@ export async function exportSCOAT6ToFlatPDF(
     // ==================== PAGE 9 (index 8): COMPLEX TANDEM + DUAL TASK ====================
     const p9 = pages[8]
 
-    // Complex Tandem Gait
-    drawText(p9, 350, H - 160, formData.complexTandemForwardEyesOpen.toString(), { font, size: fs })
-    drawText(p9, 450, H - 160, formData.complexTandemForwardEyesClosed.toString(), { font, size: fs })
-    drawText(p9, 500, H - 160, calculateComplexTandemForward(formData).toString(), { font: fontBold, size: fs })
+    // Complex Tandem Gait — four error counts, all defaulting to 0.
+    if (complexTandemAdministered) {
+      drawText(p9, 350, H - 160, formData.complexTandemForwardEyesOpen.toString(), { font, size: fs })
+      drawText(p9, 450, H - 160, formData.complexTandemForwardEyesClosed.toString(), { font, size: fs })
+      drawText(p9, 500, H - 160, calculateComplexTandemForward(formData).toString(), { font: fontBold, size: fs })
 
-    drawText(p9, 350, H - 195, formData.complexTandemBackwardEyesOpen.toString(), { font, size: fs })
-    drawText(p9, 450, H - 195, formData.complexTandemBackwardEyesClosed.toString(), { font, size: fs })
-    drawText(p9, 500, H - 195, calculateComplexTandemBackward(formData).toString(), { font: fontBold, size: fs })
+      drawText(p9, 350, H - 195, formData.complexTandemBackwardEyesOpen.toString(), { font, size: fs })
+      drawText(p9, 450, H - 195, formData.complexTandemBackwardEyesClosed.toString(), { font, size: fs })
+      drawText(p9, 500, H - 195, calculateComplexTandemBackward(formData).toString(), { font: fontBold, size: fs })
 
-    drawText(p9, 500, H - 230, calculateComplexTandemTotal(formData).toString(), { font: fontBold, size: fsl })
+      drawText(p9, 500, H - 230, calculateComplexTandemTotal(formData).toString(), { font: fontBold, size: fsl })
+    } else {
+      drawNotAdministered(p9, 350, H - 160, { font, size: fs })
+      drawNotAdministered(p9, 450, H - 160, { font, size: fs })
+      drawNotAdministered(p9, 500, H - 160, { font: fontBold, size: fs })
+      drawNotAdministered(p9, 350, H - 195, { font, size: fs })
+      drawNotAdministered(p9, 450, H - 195, { font, size: fs })
+      drawNotAdministered(p9, 500, H - 195, { font: fontBold, size: fs })
+      drawNotAdministered(p9, 500, H - 230, { font: fontBold, size: fsl })
+    }
 
     // Dual Task Gait
     drawText(p9, 200, H - 320, formData.dualTaskCognitiveTask, { font, size: fs })
-    drawText(p9, 350, H - 350, formData.dualTaskTrialsAttempted.toString(), { font, size: fs })
-    drawText(p9, 450, H - 350, formData.dualTaskTrialsCorrect.toString(), { font, size: fs })
-    drawText(p9, 350, H - 370, formData.dualTaskAverageTime, { font, size: fs })
-    drawText(p9, 450, H - 370, calculateDualTaskAccuracy(formData), { font: fontBold, size: fs })
+    if (dualTaskAdministered) {
+      drawText(p9, 350, H - 350, formData.dualTaskTrialsAttempted.toString(), { font, size: fs })
+      drawText(p9, 450, H - 350, formData.dualTaskTrialsCorrect.toString(), { font, size: fs })
+      drawText(p9, 350, H - 370, formData.dualTaskAverageTime, { font, size: fs })
+      // calculateDualTaskAccuracy already returns '-' when 0 trials attempted.
+      drawText(p9, 450, H - 370, calculateDualTaskAccuracy(formData), { font: fontBold, size: fs })
+    } else {
+      drawNotAdministered(p9, 350, H - 350, { font, size: fs })
+      drawNotAdministered(p9, 450, H - 350, { font, size: fs })
+      drawNotAdministered(p9, 450, H - 370, { font: fontBold, size: fs })
+    }
     if (formData.dualTaskComments) {
       drawWrappedText(p9, 65, H - 400, formData.dualTaskComments, 470, { font, size: fsm })
     }
@@ -422,11 +558,21 @@ export async function exportSCOAT6ToFlatPDF(
     // ==================== PAGE 10 (index 9): mVOMS + GAD-7 + PHQ-2 ====================
     const p10 = pages[9]
 
-    // mVOMS Baseline
-    drawText(p10, 200, H - 130, formData.mvomsBaseline.headache.toString(), { font, size: fs })
-    drawText(p10, 280, H - 130, formData.mvomsBaseline.dizziness.toString(), { font, size: fs })
-    drawText(p10, 360, H - 130, formData.mvomsBaseline.nausea.toString(), { font, size: fs })
-    drawText(p10, 440, H - 130, formData.mvomsBaseline.fogginess.toString(), { font, size: fs })
+    // mVOMS Baseline — 0/0/0/0 asserts "no symptom provocation at rest", which
+    // is a real clinical finding and must not be manufactured by default.
+    const mvomsBaselineCols: Array<[number, number]> = [
+      [200, formData.mvomsBaseline.headache],
+      [280, formData.mvomsBaseline.dizziness],
+      [360, formData.mvomsBaseline.nausea],
+      [440, formData.mvomsBaseline.fogginess],
+    ]
+    mvomsBaselineCols.forEach(([x, value]) => {
+      if (mvomsBaselineAdministered) {
+        drawText(p10, x, H - 130, value.toString(), { font, size: fs })
+      } else {
+        drawNotAdministered(p10, x, H - 130, { font, size: fs })
+      }
+    })
 
     // mVOMS tests
     const mvomsTests = [
@@ -437,23 +583,35 @@ export async function exportSCOAT6ToFlatPDF(
     ]
 
     mvomsTests.forEach(test => {
-      if (!test.data.notTested) {
+      // `notTested` is the explicit flag and wins outright; otherwise the row
+      // must show some evidence it was run before its 0s can be asserted.
+      const rowAdministered = !test.data.notTested && anyProvided(
+        test.data.headache, test.data.dizziness,
+        test.data.nausea, test.data.fogginess, test.data.comments,
+      )
+      if (test.data.notTested) {
+        drawText(p10, 200, test.y, 'Not tested', { font, size: fsm })
+      } else if (rowAdministered) {
         drawText(p10, 200, test.y, test.data.headache.toString(), { font, size: fs })
         drawText(p10, 280, test.y, test.data.dizziness.toString(), { font, size: fs })
         drawText(p10, 360, test.y, test.data.nausea.toString(), { font, size: fs })
         drawText(p10, 440, test.y, test.data.fogginess.toString(), { font, size: fs })
       } else {
-        drawText(p10, 200, test.y, 'Not tested', { font, size: fsm })
+        drawNotAdministered(p10, 200, test.y, { font, size: fs })
+        drawNotAdministered(p10, 280, test.y, { font, size: fs })
+        drawNotAdministered(p10, 360, test.y, { font, size: fs })
+        drawNotAdministered(p10, 440, test.y, { font, size: fs })
       }
       if (test.data.comments) {
         drawText(p10, 500, test.y, test.data.comments, { font, size: 7, maxWidth: 60 })
       }
     })
 
-    // GAD-7
-    if (!formData.gad7NotDone) {
-      const gad7StartY = H - 400
-      const gad7RowH = 18
+    // GAD-7 — an untouched screen scores 0 and reads "Minimal anxiety", which
+    // is a diagnostic assertion. Requires an actual response to print.
+    const gad7StartY = H - 400
+    const gad7RowH = 18
+    if (gad7Administered) {
       const gad7Items = [formData.gad7_1, formData.gad7_2, formData.gad7_3, formData.gad7_4,
         formData.gad7_5, formData.gad7_6, formData.gad7_7]
       gad7Items.forEach((val, i) => {
@@ -465,22 +623,32 @@ export async function exportSCOAT6ToFlatPDF(
       // GAD-7 total
       const gad7Total = calculateGAD7(formData)
       drawText(p10, 430, gad7StartY - (7 * gad7RowH), `${gad7Total} — ${getGAD7Severity(gad7Total)}`, { font: fontBold, size: fsm })
+    } else {
+      // No item circles; the score box states not-done rather than "0".
+      drawText(p10, 430, gad7StartY - (7 * gad7RowH),
+        formData.gad7NotDone ? `${na} Not done` : na, { font: fontBold, size: fsm })
     }
 
-    // PHQ-2
-    if (!formData.phq2NotDone) {
-      const phq2StartY = H - 560
+    // PHQ-2 — same rule.
+    const phq2StartY = H - 560
+    if (phq2Administered) {
       drawText(p10, 400, phq2StartY, formData.phq2_1.toString(), { font, size: fs })
       drawText(p10, 400, phq2StartY - 18, formData.phq2_2.toString(), { font, size: fs })
       drawText(p10, 400, phq2StartY - 40, `Total: ${calculatePHQ2(formData)}`, { font: fontBold, size: fsm })
+    } else {
+      drawNotAdministered(p10, 400, phq2StartY, { font, size: fs })
+      drawNotAdministered(p10, 400, phq2StartY - 18, { font, size: fs })
+      drawText(p10, 400, phq2StartY - 40,
+        formData.phq2NotDone ? `Total: ${na} Not done` : `Total: ${na}`, { font: fontBold, size: fsm })
     }
 
     // ==================== PAGE 11 (index 10): SLEEP SCREEN ====================
     const p11 = pages[10]
 
-    if (!formData.sleepNotDone) {
-      const sleepStartY = H - 160
-      const sleepRowH = 22
+    // Sleep screen — an untouched screen scores 0 and reads "Normal".
+    const sleepStartY = H - 160
+    const sleepRowH = 22
+    if (sleepAdministered) {
       const sleepItems = [formData.sleep1, formData.sleep2, formData.sleep3, formData.sleep4, formData.sleep5]
       sleepItems.forEach((val, i) => {
         const y = sleepStartY - (i * sleepRowH)
@@ -489,6 +657,12 @@ export async function exportSCOAT6ToFlatPDF(
       const sleepTotal = calculateSleepScore(formData)
       drawText(p11, 430, sleepStartY - (5 * sleepRowH),
         `${sleepTotal} — ${getSleepSeverity(sleepTotal)}`, { font: fontBold, size: fsm })
+    } else {
+      for (let i = 0; i < 5; i++) {
+        drawNotAdministered(p11, 430, sleepStartY - (i * sleepRowH), { font, size: fs })
+      }
+      drawText(p11, 430, sleepStartY - (5 * sleepRowH),
+        formData.sleepNotDone ? `${na} Not done` : na, { font: fontBold, size: fsm })
     }
 
     // ==================== PAGE 12 (index 11): DELAYED RECALL + ASSESSMENTS ====================
@@ -501,12 +675,16 @@ export async function exportSCOAT6ToFlatPDF(
 
     const drStartY = H - 190
     const drRowH = 20
-    formData.delayedRecall.forEach((correct, i) => {
-      const y = drStartY - (i * drRowH)
-      if (correct) drawCheckmark(p12, 350, y, 8)
-    })
+    if (delayedRecallAdministered) {
+      formData.delayedRecall.forEach((correct, i) => {
+        const y = drStartY - (i * drRowH)
+        if (correct) drawCheckmark(p12, 350, y, 8)
+      })
 
-    drawText(p12, 430, H - 190, calculateDelayedRecall(formData).toString(), { font: fontBold, size: fsl })
+      drawText(p12, 430, H - 190, calculateDelayedRecall(formData).toString(), { font: fontBold, size: fsl })
+    } else {
+      drawNotAdministered(p12, 430, H - 190, { font: fontBold, size: fsl })
+    }
     drawText(p12, 200, H - 420, formData.delayedRecallStartTime, { font, size: fs })
     drawText(p12, 350, H - 420, formData.delayedRecallMinutesSinceImmediate, { font, size: fs })
 
@@ -576,6 +754,8 @@ export async function exportSCOAT6ToFlatPDF(
     drawText(p15, 200, H - 180, formData.hcpTitle, { font, size: fs })
     drawText(p15, 200, H - 200, formData.hcpRegistration, { font, size: fs })
     drawText(p15, 200, H - 220, formData.hcpDate, { font, size: fs })
+    // Attestation signature — collected but never drawn.
+    drawText(p15, 200, H - 240, formData.hcpSignature, { font, size: fs })
 
     // Additional Clinical Notes
     if (formData.additionalClinicalNotes) {

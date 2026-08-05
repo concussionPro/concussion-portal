@@ -21,6 +21,17 @@ import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
 import { DIGIT_LISTS, DigitListKey } from '../shared/constants/digitLists'
 import { EmailGateModal } from '@/components/scat-forms/EmailGateModal'
 
+/**
+ * Parse a numeric <input> value while PRESERVING a typed 0.
+ * `parseInt(v) || null` silently turns a typed "0" into null.
+ */
+const parseIntOrNull = (raw: string): number | null => {
+  const trimmed = raw.trim()
+  if (trimmed === '') return null
+  const parsed = Number.parseInt(trimmed, 10)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
 const SectionHeader = ({
   id,
   title,
@@ -1230,7 +1241,7 @@ export default function SCOAT6Client() {
                       min="0"
                       max="45"
                       value={formData.alternate15WordTotal ?? ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, alternate15WordTotal: parseInt(e.target.value) || null }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, alternate15WordTotal: parseIntOrNull(e.target.value) }))}
                       className="w-32 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                       placeholder="of 45"
                     />

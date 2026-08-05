@@ -101,6 +101,12 @@ function buildBody(input: ClinicSyncInput, code: string): Record<string, unknown
       ...(input.payload ?? {}),
       eventType: input.eventType,
       patientRef: input.patientRef ?? null,
+      // When the session ACTUALLY happened. created_at is server time, so an
+      // offline session synced days later was dated at sync time — and a
+      // flushed queue collapsed several days onto one, corrupting the
+      // trajectory chart and the date range printed on GP/insurer documents
+      // (2026-08-05 journey sim). Billing windows keep using created_at.
+      occurredAt: Date.now(),
       // Stamped once at build time; the server reuses it as the row id so
       // offline replays are idempotent (final sweep #15).
       syncId:

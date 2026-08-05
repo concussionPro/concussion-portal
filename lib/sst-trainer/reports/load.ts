@@ -35,6 +35,24 @@ type Row = {
 }
 
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null)
+/**
+ * When the session ACTUALLY happened. `created_at` is server insert time, so
+ * an offline session synced days later — or a whole queue flushed at once —
+ * dated every row at sync time and collapsed multi-day episodes onto one day
+ * in documents sent to GPs and insurers (2026-08-05). The client stamps
+ * `occurredAt`; anything absent (legacy rows) or implausible falls back.
+ */
+const occurredIso = (r: { payload: Record<string, unknown> | null; created_at: string }): string => {
+  const raw = num(r.payload?.occurredAt)
+  if (raw == null) return r.created_at
+  const inserted = new Date(r.created_at).getTime()
+  // Trust it only when it is in the past and no earlier than a year before
+  // the insert — never let a client date a session into the future.
+  if (!Number.isFinite(inserted) || raw > inserted + 60_000 || raw < inserted - 365 * 86_400_000) {
+    return r.created_at
+  }
+  return new Date(raw).toISOString()
+}
 /** Sensor-verified ONLY (strict) — a manual/camera entry is never "verified". */
 const isVerified = (p: Record<string, unknown> | null): boolean => {
   const src = p?.hrSource as string | undefined
@@ -216,7 +234,7 @@ export async function loadReportInput(
   const condition = ((latest?.condition as Condition) || 'concussion') as Condition
 
   const thresholdHistory: PersistedTest[] = thresholds.map((t) => ({
-    at: new Date(t.created_at).getTime(),
+    at: new Date(occurredIso(t)).getTime(),
     interpretation: (t.payload?.interpretation as string) ?? 'invalid',
     hrt: t.hrt_bpm,
     thresholdStage: num(t.payload?.thresholdStage),
@@ -225,8 +243,8 @@ export async function loadReportInput(
   }))
 
   const sessions: PersistedSession[] = trainings.map((t) => ({
-    date: t.created_at,
-    at: new Date(t.created_at).getTime(),
+    date: occurredIso(t),
+    at: new Date(occurredIso(t)).getTime(),
     avgHeartRate: num(t.payload?.avgHeartRate) ?? num(t.payload?.avgHr) ?? 0,
     peakHeartRate: num(t.payload?.peakHeartRate) ?? num(t.payload?.peakHr) ?? 0,
     preSymptom: num(t.payload?.preSymptom) ?? 0,
@@ -285,7 +303,7 @@ export async function loadReportInput(
     thresholdHistory,
     sessions,
     goals: opts.goals,
-    episode: { startedAt: rows[0].created_at, reportedAt: new Date().toISOString() },
+    episode: { startedAt: occurredIso(rows[0]), reportedAt: new Date().toISOString() },
   }
 }
 

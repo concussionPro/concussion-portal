@@ -39,9 +39,14 @@ const faqs = [
       'The SCAT6 is intended for athletes aged 13 and over. Children aged 8–12 should be assessed with the Child SCAT6, which pairs a child self-report with a parent/guardian symptom report and adjusts the cognitive and balance components for age.',
   },
   {
+    question: 'Which SCAT6 sections does this digital form include?',
+    answer:
+      'This form implements the SCAT6 off-field assessment — Steps 1 to 6: athlete background, the 22-item symptom evaluation, cognitive screening (orientation, immediate memory, concentration), the balance examination (mBESS, timed tandem gait and the optional dual-task gait), delayed recall, and the decision and healthcare-professional attestation. It does NOT include the immediate on-field screen: there are no fields for red flags, observable signs, the Maddocks questions, the Glasgow Coma Scale or the cervical spine assessment, and those sections are left blank in the exported PDF. Perform the on-field steps at the point of injury using the printable official SCAT6 PDF or a sideline card, then record the outcome in this form’s clinical notes.',
+  },
+  {
     question: 'Is this digital SCAT6 form free to use?',
     answer:
-      'Yes. This fillable SCAT6 is free for clinical use — scores calculate automatically as you complete each section, drafts save in your browser, and the finished assessment exports as a PDF for the medical record. A free fillable PDF version is also available to download and print.',
+      'Yes. This fillable SCAT6 is free for clinical use — no account or password is needed to open, complete and auto-score it, and drafts save in your browser. Exporting the finished assessment as a PDF for the medical record asks for your email address once. A free fillable PDF version is also available to download and print with no email at all.',
   },
 ]
 
@@ -125,9 +130,28 @@ export default function SCAT6Page() {
             It is designed for use by licensed healthcare professionals and performs best within
             the first 72 hours after injury, remaining useful up to 7 days post-injury. Beyond
             that window, the SCOAT6 office assessment is the more appropriate tool, and children
-            aged 8–12 should be assessed with the Child SCAT6. This page provides a free,
-            fillable digital SCAT6 that calculates scores automatically and exports the completed
-            assessment as a PDF for the medical record.
+            aged 8–12 should be assessed with the Child SCAT6.
+          </p>
+          <p>
+            <strong>What this digital form covers.</strong> The fillable form on this page
+            implements the SCAT6 <em>off-field</em> assessment — Steps 1 to 6: athlete background,
+            the 22-item symptom evaluation, cognitive screening (orientation, immediate memory,
+            concentration), the balance examination (mBESS, timed tandem gait and the optional dual-task
+            gait), delayed recall, and the decision and healthcare-professional attestation. It
+            calculates scores automatically and exports the completed assessment as a PDF for the
+            medical record.
+          </p>
+          <p>
+            <strong>What it does not cover.</strong> The immediate on-field screen is{' '}
+            <strong>not implemented here</strong>: there are no fields for red flags, observable
+            signs, the Maddocks questions, the Glasgow Coma Scale or the cervical spine
+            assessment, and those sections are left blank in the exported PDF. Those steps are
+            time-critical and performed at the point of injury — use the printable{' '}
+            <a href="/docs/SCAT6_Fillable.pdf" className="text-blue-600 hover:underline">
+              official SCAT6 PDF
+            </a>{' '}
+            (or the sideline card) for them, and record the outcome in the clinical notes field of
+            this form.
           </p>
         </div>
         <p className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500">

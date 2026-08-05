@@ -32,6 +32,19 @@ type Row = {
   created_at: string
 }
 
+/** Real session time (client-stamped occurredAt) with server insert time as
+ *  fallback — an offline sync otherwise dates every queued session at flush
+ *  time and collapses a multi-day episode onto one day (2026-08-05). */
+function occurredIso(r: { payload?: Record<string, unknown> | null; created_at: string }): string {
+  const raw = r.payload?.occurredAt
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return r.created_at
+  const inserted = new Date(r.created_at).getTime()
+  if (!Number.isFinite(inserted) || raw > inserted + 60_000 || raw < inserted - 365 * 86_400_000) {
+    return r.created_at
+  }
+  return new Date(raw).toISOString()
+}
+
 /** Curated demo dataset for DEMO00 — three believable patients at different
  *  episode stages. Days are relative so the demo always looks current. */
 function demoFixtureRows(): Row[] {
@@ -119,11 +132,12 @@ export async function GET(request: NextRequest) {
     // "Unidentified" patient. patientRef is the same stable per-device identity
     // /api/sst/live already keys on. Falls back to the label for pre-patientRef
     // rows so legacy history still groups the way it always did.
-    const byPatient = new Map<string, { label: string; thresholds: Row[]; trainings: Row[] }>()
+    const byPatient = new Map<string, { label: string; ref: string | null; thresholds: Row[]; trainings: Row[] }>()
     for (const r of rows) {
       const label = (r.patient_label || '').trim() || 'Unidentified'
-      const key = (r.patient_ref || '').trim() || `label:${label}`
-      if (!byPatient.has(key)) byPatient.set(key, { label, thresholds: [], trainings: [] })
+      const ref = (r.patient_ref || '').trim() || null
+      const key = ref || `label:${label}`
+      if (!byPatient.has(key)) byPatient.set(key, { label, ref, thresholds: [], trainings: [] })
       const p = byPatient.get(key)!
       // Keep the most recent non-placeholder label for this device.
       if (label !== 'Unidentified') p.label = label
@@ -153,6 +167,12 @@ export async function GET(request: NextRequest) {
       const interp = (latest?.payload?.interpretation as string | undefined) ?? null
       return {
         name,
+        // The REAL stored patient_label. `name` may carry a display-only
+        // disambiguation suffix ("James M (2)") which exists nowhere in the DB —
+        // anything that queries by label (documents, reports) must use this
+        // one, and it is the name that belongs on printed paper (crawl #3).
+        label: p.label,
+        patientRef: p.ref,
         condition: latest?.condition ?? null,
         hrt: latest?.hrt_bpm ?? null,
         bandLow: latest?.band_low ?? null,
@@ -167,7 +187,7 @@ export async function GET(request: NextRequest) {
         hrtTrajectory: p.thresholds.map((t) => {
           const src = (t.payload?.hrSource as string | undefined) ?? undefined
           return {
-            date: t.created_at,
+            date: occurredIso(t),
             hrt: t.hrt_bpm,
             source: src,
             verified: t.payload?.hrVerified === true && src !== 'manual' && src !== undefined,
@@ -183,7 +203,7 @@ export async function GET(request: NextRequest) {
             patientRef: t.patient_ref ?? null,
           }
         }),
-        sessions: p.trainings.map((t) => ({ date: t.created_at, ...(t.payload ?? {}) })),
+        sessions: p.trainings.map((t) => ({ date: occurredIso(t), ...(t.payload ?? {}) })),
         sessionCount: p.trainings.length,
         // 'no-intolerance' on a re-test = recovered → clinician clearance review
         clearanceReady: interp === 'no-intolerance',
@@ -199,10 +219,16 @@ export async function GET(request: NextRequest) {
           // or clearance-acknowledgement event row is not a clinic encounter
           realTests.length +
             new Set(p.trainings.map((t) => {
-              const d = new Date(t.created_at)
+              const d = new Date(occurredIso(t))
               return `w${Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 86400000 + 4) / 7)}`
             })).size >= 5,
-        lastActivity: (p.trainings[p.trainings.length - 1] ?? latest)?.created_at ?? null,
+        // Newest of ANY row by real session time — the last TRAINING used to
+        // win unconditionally, so a re-test today still read "3d ago" (F10).
+        lastActivity:
+          [...p.trainings, ...p.thresholds]
+            .map(occurredIso)
+            .sort()
+            .pop() ?? null,
       }
     })
 

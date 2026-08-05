@@ -32,7 +32,7 @@ const faqs = [
   {
     question: 'Are these digital SCAT forms free?',
     answer:
-      'Yes. The web-based SCAT6, SCOAT6 and Child SCAT6 forms are free for clinical use — no registration required. Scores calculate automatically, drafts save in your browser, and completed assessments export as PDFs for the medical record. Free fillable PDF versions are also available to download and print.',
+      'Yes. The web-based SCAT6, SCOAT6 and Child SCAT6 forms are free for clinical use — no account, no password and no credit card. You can open, complete and score a form without signing up: scores calculate automatically and drafts save in your browser. Exporting a completed assessment as a PDF asks for your email address once (it also emails you a login link if you already have an account), after which PDF export stays available. Free fillable PDF versions are also available to download and print with no email at all.',
   },
 ]
 
@@ -157,9 +157,9 @@ export default function SCATFormsPage() {
             </p>
             <p>
               All three tools are intended for use by licensed healthcare professionals. The
-              versions on this page are free, web-based and fillable — scores calculate
-              automatically and each completed assessment exports as a PDF for the medical
-              record, with no registration required.
+              versions on this page are free, web-based and fillable — no account or password
+              needed to open, complete and auto-score a form. Exporting a completed assessment
+              as a PDF for the medical record asks for your email address once.
             </p>
           </div>
           <p className="mt-4 pt-3 border-t border-border text-xs text-muted-foreground">

@@ -10,6 +10,20 @@ import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
 import { DIGIT_LISTS, DigitListKey } from '../shared/constants/digitLists'
 import { EmailGateModal } from '@/components/scat-forms/EmailGateModal'
 
+/**
+ * Parse a numeric <input> value while PRESERVING a typed 0.
+ *
+ * `parseInt(v) || null` silently turns a typed "0" into null, so a genuine
+ * zero-error trial was recorded as "not done" and never made it into the
+ * exported PDF. Empty / non-numeric input is null; "0" is 0.
+ */
+const parseIntOrNull = (raw: string): number | null => {
+  const trimmed = raw.trim()
+  if (trimmed === '') return null
+  const parsed = Number.parseInt(trimmed, 10)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
 const SectionHeader = ({
   id,
   title,
@@ -1210,7 +1224,7 @@ export default function SCAT6Client() {
                           type="number"
                           min="0"
                           value={formData.dualTaskPracticeErrors ?? ''}
-                          onChange={(e) => setFormData(prev => ({ ...prev, dualTaskPracticeErrors: parseInt(e.target.value) || null }))}
+                          onChange={(e) => setFormData(prev => ({ ...prev, dualTaskPracticeErrors: parseIntOrNull(e.target.value) }))}
                           className="w-full px-2 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                         />
                       </div>
@@ -1242,7 +1256,7 @@ export default function SCAT6Client() {
                             type="number"
                             min="0"
                             value={formData[errorsKey as keyof SCAT6FormData] as number ?? ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [errorsKey]: parseInt(e.target.value) || null }))}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [errorsKey]: parseIntOrNull(e.target.value) }))}
                             className="w-full px-2 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                           />
                         </div>
@@ -1648,7 +1662,7 @@ export default function SCAT6Client() {
               </div>
               <div>
                 <h4 className="text-lg font-bold text-slate-900">Assessment Summary</h4>
-                <p className="text-sm text-slate-600">All sections included in this assessment</p>
+                <p className="text-sm text-slate-600">Sections included in this off-field assessment</p>
               </div>
             </div>
             <ul className="text-sm text-slate-600 space-y-1 grid grid-cols-2 gap-x-4">
@@ -1661,6 +1675,22 @@ export default function SCAT6Client() {
               <li>Step 5: Delayed Recall</li>
               <li>Step 6: Decision & HCP Attestation</li>
             </ul>
+            {/* The list above used to be headed "All sections included in this
+                assessment", which read as the whole SCAT6. The on-field module
+                is not implemented anywhere in this form and page 3 of the
+                exported PDF is drawn empty — say so rather than imply coverage. */}
+            <div className="mt-4 pt-4 border-t border-green-200">
+              <p className="text-sm font-semibold text-slate-700 mb-1">Not included — perform on-field</p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                This form does not capture the immediate on-field screen: red flags, observable signs, the
+                Maddocks questions, the Glasgow Coma Scale or the cervical spine assessment. Those sections are
+                left blank in the exported PDF. Perform them at the point of injury using the printable{' '}
+                <a href="/docs/SCAT6_Fillable.pdf" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                  official SCAT6 PDF
+                </a>{' '}
+                or a sideline card, and record the outcome in Additional Clinical Notes above.
+              </p>
+            </div>
             <div className="mt-4 pt-4 border-t border-green-200">
               <p className="text-xs text-slate-500">
                 Scores are auto-calculated. Your progress is auto-saved to this browser.
