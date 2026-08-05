@@ -39,6 +39,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
   const [searchQuery, setSearchQuery] = useState('')
   const [references, setReferences] = useState<Reference[]>([])
   const [fetching, setFetching] = useState(false)
+  const [fetchError, setFetchError] = useState(false)
 
   // Both online-only and full-course users have access
   const hasAccess = !!accessLevel
@@ -51,9 +52,11 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
     void fetch('/api/references', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (alive && Array.isArray(d?.references)) setReferences(d.references)
+        if (!alive) return
+        if (Array.isArray(d?.references)) setReferences(d.references)
+        else setFetchError(true)
       })
-      .catch(() => {})
+      .catch(() => { if (alive) setFetchError(true) })
       .finally(() => {
         if (alive) setFetching(false)
       })
@@ -338,8 +341,19 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
         ))}
       </div>
 
-      {/* Empty State */}
-      {!fetching && filteredReferences.length === 0 && (
+      {/* Loading / error / empty states */}
+      {fetching && (
+        <div className="text-center py-12">
+          <p className="text-slate-500 text-sm">Loading references…</p>
+        </div>
+      )}
+      {!fetching && fetchError && references.length === 0 && (
+        <div className="text-center py-12">
+          <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Couldn&rsquo;t load the reference library — refresh to retry.</p>
+        </div>
+      )}
+      {!fetching && !fetchError && filteredReferences.length === 0 && (
         <div className="text-center py-12">
           <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-600 font-medium">No references found matching your search</p>

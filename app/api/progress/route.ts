@@ -132,7 +132,19 @@ export async function POST(request: NextRequest) {
     // flagship 2-8 need a paid access level; CRM 201-208 need CRM ownership
     // (stream-isolated in course_purchases, NOT access_level). Without this,
     // any preview session could mark paid modules complete.
-    const moduleIds = Object.keys(progress).map(Number)
+    // CRITICAL: the client always round-trips the FULL map including the
+    // seeded zero-progress defaults for EVERY module (ProgressContext
+    // getDefaultProgress) — gate only entries carrying ACTUAL progress, or
+    // every legitimate save 403s (2026-08-05 regression check).
+    const hasRealProgress = (p: Record<string, unknown>) =>
+      p.completed === true ||
+      p.quizCompleted === true ||
+      Boolean(p.startedAt) ||
+      (p.quizAnswers != null && typeof p.quizAnswers === 'object' && Object.keys(p.quizAnswers).length > 0) ||
+      (typeof p.activeStudyMinutes === 'number' && p.activeStudyMinutes > 0)
+    const moduleIds = Object.entries(progress as Record<string, Record<string, unknown>>)
+      .filter(([, v]) => v && hasRealProgress(v))
+      .map(([k]) => Number(k))
     const hasPaidAccess =
       sessionData.accessLevel === 'online-only' || sessionData.accessLevel === 'full-course'
     const needsPaid = moduleIds.some((id) => id >= 2 && id <= 8)

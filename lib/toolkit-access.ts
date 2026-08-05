@@ -16,13 +16,17 @@
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { isBookOwner } from '@/lib/users'
-import { DEMO_KEY } from '@/lib/demo-key'
+import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 export type ToolkitPageAccess = 'entitled' | 'locked' | 'unauthenticated'
 
 export async function resolveToolkitPageAccess(): Promise<ToolkitPageAccess> {
   const cookieStore = await cookies()
   if (cookieStore.get('demo_key')?.value === DEMO_KEY) return 'entitled'
+  // /demo/clinic prospects (clinic_demo cookie, NO session): the middleware
+  // contract shows them the free-tier SELL screens — a /login bounce
+  // mid-pitch kills the tour (2026-08-05 regression check #2).
+  if (cookieStore.get('clinic_demo')?.value === CLINIC_DEMO_KEY) return 'locked'
   const sessionToken = cookieStore.get('session')?.value
   const session = sessionToken ? verifySessionToken(sessionToken) : null
   if (!session) {
