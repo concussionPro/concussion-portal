@@ -4,7 +4,7 @@ import { kv } from '@vercel/kv'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
-import { getSstClinicByEmail, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
+import { getSstClinicByEmail, getClinicUsage, isExistingPatient } from '@/lib/sst-trainer/clinic-registry'
 import { hasClinicalAccess } from '@/lib/sst-trainer/access'
 
 /**
@@ -52,7 +52,14 @@ export async function POST(req: NextRequest) {
   // subscribe prompt; the clinician can still re-send to existing patients.
   // Enforcement is on admission only — patient data sync is never blocked.
   const usage = await getClinicUsage(clinic.code)
-  if (!usage.canAddPatient) {
+  // Re-sends to EXISTING patients are exempt from the cap (final sweep #16 —
+  // the comment above always promised this; the 402 was unconditional).
+  const existingResend =
+    !usage.canAddPatient &&
+    typeof patientName === 'string' &&
+    patientName.trim() !== '' &&
+    (await isExistingPatient(clinic.code, patientName))
+  if (!usage.canAddPatient && !existingResend) {
     // Plan-aware refusal (round-4 #1: a PAYING clinic at its caseload cap was
     // told "your free trial is full — subscribe", then 409'd at checkout).
     return NextResponse.json(

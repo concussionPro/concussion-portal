@@ -5,6 +5,13 @@ import { rateLimit } from '@/lib/rate-limit'
 import { progressSchema } from '@/lib/schemas'
 import { isDemoUserId } from '@/lib/demo-session'
 import { userOwnsCrm } from '@/lib/crm-course'
+import { getCurrentAccessLevel } from '@/lib/users'
+
+// Entitlement geography of the module id space (mirrors lib/module-access):
+// flagship 2-8 need a paid CCM level; CRM 201-208 need CRM ownership; SCAT
+// 101-104 + the truncated Module 1 preview are free-tier writable.
+const isPaidGatedId = (id: number) => id >= 2 && id <= 8
+const isCrmGatedId = (id: number) => id >= 201 && id <= 208
 
 // GET - Load user progress
 export async function GET(request: NextRequest) {
@@ -30,7 +37,37 @@ export async function GET(request: NextRequest) {
       SELECT progress FROM user_progress WHERE user_id = ${sessionData.userId}
     `
 
-    const progress = rows.length > 0 ? rows[0].progress : null
+    let progress = rows.length > 0 ? rows[0].progress : null
+
+    // Downgrade hygiene (2026-08-05 sweep #12): stored history can contain
+    // paid/CRM module entries the account is no longer entitled to (refund
+    // downgrade retains the rows). Filter those entries OUT of the response
+    // so the client never round-trips them back into POST — which is what
+    // bricked every future save for downgraded accounts. The DB re-check
+    // runs only when the stored map actually contains paid ids AND the
+    // session claims a paid level; demo/free-only maps stay DB-free.
+    if (progress && typeof progress === 'object' && !isDemoUserId(sessionData.userId)) {
+      const entries = Object.entries(progress as Record<string, unknown>)
+      const hasPaidIds = entries.some(([k]) => isPaidGatedId(Number(k)))
+      const hasCrmIds = entries.some(([k]) => isCrmGatedId(Number(k)))
+      let paidOk =
+        sessionData.accessLevel === 'online-only' || sessionData.accessLevel === 'full-course'
+      if (hasPaidIds && paidOk) {
+        const dbLevel = await getCurrentAccessLevel(sessionData.userId)
+        if (dbLevel) paidOk = dbLevel === 'online-only' || dbLevel === 'full-course'
+      }
+      const crmOk = hasCrmIds ? await userOwnsCrm(sessionData.email) : true
+      if ((hasPaidIds && !paidOk) || (hasCrmIds && !crmOk)) {
+        progress = Object.fromEntries(
+          entries.filter(([k]) => {
+            const id = Number(k)
+            if (!paidOk && isPaidGatedId(id)) return false
+            if (!crmOk && isCrmGatedId(id)) return false
+            return true
+          })
+        )
+      }
+    }
 
     return NextResponse.json({ success: true, progress })
   } catch (error) {
@@ -142,30 +179,59 @@ export async function POST(request: NextRequest) {
       Boolean(p.startedAt) ||
       (p.quizAnswers != null && typeof p.quizAnswers === 'object' && Object.keys(p.quizAnswers).length > 0) ||
       (typeof p.activeStudyMinutes === 'number' && p.activeStudyMinutes > 0)
-    const moduleIds = Object.entries(progress as Record<string, Record<string, unknown>>)
+    const progressMap = progress as Record<string, Record<string, unknown>>
+    const moduleIds = Object.entries(progressMap)
       .filter(([, v]) => v && hasRealProgress(v))
       .map(([k]) => Number(k))
-    const hasPaidAccess =
-      sessionData.accessLevel === 'online-only' || sessionData.accessLevel === 'full-course'
-    const needsPaid = moduleIds.some((id) => id >= 2 && id <= 8)
-    if (needsPaid && !hasPaidAccess) {
-      return NextResponse.json(
-        { error: 'This module requires full course access' },
-        { status: 403 }
-      )
+    const needsPaid = moduleIds.some(isPaidGatedId)
+    // Revocation re-check (2026-08-05 sweep #5): a 365-day session JWT
+    // outlives a refund downgrade — when paid ids carry real progress AND the
+    // session claims a paid level, prefer the DB's current access_level over
+    // the JWT claim. Free/demo payloads never trigger the extra select.
+    let effectiveLevel: string = sessionData.accessLevel
+    if (needsPaid && (effectiveLevel === 'online-only' || effectiveLevel === 'full-course')) {
+      const dbLevel = await getCurrentAccessLevel(sessionData.userId)
+      if (dbLevel) effectiveLevel = dbLevel
     }
+    const hasPaidAccess = effectiveLevel === 'online-only' || effectiveLevel === 'full-course'
     // CRM matches its content gate (/api/ep-course/modules): ownership only —
     // a paid CCM level does NOT open the EP stream.
-    const needsCrm = moduleIds.some((id) => id >= 201 && id <= 208)
-    if (needsCrm && !(await userOwnsCrm(sessionData.email))) {
-      return NextResponse.json(
-        { error: 'This module requires the Concussion Rehab Mastery course' },
-        { status: 403 }
+    const needsCrm = moduleIds.some(isCrmGatedId)
+    const ownsCrm = needsCrm ? await userOwnsCrm(sessionData.email) : false
+
+    // Unentitled ids carrying REAL progress are STRIPPED, not 403'd
+    // (2026-08-05 sweep #12): a downgraded account round-trips its retained
+    // history on every save, so a hard 403 bricked ALL future saves — even of
+    // free-tier progress. Persist the entitled subset; the anti-fraud
+    // property holds because unentitled real progress never reaches the DB.
+    const dropPaid = needsPaid && !hasPaidAccess
+    const dropCrm = needsCrm && !ownsCrm
+    let toPersist = progressMap
+    if (dropPaid || dropCrm) {
+      toPersist = Object.fromEntries(
+        Object.entries(progressMap).filter(([k, v]) => {
+          const id = Number(k)
+          const unentitled = (dropPaid && isPaidGatedId(id)) || (dropCrm && isCrmGatedId(id))
+          return !(unentitled && v && hasRealProgress(v))
+        })
       )
+      const strippedCount = Object.keys(progressMap).length - Object.keys(toPersist).length
+      console.log(
+        `[progress] Stripped ${strippedCount} unentitled module entr${strippedCount === 1 ? 'y' : 'ies'} from save for user ${sessionData.userId}`
+      )
+      // Nothing entitled with real progress remains → no-op success. Never
+      // overwrite the stored row with a stripped-empty map, and never 403 —
+      // the client treats the save as done and moves on.
+      const entitledRealRemains = Object.entries(toPersist).some(
+        ([, v]) => v && hasRealProgress(v)
+      )
+      if (!entitledRealRemains) {
+        return NextResponse.json({ success: true, message: 'No entitled progress to save' })
+      }
     }
 
     // Prevent abuse: size cap even after schema validation
-    const progressJson = JSON.stringify(progress)
+    const progressJson = JSON.stringify(toPersist)
     if (progressJson.length > 100_000) {
       return NextResponse.json(
         { error: 'Progress data too large' },

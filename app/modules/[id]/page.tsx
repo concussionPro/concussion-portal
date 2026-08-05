@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
+import { isDemoUserId } from '@/lib/demo-session'
+import { getCurrentAccessLevel } from '@/lib/users'
 import { resolveModuleForAccess, type AccessLevel } from '@/lib/module-access'
 import type { InitialModuleData } from '@/hooks/useModuleData'
 import FlagshipModuleClient from './FlagshipModuleClient'
@@ -39,10 +41,23 @@ export default async function ModulePage({
   const clinicDemo = cookieStore.get('clinic_demo')?.value === CLINIC_DEMO_KEY
   // DEV-ONLY review bypass, mirroring the API route so localhost review of the
   // whole course keeps working without a login. Production is untouched.
-  const accessLevel: AccessLevel | null =
+  let accessLevel: AccessLevel | null =
     session?.accessLevel ??
     (clinicDemo ? 'preview' : null) ??
     (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
+
+  // Revocation re-check (2026-08-05 sweep #5): a 365-day session JWT outlives
+  // a refund downgrade — when the session CLAIMS a paid level, the DB row is
+  // the truth for paid content. One cheap indexed select, only on paid claims;
+  // demo, unauthenticated and free paths never touch the DB here.
+  if (
+    session &&
+    !isDemoUserId(session.userId) &&
+    (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')
+  ) {
+    const dbLevel = await getCurrentAccessLevel(session.userId)
+    if (dbLevel) accessLevel = dbLevel
+  }
 
   let initialModuleData: InitialModuleData | undefined
   if (Number.isFinite(moduleId) && accessLevel) {

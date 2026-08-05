@@ -67,12 +67,19 @@ export interface GpReportData {
   flares: number
 }
 
-export async function loadGpReportData(code: string, patientLabel: string): Promise<GpReportData | null> {
+export async function loadGpReportData(code: string, patientLabel: string, patientRef = ''): Promise<GpReportData | null> {
+  const ref = patientRef.trim()
   const { rows } = await sql<Row>`
     SELECT patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
     FROM sst_clinic_sessions
     WHERE upper(clinic_code) = ${code}
-      AND trim(coalesce(patient_label, '')) = ${patientLabel}
+      AND (
+        (${ref} <> '' AND payload->>'patientRef' = ${ref})
+        OR (
+          lower(trim(coalesce(patient_label, ''))) = ${patientLabel.trim().toLowerCase()}
+          AND (${ref} = '' OR NULLIF(trim(coalesce(payload->>'patientRef', '')), '') IS NULL)
+        )
+      )
     ORDER BY created_at ASC
   `
   if (rows.length === 0) return null

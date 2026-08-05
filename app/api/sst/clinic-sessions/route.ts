@@ -71,6 +71,19 @@ function demoFixtureRows(): Row[] {
   ]
 }
 
+/** EVENT rows (payload.eventType 'test-aborted' / 'red-flag-cleared') are
+ *  audit events, not graded tests: the write side forces interpretation
+ *  'invalid' and nulls hrt_bpm/bands. They must stay in the trajectory (the
+ *  hub's escalation ladder reads them to raise/downgrade attention) but must
+ *  never be selected as the patient's LATEST test — a red-flag clearance would
+ *  otherwise wipe the current HRt/band and demote the patient to "test
+ *  pending". A legitimately invalid TEST (not enough data, no eventType or a
+ *  threshold-* eventType) stays eligible — that IS the test-pending state. */
+function isThresholdEventRow(r: Row): boolean {
+  const e = typeof r.payload?.eventType === 'string' ? r.payload.eventType.toLowerCase() : ''
+  return e === 'test-aborted' || e === 'red-flag-cleared'
+}
+
 export async function GET(request: NextRequest) {
   const code = (request.nextUrl.searchParams.get('code') || '').trim().toUpperCase()
   if (!code || code.length < 3) {
@@ -134,7 +147,9 @@ export async function GET(request: NextRequest) {
         labelSeen.set(p.label, n)
         if (n > 1) name = `${p.label} (${n})`
       }
-      const latest = p.thresholds[p.thresholds.length - 1]
+      // "Latest" = the last REAL graded test — event rows are excluded (above).
+      const realTests = p.thresholds.filter((t) => !isThresholdEventRow(t))
+      const latest = realTests[realTests.length - 1]
       const interp = (latest?.payload?.interpretation as string | undefined) ?? null
       return {
         name,
@@ -158,6 +173,14 @@ export async function GET(request: NextRequest) {
             verified: t.payload?.hrVerified === true && src !== 'manual' && src !== undefined,
             gated: true,
             interpretation: (t.payload?.interpretation as string | undefined) ?? null,
+            // eventType is what lets the hub's deriveAttention see a
+            // 'red-flag-cleared' event and DOWNGRADE the urgent banner —
+            // without it a red flag stayed urgent forever for real clinics.
+            eventType: (t.payload?.eventType as string | undefined) ?? null,
+            modality: (t.payload?.modality as string | undefined) ?? null,
+            verifiedReadingPct:
+              typeof t.payload?.verifiedReadingPct === 'number' ? t.payload.verifiedReadingPct : null,
+            patientRef: t.patient_ref ?? null,
           }
         }),
         sessions: p.trainings.map((t) => ({ date: t.created_at, ...(t.payload ?? {}) })),
@@ -172,7 +195,9 @@ export async function GET(request: NextRequest) {
         // moment the patient is clearance-ready (report = the referral back).
         gpReportDue:
           interp === 'no-intolerance' ||
-          p.thresholds.length +
+          // encounter-equivalents count REAL graded tests only — an aborted-test
+          // or clearance-acknowledgement event row is not a clinic encounter
+          realTests.length +
             new Set(p.trainings.map((t) => {
               const d = new Date(t.created_at)
               return `w${Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 86400000 + 4) / 7)}`

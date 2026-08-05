@@ -30,12 +30,21 @@ interface Row {
 export async function computePatientSstSummary(
   code: string,
   patientLabel: string,
+  /** install-UUID identity — prefer over the display label (final sweep #9) */
+  patientRef = '',
 ): Promise<PatientSstSummary | null> {
+  const ref = patientRef.trim()
   const { rows } = await sql<Row>`
     SELECT session_type, hrt_bpm, band_low, band_high, payload, created_at
     FROM sst_clinic_sessions
     WHERE upper(clinic_code) = ${code.toUpperCase()}
-      AND trim(coalesce(patient_label, '')) = ${patientLabel}
+      AND (
+        (${ref} <> '' AND payload->>'patientRef' = ${ref})
+        OR (
+          lower(trim(coalesce(patient_label, ''))) = ${patientLabel.trim().toLowerCase()}
+          AND (${ref} = '' OR NULLIF(trim(coalesce(payload->>'patientRef', '')), '') IS NULL)
+        )
+      )
     ORDER BY created_at ASC
   `
   if (rows.length === 0) return null

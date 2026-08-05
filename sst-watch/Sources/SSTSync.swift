@@ -108,6 +108,9 @@ struct SSTSync {
         // payload carries eventType (from caller) + patientRef (injected).
         var pl = payload
         pl["patientRef"] = SSTStore.patientRef
+        // Stamped once per event; the server reuses it as the row id so an
+        // offline replay is idempotent (mirrors clinic-sync.ts syncId).
+        if pl["syncId"] == nil { pl["syncId"] = UUID().uuidString.lowercased() }
 
         var body: [String: Any] = [
             "clinicCode": code,

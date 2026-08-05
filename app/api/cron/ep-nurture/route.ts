@@ -24,6 +24,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
+import { userOwnsCrm } from '@/lib/crm-course'
 import { sendEmail } from '@/lib/resend-client'
 import { EP_NURTURE_SEQUENCE } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -131,13 +132,21 @@ export async function GET(request: Request) {
     const allUsers = await loadUsers()
     // Only EP-course leads, minus unsubscribes, suppressed addresses and
     // internal test accounts.
-    const users = allUsers.filter(
+    const candidates = allUsers.filter(
       (u) =>
         u.signupSource === 'ep-course' &&
         !u.nurtureUnsubscribed &&
         !u.isTest &&
         !suppressedEmails.has(u.email.toLowerCase()),
     )
+    // OWNERS OUT (2026-08-05 final sweep #8): the CRM purchase webhook stamps
+    // buyers signup_source='ep-course' too — paying customers were getting
+    // the days-3/7/14/21 SELL sequence for the course they own. Mirrors
+    // completer-conversion's exclusion.
+    const users: typeof candidates = []
+    for (const u of candidates) {
+      if (!(await userOwnsCrm(u.email))) users.push(u)
+    }
 
     const now = new Date()
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'

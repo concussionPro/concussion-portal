@@ -67,7 +67,8 @@ export async function GET(request: NextRequest) {
       if (!html) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
       return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     }
-    const data = await loadGpReportData(code, patientLabel)
+    const patientRef = request.nextUrl.searchParams.get('ref')?.trim() || ''
+    const data = await loadGpReportData(code, patientLabel, patientRef)
     if (!data) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
     const pdf = renderGpReportPdf(data)
     return new NextResponse(new Uint8Array(pdf), {

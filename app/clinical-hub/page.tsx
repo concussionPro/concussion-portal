@@ -390,7 +390,7 @@ type ApiTrajectoryPoint = {
   eventType?: string | null
   modality?: string | null
   verifiedReadingPct?: number | null
-  patientRef?: string
+  patientRef?: string | null
 }
 
 type ApiSession = {

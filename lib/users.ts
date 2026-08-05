@@ -98,6 +98,27 @@ export async function findUserById(id: string): Promise<User | null> {
   return rows.length > 0 ? rowToUser(rows[0]) : null
 }
 
+/**
+ * The user's CURRENT access_level straight from the DB — a cheap indexed
+ * single-column select for revocation-aware paid gates. A session JWT lives
+ * for 365 days, so a refund/dispute downgrade never reaches the cookie; the
+ * highest-value paid surfaces re-check this when (and only when) the session
+ * CLAIMS a paid level. Returns null when no row exists or the DB errors —
+ * callers fall back to the JWT claim (availability over a hard fail; the
+ * webhook downgrade is the enforcement source of truth).
+ */
+export async function getCurrentAccessLevel(userId: string): Promise<User['accessLevel'] | null> {
+  try {
+    const { rows } = await sql<{ access_level: User['accessLevel'] }>`
+      SELECT access_level FROM users WHERE id = ${userId} LIMIT 1
+    `
+    return rows[0]?.access_level ?? null
+  } catch (err) {
+    console.error('[users] getCurrentAccessLevel failed:', err)
+    return null
+  }
+}
+
 // One-time migration flag — ensures converted_from column exists before first write
 let columnMigrated = false
 async function ensureColumns() {

@@ -118,17 +118,10 @@ export async function GET(request: Request) {
 
     const { rows } = await sql`
       SELECT c.code, c.clinic_name, c.contact_name, c.email, c.plan, c.created_at,
-        (WITH s AS (
-           SELECT NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref,
-                  NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl
-           FROM sst_clinic_sessions WHERE clinic_code = c.code
-         )
-         SELECT (
-           (SELECT COUNT(DISTINCT ref) FROM s WHERE ref IS NOT NULL) +
-           (SELECT COUNT(DISTINCT lbl) FROM s
-             WHERE ref IS NULL AND lbl IS NOT NULL
-               AND lbl NOT IN (SELECT lbl FROM s WHERE ref IS NOT NULL AND lbl IS NOT NULL))
-         )) AS patients,
+        (SELECT COUNT(DISTINCT COALESCE(
+             NULLIF(lower(trim(coalesce(s.patient_label, ''))), ''),
+             NULLIF(trim(coalesce(s.payload->>'patientRef', '')), '')))
+           FROM sst_clinic_sessions s WHERE s.clinic_code = c.code) AS patients,
         (SELECT COUNT(*) FROM sst_clinic_sessions s WHERE s.clinic_code = c.code) AS sessions
       FROM sst_clinics c
       WHERE c.email IS NOT NULL AND c.email <> ''

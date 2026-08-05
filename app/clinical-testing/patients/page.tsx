@@ -47,8 +47,21 @@ interface Clinic {
   viewKey: string
 }
 
+function refFor(p: PatientRow): string | null {
+  if (p.patientRef) return p.patientRef
+  // the API now includes patientRef on trajectory points; the shared
+  // TrajectoryPoint type doesn't declare it
+  for (const t of (p.hrtTrajectory ?? []) as Array<{ patientRef?: string | null }>) {
+    if (t?.patientRef) return t.patientRef
+  }
+  return null
+}
+
 interface PatientRow {
   name: string
+  /** install-UUID identity from any trajectory point — threads into the
+   *  GP-report loader so duplicate names can't merge/404 (final sweep #9) */
+  patientRef?: string | null
   condition: string | null
   gpReportDue?: boolean
   hrt: number | null
@@ -134,7 +147,7 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
               the episode — clearance referral or extend-plan recommendation. */}
           <div className="mt-3 flex flex-wrap gap-2">
             <a
-              href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patient.name)}`}
+              href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patient.name)}${refFor(patient) ? `&ref=${encodeURIComponent(refFor(patient) as string)}` : ''}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"

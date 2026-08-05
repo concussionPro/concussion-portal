@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { verifyMagicTokenJWT } from '@/lib/magic-link-jwt'
-import { updateLastLogin } from '@/lib/users'
+import { updateLastLogin, findUserById, findUserByEmail } from '@/lib/users'
 import { createJWTSession, verifySessionToken, type SessionData } from '@/lib/jwt-session'
 import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
 import { sql } from '@/lib/db'
@@ -351,12 +351,26 @@ export async function POST(request: NextRequest) {
     // Always use long-lived sessions — magic links are ephemeral anyway
     const rememberMe = true
 
+    // Revocation must reach the session (2026-08-05 sweep #5): a magic token
+    // embeds the access level AT MINT TIME, so an unused pre-refund link
+    // restored revoked paid access for a year. Mint from the CURRENT DB row;
+    // the token's embedded level is only the fallback when no row exists
+    // (or the DB blips — the paid gates re-check on read anyway).
+    let accessLevel = tokenData.accessLevel
+    try {
+      const dbUser =
+        (await findUserById(tokenData.userId)) ?? (await findUserByEmail(tokenData.email))
+      if (dbUser) accessLevel = dbUser.accessLevel
+    } catch (err) {
+      console.error('[auth/verify] DB access-level re-read failed, using token level:', err)
+    }
+
     // Create JWT session token (no Blob storage needed - instant!)
     const sessionToken = createJWTSession(
       tokenData.userId,
       tokenData.email,
       tokenData.name,
-      tokenData.accessLevel,
+      accessLevel,
       rememberMe
     )
 
@@ -372,7 +386,7 @@ export async function POST(request: NextRequest) {
       // welcome CTA lands them IN Module 1, one click, authenticated). All
       // other redirect targets stay blocked for preview so a link can't
       // point them at gated pages that bounce.
-      const target = await resolveLandingTarget(tokenData.accessLevel, tokenData.email, redirect)
+      const target = await resolveLandingTarget(accessLevel, tokenData.email, redirect)
       response = NextResponse.redirect(new URL(target, request.url), 303)
     } else {
       response = NextResponse.json({
@@ -381,7 +395,7 @@ export async function POST(request: NextRequest) {
           id: tokenData.userId,
           email: tokenData.email,
           name: tokenData.name,
-          accessLevel: tokenData.accessLevel,
+          accessLevel,
         },
       })
     }

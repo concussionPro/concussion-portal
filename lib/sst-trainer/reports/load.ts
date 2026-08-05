@@ -40,6 +40,17 @@ const isVerified = (p: Record<string, unknown> | null): boolean => {
   const src = p?.hrSource as string | undefined
   return p?.hrVerified === true && src !== 'manual' && src !== undefined
 }
+/** payload.eventType, lower-cased ('' when absent). */
+const evTypeOf = (p: Record<string, unknown> | null): string =>
+  typeof p?.eventType === 'string' ? p.eventType.toLowerCase() : ''
+/** EVENT rows (test-aborted / red-flag-cleared) are audit events stored under
+ *  session_type='threshold' with interpretation forced 'invalid' and hrt_bpm
+ *  null. They are NOT graded tests and must not enter a report's test history,
+ *  pick the prescription, or read as the "latest" test. */
+const isThresholdEventRow = (r: Row): boolean => {
+  const e = evTypeOf(r.payload)
+  return e === 'test-aborted' || e === 'red-flag-cleared'
+}
 const VALID_INTERP = new Set(['physiologic', 'no-intolerance', 'red-flag', 'invalid'])
 const asInterp = (s: unknown): ThresholdResult['interpretation'] =>
   (typeof s === 'string' && VALID_INTERP.has(s) ? s : 'invalid') as ThresholdResult['interpretation']
@@ -193,8 +204,14 @@ export async function loadReportInput(
   `
   if (rows.length === 0) return null
 
-  const thresholds = rows.filter((r) => r.session_type === 'threshold')
-  const trainings = rows.filter((r) => r.session_type !== 'threshold')
+  // Event rows are excluded on BOTH branches: an aborted-test / clearance
+  // acknowledgement is not a graded test, and a 'session-abandoned' record is
+  // an audit row, not a delivered session — it must not count toward the
+  // skins' "Sessions delivered", adherence, or medicolegal per-session rows.
+  const thresholds = rows.filter((r) => r.session_type === 'threshold' && !isThresholdEventRow(r))
+  const trainings = rows.filter(
+    (r) => r.session_type !== 'threshold' && evTypeOf(r.payload) !== 'session-abandoned',
+  )
   const latest = thresholds[thresholds.length - 1]
   const condition = ((latest?.condition as Condition) || 'concussion') as Condition
 
@@ -217,10 +234,27 @@ export async function loadReportInput(
     completedMinutes: num(t.payload?.completedMinutes) ?? 0,
     hrVerified: isVerified(t.payload),
     nextDayFlare: t.payload?.nextDayFlare === true,
+    // Stop-rule + override provenance for the medicolegal skin. The web app
+    // sends `symptomLimited` (SessionLog); the watch sends `flare`, which at
+    // post time is the same ≥2-pt symptom-rise stop (its nextDayFlare
+    // component is always false when the session is committed). Either app
+    // also marks the event as 'session-symptom-stopped'.
+    symptomLimited:
+      t.payload?.symptomLimited === true ||
+      t.payload?.flare === true ||
+      evTypeOf(t.payload) === 'session-symptom-stopped',
+    // web key is overrodeStop; accept the snake_case variant defensively
+    // (the hub already does)
+    overrodeStop: t.payload?.overrodeStop === true || t.payload?.overrode_stop === true,
   }))
 
-  const latestHrt = latest?.hrt_bpm ?? null
-  const restingHr = num(latest?.payload?.restingHr)
+  // The prescription in force derives from the last MEASURED test (hrt found)
+  // — the final re-test may legitimately carry no HRt (no-intolerance), and
+  // the band in play at exit is the one from the last measurement. Mirrors
+  // the demo fixture's reasoning above.
+  const lastMeasured = [...thresholds].reverse().find((t) => t.hrt_bpm != null)
+  const latestHrt = lastMeasured?.hrt_bpm ?? null
+  const restingHr = num(lastMeasured?.payload?.restingHr)
   const prescription = latestHrt != null ? computePrescription(latestHrt, condition, { restingHr }) : null
 
   const latestTest: ThresholdResult | null = latest

@@ -104,24 +104,23 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
   const windowed = plan === 'active'
   let patientCount = 0
   try {
-    // One human = one identity. A patient can appear as ref'd rows (watch
-    // app) AND label-only rows (older/web client) — plain COALESCE-distinct
-    // double-counted them toward the cap (2026-08-05 sweep #4). Count refs,
-    // plus labels (case-folded) that never co-occur with any ref'd row.
+    // One human = one identity, LABEL-first (final sweep #13): the ref is an
+    // INSTALL UUID, so the same labeled patient on phone + laptop (or after a
+    // reinstall) is one human, not two of a 5-cap. Label when present, ref
+    // only for unlabeled installs. This also covers the earlier mixed
+    // ref/label double-count (sweep #4): shared label collapses both rows.
     const { rows } = await sql<{ n: number }>`
-      WITH s AS (
-        SELECT NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref,
-               NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl
-        FROM sst_clinic_sessions
-        WHERE upper(clinic_code) = ${code}
-          AND (${!windowed} OR created_at > NOW() - INTERVAL '30 days')
-      )
-      SELECT (
-        (SELECT COUNT(DISTINCT ref) FROM s WHERE ref IS NOT NULL) +
-        (SELECT COUNT(DISTINCT lbl) FROM s
-          WHERE ref IS NULL AND lbl IS NOT NULL
-            AND lbl NOT IN (SELECT lbl FROM s WHERE ref IS NOT NULL AND lbl IS NOT NULL))
-      )::int AS n
+      SELECT COUNT(DISTINCT COALESCE(
+        NULLIF(lower(trim(coalesce(patient_label, ''))), ''),
+        NULLIF(trim(coalesce(payload->>'patientRef', '')), '')
+      ))::int AS n
+      FROM sst_clinic_sessions
+      WHERE upper(clinic_code) = ${code}
+        AND (${!windowed} OR created_at > NOW() - INTERVAL '30 days')
+        AND COALESCE(
+          NULLIF(lower(trim(coalesce(patient_label, ''))), ''),
+          NULLIF(trim(coalesce(payload->>'patientRef', '')), '')
+        ) IS NOT NULL
     `
     patientCount = rows[0]?.n ?? 0
   } catch {
@@ -174,8 +173,13 @@ export async function setSstClinicPlan(
     // no-op — money taken, cap kept, webhook 200'd so Stripe never retried.
     // The PG row is the durable source; reconstruct the KV record from it.
     try {
+      // Reconstruct the FULL billing state, not just identity (2026-08-05
+      // sweep #18): dropping tier/plan/stripe ids here meant a KV loss also
+      // lost the billing portal (stripeCustomerId) and the bundle's
+      // subscription idempotency key (stripeSubscriptionId).
       const { rows } = await sql`
-        SELECT clinic_name, contact_name, email, view_key, created_at
+        SELECT clinic_name, contact_name, email, view_key, created_at,
+               plan, tier, stripe_customer_id, stripe_subscription_id
         FROM sst_clinics WHERE code = ${code} LIMIT 1
       `
       if (rows[0]) {
@@ -185,6 +189,10 @@ export async function setSstClinicPlan(
           email: rows[0].email,
           viewKey: rows[0].view_key,
           createdAt: rows[0].created_at,
+          plan: rows[0].plan ?? undefined,
+          tier: rows[0].tier ?? undefined,
+          stripeCustomerId: rows[0].stripe_customer_id ?? undefined,
+          stripeSubscriptionId: rows[0].stripe_subscription_id ?? undefined,
         } as NonNullable<typeof rec>
       }
     } catch (err) {

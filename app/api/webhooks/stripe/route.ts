@@ -406,6 +406,31 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     })
   }
 
+  // Record EVERY CCM purchase in course_purchases at fulfilment (2026-08-05
+  // sweep #7). The hub-refund member-downgrade guard keys on this table
+  // ("NOT EXISTS course_purchases" = hub was their only entitlement), so a
+  // member who bought CCM independently was only protected if that purchase
+  // left a row — and until now, none did. Slug per courseType; idempotent on
+  // (email, slug) via recordCoursePurchase's ON CONFLICT upsert. The repeat
+  // full-course path above records its own per-session slug — skip it here
+  // so revenue sums over course_purchases don't double-count that sale.
+  const isRepeatComplete =
+    existingUser?.accessLevel === 'full-course' && accessLevel === 'full-course'
+  if (!isRepeatComplete) {
+    try {
+      await recordCoursePurchase({
+        email: customerEmail,
+        courseSlug: accessLevel === 'full-course' ? 'ccm-complete' : 'ccm-online',
+        stripeSessionId: session.id,
+        amountAud: Math.round((session.amount_total || 0) / 100),
+      })
+    } catch (err) {
+      // Best-effort: access_level is already provisioned above — never fail
+      // the fulfilment (and trigger endless Stripe retries) over the ledger.
+      console.error(`Failed to record CCM purchase for ${redact(customerEmail)}:`, err)
+    }
+  }
+
   // Mark any abandoned checkouts for this email as recovered
   try {
     await sql`UPDATE abandoned_checkouts SET recovered = true WHERE email = ${customerEmail.toLowerCase()} AND recovered = false`
@@ -1550,7 +1575,17 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
       }
       const chargeCustomerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null
       const { rows: downgraded } = await sql<{ email: string }>`
-        UPDATE users SET access_level = 'preview'
+        UPDATE users SET access_level = CASE
+            -- Downgrade FLOOR (2026-08-05 sweep #7): a member whose own CCM
+            -- purchase was online-only loses only the hub's full-course
+            -- lift — they drop to the tier they personally paid for, never
+            -- to 'preview'.
+            WHEN EXISTS (
+              SELECT 1 FROM course_purchases cp
+              WHERE LOWER(cp.user_email) = LOWER(users.email) AND cp.course_slug = 'ccm-online'
+            ) THEN 'online-only'
+            ELSE 'preview'
+          END
         WHERE LOWER(email) IN (SELECT email FROM course_hub_members WHERE hub_code = ${hub.code})
           AND access_level = 'full-course'
           AND (stripe_customer_id IS NULL OR stripe_customer_id = ${chargeCustomerId})
@@ -1562,9 +1597,13 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
           -- Guest one-time CCM buyers have NULL stripe_customer_id, so a
           -- member who bought the course independently would be swept by the
           -- provenance guard alone (2026-08-05 round-D F3): any independent
-          -- purchase record keeps their access.
+          -- purchase record OTHER than a lone 'ccm-online' keeps their
+          -- full access untouched ('ccm-complete', repeat-round slugs, CRM,
+          -- short courses — all conservative keeps); an own 'ccm-online'
+          -- purchase instead floors the downgrade at 'online-only' above.
           AND NOT EXISTS (
-            SELECT 1 FROM course_purchases cp WHERE LOWER(cp.user_email) = LOWER(users.email)
+            SELECT 1 FROM course_purchases cp
+            WHERE LOWER(cp.user_email) = LOWER(users.email) AND cp.course_slug <> 'ccm-online'
           )
         RETURNING email
       `
@@ -1625,9 +1664,18 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
             } catch (subErr) {
               console.error(`[crm] Failed to cancel SST subscription ${subId} after ${cause}:`, subErr)
             }
-          } else {
-            // No subscription: the bundle's comp access rides on plan alone.
+          } else if (clinic.tier === 'single') {
+            // No subscription + tier 'single': the CRM bundle's comp access
+            // rides on plan alone — bundle.ts ALWAYS stamps tier 'single'
+            // when it activates a clinic, so this provenance is safe to
+            // unwind (2026-08-05 sweep #17).
             await setSstClinicPlan(clinic.code, 'trial')
+            console.log(`[crm] Re-capped bundle-comp clinic ${clinic.code} after ${cause}`)
+          } else {
+            // No subscription and tier is null (or a non-bundle tier): comp /
+            // alumni / manual grants look exactly like this — a personal CRM
+            // refund must NOT claw back an entitlement the bundle never set.
+            console.log(`[crm] Clinic ${clinic.code} plan is not CRM-bundle provenance (tier=${clinic.tier ?? 'null'}, no subscription) — left untouched after ${cause}`)
           }
         }
       } catch (err) {

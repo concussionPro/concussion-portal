@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'premium', message: 'Documents require an active plan.' }, { status: 402 })
     }
   }
-  const summary = await computePatientSstSummary(code, patientLabel)
+  const patientRef = request.nextUrl.searchParams.get('ref')?.trim() || ''
+  const summary = await computePatientSstSummary(code, patientLabel, patientRef)
   if (!summary) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
   return NextResponse.json({ summary, mergeFields: sstSummaryMergeFields(summary) })
 }

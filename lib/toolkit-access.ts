@@ -15,7 +15,8 @@
  */
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { isBookOwner } from '@/lib/users'
+import { isBookOwner, getCurrentAccessLevel } from '@/lib/users'
+import { isDemoUserId } from '@/lib/demo-session'
 import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 export type ToolkitPageAccess = 'entitled' | 'locked' | 'unauthenticated'
@@ -35,7 +36,18 @@ export async function resolveToolkitPageAccess(): Promise<ToolkitPageAccess> {
     return process.env.NODE_ENV !== 'production' ? 'locked' : 'unauthenticated'
   }
   if (session.accessLevel === 'online-only' || session.accessLevel === 'full-course') {
-    return 'entitled'
+    // Revocation re-check (2026-08-05 sweep #5): a 365-day session JWT
+    // outlives a refund downgrade — a paid CLAIM is verified against the DB
+    // row (cheap indexed select; free/demo paths never reach this branch's
+    // DB read). Prefer the DB level when it disagrees downward; when no row
+    // is found (DB blip) keep the JWT claim.
+    const dbLevel = isDemoUserId(session.userId)
+      ? null
+      : await getCurrentAccessLevel(session.userId)
+    if (!dbLevel || dbLevel === 'online-only' || dbLevel === 'full-course') {
+      return 'entitled'
+    }
+    // DB says the paid level is gone — fall through to the book-owner door.
   }
   // FAIL CLOSED: a DB error must render the locked screen, not grant access
   // (and not 500 a whole page render).

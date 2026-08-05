@@ -127,7 +127,10 @@ export async function POST(request: NextRequest) {
           // admission to its caseload cap, tell the owner — audit-keyed to
           // once per clinic per month. Suppression fail-closed per doctrine.
           if (usage.plan === 'active') {
-            void notifyPlanFull(clinicCode, usage).catch((err) =>
+            // AWAITED (final sweep #14): void'd sends can be frozen with the
+            // lambda after the 402 returns — burning the monthly audit key
+            // with no email and no delete-on-fail.
+            await notifyPlanFull(clinicCode, usage).catch((err) =>
               console.error('[sst-session] plan-full notify failed:', err),
             )
           }
@@ -259,14 +262,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Idempotency (final sweep #15): offline replays are at-least-once — the
+    // client stamps a syncId at enqueue; reusing it as the row id makes
+    // duplicate deliveries no-ops instead of duplicate clinical rows.
+    const syncIdRaw = (payload as Record<string, unknown>).syncId
+    const rowId =
+      typeof syncIdRaw === 'string' && /^[0-9a-fA-F-]{16,64}$/.test(syncIdRaw)
+        ? syncIdRaw.toLowerCase()
+        : crypto.randomUUID()
     await sql`
       INSERT INTO sst_clinic_sessions
         (id, clinic_code, clinic_name, patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at)
       VALUES (
-        ${crypto.randomUUID()}, ${clinicCode}, ${clinicName}, ${patientLabel}, ${sessionType},
+        ${rowId}, ${clinicCode}, ${clinicName}, ${patientLabel}, ${sessionType},
         ${storedHrt}, ${storedBandLow}, ${storedBandHigh},
         ${condition}, ${JSON.stringify(payloadForStore)}::jsonb, now()
       )
+      ON CONFLICT (id) DO NOTHING
     `
     return NextResponse.json({ ok: true })
   } catch (err) {

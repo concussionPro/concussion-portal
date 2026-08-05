@@ -160,9 +160,38 @@ final class SSTFlow: ObservableObject {
         step = selectedSymptoms.isEmpty ? .symptomProfile : .readiness
     }
 
-    /// Patient confirms a clinician has reviewed + cleared them → unlock.
+    /// Patient confirms a clinician has reviewed + cleared them → unlock, and
+    /// log the acknowledgement to the clinic. Web parity: page.tsx posts the
+    /// same 'red-flag-cleared' threshold event, which is what lets the hub
+    /// DOWNGRADE the urgent red-flag banner — a watch-only clearance otherwise
+    /// left the clinic dashboard urgent forever. Queued on failure by
+    /// SSTSync.postSession like every other session post.
     func confirmClearance() {
+        let redFlagAt = state.lastRedFlagAt
         state.markCleared()
+        Task { await postRedFlagCleared(redFlagAt: redFlagAt) }
+    }
+
+    private func postRedFlagCleared(redFlagAt: Date?) async {
+        // Mirror the web payload (app/platform/app/page.tsx): eventType +
+        // acknowledgedAt/redFlagAt in epoch-ms. The server forces event rows to
+        // interpretation 'invalid' / null HRt; state it explicitly for parity.
+        var payload: [String: Any] = [
+            "eventType": "red-flag-cleared",
+            "interpretation": "invalid",
+            "acknowledgedAt": Int(Date().timeIntervalSince1970 * 1000),
+        ]
+        // No raw Optionals in a JSONSerialization payload — unwrap or omit.
+        if let flaggedAt = redFlagAt {
+            payload["redFlagAt"] = Int(flaggedAt.timeIntervalSince1970 * 1000)
+        }
+        _ = await SSTSync.postSession(
+            clinicCode: state.clinicCode ?? "",
+            sessionType: "threshold",
+            patientLabel: state.patientName ?? "",
+            condition: "concussion",
+            payload: payload
+        )
     }
 
     // MARK: - Onboarding

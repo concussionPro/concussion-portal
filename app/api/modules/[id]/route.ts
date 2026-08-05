@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { resolveModuleForAccess, type AccessLevel } from '@/lib/module-access'
 import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
+import { isDemoUserId } from '@/lib/demo-session'
+import { getCurrentAccessLevel } from '@/lib/users'
 
 /**
  * Secure Module Content API
@@ -42,10 +44,23 @@ export async function GET(
     // without this (2026-07-27).
     const clinicDemo =
       request.cookies.get('clinic_demo')?.value === CLINIC_DEMO_KEY
-    const accessLevel: AccessLevel | null =
+    let accessLevel: AccessLevel | null =
       sessionData?.accessLevel ??
       (clinicDemo ? 'preview' : null) ??
       (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
+
+    // Revocation re-check (2026-08-05 sweep #5): a 365-day session JWT outlives
+    // a refund downgrade — when the session CLAIMS a paid level, the DB row is
+    // the truth for paid content. One cheap indexed select, only on paid
+    // claims; demo, unauthenticated and free paths never touch the DB here.
+    if (
+      sessionData &&
+      !isDemoUserId(sessionData.userId) &&
+      (sessionData.accessLevel === 'online-only' || sessionData.accessLevel === 'full-course')
+    ) {
+      const dbLevel = await getCurrentAccessLevel(sessionData.userId)
+      if (dbLevel) accessLevel = dbLevel
+    }
 
     const result = resolveModuleForAccess(moduleId, accessLevel)
 

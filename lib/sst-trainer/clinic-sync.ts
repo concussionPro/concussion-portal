@@ -101,6 +101,12 @@ function buildBody(input: ClinicSyncInput, code: string): Record<string, unknown
       ...(input.payload ?? {}),
       eventType: input.eventType,
       patientRef: input.patientRef ?? null,
+      // Stamped once at build time; the server reuses it as the row id so
+      // offline replays are idempotent (final sweep #15).
+      syncId:
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     },
   }
 }
