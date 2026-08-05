@@ -4,6 +4,7 @@ import { createUser, findUserByEmail } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail, sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 
@@ -137,6 +138,17 @@ export async function POST(request: NextRequest) {
       const existing = await findUserByEmail(email)
       if (existing) {
         return NextResponse.json({ success: true, message: 'User already exists' })
+      }
+
+      // MASTER BLACKLIST. This payload is third-party and unauthenticated, and
+      // the address is sniffed out of arbitrary form fields — so without this a
+      // clinician who hard-bounced, complained or replied STOP re-entered the
+      // SCAT Mastery nurture sequence just by a form being submitted with their
+      // address. Creating the account is what puts them in the cron's lane, so
+      // bail BEFORE createUser, not just before the send. Fails closed.
+      if (await isEmailSuppressed(email)) {
+        console.log('[Squarespace] Skipped suppressed address — no account, no send')
+        return NextResponse.json({ success: true, message: 'Suppressed' })
       }
 
       // Create preview user → enters SCAT Mastery nurture sequence

@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { sendEmail } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { SCAT_MASTERY_SEQUENCE } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
@@ -32,6 +33,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields: email and day' },
         { status: 400 }
+      )
+    }
+
+    // MASTER BLACKLIST. This route ships a LIVE nurture email to any address in
+    // the request body — it is the only send path combining an arbitrary
+    // recipient with real marketing content, so "it's a test route" is exactly
+    // why it must check. Fails closed.
+    if (await isEmailSuppressed(email)) {
+      return NextResponse.json(
+        { error: 'Recipient is on the email_suppression blacklist — refusing to send' },
+        { status: 409 },
       )
     }
 

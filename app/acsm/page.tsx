@@ -228,9 +228,9 @@ export default function AcsmLandingPage() {
               </>
             ) : (
               <>
-                Concussion Education Australia has applied to become an ACSM Approved Provider for
-                this course. <strong>ACSM CECs are not yet held</strong>, and no CEC value is
-                claimed until an approval letter specifies one — the course is {CONFIG.COURSE.ONLINE_CPD_POINTS}{' '}
+                Concussion Education Australia holds no ACSM Approved-Provider status and is not
+                currently pursuing one for this course. <strong>ACSM CECs are not held</strong>, and
+                no CEC value is claimed — the course is {CONFIG.COURSE.ONLINE_CPD_POINTS}{' '}
                 hours of learning, which is verifiable either way.
               </>
             )}{' '}

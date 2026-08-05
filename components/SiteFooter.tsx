@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 export function SiteFooter() {
   return (
@@ -69,7 +70,7 @@ export function SiteFooter() {
             &copy; {new Date().getFullYear()} Concussion Education Australia. ABN 74 688 155 508. All rights reserved.
           </p>
           <p className="text-xs">
-            Endorsed by Osteopathy Australia &middot; For all AHPRA clinicians &middot; 16 CPD Hours
+            For all AHPRA clinicians &middot; {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online
           </p>
         </div>
       </div>

@@ -254,8 +254,8 @@ export function NextActionCard() {
                 {isPreview
                   ? `Outstanding achievement — you've completed the SCAT6 Mastery course. Upgrade to unlock ${CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS & return-to-play, plus the Clinical Toolkit — up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD hours.`
                   : accessLevel === 'online-only'
-                  ? `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA CPD hours. Download your certificate below, or add the workshop for ${CONFIG.COURSE.TOTAL_CPD_POINTS} total.`
-                  : `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA CPD hours. Complete the ${CONFIG.COURSE.IN_PERSON_CPD_POINTS}-hour in-person practical to earn your full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hour certificate.`}
+                  ? `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA-aligned CPD hours. Download your certificate below, or add the workshop for ${CONFIG.COURSE.TOTAL_CPD_POINTS} total.`
+                  : `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA-aligned CPD hours. Complete the ${CONFIG.COURSE.IN_PERSON_CPD_POINTS}-hour in-person practical to earn your full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hour certificate.`}
               </p>
 
               {/* Certificate Section */}

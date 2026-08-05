@@ -32,6 +32,9 @@ const MODULES: { n: string; title: string; mins: number }[] = [
 const TOTAL_MINS = MODULES.reduce((s, m) => s + m.mins, 0)
 
 export const metadata = {
+  title: 'Concussion Rehab Mastery — for UK Clinical Exercise Physiologists',
+  description:
+    'An 8-module online course teaching clinical exercise physiologists to deliver measured heart-rate-threshold concussion rehabilitation: graded exercise testing, sub-symptom-threshold prescription, phenotype-specific rehab and graded return to activity.',
   alternates: { canonical: '/cep-uk' },
 }
 
@@ -187,10 +190,24 @@ export default function CepUkLandingPage() {
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
             <strong>Recognition status:</strong> Concussion Education Australia is
             pursuing AHCS Accredited Register recognition of this course through the
-            CEP-UK route. The course has been{' '}
-            <strong>independently reviewed by two reviewers appointed by Exercise
-            &amp; Sports Science Australia (ESSA)</strong>; that endorsement is
-            pending and not yet held. We don&rsquo;t claim accreditation we
+            CEP-UK route.{' '}
+            {CONFIG.FEATURES.ESSA_ACCREDITED ? (
+              <>
+                The course <strong>is accredited by Exercise &amp; Sports Science
+                Australia (ESSA)</strong> (accreditation {CONFIG.ESSA_ACCREDITATION.NUMBER},
+                granted 24 July 2026, valid to 24 July 2027) after independent review by two
+                ESSA-appointed reviewers — {CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} CPD points
+                for the online course. ESSA accreditation is an Australian credential and is not
+                an AHCS Accredited Register recognition.
+              </>
+            ) : (
+              <>
+                The course has been <strong>independently reviewed by two reviewers appointed by
+                Exercise &amp; Sports Science Australia (ESSA)</strong>; that endorsement is
+                pending and not yet held.
+              </>
+            )}{' '}
+            We don&rsquo;t claim accreditation we
             don&rsquo;t hold — this page updates the day each is confirmed.
           </p>
         </section>

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
 import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
 import { CompetencyGapEvidence } from '@/components/clinical/CompetencyGapEvidence'
 import { TrackedOutbound } from '@/components/TrackedOutbound'
@@ -109,8 +109,8 @@ export default function AccSupplierPage() {
             which records the objective outcome as it goes. Your six-monthly becomes
             review-and-transcribe instead of reconstruct-from-notes.{' '}
             <strong className="text-slate-800">And your team trained and certificated to run it</strong> —
-            the only Australian concussion training endorsed by Osteopathy Australia and
-            accredited by ESSA.
+            Osteopathy Australia endorses the clinical stream; the exercise-physiology stream is
+            ESSA-accredited.
           </p>
           {/* Evidence chips — the email leads 17→13; the page must echo it
               above the fold, not bury it in the legal footnote. */}
@@ -171,7 +171,7 @@ export default function AccSupplierPage() {
             </p>
             <p className="m-0 mt-1 text-[clamp(18px,2.2vw,24px)] font-extrabold leading-[1.15] tracking-[-0.02em]">
               Two instruments — one that engages athletes before the injury, one that delivers
-              and evidences the funded episode — plus the accredited training that makes your
+              and evidences the funded episode — plus the certificated training that makes your
               team compliant to run them. Documentation automated, filed into Gensolve.
             </p>
           </div>
@@ -196,11 +196,11 @@ export default function AccSupplierPage() {
             </div>
             <div className="border-t border-slate-200 p-6">
               <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">The competency layer</p>
-              <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">Accredited team training</p>
+              <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">Certificated team training</p>
               <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
-                For the physios and OTs your contract already mandates — OA-endorsed,
-                ESSA-accredited, certificated per clinician: the documented competency
-                Cl.&nbsp;15.2 requires.
+                For the physios and OTs your contract already mandates — OA-endorsed and
+                certificated per clinician (the exercise-physiology stream is separately
+                ESSA-accredited): the documented competency Cl.&nbsp;15.2 requires.
               </p>
             </div>
           </div>
@@ -431,10 +431,11 @@ export default function AccSupplierPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
             <div className="p-6">
               <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Indicative commercials</p>
-              <p className="m-0 mt-2 text-[22px] font-extrabold tracking-tight text-slate-900">NZ$49<span className="text-[13px] font-semibold text-slate-500"> / delivering clinician / month</span></p>
+              <p className="m-0 mt-2 text-[22px] font-extrabold tracking-tight text-slate-900">A${SST_TIER_FROM_AUD}<span className="text-[13px] font-semibold text-slate-500"> / month, from · AUD (NZD for NZ suppliers)</span></p>
               <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-slate-600">
-                Both instruments, Gensolve filing, org licence. Counted on clinicians{' '}
-                <strong>delivering the concussion service</strong> — never headcount.
+                Both instruments, Gensolve filing, org licence. Priced on active caseload —{' '}
+                <strong>patients with a session in the last 30 days</strong> — never headcount;
+                every clinician is unlimited on every plan.
               </p>
               <p className="m-0 mt-3 text-[13.5px] font-bold text-slate-800">Training seats NZ$895<span className="font-semibold text-slate-500"> → $425 at 40+</span></p>
               <p className="m-0 mt-0.5 text-[12.5px] leading-[1.5] text-slate-600">
@@ -513,11 +514,22 @@ export default function AccSupplierPage() {
           nothing is submitted to ACC. Client data is stored in Australia (NZ/AU residency per
           Cl.&nbsp;14.1). Concussion Clinical Mastery is endorsed by Osteopathy Australia; that
           endorsement belongs to that course. The programmes are authored by a registered osteopath
-          — no exercise physiologist authored them. CEA&rsquo;s exercise-physiology program
-          (Concussion Rehab Mastery) is accredited by Exercise &amp; Sports Science Australia
-          (Accreditation No. PDNF26077, valid to 24 July 2027). The director&rsquo;s mTBI
-          manuscript is prepared for submission — not peer reviewed, unpublished. CEA holds no New
-          Zealand accreditation.
+          — no exercise physiologist authored them.{' '}
+          {CONFIG.FEATURES.ESSA_ACCREDITED && (
+            <>
+              CEA&rsquo;s exercise-physiology program (Concussion Rehab Mastery) is accredited by
+              Exercise &amp; Sports Science Australia (Accreditation No.{' '}
+              {CONFIG.ESSA_ACCREDITATION.NUMBER}, valid to{' '}
+              {new Date(CONFIG.ESSA_ACCREDITATION.VALID_UNTIL).toLocaleDateString('en-AU', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+              ).{' '}
+            </>
+          )}
+          The director&rsquo;s mTBI manuscript is prepared for submission — not peer reviewed,
+          unpublished. CEA holds no New Zealand accreditation.
         </p>
         <p className="mt-2 text-center text-[11px] leading-[1.5] text-slate-400">
           Concussion Education Australia Pty Ltd · ACN 688 155 508 · ABN 74 688 155 508 · 2

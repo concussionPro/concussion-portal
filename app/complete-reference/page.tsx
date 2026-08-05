@@ -100,8 +100,6 @@ export default function CompleteReferencePage() {
                   <span>5.8 MB PDF</span>
                   <span>•</span>
                   <span>Comprehensive protocols & flowcharts</span>
-                  <span>•</span>
-                  <span>Updated January 2026</span>
                 </div>
               </div>
             </div>

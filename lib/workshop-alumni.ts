@@ -28,18 +28,36 @@ export function completedWorkshopSlugs(now: Date = nowSafe()): string[] {
 }
 
 /**
- * Is this city's CURRENT round still ahead of it?
+ * The instant separating "was in the room for the round that ran" from "is
+ * waiting for a round that has not run yet", for a city already known to be in
+ * completedWorkshopSlugs(). Registrations strictly BEFORE it are alumni.
  *
- * Sydney and Byron Bay have `hasRunWorkshop: true` (a past round ran) while
- * `status: 'collecting'` for the NEXT one. Their slugs are therefore in
- * completedWorkshopSlugs() permanently, so seat-holders for the round that
- * has NOT run yet were being read as alumni. A 'completed' city (Melbourne)
- * is different — the round that just ran IS the current round.
+ *  - A city whose round has already RUN and whose date we know (Melbourne:
+ *    status 'completed', dateObj 13 Jun 2026) → the workshop date itself.
+ *    Someone who registered after that day cannot have been in the room; they
+ *    are a buyer for the NEXT Melbourne round. `status` alone is NOT the
+ *    discriminator: a 'completed' city keeps selling (VALID_LOCATIONS in
+ *    lib/stripe.ts still accepts 'melbourne' and /in-person still lists it as
+ *    "Scheduling Now"), so "completed" never means "no new buyers".
+ *  - A city collecting its next round after a past one, with no date yet
+ *    (Sydney, Byron Bay) → ROUND_START. That is the SAME boundary
+ *    users.practicalDayAttendees() scopes the current round on, so the seat
+ *    counter and this classifier cannot disagree about who is in this round.
+ *
+ * Returns null when neither is known — the caller must then fail safe.
  */
-function isCollectingNextRound(loc: { status: string; dateObj: Date | null }, now: Date): boolean {
-  if (loc.status === 'completed') return false
-  if (loc.dateObj && loc.dateObj.getTime() < now.getTime()) return false
-  return true
+function roundCutoffMs(
+  loc: { slug: string; dateObj: Date | null },
+  now: Date,
+): number | null {
+  if (loc.dateObj && loc.dateObj.getTime() < now.getTime()) return loc.dateObj.getTime()
+  const roundStart = CONFIG.WORKSHOP.ROUND_START[loc.slug]
+  // NOTE: parsed as UTC midnight, matching how practicalDayAttendees() hands
+  // the same bare 'YYYY-MM-DD' string to Postgres. Deliberately NOT localised
+  // to AEST here — doing so in one place only would desynchronise the seat
+  // counter from this classifier.
+  if (roundStart) return new Date(roundStart).getTime()
+  return null
 }
 
 /**
@@ -72,22 +90,27 @@ export function isWorkshopAlumnus(
   if (!user.workshopLocation) return false
   if (!completedWorkshopSlugs(now).includes(user.workshopLocation)) return false
 
-  // Round scoping. Sydney/Byron are permanently in completedWorkshopSlugs()
-  // because a PAST round ran, so without this a clinician who buys a seat for
-  // the NEXT Sydney round is instantly classed an alumnus — dropping them from
-  // every nurture lane including their own post-purchase onboarding, seat
-  // reservation, prep and logistics email. They paid and heard nothing.
+  // Round scoping. Every city here is in completedWorkshopSlugs() because a
+  // PAST round ran, but all of them keep selling seats for the NEXT one. Without
+  // scoping, a clinician who buys a seat for a round that has not happened is
+  // instantly classed an alumnus — dropping them from every nurture lane
+  // including their own post-purchase onboarding, seat reservation, prep and
+  // logistics email. They paid four figures and heard nothing.
   const loc = Object.values(CONFIG.LOCATIONS).find((l) => l.slug === user.workshopLocation)
-  if (!loc || !isCollectingNextRound(loc, now)) return true
+  const cutoff = loc ? roundCutoffMs(loc, now) : null
 
-  const roundStart = CONFIG.WORKSHOP.ROUND_START[user.workshopLocation]
-  if (!roundStart) return true
-  if (!user.registeredAt) return false // unknown date → assume current round
+  // FAIL SAFE in every unknown: no city, no cutoff, no registration date, or an
+  // unparseable one → NOT an alumnus. Wrongly silencing a paying customer's
+  // whole lifecycle is unrecoverable; one extra email to a genuine alumnus is
+  // not. (This is also what stops a newly-added `hasRunWorkshop` city whose
+  // ROUND_START was forgotten from silencing every buyer in it.)
+  if (cutoff === null) return false
+  if (!user.registeredAt) return false
   const t = new Date(user.registeredAt).getTime()
   if (!Number.isFinite(t)) return false
-  // Registered on/after the current round opened → they are waiting for a
-  // workshop that has not happened. Only earlier buyers are alumni.
-  return t < new Date(roundStart).getTime()
+  // Registered before the round boundary → they were in the room. On/after it
+  // → they are waiting for a workshop that has not happened.
+  return t < cutoff
 }
 
 // Date.now() is fine in app/runtime (only workflow scripts ban it).

@@ -236,11 +236,24 @@ export async function sendPostPurchaseLoginEmail(opts: {
   origin?: string
   /** Optional attachments — used for tax invoice PDF on real purchases. */
   attachments?: Array<{ filename: string; content: Buffer | string }>
+  /**
+   * Lifetime of the magic link IN HOURS, so the copy matches the token that was
+   * actually minted. The purchase webhook mints a 7-day link (NURTURE_TTL_MS)
+   * while this template said "24 hours" — understating the window and sending
+   * buyers off to request a replacement link they did not need. Defaults to the
+   * 24h transactional TTL, which is what the admin resend path uses.
+   */
+  linkTtlHours?: number
 }): Promise<boolean> {
   const baseUrl = opts.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   const loginUrl = `${baseUrl}/api/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome`
 
   const isFullCourse = opts.accessLevel === 'full-course'
+  const ttlHours = opts.linkTtlHours && opts.linkTtlHours > 0 ? Math.round(opts.linkTtlHours) : 24
+  const linkLifetimeLabel =
+    ttlHours >= 48
+      ? `${Math.round(ttlHours / 24)} days`
+      : `${ttlHours} ${ttlHours === 1 ? 'hour' : 'hours'}`
   const firstName = opts.firstName ? escapeHtml(opts.firstName.split(' ')[0]) : 'there'
   const courseLabel = escapeHtml(opts.courseLabel)
   const amountLine = `${escapeHtml(opts.currency)} $${opts.amount.toFixed(2)}`
@@ -303,7 +316,7 @@ export async function sendPostPurchaseLoginEmail(opts: {
       <p style="text-align: center; margin: 24px 0;">
         <a href="${loginUrl}" class="button">Access Your Course →</a>
       </p>
-      <p class="secondary" style="text-align: center;">One-click login — this link expires in 24 hours.</p>
+      <p class="secondary" style="text-align: center;">One-click login — this link expires in ${linkLifetimeLabel}.</p>
 
       <div class="order">
         <strong>What you bought</strong><br>

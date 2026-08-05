@@ -34,7 +34,7 @@ import { WORD_LISTS } from '@/app/scat-forms/shared/constants/wordLists'
  * Child SCAT6 clinical-integrity tests.
  *
  * Ground truth: public/docs/Child_SCAT6_Flat.pdf (Davis GA et al, BJSM
- * 2023;57:637-648). The Step 6 decision table prints these maximums:
+ * 2023;57:636-647). The Step 6 decision table prints these maximums:
  *   Symptom number of 21 (child + parent), Symptom severity of 63,
  *   Immediate Memory of 30, Concentration of 6, Delayed Recall of 10,
  *   Cognitive Total of 46, mBESS Total Errors of 30.
@@ -201,8 +201,13 @@ describe('concentration = digits (of 5) + days in reverse (of 1)', () => {
     expect(calculateDaysReverse(form({ daysReverseErrors: 0, daysReverseTime: '18.4' }))).toBe(1)
     expect(calculateDaysReverse(form({ daysReverseErrors: 0, daysReverseTime: '31' }))).toBe(0)
     expect(calculateDaysReverse(form({ daysReverseErrors: 1, daysReverseTime: '12' }))).toBe(0)
-    // errors recorded but no time: the under-30-seconds half is unverified
-    expect(calculateDaysReverse(form({ daysReverseErrors: 0 }))).toBe(0)
+    // Errors alone lose the point regardless of an unrecorded time.
+    expect(calculateDaysReverse(form({ daysReverseErrors: 2 }))).toBe(0)
+    // No errors but no time: the under-30-seconds half is unverified, so the
+    // point is neither earned nor failed. Printing 0 would assert a failed
+    // subtest on the strength of a stopwatch nobody wrote down.
+    expect(calculateDaysReverse(form({ daysReverseErrors: 0 }))).toBeNull()
+    expect(calculateDaysReverse(form({ daysReverseErrors: 0, daysReverseTime: 'abc' }))).toBeNull()
     expect(calculateDaysReverse(form({ daysReverseTime: '12' }))).toBeNull()
   })
 

@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -149,7 +150,9 @@ export async function POST(request: NextRequest) {
     `
     const isFirstDay0 = auditRows.length > 0
 
-    if (isFirstDay0) {
+    // MASTER BLACKLIST — Day-0 of the EP lead-magnet sequence on a PUBLIC
+    // endpoint. Fails closed.
+    if (isFirstDay0 && !(await isEmailSuppressed(email))) {
       const emailSent = await sendEmail({
         to: email,
         subject: 'Your EP Concussion Rehab Starter — the measured-threshold workflow',

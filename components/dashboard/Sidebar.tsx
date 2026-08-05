@@ -350,7 +350,7 @@ export function Sidebar() {
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
               AHPRA Aligned
             </p>
-            <p className="text-[10px] text-muted-foreground mb-2">CPD Tracking Active</p>
+            <p className="text-[10px] text-muted-foreground mb-2">CPD Certificates</p>
             <a
               href="https://concussion-education-australia.com/"
               target="_blank"

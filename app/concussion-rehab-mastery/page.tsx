@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     ? 'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists. 8 online modules · 8 ESSA CPD points · the clinical tools to deliver it.'
     : 'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists. 8 online modules · 8 CPD hours · the clinical tools to deliver it · designed to ESSA CPD standards (accreditation pending).',
   robots: LIVE ? 'index, follow' : 'noindex, nofollow',
+  alternates: { canonical: '/concussion-rehab-mastery' },
 }
 
 /**
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
 const crmCourseSchema = createCourseSchema({
   name: 'Concussion Rehab Mastery',
   description:
-    `Concussion-rehabilitation training scoped for Accredited Exercise Physiologists and Exercise Scientists — graded exertional testing and prescription, symptom-limited progression, return-to-sport and return-to-work decision-making, and the documentation rehab funders require. ${CONFIG.COURSE.ONLINE_CPD_POINTS} online modules plus an optional in-person practical day (${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} ESSA CPD points in total).`,
+    `Concussion-rehabilitation training scoped for Accredited Exercise Physiologists and Exercise Scientists — graded exertional testing and prescription, symptom-limited progression, return-to-sport and return-to-work decision-making, and the documentation rehab funders require. ${CONFIG.COURSE.TOTAL_MODULES} online modules plus an optional in-person practical day (${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} ESSA CPD points in total).`,
   cpdHours: CONFIG.COURSE.CRM_TOTAL_CPD_POINTS,
   credentialName: `${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} ESSA CPD Points (accreditation No. ${CONFIG.ESSA_ACCREDITATION.NUMBER})`,
   recognizedBy: {

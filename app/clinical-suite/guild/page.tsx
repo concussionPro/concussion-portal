@@ -82,8 +82,8 @@ export default function GuildPartnerPage() {
           <p className="m-0 max-w-[520px] text-[clamp(15px,1.4vw,17.5px)] leading-[1.55] text-slate-600">
             The concussion standard of care changed in 2022, and return-to-play decisions fall to
             the clinicians Guild insures. The exposure isn&rsquo;t the exercise — it&rsquo;s whether
-            the decision was <strong>measured and documented</strong>. Accredited education closes
-            the competency gap; the instrument produces the record.
+            the decision was <strong>measured and documented</strong>. Independently recognised
+            education closes the competency gap; the instrument produces the record.
           </p>
           <div className="flex flex-wrap gap-3">
             <a
@@ -227,10 +227,10 @@ export default function GuildPartnerPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col rounded-[18px] border border-slate-200 bg-white p-[26px]">
             <p className="m-0 text-[20px] font-extrabold leading-[1.25] text-slate-900">
-              Accredited member education — both professions
+              Member education for both professions
             </p>
             <p className="m-0 mt-2 text-[13.5px] leading-[1.5] text-slate-500">
-              The only Australian concussion program carrying independent recognition across both
+              An Australian concussion program carrying independent recognition across both
               bodies — ready to run as a member-discount campaign.
             </p>
             <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
@@ -312,7 +312,12 @@ export default function GuildPartnerPage() {
           practitioner. Concussion Clinical Mastery is endorsed by Osteopathy Australia; that
           endorsement belongs to that course. Concussion Rehab Mastery is accredited by Exercise
           &amp; Sports Science Australia (Accreditation No. {CONFIG.ESSA_ACCREDITATION.NUMBER}, valid
-          to 24 July 2027); that accreditation belongs to that course. The programmes are authored
+          to{' '}
+          {new Date(CONFIG.ESSA_ACCREDITATION.VALID_UNTIL).toLocaleDateString('en-AU', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}); that accreditation belongs to that course. The programmes are authored
           by a registered osteopath. CEA holds no claims-outcome data and makes no claim that any
           product reduces claims frequency or cost. Patient data is stored in Australia.
         </p>

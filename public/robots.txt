@@ -27,9 +27,13 @@ Disallow: /modules/
 Disallow: /pay/
 # Custom per-prospect pitch pages + partner pages — private, never index
 Disallow: /p/
+Disallow: /d/
 Disallow: /partners/
 Disallow: /preseason/b/
 Disallow: /proposals/
+Disallow: /ep-pitch/
+Disallow: /sst-pitch/
+Disallow: /reference/success
 # Pre-launch gated app surfaces (SST Trainer platform + demo entry links)
 Disallow: /platform
 Disallow: /demo/
@@ -46,7 +50,13 @@ Disallow: /courses/poll
 Disallow: /s/
 Disallow: /upgrade
 Disallow: /verify
-# Pre-launch hidden tools suite (Screen Comfort + future on-device eye tools)
+# Pre-launch hidden tools suite (Screen Comfort + future on-device eye tools).
+# EXCEPTION: /tools/bctt-calculator is a deliberately PUBLIC, INDEXABLE clinical
+# calculator (see its page docstring + self-canonical + sitemap entry). Google
+# honours the most specific matching rule, so this Allow wins for that one URL
+# while everything else under /tools/ stays blocked. Without it the page carried
+# a self-canonical on a Disallow-ed URL — the "indexed, though blocked" state.
+Allow: /tools/bctt-calculator
 Disallow: /tools/
 Disallow: /screen-comfort
 # Research & publications — hidden until the first DOIs land

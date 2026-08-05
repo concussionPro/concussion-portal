@@ -9,6 +9,7 @@ import { hasElevatedEntitlement } from '@/lib/account-escalation'
 import { createJWTSession } from '@/lib/jwt-session'
 import { generateMagicLinkJWT, createMagicToken } from '@/lib/magic-link-jwt'
 import { sendEmail, sendMagicLinkEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -156,6 +157,13 @@ export async function POST(request: NextRequest) {
 
     // Record Day 0 audit BEFORE sending so a crash + re-run won't double-send
     await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+
+    // MASTER BLACKLIST — Day-0 of the SCAT nurture sequence on a PUBLIC
+    // endpoint. Without it, a clinician who hard-bounced, complained or replied
+    // STOP re-enters marketing just by filling in the form. Fails closed.
+    if (await isEmailSuppressed(email)) {
+      return NextResponse.json({ success: true, userId, suppressed: true })
+    }
 
     // Send welcome email (Day 0 of nurture sequence)
     const emailSent = await sendEmail({

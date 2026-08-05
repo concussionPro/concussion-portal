@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -100,6 +101,12 @@ export async function POST(request: NextRequest) {
     const unsubToken = generateUnsubscribeToken(email)
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
     const preseasonLink = `${baseUrl}/preseason`
+
+    // MASTER BLACKLIST — Day-0 of the SCAT Mastery sequence on a PUBLIC, CORS-
+    // exposed endpoint. Fails closed.
+    if (await isEmailSuppressed(email)) {
+      return NextResponse.json({ success: true, userId, suppressed: true })
+    }
 
     await sendEmail({
       to: email,

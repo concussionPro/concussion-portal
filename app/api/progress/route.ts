@@ -245,9 +245,15 @@ export async function POST(request: NextRequest) {
       const stored = existingRows[0]?.progress
       if (stored && typeof stored === 'object') {
         for (const [k, v] of Object.entries(stored)) {
-          const id = Number(k)
-          const gated = isPaidGatedId(id) || isCrmGatedId(id)
-          if (!gated || !v) continue
+          // EVERY module id, not just the gated ones (2026-08-05 CCM sweep):
+          // the full-overwrite semantics hurt the ordinary two-tab case just as
+          // badly. A second tab opened before Module 1 was finished holds a
+          // snapshot where module 1 is a zero-progress default; its next
+          // autosave (the 60-second active-study tick is enough) erased the
+          // completion the first tab had just recorded. Module 1 and the free
+          // SCAT ids were the only ones NOT protected — i.e. the first module
+          // every buyer studies.
+          if (!v) continue
           // The client round-trips SEEDED zero-progress defaults for every
           // module id, so key-absence alone never fires (round-M): stored
           // real history also wins over an incoming empty default.

@@ -5,6 +5,7 @@ import { sql } from '@/lib/db';
 import { getClientIp } from '@/lib/get-client-ip';
 import { verifySessionToken } from '@/lib/jwt-session';
 import { isOwnerEmail } from '@/lib/owner';
+import { isDemoUserId, isDemoEmail } from '@/lib/demo-session';
 
 // Rate limiting (in-memory, per serverless instance)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -59,6 +60,15 @@ const BOT_PATTERNS = [
   'petalbot', 'bytespider', 'gptbot', 'claudebot',
 ];
 
+/**
+ * Query params that must never persist. `k` / `token` / `key` are credentials;
+ * `email` is PII — `/auth/verify?email=<plaintext>&token=…` was writing the
+ * user's address into the `search` column of every magic-link pageview, where
+ * nothing reads it (only UTMs are parsed back out). Identity has one home: the
+ * dedicated, normalised `user_email` column.
+ */
+const SENSITIVE_SEARCH_PARAMS = ['k', 'token', 'key', 'email'];
+
 interface TrackPayload {
   eventType: string;
   eventData: Record<string, unknown>;
@@ -77,12 +87,38 @@ interface TrackPayload {
 function stripSensitiveParams(search: string): string {
   try {
     const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
-    for (const key of ['k', 'token', 'key']) params.delete(key)
+    for (const key of SENSITIVE_SEARCH_PARAMS) params.delete(key)
     const out = params.toString()
     return out ? `?${out}` : ''
   } catch {
     return ''
   }
+}
+
+/**
+ * Which internal audience (if any) this request belongs to. Demo tours and
+ * reviewer previews browse the REAL portal, so their pageviews were landing in
+ * the same buckets as cold traffic — counted as unique visitors and sitting in
+ * the bounce denominator. Tag rather than drop: the tour is still auditable in
+ * the raw table (and /demo/* writes its own `demo_tour_start` row), while every
+ * visitor-facing aggregate in /api/analytics/data filters `eventData.internal`.
+ *
+ * Note the demo cookies last 30 days, so a prospect who took a tour and comes
+ * back organically stays tagged until the cookie expires. That is deliberate —
+ * a prospect browsing under the demo identity is not measurable as ordinary
+ * traffic anyway, and under-counting is the safer error for a truth metric.
+ */
+function internalSourceFor(request: NextRequest): string | null {
+  if (request.cookies.get('clinic_demo')) return 'demo';
+  if (request.cookies.get('demo_key')) return 'review';
+  try {
+    const tok = request.cookies.get('session')?.value;
+    if (tok) {
+      const sess = verifySessionToken(tok);
+      if (sess && (isDemoUserId(sess.userId) || isDemoEmail(sess.email))) return 'demo';
+    }
+  } catch { /* unverifiable session — treat as ordinary traffic */ }
+  return null;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -153,8 +189,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // server-side so BOTH client senders (AnalyticsProvider + lib/analytics
   // trackEvent) are covered.
   const search = payload.search ? stripSensitiveParams(String(payload.search)).slice(0, 512) : null;
-  const eventDataRaw = JSON.stringify(payload.eventData ?? {});
-  const eventData = eventDataRaw.length > 4096 ? '{}' : eventDataRaw;
+  // Stamp the internal audience (demo tour / reviewer preview) so the dashboard
+  // can exclude it from visitor-facing aggregates.
+  const internal = internalSourceFor(request);
+  const incomingData =
+    payload.eventData && typeof payload.eventData === 'object' && !Array.isArray(payload.eventData)
+      ? payload.eventData
+      : {};
+  const eventDataRaw = JSON.stringify({
+    ...incomingData,
+    ...(internal ? { internal } : {}),
+  });
+  const eventData = eventDataRaw.length > 4096 ? (internal ? `{"internal":"${internal}"}` : '{}') : eventDataRaw;
   // Normalise + clamp the optional user_email so a malformed client payload
   // can't write garbage to the indexed column.
   const userEmailRaw = payload.userEmail ?? null;

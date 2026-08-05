@@ -352,7 +352,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {isPreview
                     ? 'SCAT6 & SCOAT6 mastery training — completely free. Enrol to unlock the full 8-module clinical course.'
-                    : 'Concussion Clinical Mastery, SCAT6/SCOAT6 training and specialty courses — with AHPRA-aligned CPD tracking.'}
+                    : 'Concussion Clinical Mastery, SCAT6/SCOAT6 training and specialty courses — with AHPRA-aligned CPD certificates.'}
                 </p>
               </div>
             </div>

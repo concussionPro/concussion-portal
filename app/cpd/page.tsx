@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   description:
     'Two concussion CPD streams from Concussion Education Australia: Concussion Clinical Mastery for allied health (8 CPD online, up to 16 with the workshop, endorsed by Osteopathy Australia) and Concussion Rehab Mastery scoped for Exercise Physiologists (8 CPD hours).',
   robots: CONFIG.FEATURES.ESSA_ACCREDITED ? 'index, follow' : 'noindex, nofollow',
+  alternates: { canonical: '/cpd' },
 }
 
 export default function CpdPage() {

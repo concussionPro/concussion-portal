@@ -16,6 +16,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
+import { CONFIG } from '@/lib/config'
 import {
   Brain,
   ArrowUpRight,
@@ -171,7 +172,7 @@ function SidebarBody({ onLinkClick }: { onLinkClick?: () => void }) {
       </nav>
 
       <div className="pt-5 border-t border-white/30">
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Accredited &amp; CPD-recognised</p>
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Osteopathy Australia–endorsed CPD</p>
         <p className="text-[10px] text-muted-foreground">Canadian Guideline on Concussion in Sport, 2024</p>
       </div>
     </>
@@ -191,7 +192,7 @@ function Hero() {
           Built on the Canadian Guideline on Concussion in Sport, 2nd ed. 2024
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-[10.5px] font-bold uppercase tracking-wider border border-amber-200/60">
-          Accredited &amp; CPD-recognised
+          Osteopathy Australia–endorsed CPD
         </span>
       </div>
 
@@ -475,8 +476,8 @@ function Format() {
           <ShieldCheck className="w-[18px] h-[18px] text-emerald-700" strokeWidth={2} />
         </div>
         <p className="text-[13px] text-foreground/85 leading-relaxed">
-          Certificate + 16 CPD hours (8 online + the on-site practical day). Accredited in Australia
-          (Osteopathy Australia–endorsed) — a standard comparable to or exceeding Canadian CPD requirements.
+          Certificate + {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + the on-site practical day), endorsed by
+          Osteopathy Australia.
         </p>
       </div>
     </section>

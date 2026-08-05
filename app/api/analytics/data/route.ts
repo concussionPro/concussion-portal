@@ -192,9 +192,22 @@ async function fetchEventsFromPostgres(startMs: number, endMs: number): Promise<
 // Aggregation helpers
 // ---------------------------------------------------------------------------
 
-/** Filter out server-side webhook events (sessionId starts with 'server_') */
-function excludeServerEvents(events: StoredEvent[]): StoredEvent[] {
-  return events.filter((e) => !e.sessionId.startsWith('server_'));
+/**
+ * Reduce raw rows to events from a REAL, external browser.
+ *
+ * Two kinds of row must never reach a visitor-facing number:
+ *  - server-side webhook writes (sessionId starts with 'server_') — no browser;
+ *  - internal audiences (`eventData.internal`), stamped by /api/analytics/track
+ *    for demo tours (`clinic_demo` cookie / demo identity) and accreditation
+ *    reviewer previews (`demo_key`). These browse the real portal, so every
+ *    partner tour was landing in "Unique Visitors" and in the bounce
+ *    denominator — a 6-page ACC walkthrough read as six pageviews of cold
+ *    demand. The rows stay in the table; only the aggregates drop them.
+ */
+function excludeNonVisitorEvents(events: StoredEvent[]): StoredEvent[] {
+  return events.filter(
+    (e) => !e.sessionId.startsWith('server_') && !e.eventData?.internal,
+  );
 }
 
 /** Match both 'page_view' (current client) and 'pageview' (legacy data) */
@@ -379,7 +392,7 @@ interface SessionSummary {
 
 function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
   // Exclude server-side webhook events from session analysis
-  const clientEvents = excludeServerEvents(events);
+  const clientEvents = excludeNonVisitorEvents(events);
   const sessionMap = new Map<string, StoredEvent[]>();
   for (const e of clientEvents) {
     const arr = sessionMap.get(e.sessionId) || [];
@@ -871,7 +884,7 @@ function buildInsights(
       title: 'High bounce rate',
       detail: `${(bounceRate * 100).toFixed(0)}% of visitors leave after one page. Either traffic quality is poor or the landing page doesn't match visitor expectations.`,
       metric: `${(bounceRate * 100).toFixed(0)}% bounce rate`,
-      action: 'Check if Google Ads landing page matches ad copy. Add clear next-step CTAs above the fold. Consider if blog posts need internal links.',
+      action: 'Check that the cold-outreach landing pages match what the email promised. Add clear next-step CTAs above the fold. Consider if blog posts need internal links.',
     });
   }
 
@@ -883,30 +896,21 @@ function buildInsights(
     channelGroups.set(s.channel, arr);
   }
 
+  // Paid Search = gclid / utm_medium=cpc. The Google Ads channel was RETIRED
+  // (2026-07-02) — there is no live spend, so anything landing here is a stale
+  // bookmarked ad URL, a forwarded link carrying an old gclid, or a mistagged
+  // campaign. The old copy told the owner he was "paying for clicks" and
+  // advised raising bids on campaigns that no longer run.
   const paidSessions = channelGroups.get('Paid Search') || [];
   if (paidSessions.length > 3) {
-    const paidBounce = paidSessions.filter((s) => s.isBounce).length / paidSessions.length;
-    const paidIntent = paidSessions.filter((s) => s.hasPricingView).length / paidSessions.length;
-    if (paidBounce > 0.6) {
-      insights.push({
-        type: 'critical',
-        category: 'ads',
-        title: 'Google Ads traffic is bouncing',
-        detail: `${(paidBounce * 100).toFixed(0)}% of paid visitors bounce immediately. You're paying for clicks that don't engage.`,
-        metric: `${(paidBounce * 100).toFixed(0)}% paid bounce`,
-        action: 'Review ad copy vs landing page match. Check keyword relevance. Consider negative keywords. Make sure landing page loads fast on mobile.',
-      });
-    }
-    if (paidIntent > 0.15) {
-      insights.push({
-        type: 'positive',
-        category: 'ads',
-        title: 'Google Ads driving purchase intent',
-        detail: `${(paidIntent * 100).toFixed(0)}% of paid visitors view pricing. Your ads are attracting qualified buyers.`,
-        metric: `${(paidIntent * 100).toFixed(0)}% paid → pricing`,
-        action: 'Consider increasing ad spend on high-performing campaigns. This intent rate justifies higher bids.',
-      });
-    }
+    insights.push({
+      type: 'warning',
+      category: 'ads',
+      title: `${paidSessions.length} sessions still classified Paid Search`,
+      detail: `The Google Ads channel is retired — no campaigns are running. These sessions carry a gclid or utm_medium=cpc, so they are stale ad URLs, forwarded links, or a mistagged campaign, and their traffic is being attributed to a channel you no longer spend on.`,
+      metric: `${paidSessions.length} paid-tagged sessions`,
+      action: 'Check where the gclid/cpc tagging comes from and retag it. Cold outreach is the live acquisition channel — see the Email channel row for what is actually working.',
+    });
   }
 
   // Email channel
@@ -1038,7 +1042,7 @@ function buildInsights(
         title: `Traffic up ${pvGrowth.toFixed(0)}% vs previous period`,
         detail: `${stats.pageviews.value} pageviews this period vs ${stats.pageviews.prev} previously. ${stats.uniques.value} unique visitors.`,
         metric: `+${pvGrowth.toFixed(0)}% growth`,
-        action: 'Momentum is building. Double down on whatever changed — new ads, new content, or outreach campaign.',
+        action: 'Momentum is building. Double down on whatever changed — new content, a partnership, or the latest outreach round.',
       });
     } else if (pvGrowth < -20 && stats.pageviews.prev > 10) {
       insights.push({
@@ -1047,7 +1051,7 @@ function buildInsights(
         title: `Traffic down ${Math.abs(pvGrowth).toFixed(0)}% vs previous period`,
         detail: `${stats.pageviews.value} pageviews this period vs ${stats.pageviews.prev} previously.`,
         metric: `${pvGrowth.toFixed(0)}% decline`,
-        action: 'Check if ad campaigns are still running. Review organic search rankings. Consider a new blog post or cold email blast.',
+        action: 'Check whether the cold-outreach cron is still sending. Review organic search rankings. Consider a new blog post or another outreach round.',
       });
     }
   }
@@ -1065,8 +1069,8 @@ function buildInsights(
 
 function buildStats(current: StoredEvent[], prev: StoredEvent[]): StatsResponse {
   // Exclude server-side webhook events from visitor-facing metrics
-  const cur = excludeServerEvents(current);
-  const prv = excludeServerEvents(prev);
+  const cur = excludeNonVisitorEvents(current);
+  const prv = excludeNonVisitorEvents(prev);
   return {
     pageviews: {
       value: countPageviews(cur),
@@ -1125,7 +1129,12 @@ function buildMetrics(
   const counts = new Map<string, number>();
 
   for (const e of events) {
-    if (!isPageView(e) && metricType === 'url') continue;
+    // ALL four breakdowns are pageview-scoped. Only 'url' used to be: the
+    // referrer / browser / country tables counted every event, so a session
+    // that fired scroll_depth, page_exit and a checkout_start weighed 4x a
+    // session that only loaded the page — the top-countries table was ranking
+    // engagement, not audience, while the UI reads it as reach.
+    if (!isPageView(e)) continue;
 
     let key: string;
     switch (metricType) {
@@ -1203,7 +1212,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   if (type === 'pageviews') {
-    const currentEvents = excludeServerEvents(await getEventsForDateRange(currentDates));
+    const currentEvents = excludeNonVisitorEvents(await getEventsForDateRange(currentDates));
     const timeSeries = buildTimeSeries(currentEvents, currentDates);
     return NextResponse.json(timeSeries, {
       headers: { 'Cache-Control': 'no-store' },
@@ -1211,7 +1220,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   if (type === 'metrics') {
-    const currentEvents = excludeServerEvents(await getEventsForDateRange(currentDates));
+    const currentEvents = excludeNonVisitorEvents(await getEventsForDateRange(currentDates));
     const metrics = buildMetrics(currentEvents, metricType);
     return NextResponse.json(metrics, {
       headers: { 'Cache-Control': 'no-store' },

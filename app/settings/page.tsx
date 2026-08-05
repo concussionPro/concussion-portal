@@ -23,6 +23,14 @@ interface SessionUser {
   ownsCrm?: boolean
 }
 
+/** Carries the certificate API's own message through to the user. */
+class CertificateError extends Error {}
+
+/** The server's reason when we have one, the generic line otherwise. */
+function messageFor(error: unknown, fallback: string): string {
+  return error instanceof CertificateError && error.message ? error.message : fallback
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const [user, setUser] = useState<SessionUser | null>(null)
@@ -122,7 +130,7 @@ export default function SettingsPage() {
     ? `Concussion Rehab Mastery — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ${
         CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA CPD points' : 'CPD hours'
       }`
-    : `Online Course — ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD hours`
+    : `Online Course — ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD hours`
 
   // SCAT mastery (preview users): check if all 3 free modules are complete
   const scatModuleIds = [101, 102, 103]
@@ -149,7 +157,14 @@ export default function SettingsPage() {
     setCertDownloading(true)
     try {
       const res = await fetch(`/api/certificate?type=${certType}`, { credentials: 'include' })
-      if (!res.ok) throw new Error('Download failed')
+      if (!res.ok) {
+        // Surface the SERVER's reason. The certificate route re-verifies every
+        // quiz from the saved answers and, when one fails, replies with the
+        // exact module to retake — swallowing that into "please try again" left
+        // a paying clinician clicking a button that could never work.
+        const data = await res.json().catch(() => null)
+        throw new CertificateError(data?.error || 'Download failed')
+      }
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -160,7 +175,7 @@ export default function SettingsPage() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      setCertError('Failed to download certificate. Please try again.')
+      setCertError(messageFor(error, 'Failed to download certificate. Please try again.'))
     } finally {
       setCertDownloading(false)
     }
@@ -180,6 +195,7 @@ export default function SettingsPage() {
       })
       const data = await res.json()
       setCertEmailStatus(data.success ? 'sent' : 'error')
+      if (!data.success && data.error) setCertError(data.error)
     } catch (error) {
       setCertEmailStatus('error')
       setCertError('Failed to email certificate. Please try again.')
@@ -191,7 +207,10 @@ export default function SettingsPage() {
     setScatCertDownloading(true)
     try {
       const response = await fetch('/api/certificate?type=scat-mastery', { credentials: 'include' })
-      if (!response.ok) throw new Error('Download failed')
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new CertificateError(data?.error || 'Download failed')
+      }
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -202,7 +221,7 @@ export default function SettingsPage() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      setCertError('Failed to download certificate. Please try again.')
+      setCertError(messageFor(error, 'Failed to download certificate. Please try again.'))
     } finally {
       setScatCertDownloading(false)
     }
@@ -231,7 +250,10 @@ export default function SettingsPage() {
     setFreeCertDownloading(true)
     try {
       const response = await fetch('/api/certificate?type=recognition-referral', { credentials: 'include' })
-      if (!response.ok) throw new Error('Download failed')
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new CertificateError(data?.error || 'Download failed')
+      }
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -242,7 +264,7 @@ export default function SettingsPage() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      setCertError('Failed to download certificate. Please try again.')
+      setCertError(messageFor(error, 'Failed to download certificate. Please try again.'))
     } finally {
       setFreeCertDownloading(false)
     }

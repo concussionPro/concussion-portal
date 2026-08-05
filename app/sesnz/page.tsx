@@ -203,11 +203,25 @@ export default function SesnzLandingPage() {
         <section className="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
             <strong>Recognition status:</strong> Concussion Education Australia is
-            pursuing SESNZ listing/recognition of these courses. Concussion Rehab
-            Mastery has been{' '}
-            <strong>independently reviewed by two reviewers appointed by Exercise
-            &amp; Sports Science Australia (ESSA)</strong>; that endorsement is
-            pending and not yet held. We don&rsquo;t claim accreditation we
+            pursuing SESNZ listing/recognition of these courses.{' '}
+            {CONFIG.FEATURES.ESSA_ACCREDITED ? (
+              <>
+                Concussion Rehab Mastery <strong>is accredited by Exercise &amp; Sports Science
+                Australia (ESSA)</strong> (accreditation {CONFIG.ESSA_ACCREDITATION.NUMBER},
+                granted 24 July 2026, valid to 24 July 2027) after independent review by two
+                ESSA-appointed reviewers — {CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} CPD points
+                for the online course. ESSA accreditation is an Australian credential and is not
+                a SESNZ listing.
+              </>
+            ) : (
+              <>
+                Concussion Rehab Mastery has been{' '}
+                <strong>independently reviewed by two reviewers appointed by Exercise
+                &amp; Sports Science Australia (ESSA)</strong>; that endorsement is
+                pending and not yet held.
+              </>
+            )}{' '}
+            We don&rsquo;t claim accreditation we
             don&rsquo;t hold — this page updates the day each is confirmed.
           </p>
         </section>

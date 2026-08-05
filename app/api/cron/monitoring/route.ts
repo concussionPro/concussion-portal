@@ -206,12 +206,28 @@ export async function GET(request: NextRequest) {
         AND (up.progress->'102'->>'completed')::boolean = true
         AND (up.progress->'103'->>'completed')::boolean = true
         AND COALESCE(u.is_test, false) = false
-        -- The COMPLETION must be recent, not the login. Keying this on
-        -- last_login_at counted anyone who finished up to 90 days ago and
-        -- happened to log in today — the same people re-reported as "new
-        -- completions" every morning. user_progress.updated_at is when the
-        -- progress row last changed, i.e. when they finished.
-        AND up.updated_at > NOW() - INTERVAL '24 hours'
+        -- The COMPLETION must be recent — not the login, and not merely the
+        -- last progress WRITE. This was keyed on last_login_at (anyone who
+        -- finished up to 90 days ago and logged in today was re-reported every
+        -- morning), then on up.updated_at — but app/api/progress sets
+        -- updated_at = now() on EVERY progress write, so re-opening any module
+        -- (including a different course sharing this row) still re-reported a
+        -- 60-day-old completion as new.
+        --
+        -- The per-module completedAt in the progress JSONB is the real
+        -- completion instant; the COURSE was completed when the LAST of the
+        -- three landed, hence GREATEST (which ignores NULLs). Compared as TEXT
+        -- against a UTC ISO string rather than cast to timestamptz: these are
+        -- machine-written Date.toISOString() values, so lexicographic order is
+        -- chronological order, and a malformed legacy value can then never
+        -- throw and take the whole monitoring run down with it.
+        -- All three NULL (legacy rows predating completedAt) → GREATEST is NULL
+        -- → excluded, which is the safe direction for a "new today" counter.
+        AND GREATEST(
+              up.progress->'101'->>'completedAt',
+              up.progress->'102'->>'completedAt',
+              up.progress->'103'->>'completedAt'
+            ) > TO_CHAR(NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours', 'YYYY-MM-DD"T"HH24:MI:SS')
     `
     const newCompletions = completionRows[0]?.count || 0
 

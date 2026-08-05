@@ -238,9 +238,13 @@ async function handle(request: NextRequest, dryRun: boolean) {
   })
 }
 
+// GET is ALWAYS a dry run — the admin cookie is sameSite 'lax' and middleware's
+// CSRF check only guards unsafe methods, so `?dryRun=0` on GET meant one clicked
+// cross-site link could blast real email at the whole warming list, and
+// `?dryRun=0&retry=` could additionally DELETE the send-dedupe audit keys and
+// re-send to people already emailed. Sending requires POST.
 export async function GET(request: NextRequest) {
-  const dry = new URL(request.url).searchParams.get('dryRun') !== '0'
-  return handle(request, dry)
+  return handle(request, true)
 }
 
 export async function POST(request: NextRequest) {

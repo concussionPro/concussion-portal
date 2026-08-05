@@ -36,7 +36,9 @@ const ALL_POSTS: Record<string, RelatedPost> = {
   },
   'scat6-vs-scoat6': {
     title: 'SCAT6 vs SCOAT6: Which Tool to Use When?',
-    description: 'Critical differences between SCAT6 and SCOAT6 — when to use each tool under AHPRA guidelines.',
+    // AHPRA publishes no concussion assessment guidelines — "under AHPRA
+    // guidelines" was a false attribution rendered on three posts.
+    description: 'Critical differences between SCAT6 and SCOAT6 — when to use each tool under current consensus guidance.',
     href: '/blog/scat6-vs-scoat6-difference',
     readTime: '7 min',
   },
@@ -72,7 +74,9 @@ const ALL_POSTS: Record<string, RelatedPost> = {
   },
   '21-day-stand-down': {
     title: '21-Day Concussion Stand-Down in Youth Sport',
-    description: 'Australia\'s mandatory stand-down rules, which sports enforce them, and what clinicians need to do.',
+    // "mandatory" removed: the post itself describes a position statement that
+    // NSOs have voluntarily adopted, not a legal mandate.
+    description: 'Australia\'s 21-day stand-down guidance, which sports enforce it, and what clinicians need to do.',
     href: '/blog/21-day-concussion-stand-down-youth-sport-australia',
     readTime: '9 min',
   },
@@ -88,11 +92,68 @@ const ALL_POSTS: Record<string, RelatedPost> = {
     href: '/blog/nsw-mandatory-concussion-training-combat-sports',
     readTime: '8 min',
   },
+  // --- Posts keyed by their FULL directory slug ---------------------------
+  // The AI and PPCS clusters were written after this map and were never added
+  // to it, so every one of their `slugs` lookups missed. Titles/descriptions
+  // below are the TITLE/DESCRIPTION constants from each post, trimmed for the
+  // card; read times are the post's own stated read time.
+  'heidi-vs-lyrebird-ai-scribe-australian-clinicians': {
+    title: 'Heidi vs Lyrebird vs ChatGPT for Clinical Notes: An Australian Comparison',
+    description: 'Side-by-side on AHPRA AI guidelines, Australian Privacy Principles, NDIS audit risk, and indemnity insurer positions.',
+    href: '/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians',
+    readTime: '9 min',
+  },
+  'ahpra-ai-guidelines-explained-australian-clinicians': {
+    title: 'AHPRA AI Guidelines Explained: What Australian Clinicians Actually Need to Do',
+    description: 'The four obligations every AU clinician must meet when using AI in patient care: consent, responsibility, data location, documentation integrity.',
+    href: '/blog/ahpra-ai-guidelines-explained-australian-clinicians',
+    readTime: '7 min',
+  },
+  'ai-scribe-privacy-act-compliance-australia': {
+    title: 'AI Scribe Privacy Act Compliance for Australian Clinicians — APP 8 Explained',
+    description: 'Why AU-resident scribes are compliant by default and US-resident tools need explicit patient consent for offshore disclosure.',
+    href: '/blog/ai-scribe-privacy-act-compliance-australia',
+    readTime: '8 min',
+  },
+  'chatgpt-ndis-reports-allied-health-australia': {
+    title: 'Can I Use ChatGPT for NDIS Reports? An Allied Health Compliance Guide',
+    description: 'Privacy Act exposure, NDIA audit risk, and the safe alternatives for AU allied health practitioners.',
+    href: '/blog/chatgpt-ndis-reports-allied-health-australia',
+    readTime: '8 min',
+  },
+  'cervicogenic-drivers-chronic-concussion': {
+    title: 'Cervicogenic Drivers in Chronic Concussion',
+    description: 'Cervical contribution to persistent post-concussion symptoms — assessment, cervicogenic dizziness vs headache, and manual therapy applications.',
+    href: '/blog/cervicogenic-drivers-chronic-concussion',
+    readTime: '7 min',
+  },
+  'persistent-post-concussion-symptoms-clinician-workup': {
+    title: 'Persistent Post-Concussion Symptoms (PPCS): A Clinician\'s Workup',
+    description: 'PPCS criteria, vestibulo-ocular and cervical workup, escalation pathways, and active rehabilitation protocols.',
+    href: '/blog/persistent-post-concussion-symptoms-clinician-workup',
+    readTime: '10 min',
+  },
+  'vestibulo-ocular-workup-ppcs': {
+    title: 'Vestibulo-Ocular Workup for Persistent Post-Concussion Symptoms — Beyond VOMS',
+    description: 'Convergence insufficiency, BPPV after head trauma, gaze stability, VOR exercises, and when to refer for a vestibular specialist.',
+    href: '/blog/vestibulo-ocular-workup-ppcs',
+    readTime: '8 min',
+  },
 }
+
+/** Full-slug → entry index, so a caller may pass EITHER the short key above
+ *  ('scat6-guide') or the post's directory slug
+ *  ('how-to-use-scat6-clinicians-guide'). Ten posts passed directory slugs,
+ *  every lookup missed, `.filter(Boolean)` emptied the list and the component
+ *  returned null — the whole Related Articles block silently vanished from the
+ *  newest AI and PPCS clusters, and with it their internal linking. */
+const BY_HREF: Record<string, RelatedPost> = Object.fromEntries(
+  Object.values(ALL_POSTS).map((p) => [p.href.replace('/blog/', ''), p]),
+)
 
 export function RelatedPosts({ slugs }: { slugs: string[] }) {
   const posts = slugs
-    .map(slug => ALL_POSTS[slug])
+    .map(slug => ALL_POSTS[slug] ?? BY_HREF[slug])
     .filter(Boolean)
     .slice(0, 3)
 

@@ -9,7 +9,8 @@
  * captured EP leads to the Concussion Rehabilitation Mastery course.
  *
  * Conventions mirror app/api/cron/send-nurture-emails/route.ts:
- *  - CRON_SECRET (timing-safe Bearer) OR isAdminRequest() for manual runs
+ *  - CRON_SECRET (timing-safe Bearer) OR isAdminHeaderRequest() for manual runs
+ *    (header-only — NOT the admin cookie: no dry-run mode exists here)
  *  - primary-project guard (skip the secondary Vercel project)
  *  - email_suppression checked and FAIL CLOSED (abort run if it can't load)
  *  - users.nurture_unsubscribed honoured
@@ -28,7 +29,7 @@ import { userOwnsCrm } from '@/lib/crm-course'
 import { sendEmail } from '@/lib/resend-client'
 import { EP_NURTURE_SEQUENCE } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
-import { isAdminRequest } from '@/lib/require-admin'
+import { isAdminHeaderRequest } from '@/lib/require-admin'
 import { sql } from '@/lib/db'
 import { EmailScheduler } from '@/lib/email-scheduler'
 
@@ -102,7 +103,13 @@ export async function GET(request: Request) {
         authorized = true
       }
     }
-    if (!authorized && isAdminRequest(request)) authorized = true
+    // HEADER-only admin auth (x-admin-key / Bearer ADMIN_API_KEY). This
+    // deliberately does NOT accept the admin_session cookie: this route has no
+    // dry-run mode at all, so with the cookie honoured a plain, parameterless
+    // `GET /api/cron/ep-nurture` fired the entire EP nurture send run — and the
+    // cookie is sameSite 'lax' while middleware only CSRF-checks unsafe
+    // methods, making that one clicked cross-site link.
+    if (!authorized && isAdminHeaderRequest(request)) authorized = true
     if (!authorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

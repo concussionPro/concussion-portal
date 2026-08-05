@@ -101,9 +101,10 @@ export async function POST(req: NextRequest) {
     ORDER BY
       -- Size-tier priority (Zac 2026-06-10): large (on-site pitch, >=6 clinical)
       -- > medium (Hub Pack, 2-5) > individuals. Keep in lockstep with
-      -- clinicalCount() in lib/prospect/pricing.ts (7 clinical keys).
+      -- clinicalCount() in lib/prospect/pricing.ts (8 clinical keys).
       CASE
         WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+            + COALESCE((pc.team->>'physiotherapists')::int, 0)
             + COALESCE((pc.team->>'chiropractors')::int, 0)
             + COALESCE((pc.team->>'generalPractitioners')::int, 0)
             + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
             + COALESCE((pc.team->>'myotherapists')::int, 0)
             + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 8 THEN 0
         WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+            + COALESCE((pc.team->>'physiotherapists')::int, 0)
             + COALESCE((pc.team->>'chiropractors')::int, 0)
             + COALESCE((pc.team->>'generalPractitioners')::int, 0)
             + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)

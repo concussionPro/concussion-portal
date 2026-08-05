@@ -36,7 +36,7 @@ const STATUS: StatusItem[] = [
   { name: 'Reference repository (CCM dashboard)', detail: `${REFERENCE_COUNT} peer-reviewed references with verified DOIs · 2024-2025 AU-specific guidelines (AIS, AFL, ASC, AHPRA AI, TGA) · misattributions and broken DOIs audited and fixed`, status: 'shipped', evidence: '/dashboard' },
 
   // In progress
-  { name: 'Osteopathy Australia endorsement for AI course', detail: 'CEA is already OA-endorsed via CCM. AI-course-specific endorsement application initiated. Timeline: 6-12 weeks per OA review cycle.', status: 'in-progress' },
+  { name: 'Osteopathy Australia endorsement for AI course', detail: 'Concussion Clinical Mastery is an OA-endorsed CPD activity; an AI-course-specific endorsement has not been granted.', status: 'in-progress' },
 
   // Mockup (visible in demo as illustrative; not built behind it)
   { name: 'Passive-CPD capture UI', detail: 'Visual demo of "log this 45-min session as CPD?" prompt and event timeline. Renders illustrative data. Becomes real when Heidi (or equivalent partner) integrates the event stream.', status: 'mockup', evidence: '/courses/cpd-record/passive' },

@@ -118,7 +118,7 @@ export default async function CoursePage() {
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            By Concussion Education Australia — Osteopathy Australia–endorsed provider ·
+            By Concussion Education Australia ·
             Certificate with public verification URL · 7-day refund if you&rsquo;ve not completed the quiz
           </p>
         </main>

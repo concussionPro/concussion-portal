@@ -1,29 +1,14 @@
-import { Metadata } from 'next'
-import { intlPriceForCountry } from '@/lib/international-pricing'
-
-// USD anchor from the SAME table the page body and the Stripe charge use
-// (lib/international-pricing). Buyers outside the USD bucket are charged their
-// local equivalent — the snippet quotes the anchor, never a stale literal.
-const USD = intlPriceForCountry(null).display
-
-// HONESTY: no "CE credits" claims — ACSM CECs are NOT held and the ACSM
-// Approved-Provider application is PARKED (2026-08), so "application in
-// progress" must not appear anywhere. ESSA accreditation IS held (granted
-// 2026-07-24) — state it only via CONFIG.FEATURES.ESSA_ACCREDITED.
-export const metadata: Metadata = {
-  title: 'Concussion Rehab Mastery — International (USD) for Exercise Physiologists',
-  description: `The concussion course that trains exercise physiologists to deliver the consensus-recommended first-line treatment — sub-symptom-threshold aerobic exercise from a measured HR threshold — and ships the tools to do it. ${USD}. ESSA-accredited.`,
-  keywords: 'concussion exercise physiology, sub-symptom threshold aerobic exercise, exercise physiologist concussion, HR threshold concussion rehab, Buffalo test, clinical exercise physiologist CEC, concussion rehabilitation course',
-  openGraph: {
-    title: 'Concussion Rehab Mastery — International (for Exercise Physiologists)',
-    description: `You already run the exercise test. The consensus just made it the gate to first-line concussion treatment. The EP-scoped course + the tools to deliver it. ${USD}.`,
-    type: 'website',
-    url: 'https://portal.concussion-education-australia.com/pricing-international',
-  },
-  alternates: {
-    canonical: 'https://portal.concussion-education-australia.com/pricing-international',
-  },
-}
+// NO metadata export here.
+//
+// This layout used to carry a full CRM-only metadata block from when
+// /pricing-international was the EP landing page. The route is now the
+// DUAL-STREAM (CCM + CRM) tabbed page, and page.tsx declares its own metadata —
+// but Next merges per key, so title/description/canonical were overridden while
+// the stale `openGraph` block survived. Every share and AI crawl of the
+// dual-stream page rendered "Concussion Rehab Mastery — International (for
+// Exercise Physiologists)" plus a live USD price, and the dead description
+// appended "ESSA-accredited" to a page that now leads with CCM (ESSA accredits
+// the CRM stream only). Metadata for this route lives in page.tsx.
 
 export default function PricingInternationalLayout({ children }: { children: React.ReactNode }) {
   return children

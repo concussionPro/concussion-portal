@@ -11,11 +11,12 @@ import { SiteNav } from '@/components/SiteNav'
 import { trackEvent } from '@/lib/analytics'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { REFERENCE_COUNT } from '@/data/reference-count'
-import { SST_TIERS } from '@/lib/config'
+import { SST_TIERS, sstTierAllowance } from '@/lib/config'
 
 /** The bundled platform's year-2 rate = the REAL single-clinician SST tier the
  *  webhook attaches (STRIPE_SST_SINGLE_PRICE_ID). Never a literal. */
-const PLATFORM_MONTHLY_AUD = SST_TIERS.find((t) => t.plan === 'single')!.monthlyAud
+const STARTER_TIER = SST_TIERS.find((t) => t.plan === 'single')!
+const PLATFORM_MONTHLY_AUD = STARTER_TIER.monthlyAud
 
 /**
  * CCM (Concussion Clinical Mastery) — INTERNATIONAL landing.
@@ -56,7 +57,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Is there an ongoing cost?',
-    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + SCAT6 baseline testing) is included free for your first year. After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
+    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + SCAT6 baseline testing) is included free for your first year. After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (' + sstTierAllowance(STARTER_TIER).toLowerCase() + '; clinicians are unlimited on every tier); it starts automatically at the 12-month mark and you can cancel anytime.',
   },
   {
     q: 'What’s the refund policy?',

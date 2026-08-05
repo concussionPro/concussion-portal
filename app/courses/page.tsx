@@ -5,11 +5,12 @@ import { COURSES, findProvider, getEffectiveStatus, getEffectivePrice } from '@/
 import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
 import { BookOpenCheck, Stethoscope, ArrowRight, Check } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Courses — Concussion Clinical Mastery & Concussion Rehab Mastery | Concussion Education Australia',
   description:
-    'Two accredited streams: Concussion Clinical Mastery for physiotherapists, osteopaths and chiropractors (Osteopathy Australia endorsed) and Concussion Rehab Mastery for exercise physiologists (ESSA accredited, 16 CPD). Plus evidence-graded short courses.',
+    `Two concussion CPD streams: Concussion Clinical Mastery for physiotherapists, osteopaths and chiropractors (Osteopathy Australia endorsed) and Concussion Rehab Mastery for exercise physiologists (ESSA accredited, ${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD). Plus evidence-graded short courses.`,
 }
 
 /**

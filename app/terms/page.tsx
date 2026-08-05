@@ -12,8 +12,20 @@ export default function TermsPage() {
           Terms, Refund Policy &amp; Privacy
         </h1>
         <p className="text-sm text-muted-foreground mb-10">
-          Last updated: March 2026
+          Last updated: August 2026
         </p>
+
+        {/* GST */}
+        <section className="mb-10">
+          <h2 className="text-xl font-bold text-foreground mb-4">
+            GST
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Concussion Education Australia (CEA Pty Ltd) has been registered for GST since 1 May 2026.
+            Prices advertised on this site for AUD purchases are GST-inclusive, and a tax invoice is
+            issued for each purchase.
+          </p>
+        </section>
 
         {/* Online Course */}
         <section className="mb-10">
@@ -43,6 +55,9 @@ export default function TermsPage() {
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             The complete course includes online modules and a hands-on workshop. Each component has its own refund terms:
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            <strong className="text-foreground">Pricing:</strong> ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD (early-bird) applies from the time you nominate a city until {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before your workshop date. Inside that final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE}-day window, the price is ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} AUD (standard). The standard price is a real, charged price — it is not a discount comparison.
           </p>
 
           <h3 className="text-base font-semibold text-foreground mb-2">Online modules</h3>

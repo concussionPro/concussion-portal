@@ -286,6 +286,27 @@ export const CONFIG = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// ESSA EXPIRY ENFORCEMENT.
+//
+// ~40 public surfaces gate their ESSA claim on CONFIG.FEATURES.ESSA_ACCREDITED.
+// The accreditation EXPIRES 2027-07-24, and until now nothing connected the
+// expiry date to the flag — so on 2027-07-25 every one of those surfaces would
+// keep asserting "ESSA-accredited (No. PDNF26077)" until a human remembered to
+// flip a boolean. A lapsed-accreditation claim is the same regulatory defect as
+// a never-held one.
+//
+// Flipping the flag off here means the surfaces fall back to the "designed to
+// ESSA CPD standards · accreditation pending" copy they already carry, with no
+// call-site changes. Re-accreditation = bump VALID_UNTIL.
+// ---------------------------------------------------------------------------
+if (
+  Date.now() >
+  new Date(`${CONFIG.ESSA_ACCREDITATION.VALID_UNTIL}T23:59:59+10:00`).getTime()
+) {
+  CONFIG.FEATURES.ESSA_ACCREDITED = false
+}
+
 export type LocationKey = keyof typeof CONFIG.LOCATIONS
 export type Location = LocationKey
 export type LocationConfig = typeof CONFIG.LOCATIONS[LocationKey]

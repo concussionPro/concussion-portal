@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     question: 'Is SCAT-6 mandatory under Australian sports law?',
-    answer: 'While not explicitly mandated by federal law, SCAT-6 is the required standard under multiple Australian frameworks. The Concussion in Sport Australia position statement and all major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, FFA) recognize SCAT-6 as the expected standard of care. The Amsterdam 2023 Consensus adopted by Australian medical bodies explicitly requires appropriate tool use at appropriate times. Failure to use SCAT-6 (or Child SCAT-6) when clinically indicated, or using outdated tools like SCAT-5, may fall short of the standard of practice expected under current consensus guidance and professional expectations. Documentation using SCAT-6 is essential for WorkCover, insurance claims, and return-to-play clearances.',
+    answer: 'No. SCAT-6 is not mandated by Australian law. It is, however, the tool the major frameworks expect: the Concussion in Sport Australia position statement and the major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, Football Australia) recognise SCAT-6 as the expected standard of care, and the Amsterdam consensus statement recommends using the appropriate tool at the appropriate time. Failure to use SCAT-6 (or Child SCAT-6) when clinically indicated, or using outdated tools like SCAT-5, may fall short of the standard of practice expected under current consensus guidance and professional expectations. Documentation using SCAT-6 is routinely relied on for WorkCover, insurance claims, and return-to-play clearances.',
   },
 ]
 
@@ -66,7 +66,8 @@ export default function SCATAssessmentFAQ() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(createBreadcrumbSchema([
             { name: 'Home', url: 'https://portal.concussion-education-australia.com' },
-            { name: 'FAQ', url: 'https://portal.concussion-education-australia.com/faq' },
+            // No middle 'FAQ' crumb — there is no /faq index route, so it
+            // pointed crawlers at a 404.
             { name: 'SCAT-6 Assessment', url: 'https://portal.concussion-education-australia.com/faq/scat-assessment' },
           ]))
         }}

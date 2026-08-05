@@ -7,11 +7,11 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
-  description: 'Two years since the Amsterdam Consensus, concussion management has shifted from passive rest to active rehabilitation. Learn why strict rest beyond 48 hours is now considered harmful, how SCAT6 and SCOAT6 work together, and why vestibular-ocular screening is the new vital sign.',
+  description: 'Since the Amsterdam consensus statement, concussion management has shifted from passive rest to active rehabilitation. Learn why strict rest beyond 48 hours is now considered harmful, how SCAT6 and SCOAT6 work together, and why vestibular-ocular screening is the new vital sign.',
   keywords: 'concussion management 2026, symptom free concussion, active recovery concussion, SCAT6 vs SCOAT6, vestibular ocular screening, concussion update australia',
   openGraph: {
     title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
-    description: 'Two years since the Amsterdam Consensus, concussion management has shifted from passive rest to active rehabilitation. Strict rest beyond 48 hours is now considered harmful.',
+    description: 'Since the Amsterdam consensus statement, concussion management has shifted from passive rest to active rehabilitation. Strict rest beyond 48 hours is now considered harmful.',
     type: 'article',
     publishedTime: '2026-01-05',
     images: ['/og-image.jpg'],
@@ -55,7 +55,7 @@ export default function ConcussionUpdate2026Page() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(createBlogPostSchema({
             title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
-            description: 'Two years since the Amsterdam Consensus, concussion management has shifted from passive rest to active rehabilitation. Learn the latest evidence on active recovery, SCAT6/SCOAT6 protocols, and vestibular-ocular screening.',
+            description: 'Since the Amsterdam consensus statement, concussion management has shifted from passive rest to active rehabilitation. Learn the latest evidence on active recovery, SCAT6/SCOAT6 protocols, and vestibular-ocular screening.',
             datePublished: '2026-01-05',
             dateModified: '2026-07-02',
             author: 'Zac Lewis',
@@ -76,7 +76,7 @@ export default function ConcussionUpdate2026Page() {
               2026 Concussion Update: Why &ldquo;Wait Until Symptom Free&rdquo; is Officially Obsolete
             </h1>
             <p className="text-xl text-amber-100 mb-4">
-              Two years after the Amsterdam Consensus, the evidence is clear: passive rest beyond 48 hours does more harm than good. Active recovery is the new standard.
+              Since the Amsterdam consensus statement, the evidence is clear: passive rest beyond 48 hours does more harm than good. Active recovery is the new standard.
             </p>
             <div className="flex items-center gap-3 text-amber-100 text-sm">
               <Clock className="w-4 h-4" />
@@ -95,7 +95,7 @@ export default function ConcussionUpdate2026Page() {
             </h2>
             <div className="space-y-4 text-slate-700 leading-relaxed">
               <p>
-                It has been two years since the 6th International Conference on Concussion in Sport (Amsterdam, October 2022) produced the updated consensus statement, published in the British Journal of Sports Medicine in June 2023. In that time, the global approach to sport-related concussion (SRC) management has undergone a fundamental shift -- one that Australian clinicians must understand and implement.
+                The 6th International Conference on Concussion in Sport (Amsterdam, October 2022) produced the updated consensus statement, published in the British Journal of Sports Medicine in June 2023. Since then, the global approach to sport-related concussion (SRC) management has undergone a fundamental shift -- one that Australian clinicians must understand and implement.
               </p>
               <p>
                 The central message is this: <strong>the era of &ldquo;sit in a dark room until your symptoms go away&rdquo; is over</strong>. In its place, we now have a structured, evidence-based framework that moves from documentation to active rehabilitation. This article summarises the three most important clinical changes that define concussion management in 2026.
@@ -297,7 +297,7 @@ export default function ConcussionUpdate2026Page() {
             </h2>
             <div className="space-y-4 text-slate-700 leading-relaxed">
               <p>
-                The trajectory of concussion management over the past two years has been clear and consistent. The field has moved decisively away from passive, rest-based protocols toward structured, evidence-based active recovery. The three pillars of this transition are:
+                The trajectory of concussion management since the Amsterdam consensus statement has been clear and consistent. The field has moved decisively away from passive, rest-based protocols toward structured, evidence-based active recovery. The three pillars of this transition are:
               </p>
               <ol className="space-y-3 list-decimal list-inside">
                 <li><strong>Early controlled exercise</strong> replaces prolonged rest. Sub-symptom threshold aerobic activity by Day 3 is the new standard.</li>

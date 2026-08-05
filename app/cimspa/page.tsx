@@ -13,7 +13,13 @@ import { REFERENCE_COUNT } from '@/data/reference-count'
 
 const CRM_PRICE = intlPriceForCountry('GB') // £275
 
+// Title + description were missing, so this UK page inherited the root layout's
+// Australian SCAT6 fallback title while sitting in the sitemap. Copy mirrors the
+// InternationalCourseSchema name/description below — one claim, one wording.
 export const metadata = {
+  title: 'Concussion awareness for UK fitness and active-health professionals | CIMSPA',
+  description:
+    'Recognise a concussion on the gym floor and know exactly what to do next — a free awareness course covering recognition, red flags and safe referral, with a certificate of completion.',
   alternates: { canonical: '/cimspa' },
 }
 

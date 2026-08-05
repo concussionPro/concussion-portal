@@ -3,7 +3,7 @@ import { readFile, access } from 'fs/promises'
 import { join } from 'path'
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { isBookOwner } from '@/lib/users'
+import { isBookOwner, getCurrentAccessLevel } from '@/lib/users'
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,9 +63,18 @@ export async function GET(request: NextRequest) {
     // Bundle buyers are preview-level in the session cookie but flagged in the
     // DB via reference_book_purchased_at. DB lookup is fast; this route is
     // already protected by session verification above.
-    const paidAccess =
+    // Revocation re-check, matching lib/toolkit-access.ts: the session JWT
+    // lives 365 days and outlives a refund downgrade, so a PAID CLAIM is
+    // confirmed against the users row before handing over the files. A DB blip
+    // (no row returned) keeps the JWT claim — this must never lock out a
+    // legitimate buyer — and the free/bundle paths below are unchanged.
+    let paidAccess =
       sessionData.accessLevel === 'online-only' ||
       sessionData.accessLevel === 'full-course'
+    if (paidAccess) {
+      const dbLevel = await getCurrentAccessLevel(sessionData.userId).catch(() => null)
+      if (dbLevel && dbLevel !== 'online-only' && dbLevel !== 'full-course') paidAccess = false
+    }
     const bundleOwner = !paidAccess ? await isBookOwner(sessionData.email) : false
 
     if (!paidAccess && !bundleOwner) {

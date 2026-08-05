@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 
@@ -11,11 +11,22 @@ import { REFERENCE_COUNT } from '@/data/reference-count'
  * global market review runs.
  */
 
+// The page had NO metadata of any kind, so it rendered the root layout's
+// Australian SCAT6 fallback title and was crawlable. Same posture as its
+// siblings /csep, /hpcsa and /sesnz: interest capture, not an active sale, so
+// noindex until the CASES route is real.
+export const metadata = {
+  title: 'Concussion rehabilitation CPD for UK sport & exercise scientists | CASES',
+  description:
+    'Exercise-scoped concussion rehabilitation training for UK sport and exercise scientists — sub-symptom-threshold aerobic exercise from a measured heart-rate threshold, plus the clinical tools to deliver it. Register your interest.',
+  robots: 'noindex, nofollow',
+} as const
+
 const PRICE = intlPriceForCountry('GB') // £275
-// The bundled platform renews at the real SST single-tier price. The old
+// The bundled platform renews at the real SST entry-tier price. The old
 // US$99/yr copy was never wired to any Stripe price and understated the
 // actual charge ~4x (2026-08-05 live crawl).
-const PLATFORM_MONTHLY = 49
+const PLATFORM_MONTHLY = SST_TIER_FROM_AUD
 
 const MODULES: { n: string; title: string; mins: number }[] = [
   { n: '01', title: 'Concussion for the Exercise Physiologist', mins: 60 },
@@ -180,7 +191,12 @@ export default function CasesLandingPage() {
               <>
                 The course <strong>is accredited by Exercise &amp; Sports Science
                 Australia (ESSA)</strong> (accreditation {CONFIG.ESSA_ACCREDITATION.NUMBER},
-                granted 24 July 2026, valid to 24 July 2027) after independent review by two
+                granted 24 July 2026, valid to{' '}
+                {new Date(CONFIG.ESSA_ACCREDITATION.VALID_UNTIL).toLocaleDateString('en-AU', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}) after independent review by two
                 ESSA-appointed reviewers — {CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} CPD points
                 for the online course and {CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} with the practical
                 day. ESSA accreditation is an Australian credential and is not a CASES

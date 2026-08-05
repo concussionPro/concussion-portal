@@ -127,7 +127,7 @@ export default function ZacLewisAboutPage() {
                   Beyond concussion, Zac has published and trained extensively on the safe integration of AI tools (Heidi, Lyrebird, ChatGPT, Claude) into Australian clinical practice — covering AHPRA AI guidelines, Australian Privacy Principles (APP 8 offshore disclosure), NDIS audit-safe documentation, and indemnity-insurer positions.
                 </p>
                 <p>
-                  CEA is endorsed by Osteopathy Australia (peak body for ~3,000 registered AU osteopaths) and operates under AHPRA-aligned CPD standards.
+                  Concussion Clinical Mastery is endorsed by Osteopathy Australia (peak body for ~3,000 registered AU osteopaths) and CEA operates under AHPRA-aligned CPD standards.
                 </p>
               </div>
             </section>
@@ -182,7 +182,7 @@ export default function ZacLewisAboutPage() {
                   <Users className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-semibold text-slate-900">Member, Osteopathy Australia</p>
-                    <p className="text-xs text-slate-600">Peak body for Australian osteopathic medicine. CEA is endorsed by Osteopathy Australia.</p>
+                    <p className="text-xs text-slate-600">Peak body for Australian osteopathic medicine. Concussion Clinical Mastery is endorsed by Osteopathy Australia.</p>
                   </div>
                 </li>
               </ul>
@@ -205,7 +205,7 @@ export default function ZacLewisAboutPage() {
               </p>
               <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
                 <li>Concussion Clinical Mastery course (8 CPD hours online, up to 16 with the in-person day; Osteopathy Australia endorsed)</li>
-                <li>AI in Clinical Practice short course (3 CPD hours)</li>
+                <li>AI in Clinical Practice short course (2 CPD hours)</li>
                 <li>Free SCAT6/SCOAT6 Mastery course + fillable assessment forms</li>
                 <li>20+ peer-citable clinical blog articles on concussion, PPCS, and AI in clinical practice (full index at <Link href="/blog" className="text-teal-700 underline">portal.concussion-education-australia.com/blog</Link>)</li>
                 <li>Free AI Safety Checklist for Allied Health Documentation</li>
@@ -234,7 +234,7 @@ export default function ZacLewisAboutPage() {
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Endorsement</p>
               <p className="text-xs text-slate-700">
-                Endorsed by Osteopathy Australia — the national peak body representing ~3,000 AHPRA-registered osteopaths.
+Concussion Clinical Mastery is endorsed by Osteopathy Australia — the national peak body representing ~3,000 AHPRA-registered osteopaths.
               </p>
             </div>
           </aside>

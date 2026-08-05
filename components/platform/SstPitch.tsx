@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
 import { SstTrainerDemo } from '@/components/platform/SstTrainerDemo'
 import { CompetencyGapEvidence } from '@/components/clinical/CompetencyGapEvidence'
+import { CONFIG as APP_CONFIG } from '@/lib/config'
 
 /**
  * SST Trainer — TARGET-facing pitch pages (distinct from the patient landing).
@@ -127,7 +128,7 @@ const CONFIG: Record<SstPitchVariant, VariantConfig> = {
       { icon: '✔', title: 'Outcomes reviewed across delivery', body: 'Every graded re-test is a review point; the report shows outcome measures were reviewed across the service, not reconstructed at discharge.' },
       { icon: '⤴', title: 'Reviewed between visits, on your dashboard', body: 'Home sessions stream to the clinician via a service code, so the review is continuous and visible — not reconstructed at discharge.' },
     ],
-    proof: ['Team training ESSA-accredited (No. PDNF26077)', 'ACC884 content compiled from delivery data, ready to transcribe', 'Send to a clinical or service lead — this is a workflow, not a referral'],
+    proof: [`Clinical-stream training OA-endorsed; exercise-physiology stream ESSA-accredited (No. ${APP_CONFIG.ESSA_ACCREDITATION.NUMBER})`, 'ACC884 content compiled from delivery data, ready to transcribe', 'Send to a clinical or service lead — this is a workflow, not a referral'],
     closingTitle: 'The functional measure your evaluation said was missing.',
     closingBody: 'Fifteen minutes with a clinical lead and I’ll walk the ACC884 Client Summary Report and the outcome-review evidence on a sample episode.',
   },

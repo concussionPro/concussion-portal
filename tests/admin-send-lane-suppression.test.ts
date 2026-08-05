@@ -53,6 +53,38 @@ const CRON_SEND_ROUTES = [
   'app/api/cron/sst-trial-checkins/route.ts',
 ]
 
+/**
+ * NON-ADMIN marketing/lifecycle send paths. The two lists above only ever
+ * covered admin + cron, so the entire webhook tree and every public lead-magnet
+ * route sat outside CI — and all of them were sending unchecked:
+ *
+ *  - the Stripe webhook's payment-recovery and abandoned-checkout emails gated
+ *    ONLY on users.nurture_unsubscribed, which is useless here because a failed
+ *    or abandoned checkout usually has NO users row at all, and both guards
+ *    additionally `catch { proceed }` (fail OPEN);
+ *  - the Squarespace form webhook created an account and started the nurture
+ *    sequence off an unauthenticated third-party payload;
+ *  - the certificate completion upsell failed open the same way;
+ *  - every public Day-0 lead magnet re-entered a suppressed clinician into
+ *    marketing the moment any form was filled in with their address.
+ *
+ * Transactional paths (magic links, receipts, certificates, clinical alerts)
+ * are deliberately NOT listed — those must still reach a suppressed address.
+ */
+const MARKETING_SEND_PATHS = [
+  'app/api/webhooks/stripe/route.ts',
+  'app/api/webhooks/squarespace/route.ts',
+  'app/api/certificate/route.ts',
+  'app/api/test/send-nurture/route.ts',
+  'app/api/signup-free/route.ts',
+  'app/api/signup-squarespace/route.ts',
+  'app/api/email-gate/route.ts',
+  'app/api/ep-lead/route.ts',
+  'app/api/intl-syllabus/route.ts',
+  'app/api/lead-magnet/ai-safety-checklist/route.ts',
+  'app/api/lead-magnet/ppcs-waitlist/route.ts',
+]
+
 function read(rel: string): string {
   return fs.readFileSync(path.join(ROOT, rel), 'utf8')
 }
@@ -84,6 +116,21 @@ describe('every cron send lane checks email_suppression', () => {
   for (const rel of CRON_SEND_ROUTES) {
     it(`${rel} gates on the master blacklist`, () => {
       expect(checksSuppression(read(rel))).toBe(true)
+    })
+  }
+})
+
+describe('webhook + public marketing send paths check email_suppression', () => {
+  for (const rel of MARKETING_SEND_PATHS) {
+    it(`${rel} gates on the master blacklist`, () => {
+      expect(checksSuppression(read(rel))).toBe(true)
+    })
+
+    it(`${rel} does not rely on nurture_unsubscribed alone`, () => {
+      const src = read(rel)
+      if (src.includes('nurture_unsubscribed') || src.includes('nurtureUnsubscribed')) {
+        expect(checksSuppression(src)).toBe(true)
+      }
     })
   }
 })

@@ -146,7 +146,7 @@ export default function PreSeasonBaselineTestingPage() {
                     <Activity className="w-5 h-5 text-sky-600 flex-shrink-0 mt-1" />
                     <div>
                       <h4 className="font-bold text-sky-900">3. mBESS Balance Assessment</h4>
-                      <p className="text-sm text-slate-700 mt-1">Complete the modified Balance Error Scoring System (mBESS): three stances (double leg, single leg, tandem) on a firm surface, each held for 20 seconds. Record total errors for each stance and the composite score. Individual variation in baseline mBESS is significant -- baseline error counts range from 0 to 15+ depending on the athlete&apos;s age, sport, and innate postural stability. Also record tandem gait time (best of four trials over 3 metres). These individual baselines are essential for determining whether a post-injury balance score represents genuine impairment (Broglio et al., 2007).</p>
+                      <p className="text-sm text-slate-700 mt-1">Complete the modified Balance Error Scoring System (mBESS): three stances (double leg, single leg, tandem) on a firm surface, each held for 20 seconds. Record total errors for each stance and the composite score. Individual variation in baseline mBESS is significant -- baseline error counts range from 0 to 15+ depending on the athlete&apos;s age, sport, and innate postural stability. Also record tandem gait time (best of three trials over 3 metres). These individual baselines are essential for determining whether a post-injury balance score represents genuine impairment (Broglio et al., 2007).</p>
                     </div>
                   </div>
                 </div>

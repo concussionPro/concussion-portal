@@ -35,7 +35,7 @@ export default function MelbournePage() {
             <div className="relative mx-auto w-full max-w-sm aspect-[4/3] rounded-xl overflow-hidden mb-8 shadow-md">
               <Image
                 src="/melbourne-workshop.jpg"
-                alt="Concussion Clinical Mastery · Melbourne · June 13 2026"
+                alt={`Concussion Clinical Mastery · Melbourne · ${location.date}`}
                 fill
                 priority
                 sizes="(max-width: 768px) 320px, 384px"
@@ -59,7 +59,7 @@ export default function MelbournePage() {
 
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
               Master SCAT6, VOMS, and BESS protocols in Melbourne&apos;s premier concussion management course.
-              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours.
+              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours.
             </p>
 
             {isConfirmed ? (
@@ -128,7 +128,7 @@ export default function MelbournePage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { icon: CheckCircle2, text: `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype` },
+                { icon: CheckCircle2, text: `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype` },
                 { icon: CheckCircle2, text: 'Full-day hands-on practice with live partners — SCAT6, SCOAT6, VOMS and mBESS' },
                 { icon: CheckCircle2, text: 'Return-to-play, return-to-school and return-to-work frameworks' },
                 { icon: Infinity, text: `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules — updated as guidelines evolve` },
@@ -188,45 +188,50 @@ export default function MelbournePage() {
             </div>
           </div>
 
-          {/* Travel & stay — for out-of-town attendees */}
-          <div className="glass rounded-2xl p-6 md:p-8 mb-12">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-11 h-11 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Plane className="w-5 h-5 text-accent" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Travelling in? Stay on-site.</h2>
-                <p className="text-sm text-muted-foreground">Partner perks at the venue for interstate and regional attendees.</p>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-slate-200 p-4 bg-white">
-                <div className="flex items-center gap-2 mb-2">
-                  <BedDouble className="w-4 h-4 text-accent" aria-hidden="true" />
-                  <h3 className="text-sm font-bold">{CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off accommodation</h3>
+          {/* Travel & stay — for out-of-town attendees. Only meaningful beside
+              a bookable date: on isClosed there's no upcoming workshop, no
+              2-weeks-out email, and the venue perk isn't attached to any
+              live event. */}
+          {!isClosed && (
+            <div className="glass rounded-2xl p-6 md:p-8 mb-12">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-11 h-11 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <Plane className="w-5 h-5 text-accent" aria-hidden="true" />
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Book directly at <strong>{CONFIG.VENUE_BENEFITS.MELBOURNE.hotelName}</strong> and save {CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}%. Your discount code and booking link are sent with your enrolment confirmation — use it for the night before or a multi-night stay.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 p-4 bg-white">
-                <div className="flex items-center gap-2 mb-2">
-                  <Car className="w-4 h-4 text-accent" aria-hidden="true" />
-                  <h3 className="text-sm font-bold">Secure parking on-site</h3>
+                <div>
+                  <h2 className="text-xl font-bold">Travelling in? Stay on-site.</h2>
+                  <p className="text-sm text-muted-foreground">Partner perks at the venue for interstate and regional attendees.</p>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong>Conference day rate:</strong> ${CONFIG.VENUE_BENEFITS.MELBOURNE.parkingConferenceRate} (enter before 10am, exit by 6pm).<br />
-                  <strong>Overnight guests:</strong> ${CONFIG.VENUE_BENEFITS.MELBOURNE.parkingOvernightRate}/night. Secure car park below the hotel, subject to availability.
-                </p>
               </div>
-            </div>
 
-            <p className="text-xs text-slate-500 mt-4">
-              Full travel logistics (venue door, parking entrance, nearest trains) are in the 2-weeks-out workshop email.
-            </p>
-          </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-slate-200 p-4 bg-white">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BedDouble className="w-4 h-4 text-accent" aria-hidden="true" />
+                    <h3 className="text-sm font-bold">{CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off accommodation</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Book directly at <strong>{CONFIG.VENUE_BENEFITS.MELBOURNE.hotelName}</strong> and save {CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}%. Your discount code and booking link are sent with your enrolment confirmation — use it for the night before or a multi-night stay.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 p-4 bg-white">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Car className="w-4 h-4 text-accent" aria-hidden="true" />
+                    <h3 className="text-sm font-bold">Secure parking on-site</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    <strong>Conference day rate:</strong> ${CONFIG.VENUE_BENEFITS.MELBOURNE.parkingConferenceRate} (enter before 10am, exit by 6pm).<br />
+                    <strong>Overnight guests:</strong> ${CONFIG.VENUE_BENEFITS.MELBOURNE.parkingOvernightRate}/night. Secure car park below the hotel, subject to availability.
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 mt-4">
+                Full travel logistics (venue door, parking entrance, nearest trains) are in the 2-weeks-out workshop email.
+              </p>
+            </div>
+          )}
 
           {/* CTA */}
           <div className="glass rounded-2xl p-8 text-center bg-gradient-to-br from-blue-600/5 to-teal-600/5">

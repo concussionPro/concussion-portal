@@ -234,7 +234,7 @@ export default function VOMSConcussionPage() {
             </h2>
             <div className="space-y-4 text-slate-700 leading-relaxed">
               <p>
-                The practical integration of VOMS into clinical practice is straightforward. For clinicians already using the SCOAT6 for office-based follow-up (as mandated by the Amsterdam Consensus), the VOMS is built in. The key is to administer it systematically and document findings quantitatively.
+                The practical integration of VOMS into clinical practice is straightforward. For clinicians already using the SCOAT6 for office-based follow-up (as recommended by the Amsterdam consensus statement), the VOMS is built in. The key is to administer it systematically and document findings quantitatively.
               </p>
               <p>
                 For pre-season baselines and acute sideline assessments where the full SCOAT6 is not appropriate, a standalone VOMS can be performed in 5-10 minutes. The critical steps are:

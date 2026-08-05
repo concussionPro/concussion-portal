@@ -57,14 +57,43 @@ export const ANALYTICS_EVENTS = {
 // Visit tracking — persists across sessions via localStorage
 // ---------------------------------------------------------------------------
 
+/** Session id — shared with components/AnalyticsProvider so both senders stamp
+ *  the SAME id and a visit is never split into two "sessions". */
+export function getOrCreateSessionId(): string {
+  if (typeof window === 'undefined') return ''
+  const KEY = 'cea_session_id'
+  try {
+    let id = sessionStorage.getItem(KEY)
+    if (!id) {
+      id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+      sessionStorage.setItem(KEY, id)
+    }
+    return id
+  } catch {
+    return `${Date.now()}-nostore`
+  }
+}
+
+/**
+ * Which visit this is for the returning visitor (1 = first ever).
+ *
+ * Was keyed on the ABSENCE of `cea_session_id`, which only holds if this module
+ * creates the session id first. AnalyticsProvider fires the page_view (and so
+ * creates the id) before any other tracking call runs, so the increment branch
+ * was unreachable: the counter never left 0, every session reported visitNumber
+ * 1, and the dashboard's visit distribution and "% returning visitors" were
+ * structurally pinned to first-time traffic. Key off the session id VALUE
+ * instead — order-independent, one increment per browser session.
+ */
 function getVisitNumber(): number {
   try {
+    const sessionId = getOrCreateSessionId()
     const raw = localStorage.getItem('analytics_visit_number')
     const current = raw ? parseInt(raw, 10) : 0
-    // Increment on new session (sessionStorage key absent = new session)
-    if (!sessionStorage.getItem('cea_session_id')) {
-      const next = current + 1
+    if (localStorage.getItem('analytics_visit_session') !== sessionId) {
+      const next = (Number.isFinite(current) ? current : 0) + 1
       localStorage.setItem('analytics_visit_number', String(next))
+      localStorage.setItem('analytics_visit_session', sessionId)
       return next
     }
     return current || 1
@@ -194,25 +223,38 @@ function getVisitorId(): string {
   }
 }
 
+/**
+ * The stitching bundle every event must carry: persistent visitor id, visit
+ * number, first-touch referrer and first-touch UTMs.
+ *
+ * Shared with components/AnalyticsProvider (which sends every `page_view`).
+ * It used to send none of this, and the dashboard reads all four off the
+ * session's FIRST event — always a page_view — so cross-session visitor
+ * stitching fell back to `s:<sessionId>`, the first-touch channel backfill in
+ * classifyChannel() never fired (returning visitors all landed in "Direct"),
+ * and the visit-distribution chart could only ever show visit 1.
+ */
+export function getVisitorContext(): Record<string, unknown> {
+  if (typeof window === 'undefined') return {}
+  const firstReferrer = getFirstReferrer()
+  const utmParams = getUtmParams()
+  const firstUtm = getFirstUtm()
+  return {
+    visitNumber: getVisitNumber(),
+    visitorId: getVisitorId(),
+    ...(firstReferrer ? { firstReferrer } : {}),
+    ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
+    ...(Object.keys(firstUtm).length > 0 ? { firstUtm } : {}),
+  }
+}
+
 export async function trackEvent(
   eventType: string,
   eventData: Record<string, unknown> = {}
 ): Promise<void> {
   try {
-    // MUST call getVisitNumber() BEFORE creating session ID,
-    // because it checks for absence of session ID to detect new visits
-    const visitNumber = getVisitNumber()
-
-    // Get or create session ID
-    // Use same session key as AnalyticsProvider to avoid fragmenting session data
-    let sessionId = sessionStorage.getItem('cea_session_id')
-    if (!sessionId) {
-      sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-      sessionStorage.setItem('cea_session_id', sessionId)
-    }
-    const firstReferrer = getFirstReferrer()
-    const utmParams = getUtmParams()
-    const firstUtm = getFirstUtm()
+    // Session id first — getVisitNumber() keys off its value, not its absence.
+    const sessionId = getOrCreateSessionId()
     // Caller can override identity per-call (e.g. signup flow passes the
     // email they just collected before we've persisted it to localStorage).
     const userEmail = (eventData && typeof eventData.userEmail === 'string')
@@ -223,11 +265,7 @@ export async function trackEvent(
       eventType,
       eventData: {
         ...eventData,
-        visitNumber,
-        visitorId: getVisitorId(),
-        ...(firstReferrer ? { firstReferrer } : {}),
-        ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
-        ...(Object.keys(firstUtm).length > 0 ? { firstUtm } : {}),
+        ...getVisitorContext(),
       },
       sessionId,
       timestamp: Date.now(),

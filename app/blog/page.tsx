@@ -125,7 +125,7 @@ const blogPosts: Array<{
   },
   {
     title: '21-Day Concussion Stand-Down in Youth Sport: What Every Australian Clinician Should Know',
-    description: 'Australia\'s 21-day mandatory stand-down after concussion in youth and community sport is now the national standard. Understand the rules, which sports enforce them, and what clinicians need to do.',
+    description: 'Australia\'s 21-day stand-down after concussion in youth and community sport is now the national standard. Understand the rules, which sports enforce them, and what clinicians need to do.',
     date: 'March 18, 2026',
     href: '/blog/21-day-concussion-stand-down-youth-sport-australia',
     readTime: '9 min',
@@ -181,7 +181,7 @@ const blogPosts: Array<{
   },
   {
     title: 'SCAT6 vs SCOAT6: Which Tool to Use When?',
-    description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool so your assessments stay consistent with current consensus guidance (Amsterdam 2022).',
+    description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool so your assessments stay consistent with current consensus guidance (Amsterdam 2023).',
     date: 'January 31, 2026',
     href: '/blog/scat6-vs-scoat6-difference',
     readTime: '7 min',
@@ -189,7 +189,7 @@ const blogPosts: Array<{
   },
   {
     title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
-    description: 'Two years since the Amsterdam Consensus, the evidence is clear: passive rest beyond 48 hours does more harm than good. Active recovery, the SCAT6/SCOAT6 two-tool system, and vestibular-ocular screening define the new standard.',
+    description: 'Since the Amsterdam consensus statement, the evidence is clear: passive rest beyond 48 hours does more harm than good. Active recovery, the SCAT6/SCOAT6 two-tool system, and vestibular-ocular screening define the new standard.',
     date: 'January 5, 2026',
     href: '/blog/concussion-update-2026-wait-until-symptom-free-obsolete',
     readTime: '10 min',

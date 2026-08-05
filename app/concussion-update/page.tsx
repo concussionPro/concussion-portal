@@ -34,6 +34,7 @@ const courseSchema = createCourseSchema({
     'Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. 8 CPD hours online, up to 16 CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.',
   cpdHours: 8,
   priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
+  recognizedBy: { name: 'Osteopathy Australia', url: 'https://osteopathy.org.au' },
 })
 
 // Second Course node: the FREE module this page actually signs users up for.

@@ -14,6 +14,7 @@ import {
 import { userOwnsCrm } from '@/lib/crm-course'
 import { getCourseCertificate, issueCourseCertificate } from '@/lib/course-certificates'
 import { getResend, sendEmail, sendEmailWithAttachment, escapeHtml as sharedEscapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -634,6 +635,18 @@ async function sendCertificateEmail(opts: {
  * Deduped via audit log — safe to call multiple times.
  */
 async function sendCompletionUpsell(userId: string, email: string, name: string) {
+  // MASTER BLACKLIST FIRST. This is a pure upsell to /pricing, so it is
+  // marketing — and the nurture_unsubscribed check below FAILS OPEN
+  // (`catch { proceed }`) and never sees hard bounces, complaints, STOP
+  // replies or cold-prospect unsubs. isEmailSuppressed fails closed.
+  // NOTE: this gates only the upsell. The CERTIFICATE itself is transactional
+  // and is sent elsewhere in this route — it must still reach a suppressed
+  // address.
+  if (await isEmailSuppressed(email)) {
+    console.log(`[Completion Upsell] Skipped ${email.slice(0, 3)}*** — suppressed`)
+    return
+  }
+
   // Respect unsubscribe preference
   try {
     const { rows } = await sql`SELECT nurture_unsubscribed FROM users WHERE id = ${userId} LIMIT 1`

@@ -176,7 +176,10 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: 'What if I can\'t make my workshop date?',
-      a: 'No problem — you can reschedule to any future workshop date or location at no extra cost. There\'s no expiry. Once enrolled, you have lifetime access to the online portal — content is updated and added to regularly as concussion guidelines evolve, so your knowledge stays current. Full flexibility on when you attend the hands-on day.',
+      // "any future workshop date or location" implied a schedule of dates to
+      // pick from; every city is 'collecting' with no date set, so the honest
+      // answer is that your seat carries to whichever round launches next.
+      a: 'No problem — your seat carries to any subsequent workshop round or city at no extra cost, and rounds launch city-by-city as each one fills. There\'s no expiry. Once enrolled, you have lifetime access to the online portal — content is updated and added to regularly as concussion guidelines evolve, so your knowledge stays current. Full flexibility on when you attend the hands-on day.',
     },
     {
       q: "How are workshop dates confirmed?",

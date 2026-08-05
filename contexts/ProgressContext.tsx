@@ -106,8 +106,10 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
   return defaults
 }
 
-// Parse stored progress, handling migration from old format
-function parseStoredProgress(data: Record<string, ModuleProgress>): Record<number, ModuleProgress> {
+// Parse stored progress, handling migration from old format.
+// Exported for tests — the merge rules below are the only thing standing
+// between a flaky network and a clinician's lost modules.
+export function parseStoredProgress(data: Record<string, ModuleProgress>): Record<number, ModuleProgress> {
   const parsed: Record<number, ModuleProgress> = {}
   Object.keys(data).forEach((key) => {
     const entry = data[key]
@@ -190,7 +192,7 @@ function mergeModuleProgress(a: ModuleProgress, b: ModuleProgress): ModuleProgre
   }
 }
 
-function mergeProgress(
+export function mergeProgress(
   current: Record<number, ModuleProgress>,
   incoming: Record<number, ModuleProgress>
 ): Record<number, ModuleProgress> {
@@ -199,6 +201,34 @@ function mergeProgress(
     const id = Number(key)
     merged[id] = merged[id] ? mergeModuleProgress(merged[id], incoming[id]) : incoming[id]
   })
+  return merged
+}
+
+/**
+ * What the store holds once the initial load resolves.
+ *
+ * THREE sources, all of which can hold work the others do not:
+ *  - `current`   — whatever happened on this page while the fetch was in flight
+ *                  (markModuleStarted fires within a second of mount);
+ *  - `local`     — localStorage, the ONLY home of any save that never reached
+ *                  the server (offline session, a 500 that outlived the retry
+ *                  schedule, a tab closed inside the debounce window);
+ *  - `server`    — the cross-device record, null when the fetch failed or the
+ *                  account has none yet.
+ *
+ * The loader used to read `local` purely to decide whether to show a "restored
+ * from server" banner, then overwrite it with the server snapshot — so a
+ * clinician who studied on flaky clinic wifi lost the modules they finished the
+ * moment they next opened the course. mergeProgress always keeps the MORE
+ * ADVANCED side, so unioning all three can only ever add.
+ */
+export function reconcileLoadedProgress(
+  current: Record<number, ModuleProgress>,
+  local: Record<number, ModuleProgress> | null,
+  server: Record<number, ModuleProgress> | null,
+): Record<number, ModuleProgress> {
+  let merged = local ? mergeProgress(current, local) : mergeProgress(current, {})
+  if (server) merged = mergeProgress(merged, server)
   return merged
 }
 
@@ -225,10 +255,46 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     progressRef.current = progress
   }, [progress])
 
+  /**
+   * setProgress that ALSO advances progressRef in the same tick.
+   *
+   * The effect above only runs after React re-renders, but flushSave() and the
+   * pagehide sendBeacon both read progressRef SYNCHRONOUSLY. So the flush fired
+   * by module completion (`markModuleComplete(); await flushSave()`) posted the
+   * snapshot from BEFORE the completion — the module-8 "completed" flag that
+   * unlocks the certificate reached the server only if the user stayed on the
+   * page long enough for the 2-second debounce to fire again.
+   */
+  const commitProgress = useCallback(
+    (updater: (prev: Record<number, ModuleProgress>) => Record<number, ModuleProgress>) => {
+      setProgress((prev) => {
+        const next = updater(prev)
+        progressRef.current = next
+        return next
+      })
+    },
+    [],
+  )
+
   // Load progress from backend on mount
   useEffect(() => {
     async function loadProgress() {
       if (typeof window !== 'undefined') {
+        // Read the LOCAL copy up front. It is not just a cache: any save that
+        // never reached the server (offline study session, a 500 that outlived
+        // the retry schedule, a tab closed inside the debounce window) survives
+        // ONLY here. Merging it in — rather than merely inspecting it for the
+        // "restored" banner — is what stops the next page load from silently
+        // destroying a clinician's completed modules.
+        let local: Record<number, ModuleProgress> | null = null
+        try {
+          const localStored = localStorage.getItem(STORAGE_KEY)
+          if (localStored) local = parseStoredProgress(JSON.parse(localStored))
+        } catch (error) {
+          console.error('Failed to parse stored progress:', error)
+        }
+        const hadLocalData = !!local && Object.values(local).some(p => p.completed || p.startedAt)
+
         try {
           setSyncState('syncing')
           const response = await fetch('/api/progress', { credentials: 'include' })
@@ -236,15 +302,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
             const data = await response.json()
             if (data.success && data.progress) {
               const parsed = parseStoredProgress(data.progress)
-              // Check BEFORE overwriting localStorage
-              const localStored = localStorage.getItem(STORAGE_KEY)
-              const hadLocalData = localStored && Object.values(parseStoredProgress(JSON.parse(localStored))).some(p => p.completed || p.startedAt)
 
               // NOW write server data — functional merge so any progress made
               // while this fetch was in flight (startedAt, quiz answers) is
-              // preserved rather than clobbered by the server snapshot.
-              setProgress(prev => {
-                const merged = mergeProgress(prev, parsed)
+              // preserved rather than clobbered by the server snapshot, and the
+              // local copy is unioned in ahead of it (mergeProgress always
+              // keeps the MORE ADVANCED side, so the server can only add).
+              commitProgress(prev => {
+                const merged = reconcileLoadedProgress(prev, local, parsed)
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
                 return merged
               })
@@ -269,16 +334,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           setSyncState(navigator.onLine ? 'error' : 'offline')
         }
 
-        // Fallback to localStorage
-        const stored = localStorage.getItem(STORAGE_KEY)
-        if (stored) {
-          try {
-            const parsed = parseStoredProgress(JSON.parse(stored))
-            setProgress(prev => mergeProgress(prev, parsed))
-          } catch (error) {
-            console.error('Failed to parse stored progress:', error)
-          }
-        }
+        // Fallback to localStorage (already parsed above)
+        if (local) commitProgress(prev => reconcileLoadedProgress(prev, local, null))
         setIsInitialized(true)
       }
     }
@@ -428,7 +485,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
    * longer invisible.
    */
   const updateQuizScore = (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => {
-    setProgress((prev) => {
+    commitProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       const at = new Date()
       const history = [
@@ -453,7 +510,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   // Save in-progress quiz answers without marking quiz as complete
   const saveQuizAnswers = (moduleId: number, answers: Record<string, number>) => {
-    setProgress((prev) => {
+    commitProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       return {
         ...prev,
@@ -466,7 +523,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }
 
   const markModuleComplete = (moduleId: number) => {
-    setProgress((prev) => {
+    commitProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       return {
         ...prev,
@@ -481,7 +538,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   // NEW: Mark a module as started (for "in progress" state)
   const markModuleStarted = (moduleId: number) => {
-    setProgress((prev) => {
+    commitProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       if (currentModule.startedAt) return prev // Already started
       return {
@@ -497,7 +554,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   // NEW: Track active study time (called periodically from module pages)
   const trackActiveStudy = (moduleId: number) => {
-    setProgress((prev) => {
+    commitProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       const now = new Date()
       let additionalMinutes = 0
@@ -587,7 +644,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }
 
   const resetProgress = () => {
-    setProgress(getDefaultProgress())
+    commitProgress(() => getDefaultProgress())
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY)
       // Clear server-side progress
@@ -595,26 +652,22 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Immediately flush any pending save to the backend (call before navigation)
+  /**
+   * Immediately flush any pending save to the backend (call before navigation).
+   *
+   * Delegates to attemptSave so the flush inherits its two guarantees: the
+   * pending flag is cleared ONLY on a confirmed 2xx (a failed flush used to
+   * clear it anyway, disarming the pagehide sendBeacon — the module-completion
+   * save was then lost with no retry), and a failure schedules the bounded
+   * retry instead of ending in a console line.
+   */
   const flushSave = async () => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
       saveTimeoutRef.current = null
     }
-    try {
-      const response = await fetch('/api/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ progress: progressRef.current }),
-        credentials: 'include',
-      })
-      hasPendingSaveRef.current = false
-      if (!response.ok) {
-        console.error('Failed to flush progress save:', response.status)
-      }
-    } catch (error) {
-      console.error('Failed to flush progress save:', error)
-    }
+    retryAttemptRef.current = 0
+    await attemptSave()
   }
 
   return (

@@ -163,7 +163,7 @@ function UpgradeOfferScreen({
         heading: 'Professional CPD Course',
         blurb: (
           <>
-            Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours</strong>.
+            Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours</strong>.
           </>
         ),
         statHours: `Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS}`,
@@ -437,6 +437,11 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               type: 'content' as const,
               label: module.sections[sIdx].title,
               index: sections.length,
+              // Carry the REAL section index. The renderer used to recover it
+              // by counting preceding content steps, which silently assumed
+              // parts list their sectionIds in array order — Module 1 does not,
+              // so its first two steps rendered under each other's titles.
+              sectionIndex: sIdx,
             })
           }
         })
@@ -474,6 +479,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
       type: 'content' as const,
       label: s.title,
       index: i,
+      sectionIndex: i,
     }))
     if (hasFullAccess) {
       // Downloadable Resources / Apply Tomorrow steps are descriptor-gated AND
@@ -584,7 +590,8 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
         // Find the virtualSection index for this section ID (accounts for part-quiz/milestone inserts)
         const vsIdx = virtualSections.findIndex((v, i) => {
           if (v.type !== 'content') return false
-          const contentIdx = virtualSections.slice(0, i).filter(vs => vs.type === 'content').length
+          const contentIdx =
+            v.sectionIndex ?? virtualSections.slice(0, i).filter(vs => vs.type === 'content').length
           return module.sections[contentIdx]?.id === hash
         })
         if (vsIdx >= 0 && (lockedAfterIndex === undefined || vsIdx <= lockedAfterIndex)) {
@@ -1253,11 +1260,20 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
 
             // Content section
             if (currentVS.type === 'content') {
-              // Map virtual section index to actual module section
-              // Count how many content sections appear before this index
-              const contentIndex = virtualSections.slice(0, currentSectionIndex).filter(v => v.type === 'content').length
+              // Map virtual section index to actual module section. The step
+              // carries its own sectionIndex (parts list sectionIds in READING
+              // order, which is not always the array order — Module 1 is not);
+              // the count-preceding-content fallback covers any step built
+              // before that field existed.
+              const contentIndex =
+                currentVS.sectionIndex ??
+                virtualSections.slice(0, currentSectionIndex).filter(v => v.type === 'content').length
               const section = module.sections[contentIndex]
               if (!section) return null
+              // Displayed step number = position in READING order, which is
+              // what the stepper counts; contentIndex is the array slot.
+              const contentStepNo =
+                virtualSections.slice(0, currentSectionIndex).filter(v => v.type === 'content').length + 1
               const readTime = estimateReadingTime(section.content)
 
               return (
@@ -1270,7 +1286,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                     <div className="flex items-center gap-3 mb-2">
                       <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center shadow-sm">
                         <span className="text-sm font-bold text-white">
-                          {(contentIndex + 1).toString().padStart(2, '0')}
+                          {contentStepNo.toString().padStart(2, '0')}
                         </span>
                       </div>
                       <h2 className="text-xl font-bold text-slate-900 tracking-tight flex-1">

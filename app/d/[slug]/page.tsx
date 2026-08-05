@@ -1,8 +1,16 @@
 import { redirect, notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { lookupSlug, resolveKeyForSlug } from '@/lib/ai-course/demo-slugs'
 
 interface PageParams {
   params: Promise<{ slug: string }>
+}
+
+// Per-partner demo entry — private, same class as /j/[code] and /p/[token].
+// It was the only short-link route with neither a noindex nor a robots.txt
+// Disallow, so a shared /d/<partner> link was indexable.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
 }
 
 /**

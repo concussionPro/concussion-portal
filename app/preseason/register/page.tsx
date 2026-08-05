@@ -68,7 +68,11 @@ export default function RegisterPage() {
         setSuccess({ code: data.code, athleteLink: data.athleteLink })
         trackEvent(ANALYTICS_EVENTS.PRESEASON_CLINIC_REGISTER, {
           clinicName,
-          email: email.toLowerCase(),
+          // `userEmail` (not `email`) is the convention trackEvent reads to
+          // populate the normalised, indexed analytics_events.user_email
+          // column. Under `email` the address only ever landed in the free-form
+          // event_data blob, so this lead never stitched to its session.
+          userEmail: email.toLowerCase(),
           code: data.code,
         })
         // Fire Google Ads conversion for preseason registration

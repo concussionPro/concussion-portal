@@ -97,7 +97,7 @@ export default function FreeSCAT6PDFDownloadPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-1" />
-                  <span><strong>2023 updated:</strong> Aligned with Amsterdam 2023 Consensus and AHPRA guidelines</span>
+                  <span><strong>2023 updated:</strong> Aligned with the Amsterdam 2023 consensus statement</span>
                 </li>
               </ul>
             </div>
@@ -143,7 +143,7 @@ export default function FreeSCAT6PDFDownloadPage() {
               <div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">When NOT to Use SCAT6</h3>
                 <p className="text-slate-700">
-                  Do not use SCAT6 for office-based follow-up visits after Day 3. For structured clinical assessment from Day 3-30 post-injury, use <strong>SCOAT6 (Sport Concussion Office Assessment Tool)</strong> instead. Using the wrong tool at the wrong time is inconsistent with current consensus guidance (Amsterdam 2022) and may fall short of the standard of practice expected of clinicians.
+                  Do not use SCAT6 for office-based follow-up visits after Day 3. For structured clinical assessment from Day 3-30 post-injury, use <strong>SCOAT6 (Sport Concussion Office Assessment Tool)</strong> instead. Using the wrong tool at the wrong time is inconsistent with current consensus guidance (Amsterdam 2023) and may fall short of the standard of practice expected of clinicians.
                 </p>
               </div>
               <div>

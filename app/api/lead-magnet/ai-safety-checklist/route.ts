@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -65,6 +66,14 @@ export async function POST(request: NextRequest) {
       '{{unsubscribe_url}}',
       unsubscribeUrl
     )
+
+    // MASTER BLACKLIST — Day-0 of a marketing sequence on a PUBLIC endpoint
+    // with no audit-key dedupe. Without this, anyone who hard-bounced,
+    // complained or replied STOP is remailed simply by the form being filled
+    // in with their address. Fails closed.
+    if (await isEmailSuppressed(normalizedEmail)) {
+      return NextResponse.json({ success: true, message: 'Checklist ready' })
+    }
 
     await sendEmail({
       to: normalizedEmail,

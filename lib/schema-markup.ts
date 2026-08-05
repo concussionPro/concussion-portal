@@ -237,9 +237,11 @@ export function createCourseSchema(params: {
   priceAUD?: number
   instances?: CourseInstanceInput[]
   /**
-   * The body that actually recognises the credential. Defaults to Osteopathy
-   * Australia, which endorses CCM ONLY — the EP stream (CRM) is accredited by
-   * ESSA and must never publish an OA endorsement it doesn't hold.
+   * The body that actually recognises the credential. No default — Osteopathy
+   * Australia endorses CCM ONLY, and a default would let any future non-CCM
+   * Course node silently publish an OA endorsement it doesn't hold. CCM
+   * callers must pass Osteopathy Australia explicitly; when omitted entirely,
+   * the emitted schema carries no `recognizedBy` claim.
    */
   recognizedBy?: { name: string; url: string }
   /** Overrides the credential label (the EP stream awards ESSA CPD points). */
@@ -277,11 +279,13 @@ export function createCourseSchema(params: {
         params.credentialName ??
         `${params.cpdHours} CPD Hours (count toward AHPRA registration CPD requirements)`,
       credentialCategory: 'Continuing Professional Development',
-      recognizedBy: {
-        '@type': 'Organization',
-        name: params.recognizedBy?.name ?? 'Osteopathy Australia',
-        url: params.recognizedBy?.url ?? 'https://osteopathy.org.au',
-      },
+      ...(params.recognizedBy && {
+        recognizedBy: {
+          '@type': 'Organization',
+          name: params.recognizedBy.name,
+          url: params.recognizedBy.url,
+        },
+      }),
     },
     about: { '@type': 'MedicalCondition', name: 'Sport-Related Concussion' },
     educationalLevel: 'Professional Development',

@@ -63,6 +63,10 @@ vi.mock('@/app/api/unsubscribe/route', () => ({
 
 vi.mock('@/lib/require-admin', () => ({
   isAdminRequest: () => false,
+  // This route authenticates a manual trigger with the HEADER-only check, not
+  // the cookie-accepting isAdminRequest: it has no dry-run mode, so a
+  // cookie-reachable GET was a one-click cross-site mass send.
+  isAdminHeaderRequest: () => false,
 }))
 
 vi.mock('@/lib/email-scheduler', () => ({

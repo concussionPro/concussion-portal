@@ -37,6 +37,7 @@ const courseSchema = createCourseSchema({
       priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
     },
   ],
+  recognizedBy: { name: 'Osteopathy Australia', url: 'https://osteopathy.org.au' },
 })
 
 const locations = Object.values(CONFIG.LOCATIONS)

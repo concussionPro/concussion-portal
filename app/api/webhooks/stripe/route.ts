@@ -6,6 +6,7 @@ import { provisionPlatformForBuyer } from '@/lib/sst-trainer/bundle'
 export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
 import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { createCourseHub, redeemHubSeat, revokeHub, hubSeatsForDeclaredCount, HUB_ADMIN_SEATS } from '@/lib/course-hub'
 import { createMagicToken, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -646,6 +647,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       workshopVenue: melConfirmed ? 'Rydges Melbourne, Exhibition St' : undefined,
       accommodationPerkLine: melConfirmed ? `${CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off ${CONFIG.VENUE_BENEFITS.MELBOURNE.hotelName} accommodation — booking link and code in your follow-up email` : undefined,
       origin: baseUrl,
+      // Same TTL the token above was minted with — the template used to state a
+      // flat 24 hours regardless, sending buyers to request a link they had.
+      linkTtlHours: NURTURE_TTL_MS / (60 * 60 * 1000),
       ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
     })
 
@@ -1411,6 +1415,16 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
     return
   }
 
+  // MASTER BLACKLIST FIRST. This is marketing, and nurture_unsubscribed alone
+  // cannot gate it: a failed payment usually has NO `users` row at all, so the
+  // check below silently passes for a hard-bounced/complained/STOP-replied
+  // address. isEmailSuppressed FAILS CLOSED on a DB error, unlike the
+  // `catch { proceed }` beneath it.
+  if (await isEmailSuppressed(email)) {
+    console.log(`[Payment Failed] Skipped recovery email for ${redact(email)} — suppressed`)
+    return
+  }
+
   // Check if user has unsubscribed
   try {
     const { rows: userRows } = await sql`
@@ -1530,8 +1544,15 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   // With 30-min Stripe session expiry, the user just left — strike while warm.
   // Cron handles emails 2 (24h) and 3 (72h).
   try {
+    // MASTER BLACKLIST FIRST — an abandoned checkout usually has NO `users`
+    // row, so nurture_unsubscribed cannot gate this on its own, and its catch
+    // proceeds on error. isEmailSuppressed FAILS CLOSED. This suppresses the
+    // whole 3-email recovery sequence: emails 2 and 3 are driven off the
+    // abandoned_checkouts row written below, and the nurture cron re-checks
+    // suppression before sending those.
+    let unsubscribed = await isEmailSuppressed(email)
+
     // Check if user has unsubscribed from nurture emails
-    let unsubscribed = false
     try {
       const { rows: userRows } = await sql`
         SELECT nurture_unsubscribed FROM users WHERE email = ${email.toLowerCase()} LIMIT 1

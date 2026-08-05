@@ -258,7 +258,12 @@ export function DownloadableResources({ moduleId, course = 'flagship' }: { modul
       const response = await fetch(url, { credentials: 'include' })
 
       if (!response.ok) {
-        throw new Error('Download failed')
+        // Carry the server's reason. The two realistic failures are a session
+        // that expired mid-module (401 — "log in again", a 5-second fix) and a
+        // revoked entitlement (403); "please try again or contact support"
+        // told the clinician neither.
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Download failed')
       }
 
       const blob = await response.blob()
@@ -271,9 +276,10 @@ export function DownloadableResources({ moduleId, course = 'flagship' }: { modul
 
       document.body.removeChild(link)
       window.URL.revokeObjectURL(downloadUrl)
-    } catch {
-      setDownloadError(`Failed to download ${title}. Please try again or contact support.`)
-      setTimeout(() => setDownloadError(''), 5000)
+    } catch (err) {
+      const reason = err instanceof Error && err.message && err.message !== 'Download failed' ? ` ${err.message}` : ''
+      setDownloadError(`Failed to download ${title}.${reason || ' Please try again or contact support.'}`)
+      setTimeout(() => setDownloadError(''), 8000)
     }
   }
 

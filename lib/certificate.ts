@@ -318,7 +318,7 @@ export function getSCATCertificateData(participantName: string, participantEmail
     participantEmail,
     courseTitle: 'SCAT6/SCOAT6 Mastery Course',
     courseDescription: 'Comprehensive training in Sport Concussion Assessment Tool (SCAT6) and Sport Concussion Office Assessment Tool (SCOAT6) administration, scoring, interpretation, and clinical application for Australian health practitioners.',
-    cpdPoints: 1,
+    cpdPoints: CONFIG.COURSE.SCAT_MASTERY_CPD_POINTS,
     completionDate,
     learningOutcomes: [
       'Correctly administer and score the SCAT6 for acute/sideline concussion assessment',
@@ -331,14 +331,16 @@ export function getSCATCertificateData(participantName: string, participantEmail
   }
 }
 
-// Paid online course certificate data (8 CPD hours)
+// Paid online course certificate data (CPD hours from CONFIG — never hardcode:
+// OA re-rated the practical day on 2026-07-30 and the online figure is the same
+// constant every other surface quotes).
 export function getOnlineCourseCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
   return {
     participantName,
     participantEmail,
     courseTitle: 'Online Concussion Management Course',
-    courseDescription: 'Comprehensive 8-module online course covering concussion science, SCAT6/SCOAT6 assessment, VOMS & BESS protocols, clinical phenotyping, return-to-activity frameworks, rehabilitation pathways, and medicolegal documentation for Australian health practitioners.',
-    cpdPoints: 8,
+    courseDescription: `Comprehensive ${CONFIG.COURSE.TOTAL_MODULES}-module online course covering concussion science, SCAT6/SCOAT6 assessment, VOMS & BESS protocols, clinical phenotyping, return-to-activity frameworks, rehabilitation pathways, and medicolegal documentation for Australian health practitioners.`,
+    cpdPoints: CONFIG.COURSE.ONLINE_CPD_POINTS,
     completionDate,
     learningOutcomes: [
       'Apply evidence-based concussion assessment using SCAT6, SCOAT6, VOMS, and BESS protocols',
@@ -404,7 +406,7 @@ export function getFullCourseCertificateData(participantName: string, participan
     participantName,
     participantEmail,
     courseTitle: 'Complete Concussion Management Certification',
-    courseDescription: '8-module online course plus full-day in-person practical workshop covering concussion science, SCAT6/SCOAT6 assessment, VOMS & BESS protocols, hands-on clinical assessment techniques, clinical phenotyping, return-to-activity frameworks, rehabilitation pathways, and medicolegal documentation for Australian health practitioners.',
+    courseDescription: `${CONFIG.COURSE.TOTAL_MODULES}-module online course plus full-day in-person practical workshop covering concussion science, SCAT6/SCOAT6 assessment, VOMS & BESS protocols, hands-on clinical assessment techniques, clinical phenotyping, return-to-activity frameworks, rehabilitation pathways, and medicolegal documentation for Australian health practitioners.`,
     cpdPoints: CONFIG.COURSE.TOTAL_CPD_POINTS,
     completionDate,
     learningOutcomes: [

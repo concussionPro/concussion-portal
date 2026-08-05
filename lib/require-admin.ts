@@ -27,6 +27,22 @@ export function isAdminRequest(request: NextRequest | Request): boolean {
     : parseCookieHeader(request.headers.get('cookie') || '', ADMIN_COOKIE_NAME)
   if (cookieVal && verifyAdminSessionToken(cookieVal)) return true
 
+  return isAdminHeaderRequest(request)
+}
+
+/**
+ * Header-only admin auth: `x-admin-key` or `Authorization: Bearer <ADMIN_API_KEY>`.
+ * DELIBERATELY does NOT accept the `admin_session` cookie.
+ *
+ * Use this — never isAdminRequest — as the sole gate on a GET handler that
+ * sends email, creates/upgrades accounts or otherwise mutates. The admin cookie
+ * is `sameSite: 'lax'` (lib/admin-session.ts), so a top-level cross-site
+ * navigation carries it, and middleware's CSRF/origin check only guards
+ * POST/PUT/PATCH/DELETE (middleware.ts UNSAFE_METHODS). A cookie-gated mutating
+ * GET is therefore one clicked link away from firing with live admin authority.
+ * A browser will not attach either of these headers cross-site.
+ */
+export function isAdminHeaderRequest(request: NextRequest | Request): boolean {
   const envKey = process.env.ADMIN_API_KEY
   if (!envKey) return false
 

@@ -19,7 +19,7 @@ export function ClinicalTestingComingSoon() {
               <FlaskConical className="h-5 w-5 text-accent" />
             </div>
             <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
-              In final clinical testing
+              Included with enrolment
             </p>
             <h1 className="mb-3 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Clinical Testing suite

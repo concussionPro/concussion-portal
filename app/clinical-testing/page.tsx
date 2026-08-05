@@ -11,7 +11,7 @@ import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes, CpdRingVisua
 import { TrackedOutbound } from '@/components/TrackedOutbound'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 import { Lock, ArrowRight } from 'lucide-react'
-import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
+import { CONFIG, SST_TIER_FROM_AUD, SST_TIERS, sstTierAllowance } from '@/lib/config'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
 
@@ -283,12 +283,12 @@ function Shell() {
                 <div className="p-5">
                   <p className="m-0 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Indicative commercials</p>
                   <p className="m-0 mt-1.5 text-xl font-extrabold tracking-tight text-slate-900">
-                    ${SST_TIER_FROM_AUD}<span className="text-[12px] font-semibold text-slate-500"> / delivering clinician / month · AUD (NZD for NZ suppliers)</span>
+                    ${SST_TIER_FROM_AUD}<span className="text-[12px] font-semibold text-slate-500"> / month, from ({sstTierAllowance(SST_TIERS[0])}, unlimited clinicians) · AUD (NZD for NZ suppliers)</span>
                   </p>
                   <p className="m-0 mt-1 text-[12px] leading-snug text-slate-600">
                     Both instruments, PMS filing (<a href="/integrations/cliniko" className="underline">Cliniko live</a> · Gensolve for NZ), org licence. Optional training
                     seats across the allied team — physios, osteos and OTs (OA-endorsed) and exercise
-                    physiologists (ESSA-accredited, 16 CPD). Final commercials sized per organisation.
+                    physiologists ({CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA-accredited' : 'designed to ESSA CPD standards (accreditation pending)'}, {CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD). Final commercials sized per organisation.
                   </p>
                 </div>
                 <div className="flex flex-col items-start justify-center gap-2.5 p-5 bg-teal-50/60">

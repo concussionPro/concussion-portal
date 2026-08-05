@@ -10,6 +10,15 @@ export interface VirtualSection {
   type: VirtualSectionType
   label: string
   index: number
+  /**
+   * For `content` steps: the index in module.sections this step renders. Set
+   * explicitly because a parts-based module lists its sectionIds in READING
+   * order, which is not necessarily the order the sections sit in the array —
+   * Module 1 opens with `learning-objectives` per its parts but stores
+   * `myths-intro` first. Deriving the section by counting preceding content
+   * steps therefore printed one section's title above another's content.
+   */
+  sectionIndex?: number
 }
 
 interface SectionStepperProps {

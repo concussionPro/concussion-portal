@@ -2,21 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useCallback, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-
-// ---------------------------------------------------------------------------
-// Session ID helper
-// ---------------------------------------------------------------------------
-
-function getOrCreateSessionId(): string {
-  if (typeof window === 'undefined') return '';
-  const KEY = 'cea_session_id';
-  let id = sessionStorage.getItem(KEY);
-  if (!id) {
-    id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    sessionStorage.setItem(KEY, id);
-  }
-  return id;
-}
+import { getOrCreateSessionId, getVisitorContext, getIdentity } from '@/lib/analytics';
 
 // ---------------------------------------------------------------------------
 // UTM Parameter Tracking
@@ -78,7 +64,9 @@ export function useAnalytics(): AnalyticsContextValue {
 
 // Credential-bearing query params (view keys, magic-link tokens) must never
 // land in the analytics store — strip them, keep everything else.
-const SENSITIVE_SEARCH_PARAMS = ['k', 'token', 'key'];
+// `email` included: /auth/verify?email=<plaintext>&token=… was persisting the
+// user's address into the analytics `search` column, where nothing reads it.
+const SENSITIVE_SEARCH_PARAMS = ['k', 'token', 'key', 'email'];
 
 function stripSensitiveParams(search: string | null): string | null {
   if (!search) return null;
@@ -101,13 +89,19 @@ async function sendEvent(
   const utm = getUtmParams();
   const payload = {
     eventType,
-    eventData: { ...eventData, ...(Object.keys(utm).length > 0 ? { utm } : {}) },
+    // getVisitorContext() supplies visitorId / visitNumber / firstReferrer /
+    // firstUtm — the fields /api/analytics/data reads off a session's FIRST
+    // event, which is always the page_view sent from here. Its `utm` (URL, then
+    // persisted first-touch) is layered UNDER the sessionStorage copy below so
+    // the existing capture-on-navigation behaviour still wins.
+    eventData: { ...eventData, ...getVisitorContext(), ...(Object.keys(utm).length > 0 ? { utm } : {}) },
     sessionId,
     timestamp: Date.now(),
     userAgent: navigator.userAgent,
     referrer: document.referrer || null,
     path,
     search: stripSensitiveParams(search),
+    userEmail: getIdentity(),
   };
 
   try {

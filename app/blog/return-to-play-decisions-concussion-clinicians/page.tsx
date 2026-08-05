@@ -181,7 +181,7 @@ export default function ReturnToPlayPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span><strong>Tandem gait:</strong> Best time of four trials. Normative data suggests less than 14 seconds for most athletic populations. Times significantly above baseline or normative values indicate persistent postural control deficits.</span>
+                  <span><strong>Tandem gait:</strong> Best time of three trials. Normative data suggests less than 14 seconds for most athletic populations. Times significantly above baseline or normative values indicate persistent postural control deficits.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />

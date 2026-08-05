@@ -611,7 +611,7 @@ export default function HomeClient() {
                 Ready to master evidence-based concussion management?
               </h2>
               <p className="text-sm text-white/60 mb-6 max-w-md mx-auto relative z-10">
-                Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE}
+                Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
                 <Link

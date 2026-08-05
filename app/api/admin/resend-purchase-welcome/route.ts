@@ -22,7 +22,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { findUserByEmail, createUser } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendPostPurchaseLoginEmail } from '@/lib/resend-client'
-import { isAdminRequest } from '@/lib/require-admin'
+import { isAdminRequest, isAdminHeaderRequest } from '@/lib/require-admin'
 import { CONFIG } from '@/lib/config'
 
 const COURSE_TYPES = ['online-only', 'full-course', 'workshop-upgrade', 'international-online'] as const
@@ -46,9 +46,20 @@ function defaultAmount(courseType: CourseType): number {
   return CONFIG.COURSE.PRICE_ONLINE
 }
 
+// HEADER-only admin auth on GET (x-admin-key / Bearer ADMIN_API_KEY).
+// This handler CREATES OR UPGRADES an account from query params and mails it a
+// working magic link, so under the sameSite-'lax' admin cookie — which GET is
+// not CSRF-checked for — a single clicked link like
+//   /api/admin/resend-purchase-welcome?email=attacker@evil.com&courseType=full-course
+// was account-creation + privilege-escalation + credential delivery to an
+// attacker-chosen address. A browser never attaches these headers cross-site.
+// Interactive/browser use must go through POST, which middleware origin-checks.
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!isAdminHeaderRequest(request)) {
+    return NextResponse.json(
+      { error: 'Unauthorized — GET requires x-admin-key/Bearer; use POST from a browser' },
+      { status: 401 },
+    )
   }
   const url = new URL(request.url)
   return handleSend(request, {

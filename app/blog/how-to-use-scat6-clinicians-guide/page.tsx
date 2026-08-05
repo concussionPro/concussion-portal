@@ -187,7 +187,7 @@ export default function HowToUseSCAT6Page() {
               <div className="border-l-4 border-purple-500 pl-5">
                 <h3 className="text-xl font-bold text-slate-900 mb-2">5. Balance Assessment</h3>
                 <p>
-                  The modified Balance Error Scoring System (mBESS) tests three stances on a firm surface: double-leg (feet together), single-leg (non-dominant foot), and tandem (non-dominant foot behind dominant). Each stance is held for 20 seconds with eyes closed and hands on hips. Errors are counted for each stance (maximum 10 errors per stance, 30 total). The tandem gait test requires the athlete to walk heel-to-toe along a 3-metre line and back as quickly as possible; the best time of four trials is recorded.
+                  The modified Balance Error Scoring System (mBESS) tests three stances on a firm surface: double-leg (feet together), single-leg (non-dominant foot), and tandem (non-dominant foot behind dominant). Each stance is held for 20 seconds with eyes closed and hands on hips. Errors are counted for each stance (maximum 10 errors per stance, 30 total). The tandem gait test requires the athlete to walk heel-to-toe along a 3-metre line and back as quickly as possible; the best time of three trials is recorded.
                 </p>
               </div>
 
@@ -251,7 +251,7 @@ export default function HowToUseSCAT6Page() {
                     <h4 className="font-bold text-blue-900">Perform Balance Assessment</h4>
                   </div>
                   <p className="text-sm text-slate-700 ml-11">
-                    Administer the mBESS (double-leg, single-leg, tandem stance -- 20 seconds each) and the tandem gait test (four trials, record best time). Count and document errors for each mBESS stance. Ensure the athlete removes shoes for the mBESS if possible and stands on a firm surface.
+                    Administer the mBESS (double-leg, single-leg, tandem stance -- 20 seconds each) and the tandem gait test (three trials, record best time). Count and document errors for each mBESS stance. Ensure the athlete removes shoes for the mBESS if possible and stands on a firm surface.
                   </p>
                 </div>
 
@@ -315,7 +315,7 @@ export default function HowToUseSCAT6Page() {
                   <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-bold text-amber-900">Age-Appropriate Tools</h4>
-                    <p className="text-sm text-slate-700">The SCAT6 is validated for athletes aged 13 years and older. For children aged 5-12 years, the Child SCAT6 must be used. It includes modified symptom lists, simplified cognitive tasks, and parent/carer report components appropriate for the developmental level.</p>
+                    <p className="text-sm text-slate-700">The SCAT6 is validated for athletes aged 13 years and older. For children aged 8-12 years, the Child SCAT6 must be used. It includes modified symptom lists, simplified cognitive tasks, and parent/carer report components appropriate for the developmental level.</p>
                   </div>
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function HowToUseSCAT6Page() {
                 Echemendia, R. J., et al. (2023). Sport Concussion Office Assessment Tool - 6th Edition (SCOAT6). <em>British Journal of Sports Medicine</em>, 57(11), 651-665.
               </li>
               <li>
-                Davis, G. A., et al. (2023). Child Sport Concussion Assessment Tool - 6th Edition (Child SCAT6). <em>British Journal of Sports Medicine</em>, 57(11), 632-650.
+                Davis, G. A., et al. (2023). Child Sport Concussion Assessment Tool - 6th Edition (Child SCAT6). <em>British Journal of Sports Medicine</em>, 57(11), 636-647.
               </li>
               <li>
                 Concussion in Sport Australia.{' '}

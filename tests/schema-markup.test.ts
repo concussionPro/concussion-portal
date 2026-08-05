@@ -150,9 +150,25 @@ describe('createCourseSchema', () => {
     expect(inst.offers.availability).toContain('LimitedAvailability')
   })
 
-  it('recognises Osteopathy Australia (never AHPRA — AHPRA does not accredit CPD)', () => {
+  // recognizedBy is now OPT-IN. It used to default to Osteopathy Australia, so
+  // any Course node that forgot to pass it published an OA recognition claim in
+  // JSON-LD — and OA endorses Concussion Clinical Mastery ONLY (see the
+  // server-side rule in lib/certificate.ts). Omitting it must emit no claim at
+  // all; passing it must emit exactly what was passed, and never AHPRA.
+  it('emits NO recognizedBy claim unless the caller supplies one', () => {
     const s = createCourseSchema({ name: 'X', description: 'Y', cpdHours: 16 })
-    expect(s.educationalCredentialAwarded.recognizedBy.name).toBe('Osteopathy Australia')
+    expect(s.educationalCredentialAwarded.recognizedBy).toBeUndefined()
+    expect(JSON.stringify(s)).not.toContain('recognizedBy')
+  })
+
+  it('recognises Osteopathy Australia when supplied (never AHPRA — AHPRA does not accredit CPD)', () => {
+    const s = createCourseSchema({
+      name: 'X',
+      description: 'Y',
+      cpdHours: 16,
+      recognizedBy: { name: 'Osteopathy Australia', url: 'https://osteopathy.org.au' },
+    })
+    expect(s.educationalCredentialAwarded.recognizedBy?.name).toBe('Osteopathy Australia')
     expect(JSON.stringify(s.educationalCredentialAwarded.recognizedBy)).not.toContain('AHPRA')
   })
 

@@ -288,7 +288,7 @@ export default function StandDownPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD) &mdash; ${workshopPriceFor().toLocaleString()}
+                Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD) &mdash; from ${workshopPriceFor().toLocaleString()} early-bird
               </Link>
             </div>
           </div>

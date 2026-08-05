@@ -35,6 +35,22 @@ export async function trackServerPurchase(
   // break dedup, double-counting purchases.
   const clientId = `server_${transactionId.replace('cs_', '').slice(0, 20)}`
 
+  // Hash before the address ever leaves this process. Node's webcrypto is used
+  // rather than `crypto.createHash` so this behaves identically if the caller
+  // is ever moved to the edge runtime.
+  const hashedEmail = email?.trim()
+    ? Array.from(
+        new Uint8Array(
+          await crypto.subtle.digest(
+            'SHA-256',
+            new TextEncoder().encode(email.trim().toLowerCase()),
+          ),
+        ),
+      )
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
+    : null
+
   const body = {
     client_id: clientId,
     events: [
@@ -46,13 +62,23 @@ export async function trackServerPurchase(
           currency,
           items: [
             {
-              item_name: 'ConcussionPro Course',
+              // Customer-facing brand. "ConcussionPro" is the internal folder
+              // name only and must not appear in anything we send outward.
+              item_name: 'Concussion Education Australia Course',
               quantity: 1,
               price: value,
             },
           ],
-          // Enhanced conversions: send plain-text email — GA4 MP hashes it server-side
-          ...(email ? { user_data: { email_address: email.trim().toLowerCase() } } : {}),
+          // Enhanced conversions, SHA-256 hashed.
+          //
+          // This previously sent the buyer's PLAIN-TEXT email address to Google
+          // from the Stripe webhook. GA4 does hash on receipt, but the address
+          // still left our systems in the clear, to a processor the privacy
+          // policy did not name, on a channel that has been retired. The
+          // browser-side conversion helpers already hash before sending
+          // (sha256_email_address); this now matches them, so Google receives a
+          // digest it can match against and never the address itself.
+          ...(hashedEmail ? { user_data: { sha256_email_address: hashedEmail } } : {}),
         },
       },
     ],

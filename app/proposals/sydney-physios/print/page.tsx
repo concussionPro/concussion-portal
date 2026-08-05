@@ -123,7 +123,7 @@ function PageOne() {
   const stats = [
     { big: '1 day', label: 'Full practical day delivered in-clinic in Sydney' },
     { big: '8 hrs', label: 'Online pre-work modules, completed before the day' },
-    { big: '16 CPD', label: 'Accredited hours per clinician, certificate issued' },
+    { big: '16 CPD', label: 'CPD hours per clinician, certificate issued' },
   ]
   const chips = [
     'Rugby & league clubs',
@@ -235,7 +235,7 @@ function PageTwo() {
     { t: 'Full assessment battery', d: 'SCAT6 & SCOAT6 plus VOMS, BESS and oculomotor screening' },
     { t: 'Targeted neuro rehab', d: 'progressive oculomotor, vestibular (VOMS) and balance (BESS), acute through PCS' },
     { t: 'Return-to-sport, work & learn', d: 'graded progression frameworks and discharge protocols' },
-    { t: '16 CPD hours + certification', d: 'accredited certificate, endorsed by Osteopathy Australia' },
+    { t: '16 CPD hours + certification', d: 'certificate of completion, endorsed by Osteopathy Australia' },
   ]
   const roles = [
     {

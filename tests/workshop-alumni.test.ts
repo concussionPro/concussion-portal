@@ -77,6 +77,42 @@ describe('isWorkshopAlumnus — round scoping', () => {
     ).toBe(true)
   })
 
+  it('does NOT silence a Melbourne buyer who bought AFTER the round ran', () => {
+    // Melbourne is status 'completed' (ran 13 Jun 2026) but is still nominatable
+    // for its next round — VALID_LOCATIONS in lib/stripe.ts accepts 'melbourne'
+    // and /in-person lists it as "Scheduling Now". Round scoping used to be
+    // skipped entirely for a 'completed' city, so every new Melbourne buyer was
+    // instantly classed an alumnus and dropped from their own post-purchase
+    // onboarding, seat reservation, prep and logistics email.
+    const afterTheRound = new Date(
+      CONFIG.LOCATIONS.MELBOURNE.dateObj!.getTime() + 30 * 86400000,
+    ).toISOString()
+    expect(
+      isWorkshopAlumnus(
+        { accessLevel: 'full-course', workshopLocation: 'melbourne', registeredAt: afterTheRound },
+        now,
+      ),
+    ).toBe(false)
+  })
+
+  it('a hasRunWorkshop city with NO ROUND_START fails SAFE, not silent', () => {
+    // Adding a city with hasRunWorkshop:true and forgetting its ROUND_START
+    // (CLAUDE.md: "After a new workshop round opens: update ROUND_START") must
+    // not silence every buyer in it.
+    const orig = CONFIG.WORKSHOP.ROUND_START.sydney
+    delete CONFIG.WORKSHOP.ROUND_START.sydney
+    try {
+      expect(
+        isWorkshopAlumnus(
+          { accessLevel: 'full-course', workshopLocation: 'sydney', registeredAt: '2026-08-01' },
+          now,
+        ),
+      ).toBe(false)
+    } finally {
+      CONFIG.WORKSHOP.ROUND_START.sydney = orig
+    }
+  })
+
   it('covers the CRM half of the shared practical day the same way', () => {
     const currentRound = new Date(
       new Date(CONFIG.WORKSHOP.ROUND_START.sydney).getTime() + 86400000,

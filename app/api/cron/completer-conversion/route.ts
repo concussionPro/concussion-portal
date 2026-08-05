@@ -24,7 +24,9 @@
  *
  * Auth:
  *  - Vercel cron / scripts: Bearer CRON_SECRET → live send
- *  - Admin (cookie / x-admin-key): defaults to dry-run; add ?send=1 to send
+ *  - Admin x-admin-key header: dry-run; add ?send=1 to send (either verb)
+ *  - Admin cookie: GET is ALWAYS dry-run (?send=1 is ignored — the cookie is
+ *    sameSite 'lax' and GET is not CSRF-checked); POST honours ?send=1
  *
  * Configured in vercel.json.
  */
@@ -33,7 +35,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
-import { isAdminRequest } from '@/lib/require-admin'
+import { isAdminRequest, isAdminHeaderRequest } from '@/lib/require-admin'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import {
   COMPLETER_CONVERT_PRICE,
@@ -204,15 +206,28 @@ async function handle(request: NextRequest, live: boolean) {
   return NextResponse.json({ ok: true, found: targets.length, sent, skipped, errors, capped: targets.length > SEND_CAP })
 }
 
+/** `?send=1` opt-in, only honoured where the caller is CSRF-safe. */
+function wantsSend(request: NextRequest): boolean {
+  return new URL(request.url).searchParams.get('send') === '1'
+}
+
 export async function GET(request: NextRequest) {
+  // Vercel cron.
   if (bearerValid(request)) return handle(request, true)
-  if (isAdminRequest(request)) {
-    const send = new URL(request.url).searchParams.get('send') === '1'
-    return handle(request, send)
-  }
+  // Manual trigger from a script/CLI. HEADER-only admin auth — a browser never
+  // attaches x-admin-key / Authorization cross-site.
+  if (isAdminHeaderRequest(request)) return handle(request, wantsSend(request))
+  // Admin COOKIE on a GET is always dry. The cookie is sameSite 'lax' and
+  // middleware only CSRF-checks unsafe methods, so honouring `?send=1` here
+  // made one clicked cross-site link a live mass send. Sending needs POST.
+  if (isAdminRequest(request)) return handle(request, false)
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }
 
 export async function POST(request: NextRequest) {
-  return GET(request)
+  if (bearerValid(request)) return handle(request, true)
+  // POST is origin-checked by middleware and the lax cookie is not sent on a
+  // cross-site POST, so the cookie is safe to honour here.
+  if (isAdminRequest(request)) return handle(request, wantsSend(request))
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }

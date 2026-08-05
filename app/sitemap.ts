@@ -73,12 +73,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/courses/streams`,
-      lastModified: ESSA_LIVE_LAST_MODIFIED,
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
+    // /courses/streams REMOVED 2026-08-05: the page is now `redirect('/')`
+    // (retired 2026-07-28 as a home-page duplicate). Same rule as /trial below —
+    // redirects don't belong in sitemaps.
     // Per-module trial pages. These carry the SAME unlocked sections the
     // /preview page shows (Module 1: 3 sections, others: 1) — no extra content,
     // just one URL per module so each can rank for its own clinical intent.
@@ -281,6 +278,52 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/courses/sydney`,
       lastModified: SEO_SWEEP_LAST_MODIFIED,
       changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    // Indexable marketing routes that were missing from the sitemap (each has a
+    // title, description, self-canonical and no noindex, but no entry here).
+    {
+      url: `${baseUrl}/cpd`,
+      lastModified: ESSA_LIVE_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/security`,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/integrations/cliniko`,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/integrations/cliniko/guide`,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/clinical-suite/baseline`,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/clinical-suite/evidence`,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    // Public clinical calculator — the mid-consult search surface. robots.txt
+    // carries a matching `Allow:` exception to the /tools/ block.
+    {
+      url: `${baseUrl}/tools/bctt-calculator`,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
+      changeFrequency: 'monthly',
       priority: 0.7,
     },
   ]

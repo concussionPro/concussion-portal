@@ -48,7 +48,7 @@ export default async function AboutFounderPage() {
               Zac Lewis
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-4 max-w-2xl">
-              AHPRA-registered osteopath, Osteopathy Australia–endorsed CPD provider, and the solo developer of the platform you&apos;re looking at. Clinician, provider, and engineer in one person — built CEA over the last 12 months.
+              AHPRA-registered osteopath, provider of the Osteopathy Australia–endorsed Concussion Clinical Mastery course, and the solo developer of the platform you&apos;re looking at. Clinician, provider, and engineer in one person — built CEA over the last 12 months.
             </p>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">

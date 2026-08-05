@@ -41,7 +41,7 @@ export default function SydneyPage() {
 
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
               Master SCAT6, VOMS, and BESS protocols in Sydney&apos;s premier concussion management course.
-              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours.
+              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours.
             </p>
 
             {location.status === 'confirmed' ? (
@@ -87,7 +87,7 @@ export default function SydneyPage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype`,
+                `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype`,
                 'Full-day hands-on practice with live partners — SCAT6, SCOAT6, VOMS and mBESS',
                 'Return-to-play, return-to-school and return-to-work frameworks',
                 'Clinical decision-making in acute concussion',

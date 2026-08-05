@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -130,7 +131,8 @@ export async function POST(request: NextRequest) {
       RETURNING audit_key
     `
 
-    if (auditRows.length > 0) {
+    // MASTER BLACKLIST — Day-0 lead magnet on a PUBLIC endpoint. Fails closed.
+    if (auditRows.length > 0 && !(await isEmailSuppressed(email))) {
       const moduleRows = CCM_MODULES.map(
         (t, i) =>
           `<tr><td style="padding:7px 12px 7px 0;font-size:13px;color:#0d9488;font-weight:700;white-space:nowrap;vertical-align:top;">Module ${i + 1}</td><td style="padding:7px 0;font-size:14px;color:#1e293b;">${escapeHtml(t)}</td></tr>`

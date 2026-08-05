@@ -42,7 +42,7 @@ const toolkitResources: ToolkitResource[] = [
   {
     id: 'child-scat6',
     title: 'Child SCAT6',
-    description: 'Child Sport Concussion Assessment Tool (6th Edition), ages 5–12 - print to complete; send home for the symptom/history sections ahead of the appointment',
+    description: 'Child Sport Concussion Assessment Tool (6th Edition), ages 8–12 - print to complete; send home for the symptom/history sections ahead of the appointment',
     fileSize: '2.0 MB',
     category: 'assessment',
     isFree: false,

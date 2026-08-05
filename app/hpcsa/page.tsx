@@ -55,8 +55,8 @@ export default function HpcsaLandingPage() {
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-slate-600">
             <strong className="text-slate-900">Concussion Rehab Mastery</strong> is
-            a structured rehab-exercise course for biokineticists — eight hours of
-            CEU-track learning, shipped with the clinical tools to deliver the
+            a structured rehab-exercise course for biokineticists — {CONFIG.COURSE.ONLINE_CPD_POINTS} hours of
+            structured learning, shipped with the clinical tools to deliver the
             protocol.
           </p>
           <a
@@ -184,10 +184,24 @@ export default function HpcsaLandingPage() {
         <section className="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
             <strong>CEU status:</strong> Concussion Education Australia is pursuing
-            HPCSA CEU accreditation of this course. The course has been{' '}
-            <strong>independently reviewed by two reviewers appointed by Exercise
-            &amp; Sports Science Australia (ESSA)</strong>; that endorsement is
-            pending and not yet held. No CEU value is claimed until an accreditation
+            HPCSA CEU accreditation of this course.{' '}
+            {CONFIG.FEATURES.ESSA_ACCREDITED ? (
+              <>
+                The course <strong>is accredited by Exercise &amp; Sports Science
+                Australia (ESSA)</strong> (accreditation {CONFIG.ESSA_ACCREDITATION.NUMBER},
+                granted 24 July 2026, valid to 24 July 2027) after independent review by two
+                ESSA-appointed reviewers — {CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} CPD points
+                for the online course. ESSA accreditation is an Australian credential and is not
+                an HPCSA CEU accreditation.
+              </>
+            ) : (
+              <>
+                The course has been <strong>independently reviewed by two reviewers appointed by
+                Exercise &amp; Sports Science Australia (ESSA)</strong>; that endorsement is
+                pending and not yet held.
+              </>
+            )}{' '}
+            No CEU value is claimed until an accreditation
             letter specifies one. We don&rsquo;t claim accreditation we don&rsquo;t
             hold — this page updates the day each is confirmed.
           </p>

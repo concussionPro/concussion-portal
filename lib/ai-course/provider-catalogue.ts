@@ -167,7 +167,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     // Honest learning-hours figure (module reading times sum to ~2.3 hr → 2 CPD
     // points for ESSA, which allocates 1 point/hour). Was 3; corrected 2026-06.
     cpdHours: 2,
-    cpdRecognition: ['AHPRA-aligned', 'By Osteopathy Australia–endorsed provider'],
+    cpdRecognition: ['AHPRA-aligned'],
     description: 'AHPRA-aligned compliance training for AI use by Australian clinicians. Covers Privacy Act, APP 6/8/11, TGA boundaries, AHPRA documentation, indemnity carrier positions.',
     route: '/courses/ai-in-clinical-practice',
     // Flat A$99 (owner truth 2026-07-02). The old $197-with-50%-launch-week
@@ -187,7 +187,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     title: 'The Vagus Nerve in Clinical Practice',
     providerId: 'cea',
     cpdHours: 1,
-    cpdRecognition: ['AHPRA-aligned', 'By Osteopathy Australia–endorsed provider'],
+    cpdRecognition: ['AHPRA-aligned'],
     description: 'Evidence-based assessment + defensible interventions for autonomic dysfunction. Anatomy, red flags, phenotypes (POTS, post-concussion, long-COVID), interventions with honest evidence ranking. 6 modules · ~75 minutes.',
     route: '/courses/vagus-nerve',
     priceAUD: 97,
@@ -205,7 +205,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     title: 'Concussion Clinical Mastery',
     providerId: 'cea',
     cpdHours: CONFIG.COURSE.TOTAL_CPD_POINTS,
-    cpdRecognition: ['Osteopathy Australia–endorsed', 'AHPRA-aligned', 'MedCPD Career Health accredited'],
+    cpdRecognition: ['Osteopathy Australia–endorsed', 'AHPRA-aligned'],
     description: '8 online modules + full-day workshop. SCAT6, VOMS, BESS, return-to-sport/learn/work protocols. Workshop dates launch per city as clinicians nominate — online access starts immediately.',
     route: '/pricing',
     // Standing early-bird under the nomination model ($1,400 sticker applies

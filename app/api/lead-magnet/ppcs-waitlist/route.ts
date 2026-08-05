@@ -4,8 +4,8 @@
  * POST { email, name? } -> records intent on the course_early_access
  * table with course_slug='persistent-post-concussion-symptoms',
  * source='waitlist'. Sends a one-shot confirmation email — NO
- * downstream nurture sequence, NO PDF. The full course launches
- * August 2026; waitlist members get a 50%-off launch email.
+ * downstream nurture sequence, NO PDF. The full course has no launch
+ * date yet; waitlist members get a 50%-off launch email.
  *
  * This is the new validation pattern (waitlist not free-PDF). If
  * <100 signups in 4 weeks, the PPCS course is killed before build.
@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { getClientIp } from '@/lib/get-client-ip'
 import { rateLimit } from '@/lib/rate-limit'
@@ -86,9 +87,12 @@ export async function POST(request: NextRequest) {
         <p>&mdash; Zac<br>Concussion Education Australia</p>
       `
 
-      await sendEmail({
+      // MASTER BLACKLIST — this carries a 50%-off launch-week pitch, so it is
+      // marketing on a PUBLIC endpoint. Fails closed.
+      const suppressed = await isEmailSuppressed(normalizedEmail)
+      if (!suppressed) await sendEmail({
         to: normalizedEmail,
-        subject: "You're on the PPCS course waitlist — launch August 2026",
+        subject: "You're on the PPCS course waitlist",
         html,
         tags: [
           { name: 'sequence', value: 'ppcs-waitlist' },

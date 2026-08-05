@@ -10,7 +10,7 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
-import { SST_TIERS } from '@/lib/config'
+import { CONFIG, SST_TIERS } from '@/lib/config'
 
 /**
  * CRM (Concussion Rehab Mastery) — INTERNATIONAL landing.
@@ -44,18 +44,21 @@ export interface IntlPriceView {
   code: string // e.g. "GBP"
 }
 
-const INTL_FAQS: { q: string; a: string }[] = [
+// ESSA accreditation is gated on CONFIG.FEATURES.ESSA_ACCREDITED, same
+// discipline as CrmPricingContent's buildFaqs — the FAQ text is a function of
+// the flag rather than a hardcoded claim.
+const buildIntlFaqs = (essaAccredited: boolean): { q: string; a: string }[] => [
   {
     q: 'Is this a course or a platform?',
     a: 'Both — always sold as one. Enrolment includes the working instruments you deliver concussion rehab with: the SST Trainer app (graded test → HR-threshold prescription → monitored home sessions), the BCTT calculator and the full Clinical Toolkit. The platform is never available without the training — running HR-threshold prescriptions on brain-injured patients without concussion education isn’t safe.',
   },
   {
     q: 'What accreditation does it carry?',
-    a: 'The course is built to ACSM CEC standards, but CEA holds no ACSM Approved-Provider status and is not currently pursuing one — so no ACSM CECs are offered. The course is ESSA-accredited — 8 ESSA CPD points for the online course — independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
+    a: `The course is built to ACSM CEC standards, but CEA holds no ACSM Approved-Provider status and is not currently pursuing one — so no ACSM CECs are offered. The course is ${essaAccredited ? `ESSA-accredited — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points for the online course` : 'built to ESSA CPD standards (accreditation pending)'} — independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states ${CONFIG.COURSE.ONLINE_CPD_POINTS} hours of assessed learning, and each accreditation is added the day it’s confirmed.`,
   },
   {
     q: 'Is there an ongoing cost?',
-    a: 'The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
+    a: `The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$${PLATFORM_MONTHLY_AUD}/month (the Starter rate — up to ${SST_TIERS[0].activePatientCap} active patients, unlimited clinicians); it starts automatically at the 12-month mark and you can cancel anytime.`,
   },
   {
     q: 'What’s the refund policy?',
@@ -64,6 +67,11 @@ const INTL_FAQS: { q: string; a: string }[] = [
 ]
 
 export default function CrmInternationalContent({ price, live = false, hideNav = false }: { price: IntlPriceView; live?: boolean; hideNav?: boolean }) {
+  const essaAccredited = CONFIG.FEATURES.ESSA_ACCREDITED
+  const essaBadgeLine = essaAccredited
+    ? `ESSA-accredited · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours`
+    : 'Designed to ESSA CPD standards · accreditation pending'
+  const INTL_FAQS = buildIntlFaqs(essaAccredited)
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
 
   // Live checkout (only when `live`): POST to the geo-priced international
@@ -216,7 +224,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               Built to ACSM CEC &amp; ESSA CPD standards
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Built to ACSM CEC standards · ESSA-accredited · 8 CPD hours
+              Built to ACSM CEC standards · {essaBadgeLine}
             </p>
           </div>
         </div>
@@ -326,38 +334,21 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               </div>
 
               <div className="mt-auto">
-                {live ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleEnrol}
-                      disabled={enrolling}
-                      className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
-                      {!enrolling && <ArrowRight className="w-4 h-4" />}
-                    </button>
-                    {enrolError && (
-                      <p className="text-[11px] text-center text-red-600 mt-2">{enrolError}</p>
-                    )}
-                    <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
-                      Prices shown in your region&rsquo;s currency · secure checkout · 7-day money-back guarantee
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <a
-                      href="#founding"
-                      className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
-                    >
-                      Join the founding cohort
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
-                    <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
-                      Prices shown in your region&rsquo;s currency · founding-cohort registration ahead of enrolment opening
-                    </p>
-                  </>
+                <button
+                  type="button"
+                  onClick={handleEnrol}
+                  disabled={enrolling}
+                  className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+                  {!enrolling && <ArrowRight className="w-4 h-4" />}
+                </button>
+                {enrolError && (
+                  <p className="text-[11px] text-center text-red-600 mt-2">{enrolError}</p>
                 )}
+                <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
+                  Prices shown in your region&rsquo;s currency · secure checkout · 7-day money-back guarantee
+                </p>
               </div>
             </div>
           </div>
@@ -473,7 +464,8 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
             <strong>Continuing-education status:</strong> the course is built to ACSM CEC standards,
             but CEA holds <strong>no ACSM Approved-Provider status</strong> and is not currently
-            pursuing one — no ACSM CECs are offered. The course <strong>is ESSA-accredited</strong>,
+            pursuing one — no ACSM CECs are offered. The course is{' '}
+            {essaAccredited ? <strong>ESSA-accredited</strong> : 'built to ESSA CPD standards (accreditation pending)'},
             content independently reviewed by two reviewers appointed by ESSA through its
             professional development endorsement process. We don&rsquo;t claim credits or
             accreditation we don&rsquo;t hold — this page updates the day any new one is confirmed.
@@ -558,57 +550,42 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               </a>
             )}
             <p className="text-xs text-muted-foreground mt-4">
-              Built to ACSM CEC standards · ESSA-accredited · 8 CPD hours
+              Built to ACSM CEC standards · {essaBadgeLine}
             </p>
           </div>
         </div>
 
-        {/* Bottom capture — founding cohort when inert; live enrol when the flag is on */}
+        {/* Bottom enrol block. The `#founding` id is a legacy anchor target kept
+            so existing links still land here — the founding-cohort MODEL is
+            retired and must not come back (see lib/config.ts). */}
         <div id="founding" className="max-w-2xl mx-auto mt-16 scroll-mt-24">
-          {live ? (
-            <>
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
-                  Enrol in Concussion Rehab Mastery
-                </h2>
-                <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
-                  The EP-scoped course + the working clinical platform, delivered wholly online.
-                  {' '}Your first year on the platform is included; secure checkout in your region&rsquo;s
-                  currency, 7-day money-back guarantee.
-                </p>
-              </div>
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleEnrol}
-                  disabled={enrolling}
-                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
-                  {!enrolling && <ArrowRight className="w-5 h-5" />}
-                </button>
-                {enrolError && (
-                  <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>
-                )}
-                <p className="text-[11px] text-muted-foreground mt-3">
-                  {price.display} {price.code} one-time · lifetime course + first year of the platform free · then A${PLATFORM_MONTHLY_AUD}/mo to keep the platform
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
-                  Be a founding-cohort clinic
-                </h2>
-                <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
-                  Register your interest and we&rsquo;ll notify you the moment enrolment opens —
-                  founding pricing, locked, ahead of the ACSM listing going live.
-                </p>
-              </div>
-              <EpLeadCapture variant="full" location="international" />
-            </>
-          )}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
+              Enrol in Concussion Rehab Mastery
+            </h2>
+            <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
+              The EP-scoped course + the working clinical platform, delivered wholly online.
+              {' '}Your first year on the platform is included; secure checkout in your region&rsquo;s
+              currency, 7-day money-back guarantee.
+            </p>
+          </div>
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleEnrol}
+              disabled={enrolling}
+              className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+              {!enrolling && <ArrowRight className="w-5 h-5" />}
+            </button>
+            {enrolError && (
+              <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>
+            )}
+            <p className="text-[11px] text-muted-foreground mt-3">
+              {price.display} {price.code} one-time · lifetime course + first year of the platform free · then A${PLATFORM_MONTHLY_AUD}/mo to keep the platform
+            </p>
+          </div>
         </div>
 
       </div>

@@ -140,7 +140,7 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-foreground mb-4">5. Storage, location and retention</h2>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
             <li><strong className="text-foreground">Database:</strong> records are stored in a PostgreSQL database hosted in Australia (Sydney region).</li>
-            <li><strong className="text-foreground">Application:</strong> the portal&apos;s server functions are configured to run in the Sydney region, so clinical information is processed in Australia.</li>
+            <li><strong className="text-foreground">Application:</strong> the portal&apos;s serverless functions — which handle clinical records, reports and account data — are configured to run in the Sydney region, so that processing happens in Australia. A thin request-handling layer (routing, access checks and rate limiting) runs at edge locations close to the visitor, which may be outside Australia; it sees request metadata such as your IP address, your session identifier and the email address inside it, but not clinical records.</li>
             <li><strong className="text-foreground">Reports:</strong> reports are generated on demand from the stored record. Where a report is emailed, delivery is handled by the provider named in section 6.</li>
             <li><strong className="text-foreground">Security:</strong> information is encrypted in transit. Access to a clinic&apos;s records requires that clinic&apos;s credentials, administrative access is separately authenticated, and any credentials you give us to connect a practice-management system are stored encrypted.</li>
             <li><strong className="text-foreground">Retention:</strong> clinical records are retained so that later tests can be compared against earlier ones and so that a clinic keeps a defensible record of care. We keep them for as long as needed for that purpose and for any period the clinic&apos;s own professional or legal obligations require, and we delete or de-identify information when it is no longer required or on a valid request, subject to any legal retention obligations. Course and purchase records are retained for as long as needed to evidence your training and to meet tax and record-keeping obligations.</li>
@@ -159,11 +159,22 @@ export default function PrivacyPage() {
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
             <li><strong className="text-foreground">Neon</strong> — managed PostgreSQL database hosting. Our database is in Australia (Sydney region).</li>
             <li><strong className="text-foreground">Vercel</strong> — application hosting and delivery. Our server functions are configured to run in the Sydney region; content delivery is global.</li>
-            <li><strong className="text-foreground">Upstash</strong> — key/value store used for service controls such as rate limiting and short-lived session state.</li>
-            <li><strong className="text-foreground">Resend</strong> — transactional and educational email delivery; United States.</li>
+            <li><strong className="text-foreground">Cloudflare</strong> — network security, DNS and content delivery. It handles requests to this site and sees request metadata including your IP address; delivery is global.</li>
+            <li><strong className="text-foreground">Upstash</strong> — key/value store used for service controls such as rate limiting, and for operational data including clinic contact details and access keys and short-lived test data.</li>
+            <li><strong className="text-foreground">Resend</strong> — transactional and educational email delivery, including delivery and engagement events; United States.</li>
             <li><strong className="text-foreground">Stripe</strong> — payment processing; United States. Stripe receives your payment details directly.</li>
+            <li><strong className="text-foreground">Google</strong> — website analytics and advertising measurement. Where a purchase is measured, your email address is sent only as an irreversible cryptographic hash, never in readable form; United States.</li>
             <li><strong className="text-foreground">Practice-management systems</strong> (for example Cliniko or PracSuite) — only where your clinic connects one, and only for the information a clinician chooses to file.</li>
+            <li><strong className="text-foreground">Cal.com</strong> — appointment booking, where you book a call with us.</li>
+            <li><strong className="text-foreground">Squarespace</strong> — our marketing website and its enquiry forms.</li>
           </ul>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+            Separately, for business-to-business marketing we use{' '}
+            <strong className="text-foreground">Apollo</strong> and <strong className="text-foreground">Hunter</strong>{' '}
+            to source and verify publicly listed professional contact details for clinics — business
+            contact information only. This never involves patient information. If you receive marketing
+            from us this way you can opt out using the link in the email, and we will not contact you again.
+          </p>
         </section>
 
         {/* Minors */}

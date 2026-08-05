@@ -110,10 +110,6 @@ export default function PreseasonLandingPage() {
             <span className="text-[13px] font-semibold leading-[1.4] text-slate-500">
               ~5 minutes on any computer
             </span>
-            <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <span className="text-[13px] font-semibold leading-[1.4] text-slate-500">
-              Endorsed by Osteopathy Australia
-            </span>
           </div>
         </div>
 

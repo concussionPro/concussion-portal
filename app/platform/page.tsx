@@ -24,7 +24,11 @@ const DEVICES = [
 
 const NAV_CARDS = [
   {
-    href: '/platform/clinicians',
+    // /platform/clinicians redirects to /pricing (founding-clinic funnel
+    // retired) — /clinical-suite is the real public clinician surface for the
+    // Clinical Testing suite (SST Trainer + baseline), so point the CTA there
+    // instead of round-tripping through a redirect.
+    href: '/clinical-suite',
     title: 'For clinicians →',
     body: 'Prescribe, oversee & track recovery.',
     accent: false,
@@ -91,7 +95,7 @@ function InstallCta() {
         </a>
       )}
       <Link
-        href="/platform/clinicians"
+        href="/clinical-suite"
         className="rounded-[14px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[14px] text-[15px] font-bold transition-colors hover:border-slate-400"
         style={{ color: PLATFORM.navy }}
       >
@@ -450,7 +454,7 @@ export default function PlatformHome() {
             Chest strap = most accurate ·{' '}
             {CONFIG.FEATURES.SST_IOS_APP_LIVE
               ? 'iPhone: native app on the App Store'
-              : 'iPhone: native app in App Store review — beta access through your clinician'}{' '}
+              : 'iPhone: TestFlight beta — through your clinician'}{' '}
             · phone-camera pulse check for resting measurements.
           </p>
 

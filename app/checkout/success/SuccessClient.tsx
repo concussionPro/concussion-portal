@@ -234,10 +234,17 @@ function CheckoutSuccessContent() {
           const location = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === sessionData.location)
           if (!location) return null
 
-          // Confirmed city with date — show countdown
-          if (location.dateObj) {
-            const daysUntil = Math.ceil((location.dateObj.getTime() - mountedAt) / (1000 * 60 * 60 * 24))
-            if (daysUntil <= 0) return null
+          // Confirmed city with a FUTURE date — show countdown. A past date
+          // means that round has run and this purchase is a nomination for the
+          // next one (CONFIG: "a completed city is still nominatable"), so it
+          // falls through to the reservation block below. Returning null here
+          // showed a Complete Course buyer NOTHING about the workshop they had
+          // just paid for — which is exactly what the default Melbourne
+          // nomination produced.
+          const daysUntil = location.dateObj
+            ? Math.ceil((location.dateObj.getTime() - mountedAt) / (1000 * 60 * 60 * 24))
+            : 0
+          if (location.dateObj && daysUntil > 0) {
             return (
               <div className="glass rounded-2xl p-6 md:p-8 mb-6 text-center border border-accent/20">
                 <p className="text-sm font-semibold text-accent uppercase tracking-wider mb-2">Your Workshop</p>

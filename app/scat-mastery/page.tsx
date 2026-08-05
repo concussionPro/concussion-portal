@@ -39,6 +39,7 @@ const courseSchema = createCourseSchema({
     `Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.`,
   cpdHours: CONFIG.COURSE.TOTAL_CPD_POINTS,
   priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
+  recognizedBy: { name: 'Osteopathy Australia', url: 'https://osteopathy.org.au' },
 })
 
 // Second Course node: the FREE course this page actually signs users up for.
@@ -327,7 +328,7 @@ export default function SCATMasteryPage() {
                 <p className="text-xs text-slate-500 font-semibold">— Sarah, Physiotherapist</p>
               </div>
               <p className="text-sm text-slate-500">
-                AHPRA aligned · Endorsed by Osteopathy Australia
+                AHPRA aligned · Concussion Clinical Mastery is endorsed by Osteopathy Australia
               </p>
             </div>
           </div>

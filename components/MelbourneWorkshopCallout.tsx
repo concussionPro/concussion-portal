@@ -62,7 +62,7 @@ export function MelbourneWorkshopCallout({
           Melbourne · Saturday 13 June 2026
         </h3>
         <p className="text-sm text-slate-700 mb-4">
-          Hands-on full day at <strong>Rydges Melbourne</strong> on Exhibition St. {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype. Lifetime online access included.
+          Hands-on full day at <strong>Rydges Melbourne</strong> on Exhibition St. {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype. Lifetime online access included.
         </p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-700 mb-5">
           <span className="inline-flex items-center gap-1.5">

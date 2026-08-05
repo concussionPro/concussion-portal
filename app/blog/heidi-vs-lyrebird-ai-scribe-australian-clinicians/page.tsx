@@ -267,7 +267,7 @@ export default function HeidiVsLyrebirdPage() {
           <section className="bg-gradient-to-br from-teal-600 to-emerald-600 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">Want the full framework?</h2>
             <p className="text-emerald-50 leading-relaxed mb-5">
-              This article covers the headlines. Our short course <strong>AI in Clinical Practice</strong> walks through the AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation workflows, and the full Tier A/B/C framework with worked examples for physiotherapy, osteopathy, GP and naturopathy. 3 CPD hours, fully online, certificate on completion. Now available.
+              This article covers the headlines. Our short course <strong>AI in Clinical Practice</strong> walks through the AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation workflows, and the full Tier A/B/C framework with worked examples for physiotherapy, osteopathy, GP and naturopathy. 2 CPD hours, fully online, certificate on completion. Now available.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link

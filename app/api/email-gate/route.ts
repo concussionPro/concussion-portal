@@ -10,6 +10,7 @@ import { hasElevatedEntitlement } from '@/lib/account-escalation'
 import { createJWTSession } from '@/lib/jwt-session'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendEmail, sendMagicLinkEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -134,7 +135,13 @@ export async function POST(request: NextRequest) {
       sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         .catch(err => console.error('Failed to write email-gate audit log:', err))
 
-      sendEmail({
+      // MASTER BLACKLIST — Day-0 of the SCAT nurture sequence on a PUBLIC
+      // endpoint. This send is deliberately not awaited (it must not block the
+      // PDF download), so the gate is chained onto the same promise rather than
+      // awaited here. isEmailSuppressed fails closed, so a DB error skips it.
+      void isEmailSuppressed(normalizedEmail).then((suppressed) => {
+        if (suppressed) return
+        return sendEmail({
         to: normalizedEmail,
         subject: 'Your SCAT6 assessment PDF + concussion mini-course',
         headers: {
@@ -197,6 +204,7 @@ export async function POST(request: NextRequest) {
           { name: 'sequence', value: 'scat-export' },
           { name: 'day', value: '0' },
         ],
+        })
       }).catch((err) => console.error('Email gate welcome email failed:', err))
     }
 
