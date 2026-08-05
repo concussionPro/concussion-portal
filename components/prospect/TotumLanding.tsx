@@ -594,7 +594,7 @@ function CoursePreview() {
               Module 1 — preview the course
             </h4>
             <p className="text-sm text-white/85 leading-relaxed">
-              First sections + an interactive quiz checkpoint, exactly as your team will see it. 8 CPD hrs online across all 8 modules — 14 with the practical day.
+              First sections + an interactive quiz checkpoint, exactly as your team will see it. 8 CPD hrs online across all 8 modules — 16 with the practical day.
             </p>
           </div>
           <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">

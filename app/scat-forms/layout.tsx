@@ -213,7 +213,7 @@ export default function SCATFormsLayout({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-lg font-bold text-slate-900">Confident using this form clinically?</h3>
-                    <span className="badge text-xs">8 CPD hrs online, up to 14 with the in-person day</span>
+                    <span className="badge text-xs">8 CPD hrs online, up to 16 with the in-person day</span>
                   </div>
                   <p className="text-sm text-slate-700 mb-2 leading-relaxed">
                     Beyond the form: VOMS interpretation, vestibular assessment, BESS scoring, and evidence-based RTP decision-making. CPD hours count toward your AHPRA registration requirements.

@@ -369,7 +369,7 @@ export function PreviewClient({
         </div>
 
         {/* Pricing Options — shared across both streams: both complete the same
-            Concussion Clinical Mastery practical day (8 online + 6 practical = 14). */}
+            Concussion Clinical Mastery practical day (8 online + 8 practical = 16). */}
         <div id="pricing-section" className="mt-16 mb-12">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-bold mb-4">

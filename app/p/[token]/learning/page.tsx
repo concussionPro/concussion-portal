@@ -85,8 +85,8 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
             {isPurpose
-              ? 'Two streams — CCM (allied health) and CRM (exercise physiology), 8 modules each. 8 CPD hrs online per stream (+6 in-person = 14 total). Pick a stream below to see its modules.'
-              : '8 modules · 8 CPD hrs online (+6 in-person = 14 total) · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.'}
+              ? 'Two streams — CCM (allied health) and CRM (exercise physiology), 8 modules each. 8 CPD hrs online per stream (+8 in-person = 16 total). Pick a stream below to see its modules.'
+              : '8 modules · 8 CPD hrs online (+8 in-person = 16 total) · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.'}
           </p>
 
           {isPurpose ? (
@@ -149,7 +149,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
 
               <div className="glass-premium rounded-2xl p-4 mt-6 text-center">
                 <p className="text-xs text-muted-foreground">
-                  Modules 2-8 unlock for every {clinic.shortName} clinician with the Hub Program · 8 CPD hrs online each (14 with the in-person day).
+                  Modules 2-8 unlock for every {clinic.shortName} clinician with the Hub Program · 8 CPD hrs online each (16 with the in-person day).
                 </p>
               </div>
             </>

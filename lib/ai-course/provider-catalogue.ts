@@ -204,7 +204,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     id: 'concussion-clinical-mastery',
     title: 'Concussion Clinical Mastery',
     providerId: 'cea',
-    cpdHours: 14,
+    cpdHours: CONFIG.COURSE.TOTAL_CPD_POINTS,
     cpdRecognition: ['Osteopathy Australia–endorsed', 'AHPRA-aligned', 'MedCPD Career Health accredited'],
     description: '8 online modules + full-day workshop. SCAT6, VOMS, BESS, return-to-sport/learn/work protocols. Workshop dates launch per city as clinicians nominate — online access starts immediately.',
     route: '/pricing',
@@ -220,14 +220,14 @@ export const COURSES: CourseCatalogueEntry[] = [
     id: 'concussion-rehab-mastery',
     title: 'Concussion Rehab Mastery',
     providerId: 'cea',
-    // Online tier = 8 CPD hours; complete (with the shared practical day) = 14.
-    cpdHours: 8,
+    // Online tier = 8 CPD hours; complete (with the shared practical day) = 16.
+    cpdHours: CONFIG.COURSE.ONLINE_CPD_POINTS,
     // ESSA accreditation GRANTED 2026-07-24. Derived from the same flag every
     // other ESSA claim obeys, so this entry can never contradict the live copy.
     cpdRecognition: CONFIG.FEATURES.ESSA_ACCREDITED
       ? ['Accredited by ESSA', '8 ESSA CPD points online (16 with the practical day)']
       : ['Designed to ESSA CPD standards', 'ESSA accreditation pending'],
-    description: 'The EP-scoped concussion-rehab stream for Accredited Exercise Physiologists & Exercise Scientists — BCTT/HRt, sub-symptom-threshold prescription, graded return-to-activity, plus the live clinical tools. 8 online modules · 8 CPD (14 with the shared practical day).',
+    description: `The EP-scoped concussion-rehab stream for Accredited Exercise Physiologists & Exercise Scientists — BCTT/HRt, sub-symptom-threshold prescription, graded return-to-activity, plus the live clinical tools. 8 online modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD (${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} with the shared practical day).`,
     route: '/concussion-rehab-mastery',
     priceAUD: 497,
     // CRM has its OWN checkout (/api/crm/checkout), not the generic short-course

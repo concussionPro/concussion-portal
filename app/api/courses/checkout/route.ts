@@ -64,7 +64,10 @@ export async function POST(request: NextRequest) {
   const successUrl = `${successBase}${course.route}?purchase=success&session_id={CHECKOUT_SESSION_ID}`
   const cancelUrl = `${successBase}/courses?purchase=cancelled&course=${courseSlug}`
 
-  // Auto-apply promo code if present
+  // Auto-apply promo code if present. The open manual-entry field is only
+  // offered when a promo was intentionally passed but couldn't be auto-applied
+  // — mirrors the CCM guard in lib/stripe.ts: an always-open field let buyers
+  // type SCAT6 (the CCM-online-only completion coupon) onto short courses.
   let discounts: { promotion_code: string }[] | undefined
   let allowPromotionCodes: boolean | undefined
   if (promoCode) {
@@ -82,8 +85,6 @@ export async function POST(request: NextRequest) {
     } catch {
       allowPromotionCodes = true
     }
-  } else {
-    allowPromotionCodes = true
   }
 
   const session = await stripe.checkout.sessions.create({

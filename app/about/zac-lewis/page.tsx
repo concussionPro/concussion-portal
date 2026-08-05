@@ -204,7 +204,7 @@ export default function ZacLewisAboutPage() {
                 Zac is the lead clinical author of all CEA content, including:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
-                <li>Concussion Clinical Mastery course (8 CPD hours online, up to 14 with the in-person day; Osteopathy Australia endorsed)</li>
+                <li>Concussion Clinical Mastery course (8 CPD hours online, up to 16 with the in-person day; Osteopathy Australia endorsed)</li>
                 <li>AI in Clinical Practice short course (3 CPD hours)</li>
                 <li>Free SCAT6/SCOAT6 Mastery course + fillable assessment forms</li>
                 <li>20+ peer-citable clinical blog articles on concussion, PPCS, and AI in clinical practice (full index at <Link href="/blog" className="text-teal-700 underline">portal.concussion-education-australia.com/blog</Link>)</li>

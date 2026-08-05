@@ -42,7 +42,7 @@ export async function recordCoursePurchase(args: {
   const email = args.email.trim().toLowerCase()
   const { rows } = await sql`
     INSERT INTO course_purchases (user_email, course_slug, stripe_session_id, amount_aud)
-    VALUES (${email}, ${args.courseSlug}, ${args.stripeSessionId}, ${args.amountAud})
+    VALUES (${email}, ${args.courseSlug}, ${args.stripeSessionId}, ${Math.round(args.amountAud)})
     ON CONFLICT (user_email, course_slug) DO UPDATE
       SET stripe_session_id = EXCLUDED.stripe_session_id,
           amount_aud = EXCLUDED.amount_aud

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createCrmCheckoutSession } from '@/lib/stripe'
 import { CONFIG } from '@/lib/config'
 import { VALID_LOCATIONS } from '@/lib/stripe'
+import { userOwnsCrm } from '@/lib/crm-course'
 
 /**
  * POST /api/crm/checkout — Concussion Rehab Mastery (EP stream) purchase.
@@ -50,6 +51,16 @@ export async function POST(request: NextRequest) {
   // we require it there too so EP city-demand is captured from the first sale.
   if (!location) {
     return NextResponse.json({ error: 'Please nominate your workshop city.' }, { status: 400 })
+  }
+
+  // The upgrade tier only makes sense (and is only priced) as an add-on for an
+  // existing CRM Online owner — anyone else would pay $693 for a practical day
+  // with no course behind it.
+  if (tier === 'upgrade' && !(await userOwnsCrm(email))) {
+    return NextResponse.json(
+      { error: 'The practical-day upgrade is for existing CRM Online owners. New to CRM? Choose CRM Complete — it includes the online course and the practical day.' },
+      { status: 400 },
+    )
   }
 
   const base = CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'

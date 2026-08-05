@@ -305,7 +305,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             <>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
                 Earn 8 CPD Hours Online —{' '}
-                <span className="text-gradient">14 with the Workshop</span>
+                <span className="text-gradient">16 with the Workshop</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 AHPRA-aligned concussion assessment training for physiotherapists &amp; osteopaths.
@@ -412,7 +412,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           <div className="text-left">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Endorsed by</p>
             <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">Osteopathy Australia</p>
-            <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · 8 CPD hrs online, 14 with the workshop</p>
+            <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · 8 CPD hrs online, 16 with the workshop</p>
           </div>
         </div>
         )}

@@ -16,6 +16,7 @@
 import Stripe from 'stripe'
 import { CONFIG, isEarlyBirdForLocation } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
+import { clampClinicianSeats } from '@/lib/course-hub'
 
 // Lazy init: Stripe is only needed at request time, not during build page collection
 let _stripe: Stripe | null = null
@@ -206,7 +207,7 @@ export async function createCourseCheckoutSession({
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `Concussion Education Australia — Workshop Upgrade (${locationLabel})`
-    productDescription = `Full-day in-person workshop (${locationLabel}) · 6 additional CPD hours (14 total) · AHPRA aligned · All materials included`
+    productDescription = `Full-day in-person workshop (${locationLabel}) · ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} additional CPD hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} total) · AHPRA aligned · All materials included`
   } else if (courseType === 'online-only') {
     unitAmount = COURSE_PRICING.ONLINE_ONLY
     currency = 'aud'
@@ -231,7 +232,7 @@ export async function createCourseCheckoutSession({
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `Concussion Hub Pack — Workshop Upgrade (${locationLabel})`
-    productDescription = `Adds in-person workshop attendance for 1 nominated clinician (${locationLabel}) · 6 additional CPD hours · Hands-on credentials · Clinic Hub Pack add-on`
+    productDescription = `Adds in-person workshop attendance for 1 nominated clinician (${locationLabel}) · ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} additional CPD hours · Hands-on credentials · Clinic Hub Pack add-on`
   } else {
     unitAmount = isEarlyBird ? COURSE_PRICING.FULL_COURSE_EARLY : COURSE_PRICING.FULL_COURSE_REGULAR
     currency = 'aud'
@@ -298,6 +299,43 @@ export async function createCourseCheckoutSession({
     allowPromotionCodes = true
   }
 
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    {
+      price_data: {
+        currency,
+        unit_amount: unitAmount,
+        product_data: {
+          name: productName,
+          description: productDescription,
+        },
+      },
+      quantity: 1,
+    },
+  ]
+
+  // Hub Pack seat pricing (documented model): the base covers 5 clinician
+  // seats; the declared headcount above that bills at A$497/clinician. The
+  // webhook sets the key's seat cap from the SAME declared count (clamped to
+  // 12), so the cap the buyer gets is always the cap they paid for.
+  // HubPackBuyCard shows the identical computed total — display = charge.
+  if (courseType === 'clinic-hub-pack') {
+    const declaredSeats = clampClinicianSeats(clinicianCount ?? CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED)
+    const extraSeats = Math.max(0, declaredSeats - CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED)
+    if (extraSeats > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'aud',
+          unit_amount: COURSE_PRICING.CLINIC_HUB_EXTRA_SEAT,
+          product_data: {
+            name: 'Additional clinician seat — Clinic Hub Pack',
+            description: `Online seat beyond the ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} included in the base pack · ${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours · Lifetime access`,
+          },
+        },
+        quantity: extraSeats,
+      })
+    }
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour (gives BNPL users time)
@@ -305,19 +343,7 @@ export async function createCourseCheckoutSession({
     // Shows Apple Pay, Google Pay, Link, cards, Afterpay, Klarna as appropriate.
     // Requires: (1) payment methods enabled in Stripe Dashboard, (2) Apple Pay
     // domain verification file at /.well-known/apple-developer-merchantid-domain-association
-    line_items: [
-      {
-        price_data: {
-          currency,
-          unit_amount: unitAmount,
-          product_data: {
-            name: productName,
-            description: productDescription,
-          },
-        },
-        quantity: 1,
-      },
-    ],
+    line_items: lineItems,
     customer_email: customerEmail || undefined,
     // Stripe-hosted cart recovery: expired sessions carry a recovery URL that
     // re-opens the same checkout (same price/discounts) for 30 days. The

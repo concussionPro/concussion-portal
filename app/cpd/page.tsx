@@ -20,7 +20,7 @@ import { CourseStreams } from '@/components/cpd/CourseStreams'
 export const metadata: Metadata = {
   title: 'Concussion CPD Streams | Allied Health & Exercise Physiology | CEA',
   description:
-    'Two concussion CPD streams from Concussion Education Australia: Concussion Clinical Mastery for allied health (8 CPD online, up to 14 with the workshop, endorsed by Osteopathy Australia) and Concussion Rehab Mastery scoped for Exercise Physiologists (8 CPD hours).',
+    'Two concussion CPD streams from Concussion Education Australia: Concussion Clinical Mastery for allied health (8 CPD online, up to 16 with the workshop, endorsed by Osteopathy Australia) and Concussion Rehab Mastery scoped for Exercise Physiologists (8 CPD hours).',
   robots: CONFIG.FEATURES.ESSA_ACCREDITED ? 'index, follow' : 'noindex, nofollow',
 }
 

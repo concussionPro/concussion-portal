@@ -44,7 +44,7 @@ export function InvestmentLadder() {
       forWho: 'A single clinician who wants the full credential.',
       includes: [
         '8 online modules — 8 CPD hours, Osteopathy Australia-endorsed',
-        'A seat at the full-day practical workshop in your nominated city (+6 CPD = 14 total)',
+        'A seat at the full-day practical workshop in your nominated city (+8 CPD = 16 total)',
         'The full clinical toolkit — SCAT6/SCOAT6, referral letters, RTP tracking',
       ],
       priceDetail: `A$${eb.toLocaleString()} early bird · A$${reg.toLocaleString()} standard · online-only A$${online}`,

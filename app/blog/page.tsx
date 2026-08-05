@@ -390,7 +390,7 @@ export default function BlogIndexPage() {
                     href="/pricing"
                     className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 text-center"
                   >
-                    Full Course — 8 CPD hrs online, up to 14 with the in-person day · from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
+                    Full Course — 8 CPD hrs online, up to 16 with the in-person day · from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
                   </Link>
                 </div>
               </div>

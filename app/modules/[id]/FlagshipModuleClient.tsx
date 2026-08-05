@@ -26,7 +26,7 @@ const FLAGSHIP_COURSE: CourseModuleDescriptor = {
   hasScatModules: true,
   showCertificateCta: true,
   headerModuleNumber: 'data',
-  scatQuizFailUpsellSuffix: '8 modules · 8 CPD hours online (up to 14 with the in-person day)',
+  scatQuizFailUpsellSuffix: '8 modules · 8 CPD hours online (up to 16 with the in-person day)',
 }
 
 export default function FlagshipModuleClient({

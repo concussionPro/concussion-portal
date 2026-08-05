@@ -149,7 +149,7 @@ export default function HeadacheDifferentialPage() {
             <h2 className="text-2xl font-bold mb-3">Go from &ldquo;post-concussion headache&rdquo; to a phenotype-specific plan</h2>
             <p className="text-indigo-100 leading-relaxed mb-5">Concussion Clinical Mastery takes you through the full headache workup &mdash; phenotyping, the cervical and vestibulo-ocular examinations, and the management pathway for each driver &mdash; alongside the complete assessment-to-rehab framework. Endorsed by Osteopathy Australia.</p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors text-center">Concussion Clinical Mastery &mdash; 8 CPD hrs online, up to 14 with the in-person day &middot; from $1,190 early-bird</Link>
+              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors text-center">Concussion Clinical Mastery &mdash; 8 CPD hrs online, up to 16 with the in-person day &middot; from $1,190 early-bird</Link>
               <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Start with the free SCAT Mastery course</Link>
             </div>
           </section>

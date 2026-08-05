@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent, sstPlanPriceId } from '@/lib/stripe'
-import { setSstClinicPlan } from '@/lib/sst-trainer/clinic-registry'
+import { setSstClinicPlan, getSstClinicByEmail, getSstClinicStripeSubscription } from '@/lib/sst-trainer/clinic-registry'
 import { provisionPlatformForBuyer } from '@/lib/sst-trainer/bundle'
 
 export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
 import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail } from '@/lib/resend-client'
-import { createCourseHub, redeemHubSeat, clampClinicianSeats, HUB_ADMIN_SEATS } from '@/lib/course-hub'
+import { createCourseHub, redeemHubSeat, revokeHub, clampClinicianSeats, HUB_ADMIN_SEATS } from '@/lib/course-hub'
 import { createMagicToken, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
@@ -42,6 +42,22 @@ function redact(email: string | null | undefined): string {
 /** Parse a JSON metadata string; fall back to the raw string on failure. */
 function safeJson(s: string): unknown {
   try { return JSON.parse(s) } catch { return s }
+}
+
+/**
+ * True when checkout-session / payment-intent metadata identifies a NON-CCM
+ * product. The abandoned/failed-payment recovery emails are written for the
+ * CCM flagship ("Concussion Management course", /pricing CTA, module count) —
+ * sending that copy for an SST subscription, CRM, short-course, book or Hub
+ * Pack checkout is the wrong product entirely, so those lanes skip.
+ */
+function isNonCcmProduct(md: Stripe.Metadata | Record<string, string> | null | undefined): boolean {
+  if (!md) return false
+  if (md.product === 'sst-trainer') return true
+  if (md.stream === 'crm') return true
+  if (md.courseType === 'clinic-hub-pack') return true
+  const pt = md.productType
+  return pt === 'crm-course' || pt === 'crm-upgrade' || pt === 'short-course' || pt === 'reference-book' || pt === 'clinic-hub-pack'
 }
 
 /**
@@ -202,6 +218,13 @@ export async function POST(request: NextRequest) {
         await handleChargeRefunded(event.data.object as Stripe.Charge)
         break
 
+      // A dispute is treated like a full refund for entitlement purposes (the
+      // money is already clawed back) PLUS an ACTION-REQUIRED alert — disputes
+      // have response deadlines. Idempotent via processed_webhook_events above.
+      case 'charge.dispute.created':
+        await handleDisputeCreated(event.data.object as Stripe.Dispute)
+        break
+
       // SST Trainer subscriptions — flip the clinic's plan (lifts/re-applies
       // the 3-patient trial cap). checkout.session.completed already routes
       // to handleCheckoutCompleted, which branches on product='sst-trainer'.
@@ -350,6 +373,25 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         signupSource: 'purchase',
       })
       console.log(`Upgraded ${redact(customerEmail)} to ${accessLevel}`)
+    } else if (existingUser.accessLevel === 'full-course' && accessLevel === 'full-course') {
+      // REPEAT Complete/workshop purchase (e.g. attending another round).
+      // Access is already maximal, but the NEW nomination and the sale itself
+      // must still count: move the buyer to the newly nominated city and record
+      // the purchase so the round threshold + admin revenue views see it.
+      try {
+        if (workshopCity) {
+          await sql`UPDATE users SET workshop_location = ${workshopCity} WHERE LOWER(email) = ${customerEmail.toLowerCase()}`
+        }
+        await recordCoursePurchase({
+          email: customerEmail,
+          courseSlug: 'ccm-complete-repeat',
+          stripeSessionId: session.id,
+          amountAud: (session.amount_total || 0) / 100,
+        })
+        console.log(`Repeat full-course purchase recorded for ${redact(customerEmail)}${workshopCity ? ` — nominated ${workshopCity}` : ''}`)
+      } catch (err) {
+        console.error(`Failed to record repeat purchase for ${redact(customerEmail)}:`, err)
+      }
     }
   } else {
     console.log(`Creating new user: ${redact(customerEmail)} (${accessLevel})`)
@@ -769,8 +811,9 @@ async function handleCrmPurchase(
         workshopLocation: location || undefined,
         signupSource: 'ep-course',
       })
-  // Existing user: still capture the nominated city (COALESCE won't overwrite an
-  // earlier one, which is fine — one nomination per person).
+  // Existing user: still capture the nominated city. createUser's COALESCE
+  // prefers the NEW value (EXCLUDED first), so the latest nomination wins —
+  // which is what we want for a fresh purchase.
   if (existing && location) {
     await createUser({ email: customerEmail, name: customerName, accessLevel: existing.accessLevel, workshopLocation: location, signupSource: 'ep-course' })
   }
@@ -783,7 +826,10 @@ async function handleCrmPurchase(
       await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_COURSE_SLUG, stripeSessionId: session.id, amountAud })
     }
     if (tier === 'complete' || tier === 'upgrade') {
-      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_PRACTICAL_SLUG, stripeSessionId: session.id, amountAud })
+      // 'complete' is ONE charge recorded on TWO slugs; the full amount lives on
+      // the CRM_COURSE_SLUG row above, so the practical row records $0 — any
+      // revenue sum over course_purchases would otherwise double-count it.
+      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_PRACTICAL_SLUG, stripeSessionId: session.id, amountAud: tier === 'complete' ? 0 : amountAud })
     }
   } catch (err) {
     console.error(`[crm] entitlement write failed for ${redact(customerEmail)} (${tier}):`, err)
@@ -1217,12 +1263,18 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   let email: string | undefined = paymentIntent.receipt_email || paymentIntent.metadata?.email || undefined
   // receipt_email / PI metadata are usually empty for Checkout-created
   // PaymentIntents — fall back to the Checkout Session's customer_details,
-  // which Stripe populates from the email field on the checkout page.
-  if (!email && paymentIntent.id) {
+  // which Stripe populates from the email field on the checkout page. The
+  // session metadata also identifies the product (the PI often carries none),
+  // so fetch it even when we already have an email.
+  let sessionMeta: Stripe.Metadata | null = null
+  if (paymentIntent.id) {
     try {
       const { getStripe } = await import('@/lib/stripe')
       const sessions = await getStripe().checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
-      email = sessions.data[0]?.customer_details?.email || sessions.data[0]?.customer_email || undefined
+      sessionMeta = sessions.data[0]?.metadata ?? null
+      if (!email) {
+        email = sessions.data[0]?.customer_details?.email || sessions.data[0]?.customer_email || undefined
+      }
     } catch (lookupErr) {
       console.error('[Payment Failed] Checkout session lookup failed:', lookupErr)
     }
@@ -1243,6 +1295,12 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   }
 
   if (!email) return
+
+  // Non-CCM products get no recovery email — the copy is CCM-specific.
+  if (isNonCcmProduct(paymentIntent.metadata) || isNonCcmProduct(sessionMeta)) {
+    console.log(`[Payment Failed] Skipping recovery email for non-CCM payment ${paymentIntent.id}`)
+    return
+  }
 
   // Check if user has unsubscribed
   try {
@@ -1314,6 +1372,12 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   const email = session.customer_email || session.customer_details?.email
   if (!email) {
     console.log('Expired checkout session with no email:', session.id)
+    return
+  }
+
+  // Non-CCM products get no recovery sequence — the copy is CCM-specific.
+  if (isNonCcmProduct(session.metadata)) {
+    console.log(`Skipping abandoned-checkout recovery for non-CCM session ${session.id} (${session.metadata?.productType || session.metadata?.product || session.metadata?.courseType})`)
     return
   }
 
@@ -1440,19 +1504,21 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     return
   }
 
-  const user = await findUserByEmail(email)
-  if (!user) {
-    console.log(`Refunded user not found: ${redact(email)}`)
-    return
-  }
+  await revokeEntitlementsForCharge(charge, email, 'refund')
+}
 
-  // Work out WHAT was refunded. The Checkout Session metadata is the source
-  // of truth for productType (reference-book / short-course / CCM course) —
-  // PI metadata only carries courseType for CCM purchases.
+/**
+ * Shared revocation core for FULL refunds and disputes: works out what product
+ * the charge paid for (Checkout Session metadata is the source of truth —
+ * PI metadata only carries courseType for CCM purchases) and revokes exactly
+ * that entitlement. `cause` is only for log lines.
+ */
+async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string, cause: 'refund' | 'dispute') {
   let courseType: string | undefined
   let productType: string | undefined
   let refundedCourseSlug: string | undefined
   let refundedTier: string | undefined
+  let chargeSessionId: string | undefined
   try {
     const { getStripe } = await import('@/lib/stripe')
     if (charge.payment_intent && typeof charge.payment_intent === 'string') {
@@ -1460,12 +1526,47 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
       courseType = pi.metadata?.courseType
       const sessions = await getStripe().checkout.sessions.list({ payment_intent: charge.payment_intent, limit: 1 })
       const sessionMeta = sessions.data[0]?.metadata
+      chargeSessionId = sessions.data[0]?.id
       productType = sessionMeta?.productType
       refundedCourseSlug = sessionMeta?.courseSlug
       refundedTier = sessionMeta?.tier
       courseType = courseType || sessionMeta?.courseType
     }
   } catch { /* fallback to heuristic below */ }
+
+  // Hub Pack refund/dispute → revoke the hub key (no further redemptions) and
+  // downgrade the members whose ONLY entitlement is that hub. Redemption
+  // provisions members via createUser with signupSource 'purchase' and NO
+  // stripe_customer_id, so "bought something independently" is detectable as a
+  // non-null stripe_customer_id that isn't this charge's customer — those
+  // accounts are left alone (conservative: never claw back an independent
+  // purchase). Members seated by ANOTHER un-revoked hub also keep access.
+  if (courseType === 'clinic-hub-pack' || productType === 'clinic-hub-pack') {
+    try {
+      const hub = chargeSessionId ? await revokeHub({ stripeSessionId: chargeSessionId }) : null
+      if (!hub) {
+        console.error(`[hub-pack] ${cause} for ${redact(email)} but no un-revoked hub matched session ${chargeSessionId || 'unknown'} — check manually`)
+        return
+      }
+      const chargeCustomerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null
+      const { rows: downgraded } = await sql<{ email: string }>`
+        UPDATE users SET access_level = 'preview'
+        WHERE LOWER(email) IN (SELECT email FROM course_hub_members WHERE hub_code = ${hub.code})
+          AND access_level = 'full-course'
+          AND (stripe_customer_id IS NULL OR stripe_customer_id = ${chargeCustomerId})
+          AND NOT EXISTS (
+            SELECT 1 FROM course_hub_members m2
+            JOIN course_hubs h2 ON h2.code = m2.hub_code
+            WHERE m2.email = LOWER(users.email) AND m2.hub_code <> ${hub.code} AND h2.revoked_at IS NULL
+          )
+        RETURNING email
+      `
+      console.log(`[hub-pack] Revoked hub ${hub.code} after ${cause} for ${redact(email)} — downgraded ${downgraded.length} member account(s)`)
+    } catch (err) {
+      console.error(`[hub-pack] Failed to revoke hub after ${cause} for ${redact(email)}:`, err)
+    }
+    return
+  }
 
   // CRM refund → remove the CRM entitlement. crm-course full refund revokes the
   // online course (and the practical add-on if it was the complete bundle);
@@ -1478,9 +1579,32 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
       } else {
         await sql`DELETE FROM course_purchases WHERE user_email = ${email.toLowerCase()} AND course_slug IN (${CRM_COURSE_SLUG}, ${CRM_PRACTICAL_SLUG})`
       }
-      console.log(`Revoked CRM entitlement (${productType}${refundedTier ? `/${refundedTier}` : ''}) for ${redact(email)} after full refund`)
+      console.log(`Revoked CRM entitlement (${productType}${refundedTier ? `/${refundedTier}` : ''}) for ${redact(email)} after full ${cause}`)
     } catch (err) {
-      console.error(`Failed to revoke CRM entitlement for ${redact(email)} after refund:`, err)
+      console.error(`Failed to revoke CRM entitlement for ${redact(email)} after ${cause}:`, err)
+    }
+    // crm-course refund also unwinds the bundled platform: cancel any live SST
+    // subscription and drop the clinic back to trial. (A crm-upgrade refund
+    // leaves the online course — and its platform bundle — in place.)
+    if (productType === 'crm-course') {
+      try {
+        const clinic = await getSstClinicByEmail(email)
+        if (clinic) {
+          const subId = await getSstClinicStripeSubscription(clinic.code)
+          if (subId) {
+            try {
+              const { getStripe } = await import('@/lib/stripe')
+              await getStripe().subscriptions.cancel(subId)
+              console.log(`[crm] Cancelled bundled SST subscription ${subId} for clinic ${clinic.code} after ${cause}`)
+            } catch (subErr) {
+              console.error(`[crm] Failed to cancel SST subscription ${subId} after ${cause}:`, subErr)
+            }
+          }
+          await setSstClinicPlan(clinic.code, 'trial')
+        }
+      } catch (err) {
+        console.error(`[crm] Failed to unwind bundled platform for ${redact(email)} after ${cause}:`, err)
+      }
     }
     return
   }
@@ -1494,9 +1618,9 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
       await sql`
         UPDATE users SET reference_book_purchased_at = NULL WHERE LOWER(email) = ${email.toLowerCase()}
       `
-      console.log(`Revoked reference-book ownership for ${redact(email)} after full refund ($${chargeAmount})`)
+      console.log(`Revoked reference-book ownership for ${redact(email)} after full ${cause} ($${chargeAmount})`)
     } catch (err) {
-      console.error(`Failed to revoke book ownership for ${redact(email)} after refund:`, err)
+      console.error(`Failed to revoke book ownership for ${redact(email)} after ${cause}:`, err)
     }
     return
   }
@@ -1514,10 +1638,16 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
       if (refundedCourseSlug === 'ai-in-clinical-practice') {
         await unenrolAiCourseUser(email)
       }
-      console.log(`Revoked short-course access (${refundedCourseSlug || 'unknown slug'}) for ${redact(email)} after full refund ($${chargeAmount})`)
+      console.log(`Revoked short-course access (${refundedCourseSlug || 'unknown slug'}) for ${redact(email)} after full ${cause} ($${chargeAmount})`)
     } catch (err) {
-      console.error(`Failed to revoke short-course access for ${redact(email)} after refund:`, err)
+      console.error(`Failed to revoke short-course access for ${redact(email)} after ${cause}:`, err)
     }
+    return
+  }
+
+  const user = await findUserByEmail(email)
+  if (!user) {
+    console.log(`Refunded user not found: ${redact(email)}`)
     return
   }
 
@@ -1537,9 +1667,86 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     await sql`
       UPDATE users SET access_level = ${downgradeLevel} WHERE LOWER(email) = ${email.toLowerCase()}
     `
-    console.log(`Downgraded ${redact(email)} to ${downgradeLevel} access after refund ($${chargeAmount})`)
+    console.log(`Downgraded ${redact(email)} to ${downgradeLevel} access after ${cause} ($${chargeAmount})`)
   } catch (err) {
-    console.error(`Failed to downgrade ${redact(email)} after refund:`, err)
+    console.error(`Failed to downgrade ${redact(email)} after ${cause}:`, err)
+  }
+}
+
+/**
+ * charge.dispute.created — the money is already withheld, so entitlements are
+ * revoked through the SAME logic as a full refund of the matched product, and
+ * the admin gets an ACTION-REQUIRED alert (disputes have evidence deadlines).
+ * Idempotent via the event-id idempotency in POST; revokeHub itself is also
+ * idempotent, so a dispute after a refund is a safe no-op.
+ */
+async function handleDisputeCreated(dispute: Stripe.Dispute) {
+  const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id
+  if (!chargeId) {
+    console.error('Dispute with no charge id:', dispute.id)
+    return
+  }
+
+  let charge: Stripe.Charge
+  try {
+    const { getStripe } = await import('@/lib/stripe')
+    charge = await getStripe().charges.retrieve(chargeId)
+  } catch (err) {
+    console.error(`Failed to retrieve disputed charge ${chargeId}:`, err)
+    throw err // 500 → Stripe retries; a dispute must never be silently dropped
+  }
+
+  const email = charge.receipt_email || charge.billing_details?.email
+  const amount = (dispute.amount || charge.amount || 0) / 100
+  const currency = (dispute.currency || charge.currency || 'aud').toUpperCase()
+  console.log(`Dispute ${dispute.id} (${dispute.reason}) on charge ${chargeId} — $${amount} ${currency} — ${redact(email)}`)
+
+  try {
+    await logAnalyticsEvent('charge_disputed', {
+      disputeId: dispute.id,
+      chargeId,
+      reason: dispute.reason,
+      amount,
+      currency,
+      email: redact(email),
+    }, email)
+  } catch (err) {
+    console.error('Failed to log dispute analytics:', err)
+  }
+
+  if (email) {
+    await revokeEntitlementsForCharge(charge, email, 'dispute')
+  } else {
+    console.error(`Disputed charge ${chargeId} has no email — entitlements NOT revoked automatically`)
+  }
+
+  // ACTION-REQUIRED alert — this is the one Stripe event with a response
+  // deadline attached. Alert failure rethrows so Stripe retries the event.
+  try {
+    const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id
+    const dueBy = dispute.evidence_details?.due_by
+      ? new Date(dispute.evidence_details.due_by * 1000).toISOString().slice(0, 10)
+      : 'unknown'
+    await sendEmail({
+      to: CONFIG.CONTACT_EMAIL,
+      subject: `ACTION REQUIRED: payment dispute — ${currency} $${amount.toFixed(2)} (${dispute.reason})`,
+      html: `
+        <p><strong>A customer has disputed a charge.</strong> Entitlements have been revoked (same as a full refund); respond in the Stripe dashboard before the deadline.</p>
+        <ul>
+          <li><strong>Customer:</strong> ${escapeHtml(email || 'unknown')}${charge.billing_details?.name ? ` (${escapeHtml(charge.billing_details.name)})` : ''}</li>
+          <li><strong>Amount:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}</li>
+          <li><strong>Reason:</strong> ${escapeHtml(dispute.reason || 'unknown')}</li>
+          <li><strong>Evidence due:</strong> ${escapeHtml(dueBy)}</li>
+          <li><strong>Charge:</strong> <code>${escapeHtml(chargeId)}</code></li>
+          <li><strong>Stripe customer:</strong> <code>${escapeHtml(customerId || '—')}</code></li>
+          <li><strong>Dispute:</strong> <code>${escapeHtml(dispute.id)}</code></li>
+        </ul>
+      `,
+      tags: [{ name: 'type', value: 'admin-dispute-alert' }],
+    })
+  } catch (alertErr) {
+    console.error('Dispute admin alert failed:', alertErr)
+    throw alertErr
   }
 }
 

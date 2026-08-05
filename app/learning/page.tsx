@@ -243,7 +243,7 @@ function LearningSuiteInner() {
                 <h3 className="text-sm font-bold text-foreground mb-1">How This Course Works</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {isFreeTier
-                    ? '3 short modules take you through SCAT6, SCOAT6 and Child SCAT6 — about an hour all up, with 1 CPD hour and a certificate on completion. The full program adds 8 clinical modules (8 CPD hours online, up to 14 with the hands-on workshop).'
+                    ? '3 short modules take you through SCAT6, SCOAT6 and Child SCAT6 — about an hour all up, with 1 CPD hour and a certificate on completion. The full program adds 8 clinical modules (8 CPD hours online, up to 16 with the hands-on workshop).'
                     : isPaidCcm
                     ? '8 online modules build your clinical reasoning foundation. The full-day practical workshop (full-course access) is where you apply assessment skills hands-on.'
                     : '8 online modules build your exercise-rehabilitation reasoning — graded testing, heart-rate-threshold prescription and graded return to activity. The shared practical day is where you apply it hands-on.'}

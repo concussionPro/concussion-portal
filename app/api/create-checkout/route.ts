@@ -56,6 +56,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Hub Pack add-ons have NO webhook fulfilment yet — nothing bumps the hub's
+    // seat cap or registers the workshop attendee on checkout.session.completed,
+    // so a charge here would take money and deliver nothing. Schemas stay so the
+    // wiring is visible; refuse the sale until fulfilment exists. (Extra seats
+    // ARE sold correctly as a second line item on the clinic-hub-pack base.)
+    if (courseType === 'clinic-hub-extra-seat' || courseType === 'clinic-workshop-upgrade') {
+      return NextResponse.json(
+        { error: 'This add-on is not yet available. Contact zac@concussion-education-australia.com to add seats or workshop places to your Hub Pack.' },
+        { status: 400 }
+      )
+    }
+
     // Workshop upgrade: requires authenticated online-only user + valid location
     let sessionEmail: string | undefined
     if (courseType === 'workshop-upgrade') {
@@ -170,9 +182,9 @@ export async function POST(request: NextRequest) {
     const checkoutSession = await createCourseCheckoutSession({
       courseType: courseType as CourseType,
       // Pass the nominated city for every in-person-bearing type (the schema
-      // now requires one) — clinic-workshop-upgrade was dropping it, so the
-      // seat was charged as "(TBD)" and never reached Ready-to-Train.
-      location: (courseType === 'full-course' || courseType === 'workshop-upgrade' || courseType === 'clinic-workshop-upgrade')
+      // now requires one). clinic-workshop-upgrade is 400-blocked above until
+      // its webhook fulfilment exists — re-add it here when that unblocks.
+      location: (courseType === 'full-course' || courseType === 'workshop-upgrade')
         ? location
         : undefined,
       preferredCity: courseType === 'online-only' ? preferredCity : undefined,

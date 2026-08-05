@@ -16,11 +16,16 @@ const HUB_MAX = 12
 
 export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: string }) {
   const [loading, setLoading] = useState(false)
-  const price = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
+  const basePrice = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
   const baseSeats = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
+  const extraSeatPrice = CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT
   // Buyer declares their clinician headcount — this becomes the access key's
   // hard seat cap. Default to the clinic's known size (min the base 5, max 12).
   const [count, setCount] = useState<number>(Math.min(HUB_MAX, Math.max(baseSeats, clinical || 0)))
+  // Charge model (lib/stripe.ts adds the same second line item): base covers 5
+  // seats, each seat above bills at A$497 — display must equal the charge.
+  const extraSeats = Math.max(0, count - baseSeats)
+  const price = basePrice + extraSeats * extraSeatPrice
   const individualCost = count * CONFIG.COURSE.PRICE_ONLINE
   const cheaperThanIndividual = individualCost > price
 
@@ -80,6 +85,11 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           <div className="text-right">
             <p className="text-3xl font-bold text-accent leading-none">A${price.toLocaleString()}</p>
             <p className="text-[11px] text-muted-foreground mt-1">one-off · covers {count} clinicians + admin</p>
+            {extraSeats > 0 && (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                A${basePrice.toLocaleString()} base + {extraSeats} extra seat{extraSeats > 1 ? 's' : ''} × A${extraSeatPrice}
+              </p>
+            )}
           </div>
         </div>
 
@@ -95,7 +105,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
         <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/20 bg-white/50 px-4 py-3 mb-4">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">How many clinicians?</p>
-            <p className="text-[11px] text-muted-foreground leading-snug">Sets your team access key. Front-desk / admin staff are included on top.</p>
+            <p className="text-[11px] text-muted-foreground leading-snug">Sets your team access key. {baseSeats} seats included; extras A${extraSeatPrice}/clinician. Front-desk / admin staff are included on top.</p>
           </div>
           <div className="flex items-center gap-2 flex-none">
             <button type="button" aria-label="Fewer" onClick={() => setCount((c) => Math.max(1, c - 1))}

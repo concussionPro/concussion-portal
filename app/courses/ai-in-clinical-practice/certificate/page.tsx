@@ -166,7 +166,7 @@ export default async function CertificatePage() {
               href="/pricing"
               className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
             >
-              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Flagship · 8 CPD hours online · up to 14 with the workshop day</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Flagship · 8 CPD hours online · up to 16 with the workshop day</p>
               <p className="text-sm font-semibold text-foreground leading-tight">Concussion Clinical Mastery</p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Osteopathy Australia–endorsed concussion assessment and management — SCAT6, VOMS, BESS, return-to-sport protocols.</p>
             </Link>

@@ -225,7 +225,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                   Module 1 Trial · What is a Concussion?
                 </h3>
                 <p className="text-sm text-white/85 leading-relaxed">
-                  First sections + interactive quiz checkpoint. 8 CPD hrs online across 8 modules (14 with the in-person day).
+                  First sections + interactive quiz checkpoint. 8 CPD hrs online across 8 modules (16 with the in-person day).
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
@@ -470,7 +470,7 @@ function ZacCredibility() {
           Osteopathy Australia endorsed
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-[10.5px] font-bold uppercase tracking-wider border border-amber-200/60">
-          8 CPD hrs online (14 with the practical day) · AHPRA aligned
+          8 CPD hrs online (16 with the practical day) · AHPRA aligned
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-700 text-[10.5px] font-bold uppercase tracking-wider border border-slate-200/60">
           Speaker · OA conference circuit
@@ -986,7 +986,7 @@ function SocialProofFooter() {
           {[
             ['500+', 'SCAT6 forms downloaded by AU clinicians'],
             ['OA', 'Endorsed by Osteopathy Australia'],
-            ['8 hrs', 'Online CPD per clinician — 14 with the practical day'],
+            ['8 hrs', 'Online CPD per clinician — 16 with the practical day'],
             ['120', 'Peer-reviewed references in the library'],
           ].map(([h, l]) => (
             <div key={h}>

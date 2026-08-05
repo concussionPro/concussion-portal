@@ -306,7 +306,7 @@ export default function VOMSConcussionPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
+                Full Course — 8 CPD hrs online, up to 16 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

@@ -134,7 +134,7 @@ export default function CervicogenicChronicConcussionPage() {
               <p className="text-sm font-semibold text-rose-100 mb-3">Available now:</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Free SCAT Mastery course</Link>
-                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Concussion Clinical Mastery — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird</Link>
+                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Concussion Clinical Mastery — 8 CPD hrs online, up to 16 with the in-person day · from $1,190 early-bird</Link>
               </div>
             </div>
           </section>

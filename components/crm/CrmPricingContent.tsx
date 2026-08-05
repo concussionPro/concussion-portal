@@ -452,6 +452,9 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="flex items-baseline gap-1 justify-end">
+                    {/* "from": the charge is workshopPriceFor(city) — $1,190 early-bird,
+                        full price only in the final window before a scheduled date. */}
+                    <span className="text-[11px] text-[var(--muted-foreground)]">from</span>
                     <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
                     <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
                   </div>
@@ -483,6 +486,9 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               </ul>
 
               <div className="mt-auto">
+                <p className="text-[10px] text-[var(--muted-foreground)] mb-2">
+                  ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird — standard ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies only in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a confirmed workshop date.
+                </p>
                 <CrmCheckoutButton
                   tier="complete"
                   accredited={accredited}

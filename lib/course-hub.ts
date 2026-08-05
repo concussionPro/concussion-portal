@@ -18,6 +18,8 @@ export interface CourseHub {
   clinicName: string | null
   clinicianSeats: number
   adminSeats: number
+  /** Set when the purchase was refunded/disputed — a revoked key redeems nothing. */
+  revokedAt: string | null
 }
 
 export interface HubUsage {
@@ -59,6 +61,8 @@ async function ensureHubTables(): Promise<void> {
       PRIMARY KEY (hub_code, email)
     )
   `
+  // Lazy migration — refund/dispute revocation (2026-08-05).
+  await sql`ALTER TABLE course_hubs ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ`
   tablesReady = true
 }
 
@@ -93,31 +97,57 @@ export async function createCourseHub(opts: {
   return code
 }
 
+type HubRow = {
+  code: string; owner_email: string; clinic_name: string | null; clinician_seats: number; admin_seats: number; revoked_at: string | null
+}
+
+function toHub(r: HubRow): CourseHub {
+  return { code: r.code, ownerEmail: r.owner_email, clinicName: r.clinic_name, clinicianSeats: r.clinician_seats, adminSeats: r.admin_seats, revokedAt: r.revoked_at }
+}
+
 export async function getCourseHub(code: string): Promise<CourseHub | null> {
   await ensureHubTables()
   const norm = code.trim().toUpperCase()
-  const { rows } = await sql<{
-    code: string; owner_email: string; clinic_name: string | null; clinician_seats: number; admin_seats: number
-  }>`
-    SELECT code, owner_email, clinic_name, clinician_seats, admin_seats
+  const { rows } = await sql<HubRow>`
+    SELECT code, owner_email, clinic_name, clinician_seats, admin_seats, revoked_at
     FROM course_hubs WHERE code = ${norm}
   `
-  const r = rows[0]
-  if (!r) return null
-  return { code: r.code, ownerEmail: r.owner_email, clinicName: r.clinic_name, clinicianSeats: r.clinician_seats, adminSeats: r.admin_seats }
+  return rows[0] ? toHub(rows[0]) : null
 }
 
 export async function getHubByOwner(email: string): Promise<CourseHub | null> {
   await ensureHubTables()
-  const { rows } = await sql<{
-    code: string; owner_email: string; clinic_name: string | null; clinician_seats: number; admin_seats: number
-  }>`
-    SELECT code, owner_email, clinic_name, clinician_seats, admin_seats
+  const { rows } = await sql<HubRow>`
+    SELECT code, owner_email, clinic_name, clinician_seats, admin_seats, revoked_at
     FROM course_hubs WHERE owner_email = ${email.toLowerCase()} ORDER BY created_at DESC LIMIT 1
   `
-  const r = rows[0]
-  if (!r) return null
-  return { code: r.code, ownerEmail: r.owner_email, clinicName: r.clinic_name, clinicianSeats: r.clinician_seats, adminSeats: r.admin_seats }
+  return rows[0] ? toHub(rows[0]) : null
+}
+
+/**
+ * Revoke a hub after a full refund or dispute — the key stops redeeming
+ * immediately (`redeemHubSeat` rejects revoked hubs). Idempotent: returns null
+ * when no un-revoked hub matches, so a dispute following a refund is a no-op.
+ */
+export async function revokeHub(ref: { code?: string; stripeSessionId?: string }): Promise<CourseHub | null> {
+  await ensureHubTables()
+  if (ref.code) {
+    const { rows } = await sql<HubRow>`
+      UPDATE course_hubs SET revoked_at = now()
+      WHERE revoked_at IS NULL AND code = ${ref.code.trim().toUpperCase()}
+      RETURNING code, owner_email, clinic_name, clinician_seats, admin_seats, revoked_at
+    `
+    return rows[0] ? toHub(rows[0]) : null
+  }
+  if (ref.stripeSessionId) {
+    const { rows } = await sql<HubRow>`
+      UPDATE course_hubs SET revoked_at = now()
+      WHERE revoked_at IS NULL AND stripe_session_id = ${ref.stripeSessionId}
+      RETURNING code, owner_email, clinic_name, clinician_seats, admin_seats, revoked_at
+    `
+    return rows[0] ? toHub(rows[0]) : null
+  }
+  return null
 }
 
 export async function getHubUsage(code: string): Promise<HubUsage | null> {
@@ -156,7 +186,8 @@ export async function redeemHubSeat(
   const em = email.trim().toLowerCase()
 
   const hub = await getCourseHub(norm)
-  if (!hub) return 'no-hub'
+  // A revoked (refunded/disputed) key must never grant a seat again.
+  if (!hub || hub.revokedAt) return 'no-hub'
 
   // Already redeemed on this key → idempotent success (not a new seat, no leak).
   const { rows: existing } = await sql`
@@ -170,6 +201,7 @@ export async function redeemHubSeat(
     SELECT ${norm}, ${em}, ${name}, ${role}
     FROM course_hubs h
     WHERE h.code = ${norm}
+      AND h.revoked_at IS NULL
       AND (
         SELECT COUNT(*) FROM course_hub_members m
         WHERE m.hub_code = ${norm} AND m.role = ${role}

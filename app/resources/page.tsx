@@ -181,7 +181,7 @@ export default function ResourcesPage() {
 
             <div className="text-center pt-6 border-t border-teal-200">
               <p className="text-slate-700 mb-4">
-                Want structured training with 8 CPD hours (up to 14 with the in-person day)?
+                Want structured training with 8 CPD hours (up to 16 with the in-person day)?
               </p>
               <Link
                 href="/scat-mastery"

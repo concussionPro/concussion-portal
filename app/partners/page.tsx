@@ -47,7 +47,7 @@ const PILLARS: {
   {
     icon: GraduationCap,
     title: 'Your team trained & credentialed',
-    body: 'Every clinician trained on the protocol — 8 CPD hours each online (14 with the in-person practical day), Osteopathy Australia endorsed — so your whole team runs concussion the same way.',
+    body: 'Every clinician trained on the protocol — 8 CPD hours each online (16 with the in-person practical day), Osteopathy Australia endorsed — so your whole team runs concussion the same way.',
   },
   {
     icon: Stethoscope,

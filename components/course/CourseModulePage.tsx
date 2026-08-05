@@ -137,7 +137,7 @@ function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number;
               Professional CPD Course
             </h1>
             <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 AHPRA CPD hours</strong>.
+              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 16 AHPRA CPD hours</strong>.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

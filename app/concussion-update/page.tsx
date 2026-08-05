@@ -27,7 +27,7 @@ import { createCourseSchema } from '@/lib/schema-markup'
 const FREE_SIGNUP_CONVERSION = 'AW-17984048021/TVzUCLHT0IccEJWXu_9C'
 
 // Flagship-course structured data for the upgrade CTA on this page.
-// CPD truth: 8 hours online; up to 14 ONLY with the optional in-person day.
+// CPD truth: 8 hours online; up to 16 ONLY with the optional in-person day.
 const courseSchema = createCourseSchema({
   name: 'Concussion Clinical Mastery',
   description:

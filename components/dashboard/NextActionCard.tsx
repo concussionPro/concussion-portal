@@ -338,7 +338,7 @@ export function NextActionCard() {
                     onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_primary', from: 'preview' }); router.push('/pricing') }}
                     className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all flex items-center gap-2"
                   >
-                    Unlock all 8 modules · 8 CPD hrs (up to 14 with the workshop)
+                    Unlock all 8 modules · 8 CPD hrs (up to 16 with the workshop)
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : accessLevel !== 'online-only' ? (

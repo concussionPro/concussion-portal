@@ -182,7 +182,7 @@ function SidebarBody({
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{accreditation === 'essa'
           ? (CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA Endorsed' : 'ESSA Endorsement Pending')
           : 'AHPRA Aligned'}</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 8 CPD hrs online (14 with the practical day)</p>
+        <p className="text-[10px] text-muted-foreground">OA Endorsed · 8 CPD hrs online (16 with the practical day)</p>
       </div>
     </>
   )

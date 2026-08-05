@@ -265,7 +265,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       <div class="callout">
         <strong>What you'll get:</strong><br><br>
         &#8226; 8 online modules with lifetime access<br>
-        &#8226; 8 AHPRA-aligned CPD hours (14 with workshop)<br>
+        &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} with workshop)<br>
         &#8226; Clinical Toolkit: referral templates, RTP forms, clearance letters<br>
         &#8226; Endorsed by Osteopathy Australia
       </div>
