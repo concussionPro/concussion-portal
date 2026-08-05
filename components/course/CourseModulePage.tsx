@@ -137,7 +137,7 @@ function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number;
               Professional CPD Course
             </h1>
             <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 16 AHPRA CPD hours</strong>.
+              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours</strong>.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -146,8 +146,8 @@ function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number;
                 <div className="text-sm text-slate-300">Complete Modules</div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                <div className="text-3xl font-bold text-amber-400 mb-1">Up to 14</div>
-                <div className="text-sm text-slate-300">8 online + 6 workshop</div>
+                <div className="text-3xl font-bold text-amber-400 mb-1">Up to {CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
+                <div className="text-sm text-slate-300">{CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop</div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />

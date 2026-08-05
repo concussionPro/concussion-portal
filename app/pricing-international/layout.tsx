@@ -1,10 +1,12 @@
 import { Metadata } from 'next'
 
-// HONESTY: no "CE credits" / accreditation claims — ACSM CECs are pending
-// (application in progress) and ESSA is pending. Metadata must not claim either.
+// HONESTY: no "CE credits" claims — ACSM CECs are NOT held and the ACSM
+// Approved-Provider application is PARKED (2026-08), so "application in
+// progress" must not appear anywhere. ESSA accreditation IS held (granted
+// 2026-07-24) — state it only via CONFIG.FEATURES.ESSA_ACCREDITED.
 export const metadata: Metadata = {
   title: 'Concussion Rehab Mastery — International (USD) for Exercise Physiologists',
-  description: 'The concussion course that trains exercise physiologists to deliver the consensus-recommended first-line treatment — sub-symptom-threshold aerobic exercise from a measured HR threshold — and ships the tools to do it. USD $347. ACSM CEC application in progress.',
+  description: 'The concussion course that trains exercise physiologists to deliver the consensus-recommended first-line treatment — sub-symptom-threshold aerobic exercise from a measured HR threshold — and ships the tools to do it. USD $347. ESSA-accredited.',
   keywords: 'concussion exercise physiology, sub-symptom threshold aerobic exercise, exercise physiologist concussion, HR threshold concussion rehab, Buffalo test, clinical exercise physiologist CEC, concussion rehabilitation course',
   openGraph: {
     title: 'Concussion Rehab Mastery — International (for Exercise Physiologists)',

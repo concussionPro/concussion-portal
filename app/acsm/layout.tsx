@@ -7,8 +7,9 @@ import { Metadata } from 'next'
 // provider_listing (see docs/applications/ACSM-SUBMISSION-PACK.md).
 //
 // HONESTY GATE — non-negotiable, this page is the one ACSM's reviewer will read:
-//   • ACSM CECs are NOT held. The application is in progress. Never state a CEC
-//     figure until the approval letter specifies one.
+//   • ACSM CECs are NOT held and the Approved-Provider application is PARKED
+//     (2026-08). Never state a CEC figure, and never say the application is
+//     "in progress" — it is not being progressed.
 //   • Citing ACSM's published position (the Hot Topic) is fair use. Implying
 //     ACSM ENDORSES this course is not. Keep those strictly separate.
 //   • After approval we are limited to the exact statement wording ACSM issues
@@ -17,7 +18,7 @@ import { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Concussion Rehab Mastery — for ACSM-EP and ACSM-CEP Professionals',
   description:
-    'The consensus made a heart-rate-threshold exercise prescription the first-line treatment for concussion — derived from a graded exercise test. That is your competency. This is the course that turns it into a new patient population, with the tools to deliver it. USD $347. ACSM CEC application in progress.',
+    'The consensus made a heart-rate-threshold exercise prescription the first-line treatment for concussion — derived from a graded exercise test. That is your competency. This is the course that turns it into a new patient population, with the tools to deliver it. USD $347.',
   keywords:
     'ACSM CEC concussion, ACSM-EP concussion, ACSM-CEP concussion, clinical exercise physiologist concussion, sub-symptom threshold aerobic exercise, Buffalo concussion treadmill test, FITT concussion prescription',
   openGraph: {

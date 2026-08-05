@@ -79,7 +79,13 @@ function Shell() {
   const access = useClinicalAccess()
   const isPreview = !user || user.accessLevel === 'preview'
   // The clinic code namespaces the clinic profile (unique per clinic).
-  const [clinicCode, setClinicCode] = useState<string | null>(null)
+  // undefined = still resolving; null = no clinic yet; string = the code.
+  // The tri-state matters: the profile card must NOT render before a clinic
+  // exists — it namespaced localStorage as ':UNSET' and PUT into a 400, so a
+  // first-run clinician's six typed fields were silently destroyed
+  // (2026-08-05 crawl #1). SstClinicCard lifts the code up the moment it
+  // provisions, so the card appears without a reload.
+  const [clinicCode, setClinicCode] = useState<string | null | undefined>(undefined)
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
@@ -258,11 +264,15 @@ function Shell() {
             )}
           </div>
 
-          <div className="mb-5">
-            <ClinicProfileCard clinicCode={clinicCode} />
-          </div>
+          {clinicCode && (
+            <div className="mb-5">
+              <ClinicProfileCard clinicCode={clinicCode} />
+            </div>
+          )}
 
-          <SstClinicCard />
+          <SstClinicCard
+            onClinicResolved={(c) => setClinicCode(c?.code?.trim() ? c.code : null)}
+          />
 
           {/* Demo viewers ONLY (owner 2026-07-28): the tour's "now what" —
               indicative commercials + the path, mirroring /acc. Paying users

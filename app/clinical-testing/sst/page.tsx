@@ -6,7 +6,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { SstClinicCard } from '@/components/clinical/SstClinicCard'
 import PlatformApp from '@/app/platform/app/page'
-import { clearState } from '@/lib/sst-trainer/store'
+import { clearState, getPendingSyncs } from '@/lib/sst-trainer/store'
 import Link from 'next/link'
 import { Lock, ArrowRight, ChevronLeft } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -118,9 +118,13 @@ function Shell() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#dde7e8]">
+    // Below lg the workspace is a SCROLLING page, not a fixed viewport: the
+    // setup rail (clinic code, patient link, QR, invite) stacks under the app
+    // instead of being display:none — on a phone it was unreachable, which
+    // made provisioning impossible there (2026-08-05 crawl #5).
+    <div className="flex min-h-screen bg-[#dde7e8] lg:h-screen lg:overflow-hidden">
       <Sidebar />
-      <main className="ml-0 flex h-full min-w-0 flex-1 flex-col md:ml-64">
+      <main className="ml-0 flex min-h-screen min-w-0 flex-1 flex-col md:ml-64 lg:h-full lg:min-h-0">
         {/* slim workspace header */}
         <div className="flex flex-none items-center gap-3 border-b border-slate-200/70 bg-white/70 px-4 py-2.5 backdrop-blur sm:px-6">
           <Link
@@ -151,8 +155,15 @@ function Shell() {
                   // This device persists ONE patient's state (sst:v1). When a
                   // clinician runs a second patient on the same browser, clear it
                   // first so patient B never inherits patient A's band/history.
-                  if (window.confirm('Start a fresh patient? This clears the current patient’s in-progress data on THIS device.')) {
-                    clearState()
+                  // UNSENT CLINICAL EVENTS SURVIVE (2026-08-05): clearState used
+                  // to drop the pendingSyncs queue with everything else, so any
+                  // session that hadn't reached the clinic was lost for good.
+                  const unsent = getPendingSyncs().length
+                  const warning = unsent
+                    ? `\n\n${unsent} session${unsent === 1 ? '' : 's'} ${unsent === 1 ? 'has' : 'have'} not reached your clinic yet — ${unsent === 1 ? 'it is' : 'they are'} kept and will keep retrying.`
+                    : ''
+                  if (window.confirm(`Start a fresh patient? This clears the current patient’s in-progress data on THIS device.${warning}`)) {
+                    clearState({ preservePendingSyncs: true })
                     setResetSeq((n) => n + 1)
                   }
                 }}
@@ -164,43 +175,58 @@ function Shell() {
           )}
         </div>
 
-        {/* landscape workspace. grid-rows-[minmax(0,1fr)] is LOAD-BEARING:
+        {/* Landscape workspace (lg and up). The APP is the primary, growing
+            column; the setup rail (code / sharing / runbook) is a fixed sidebar
+            shown only when opened — forced open until a clinic code exists.
+            lg:grid-rows-[minmax(0,1fr)] is LOAD-BEARING at desktop widths:
             without it the row grows to the app's full height and everything
-            below the fold is clipped unreachable inside overflow-hidden. */}
-        {/* landscape workspace. The APP is the primary, growing column; the setup
-            rail (code / sharing / runbook) is a fixed sidebar shown only when
-            opened — forced open until a clinic code is provisioned. */}
+            below the fold is clipped unreachable inside overflow-hidden. Below
+            lg none of that applies — the page scrolls and the rail stacks. */}
         {(() => {
           const railOpen = setupOpen || !clinicCode
           return (
             <div className="min-h-0 flex-1 px-4 py-4 sm:px-6">
               <div
-                className={`mx-auto grid h-full w-full grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 ${
+                className={`mx-auto grid w-full grid-cols-1 gap-6 lg:h-full lg:grid-rows-[minmax(0,1fr)] ${
                   railOpen ? 'max-w-[1600px] lg:grid-cols-[minmax(0,1fr)_360px]' : 'max-w-[1100px] lg:grid-cols-1'
                 }`}
               >
                 {/* the app — the primary column; the embedded app uses the width */}
-                <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
+                <div
+                  className={`overflow-hidden rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain ${
+                    // no code yet → keep this short on mobile so the setup rail
+                    // (where they provision) is a thumb-scroll away, not a screen
+                    clinicCode ? 'min-h-[60vh]' : 'min-h-0'
+                  }`}
+                >
                   {clinicCode === undefined ? (
-                    <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
+                    <div className="flex h-full min-h-[320px] items-center justify-center p-8 text-sm text-muted-foreground">
                       Loading your clinic…
                     </div>
                   ) : clinicCode === null ? (
-                    <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
+                    <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-2 p-8 text-center">
                       <p className="text-sm font-semibold text-foreground">Set up your clinic code first</p>
                       <p className="max-w-[280px] text-xs text-muted-foreground">
-                        Provision your clinic code in the setup panel, then the trainer runs here with every
-                        session syncing to your hub.
+                        Create it in the setup panel — beside this on a wide screen, just below on a phone or
+                        tablet. Then the trainer runs here with every session syncing to your hub.
                       </p>
                     </div>
                   ) : (
                     <PlatformApp key={resetSeq} embeddedClinicCode={clinicCode} />
                   )}
                 </div>
-                {/* setup rail — code / sharing / runbook; only when open */}
+                {/* setup rail — code / sharing / runbook; only when open.
+                    Stacks BELOW the app under lg (was display:none, which made
+                    the clinic code, patient link, QR and invite unreachable on
+                    a phone — and provisioning impossible). */}
                 {railOpen && (
-                  <div className="hidden h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain pb-2 pr-1 lg:flex">
-                    <SstClinicCard />
+                  <div className="flex flex-col gap-5 pb-2 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+                    {/* Provisioning here must unblock the app column immediately
+                        — otherwise the clinician creates their code and the app
+                        still says "set up your clinic code first" until reload. */}
+                    <SstClinicCard
+                      onClinicResolved={(c) => setClinicCode(c?.code?.trim() ? c.code : null)}
+                    />
                     <RunbookCard />
                   </div>
                 )}

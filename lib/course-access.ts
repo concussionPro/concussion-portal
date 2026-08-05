@@ -129,7 +129,8 @@ export async function requireCourseAccess(
 ): Promise<CourseGateResult> {
   const result = await checkCourseServerAccess(slug)
   if (!result.ok) {
-    redirect(redirectTo || `/login?from=/courses/${slug}`)
+    // ?redirect= is the only param /login reads — ?from= was dropped silently.
+    redirect(redirectTo || `/login?redirect=${encodeURIComponent(`/courses/${slug}`)}`)
   }
   return result
 }

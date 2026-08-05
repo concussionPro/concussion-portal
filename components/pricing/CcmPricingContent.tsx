@@ -201,7 +201,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: 'Does this count toward my AHPRA CPD requirements?',
-      a: 'Yes. The online modules count as formal CPD hours (8 hours), and the workshop adds 6 hours. Log it as "Educational Activity — Reviewing & Reflecting" in your CPD portfolio. Your certificate includes completion date, CPD hours, and a unique certificate ID — everything you need for an AHPRA audit. Endorsed by Osteopathy Australia.',
+      a: `Yes. The online modules count as formal CPD hours (${CONFIG.COURSE.ONLINE_CPD_POINTS} hours), and the workshop adds ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} hours — ${CONFIG.COURSE.TOTAL_CPD_POINTS} in total. Log it as "Educational Activity — Reviewing & Reflecting" in your CPD portfolio. Your certificate includes completion date, CPD hours, and a unique certificate ID — everything you need for an AHPRA audit. Endorsed by Osteopathy Australia.`,
     },
     {
       q: 'Where are workshops held and when is the next one?',
@@ -547,13 +547,13 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                     ['Clinical Testing suite — SST Trainer + club baseline testing (included)', true, true],
                     ['Your clinic code — patients & clubs link straight to you', true, true],
                     ['Clinical Toolkit downloads', true, true],
-                    ['CPD certificate (online)', '8 pts', '8 pts'],
+                    ['CPD certificate (online)', `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`, `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`],
                     ['Lifetime access', true, true],
                     ['Full-day hands-on workshop', false, true],
                     ['Expert coaching & 1:1 feedback', false, true],
                     ['Supervised clinical practice', false, true],
-                    ['Workshop CPD certificate', false, '+6 pts in-person'],
-                    ['Total CPD hours', '8', '14'],
+                    ['Workshop CPD certificate', false, `+${CONFIG.COURSE.IN_PERSON_CPD_POINTS} pts in-person`],
+                    ['Total CPD hours', `${CONFIG.COURSE.ONLINE_CPD_POINTS}`, `${CONFIG.COURSE.TOTAL_CPD_POINTS}`],
                     ['Afterpay / Klarna available', true, true],
                   ] as [string, boolean | string, boolean | string][]).map(([feature, online, workshop], i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>

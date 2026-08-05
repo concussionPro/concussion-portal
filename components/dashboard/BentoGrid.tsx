@@ -738,7 +738,7 @@ function WorkshopCard({
             <Check className="w-2.5 h-2.5 inline mr-0.5" />{cityLabel(workshopLocation!)}
           </span>
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Hours</p>
+        <p className="text-sm text-foreground font-semibold mb-1">{CONFIG.COURSE.IN_PERSON_CPD_POINTS} Practical CPD Hours</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
           Nominated for {cityLabel(workshopLocation!)}. We confirm a date once the round fills — you&apos;ll get {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
         </p>
@@ -778,12 +778,12 @@ function WorkshopCard({
           </span>
         )}
       </div>
-      <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Hours</p>
+      <p className="text-sm text-foreground font-semibold mb-1">{CONFIG.COURSE.IN_PERSON_CPD_POINTS} Practical CPD Hours</p>
       <p className="text-xs text-muted-foreground leading-relaxed">
         {isFullCourse && !allModulesComplete
           ? 'Complete your online modules to nominate your workshop city.'
           : isOnlineOnly
-          ? 'Add the hands-on workshop to earn all 16 CPD hours. SCAT6, VOMS & BESS with expert feedback.'
+          ? `Add the hands-on workshop to earn all ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours. SCAT6, VOMS & BESS with expert feedback.`
           : 'Hands-on training with standardised assessments, sideline protocols, and case studies.'}
       </p>
     </Card>

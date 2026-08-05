@@ -28,6 +28,13 @@ export interface CertificateData {
   completionDate: Date
   learningOutcomes: string[]
   courseType: 'scat-mastery' | 'online-course' | 'full-course' | 'recognition-referral' | 'crm-online'
+  /**
+   * Override the derived id with the one already on record for this holder +
+   * course (course_certificates). The derived id is a hash of the COMPLETION
+   * DATE, so a module re-take would otherwise mint a new id and orphan the
+   * /verify link the holder already shared.
+   */
+  certificateId?: string
 }
 
 interface CertificateResult {
@@ -52,6 +59,11 @@ function generateCertificateId(email: string, courseType: string, date: Date): s
   return `CEA-${prefix}-${year}-${hash}`
 }
 
+/** Origin printed on the certificate's verification line (no trailing slash). */
+const VERIFY_BASE_URL = (
+  process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+).replace(/\/+$/, '').replace(/^https?:\/\//, '')
+
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-AU', {
     day: 'numeric',
@@ -61,7 +73,8 @@ function formatDate(date: Date): string {
 }
 
 export function generateCertificatePDF(data: CertificateData): CertificateResult {
-  const certificateId = generateCertificateId(data.participantEmail, data.courseType, data.completionDate)
+  const certificateId =
+    data.certificateId || generateCertificateId(data.participantEmail, data.courseType, data.completionDate)
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()   // 297
   const pageHeight = doc.internal.pageSize.getHeight()  // 210
@@ -278,7 +291,12 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   doc.setTextColor(100, 116, 139)
   doc.text(`Certificate ID: ${certificateId}`, pageWidth - 40, sigY, { align: 'center' })
   doc.text(`Date of Issue: ${formatDate(new Date())}`, pageWidth - 40, sigY + 4, { align: 'center' })
-  doc.text(`Verify: portal.concussion-education-australia.com`, pageWidth - 40, sigY + 8, { align: 'center' })
+  // The FULL verification path — a bare domain sends an auditor to the
+  // homepage with nothing to check. /verify/:id resolves against
+  // course_certificates (every issued certificate is recorded there).
+  doc.setFontSize(6.5)
+  doc.text(`Verify: ${VERIFY_BASE_URL}/verify/${certificateId}`, pageWidth - 40, sigY + 8, { align: 'center' })
+  doc.setFontSize(7)
 
   // ── Footer ──────────────────────────────────
   doc.setFontSize(6.5)

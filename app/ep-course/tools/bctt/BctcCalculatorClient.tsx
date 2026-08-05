@@ -15,6 +15,7 @@ import {
 import {
   computePrescription,
   PROVOCATION_RISE,
+  EXHAUSTION_RPE,
   type Prescription,
 } from '@/lib/sst-trainer/protocol'
 
@@ -39,6 +40,13 @@ function makeStage(): Stage {
 // Source the rise threshold from the engine so the tool stays in lockstep.
 const SYMPTOM_RISE_THRESHOLD = PROVOCATION_RISE
 
+// The OTHER validated BCTT termination criterion: voluntary exhaustion at
+// Borg RPE >= 17 with no symptom provocation. It was collected and range-
+// checked but never applied, while the public page claimed the tool applies
+// "the standard termination rules" — so an RPE-limited test could still mint
+// an HRt off a later stage. Sourced from the engine, same as the symptom rise.
+const EXHAUSTION_RPE_THRESHOLD = EXHAUSTION_RPE
+
 // Sane input bounds. Out-of-range values are rejected with a clear message
 // rather than silently producing a "valid" HRt.
 const SYMPTOM_MIN = 0
@@ -53,12 +61,22 @@ type ComputeResult =
   | { kind: 'range-error'; message: string }
   | { kind: 'hr-missing'; stageNumber: number }
   | { kind: 'no-complete-stage' }
-  | { kind: 'no-threshold' }
+  | { kind: 'no-threshold'; rpeEndpointStage: number | null }
+  // The test hit the voluntary-exhaustion endpoint (RPE >= 17) BEFORE symptoms
+  // rose >= 3 points. Stages beyond that are past the protocol's termination
+  // point, so no HRt is minted from them.
+  | {
+      kind: 'rpe-endpoint-first'
+      rpeEndpointStage: number
+      rpeEndpointValue: number
+      symptomStageNumber: number
+    }
   | {
       kind: 'ok'
       hrt: number
       triggerStageNumber: number
       triggerSymptom: number
+      rpeEndpointStage: number | null
       rx: Prescription
     }
 
@@ -95,10 +113,24 @@ function computeResult(stages: Stage[], baseline: string): ComputeResult {
     }
   }
 
-  // Select the threshold on the FIRST stage whose symptom score rose >= 3
-  // above baseline — regardless of whether HR was entered (matches the engine
-  // contract: HRt = HR at that minute). If that crossing stage has no HR,
-  // surface a validation error rather than skipping to a later (higher) HR.
+  // TERMINATION RULE 2 (voluntary exhaustion): the first stage at RPE >= 17.
+  // Computed up front so it can be compared against the symptom crossing.
+  let rpeEndpointStage: number | null = null
+  let rpeEndpointValue = 0
+  for (let i = 0; i < stages.length; i++) {
+    const rpe = num(stages[i].rpe)
+    if (rpe !== null && rpe >= EXHAUSTION_RPE_THRESHOLD) {
+      rpeEndpointStage = i + 1
+      rpeEndpointValue = rpe
+      break
+    }
+  }
+
+  // TERMINATION RULE 1 (symptom exacerbation): the threshold sits on the FIRST
+  // stage whose symptom score rose >= 3 above baseline — regardless of whether
+  // HR was entered (matches the engine contract: HRt = HR at that minute). If
+  // that crossing stage has no HR, surface a validation error rather than
+  // skipping to a later (higher) HR.
   let completeStageCount = 0
   for (let i = 0; i < stages.length; i++) {
     const s = stages[i]
@@ -107,19 +139,32 @@ function computeResult(stages: Stage[], baseline: string): ComputeResult {
     if (sym !== null && hr !== null) completeStageCount++
     if (sym === null) continue
     if (sym - baselineNum >= SYMPTOM_RISE_THRESHOLD) {
-      if (hr === null) return { kind: 'hr-missing', stageNumber: i + 1 }
+      const stageNumber = i + 1
+      // Whichever endpoint came FIRST terminates the test. If the patient hit
+      // voluntary exhaustion earlier, the later symptom rise is past the
+      // protocol's endpoint and must not be reported as an HRt.
+      if (rpeEndpointStage !== null && rpeEndpointStage < stageNumber) {
+        return {
+          kind: 'rpe-endpoint-first',
+          rpeEndpointStage,
+          rpeEndpointValue,
+          symptomStageNumber: stageNumber,
+        }
+      }
+      if (hr === null) return { kind: 'hr-missing', stageNumber }
       return {
         kind: 'ok',
         hrt: hr,
-        triggerStageNumber: i + 1,
+        triggerStageNumber: stageNumber,
         triggerSymptom: sym,
+        rpeEndpointStage,
         rx: computePrescription(hr),
       }
     }
   }
 
   if (completeStageCount === 0) return { kind: 'no-complete-stage' }
-  return { kind: 'no-threshold' }
+  return { kind: 'no-threshold', rpeEndpointStage }
 }
 
 export default function BctcCalculatorClient() {
@@ -156,10 +201,18 @@ export default function BctcCalculatorClient() {
   const hrMissingStage = submitted && result.kind === 'hr-missing' ? result.stageNumber : null
   const needStages = submitted && result.kind === 'no-complete-stage'
 
+  const rpeFirst = submitted && result.kind === 'rpe-endpoint-first' ? result : null
+
   // No threshold but >=1 complete stage. Exhaustion-limited => did NOT
   // demonstrate exercise intolerance; symptom-limited => inconclusive data.
-  const noIntolerance = submitted && result.kind === 'no-threshold' && termination === 'exhaustion'
-  const inconclusive = submitted && result.kind === 'no-threshold' && termination === 'symptom'
+  // A recorded RPE >= 17 IS the exhaustion endpoint, so it counts even if the
+  // clinician left the radio on "symptom-limited" — the data outranks the radio.
+  const rpeEndpointStage =
+    submitted && (result.kind === 'no-threshold' || result.kind === 'ok') ? result.rpeEndpointStage : null
+  const noIntolerance =
+    submitted && result.kind === 'no-threshold' && (termination === 'exhaustion' || result.rpeEndpointStage !== null)
+  const inconclusive =
+    submitted && result.kind === 'no-threshold' && termination === 'symptom' && result.rpeEndpointStage === null
 
   const displayName = name.trim() || 'this patient'
 
@@ -223,7 +276,16 @@ export default function BctcCalculatorClient() {
         </div>
 
         <p className="mt-2 text-xs text-slate-500">
-          One row per stage / minute. Heart rate and symptom score are required to find the threshold; speed/incline and RPE are for your record.
+          One row per stage / minute. Heart rate and symptom score are required to find the threshold; speed/incline is
+          for your record. RPE is applied: a stage at RPE ≥{EXHAUSTION_RPE_THRESHOLD} is the voluntary-exhaustion
+          endpoint and terminates the test.
+        </p>
+        {/* Buffalo incline is DEGREES, not percent. The placeholder said "2%",
+            which teaches the wrong protocol on a page that ranks for "BCTT
+            protocol" (2026-08-05 crawl). */}
+        <p className="mt-1.5 text-xs text-slate-500">
+          Buffalo protocol: fixed walking speed, incline raised <strong>1 degree (1°) per minute</strong> — degrees, not
+          percent. Once incline reaches its ceiling, speed is increased instead.
         </p>
 
         {/* Desktop / wide table */}
@@ -250,7 +312,7 @@ export default function BctcCalculatorClient() {
                         type="text"
                         value={s.load}
                         onChange={(e) => updateStage(s.id, 'load', e.target.value)}
-                        placeholder="e.g. 5.3 km/h / 2%"
+                        placeholder="e.g. 5.3 km/h / 2° incline"
                         className="w-32 rounded-md border border-slate-300 px-2 py-1.5 outline-none focus:border-[#5b9aa6] focus:ring-1 focus:ring-[#5b9aa6]/30"
                       />
                     </td>
@@ -331,7 +393,7 @@ export default function BctcCalculatorClient() {
                       type="text"
                       value={s.load}
                       onChange={(e) => updateStage(s.id, 'load', e.target.value)}
-                      placeholder="e.g. 5.3 km/h / 2%"
+                      placeholder="e.g. 5.3 km/h / 2° incline"
                       className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm font-normal outline-none focus:border-[#5b9aa6]"
                     />
                   </label>
@@ -456,14 +518,37 @@ export default function BctcCalculatorClient() {
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-amber-900">
             {displayName} completed an exhaustion / RPE-limited test <strong>without provoking symptoms</strong> (no stage
-            rose ≥{SYMPTOM_RISE_THRESHOLD} points above the resting baseline of {baselineNum}). This patient did{' '}
-            <strong>not demonstrate exercise intolerance</strong> on the Buffalo protocol — the physiological
-            (autonomic / exercise-intolerance) phenotype is unlikely to be the driver here.
+            rose ≥{SYMPTOM_RISE_THRESHOLD} points above the resting baseline of {baselineNum})
+            {rpeEndpointStage !== null && (
+              <> — the voluntary-exhaustion endpoint (RPE ≥{EXHAUSTION_RPE_THRESHOLD}) was reached at{' '}
+              <strong>stage {rpeEndpointStage}</strong></>
+            )}
+            . This patient did <strong>not demonstrate exercise intolerance</strong> on the Buffalo protocol — the
+            physiological (autonomic / exercise-intolerance) phenotype is unlikely to be the driver here.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-amber-900">
             <strong>No sub-symptom-threshold aerobic prescription is generated.</strong> Flag this back to the referring
             clinician for re-evaluation — consider cervicogenic, vestibulo-ocular, or other non-physiological
             contributors that sit outside an HRt-driven aerobic program.
+          </p>
+        </div>
+      )}
+
+      {rpeFirst && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-6">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-amber-900">
+            <AlertTriangle className="h-5 w-5" /> Test ended at voluntary exhaustion, not symptom provocation
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-amber-900">
+            RPE reached {rpeFirst.rpeEndpointValue} (≥{EXHAUSTION_RPE_THRESHOLD}) at{' '}
+            <strong>stage {rpeFirst.rpeEndpointStage}</strong> — that is the Buffalo protocol&rsquo;s
+            voluntary-exhaustion termination point. The ≥{SYMPTOM_RISE_THRESHOLD}-point symptom rise you recorded first
+            appears at <strong>stage {rpeFirst.symptomStageNumber}</strong>, which is past the endpoint.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-amber-900">
+            <strong>No heart-rate threshold or prescription is generated</strong> from stages beyond the termination
+            point. If the test genuinely continued past stage {rpeFirst.rpeEndpointStage}, correct the RPE entries; if it
+            stopped there, this is an exhaustion-limited test that did not demonstrate exercise intolerance.
           </p>
         </div>
       )}
@@ -524,6 +609,33 @@ export default function BctcCalculatorClient() {
                 improves.
               </p>
             </div>
+
+            {/* Validated prognostic flag (Haider 2019). computePrescription
+                has always returned this; it was simply never rendered, so the
+                one finding on this screen with published predictive value was
+                invisible to the clinician reading it. */}
+            {ok.rx.prolongedRecoveryRisk && ok.rx.clinicianNote && (
+              <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <div>
+                  <p className="text-sm font-bold text-amber-900">Prolonged-recovery risk flag</p>
+                  <p className="mt-1 text-sm leading-relaxed text-amber-900">{ok.rx.clinicianNote}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-amber-800">
+                    Prognostic only — it does <strong>not</strong> change the prescription above. The training band is
+                    already individualised by being a percentage of this patient&rsquo;s own HRt.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Termination record — which of the two standard endpoints applied. */}
+            <p className="mt-4 text-xs leading-relaxed text-slate-500">
+              <strong>Termination:</strong> symptom exacerbation (≥{SYMPTOM_RISE_THRESHOLD}-point rise) at stage{' '}
+              {ok.triggerStageNumber}
+              {ok.rpeEndpointStage !== null
+                ? ` — voluntary exhaustion (RPE ≥${EXHAUSTION_RPE_THRESHOLD}) was also recorded at stage ${ok.rpeEndpointStage}, at or after the symptom endpoint.`
+                : ` — voluntary exhaustion (RPE ≥${EXHAUSTION_RPE_THRESHOLD}) was not reached.`}
+            </p>
 
             {/* Scope reminder */}
             <div className="mt-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">

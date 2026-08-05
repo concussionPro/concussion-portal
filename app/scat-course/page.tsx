@@ -25,12 +25,17 @@ export default function SCATCoursePage() {
   const modules = getSCATModulesMeta()
 
   useEffect(() => {
-    // Check if user is logged in and has preview access
+    // Check if user is logged in and has preview access.
+    // The bounce MUST carry ?redirect= (the param /login actually reads) —
+    // this is the target of the email-gate welcome CTA, which is routinely
+    // opened on a second device with no session. Without it the clinician
+    // logs in and lands on /dashboard, never the course they were sent to.
+    const LOGIN_URL = `/login?redirect=${encodeURIComponent('/scat-course')}`
     fetch('/api/auth/session', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (!data.user) {
-          router.push('/login')
+          router.push(LOGIN_URL)
           return
         }
 
@@ -40,7 +45,7 @@ export default function SCATCoursePage() {
       })
       .catch(error => {
         console.error('Failed to load course:', error)
-        router.push('/login')
+        router.push(LOGIN_URL)
       })
   }, [router])
 

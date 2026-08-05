@@ -1,10 +1,12 @@
 /**
- * Generic per-course certificate store. Designed for short courses
- * (vagus-nerve and future). Distinct from the AI course's certificate
- * pipeline, which lives in user columns and predates this table.
+ * Generic per-course certificate store — the table /verify/:id reads.
+ * Every certificate the portal issues must land here or public verification
+ * returns a FALSE NEGATIVE on a genuine AHPRA CPD document.
  *
- * One row per (email, course_slug). Issuing re-issues — fresh ID and
- * fresh 12-month validity. Lazy CREATE TABLE on first call.
+ * One row per (email, course_slug). Re-issuing refreshes the score/date and
+ * the 12-month validity but KEEPS THE EXISTING CERTIFICATE ID — a re-take
+ * used to mint a new id, silently breaking every /verify link the holder had
+ * already shared with an employer or auditor. Lazy CREATE TABLE on first call.
  */
 
 import crypto from 'crypto'
@@ -51,32 +53,42 @@ export async function issueCourseCertificate(args: {
   courseSlug: string
   courseTitle: string
   cpdHours: number
+  /**
+   * Id to store when this is the FIRST issue for (email, course). Callers
+   * that print a DETERMINISTIC id on the PDF (lib/certificate.ts) pass it so
+   * the printed id and the verifiable id are the same string. Omit to mint a
+   * random one. On re-issue the stored id always wins — see below.
+   */
+  certificateId?: string
 }): Promise<CourseCertificateRecord> {
   await ensureTable()
   const email = args.email.trim().toLowerCase()
-  const certificateId = makeCertificateId()
+  const certificateId = args.certificateId || makeCertificateId()
   const issuedAt = new Date()
   const expiresAt = new Date(issuedAt.getTime() + CERT_VALIDITY_MS)
 
-  const { rows } = await sql<{ name: string | null }>`
+  // Re-issue (a re-take, a re-download) refreshes the record but NEVER the
+  // id: certificate_id is deliberately absent from the DO UPDATE SET list, so
+  // links the holder already shared keep resolving. RETURNING gives back
+  // whichever id actually persisted.
+  const { rows } = await sql<{ certificate_id: string; name: string | null }>`
     INSERT INTO course_certificates
       (certificate_id, email, name, course_slug, course_title, cpd_hours, issued_at, expires_at)
     VALUES
       (${certificateId}, ${email}, ${args.name ?? null}, ${args.courseSlug}, ${args.courseTitle}, ${args.cpdHours}, ${issuedAt.toISOString()}, ${expiresAt.toISOString()})
     ON CONFLICT (email, course_slug) DO UPDATE
-      SET certificate_id = EXCLUDED.certificate_id,
-          -- Never wipe a previously-captured holder name with NULL on
+      SET -- Never wipe a previously-captured holder name with NULL on
           -- re-issue — keep the best name we have.
           name = COALESCE(EXCLUDED.name, course_certificates.name),
           course_title = EXCLUDED.course_title,
           cpd_hours = EXCLUDED.cpd_hours,
           issued_at = EXCLUDED.issued_at,
           expires_at = EXCLUDED.expires_at
-    RETURNING name
+    RETURNING certificate_id, name
   `
 
   return {
-    certificateId,
+    certificateId: rows[0]?.certificate_id ?? certificateId,
     email,
     name: rows[0]?.name ?? args.name ?? null,
     courseSlug: args.courseSlug,

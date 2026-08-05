@@ -5,6 +5,7 @@ import { CourseSidebar } from '@/components/ai-course/CourseSidebar'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { getUserCertificate } from '@/lib/ai-course/certificate'
 import { CONFIG } from '@/lib/config'
+import { findCourse, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 
 export const metadata: Metadata = {
   title: 'Certificate — AI in Clinical Practice',
@@ -14,6 +15,12 @@ export const metadata: Metadata = {
 export default async function CertificatePage() {
   const access = await requireAiCourseAccess()
   const cert = access.email ? await getUserCertificate(access.email) : null
+
+  // Cross-sell price MUST come from the same catalogue Stripe charges from
+  // (/api/courses/checkout → getEffectivePrice). A hardcoded A$97 advertised
+  // the sticker while checkout charged the A$82 early-bird (2026-08-05 crawl).
+  const vagusCourse = findCourse('vagus-nerve')
+  const vagusPrice = vagusCourse ? getEffectivePrice(vagusCourse).price : null
 
   if (!cert) {
     return (
@@ -158,7 +165,10 @@ export default async function CertificatePage() {
               href="/courses/vagus-nerve"
               className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
             >
-              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Short course · 1 CPD hour · A$97</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">
+                Short course · {vagusCourse?.cpdHours ?? 1} CPD hour{(vagusCourse?.cpdHours ?? 1) === 1 ? '' : 's'}
+                {vagusPrice !== null && ` · A$${vagusPrice}`}
+              </p>
               <p className="text-sm font-semibold text-foreground leading-tight">The Vagus Nerve in Clinical Practice</p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Evidence-based assessment and defensible interventions for autonomic dysfunction — POTS, post-concussion, long COVID.</p>
             </Link>
@@ -166,7 +176,7 @@ export default async function CertificatePage() {
               href="/pricing"
               className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
             >
-              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Flagship · 8 CPD hours online · up to 16 with the workshop day</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Flagship · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online · up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop day</p>
               <p className="text-sm font-semibold text-foreground leading-tight">Concussion Clinical Mastery</p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Osteopathy Australia–endorsed concussion assessment and management — SCAT6, VOMS, BESS, return-to-sport protocols.</p>
             </Link>

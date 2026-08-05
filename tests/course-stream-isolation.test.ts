@@ -68,8 +68,12 @@ describe('CRM buyers land on their own course, never the free SCAT funnel', () =
   it('magic-link verify routes CRM owners to /ep-course, not /modules/101', () => {
     const src = read('app/api/auth/verify/route.ts')
     expect(src).toMatch(/userOwnsCrm/)
-    // The free-tier landing must be conditioned on NOT owning CRM.
-    expect(src).toMatch(/isFreeTier \? '\/modules\/101' : '\/ep-course'/)
+    // The free-tier landing must be conditioned on NOT owning CRM. (Assertion
+    // refreshed 2026-08-05: the resolver was refactored into
+    // resolveLandingTarget with an SST door, so the old `isFreeTier ? …`
+    // literal no longer existed and this test could never pass.)
+    expect(src).toMatch(/ownsCrm \? '\/ep-course'/)
+    expect(src).toMatch(/: '\/modules\/101'/)
   })
 
   it('the public nav sends a CRM owner to /ep-course under "My Course"', () => {

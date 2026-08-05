@@ -80,7 +80,8 @@ export async function checkServerAccess(): Promise<GateResult> {
 export async function requireAiCourseAccess(redirectTo?: string): Promise<GateResult> {
   const result = await checkServerAccess()
   if (!result.ok) {
-    redirect(redirectTo || '/login?from=/courses/ai-in-clinical-practice')
+    // ?redirect= is the only param /login reads — ?from= was dropped silently.
+    redirect(redirectTo || `/login?redirect=${encodeURIComponent('/courses/ai-in-clinical-practice')}`)
   }
   return result
 }

@@ -8,6 +8,7 @@ import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/monitoring'
 import { getClientIp } from '@/lib/get-client-ip'
 import { rateLimit } from '@/lib/rate-limit'
+import { isSafeRelativePath } from '@/lib/safe-redirect'
 
 const EMAIL_RATE_LIMIT = 3 // max attempts per email per window
 const IP_RATE_LIMIT = 10 // max attempts per IP per window
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
     }
-    const { email } = body as { email?: string }
+    const { email, redirect } = body as { email?: string; redirect?: string }
 
     // Validate email
     if (!email) {
@@ -81,9 +82,14 @@ export async function POST(request: Request) {
     const token = createMagicToken(user.id, user.email, user.name, user.accessLevel)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
+    // Carry the caller's post-login destination into the emailed link. Only
+    // same-origin relative paths survive; /api/auth/verify still applies the
+    // entitlement allowlist before honouring it.
+    const safeRedirect = isSafeRelativePath(redirect) ? redirect : null
+
     // Send magic link email (with performance monitoring)
     const emailSent = await measurePerformance('sendMagicLinkEmail', () =>
-      sendMagicLinkEmail(user.email, token, baseUrl)
+      sendMagicLinkEmail(user.email, token, baseUrl, safeRedirect)
     )
 
     if (emailSent) {
@@ -93,7 +99,7 @@ export async function POST(request: Request) {
       const isDevelopment = process.env.NODE_ENV === 'development'
 
       if (isDevelopment) {
-        const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(user.email)}&token=${token}`
+        const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(user.email)}&token=${token}${safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''}`
         console.log('\u26a0\ufe0f  Email service not configured - returning magic link directly')
         console.log('\ud83d\udd17 Magic Link:', magicLink)
         return NextResponse.json({

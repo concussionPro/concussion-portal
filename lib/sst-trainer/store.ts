@@ -226,15 +226,26 @@ export function savePatientStateDebounced(state: PatientState, delayMs = 400): v
   }, delayMs)
 }
 
-/** "Start over" — wipes everything, including the install id. */
-export function clearState(): void {
+/**
+ * "Start over" — wipes everything, including the install id.
+ *
+ * `preservePendingSyncs` keeps the failed-sync retry queue alive across the
+ * wipe (2026-08-05: the clinician's "+ New patient" button called this and
+ * silently destroyed every clinical event that hadn't reached the clinic yet).
+ * The queued bodies already carry their own patientRef, so they still land
+ * against the right patient after the install id is regenerated. When the
+ * queue is empty the key is removed exactly as before.
+ */
+export function clearState(opts?: { preservePendingSyncs?: boolean }): void {
   if (saveTimer) {
     clearTimeout(saveTimer)
     saveTimer = null
   }
   if (!storageAvailable()) return
+  const pending = opts?.preservePendingSyncs ? (loadState()?.pendingSyncs ?? []) : []
   try {
-    window.localStorage.removeItem(STORE_KEY)
+    if (pending.length) saveStateNow({ ...defaultState(), pendingSyncs: pending })
+    else window.localStorage.removeItem(STORE_KEY)
   } catch {
     /* best-effort */
   }

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Mail, AlertCircle, ArrowLeft, Check, Brain, Shield, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { useSession } from '@/contexts/SessionContext'
+import { isSafeRelativePath } from '@/lib/safe-redirect'
 
 function LoginForm() {
   const router = useRouter()
@@ -16,22 +17,20 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [devMagicLink, setDevMagicLink] = useState('')
+  // Redirect validation (open-redirect guard) uses the shared helper
+  // isSafeRelativePath — the same rule /api/auth/verify applies server-side.
   const redirectParam = searchParams.get('redirect')
-
-  // Validate redirect to prevent open redirect attacks
-  const isValidRedirect = (path: string) =>
-    path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !/[\x00-\x1f]/.test(path)
 
   // Redirect authenticated users — no need to log in again
   useEffect(() => {
     if (sessionLoading || !user) return
-    const dest = (redirectParam && isValidRedirect(redirectParam)) ? redirectParam : '/dashboard'
+    const dest = (redirectParam && isSafeRelativePath(redirectParam)) ? redirectParam : '/dashboard'
     router.replace(dest)
   }, [user, sessionLoading, router, redirectParam])
 
   // Persist redirect destination so it survives the magic link email flow
   useEffect(() => {
-    if (redirectParam && isValidRedirect(redirectParam)) {
+    if (redirectParam && isSafeRelativePath(redirectParam)) {
       localStorage.setItem('login_redirect', redirectParam)
     }
   }, [redirectParam])
@@ -55,10 +54,17 @@ function LoginForm() {
     }
 
     try {
+      // The destination MUST ride the request: production magic-link emails
+      // point at /api/auth/verify (never this app's /auth/verify page), so
+      // the localStorage stash below is invisible to them. Without this the
+      // gated page the user was bounced from was lost on every login.
       const response = await fetch('/api/send-magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          ...(redirectParam && isSafeRelativePath(redirectParam) ? { redirect: redirectParam } : {}),
+        }),
       })
 
       if (response.ok) {

@@ -104,7 +104,10 @@ export default function MelbournePage() {
                 <p className="text-sm text-slate-500 mb-6">
                   Add your details below and you&apos;ll be first to hear the next date — before it opens publicly.
                 </p>
-                {/* Interest capture for the next round — NOT a buy button. */}
+                {/* Next-round capture. Under the nomination model the Complete
+                    Course is buyable at any time for any city, so this card also
+                    offers the live early-bird enrolment (which IS a nomination
+                    for the next round) alongside the notify-me form. */}
                 <NextEarlyBirdCapture defaultCity="melbourne" />
               </>
             ) : (

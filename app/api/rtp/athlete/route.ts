@@ -46,7 +46,7 @@ interface ConsentData {
  * logic never runs on data collected without consent.
  */
 export async function POST(request: NextRequest) {
-  if (!isRtpRequestAllowed(request)) {
+  if (!(await isRtpRequestAllowed(request))) {
     return NextResponse.json({ error: 'Not available' }, { status: 403 })
   }
 

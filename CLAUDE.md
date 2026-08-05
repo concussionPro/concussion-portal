@@ -6,7 +6,7 @@ Guidance for Claude Code working in this repo.
 
 Customer-facing brand: **Concussion Education Australia (CEA)** — concussion-education-australia.com. Folder name `ConcussionPro` is internal only.
 
-Flagship product: Concussion Clinical Mastery — 14 CPD hours, Osteopathy Australia endorsed.
+Flagship product: Concussion Clinical Mastery — 16 CPD hours (8 online + 8 in-person; OA re-rated the practical day 2026-07-30, aligning with ESSA), Osteopathy Australia endorsed. **Never hardcode CPD numbers in copy** — derive from `CONFIG.COURSE.TOTAL_CPD_POINTS` / `ONLINE_CPD_POINTS` / `IN_PERSON_CPD_POINTS` in `lib/config.ts`.
 
 ## Goals (2026)
 

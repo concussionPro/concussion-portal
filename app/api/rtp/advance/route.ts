@@ -28,7 +28,7 @@ const MS_PER_DAY = 86_400_000
  * capped at full-time school (stage 4). Gated (admin/demo) + rate limited.
  */
 export async function POST(request: NextRequest) {
-  if (!isRtpRequestAllowed(request)) {
+  if (!(await isRtpRequestAllowed(request))) {
     return NextResponse.json({ error: 'Not available' }, { status: 403 })
   }
 

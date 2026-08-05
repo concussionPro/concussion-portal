@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Lock, Search, ExternalLink, FileText, Award, Star, Sparkles } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackShopClick, trackEvent, trackSearch } from '@/lib/analytics'
 import type { Reference } from '@/data/references'
 
@@ -240,7 +240,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                 Upgrade to Full Course + Practical Skills Training
               </h3>
               <p className="text-sm text-slate-700 mb-4">
-                You have full access to all online modules and research references. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA CPD hour certificate (8 online + 8 in-person).
+                You have full access to all online modules and research references. Upgrade to include the full-day hands-on workshop to earn your complete {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hour certificate ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person).
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
@@ -248,7 +248,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                   onClick={() => trackShopClick('references-online-only-upgrade', { accessLevel: 'online-only' })}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                 >
-                  Upgrade Now - Add Workshop for ${(CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE).toLocaleString()}
+                  Upgrade Now - Add Workshop for ${upgradePriceFor().toLocaleString()}
                 </a>
                 <a
                   href="/in-person"

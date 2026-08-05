@@ -113,7 +113,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             <div className="glass rounded-xl p-3 border border-border/30">
               <Award className="w-5 h-5 text-accent mx-auto mb-1" />
               <div className="text-lg font-bold text-foreground">Up to {CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
-              <div className="text-xs text-muted-foreground">8 online + 6 workshop</div>
+              <div className="text-xs text-muted-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop</div>
             </div>
             <div className="glass rounded-xl p-3 border border-border/30">
               <ShieldCheck className="w-5 h-5 text-accent mx-auto mb-1" />

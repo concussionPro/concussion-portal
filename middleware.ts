@@ -349,7 +349,13 @@ export async function middleware(request: NextRequest) {
 
   // Protected frontend routes — require valid session, redirect to /login if missing.
   // DEV-ONLY: skip on localhost so the dashboard/courses can be reviewed without login.
-  const protectedPrefixes = ['/learning', '/dashboard', '/settings', '/clinical-toolkit', '/complete-reference', '/assessment', '/scat-course', '/references']
+  // NOTE: /assessment is NOT here and must not be. It is the "Free Knowledge
+  // Test" linked from the site footer on every public page and from
+  // /not-found, and its own schema calls it a "Free Skills Assessment" — so
+  // login-walling it 307'd both lead-magnet visitors and crawlers to /login.
+  // It is a self-contained client-side quiz that saves nothing, so it is
+  // genuinely public; anything that persists a result must gate itself.
+  const protectedPrefixes = ['/learning', '/dashboard', '/settings', '/clinical-toolkit', '/complete-reference', '/scat-course', '/references']
   if (process.env.NODE_ENV !== 'production' && protectedPrefixes.some(p => pathname.startsWith(p))) {
     return NextResponse.next()
   }
@@ -443,7 +449,6 @@ export const config = {
     '/settings/:path*',
     '/clinical-toolkit/:path*',
     '/complete-reference/:path*',
-    '/assessment/:path*',
     '/scat-course/:path*',
     '/references/:path*',
   ]

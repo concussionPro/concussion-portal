@@ -9,7 +9,9 @@ import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
  * athlete surface will be free at launch. noindex is set at the /rtp layout.
  */
 export default async function RtpLandingPage() {
-  await requireAiCourseAccess('/login?from=/rtp')
+  // `redirect` — NOT `from`: /login only ever reads ?redirect=, so the old
+  // param silently dropped the destination on every bounce.
+  await requireAiCourseAccess('/login?redirect=%2Frtp')
 
   return (
     <main

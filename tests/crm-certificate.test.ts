@@ -173,9 +173,14 @@ describe('PMS plugin (2026-07-27 build) — the rails that keep it safe', () => 
     expect(fileRoute).toMatch(/gensolve' && !gensolveWritesConfirmed\(\)/)
   })
 
-  it('filing enforces the jurisdiction rule like the report viewer', () => {
+  it('filing derives jurisdiction from the skin and rejects unknown skins', () => {
+    // The old assertion required getReportSkins(jurisdiction).includes(skin),
+    // which was removed 2026-08-05: it was tautological (jurisdiction is
+    // DERIVED from the skin, so every skin passed its own list) and the
+    // comment claimed a protection it never provided. The real contract is
+    // an explicit allowlist of known skins.
     expect(fileRoute).toMatch(/acc884' \|\| skin === 'acc885' \? 'NZ' : 'AU'/)
-    expect(fileRoute).toContain('getReportSkins(jurisdiction).includes(skin)')
+    expect(fileRoute).toContain('ALL_SKINS.includes(skin)')
   })
 
   it('crypto roundtrip works', async () => {

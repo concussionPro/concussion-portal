@@ -303,8 +303,12 @@ export default function HomeClient() {
             <div className="rounded-2xl bg-white border border-[rgba(13,115,119,0.11)] shadow-[0_1px_2px_rgba(10,15,20,0.04),0_14px_36px_-6px_rgba(13,115,119,0.14)] px-5 py-6 md:px-8 md:py-7 animate-fade-in-delay-1">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 divide-[rgba(13,115,119,0.08)] md:divide-x">
                 {[
-                  { value: 'Up to 14', label: 'AHPRA CPD Hours', sub: '8 online + 6 workshop' },
-                  { value: '8', label: 'Online Modules', sub: 'Interactive quizzes' },
+                  {
+                    value: `Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS}`,
+                    label: 'AHPRA CPD Hours',
+                    sub: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop`,
+                  },
+                  { value: `${CONFIG.COURSE.TOTAL_MODULES}`, label: 'Online Modules', sub: 'Interactive quizzes' },
                   { value: '140+', label: 'References', sub: 'Evidence-based' },
                 ].map((stat) => (
                   <div key={stat.label} className="text-center md:px-3">

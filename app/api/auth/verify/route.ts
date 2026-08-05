@@ -7,6 +7,8 @@ import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
 import { sql } from '@/lib/db'
 import { userOwnsCrm } from '@/lib/crm-course'
 import { hasSstEntitlement } from '@/lib/users'
+import { isSafeRelativePath } from '@/lib/safe-redirect'
+import { isUserEnrolled } from '@/lib/ai-course/access'
 
 /** Ensure the used_magic_tokens table exists (runs once per cold start) */
 let tableEnsured = false
@@ -23,14 +25,13 @@ function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex')
 }
 
-/** Only allow same-origin relative redirect paths (no open redirect). */
-function isValidRedirect(path: string): boolean {
-  // Control chars (tab/CR/etc.) are STRIPPED by the WHATWG URL parser, so
-  // '/\t/evil.com' resolves to https://evil.com — reject anything < 0x20
-  // outright (2026-08-05 round-G #1: open redirect).
-  // eslint-disable-next-line no-control-regex
-  return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !/[\x00-\x1f]/.test(path)
-}
+/**
+ * Only allow same-origin relative redirect paths (no open redirect).
+ * Shared helper — control chars (tab/CR/etc.) are STRIPPED by the WHATWG URL
+ * parser, so '/\t/evil.com' resolves to https://evil.com (2026-08-05 round-G
+ * #1: open redirect).
+ */
+const isValidRedirect = isSafeRelativePath
 
 /**
  * A dead magic link (expired / already used) must NOT dead-end a browser
@@ -45,19 +46,39 @@ function existingValidSession(request: NextRequest): SessionData | null {
 }
 
 /**
- * Where a user should land after auth.
+ * Surfaces EVERY preview user owns — free course content and free
+ * lead-magnet deliverables. A preview magic link may deep-link into any of
+ * these without an extra entitlement lookup.
+ */
+const PREVIEW_FREE_PREFIXES = [
+  '/modules/',          // free SCAT + awareness module content
+  '/scat-course',       // the free SCAT course hub (session-gated page)
+  '/ai-safety-checklist', // lead-magnet deliverable (the thing they signed up for)
+]
+
+/** Surfaces unlocked by AI-course/RTP enrolment (users.ai_course_enrolled). */
+const ENROLLED_PREFIXES = [
+  '/courses/ai-in-clinical-practice',
+  '/concussion-rehab-mastery',
+  '/rtp',
+]
+
+/**
+ * Where a user should land after auth — the SINGLE resolver for every login
+ * surface (the interstitial form post, the /auth/verify client page via
+ * `redirectTo` in the JSON, and the already-logged-in paths).
  *
  * CRM (EP stream) buyers carry access_level 'preview' because the streams are
  * isolated (lib/crm-course.ts) — so the plain preview rule dropped a PAYING EP
  * customer onto /modules/101, the free SCAT course, every time they used their
- * magic link. Resolve CRM ownership first and send them to their own course.
+ * magic link. Resolve ownership first and send them to their own course.
  */
-async function resolveLandingTarget(
+export async function resolveLandingTarget(
   accessLevel: string,
   email: string,
   redirect: string | null,
 ): Promise<string> {
-  // Two preview-level ownership doors, resolved independently:
+  // Preview-level ownership doors, resolved independently:
   //  - CRM (EP stream) buyers → their paid course.
   //  - SST-entitled clinics (trial signups, seated members) → the Clinical
   //    Testing workspace their welcome/invite emails deep-link to. Without
@@ -71,15 +92,26 @@ async function resolveLandingTarget(
     : ownsCrm ? '/ep-course'
     : isSstClinic ? '/clinical-testing'
     : '/modules/101'
-  // Preview users may deep-link only into surfaces they own: module content
-  // (everyone), their own course (CRM buyers), the clinical workspace (SST).
-  if (redirect && isValidRedirect(redirect) &&
-      (!isPreview ||
-        redirect.startsWith('/modules/') ||
-        (ownsCrm && redirect.startsWith('/ep-course')) ||
-        (isSstClinic && redirect.startsWith('/clinical-testing')))) {
-    target = redirect
-  }
+
+  if (!redirect || !isValidRedirect(redirect)) return target
+
+  // Non-preview (paid) users may deep-link anywhere same-origin.
+  if (!isPreview) return redirect
+
+  // Preview users may deep-link only into surfaces they actually own:
+  // free content/lead-magnets (everyone), their own course (CRM buyers), the
+  // clinical workspace (SST clinics), the enrolled-only course + RTP
+  // surfaces (users.ai_course_enrolled — the page gate admits exactly these).
+  const allowed =
+    PREVIEW_FREE_PREFIXES.some(p => redirect.startsWith(p)) ||
+    (ownsCrm && redirect.startsWith('/ep-course')) ||
+    (isSstClinic && redirect.startsWith('/clinical-testing')) ||
+    // Entitlement lookup runs ONLY when the target needs it — normal logins
+    // pay no extra query.
+    (ENROLLED_PREFIXES.some(p => redirect.startsWith(p)) &&
+      (await isUserEnrolled(email).catch(() => false)))
+
+  if (allowed) target = redirect
   return target
 }
 
@@ -270,12 +302,14 @@ export async function POST(request: NextRequest) {
       // get the same success JSON shape a fresh verify returns.
       const session = existingValidSession(request)
       if (session) {
+        const redirectTo = await sessionRedirectTarget(session, redirect)
         if (isFormPost) {
-          return NextResponse.redirect(new URL(await sessionRedirectTarget(session, redirect), request.url), 303)
+          return NextResponse.redirect(new URL(redirectTo, request.url), 303)
         }
         return NextResponse.json({
           success: true,
           alreadyLoggedIn: true,
+          redirectTo,
           user: {
             id: session.userId,
             email: session.email,
@@ -312,12 +346,14 @@ export async function POST(request: NextRequest) {
       // still-valid session, complete the journey instead of erroring.
       const session = existingValidSession(request)
       if (session) {
+        const redirectTo = await sessionRedirectTarget(session, redirect)
         if (isFormPost) {
-          return NextResponse.redirect(new URL(await sessionRedirectTarget(session, redirect), request.url), 303)
+          return NextResponse.redirect(new URL(redirectTo, request.url), 303)
         }
         return NextResponse.json({
           success: true,
           alreadyLoggedIn: true,
+          redirectTo,
           user: {
             id: session.userId,
             email: session.email,
@@ -379,18 +415,19 @@ export async function POST(request: NextRequest) {
     // Prune tokens older than 366 days (non-blocking best-effort)
     sql`DELETE FROM used_magic_tokens WHERE used_at < now() - interval '366 days'`.catch(() => {})
 
-    // Build the response: form posts navigate, fetch callers get JSON
+    // Build the response: form posts navigate, fetch callers get JSON.
+    // BOTH branches resolve the landing target through the SAME function —
+    // the /auth/verify client page used to re-implement the rule and got it
+    // wrong for every preview-tier paying customer (CRM owners, SST clinics)
+    // and for lead-magnet deep links. It now just obeys `redirectTo`.
+    const target = await resolveLandingTarget(accessLevel, tokenData.email, redirect)
     let response: NextResponse
     if (isFormPost) {
-      // Preview users may deep-link ONLY into module content (the Day-0
-      // welcome CTA lands them IN Module 1, one click, authenticated). All
-      // other redirect targets stay blocked for preview so a link can't
-      // point them at gated pages that bounce.
-      const target = await resolveLandingTarget(accessLevel, tokenData.email, redirect)
       response = NextResponse.redirect(new URL(target, request.url), 303)
     } else {
       response = NextResponse.json({
         success: true,
+        redirectTo: target,
         user: {
           id: tokenData.userId,
           email: tokenData.email,

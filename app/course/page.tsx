@@ -15,7 +15,7 @@ import {
   Brain,
   Shield,
 } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 import { createCourseSchema } from '@/lib/schema-markup'
 
@@ -53,7 +53,7 @@ const locations = Object.values(CONFIG.LOCATIONS)
 const included = [
   { icon: BookOpen, title: '8 Online Modules', desc: 'Self-paced expert training' },
   { icon: Calendar, title: 'Full-Day Skills Training', desc: 'Full-day practical SCAT6, VOMS, BESS' },
-  { icon: Award, title: '16 CPD Hours', desc: 'AHPRA aligned' },
+  { icon: Award, title: `${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD Hours`, desc: 'AHPRA aligned' },
   { icon: FileText, title: 'Clinical Resources', desc: 'Templates & frameworks' },
   { icon: Users, title: 'Expert Support', desc: 'Direct instructor access' },
   { icon: Brain, title: 'Lifetime Access', desc: 'Content updated regularly' },
@@ -99,7 +99,7 @@ export default function CoursePage() {
             </div>
             <div className="h-12 w-px bg-border" />
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">14</div>
+              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">{CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
               <div className="text-xs text-muted-foreground font-medium">CPD Hours</div>
             </div>
           </div>
@@ -174,8 +174,14 @@ export default function CoursePage() {
             Investment in clinical excellence
           </h2>
           <p className="text-base text-muted-foreground mb-6">
-            Online course from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course with workshop ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} AUD
+            Online course from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course with workshop ${workshopPriceFor().toLocaleString()} AUD
           </p>
+          {isEarlyBirdForLocation() && (
+            <p className="text-sm text-muted-foreground mb-6">
+              Early-bird rate. Standard ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies in the final{' '}
+              {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a scheduled workshop.
+            </p>
+          )}
           <Link
             href="/pricing"
             className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"

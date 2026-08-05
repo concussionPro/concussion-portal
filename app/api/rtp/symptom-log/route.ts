@@ -21,7 +21,7 @@ import { PCSS_TOTAL_MAX } from '@/lib/rtp/symptoms'
  * stage change itself — it persists whatever applySymptomLog returns.
  */
 export async function POST(request: NextRequest) {
-  if (!isRtpRequestAllowed(request)) {
+  if (!(await isRtpRequestAllowed(request))) {
     return NextResponse.json({ error: 'Not available' }, { status: 403 })
   }
 

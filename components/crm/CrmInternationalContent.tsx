@@ -41,7 +41,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'What accreditation does it carry?',
-    a: 'The course is built to ACSM CEC standards and the Approved-Provider application is in progress; the course is ESSA-accredited — 8 ESSA CPD points for the online course — independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
+    a: 'The course is built to ACSM CEC standards, but CEA holds no ACSM Approved-Provider status and is not currently pursuing one — so no ACSM CECs are offered. The course is ESSA-accredited — 8 ESSA CPD points for the online course — independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states 8 hours of assessed learning, and each accreditation is added the day it’s confirmed.',
   },
   {
     q: 'Is there an ongoing cost?',
@@ -206,7 +206,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               Built to ACSM CEC &amp; ESSA CPD standards
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              ACSM Approved-Provider application in progress · ESSA-accredited · 8 CPD hours
+              Built to ACSM CEC standards · ESSA-accredited · 8 CPD hours
             </p>
           </div>
         </div>
@@ -461,11 +461,12 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
         <div className="max-w-3xl mx-auto mb-8 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4">
           <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" strokeWidth={2} />
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
-            <strong>Continuing-education status:</strong> the course is built to ACSM CEC standards
-            and its ACSM Approved-Provider application is in progress; the course is ESSA-accredited —
+            <strong>Continuing-education status:</strong> the course is built to ACSM CEC standards,
+            but CEA holds <strong>no ACSM Approved-Provider status</strong> and is not currently
+            pursuing one — no ACSM CECs are offered. The course <strong>is ESSA-accredited</strong>,
             content independently reviewed by two reviewers appointed by ESSA through its
             professional development endorsement process. We don&rsquo;t claim credits or
-            accreditation we don&rsquo;t yet hold — this page updates the day each is confirmed.
+            accreditation we don&rsquo;t hold — this page updates the day any new one is confirmed.
           </p>
         </div>
 
@@ -547,7 +548,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               </a>
             )}
             <p className="text-xs text-muted-foreground mt-4">
-              ACSM Approved-Provider application in progress · ESSA-accredited · 8 CPD hours
+              Built to ACSM CEC standards · ESSA-accredited · 8 CPD hours
             </p>
           </div>
         </div>

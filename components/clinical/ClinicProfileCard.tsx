@@ -36,6 +36,30 @@ const EMPTY: ClinicProfile = {
   clinic_phone: '',
 }
 
+/** Blank profile — shared with every consumer so nobody re-declares the shape. */
+export const EMPTY_CLINIC_PROFILE: ClinicProfile = EMPTY
+
+/** Normalise a server profile (partial, possibly null) into a full profile. */
+export function toClinicProfile(raw: unknown): ClinicProfile {
+  if (!raw || typeof raw !== 'object') return EMPTY
+  const src = raw as Partial<Record<keyof ClinicProfile, unknown>>
+  const out = { ...EMPTY }
+  for (const k of Object.keys(EMPTY) as (keyof ClinicProfile)[]) {
+    if (typeof src[k] === 'string') out[k] = src[k] as string
+  }
+  return out
+}
+
+/** Write the offline cache for a clinic (server profile stays the master). */
+export function cacheClinicProfile(clinicCode: string | null | undefined, profile: ClinicProfile): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(keyFor(clinicCode), JSON.stringify(profile))
+  } catch {
+    /* private mode / quota */
+  }
+}
+
 const FIELDS: { key: keyof ClinicProfile; label: string; placeholder: string }[] = [
   { key: 'clinic_name', label: 'Clinic name', placeholder: 'Your clinic name' },
   { key: 'clinician_name', label: 'Practitioner name', placeholder: 'Your name' },
@@ -71,6 +95,11 @@ export function ClinicProfileCard({
   const [profile, setProfile] = useState<ClinicProfile>(EMPTY)
   const [open, setOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  // Save state is SHOWN (2026-08-05 crawl #1): the PUT 400s outright when the
+  // caller has no clinic yet, and the failure used to vanish into a bare
+  // .catch — six fields typed, nothing stored, no warning.
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveError, setSaveError] = useState('')
 
   // Load the saved profile for THIS clinic code (blank if unset). No seeding.
   useEffect(() => {
@@ -114,15 +143,37 @@ export function ClinicProfileCard({
     } catch {
       /* ignore quota */
     }
-    // Debounced push to the server master copy.
+    // DEMO00 has no server profile (setClinicProfile refuses the demo code) —
+    // the demo card stays local-only and silent, exactly as it was.
+    if ((clinicCode || '').toUpperCase() === 'DEMO00') return
+    // Debounced push to the server master copy — result surfaced, never swallowed.
     if (saveTimer.current) clearTimeout(saveTimer.current)
+    setSaveState('saving')
+    setSaveError('')
     saveTimer.current = setTimeout(() => {
       void fetch('/api/clinical-testing/clinic', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile: next }),
-      }).catch(() => {})
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            setSaveState('saved')
+            return
+          }
+          const data = (await res.json().catch(() => ({}))) as { error?: string }
+          setSaveState('error')
+          setSaveError(
+            res.status === 400 && /no clinic/i.test(data.error || '')
+              ? 'Create your clinic code below first — these details save against it.'
+              : data.error || 'Couldn’t save to your clinic. These details are on this device only until it does.',
+          )
+        })
+        .catch(() => {
+          setSaveState('error')
+          setSaveError('Couldn’t reach the server. These details are on this device only until it saves.')
+        })
     }, 800)
   }
 
@@ -170,10 +221,21 @@ export function ClinicProfileCard({
               />
             </label>
           ))}
-          <p className="col-span-full m-0 text-[11px] text-slate-400">
-            Saved on this device for this clinic code. These fill the matching fields across every
-            report; edit a field on a document to override it for that one document only.
-          </p>
+          {saveState === 'error' ? (
+            <p className="col-span-full m-0 text-[11.5px] font-semibold text-amber-800">{saveError}</p>
+          ) : (
+            <p className="col-span-full m-0 text-[11px] text-slate-400">
+              {(clinicCode || '').toUpperCase() === 'DEMO00'
+                ? 'Demo workspace — these stay on this device.'
+                : saveState === 'saving'
+                  ? 'Saving to your clinic…'
+                  : saveState === 'saved'
+                    ? 'Saved to your clinic — every seat and device sees these.'
+                    : 'Saved to your clinic, so every seat and device sees the same details.'}{' '}
+              These fill the matching fields across every report; edit a field on a document to
+              override it for that one document only.
+            </p>
+          )}
         </div>
       )}
     </div>

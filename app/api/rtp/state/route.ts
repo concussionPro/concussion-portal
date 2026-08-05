@@ -11,7 +11,7 @@ import { pathwayState } from '@/lib/rtp/protocol'
  * engine stays pure/deterministic. Gated (admin/demo) + rate limited.
  */
 export async function GET(request: NextRequest) {
-  if (!isRtpRequestAllowed(request)) {
+  if (!(await isRtpRequestAllowed(request))) {
     return NextResponse.json({ error: 'Not available' }, { status: 403 })
   }
 

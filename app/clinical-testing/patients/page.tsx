@@ -57,8 +57,17 @@ function refFor(p: PatientRow): string | null {
   return null
 }
 
+/** The label as STORED. `name` may carry the display-only "(2)" suffix, which
+ *  matches nothing in the DB and must never reach a query or a printed
+ *  document (2026-08-05 crawl #3). */
+function labelFor(p: PatientRow): string {
+  return (p.label || '').trim() || p.name.replace(/\s\(\d+\)$/, '')
+}
+
 interface PatientRow {
   name: string
+  /** the real stored patient_label, without the disambiguation suffix */
+  label?: string
   /** install-UUID identity from any trajectory point — threads into the
    *  GP-report loader so duplicate names can't merge/404 (final sweep #9) */
   patientRef?: string | null
@@ -147,7 +156,7 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
               the episode — clearance referral or extend-plan recommendation. */}
           <div className="mt-3 flex flex-wrap gap-2">
             <a
-              href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patient.name)}${refFor(patient) ? `&ref=${encodeURIComponent(refFor(patient) as string)}` : ''}`}
+              href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(labelFor(patient))}${refFor(patient) ? `&ref=${encodeURIComponent(refFor(patient) as string)}` : ''}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
@@ -155,9 +164,15 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
               <FileText className="h-3.5 w-3.5" />
               {patient.clearanceReady ? 'GP report — clearance referral' : 'GP report — episode summary'}
             </a>
-            {/* Full document suite, pre-filled from this patient's measured SST data */}
+            {/* Full document suite, pre-filled from this patient's measured SST data.
+                patient = the STORED label (queryable + printable); ref = the install
+                UUID, which is what actually disambiguates two patients sharing a name.
+                Sending the "(2)" display string 404'd the summary lookup and left the
+                documents empty forever (crawl #3). */}
             <Link
-              href={`/clinical-testing/documents?patient=${encodeURIComponent(patient.name)}`}
+              href={`/clinical-testing/documents?patient=${encodeURIComponent(labelFor(patient))}${
+                refFor(patient) ? `&ref=${encodeURIComponent(refFor(patient) as string)}` : ''
+              }`}
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
             >
               <FileText className="h-3.5 w-3.5" />

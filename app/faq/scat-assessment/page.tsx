@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     question: 'How does SCAT-6 differ from SCAT-5?',
-    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words for 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated, and continuing to use it may fall short of the standard of practice expected under current consensus guidance (Amsterdam 2023 Consensus) and Australian professional expectations.',
+    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words for 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, a timed tandem gait (3 trials) with an optional dual-task component — counting backwards by 7s while walking heel-to-toe, which may instead be administered later in the office setting (see SCOAT6) — updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated, and continuing to use it may fall short of the standard of practice expected under current consensus guidance (Amsterdam 2023 Consensus) and Australian professional expectations.',
   },
   {
     question: "What's the difference between SCAT-6 and SCOAT-6?",

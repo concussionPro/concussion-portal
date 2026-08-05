@@ -3,6 +3,7 @@ import { verifyModuleQuiz } from '@/lib/quiz-verify'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { findUserById } from '@/lib/users'
 import {
+  type CertificateData,
   generateCertificatePDF,
   getSCATCertificateData,
   getOnlineCourseCertificateData,
@@ -11,6 +12,7 @@ import {
   getCrmCertificateData,
 } from '@/lib/certificate'
 import { userOwnsCrm } from '@/lib/crm-course'
+import { getCourseCertificate, issueCourseCertificate } from '@/lib/course-certificates'
 import { getResend, sendEmail, sendEmailWithAttachment, escapeHtml as sharedEscapeHtml } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
@@ -26,6 +28,47 @@ const RECOGNITION_REFERRAL_MODULE_IDS = [104]
 // CRM (EP stream) progress lives at the NAMESPACED ids 201-208 (epProgressId)
 // — never 1-8, which are the flagship's.
 const CRM_MODULE_IDS = [201, 202, 203, 204, 205, 206, 207, 208]
+
+/**
+ * Generate the PDF **and** record the certificate so /verify/:id resolves it.
+ *
+ * Before this, only the vagus course wrote to course_certificates — so the
+ * four certificates this route issues (scat-mastery, online-course,
+ * recognition-referral, crm) all returned "no certificate matches this ID" on
+ * the public verification page: a false negative on a genuine AHPRA CPD
+ * document.
+ *
+ * Ids stay stable: the printed id is a hash of the COMPLETION DATE, so a
+ * module re-take would mint a new one. Any id already on record wins, and it
+ * is what gets printed.
+ */
+async function generateAndRecordCertificate(
+  certData: CertificateData,
+  opts: { courseSlug: string; email: string; holderName: string | null },
+): Promise<{ pdfBuffer: Buffer; certificateId: string }> {
+  const existing = await getCourseCertificate(opts.email, opts.courseSlug).catch(() => null)
+  const result = generateCertificatePDF(
+    existing ? { ...certData, certificateId: existing.certificateId } : certData
+  )
+
+  // Recording is best-effort: a DB blip must not deny someone the CPD
+  // document they earned. It is logged loudly because the certificate stays
+  // unverifiable until the next issue succeeds.
+  try {
+    await issueCourseCertificate({
+      email: opts.email,
+      name: opts.holderName,
+      courseSlug: opts.courseSlug,
+      courseTitle: certData.courseTitle,
+      cpdHours: certData.cpdPoints,
+      certificateId: result.certificateId,
+    })
+  } catch (err) {
+    console.error(`[certificate] Failed to record ${opts.courseSlug} certificate for verification:`, err)
+  }
+
+  return result
+}
 
 /** Which module ids gate a given certificate type. */
 function moduleIdsForCertType(courseType: string): number[] {
@@ -147,7 +190,11 @@ export async function GET(request: NextRequest) {
     let pdfBuffer: Buffer
     let certificateId: string
     try {
-      const result = generateCertificatePDF(certData)
+      const result = await generateAndRecordCertificate(certData, {
+        courseSlug: courseType,
+        email: sessionData.email,
+        holderName: resolvedUser?.name?.trim() || null,
+      })
       pdfBuffer = result.pdfBuffer
       certificateId = result.certificateId
     } catch (pdfError) {
@@ -271,7 +318,11 @@ export async function POST(request: NextRequest) {
     let pdfBuffer: Buffer
     let certificateId: string
     try {
-      const result = generateCertificatePDF(certData)
+      const result = await generateAndRecordCertificate(certData, {
+        courseSlug: courseType,
+        email: sessionData.email,
+        holderName: resolvedUser?.name?.trim() || null,
+      })
       pdfBuffer = result.pdfBuffer
       certificateId = result.certificateId
     } catch (pdfError) {

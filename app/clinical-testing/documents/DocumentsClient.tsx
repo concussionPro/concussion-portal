@@ -17,7 +17,13 @@ import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
 import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
-import { loadClinicProfile, type ClinicProfile } from '@/components/clinical/ClinicProfileCard'
+import {
+  loadClinicProfile,
+  cacheClinicProfile,
+  toClinicProfile,
+  EMPTY_CLINIC_PROFILE,
+  type ClinicProfile,
+} from '@/components/clinical/ClinicProfileCard'
 import type { DischargeTemplate } from '@/data/hub-program-content'
 import { Lock, ArrowRight, FileText, ChevronLeft } from 'lucide-react'
 
@@ -51,42 +57,70 @@ function Shell({ content }: { content: DocumentsContent | null }) {
   const { isLoading } = useSession()
   const access = useClinicalAccess()
   const [clinic, setClinic] = useState<Clinic | null | undefined>(undefined)
-  // ?patient=<label> (from the patient list) → pre-fill the docs from their
-  // measured SST episode. Read off the URL to avoid a Suspense boundary.
+  // ?patient=<label>&ref=<install UUID> (from the patient list) → pre-fill the
+  // docs from their measured SST episode. Read off the URL to avoid a Suspense
+  // boundary.
   const [patientLabel, setPatientLabel] = useState<string | null>(null)
+  const [patientRef, setPatientRef] = useState<string | null>(null)
   const [sstFields, setSstFields] = useState<Record<string, string>>({})
-  // Clinic master profile — entered once on the Clinical Testing home, loaded
-  // here (keyed per clinic) to fill clinic/practitioner fields across every doc.
-  const [profile, setProfile] = useState<ClinicProfile>(() => loadClinicProfile())
+  const [summaryState, setSummaryState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  // Clinic master profile. The SERVER copy is the master (one input across every
+  // seat and device — /api/sst/report already builds the letterhead from it);
+  // localStorage is only an offline cache. Reading the cache alone meant a
+  // second practitioner or a second device printed a blank letterhead while the
+  // hub's own reports rendered fully (2026-08-05 crawl #2).
+  const [profile, setProfile] = useState<ClinicProfile>(EMPTY_CLINIC_PROFILE)
 
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        setClinic(d?.clinic ?? null)
+        const c: Clinic | null = d?.clinic ?? null
+        setClinic(c)
+        if (d?.profile) {
+          const server = toClinicProfile(d.profile)
+          setProfile(server)
+          cacheClinicProfile(c?.code ?? null, server)
+        } else if (c?.code) {
+          // No server profile (not set yet, or this request couldn't read it) —
+          // fall back to whatever this device cached for THIS clinic.
+          setProfile(loadClinicProfile(c.code))
+        }
       })
-      .catch(() => setClinic(null))
-    const p = new URLSearchParams(window.location.search).get('patient')
+      .catch(() => {
+        setClinic(null)
+      })
+    const sp = new URLSearchParams(window.location.search)
+    const p = sp.get('patient')
+    const r = sp.get('ref')
     setPatientLabel(p && p.trim() ? p.trim() : null)
+    setPatientRef(r && r.trim() ? r.trim() : null)
   }, [])
 
   // Fetch the patient's objective SST summary → autofill the WorkCover/NDIS/GP
-  // merge fields (measured HRt, band, sessions, trajectory).
+  // merge fields (measured HRt, band, sessions, trajectory). `ref` is the
+  // install UUID and is what actually identifies the patient when two share a
+  // display name — without it the lookup 404'd and the banner said "loading
+  // measured data…" forever (crawl #3).
   useEffect(() => {
     if (!patientLabel || !clinic?.code || !clinic?.viewKey) return
+    setSummaryState('loading')
     void fetch(
-      `/api/sst/patient-summary?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patientLabel)}`,
+      `/api/sst/patient-summary?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patientLabel)}${
+        patientRef ? `&ref=${encodeURIComponent(patientRef)}` : ''
+      }`,
     )
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.mergeFields) setSstFields(d.mergeFields) })
-      .catch(() => {})
-  }, [patientLabel, clinic])
-
-  // Load the clinic's saved profile (entered on the Clinical Testing home),
-  // namespaced per clinic code, once the code resolves.
-  useEffect(() => {
-    if (clinic?.code) setProfile(loadClinicProfile(clinic.code))
-  }, [clinic])
+      .then((d) => {
+        if (d?.mergeFields) {
+          setSstFields(d.mergeFields)
+          setSummaryState('ready')
+        } else {
+          setSummaryState('error')
+        }
+      })
+      .catch(() => setSummaryState('error'))
+  }, [patientLabel, patientRef, clinic])
 
   if (isLoading || access === 'loading') {
     return <Frame><p className="text-sm text-muted-foreground">Loading…</p></Frame>
@@ -137,9 +171,27 @@ function Shell({ content }: { content: DocumentsContent | null }) {
               </div>
             )}
             {patientLabel && (
-              <div className="mb-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-2.5 text-[13px] text-teal-800">
-                Pre-filled from <strong>{patientLabel}</strong>&rsquo;s SST episode
-                {Object.keys(sstFields).length === 0 && ' — loading measured data…'}
+              <div
+                className={`mb-4 rounded-xl border px-4 py-2.5 text-[13px] ${
+                  summaryState === 'error'
+                    ? 'border-amber-200 bg-amber-50 text-amber-800'
+                    : 'border-teal-200 bg-teal-50 text-teal-800'
+                }`}
+              >
+                {summaryState === 'error' ? (
+                  <>
+                    Couldn&rsquo;t load <strong>{patientLabel}</strong>&rsquo;s measured SST data — the
+                    clinic and practitioner fields are filled, but every measured value below must be
+                    entered by hand. Open this patient again from your{' '}
+                    <Link href="/clinical-testing/patients" className="font-semibold underline">patient list</Link>{' '}
+                    to retry.
+                  </>
+                ) : (
+                  <>
+                    Pre-filled from <strong>{patientLabel}</strong>&rsquo;s SST episode
+                    {summaryState !== 'ready' && ' — loading measured data…'}
+                  </>
+                )}
               </div>
             )}
             <SstReportCallout />

@@ -4,6 +4,7 @@
  */
 
 import { Resend } from 'resend'
+import { isSafeRelativePath } from './safe-redirect'
 
 function redactEmail(email: string): string {
   return email.length > 3 ? email.slice(0, 3) + '***' : '***'
@@ -397,9 +398,23 @@ export async function sendHubOwnerWelcomeEmail(opts: {
 /**
  * Send magic link login email
  */
-export async function sendMagicLinkEmail(email: string, token: string, origin?: string): Promise<boolean> {
+export async function sendMagicLinkEmail(
+  email: string,
+  token: string,
+  origin?: string,
+  /**
+   * Where the user was headed before the login bounce (middleware /
+   * ProtectedRoute set `?redirect=` on /login). It MUST ride the emailed
+   * link — production emails never hit the /auth/verify page, so the
+   * localStorage stash on /login is invisible to them and every gated
+   * destination was silently dropped onto /dashboard. The server-side
+   * allowlist in /api/auth/verify still decides what is honoured.
+   */
+  redirect?: string | null,
+): Promise<boolean> {
   const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  const loginUrl = `${baseUrl}/api/auth/verify?token=${token}`
+  const safeRedirect = isSafeRelativePath(redirect) ? redirect : null
+  const loginUrl = `${baseUrl}/api/auth/verify?token=${token}${safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''}`
 
   return sendEmail({
     to: email,

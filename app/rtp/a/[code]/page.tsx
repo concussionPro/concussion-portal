@@ -17,7 +17,8 @@ interface PageProps {
 }
 
 export default async function RtpAthletePage({ params, searchParams }: PageProps) {
-  await requireAiCourseAccess('/login?from=/rtp')
+  // `redirect` — NOT `from`: /login only ever reads ?redirect=.
+  await requireAiCourseAccess('/login?redirect=%2Frtp')
   const { code } = await params
   const { org } = await searchParams
   return <RtpAthleteApp code={code} orgCode={org} />

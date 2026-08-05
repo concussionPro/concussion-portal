@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { setIdentity, trackEvent } from '@/lib/analytics'
+import { isSafeRelativePath } from '@/lib/safe-redirect'
 
 function VerifyContent() {
   const router = useRouter()
@@ -24,11 +25,27 @@ function VerifyContent() {
       return
     }
 
+    // Where the user was headed: the ?redirect= URL param (admin-generated
+    // direct links, lead-magnet deep links) wins over the localStorage stash
+    // set by /login when the visitor was bounced off a gated page.
+    //
+    // It is sent WITH the verify call so the SERVER resolves the landing
+    // target. This page previously re-implemented the rule and allowed only
+    // /modules/* for preview tier — which dumped preview-tier PAYING
+    // customers (CRM owners, SST clinics) and every lead-magnet recipient on
+    // /modules/101.
+    const urlRedirect = searchParams.get('redirect')
+    const savedRedirect = typeof window !== 'undefined' ? localStorage.getItem('login_redirect') : null
+    if (typeof window !== 'undefined') localStorage.removeItem('login_redirect')
+    const requestedRedirect = urlRedirect || savedRedirect
+    const verifyUrl = `/api/auth/verify?token=${encodeURIComponent(token)}` +
+      (isSafeRelativePath(requestedRedirect) ? `&redirect=${encodeURIComponent(requestedRedirect)}` : '')
+
     // Verify token. MUST be a POST — the API's GET path validates without
     // consuming (email security scanners prefetch bare GETs and were
     // burning one-time tokens before the user clicked). Only the POST
     // consumes the token and sets the session cookie.
-    fetch(`/api/auth/verify?token=${encodeURIComponent(token)}`, { method: 'POST' })
+    fetch(verifyUrl, { method: 'POST' })
       .then(async (res) => {
         if (!res.ok) {
           const error = await res.json()
@@ -61,36 +78,16 @@ function VerifyContent() {
         // Session cookie is set automatically by the server
         // Short delay to allow gtag to fire before redirect
         setTimeout(() => {
-          const urlRedirect = searchParams.get('redirect')
-          const savedRedirect = localStorage.getItem('login_redirect')
-          localStorage.removeItem('login_redirect')
-
-          const isValidRedirect = (path: string) => {
-            return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !/[\x00-\x1f]/.test(path)
-          }
-
           // Hard navigation, not router.push — App Router's RSC navigation
           // can race with the Set-Cookie commit, leaving middleware seeing
           // no session and bouncing back to /login. Full browser nav avoids
           // the race entirely.
           //
-          // Priority: ?redirect= URL param (admin-generated direct links) >
-          // localStorage (set by /login when user came from a gated page) >
-          // accessLevel default. URL param wins so admins can point a
-          // specific user at a specific page via a baked one-click URL.
-          // Preview users may deep-link ONLY into module content (/modules/*
-          // — the Day-0 welcome CTA lands them IN Module 1); every other
-          // redirect stays blocked for preview.
-          const previewAllowed = (path: string) => path.startsWith('/modules/')
-          const isPreview = data.user.accessLevel === 'preview'
-          let target = '/dashboard'
-          if (urlRedirect && isValidRedirect(urlRedirect) && (!isPreview || previewAllowed(urlRedirect))) {
-            target = urlRedirect
-          } else if (savedRedirect && isValidRedirect(savedRedirect) && (!isPreview || previewAllowed(savedRedirect))) {
-            target = savedRedirect
-          } else if (isPreview) {
-            target = '/modules/101'
-          }
+          // The target comes from the API (resolveLandingTarget): it holds
+          // the entitlement allowlist — CRM owners → their course, SST
+          // clinics → /clinical-testing, free/lead-magnet surfaces for
+          // preview. Never re-derive it here; the two used to disagree.
+          const target = isSafeRelativePath(data.redirectTo) ? data.redirectTo : '/dashboard'
           window.location.href = target
         }, 500)
       })
