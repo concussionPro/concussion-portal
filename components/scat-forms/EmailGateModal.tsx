@@ -43,9 +43,15 @@ export function EmailGateModal({ isOpen, onClose, onSuccess, accentColor = 'blue
         body: JSON.stringify({ email: trimmed }),
       })
 
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json()
         setError(data.error || 'Something went wrong')
+        return
+      }
+      // Existing paid accounts get a magic-link email and NO session (anti-
+      // takeover) — telling the export to proceed just 401s. Tell the truth.
+      if (data.requiresEmailLogin) {
+        setError('This email has an account — we\'ve sent you a login link. Open it, then come back and export.')
         return
       }
 

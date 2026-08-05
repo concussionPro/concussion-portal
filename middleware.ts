@@ -24,6 +24,12 @@ const PUBLIC_DOCS = new Set<string>([])
 const AUTH_DOCS = new Set([
   '/docs/SCAT6_Fillable.pdf',
   '/docs/SCOAT6_Fillable.pdf',
+  // Flat templates feed the SCAT form tools' PDF export — the email gate
+  // mints a PREVIEW session for exactly this, so paid-gating them 401'd the
+  // lead magnet at its conversion moment (2026-08-05 round-C #1).
+  '/docs/SCAT6_Flat.pdf',
+  '/docs/SCOAT6_Flat.pdf',
+  '/docs/Child_SCAT6_Flat.pdf',
 ])
 
 // Files that paid users can access directly (served via CDN, not serverless)
@@ -32,9 +38,6 @@ const PAID_DOCS = new Set([
   '/docs/CCM_Complete_Reference_2026.pdf',
   '/docs/SCAT-SCOAT_FillablePDFs.zip',
   '/docs/ClinicalToolkit_Complete.zip',
-  '/docs/SCAT6_Flat.pdf',
-  '/docs/SCOAT6_Flat.pdf',
-  '/docs/Child_SCAT6_Flat.pdf',
   // Paid Word/image templates (2026-07-05 audit: these were world-readable —
   // the matcher only covered .pdf/.zip, so raw /docs/ URLs bypassed the gate)
   '/docs/Email Template Pack.docx',

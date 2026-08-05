@@ -27,6 +27,7 @@ import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { isAdminRequest } from '@/lib/require-admin'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { CONFIG } from '@/lib/config'
 
 export const maxDuration = 120
 
@@ -69,7 +70,7 @@ We're looking at potentially running a ${cityLabel} date on ${params.dateLabel}.
 
 ${params.venueLine}
 
-Early bird pricing is $1,190 with immediate access to all online modules and clinical toolkit docs:
+Early bird pricing is $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} with immediate access to all online modules and clinical toolkit docs:
 https://portal.concussion-education-australia.com/pricing
 
 If you have a colleague that might want to come along, ask about our group pricing.

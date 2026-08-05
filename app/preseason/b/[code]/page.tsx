@@ -367,6 +367,7 @@ export default function AthleteBaselineForm() {
   const submittingRef = useRef(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [emailFailed, setEmailFailed] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [validationError, setValidationError] = useState('')
 
@@ -641,6 +642,8 @@ export default function AthleteBaselineForm() {
       })
 
       if (response.ok) {
+        const okData = await response.json().catch(() => ({}))
+        if (okData?.emailFailed) setEmailFailed(true)
         setSubmitted(true)
         // Non-clinical "submitted" signal only — no health scores in analytics.
         trackEvent(ANALYTICS_EVENTS.PRESEASON_BASELINE_SUBMIT, {
@@ -784,7 +787,9 @@ export default function AthleteBaselineForm() {
           <p className="text-muted-foreground mb-4">
             {code.toUpperCase() === 'DEMO00'
               ? 'This was a demo — no report was sent. Register your clinic to start collecting real baselines.'
-              : <>Your results have been emailed to <strong>{clinicName}</strong>. Basic test records are stored to support future baseline comparisons.</>
+              : emailFailed
+                ? <>Your test was recorded for <strong>{clinicName}</strong>. The emailed report is delayed and will follow — your clinician can also request it from us directly.</>
+                : <>Your results have been emailed to <strong>{clinicName}</strong>. Basic test records are stored to support future baseline comparisons.</>
             }
           </p>
           <p className="text-xs text-muted-foreground">

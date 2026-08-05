@@ -362,7 +362,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
         <li>BESS (Balance Error Scoring System) — scoring calibration exercises</li>
         <li>Clinical case studies — group discussion and decision-making frameworks</li>
       </ul>
-      <p>You'll earn <strong>6 additional CPD hours</strong> (for a total of 14) upon completion.</p>
+      <p>You'll earn <strong>${CONFIG.COURSE.IN_PERSON_CPD_POINTS} additional CPD hours</strong> (for a total of ${CONFIG.COURSE.TOTAL_CPD_POINTS}) upon completion.</p>
       <p>Questions? Reply to this email or text me on the day.</p>
       <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
     `),
@@ -434,17 +434,17 @@ export const SCAT_MASTERY_SEQUENCE = [
 
   // DAY 10 - Promo code (ONLY sent to users with 3+ modules completed — gated by cron)
   // Users with <3 modules get SCAT_DAY10_ENGAGEMENT instead
+  // NOTE: the SCAT6 code never expires — no fake deadline (2026-08-05).
   {
     day: 10,
     subject: 'You earned it — here\'s $50 off the full course',
-    template: (name: string, upgradeLink: string, expiryDate?: string) => emailShell(`
+    template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>You've been working through the SCAT6 Mastery course &mdash; great to see you investing in your concussion knowledge.</p>
       <p>As a thank you, here's <strong>$50 off</strong> the full Concussion Management course:</p>
       <div class="callout-warn">
         <strong>Your code: ${CONFIG.COURSE.PROMO_CODE}</strong><br><br>
-        $50 off the online course at checkout.<br><br>
-        <strong>Expires: ${expiryDate || 'in 72 hours'}</strong>
+        $50 off the online course at checkout &mdash; it's tied to your account, so use it whenever you're ready.
       </div>
       <p>The full course picks up where SCAT6 Mastery leaves off &mdash; 8 modules covering concussion pathophysiology, VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. Plus the option to add a hands-on workshop day.</p>
       <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day10', 'promo_code')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
@@ -490,16 +490,17 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 
-  // WEEK 5 (Day 28) - Last chance promo with hard 72h deadline
+  // WEEK 5 (Day 28) - Final promo reminder. The SCAT6 code never expires, so
+  // no manufactured deadline — "last time I'll send this" is the true scarcity
+  // (it IS the final promo email).
   {
     day: 28,
-    subject: '$50 SCAT discount — closes Friday',
-    template: (name: string, upgradeLink: string, expiryDate?: string) => emailShell(`
+    subject: '$50 SCAT discount — your code is still active',
+    template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>This is the last time I'll send this offer.</p>
       <div class="callout-warn">
-        <strong>Code: ${CONFIG.COURSE.PROMO_CODE}</strong> &mdash; $50 off the online course<br><br>
-        <strong>Expires: ${expiryDate || 'in 72 hours'}</strong>
+        <strong>Code: ${CONFIG.COURSE.PROMO_CODE}</strong> &mdash; $50 off the online course, still active on your account
       </div>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
         <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
@@ -799,7 +800,7 @@ export const ONLINE_UPGRADE_SEQUENCE = [
       <p>You can lock in the workshop upgrade whenever you're ready &mdash; pay the difference to the A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird rate, nominate your city, and your date launches once enough clinicians register there. That caps off your 16 CPD hours.</p>
       ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'upgrade_nudge', 'see_workshop')}" class="cta-btn">See Workshop Options</a></center>
-      <p style="font-size: 13px; color: #64748b; text-align: center;">6 extra CPD hours · Small group (max 12) · Upgrade anytime</p>
+      <p style="font-size: 13px; color: #64748b; text-align: center;">${CONFIG.COURSE.IN_PERSON_CPD_POINTS} extra CPD hours · Small group (max 12) · Upgrade anytime</p>
       <div class="sig">Zac</div>
       <p class="ps">P.S. Reply if you have any questions about the modules — I'm always happy to help.</p>
     `),
@@ -957,25 +958,10 @@ export const COMPLETER_CONVERT_RELEVANCE = {
   `),
 }
 
-/** Branch 3 — registered workshop interest. Point them at the pathway and let
- *  them start the online pre-work now while their city's date firms up. */
-export const COMPLETER_CONVERT_WORKSHOP = {
-  subject: 'The hands-on day you registered interest in',
-  template: (name: string, pricingLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])} — you flagged wanting the hands-on day</h2>
-    <p>Good instinct: the practical skills (VOMS, BESS, vestibular and cervical assessment on real cases) land far better in person than on a screen.</p>
-    <p>Here's how the pathway works:</p>
-    <ul>
-      <li><strong>8 hours online pre-work</strong> — the full course, done at your own pace (8 CPD hours)</li>
-      <li><strong>1 day in person</strong> — the practical skills day (6 more CPD hours)</li>
-      <li><strong>= up to 16 CPD hours</strong> total, Osteopathy Australia endorsed</li>
-    </ul>
-    <p>You're already on the list for your city, so you'll be first to hear when the date is confirmed. In the meantime you can start the online pre-work now — it's the same course either way, and it counts toward the 16 hours.</p>
-    <center><a href="${utm(pricingLink, 'completer_convert_workshop', 'start_prework')}" class="cta-btn">Start the online course</a></center>
-    <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">A$${CONFIG.COURSE.PRICE_ONLINE} online &middot; add the in-person day later for the difference</p>
-    <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
-  `),
-}
+// Branch 3 (COMPLETER_CONVERT_WORKSHOP) removed 2026-08-05: workshop-interest
+// completers are register-quiet (2026-08-03) — they get NO automated conversion
+// email; their next touch is the date announcement. The completer-conversion
+// cron excludes them in findTargets, so the branch was unreachable.
 
 /**
  * FREE_LOGGED_IN_NO_PROGRESS — Day 7 for preview users who logged in
@@ -1084,7 +1070,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
         &#8226; 8 video modules with clinical demonstrations (the VOMS and cervical screens especially)<br>
         &#8226; Case-based walkthroughs — watch me reason through real patient presentations<br>
         &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD hours and a certificate<br>
-        &#8226; Optional hands-on workshop day &mdash; nominate your city, the date launches when it fills (6 more CPD hours)
+        &#8226; Optional hands-on workshop day &mdash; nominate your city, the date launches when it fills (${CONFIG.COURSE.IN_PERSON_CPD_POINTS} more CPD hours)
       </div>
       <center><a href="${utm(pricingLink, 'ref_upgrade_d9', 'bundle_credit')}" class="cta-btn">See Your Discounted Price</a></center>
       <p class="ps">P.S. The credit doesn't expire — it's tied to your account, not a code.</p>

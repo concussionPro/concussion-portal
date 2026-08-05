@@ -6,9 +6,12 @@
  * DID — never by the survey answer (the survey promises no automated
  * sequence, so we branch off behaviour instead):
  *
- *   workshop-interest registered   → COMPLETER_CONVERT_WORKSHOP
  *   viewed pricing / checkout_start → COMPLETER_CONVERT_PRICE
  *   neither                         → COMPLETER_CONVERT_RELEVANCE
+ *
+ * Workshop-interest completers get NO automated conversion email — register-
+ * quiet (2026-08-03): they're date-waiting, their next touch is the date
+ * announcement. findTargets excludes them, so there is no workshop branch.
  *
  * Guardrails:
  *  - preview only, respects nurture_unsubscribed
@@ -35,7 +38,6 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import {
   COMPLETER_CONVERT_PRICE,
   COMPLETER_CONVERT_RELEVANCE,
-  COMPLETER_CONVERT_WORKSHOP,
 } from '@/lib/email-sequences'
 
 interface CompleterProgressRow { id: string; email: string; name: string | null; progress: Record<string, { completed?: boolean; quizScore?: number }> | null }
@@ -49,9 +51,8 @@ const MIN_AGE_DAYS = 18
 // Micah is on the Purpose EP pitch (/p/purpose-healthcare); don't double-touch.
 const EXCLUDED_EMAILS = new Set(['micah@purposehealthcare.com.au'])
 
-type Branch = 'workshop' | 'price' | 'relevance'
+type Branch = 'price' | 'relevance'
 const BRANCH = {
-  workshop: { seq: COMPLETER_CONVERT_WORKSHOP, tag: 'completer_convert_workshop' },
   price: { seq: COMPLETER_CONVERT_PRICE, tag: 'completer_convert_price' },
   relevance: { seq: COMPLETER_CONVERT_RELEVANCE, tag: 'completer_convert_relevance' },
 } as const
@@ -83,6 +84,7 @@ async function findTargets(): Promise<Target[]> {
         WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = 'crm'
       )
       AND COALESCE(u.nurture_unsubscribed, false) = false
+      AND COALESCE(u.is_test, false) = false
       AND NOT EXISTS (SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(u.email))
       -- register-quiet (2026-08-03): workshop-interest registrants wait for a date, not drip
       AND NOT EXISTS (SELECT 1 FROM workshop_interest wi WHERE LOWER(wi.email) = LOWER(u.email))
@@ -91,6 +93,7 @@ async function findTargets(): Promise<Target[]> {
         SELECT 1 FROM email_audit_log l
         WHERE l.audit_key = 'completer_convert_price_' || u.id
            OR l.audit_key = 'completer_convert_relevance_' || u.id
+           -- historical: workshop branch removed 2026-08-05, old keys still dedupe
            OR l.audit_key = 'completer_convert_workshop_' || u.id
       )
   `
@@ -109,15 +112,11 @@ async function findTargets(): Promise<Target[]> {
   return targets
 }
 
-/** Behaviour classifier — priority: workshop-interest > pricing-view > relevance.
+/** Behaviour classifier — pricing-view > relevance. (Workshop-interest users
+ *  never reach here: findTargets excludes them via register-quiet.)
  *  International pricing viewers fall through to relevance (no domestic-only
  *  discount claim). */
 async function classify(email: string): Promise<Branch> {
-  const { rows: wi } = await sql`
-    SELECT 1 FROM workshop_interest WHERE LOWER(email) = LOWER(${email}) LIMIT 1
-  `
-  if (wi.length) return 'workshop'
-
   const { rows: pv } = await sql`
     SELECT
       BOOL_OR(event_type IN ('pricing_page', 'pricing_cards_in_view', 'checkout_start')

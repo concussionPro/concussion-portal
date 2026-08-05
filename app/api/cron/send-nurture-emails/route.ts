@@ -112,7 +112,9 @@ export async function GET(request: Request) {
         // attendee the new-buyer onboarding ("you picked up the course a few days
         // ago — start Module 1"). isWorkshopAlumnus misses them because granted
         // accounts have no workshopLocation. Bug fix 2026-06-26.
-        !String(u.signupSource ?? '').startsWith('alumni'),
+        !String(u.signupSource ?? '').startsWith('alumni') &&
+        // Internal test accounts never get real sends (2026-08-05)
+        !u.isTest,
     )
     const now = new Date()
     let emailsSent = 0
@@ -177,21 +179,40 @@ export async function GET(request: Request) {
     // for someone who's already registered"): anyone on the workshop-interest
     // register is date-waiting — their next touch is the date announcement,
     // not drip marketing. FAIL CLOSED like suppression.
-    let registerEmails: Set<string>
+    //
+    // PER-LANE, not global (fix 2026-08-05): applying this to the shared users
+    // array silenced TRANSACTIONAL workshop lanes (post-purchase/reservation,
+    // pre-workshop prep, logistics, momentum) for PAID attendees who happen to
+    // sit on the register, and the upgrade lane for online-only users who used
+    // /api/workshop/nominate. It now gates ONLY the marketing lanes below
+    // (SCAT drip, completion upsell, free-almost-done, reference-upgrade,
+    // AI-checklist), and only for accessLevel === 'preview' — paying users
+    // always get their lanes.
+    let registerQuiet: Set<string>
     try {
       const { rows: regRows } = await sql<{ email: string }>`
         SELECT DISTINCT LOWER(email) AS email FROM workshop_interest
       `
-      registerEmails = new Set(regRows.map(r => r.email))
+      registerQuiet = new Set(regRows.map(r => r.email))
     } catch (err) {
       console.error('[Nurture] workshop_interest load failed — ABORTING (fail closed):', err)
       return NextResponse.json({ error: 'register load failed — run aborted' }, { status: 503 })
     }
 
-    // Single global gate for every nurture/lifecycle lane: suppression + register-quiet.
+    // Single global gate for every nurture/lifecycle lane: suppression.
+    // (Register-quiet is applied per-lane below — marketing lanes only.)
     const users = alumniFilteredUsers.filter(
-      (u) => !suppressedEmails.has(u.email.toLowerCase()) && !registerEmails.has(u.email.toLowerCase())
+      (u) => !suppressedEmails.has(u.email.toLowerCase())
     )
+
+    // Section-1 audience allowlist (2026-08-05): the SCAT drip (and its Day-0
+    // catch-up) assumes the user came for the free SCAT6 course/forms. Only
+    // genuine SCAT-intender signup sources get it; legacy accounts predate
+    // signup_source (null/undefined) and are included. Everything else has its
+    // own lane or no drip at all: 'ep-course' → ep-nurture cron,
+    // 'ai-safety-checklist' → dedicated sequence below, 'intl-syllabus',
+    // 'sst-clinic', 'cpd-tracker', 'purchase', 'admin', 'alumni*' → none.
+    const SCAT_DRIP_SOURCES = new Set(['free-course', 'squarespace', 'scat-export', 'preseason'])
 
     // Stagger nurture sends across ~30-45 min with per-domain throttling so
     // the daily batch doesn't read as a marketing blast to inbox providers.
@@ -204,8 +225,10 @@ export async function GET(request: Request) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
-      // AI Safety Checklist signups have their own dedicated sequence below — skip here
-      if (user.signupSource === 'ai-safety-checklist') continue
+      if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
+      // Allowlist: SCAT intenders only (also gates the Day-0 catch-up below).
+      // Covers the old ai-safety-checklist exclusion — it has its own sequence.
+      if (user.signupSource && !SCAT_DRIP_SOURCES.has(user.signupSource)) continue
 
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -311,7 +334,7 @@ export async function GET(request: Request) {
 
       // ── Day 10: Route based on module completion ──
       // <3 modules → engagement push (SCAT_DAY10_ENGAGEMENT)
-      // 3+ modules → promo code with 72h deadline (default sequence)
+      // 3+ modules → standing promo code (default sequence)
       if (email.day === 10 && scatCompletedCount < 3) {
         const auditKey = `scat_day10_engagement_${user.id}`
         const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
@@ -348,18 +371,9 @@ export async function GET(request: Request) {
       const { rowCount: scatInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
       if (scatInserted === 0) continue // Already sent
 
-      // Calculate 72h expiry date for Day 10 and Day 28 promo emails
-      let expiryDate: string | undefined
-      if (email.day === 10 || email.day === 28) {
-        const expiry = new Date(now.getTime() + 72 * 60 * 60 * 1000)
-        expiryDate = expiry.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })
-      }
-
       // Days 0-7: link to free course login. Days 14+: link to pricing/upgrade.
       const ctaLink = email.day <= 7 ? loginLink : upgradeLink
-      const html = (email.day === 10 || email.day === 28)
-        ? email.template(user.name, ctaLink, expiryDate).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
-        : email.template(user.name, ctaLink).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+      const html = email.template(user.name, ctaLink).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
       const sent = await sendOrRollbackAudit({
         to: user.email,
@@ -812,6 +826,7 @@ export async function GET(request: Request) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
+      if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
@@ -870,6 +885,7 @@ export async function GET(request: Request) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
+      if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
@@ -929,6 +945,7 @@ export async function GET(request: Request) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue // upgraded → stop
       if (user.nurtureUnsubscribed) continue
+      if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
       if (!user.referenceBookPurchasedAt) continue
 
       const purchaseDate = new Date(user.referenceBookPurchasedAt)
@@ -985,6 +1002,8 @@ export async function GET(request: Request) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.signupSource !== 'ai-safety-checklist') continue
       if (user.nurtureUnsubscribed) continue
+      // Register-quiet: marketing lane, preview only (paying users keep their lanes)
+      if (user.accessLevel === 'preview' && registerQuiet.has(user.email.toLowerCase())) continue
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
       const slot = findCatchUp(aiChecklistSchedule, daysSinceSignup)

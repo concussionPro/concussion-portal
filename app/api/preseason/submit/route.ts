@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { jsPDF } from 'jspdf'
-import { sendEmailWithAttachment } from '@/lib/resend-client'
+import { sendEmailWithAttachment, sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { sql } from '@/lib/db'
 import { generateComparisonPdf, type ComparisonTest } from '@/lib/preseason/comparison-pdf'
@@ -933,6 +933,17 @@ export async function POST(request: Request) {
       // Data is already saved — don't return 500 or user will retry and create duplicates.
       // Log the clinic CODE, never the email address.
       console.error(`Baseline email failed for clinic ${body.clinicCode.toUpperCase()} — data saved, email not delivered`)
+      // Failure must be VISIBLE (2026-08-05 round-C #3): the clinic email is
+      // the report's only delivery channel and the submission is already
+      // stored — alert the owner so it can be resent manually.
+      try {
+        await sendEmail({
+          to: CONFIG.CONTACT_EMAIL,
+          subject: `ACTION: baseline report email FAILED — ${clinic.clinicName}`,
+          html: `<p style="margin:0 0 1em 0;">A baseline report email failed to send.</p><p style="margin:0 0 1em 0;">Clinic: ${escapeHtml(clinic.clinicName)}<br/>Athlete: ${escapeHtml(athleteNameRaw)}<br/>Submitted: ${new Date().toISOString()}</p><p style="margin:0;">The submission is stored in preseason_baselines — regenerate and resend manually.</p>`,
+          tags: [{ name: 'type', value: 'preseason-email-failed' }],
+        })
+      } catch { /* alert is best-effort */ }
       return NextResponse.json({ success: true, emailFailed: true })
     }
 

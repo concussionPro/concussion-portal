@@ -129,11 +129,13 @@ export async function GET(request: Request) {
     }
 
     const allUsers = await loadUsers()
-    // Only EP-course leads, minus unsubscribes and suppressed addresses.
+    // Only EP-course leads, minus unsubscribes, suppressed addresses and
+    // internal test accounts.
     const users = allUsers.filter(
       (u) =>
         u.signupSource === 'ep-course' &&
         !u.nurtureUnsubscribed &&
+        !u.isTest &&
         !suppressedEmails.has(u.email.toLowerCase()),
     )
 
