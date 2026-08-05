@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
 import {
   getPmsConnection,
+  getPmsConnectionSnapshot,
+  restorePmsConnection,
   setPmsConnection,
   removePmsConnection,
   markPmsOk,
@@ -17,8 +19,9 @@ import { getClientIp } from '@/lib/get-client-ip'
  * plugin works wherever the clinic surfaces do — no separate login).
  *
  * GET    ?code&k          → { connected, kind?, lastOkAt? }
- * POST   {code,k,kind,apiKey,creds?} → connects; VALIDATES with a live
- *        read-only patient search before storing marks lastOk on success.
+ * POST   {code,k,kind,apiKey,creds?} → connects; PROVES the key with the
+ *        adapter's probe() (cheapest authenticated read) before keeping it —
+ *        a failed probe restores the previous connection untouched.
  * DELETE {code,k}         → disconnect.
  */
 
@@ -66,24 +69,36 @@ export async function POST(request: NextRequest) {
   const apiKey = (body.apiKey || '').trim()
   if (!apiKey || apiKey.length < 8) return NextResponse.json({ error: 'API key required' }, { status: 400 })
 
-  // Store, then prove the connection with a harmless read-only search. A key
-  // that can't search is a key that can't file reports — reject it now, not at
-  // report time.
+  // Snapshot the EXISTING connection (if any), store the new one, then prove
+  // it with the adapter's probe() — the cheapest authenticated read. A key
+  // that can't read is a key that can't file reports — reject it now, not at
+  // report time, and put the working connection back so a typo can never
+  // destroy it. (findPatient was useless here: it maps every failure to [].)
+  const previous = await getPmsConnectionSnapshot(code)
   await setPmsConnection({ clinicCode: code, kind: body.kind, apiKey, creds: body.creds })
   const resolved = await resolveTenantAdapter(code)
   if (!resolved) {
-    await removePmsConnection(code)
+    if (previous) await restorePmsConnection(code, previous)
+    else await removePmsConnection(code)
     return NextResponse.json({ error: 'Connection could not be created' }, { status: 500 })
   }
-  try {
-    await resolved.adapter.findPatient('a')
-    await markPmsOk(code)
-    return NextResponse.json({ ok: true, kind: resolved.kind })
-  } catch (err) {
-    await removePmsConnection(code)
-    const msg = err instanceof Error ? err.message : 'connection test failed'
-    return NextResponse.json({ error: `The ${body.kind} API rejected the key: ${msg.slice(0, 140)}` }, { status: 400 })
+  const probe = await resolved.adapter.probe()
+  if (!probe.ok) {
+    if (previous) await restorePmsConnection(code, previous)
+    else await removePmsConnection(code)
+    return NextResponse.json(
+      {
+        error:
+          `The ${body.kind} API rejected the key` +
+          (probe.status ? ` (HTTP ${probe.status})` : ' (no response)') +
+          (previous ? ' — your existing connection is unchanged.' : '.'),
+        status: probe.status ?? null,
+      },
+      { status: 400 },
+    )
   }
+  await markPmsOk(code)
+  return NextResponse.json({ ok: true, kind: resolved.kind })
 }
 
 export async function DELETE(request: NextRequest) {

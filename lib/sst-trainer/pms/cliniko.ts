@@ -75,15 +75,55 @@ export class ClinikoAdapter implements PmsAdapter {
     }
   }
 
+  async probe(): Promise<{ ok: boolean; status?: number }> {
+    if (!this.apiKey) return { ok: false }
+    try {
+      // Cheapest authenticated read: one patient page. A wrong key / wrong
+      // shard answers 401/404 here with the status preserved — the signal
+      // findPatient deliberately swallows.
+      const res = await fetch(`${this.baseUrl}/patients?per_page=1`, { headers: this.headers() })
+      return { ok: res.ok, status: res.status }
+    } catch {
+      return { ok: false }
+    }
+  }
+
   async findPatient(query: string): Promise<PmsPatient[]> {
     if (!this.apiKey) return []
+    const limit = 25
     try {
-      // VALIDATED live 2026-07-20: `?q[]=first_name:~<term>` returns matches.
-      const url = `${this.baseUrl}/patients?q[]=${encodeURIComponent(`first_name:~${query}`)}&per_page=25`
-      const res = await fetch(url, { headers: this.headers() })
-      if (!res.ok) return []
-      const json = (await res.json()) as { patients?: ClinikoPatient[] }
-      return (json.patients ?? []).map(toPmsPatient)
+      // VALIDATED live 2026-07-20: `?q[]=<field>:~<term>` returns matches;
+      // multiple q[] params AND together.
+      const term = query.trim()
+      const search = async (filters: string[]): Promise<ClinikoPatient[]> => {
+        const qs = filters.map((f) => `q[]=${encodeURIComponent(f)}`).join('&')
+        const res = await fetch(`${this.baseUrl}/patients?${qs}&per_page=${limit}`, { headers: this.headers() })
+        if (!res.ok) return []
+        const json = (await res.json()) as { patients?: ClinikoPatient[] }
+        return json.patients ?? []
+      }
+      if (/\s/.test(term)) {
+        // "First Last" → one request, both name filters ANDed.
+        const [first, ...rest] = term.split(/\s+/)
+        const last = rest.join(' ')
+        return (await search([`first_name:~${first}`, `last_name:~${last}`])).map(toPmsPatient)
+      }
+      // Single term → could be a first OR a last name (first_name-only missed
+      // every surname search). Two requests, merged unique by id.
+      const [byFirst, byLast] = await Promise.all([
+        search([`first_name:~${term}`]),
+        search([`last_name:~${term}`]),
+      ])
+      const seen = new Set<string>()
+      const merged: PmsPatient[] = []
+      for (const p of [...byFirst, ...byLast]) {
+        const id = String(p.id)
+        if (seen.has(id)) continue
+        seen.add(id)
+        merged.push(toPmsPatient(p))
+        if (merged.length >= limit) break
+      }
+      return merged
     } catch {
       return []
     }

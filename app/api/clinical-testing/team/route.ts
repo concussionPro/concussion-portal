@@ -74,13 +74,14 @@ export async function GET(req: NextRequest) {
     ORDER BY created_at ASC
   `
   const usage = await getClinicUsage(clinic.code)
-  const tier = clinic.tier || (usage.plan === 'active' ? 'single' : 'trial')
   return NextResponse.json({
     members: rows,
     // owner occupies seat 1
     seatsUsed: rows.length + 1,
     seatAllowance: usage.plan === 'active' ? null : TRIAL_SEATS,
-    tier: usage.plan === 'active' ? tier : 'trial',
+    // null tier on an active plan = alumni comp / legacy grant (unlimited) —
+    // NOT the 'single' tier; report null so the UI names no plan for it.
+    tier: usage.plan === 'active' ? (clinic.tier ?? null) : 'trial',
     isOwner: auth.isOwner,
   })
 }

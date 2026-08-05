@@ -383,9 +383,10 @@ export async function recordPortalView(input: {
   await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS utm_source TEXT`
   await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS utm_campaign TEXT`
   await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS utm_term TEXT`
+  // utm_* is attacker-controllable query input — clamp before persisting.
   await sql`
     INSERT INTO prospect_portal_views (clinic_id, viewer_ip, user_agent, section_visited, utm_source, utm_campaign, utm_term)
-    VALUES (${input.clinicId}, ${input.viewerIp ?? null}, ${input.userAgent ?? null}, ${input.section}, ${input.utmSource ?? null}, ${input.utmCampaign ?? null}, ${input.utmTerm ?? null})
+    VALUES (${input.clinicId}, ${input.viewerIp ?? null}, ${input.userAgent ?? null}, ${input.section}, ${input.utmSource?.slice(0, 128) ?? null}, ${input.utmCampaign?.slice(0, 128) ?? null}, ${input.utmTerm?.slice(0, 128) ?? null})
   `
 }
 

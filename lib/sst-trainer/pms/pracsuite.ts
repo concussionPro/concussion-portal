@@ -54,6 +54,21 @@ export class PracsuiteAdapter implements PmsAdapter {
     }
   }
 
+  async probe(): Promise<{ ok: boolean; status?: number }> {
+    if (this.configured()) return { ok: false }
+    try {
+      // Cheapest authenticated read on the documented patient resource — a
+      // rejected vendor/subscriber key answers 401/403 with the status kept.
+      const res = await fetch(
+        `${this.baseUrl}/openapi/patient?q[]=${encodeURIComponent('name:a')}`,
+        { headers: this.headers() },
+      )
+      return { ok: res.ok, status: res.status }
+    } catch {
+      return { ok: false }
+    }
+  }
+
   async findPatient(query: string): Promise<PmsPatient[]> {
     if (this.configured()) return []
     try {

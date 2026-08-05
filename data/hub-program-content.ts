@@ -943,7 +943,8 @@ export const OUTREACH_TEMPLATES: OutreachTemplate[] = [
         heading: 'Our team',
         body: [
           '• Structured concussion training via Concussion Education Australia (Osteopathy Australia–endorsed).',
-          '• 14 CPD hours per treating clinician.',
+          // 16 = CONFIG.COURSE.TOTAL_CPD_POINTS (data file — keep in sync with lib/config.ts)
+          '• 16 CPD hours per treating clinician.',
           '• Assessment delivered per the 2023 Amsterdam Consensus Statement.',
         ],
       },

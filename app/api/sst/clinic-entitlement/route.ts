@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
-import { getClinicUsage, isRegisteredClinic } from '@/lib/sst-trainer/clinic-registry'
+import { getClinicUsage, isExistingPatient, isRegisteredClinic } from '@/lib/sst-trainer/clinic-registry'
 
 /**
- * GET /api/sst/clinic-entitlement?code=X
+ * GET /api/sst/clinic-entitlement?code=X[&patient=<label>]
  *
  * Public (code-only) read of a clinic's trial/usage state, so the patient
  * app can tell a BRAND-NEW patient when a clinic's free trial is full
@@ -12,8 +12,10 @@ import { getClinicUsage, isRegisteredClinic } from '@/lib/sst-trainer/clinic-reg
  * plan + patient count + whether a new patient can be admitted.
  *
  * Clinical-safety rule: this gate only ever restricts admitting a NEW
- * patient; a patient already on the clinic's roster is never blocked (the
- * app passes ?existing=1 once it knows the label is known).
+ * patient; a patient already on the clinic's roster is never blocked — the
+ * app passes ?patient=<label> and a label the clinic already knows answers
+ * canAddPatient=true even when the cap is full (returning patient, new
+ * device).
  */
 export async function GET(req: NextRequest) {
   const ip = getClientIp(req)
@@ -26,11 +28,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
   }
   const usage = await getClinicUsage(code)
+  // Existing-patient re-enrol path: when the cap is full, a label already on
+  // the clinic's roster is never walled (clinical-safety rule above).
+  let canAddPatient = usage.canAddPatient
+  const patient = (req.nextUrl.searchParams.get('patient') || '').trim()
+  if (!canAddPatient && patient && (await isExistingPatient(code, patient))) {
+    canAddPatient = true
+  }
   // Code-only callers (patients) get ONLY what the app needs to show a
   // trial-full message — never the clinic's roster size or billing plan (that's
   // business info; disclosing it to every code holder is an unnecessary leak).
   return NextResponse.json({
     cap: usage.cap,
-    canAddPatient: usage.canAddPatient,
+    canAddPatient,
   })
 }

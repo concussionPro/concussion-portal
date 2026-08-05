@@ -87,6 +87,19 @@ export class GensolveAdapter implements PmsAdapter {
     return h
   }
 
+  async probe(): Promise<{ ok: boolean; status?: number }> {
+    if (!this.apiKey) return { ok: false }
+    try {
+      // Cheapest authenticated read GPM exposes: the clients resource. A bad
+      // token or unwhitelisted IP answers 401/403 here with the status kept —
+      // findPatient flattens the same failures to [].
+      const res = await fetch(`${this.baseUrl}/clients?search=a`, { headers: this.headers() })
+      return { ok: res.ok, status: res.status }
+    } catch {
+      return { ok: false }
+    }
+  }
+
   async findPatient(query: string): Promise<PmsPatient[]> {
     if (!this.apiKey) return []
     try {

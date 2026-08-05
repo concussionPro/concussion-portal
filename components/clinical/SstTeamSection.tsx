@@ -15,7 +15,8 @@ const TIER_NAMES: Record<string, string> = { single: 'Starter', clinic: 'Clinic'
 
 export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   const [members, setMembers] = useState<Member[]>([])
-  const [seats, setSeats] = useState<{ used: number; allowance: number | null; tier: string; isOwner: boolean } | null>(null)
+  // tier null = active plan with no named tier (alumni comp / legacy grant).
+  const [seats, setSeats] = useState<{ used: number; allowance: number | null; tier: string | null; isOwner: boolean } | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -32,7 +33,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       .then((d) => {
         if (!d) return
         setMembers(d.members ?? [])
-        setSeats({ used: d.seatsUsed ?? 1, allowance: d.seatAllowance === null ? null : (d.seatAllowance ?? 1), tier: d.tier ?? 'trial', isOwner: d.isOwner !== false })
+        setSeats({ used: d.seatsUsed ?? 1, allowance: d.seatAllowance === null ? null : (d.seatAllowance ?? 1), tier: d.tier ?? null, isOwner: d.isOwner !== false })
       })
       .catch(() => {})
   }, [demo])
@@ -81,7 +82,8 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
           {seats.allowance === null
             ? `${seats.used} practitioner${seats.used === 1 ? '' : 's'} · unlimited`
             : `${seats.used} of ${seats.allowance} seat${seats.allowance === 1 ? '' : 's'}`}
-          {seats.tier !== 'trial' && ` · ${TIER_NAMES[seats.tier] ?? seats.tier} plan`}
+          {/* only a KNOWN tier name gets the suffix — null/trial render nothing */}
+          {seats.tier && TIER_NAMES[seats.tier] ? ` · ${TIER_NAMES[seats.tier]} plan` : null}
         </span>
       </div>
       <ul className="space-y-1.5">

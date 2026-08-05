@@ -20,6 +20,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { getClientIp } from '@/lib/get-client-ip'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -41,6 +42,12 @@ function escapeHtml(s: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Public unauthenticated form that triggers TWO emails — rate-limit it like
+  // /api/sst/start before doing any work.
+  const clientIp = getClientIp(req)
+  const rl = await rateLimit({ key: `talk-request:${clientIp}`, limit: 3, windowSec: 3600 })
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests — try again later.' }, { status: 429 })
+
   let body: Body
   try {
     body = (await req.json()) as Body
@@ -67,7 +74,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'name and email required' }, { status: 400 })
   }
 
-  const ip = getClientIp(req)
+  const ip = clientIp
   const country =
     req.headers.get('cf-ipcountry') || req.headers.get('x-vercel-ip-country') || null
   const region =
@@ -112,8 +119,16 @@ export async function POST(req: NextRequest) {
       tags: [{ name: 'sequence', value: 'talk-request-internal' }],
     }).catch((e) => console.error('[talk-request] Zac notify failed:', e))
 
-    // Confirm receipt to the requester so they know it's real.
-    sendEmail({
+    // Confirm receipt to the requester so they know it's real — capped at ONE
+    // per address per day via email_audit_log (this endpoint echoes visitor-
+    // typed text to any address, so repeats would be an outbound-spam lever).
+    // Zac's notification above is NOT capped — every submission still lands.
+    const confirmKey = `talk_confirm_${email}_${new Date().toISOString().slice(0, 10)}`
+    const { rowCount: confirmFresh } = await sql`
+      INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${confirmKey}, NOW())
+      ON CONFLICT (audit_key) DO NOTHING
+    `
+    if ((confirmFresh ?? 0) > 0) sendEmail({
       to: email,
       subject: 'Got it — I\'ll be in touch within 24 hours',
       html: `

@@ -53,6 +53,19 @@ export class CoreplusAdapter implements PmsAdapter {
     }
   }
 
+  async probe(): Promise<{ ok: boolean; status?: number }> {
+    const h = this.headers()
+    if (!h) return { ok: false }
+    try {
+      // Cheapest authenticated read on the documented clients resource — a
+      // rejected bearer token answers 401 with the status kept.
+      const res = await fetch(`${this.baseUrl}/api/v2.1/clients?search=a`, { headers: h })
+      return { ok: res.ok, status: res.status }
+    } catch {
+      return { ok: false }
+    }
+  }
+
   async findPatient(query: string): Promise<PmsPatient[]> {
     const h = this.headers()
     if (!h) return []

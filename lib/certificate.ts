@@ -17,6 +17,7 @@
 
 import jsPDF from 'jspdf'
 import crypto from 'crypto'
+import { CONFIG } from '@/lib/config'
 
 export interface CertificateData {
   participantName: string
@@ -379,14 +380,14 @@ export function getCrmCertificateData(participantName: string, participantEmail:
   }
 }
 
-// Full course certificate data (16 CPD hours — online + in-person workshop)
+// Full course certificate data (online + in-person workshop — CPD total from CONFIG)
 export function getFullCourseCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
   return {
     participantName,
     participantEmail,
     courseTitle: 'Complete Concussion Management Certification',
     courseDescription: '8-module online course plus full-day in-person practical workshop covering concussion science, SCAT6/SCOAT6 assessment, VOMS & BESS protocols, hands-on clinical assessment techniques, clinical phenotyping, return-to-activity frameworks, rehabilitation pathways, and medicolegal documentation for Australian health practitioners.',
-    cpdPoints: 14,
+    cpdPoints: CONFIG.COURSE.TOTAL_CPD_POINTS,
     completionDate,
     learningOutcomes: [
       'Administer and interpret SCAT6, SCOAT6, VOMS, and BESS assessments with hands-on proficiency',

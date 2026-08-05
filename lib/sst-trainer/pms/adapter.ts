@@ -69,6 +69,15 @@ export interface PmsAdapter {
   /** Stable identifier for logging / UI ('cliniko', 'gensolve', …). */
   readonly name: string
 
+  /**
+   * Cheapest authenticated read the PMS offers — proves the stored key works.
+   * Never throws: ok:false carries the HTTP status when one was received.
+   * The connect route depends on this — findPatient flattens every failure
+   * (bad key, wrong shard, network) to [], which is indistinguishable from
+   * "no matches", so it can NOT validate a connection.
+   */
+  probe(): Promise<{ ok: boolean; status?: number }>
+
   /** Search patients by free-text query (name, DOB, etc.). */
   findPatient(query: string): Promise<PmsPatient[]>
 

@@ -76,6 +76,18 @@ export function useAnalytics(): AnalyticsContextValue {
 // Core tracking function
 // ---------------------------------------------------------------------------
 
+// Credential-bearing query params (view keys, magic-link tokens) must never
+// land in the analytics store — strip them, keep everything else.
+const SENSITIVE_SEARCH_PARAMS = ['k', 'token', 'key'];
+
+function stripSensitiveParams(search: string | null): string | null {
+  if (!search) return null;
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  SENSITIVE_SEARCH_PARAMS.forEach((p) => params.delete(p));
+  const cleaned = params.toString();
+  return cleaned ? `?${cleaned}` : null;
+}
+
 async function sendEvent(
   eventType: string,
   eventData: Record<string, unknown>,
@@ -95,7 +107,7 @@ async function sendEvent(
     userAgent: navigator.userAgent,
     referrer: document.referrer || null,
     path,
-    search: search || null,
+    search: stripSensitiveParams(search),
   };
 
   try {

@@ -132,6 +132,10 @@ export default function SstOnboarding({
     setNative(isNativeApp())
   }, [])
 
+  // Current patient name for the entitlement check — a ref so runValidation
+  // (stable useCallback) always reads the live value, never a stale closure.
+  const patientNameRef = useRef('')
+
   // Validate the code (on blur / continue / prefill). Sequenced so a slow first
   // response can't overwrite the result of a newer check.
   const checkSeq = useRef(0)
@@ -154,12 +158,17 @@ export default function SstOnboarding({
       setCodeStatus('valid')
       setClinicName(result.clinicName)
       // A returning patient on THIS device (already enrolled with this code) is
-      // never blocked — only a genuinely new patient is capped. Fail OPEN on a
+      // never blocked — only a genuinely new patient is capped. The entered
+      // name rides along so a returning patient on a NEW device is recognised
+      // server-side (isExistingPatient) and not walled either. Fail OPEN on a
       // read error: never wrongly block care over an entitlement hiccup.
       const alreadyHere = loadState()?.clinicCode?.toUpperCase() === trimmed.toUpperCase()
       if (!alreadyHere) {
         try {
-          const res = await fetch(`/api/sst/clinic-entitlement?code=${encodeURIComponent(trimmed)}`)
+          const label = patientNameRef.current.trim()
+          const res = await fetch(
+            `/api/sst/clinic-entitlement?code=${encodeURIComponent(trimmed)}${label ? `&patient=${encodeURIComponent(label)}` : ''}`,
+          )
           if (seq !== checkSeq.current) return
           const ent = res.ok ? await res.json() : null
           setTrialFull(ent != null && ent.canAddPatient === false)
@@ -179,6 +188,31 @@ export default function SstOnboarding({
     if (initialClinicCode) void runValidation(initialClinicCode)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // The wall usually lands BEFORE the name is typed (code validates on blur,
+  // name comes after) — so once walled, re-ask the entitlement with the label
+  // as it's entered: a patient the clinic already knows unblocks live. Errors
+  // keep the current state (the initial check already failed open).
+  useEffect(() => {
+    if (!trialFull || codeStatus !== 'valid') return
+    const label = patientName.trim()
+    if (!label) return
+    const code = clinicCode.trim()
+    const t = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch(
+            `/api/sst/clinic-entitlement?code=${encodeURIComponent(code)}&patient=${encodeURIComponent(label)}`,
+          )
+          const ent = res.ok ? await res.json() : null
+          if (ent != null && ent.canAddPatient !== false) setTrialFull(false)
+        } catch {
+          /* stay as-is — never flip the wall on a read error */
+        }
+      })()
+    }, 400)
+    return () => clearTimeout(t)
+  }, [trialFull, codeStatus, patientName, clinicCode])
 
   /**
    * Pair a heart-rate source. Triggered from the tap (a user gesture), which is
@@ -358,7 +392,10 @@ export default function SstOnboarding({
             id="patient-name"
             type="text"
             value={patientName}
-            onChange={(e) => setPatientName(e.target.value)}
+            onChange={(e) => {
+              setPatientName(e.target.value)
+              patientNameRef.current = e.target.value
+            }}
             placeholder="First and last name"
             autoCapitalize="words"
             className="w-full rounded-[14px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-3.5 py-3 text-base text-(--sst-navy) outline-none focus:border-(--sst-accent)"

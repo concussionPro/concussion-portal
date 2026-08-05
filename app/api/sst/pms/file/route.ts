@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         const tok = request.cookies.get('session')?.value
         const sess = tok ? verifySessionToken(tok) : null
         if (sess?.email) {
-          const name = await resolveActingClinician(sess.email, String(body.code || '').toUpperCase())
+          const name = await resolveActingClinician(sess.email, code)
           if (name) return { name }
         }
         return undefined

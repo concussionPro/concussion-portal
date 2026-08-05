@@ -15,9 +15,10 @@
  * Auth: relies on the access_key in the request body matching the clinic
  * record. Same model as the landing-page render.
  *
- * Bot guard: aggregator-side regex filter already exists in the engagement
- * route. We persist all UA strings here for completeness, filtering at
- * read-time.
+ * Bot guard: scanner user-agents are dropped at the door (SCANNER_UA below)
+ * so email-security detonations can't flip 'engaged' or fire alerts; the
+ * aggregator-side regex filter in the engagement route still covers reads
+ * of historical rows. Per-clinic KV rate limit caps forged/looping clients.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
@@ -25,6 +26,7 @@ import { getClinicBySlug } from '@/lib/prospect/repo'
 import { accessKeyMatches } from '@/lib/prospect/access-key'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
+import { rateLimit } from '@/lib/rate-limit'
 
 const ALLOWED_INTERACTION_TYPES = new Set([
   'view',
@@ -32,6 +34,11 @@ const ALLOWED_INTERACTION_TYPES = new Set([
   'cta_click',
   'exit',
 ])
+
+// Same filter the demo tour entry uses (app/demo/clinic/route.ts): email-
+// security sandboxes detonate portal links and "click" CTAs — a scanner
+// interaction is not engagement and must not flip status or alert Zac.
+const SCANNER_UA = /bot|crawler|spider|headless|safelinks|mimecast|proofpoint|barracuda|googleimageproxy|expanse|urlscan|preview|scan/i
 
 interface TrackPayload {
   accessKey?: string
@@ -78,6 +85,11 @@ export async function POST(
     ? Math.round(body.dwellMs)
     : null
 
+  // Scanner detonations are dropped whole — not persisted, never escalated.
+  if (SCANNER_UA.test(req.headers.get('user-agent') || '')) {
+    return new NextResponse(null, { status: 204 })
+  }
+
   // Validate clinic + access key
   const clinic = await getClinicBySlug(token)
   if (!clinic) {
@@ -86,6 +98,10 @@ export async function POST(
   if (!accessKeyMatches(body.accessKey, clinic)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Per-clinic cap — a forged/looping client can't flood the views table.
+  const rl = await rateLimit({ key: `prospect-track:${clinic.id}`, limit: 30, windowSec: 3600 })
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
   try {
     await ensureColumns()
@@ -130,13 +146,15 @@ export async function POST(
   }
   if (isCta) {
     try {
-      // Throttle to the clinic's FIRST cta_click (this row is already persisted,
-      // so count === 1 means first) → exactly one hot-lead alert per clinic.
-      const { rows: cnt } = await sql`
-        SELECT COUNT(*)::int AS n FROM prospect_portal_views
-        WHERE clinic_id = ${clinic.id} AND interaction_type = 'cta_click'
+      // Exactly one hot-lead alert per clinic, EVER — audit-keyed in
+      // email_audit_log so forged/repeat clicks (or a race on the COUNT this
+      // used to rely on) can't spam Zac's inbox.
+      const { rowCount: firstAlert } = await sql`
+        INSERT INTO email_audit_log (audit_key, sent_at)
+        VALUES (${`prospect_hotlead_${token}`}, NOW())
+        ON CONFLICT (audit_key) DO NOTHING
       `
-      if (cnt[0]?.n === 1) {
+      if ((firstAlert ?? 0) > 0) {
         const { rows: c } = await sql<{ name: string; contact_full_name: string | null; contact_email: string | null; city: string | null; state: string | null; status: string }>`
           SELECT name, contact_full_name, contact_email, city, state, status
           FROM prospect_clinics WHERE id = ${clinic.id}

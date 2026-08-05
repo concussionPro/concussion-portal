@@ -79,7 +79,10 @@ export async function provisionPlatformForBuyer(
   // international buyers whose subscription creation had silently failed. The
   // free platform year is deliberate; a free platform *forever* is not.
   if (subscriptionAttached) {
-    await setSstClinicPlan(clinic.code, 'active')
+    // tier 'single': the intl bundle's included platform IS the single-
+    // clinician tier — without it the clinic sat unlimited (null tier) until
+    // a random subscription.updated event flipped it to the 5-active cap.
+    await setSstClinicPlan(clinic.code, 'active', { tier: 'single' })
   } else {
     console.warn(
       `[bundle] clinic ${clinic.code} provisioned WITHOUT a renewal subscription — staying on the trial cap. ` +
@@ -172,7 +175,9 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
       },
     })
 
-    await setSstClinicPlan(clinicCode, 'active', { customerId: sub.customerId, subscriptionId: created.id })
+    // tier 'single' so year 1 matches what the subscription's webhook events
+    // will set from year 2 (metadata.plan='single') — never a tier flip.
+    await setSstClinicPlan(clinicCode, 'active', { customerId: sub.customerId, subscriptionId: created.id, tier: 'single' })
     console.log(`[bundle] SST subscription ${created.id} attached to clinic ${clinicCode} (365-day trial → A$49/mo at year 2)`)
     return true
   } catch (err) {

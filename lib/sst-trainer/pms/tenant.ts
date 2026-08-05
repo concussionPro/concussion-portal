@@ -99,6 +99,48 @@ export async function setPmsConnection(args: {
   `
 }
 
+/**
+ * Raw stored connection row — lets the connect route snapshot a WORKING
+ * connection before overwriting it with an unproven key, and restore it
+ * verbatim (still encrypted — the key is never decrypted in transit) when
+ * the probe fails. A typo must never destroy a working connection.
+ */
+export interface PmsConnectionSnapshot {
+  kind: string
+  apiKeyEnc: string
+  creds: unknown
+  connectedAt: string
+  lastOkAt: string | null
+}
+
+export async function getPmsConnectionSnapshot(clinicCode: string): Promise<PmsConnectionSnapshot | null> {
+  await ensureTable()
+  const { rows } = await sql`
+    SELECT kind, api_key_enc, creds, connected_at, last_ok_at
+    FROM sst_clinic_pms WHERE clinic_code = ${clinicCode.toUpperCase()}
+  `
+  if (!rows.length) return null
+  return {
+    kind: String(rows[0].kind),
+    apiKeyEnc: String(rows[0].api_key_enc),
+    creds: rows[0].creds ?? {},
+    connectedAt: String(rows[0].connected_at),
+    lastOkAt: rows[0].last_ok_at ? String(rows[0].last_ok_at) : null,
+  }
+}
+
+export async function restorePmsConnection(clinicCode: string, snap: PmsConnectionSnapshot): Promise<void> {
+  await ensureTable()
+  await sql`
+    INSERT INTO sst_clinic_pms (clinic_code, kind, api_key_enc, creds, connected_at, last_ok_at)
+    VALUES (${clinicCode.toUpperCase()}, ${snap.kind}, ${snap.apiKeyEnc}, ${JSON.stringify(snap.creds)}::jsonb,
+            ${snap.connectedAt}, ${snap.lastOkAt})
+    ON CONFLICT (clinic_code) DO UPDATE
+      SET kind = EXCLUDED.kind, api_key_enc = EXCLUDED.api_key_enc, creds = EXCLUDED.creds,
+          connected_at = EXCLUDED.connected_at, last_ok_at = EXCLUDED.last_ok_at
+  `
+}
+
 export async function markPmsOk(clinicCode: string): Promise<void> {
   await ensureTable()
   await sql`UPDATE sst_clinic_pms SET last_ok_at = NOW() WHERE clinic_code = ${clinicCode.toUpperCase()}`
