@@ -1632,6 +1632,14 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
         }
       } catch (err) {
         console.error(`[crm] Failed to unwind bundled platform for ${redact(email)} after ${cause}:`, err)
+        try {
+          await sendEmail({
+            to: CONFIG.CONTACT_EMAIL,
+            subject: `ACTION: CRM platform unwind FAILED after ${cause}`,
+            html: `<p style="margin:0;">Unwinding the bundled SST platform for ${escapeHtml(email)} (charge ${charge.id}) failed — cancel the bundle subscription / re-cap the clinic manually.</p>`,
+            tags: [{ name: 'type', value: 'revocation-failed' }],
+          })
+        } catch { /* best-effort */ }
       }
     }
     return
@@ -1686,11 +1694,10 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
   // handled by the subscription webhooks; anything else unattributed goes
   // to the owner for a manual decision.
   if (!courseType) {
-    const invoiceRef = (charge as { invoice?: string | null }).invoice
-    if (invoiceRef) {
-      console.log(`Charge ${charge.id} is a subscription invoice (${invoiceRef}) — no course revocation (${cause})`)
-      return
-    }
+    // (Charge.invoice was removed from the pinned Stripe API version, so
+    // subscription-renewal refunds can't be short-circuited here — they land
+    // in this manual-alert path deliberately: no access is touched, the
+    // owner decides.)
     try {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
