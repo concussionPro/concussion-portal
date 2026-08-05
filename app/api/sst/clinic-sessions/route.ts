@@ -179,6 +179,16 @@ export async function GET(request: NextRequest) {
       if (r.session_type === 'threshold') p.thresholds.push(r)
       else p.trainings.push(r)
     }
+    // Order by WHEN IT HAPPENED, not when it landed. The SQL orders on
+    // created_at (insert time), so a test taken offline and flushed days later
+    // sorted AFTER everything since — and "latest test" (which sets the
+    // clearance badge and the GP-report-due flag) resolved to a STALE result
+    // (2026-08-05 reporting-integrity sweep).
+    const byOccurred = (a: Row, b: Row) => Date.parse(occurredIso(a)) - Date.parse(occurredIso(b))
+    for (const p of byPatient.values()) {
+      p.thresholds.sort(byOccurred)
+      p.trainings.sort(byOccurred)
+    }
     // An interruption record superseded by the completed save must not surface
     // as a second session (see dropSupersededAbandonments).
     for (const p of byPatient.values()) {

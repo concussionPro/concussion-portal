@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Download, ArrowRight, Mail, Loader2 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { CONFIG } from '@/lib/config'
 
 function SuccessContent() {
   const search = useSearchParams()
@@ -91,7 +92,7 @@ function SuccessContent() {
                       We&apos;ve sent a confirmation + login link. The PDF also lives inside your Concussion Education Australia account for lifetime access across devices.
                     </p>
                     <p className="text-sm text-teal-800 leading-relaxed">
-                      <strong>Next step:</strong> book owners get A$100 off the full online course (8 CPD hours, interactive quizzes, curated clinical video library, CPD certificate). The reference is Part 1; the course is Part 2.
+                      <strong>Next step:</strong> book owners get A${CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD} off the full online course (8 CPD hours, interactive quizzes, curated clinical video library, CPD certificate). The reference is Part 1; the course is Part 2.
                     </p>
                     <Link
                       href="/pricing"

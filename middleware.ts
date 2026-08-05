@@ -17,34 +17,88 @@ function constantTimeEqual(a: string, b: string): boolean {
   return result === 0
 }
 
-// No public docs — all require at least an email capture
-const PUBLIC_DOCS = new Set<string>([])
+// The gate lists live in lib/gated-docs.ts so /api/auth/verify can honour a
+// post-login redirect back to an AUTH_DOC without re-declaring the list.
+import { isPublicDoc, isAuthDoc, isPaidDoc } from '@/lib/gated-docs'
 
-// Docs accessible to any authenticated user (including preview/free accounts)
-const AUTH_DOCS = new Set([
-  '/docs/SCAT6_Fillable.pdf',
-  '/docs/SCOAT6_Fillable.pdf',
-  // Flat templates feed the SCAT form tools' PDF export — the email gate
-  // mints a PREVIEW session for exactly this, so paid-gating them 401'd the
-  // lead magnet at its conversion moment (2026-08-05 round-C #1).
-  '/docs/SCAT6_Flat.pdf',
-  '/docs/SCOAT6_Flat.pdf',
-  '/docs/Child_SCAT6_Flat.pdf',
-])
+/**
+ * Is this a browser NAVIGATION (someone tapped a link) rather than a
+ * programmatic fetch/XHR/`download` request?
+ *
+ * A gated asset denied to a navigation must NOT answer with a raw JSON body —
+ * that renders `{"error":"Please log in…"}` in a tab. Two public pages link
+ * gated assets by design (/course → the brochure PDF, /scat-forms/scat6 → the
+ * official SCAT6 fillable, offered mid-assessment), so this was a clinician
+ * hitting a JSON blob with a patient in front of them (2026-08-05 live crawl).
+ * Programmatic callers keep the JSON shape they already parse.
+ */
+function isBrowserNavigation(request: NextRequest): boolean {
+  const mode = request.headers.get('sec-fetch-mode')
+  if (mode) return mode === 'navigate'
+  return (request.headers.get('accept') || '').includes('text/html')
+}
 
-// Files that paid users can access directly (served via CDN, not serverless)
-// Large files MUST be served via CDN to bypass Vercel's 4.5 MB serverless body limit
-const PAID_DOCS = new Set([
-  '/docs/CCM_Complete_Reference_2026.pdf',
-  '/docs/SCAT-SCOAT_FillablePDFs.zip',
-  '/docs/ClinicalToolkit_Complete.zip',
-  // Paid Word/image templates (2026-07-05 audit: these were world-readable —
-  // the matcher only covered .pdf/.zip, so raw /docs/ URLs bypassed the gate)
-  '/docs/Email Template Pack.docx',
-  '/docs/Employer _ School Letter Template.docx',
-  '/docs/Return-to-School Plan Template (DOCX).docx',
-  '/docs/RehabFlow.png',
-])
+function docDenialHtml(title: string, message: string, ctaHref: string, ctaLabel: string): string {
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>${esc(title)} | Concussion Education Australia</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px}
+  .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.08);padding:40px 32px;max-width:440px;width:100%;text-align:center}
+  h1{font-size:22px;margin:0 0 8px}
+  p{font-size:15px;color:#475569;line-height:1.6;margin:0 0 24px}
+  a{display:inline-block;padding:14px 28px;background:#5b9aa6;color:#fff;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none}
+</style>
+</head><body>
+<div class="card">
+  <h1>${esc(title)}</h1>
+  <p>${esc(message)}</p>
+  <a href="${esc(ctaHref)}">${esc(ctaLabel)}</a>
+</div>
+</body></html>`
+}
+
+const DENIAL_HTML_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
+
+/**
+ * Deny a gated asset. Same status and same JSON body as before for
+ * programmatic callers; a human-readable page for browser navigations.
+ *
+ * `loginRedirect` is only ever set when the request has NO valid session —
+ * bouncing an authenticated-but-unentitled visitor to /login would loop
+ * (/login redirects a signed-in user straight back to ?redirect).
+ */
+function denyDoc(
+  request: NextRequest,
+  opts: {
+    status: 401 | 403
+    error: string
+    title: string
+    message: string
+    ctaHref: string
+    ctaLabel: string
+    loginRedirect?: boolean
+  },
+): NextResponse {
+  if (isBrowserNavigation(request)) {
+    if (opts.loginRedirect) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      loginUrl.search = ''
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+    return new NextResponse(
+      docDenialHtml(opts.title, opts.message, opts.ctaHref, opts.ctaLabel),
+      { status: opts.status, headers: DENIAL_HTML_HEADERS },
+    )
+  }
+  return NextResponse.json({ error: opts.error }, { status: opts.status })
+}
 
 // Edge-compatible HMAC-SHA256 signature verification (base64url)
 async function verifyHmacSig(payloadStr: string, signature: string): Promise<boolean> {
@@ -263,30 +317,41 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Block direct access to CourseContent brochure — paid content only
+  // Block direct access to CourseContent brochure — paid content only.
+  // It is linked as a prominent download card from the PUBLIC /course page,
+  // so the anonymous case is the COMMON one and must land somewhere useful.
   if (pathname === '/CourseContent_2026.pdf') {
     const sessionToken = request.cookies.get('session')?.value
-    if (sessionToken) {
-      const session = await verifySessionEdge(sessionToken)
-      if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
-        return NextResponse.next()
-      }
+    const session = sessionToken ? await verifySessionEdge(sessionToken) : null
+    if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
+      return NextResponse.next()
     }
-    return NextResponse.json(
-      { error: 'Please log in to access this resource.' },
-      { status: 401 }
-    )
+    return denyDoc(request, {
+      status: 401,
+      error: 'Please log in to access this resource.',
+      loginRedirect: !session,
+      title: session ? 'Part of the course' : 'Sign in to open this',
+      message: session
+        ? 'The full course outline is included with enrolment. Enrol and it opens straight away.'
+        : 'The full course outline is for enrolled clinicians. Sign in and it will open automatically.',
+      ctaHref: session ? '/pricing' : '/login',
+      ctaLabel: session ? 'See enrolment options' : 'Sign in',
+    })
   }
 
   // Handle /docs/ file access (PDFs and ZIPs)
   if (pathname.startsWith('/docs/') && /\.(pdf|zip|docx|png)$/.test(pathname)) {
     // Public docs — always allow
-    if (PUBLIC_DOCS.has(pathname)) {
+    if (isPublicDoc(pathname)) {
       return NextResponse.next()
     }
 
-    // Auth docs — any logged-in user can access (including preview/free accounts)
-    if (AUTH_DOCS.has(pathname)) {
+    // Auth docs — any logged-in user can access (including preview/free accounts).
+    // These are the SCAT/SCOAT forms linked from the PUBLIC /scat-forms pages,
+    // offered to a clinician mid-assessment: the denial has to be a page they
+    // can act on, and the login round-trip has to come back to the file
+    // (/api/auth/verify allows AUTH_DOCS as a preview landing target).
+    if (isAuthDoc(pathname)) {
       const sessionToken = request.cookies.get('session')?.value
       if (sessionToken) {
         const session = await verifySessionEdge(sessionToken)
@@ -294,57 +359,76 @@ export async function middleware(request: NextRequest) {
           return NextResponse.next()
         }
       }
-      return NextResponse.json(
-        { error: 'Please log in to download this file.' },
-        { status: 401 }
-      )
+      return denyDoc(request, {
+        status: 401,
+        error: 'Please log in to download this file.',
+        loginRedirect: true,
+        title: 'Sign in to download',
+        message:
+          'The official SCAT6 and SCOAT6 forms are free — a login just keeps them tied to your account. Sign in and the download starts automatically.',
+        ctaHref: '/login',
+        ctaLabel: 'Sign in',
+      })
     }
 
     // Paid docs — verify session and access level (served via CDN, bypasses serverless body limit)
-    if (PAID_DOCS.has(pathname) || PAID_DOCS.has(decodeURIComponent(pathname))) {
+    if (isPaidDoc(pathname)) {
       const sessionToken = request.cookies.get('session')?.value
-      if (sessionToken) {
-        const session = await verifySessionEdge(sessionToken)
-        if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
-          return NextResponse.next()
-        }
-        // Reference+Toolkit (A$97) bundle owners are accessLevel 'preview' with
-        // a DB flag — every /api/* download grants them, but this CDN gate
-        // didn't (2026-07-05 audit: paying tier got 401 on Download-All).
-        // Rare path, one indexed lookup, @vercel/postgres is edge-safe.
-        if (session?.email) {
-          try {
-            const { rows } = await sql`
-              SELECT 1 FROM users
-              WHERE LOWER(email) = LOWER(${session.email})
-                AND reference_book_purchased_at IS NOT NULL
-              LIMIT 1
-            `
-            if (rows.length > 0) return NextResponse.next()
-          } catch {
-            /* fall through to 401 — never fail open on a paid asset */
-          }
+      const session = sessionToken ? await verifySessionEdge(sessionToken) : null
+      if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
+        return NextResponse.next()
+      }
+      // Reference+Toolkit (A$97) bundle owners are accessLevel 'preview' with
+      // a DB flag — every /api/* download grants them, but this CDN gate
+      // didn't (2026-07-05 audit: paying tier got 401 on Download-All).
+      // Rare path, one indexed lookup, @vercel/postgres is edge-safe.
+      if (session?.email) {
+        try {
+          const { rows } = await sql`
+            SELECT 1 FROM users
+            WHERE LOWER(email) = LOWER(${session.email})
+              AND reference_book_purchased_at IS NOT NULL
+            LIMIT 1
+          `
+          if (rows.length > 0) return NextResponse.next()
+        } catch {
+          /* fall through to 401 — never fail open on a paid asset */
         }
       }
-      return NextResponse.json(
-        { error: 'Authentication required. Please log in to access this resource.' },
-        { status: 401 }
-      )
+      return denyDoc(request, {
+        status: 401,
+        error: 'Authentication required. Please log in to access this resource.',
+        loginRedirect: !session,
+        title: session ? 'Included with the course' : 'Sign in to access this',
+        message: session
+          ? 'This download is part of the Clinical Toolkit that comes with enrolment. Open the toolkit to see what your account includes.'
+          : 'This download is part of the paid course. Sign in and it will open automatically.',
+        ctaHref: session ? '/clinical-toolkit' : '/login',
+        ctaLabel: session ? 'Open the Clinical Toolkit' : 'Sign in',
+      })
     }
 
     // All other docs — block direct access
-    return NextResponse.json(
-      { error: 'Direct access not allowed. Please download via the Clinical Toolkit.' },
-      { status: 403 }
-    )
+    return denyDoc(request, {
+      status: 403,
+      error: 'Direct access not allowed. Please download via the Clinical Toolkit.',
+      title: 'Download from the toolkit',
+      message: 'This file is delivered through the Clinical Toolkit rather than a direct link.',
+      ctaHref: '/clinical-toolkit',
+      ctaLabel: 'Open the Clinical Toolkit',
+    })
   }
 
   // Block direct PDF access in /resources/ directory
   if (pathname.startsWith('/resources/') && pathname.endsWith('.pdf')) {
-    return NextResponse.json(
-      { error: 'Direct access not allowed. Access via /resources page.' },
-      { status: 403 }
-    )
+    return denyDoc(request, {
+      status: 403,
+      error: 'Direct access not allowed. Access via /resources page.',
+      title: 'Download from the resources page',
+      message: 'This file is delivered from the resources page rather than a direct link.',
+      ctaHref: '/resources',
+      ctaLabel: 'Go to resources',
+    })
   }
 
   // Protected frontend routes — require valid session, redirect to /login if missing.

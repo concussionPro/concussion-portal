@@ -3,36 +3,29 @@ import Link from 'next/link'
 import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { requireCrmCourseAccess } from '@/components/ep-course/CrmCourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
-import { epModules, epDisplayId } from '@/data/ep-modules'
+import { EpReferenceSearch } from '@/components/ep-course/EpReferenceSearch'
+import { getEpModulesMeta } from '@/data/ep-module-meta'
+import { getEpReferences, epCitationTotal } from '@/lib/ep-references'
 
 export const metadata: Metadata = {
   title: 'Reference Repository — Concussion Rehab for EPs',
   robots: 'noindex, nofollow',
 }
 
-// Render any embedded URL (DOI link etc.) inside a reference string as a
-// clickable link — same behaviour as the flagship Reference Repository.
-function linkifyRef(ref: string) {
-  return ref.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
-    /^https?:\/\//.test(part) ? (
-      <a
-        key={i}
-        href={part}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="break-all text-teal-700 underline hover:text-teal-900"
-      >
-        {part}
-      </a>
-    ) : (
-      <span key={i}>{part}</span>
-    ),
-  )
-}
-
+/**
+ * CRM Reference Repository — searchable and module-filterable, matching what a
+ * CCM buyer gets at /references.
+ *
+ * SERVER-gated (requireCrmCourseAccess) and the citations are passed to the
+ * client component as props, so the dataset only ever ships in the RSC payload
+ * of an entitled request. It is derived from the modules' own
+ * `clinicalReferences` strings — there is no second citation list to drift.
+ */
 export default async function EpReferencesPage() {
   const access = await requireCrmCourseAccess()
-  const total = epModules.reduce((s, m) => s + (m.clinicalReferences?.length ?? 0), 0)
+  const references = getEpReferences()
+  const citationTotal = epCitationTotal()
+  const moduleTitles = getEpModulesMeta().map((m) => ({ id: m.id, title: m.title }))
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -40,35 +33,24 @@ export default async function EpReferencesPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-4xl px-6 py-10">
           <AdminPreviewBadge access={access} />
-          <Link href="/ep-course/modules/1" className="text-sm font-semibold text-teal-700 hover:underline">
+          <Link href="/ep-course/dashboard" className="text-sm font-semibold text-teal-700 hover:underline">
             ← Course
           </Link>
 
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">Reference Repository</h1>
           <p className="mt-2 text-slate-600">
-            {total} peer-reviewed references underpinning the course content, grouped by module — the evidence base
-            an Accredited Exercise Physiologist can cite for concussion exercise rehabilitation.
+            The {citationTotal}-citation evidence base behind the course — searchable, and filterable by the module
+            that cites it. The literature an Accredited Exercise Physiologist can cite for concussion exercise
+            rehabilitation.
           </p>
+          {citationTotal > references.length && (
+            <p className="mt-1 text-xs text-slate-400">
+              {references.length} distinct papers: a paper cited by more than one module is listed once and tagged
+              with every module that cites it.
+            </p>
+          )}
 
-          <div className="mt-8 space-y-8">
-            {epModules.map((m) => (
-              <section key={m.id} className="rounded-xl border border-slate-200 bg-white p-6">
-                <div className="mb-3 flex items-baseline justify-between gap-4">
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Module {epDisplayId(m.id)} — {m.title}
-                  </h2>
-                  <span className="shrink-0 text-xs font-medium text-slate-400">
-                    {m.clinicalReferences?.length ?? 0} refs
-                  </span>
-                </div>
-                <ol className="list-decimal space-y-1.5 pl-5 text-sm text-slate-600">
-                  {(m.clinicalReferences ?? []).map((r, i) => (
-                    <li key={i}>{linkifyRef(r)}</li>
-                  ))}
-                </ol>
-              </section>
-            ))}
-          </div>
+          <EpReferenceSearch references={references} moduleTitles={moduleTitles} />
         </div>
       </main>
     </div>

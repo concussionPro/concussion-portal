@@ -1,51 +1,58 @@
-'use client'
-
-import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
-import { EpInteractiveElements } from '@/components/ep-course/EpInteractiveElements'
-import { epProgressId } from '@/data/ep-module-meta'
-import { CourseModulePage, type CourseModuleDescriptor } from '@/components/course/CourseModulePage'
+import { getEpModuleById } from '@/data/ep-modules'
+import { checkCrmServerAccess } from '@/components/ep-course/CrmCourseGate'
+import type { InitialModuleData } from '@/hooks/useModuleData'
+import EpModuleClient from './EpModuleClient'
 
 /**
- * EP course (Concussion Rehab Mastery) — private ESSA-review demo. All
- * behaviour lives in the shared CourseModulePage; this descriptor is the
- * complete list of EP-specific behaviour:
+ * /ep-course/modules/[id] — Concussion Rehab Mastery (CRM / EP stream).
  *
- * - Progress ids are namespaced to 201-208 (epProgressId): the shared
- *   ProgressContext store also holds the flagship course's modules 1-8, and
- *   identical ids corrupted progress across the two courses.
- * - Checkpoint keys are ep- prefixed so they can never collide with the
- *   flagship course's `module-N-checkpoint` keys.
- * - No Downloadable Resources / Apply Tomorrow steps: those components are
- *   keyed by moduleId and the EP modules share ids 1-8 with the flagship,
- *   so they'd leak flagship content. Content sections + Knowledge Check only.
- * - Demo/ESSA-review viewers get isolated quizzes (never persist/restore).
- * - EP pass mark is 80% — must match ProgressContext's quizPassThreshold
- *   for the namespaced ids 201-208.
+ * SERVER COMPONENT, mirroring the flagship /modules/[id]. It resolves the
+ * module with the SAME gate the content API uses (checkCrmServerAccess — the
+ * non-redirecting half of the CRM gate, so a non-owner still gets the in-page
+ * upgrade screen rather than a bounce) and hands the result to the client
+ * player as `initialModuleData`, so the content is present on the first paint.
+ *
+ * Before this, every CRM module load was: empty HTML + a spinner → hydrate →
+ * GET /api/auth/session → GET /api/ep-course/modules/N (65-90KB) → render.
+ * Three sequential round trips before a paying exercise physiologist saw the
+ * first word of the course they bought — while CCM buyers had server-rendered
+ * first paint since the flagship page was converted.
+ *
+ * Gating is UNCHANGED and still enforced server-side: an unentitled visitor
+ * gets `needsUpgrade` (module: null) exactly as /api/ep-course/modules/[id]
+ * returns on 403, and the client hook still owns re-fetching after a checkout
+ * completes in another tab.
  */
-const EP_COURSE: CourseModuleDescriptor = {
-  course: 'ep',
-  NavComponent: EpCourseNavigation,
-  InteractiveComponent: EpInteractiveElements,
-  progressIdFor: epProgressId,
-  checkpointKeyFor: (id) => `ep-module-${id}-checkpoint`,
-  loginPathFor: (id) => `/ep-course/modules/${id}`,
-  // The COURSE dashboard, not Module 1. Every "back"/"view all modules" exit in
-  // the shared player lands here, and it is the only surface carrying the CRM
-  // certificate link (2026-08-05 parity: finishing module 8 used to dump the
-  // buyer back into Module 1 with no route to their certificate).
-  backHref: '/ep-course/dashboard',
-  moduleBasePath: '/ep-course/modules',
-  passMarkPercent: 80,
-  showResources: false,
-  supportsDemoViewer: true,
-  hasScatModules: false,
-  // Finishing module 8 surfaces the claim-your-certificate CTA — the CRM cert
-  // is a real, server-verified ESSA CPD certificate (/api/certificate?type=crm).
-  showCertificateCta: true,
-  headerModuleNumber: 'url',
-  scatQuizFailUpsellSuffix: '8 modules, 8 CPD hours',
-}
+export default async function ModulePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const moduleId = parseInt(id, 10)
 
-export default function ModulePage() {
-  return <CourseModulePage descriptor={EP_COURSE} />
+  let initialModuleData: InitialModuleData | undefined
+  if (Number.isFinite(moduleId)) {
+    const access = await checkCrmServerAccess()
+    const epModule = getEpModuleById(moduleId)
+
+    if (access.ok && epModule) {
+      initialModuleData = {
+        module: epModule,
+        accessLevel: 'full-course',
+        needsUpgrade: false,
+        allSectionTitles: null,
+      }
+    } else if (!access.ok && epModule) {
+      // Not entitled, but a real module — render the enrolment screen
+      // immediately rather than flashing a spinner first. Section titles are
+      // the same teaser the API's 403 carries.
+      initialModuleData = {
+        module: null,
+        accessLevel: 'preview',
+        needsUpgrade: true,
+        allSectionTitles: epModule.sections.map((s) => s.title),
+      }
+    }
+    // Unknown module id falls through with no initial data — the client hook
+    // fetches and renders its existing 404 state.
+  }
+
+  return <EpModuleClient initialModuleData={initialModuleData} />
 }

@@ -210,7 +210,10 @@ export const COURSES: CourseCatalogueEntry[] = [
     route: '/pricing',
     // Standing early-bird under the nomination model ($1,400 sticker applies
     // only in the final 14 days before a scheduled workshop).
-    priceAUD: 1190,
+    // Derived (was a literal 1190): the /courses card, dashboard tiles and the
+    // nurture emails read this, so a pricing change must not leave them quoting
+    // a rate checkout no longer charges.
+    priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
     // Display-only here: CCM checkout lives at /pricing (full-course flow).
     purchasableViaCheckout: false,
     status: 'live',
@@ -229,7 +232,7 @@ export const COURSES: CourseCatalogueEntry[] = [
       : ['Designed to ESSA CPD standards', 'ESSA accreditation pending'],
     description: `The EP-scoped concussion-rehab stream for Accredited Exercise Physiologists & Exercise Scientists — BCTT/HRt, sub-symptom-threshold prescription, graded return-to-activity, plus the live clinical tools. 8 online modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD (${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} with the shared practical day).`,
     route: '/concussion-rehab-mastery',
-    priceAUD: 497,
+    priceAUD: CONFIG.COURSE.PRICE_ONLINE,
     // CRM has its OWN checkout (/api/crm/checkout), not the generic short-course
     // flow this flag drives — so false is correct and does not mean "unbuyable".
     purchasableViaCheckout: false,

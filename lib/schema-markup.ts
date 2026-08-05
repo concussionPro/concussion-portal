@@ -236,6 +236,18 @@ export function createCourseSchema(params: {
   cpdHours: number
   priceAUD?: number
   instances?: CourseInstanceInput[]
+  /**
+   * The body that actually recognises the credential. Defaults to Osteopathy
+   * Australia, which endorses CCM ONLY — the EP stream (CRM) is accredited by
+   * ESSA and must never publish an OA endorsement it doesn't hold.
+   */
+  recognizedBy?: { name: string; url: string }
+  /** Overrides the credential label (the EP stream awards ESSA CPD points). */
+  credentialName?: string
+  audienceRoles?: string[]
+  teaches?: string[]
+  /** Where the offer is bought. Defaults to the CCM pricing page. */
+  offerUrl?: string
 }) {
   const fallbackInstance: CourseInstanceInput = {
     courseMode: 'online',
@@ -261,12 +273,14 @@ export function createCourseSchema(params: {
       '@type': 'EducationalOccupationalCredential',
       // AHPRA does not accredit CPD — never claim recognizedBy AHPRA. These
       // hours count toward practitioners' AHPRA registration CPD requirements.
-      name: `${params.cpdHours} CPD Hours (count toward AHPRA registration CPD requirements)`,
+      name:
+        params.credentialName ??
+        `${params.cpdHours} CPD Hours (count toward AHPRA registration CPD requirements)`,
       credentialCategory: 'Continuing Professional Development',
       recognizedBy: {
         '@type': 'Organization',
-        name: 'Osteopathy Australia',
-        url: 'https://osteopathy.org.au',
+        name: params.recognizedBy?.name ?? 'Osteopathy Australia',
+        url: params.recognizedBy?.url ?? 'https://osteopathy.org.au',
       },
     },
     about: { '@type': 'MedicalCondition', name: 'Sport-Related Concussion' },
@@ -274,9 +288,14 @@ export function createCourseSchema(params: {
     audience: {
       '@type': 'EducationalAudience',
       audienceType: 'Healthcare Professionals',
-      educationalRole: ['Medical Doctor', 'Physiotherapist', 'Osteopath', 'Sports Trainer'],
+      educationalRole: params.audienceRoles ?? [
+        'Medical Doctor',
+        'Physiotherapist',
+        'Osteopath',
+        'Sports Trainer',
+      ],
     },
-    teaches: [
+    teaches: params.teaches ?? [
       'SCAT-6 Assessment Protocol',
       'SCOAT-6 Office Assessment',
       'Return-to-Play Decision Making',
@@ -292,7 +311,7 @@ export function createCourseSchema(params: {
         price: params.priceAUD.toFixed(2),
         priceCurrency: 'AUD',
         availability: 'https://schema.org/InStock',
-        url: `${SITE_URL}/pricing`,
+        url: params.offerUrl ?? `${SITE_URL}/pricing`,
       },
     }),
   }

@@ -11,7 +11,7 @@ import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download,
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
-import { COURSES } from '@/lib/ai-course/provider-catalogue'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { trackEvent } from '@/lib/analytics'
 
 // Short-course cross-sell for completers — sourced from the catalogue (single
@@ -358,7 +358,7 @@ export function NextActionCard() {
                         <span className="min-w-0">
                           <span className="block text-[13px] font-semibold text-foreground leading-tight truncate">{c.title}</span>
                           <span className="block text-[11px] text-muted-foreground leading-tight">
-                            {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
+                            {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{getEffectivePrice(c).price !== null && <> · A${getEffectivePrice(c).price!.toLocaleString('en-AU')}</>}
                           </span>
                         </span>
                         <ArrowRight className="w-3.5 h-3.5 text-teal-600/60 flex-shrink-0" />

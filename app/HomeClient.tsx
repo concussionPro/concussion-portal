@@ -358,7 +358,7 @@ export default function HomeClient() {
                   <div className="inline-flex items-center gap-2 mb-4 rounded-lg bg-white/70 border border-[rgba(13,115,119,0.25)] px-3 py-2">
                     <Check className="w-4 h-4 text-[var(--accent)] shrink-0" strokeWidth={2.5} />
                     <span className="text-[13px] font-semibold text-[var(--foreground)]">
-                      Finish it and get <span className="text-[var(--accent)]">$50 off</span> the full online course
+                      Finish it and get <span className="text-[var(--accent)]">${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off</span> the full online course
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2.5">

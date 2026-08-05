@@ -19,10 +19,70 @@ export interface Module {
   parts?: ModulePart[]
 }
 
+/**
+ * Interactive elements authored as DATA on the section they belong to.
+ *
+ * WHY DATA AND NOT JSX. The flagship course's ~150 interactive elements are
+ * hardcoded JSX in components/course/SectionInteractiveElements.tsx (a client
+ * component) keyed by (moduleId, sectionId). That works for CCM, but it means
+ * every answer key ships in a PUBLIC client chunk, and it means a second course
+ * can only gain interactivity by someone writing more JSX.
+ *
+ * Sections authored with `interactives` render through the SAME components
+ * (components/course/SectionDataInteractives.tsx → InteractiveElements.tsx),
+ * but the specs travel inside the module payload — which is served by the
+ * entitlement-gated content APIs (/api/modules/[id], /api/ep-course/modules/[id]).
+ * So a paid answer key never reaches an unentitled visitor, and adding an
+ * interactive is a content edit next to the prose it tests, not a code change.
+ *
+ * Available to BOTH courses. CRM (data/ep-modules/*) has no JSX interactives
+ * file to extend, so this is the supported way to add them there.
+ */
+export type SectionInteractive =
+  | { kind: 'quick-check'; question: string; options: string[]; correctAnswer: number; explanation: string }
+  | { kind: 'multi-select'; question: string; options: string[]; correctAnswers: number[]; explanation: string }
+  | { kind: 'insight'; title: string; content: string; type?: 'insight' | 'warning' | 'tip' | 'success' | 'info' }
+  | { kind: 'key-concept'; title: string; points?: string[]; content?: string }
+  | { kind: 'flowchart'; title: string; steps: { label: string; description: string }[] }
+  | { kind: 'scenario'; title: string; patientSummary: string; steps: ScenarioStepSpec[] }
+  | {
+      kind: 'ordering'
+      title: string
+      instruction: string
+      items: { id: string; label: string; rationale?: string }[]
+      correctOrder: string[]
+      explanation: string
+    }
+  | {
+      kind: 'matching'
+      title: string
+      instruction: string
+      pairs: { id: string; left: string; right: string; explanation?: string }[]
+      leftLabel?: string
+      rightLabel?: string
+    }
+
+/** One node of a branching ClinicalScenario. Mirrors InteractiveElements.tsx. */
+export interface ScenarioStepSpec {
+  id: string
+  narrative: string
+  clinicalData?: string[]
+  choices: { label: string; feedback?: string; nextStepId: string }[]
+  isOutcome?: boolean
+  outcome?: {
+    type: 'optimal' | 'acceptable' | 'suboptimal'
+    title: string
+    explanation: string
+    clinicalReasoning: string
+  }
+}
+
 export interface Section {
   id: string
   title: string
   content: string[]
+  /** Optional data-authored interactive elements (see SectionInteractive). */
+  interactives?: SectionInteractive[]
 }
 
 export interface QuizQuestion {

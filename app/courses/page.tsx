@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import CourseStreamsClient from '@/components/courses/CourseStreamsClient'
-import { COURSES, findProvider, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
+import { COURSES, findProvider, getEffectiveStatus, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
 import { BookOpenCheck, Stethoscope, ArrowRight, Check } from 'lucide-react'
@@ -82,7 +82,7 @@ export default async function CoursesIndexPage({
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground tabular-nums">
                         <strong className="text-foreground">{c.cpdHours} CPD hours</strong>
-                        {c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
+                        {getEffectivePrice(c).price !== null && <> · A${getEffectivePrice(c).price!.toLocaleString('en-AU')}</>}
                       </span>
                       <span className="text-accent font-semibold">View →</span>
                     </div>

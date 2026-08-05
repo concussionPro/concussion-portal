@@ -7,6 +7,13 @@ interface PaidRegistrant {
   name: string
   email: string
   createdAt: string
+  /**
+   * Which stream sold the seat. The practical day is SHARED between CCM and
+   * CRM, and a CRM buyer's users.access_level stays 'preview' — so they were
+   * missing from this board entirely until practicalDayAttendees() unioned
+   * both (lib/users.ts). Shown so the roster tells you who's in the room.
+   */
+  stream?: 'ccm' | 'crm'
 }
 
 interface PaidCity {
@@ -132,7 +139,7 @@ export default function AdminReadyToTrainPage() {
           r.name,
           r.email,
           new Date(r.createdAt).toLocaleDateString(),
-          'stripe',
+          r.stream === 'crm' ? 'stripe (CRM)' : 'stripe (CCM)',
         ])
       ),
       ...readyToUpgrade.flatMap(c =>
@@ -260,6 +267,7 @@ export default function AdminReadyToTrainPage() {
                 <tr>
                   <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Name</th>
                   <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Email</th>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Stream</th>
                   <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Enrolled</th>
                 </tr>
               </thead>
@@ -272,6 +280,13 @@ export default function AdminReadyToTrainPage() {
                         <Mail className="w-3.5 h-3.5 text-slate-400" />
                         {r.email}
                       </div>
+                    </td>
+                    <td className="px-6 py-3 text-sm">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        r.stream === 'crm' ? 'bg-teal-100 text-teal-700' : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {r.stream === 'crm' ? 'CRM' : 'CCM'}
+                      </span>
                     </td>
                     <td className="px-6 py-3 text-sm text-slate-600">{new Date(r.createdAt).toLocaleDateString()}</td>
                   </tr>

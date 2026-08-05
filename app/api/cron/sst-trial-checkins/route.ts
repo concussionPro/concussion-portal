@@ -25,6 +25,7 @@ import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { isOwnerEmail } from '@/lib/owner'
+import { SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 
 function redact(e: string) { return e.length > 3 ? e.slice(0, 3) + '***' : '***' }
 
@@ -66,7 +67,7 @@ function capEmail(c: ClinicRow): { subject: string; text: string } {
 
 You've got ${c.patients} patients running through SST at ${c.clinic_name} — keen to hear how the first episodes have gone, and whether the reports are landing the way your team needs.
 
-Your trial includes 3 patients. When you're ready to open it up, plans start at A$49/month (cancel anytime) and every plan includes unlimited clinicians with their own logins — you can upgrade from your workspace, or just reply and I'll set it up with you.
+Your trial includes ${SST_TRIAL_PATIENT_CAP} patients. When you're ready to open it up, plans start at A$${SST_TIER_FROM_AUD}/month (cancel anytime) and every plan includes unlimited clinicians with their own logins — you can upgrade from your workspace, or just reply and I'll set it up with you.
 
 If a walkthrough for the rest of the team would help, happy to do that too.
 

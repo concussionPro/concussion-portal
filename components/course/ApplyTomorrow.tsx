@@ -1,101 +1,131 @@
 'use client'
 
 import { Rocket, CheckSquare } from 'lucide-react'
+import type { CourseKey } from '@/hooks/useModuleData'
 
 interface ApplyTomorrowItem {
   action: string
   description: string
 }
 
-export function ApplyTomorrow({ moduleId }: { moduleId: number }) {
-  const actionsByModule: Record<number, ApplyTomorrowItem[]> = {
-    1: [
-      {
-        action: 'Identify rotational vs. linear forces',
-        description: 'When taking patient history, ask about mechanism of injury to determine force type',
-      },
-      {
-        action: 'Explain the energy crisis',
-        description: 'Use this simple explanation with patients: "Your brain needs more energy to heal, but has less blood flow - that\'s why rest is critical"',
-      },
-      {
-        action: 'Screen for risk factors',
-        description: 'Check previous concussion history, age, and genetic factors',
-      }
-    ],
-    2: [
-      {
-        action: 'Use this 2-minute SCAT6 screening',
-        description: 'Rapid sideline assessment protocol with red flag identification',
-      },
-      {
-        action: 'Test cranial nerves systematically',
-        description: 'Use the rapid verbal screen: smell, vision, hearing changes?',
-      },
-      {
-        action: 'Apply VOMS protocol',
-        description: 'Screen for vestibular-ocular dysfunction in subacute patients',
-      }
-    ],
-    3: [
-      {
-        action: 'Follow acute management checklist',
-        description: 'First 72-hour protocol: relative rest, symptom monitoring, graduated activity',
-      },
-      {
-        action: 'Give patient handout',
-        description: 'Evidence-based patient education reduces anxiety and improves compliance',
-      }
-    ],
-    4: [
-      {
-        action: 'Use PCS differential diagnosis tree',
-        description: 'Distinguish true PCS from cervicogenic, vestibular, and mood disorders',
-      },
-      {
-        action: 'Know when to refer',
-        description: 'Red flags for specialist referral at 4-week mark',
-      }
-    ],
-    5: [
-      {
-        action: 'Map your multidisciplinary team',
-        description: 'Who do you refer to for vestibular? Ocular-motor? Mood?',
-      }
-    ],
-    6: [
-      {
-        action: 'Apply graduated RTP protocol',
-        description: '6-stage progression with 24-hour observation between stages',
-      },
-      {
-        action: 'Provide school accommodation guide',
-        description: 'Give this to parents/teachers for return-to-learn support',
-      }
-    ],
-    7: [
-      {
-        action: 'Identify symptom phenotype',
-        description: 'Use assessment tool to determine dominant cluster',
-      },
-      {
-        action: 'Apply phenotype-specific protocol',
-        description: 'Target treatment to vestibular, cervicogenic, or ocular-motor dysfunction',
-      }
-    ],
-    8: [
-      {
-        action: 'Use documentation template',
-        description: 'AHPRA-aligned progress notes protect you legally',
-      },
-      {
-        action: 'Script difficult conversations',
-        description: 'How to discuss RTP with pushy coaches or worried parents',
-      }
-    ]
-  }
+/** Flagship (CCM) per-module practice actions. */
+const FLAGSHIP_ACTIONS: Record<number, ApplyTomorrowItem[]> = {
+  1: [
+    {
+      action: 'Identify rotational vs. linear forces',
+      description: 'When taking patient history, ask about mechanism of injury to determine force type',
+    },
+    {
+      action: 'Explain the energy crisis',
+      description: 'Use this simple explanation with patients: "Your brain needs more energy to heal, but has less blood flow - that\'s why rest is critical"',
+    },
+    {
+      action: 'Screen for risk factors',
+      description: 'Check previous concussion history, age, and genetic factors',
+    }
+  ],
+  2: [
+    {
+      action: 'Use this 2-minute SCAT6 screening',
+      description: 'Rapid sideline assessment protocol with red flag identification',
+    },
+    {
+      action: 'Test cranial nerves systematically',
+      description: 'Use the rapid verbal screen: smell, vision, hearing changes?',
+    },
+    {
+      action: 'Apply VOMS protocol',
+      description: 'Screen for vestibular-ocular dysfunction in subacute patients',
+    }
+  ],
+  3: [
+    {
+      action: 'Follow acute management checklist',
+      description: 'First 72-hour protocol: relative rest, symptom monitoring, graduated activity',
+    },
+    {
+      action: 'Give patient handout',
+      description: 'Evidence-based patient education reduces anxiety and improves compliance',
+    }
+  ],
+  4: [
+    {
+      action: 'Use PCS differential diagnosis tree',
+      description: 'Distinguish true PCS from cervicogenic, vestibular, and mood disorders',
+    },
+    {
+      action: 'Know when to refer',
+      description: 'Red flags for specialist referral at 4-week mark',
+    }
+  ],
+  5: [
+    {
+      action: 'Map your multidisciplinary team',
+      description: 'Who do you refer to for vestibular? Ocular-motor? Mood?',
+    }
+  ],
+  6: [
+    {
+      action: 'Apply graduated RTP protocol',
+      description: '6-stage progression with 24-hour observation between stages',
+    },
+    {
+      action: 'Provide school accommodation guide',
+      description: 'Give this to parents/teachers for return-to-learn support',
+    }
+  ],
+  7: [
+    {
+      action: 'Identify symptom phenotype',
+      description: 'Use assessment tool to determine dominant cluster',
+    },
+    {
+      action: 'Apply phenotype-specific protocol',
+      description: 'Target treatment to vestibular, cervicogenic, or ocular-motor dysfunction',
+    }
+  ],
+  8: [
+    {
+      action: 'Use documentation template',
+      description: 'AHPRA-aligned progress notes protect you legally',
+    },
+    {
+      action: 'Script difficult conversations',
+      description: 'How to discuss RTP with pushy coaches or worried parents',
+    }
+  ]
+}
 
-  const actions = actionsByModule[moduleId] || []
+/**
+ * EP course (CRM) per-module practice actions — CONTENT NOT YET AUTHORED.
+ *
+ * This map is deliberately empty rather than filled with CCM-derived text: the
+ * actions are clinical instructions in AEP scope and must be written by the
+ * course author, not inferred. While a module has no entry the player omits
+ * its "Apply Tomorrow" step entirely (see hasApplyTomorrow below), so an empty
+ * map costs the buyer nothing — it is not a blank panel.
+ *
+ * TO POPULATE: add `N: [{ action, description }, …]` for EP display ids 1-8.
+ * Keep every action inside AEP scope (implement / monitor / progress /
+ * recommend — never diagnose, never medically clear for return to contact).
+ */
+const EP_ACTIONS: Record<number, ApplyTomorrowItem[]> = {}
+
+const ACTIONS_BY_COURSE: Record<CourseKey, Record<number, ApplyTomorrowItem[]>> = {
+  flagship: FLAGSHIP_ACTIONS,
+  ep: EP_ACTIONS,
+}
+
+/**
+ * Does this (course, module) have practice actions? The player calls this so a
+ * module with none never gets an empty "Apply Tomorrow" step in the stepper.
+ */
+export function hasApplyTomorrow(course: CourseKey, moduleId: number): boolean {
+  return (ACTIONS_BY_COURSE[course]?.[moduleId]?.length ?? 0) > 0
+}
+
+export function ApplyTomorrow({ moduleId, course = 'flagship' }: { moduleId: number; course?: CourseKey }) {
+  const actions = ACTIONS_BY_COURSE[course]?.[moduleId] || []
 
   if (actions.length === 0) return null
 

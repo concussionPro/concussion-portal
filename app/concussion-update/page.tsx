@@ -185,6 +185,17 @@ export default function ConcussionUpdatePage() {
 
       const data = await res.json()
 
+      // Existing account that OWNS something: the API deliberately sets NO
+      // session cookie and emails a login link instead (anti-takeover — see
+      // lib/account-escalation.ts). Navigating on would land them on gated
+      // content with no session, so say what actually happened.
+      if (data.requiresEmailLogin) {
+        setError(
+          "You already have an account \u2014 we've emailed you a login link. Open it and you'll be signed straight in.",
+        )
+        return
+      }
+
       if (data.success) {
         // Show success state (cookie already set by API), fire the gtag lead
         // conversion, then navigate from gtag's event_callback so the hit is

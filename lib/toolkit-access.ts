@@ -24,17 +24,24 @@ export type ToolkitPageAccess = 'entitled' | 'locked' | 'unauthenticated'
 export async function resolveToolkitPageAccess(): Promise<ToolkitPageAccess> {
   const cookieStore = await cookies()
   if (cookieStore.get('demo_key')?.value === DEMO_KEY) return 'entitled'
-  // /demo/clinic prospects (clinic_demo cookie, NO session): the middleware
-  // contract shows them the free-tier SELL screens — a /login bounce
-  // mid-pitch kills the tour (2026-08-05 regression check #2).
-  if (cookieStore.get('clinic_demo')?.value === CLINIC_DEMO_KEY) return 'locked'
+  // /demo/clinic prospects (clinic_demo cookie): the middleware contract shows
+  // them the free-tier SELL screens — a /login bounce mid-pitch kills the tour
+  // (2026-08-05 regression check #2). But this is a FLOOR, never a downgrade:
+  // the cookie lives 30 days, so returning 'locked' before reading the session
+  // paywalled a paying customer out of the toolkit they bought for a month
+  // after they took the tour. Resolve the real session first.
+  const clinicDemo = cookieStore.get('clinic_demo')?.value === CLINIC_DEMO_KEY
   const sessionToken = cookieStore.get('session')?.value
   const session = sessionToken ? verifySessionToken(sessionToken) : null
   if (!session) {
+    if (clinicDemo) return 'locked'
     // Mirrors /api/auth/session's localhost dev-preview fallback: render the
     // locked screen for review instead of bouncing to /login.
     return process.env.NODE_ENV !== 'production' ? 'locked' : 'unauthenticated'
   }
+  // Synthetic demo identity (/demo/clinic carries a real preview JWT): the
+  // free-tier sell screen, and never a DB read — demo ids have no users row.
+  if (isDemoUserId(session.userId)) return 'locked'
   if (session.accessLevel === 'online-only' || session.accessLevel === 'full-course') {
     // Revocation re-check (2026-08-05 sweep #5): a 365-day session JWT
     // outlives a refund downgrade — a paid CLAIM is verified against the DB

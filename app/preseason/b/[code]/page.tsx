@@ -23,8 +23,13 @@ const CONSENT_VERSION = 'v1'
 // NEVER restored silently — a shared team iPad must not leak the previous
 // athlete's answers into the next athlete's form, so the resume prompt names
 // the athlete whose draft it is and offers "start fresh".
-const DRAFT_VERSION = 1
+// v2: symptom ratings changed from "0 by default" to UNRATED by default, so a
+// v1 draft's zeros cannot be restored as if the athlete had answered them.
+const DRAFT_VERSION = 2
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000
+
+/** Sentinel for a symptom item the athlete has not answered yet. */
+const UNRATED = -1
 const draftKey = (clinicCode: string) => `preseason-draft:${clinicCode}`
 
 // Required delay (seconds) between immediate memory and delayed recall (SCAT6).
@@ -405,7 +410,11 @@ export default function AthleteBaselineForm() {
   const [currentMedications, setCurrentMedications] = useState('')
 
   // Step 2: Symptoms
-  const [symptomRatings, setSymptomRatings] = useState<number[]>(new Array(22).fill(0))
+  // UNRATED, not 0. Seeding the scale with zeros pre-selected "0 — none" on all
+  // 22 items, so an athlete who scrolled past the step filed a baseline
+  // asserting "0/22 symptoms, severity 0/132" — a perfect asymptomatic
+  // reference that a later post-injury test is then compared against.
+  const [symptomRatings, setSymptomRatings] = useState<number[]>(new Array(22).fill(UNRATED))
   const [feelNormalPercent, setFeelNormalPercent] = useState('100')
   const [notNormalReason, setNotNormalReason] = useState('')
   const [physicalWorsens, setPhysicalWorsens] = useState(false)
@@ -625,9 +634,14 @@ export default function AthleteBaselineForm() {
     }, 100)
   }, [])
 
-  // Scoring calculations
+  // Scoring calculations. Unanswered items (UNRATED) are excluded from both
+  // the count and the severity sum, and the step cannot be left until every
+  // item carries a real answer — the submitted payload is therefore always a
+  // complete 22-item scale of values 0-6.
+  const symptomsRated = symptomRatings.filter(r => r >= 0).length
+  const symptomScaleComplete = symptomsRated === SYMPTOMS.length
   const symptomCount = symptomRatings.filter(r => r > 0).length
-  const symptomTotal = symptomRatings.reduce((a, b) => a + b, 0)
+  const symptomTotal = symptomRatings.reduce((a, b) => a + Math.max(0, b), 0)
 
   // Orientation is "answered" only once every item has a response. A partially
   // answered or untouched orientation must never be scored — an empty form
@@ -807,7 +821,12 @@ export default function AthleteBaselineForm() {
     setPreviousConcussionSymptoms(s.previousConcussionSymptoms)
     setDiagnosedMigraines(s.diagnosedMigraines); setMedicalHistory(s.medicalHistory)
     setCurrentMedications(s.currentMedications)
-    setSymptomRatings(s.symptomRatings); setFeelNormalPercent(s.feelNormalPercent)
+    setSymptomRatings(
+      Array.isArray(s.symptomRatings) && s.symptomRatings.length === SYMPTOMS.length
+        ? s.symptomRatings.map(r => (typeof r === 'number' && r >= 0 && r <= 6 ? r : UNRATED))
+        : new Array(SYMPTOMS.length).fill(UNRATED)
+    )
+    setFeelNormalPercent(s.feelNormalPercent)
     setNotNormalReason(s.notNormalReason); setPhysicalWorsens(s.physicalWorsens)
     setMentalWorsens(s.mentalWorsens)
     setOrientMonth(s.orientMonth); setOrientDate(s.orientDate); setOrientDay(s.orientDay)
@@ -847,6 +866,16 @@ export default function AthleteBaselineForm() {
     // (mirrored by a server-side 400).
     if (!consentRecord?.agreed) {
       setSubmitError('Consent is required before this baseline can be submitted.')
+      return
+    }
+    // Fail closed: never file a symptom scale with unanswered items. The
+    // stored record and the clinician's report both print "x/22" and "x/132",
+    // and a partial scale reported against those denominators understates the
+    // athlete's symptoms.
+    if (!symptomScaleComplete) {
+      setSubmitError(
+        `Answer all ${SYMPTOMS.length} symptom items before submitting — ${symptomsRated} answered so far. Go back to Symptom Evaluation.`
+      )
       return
     }
     if (isMinor && !consentRecord.guardian?.agreed) {
@@ -1603,11 +1632,18 @@ export default function AthleteBaselineForm() {
             </div>
 
             {/* Totals */}
-            <div className="mt-4 p-3 glass rounded-xl border border-accent/20">
+            <div className={`mt-4 p-3 glass rounded-xl border ${symptomScaleComplete ? 'border-accent/20' : 'border-amber-300'}`}>
               <div className="flex justify-between text-sm">
-                <span>Symptom Number: <strong>{symptomCount}/22</strong></span>
-                <span>Severity Score: <strong>{symptomTotal}/132</strong></span>
+                <span>Symptom Number: <strong>{symptomScaleComplete ? symptomCount : '—'}/{SYMPTOMS.length}</strong></span>
+                <span>Severity Score: <strong>{symptomScaleComplete ? symptomTotal : '—'}/{SYMPTOMS.length * 6}</strong></span>
               </div>
+              {!symptomScaleComplete && (
+                <p className="mt-2 text-xs text-amber-700">
+                  {symptomsRated} of {SYMPTOMS.length} answered. Tap <strong>0</strong> for anything you
+                  do not have — an item left blank is not recorded as zero, and the baseline cannot be
+                  scored until every item has an answer.
+                </p>
+              )}
             </div>
 
             {/* Follow-up questions */}
@@ -2392,7 +2428,7 @@ export default function AthleteBaselineForm() {
               <p className="text-sm font-semibold mb-2">Sections completed:</p>
               <div className="space-y-1.5">
                 {[
-                  { label: 'Symptom Evaluation', done: true },
+                  { label: 'Symptom Evaluation', done: symptomScaleComplete },
                   { label: 'Orientation', done: orientationAdministered },
                   { label: 'Immediate Memory', done: true },
                   { label: 'Concentration', done: true },
@@ -2515,7 +2551,7 @@ export default function AthleteBaselineForm() {
                 setStep(prev => prev + 1)
                 window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
-              disabled={(step === 5 && !delayedRecallReady) || (step === 3 && (memoryPhase !== 'done' || !orientationComplete || digitPhase !== 'done' || monthsPhase !== 'done')) || (step === 4 && oculomotorSubStep < 9) || lookingUpHistory}
+              disabled={(step === 2 && !symptomScaleComplete) || (step === 5 && !delayedRecallReady) || (step === 3 && (memoryPhase !== 'done' || !orientationComplete || digitPhase !== 'done' || monthsPhase !== 'done')) || (step === 4 && oculomotorSubStep < 9) || lookingUpHistory}
               className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
             >
               {lookingUpHistory ? (

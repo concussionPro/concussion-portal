@@ -3,11 +3,17 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Download, ChevronDown, ChevronUp } from 'lucide-react'
-import { ChildSCAT6FormData, getDefaultChildSCAT6FormData } from '../shared/types/child-scat6.types'
-import { getAllCalculatedScores } from '../shared/utils/child-scat6-calculations'
+import {
+  ChildSCAT6FormData,
+  ChildSCAT6SymptomKey,
+  CHILD_SCAT6_SYMPTOM_COUNT,
+  CHILD_SCAT6_WORD_LIST_SOURCE,
+  getDefaultChildSCAT6FormData,
+  normalizeChildSCAT6Draft,
+} from '../shared/types/child-scat6.types'
+import { getAllCalculatedScores, CHILD_SCAT6_MAX } from '../shared/utils/child-scat6-calculations'
 import { exportChildSCAT6ToFlatPDF } from '../shared/utils/child-scat6-pdf-flat'
-import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
-import { DIGIT_LISTS, DigitListKey } from '../shared/constants/digitLists'
+import { WORD_LISTS } from '../shared/constants/wordLists'
 import { EmailGateModal } from '@/components/scat-forms/EmailGateModal'
 
 const SectionHeader = ({
@@ -40,6 +46,21 @@ const SectionHeader = ({
       )}
     </div>
   )
+}
+
+/** A score that has not been recorded prints as a dash — never as 0. */
+const score = (value: number | null) => (value === null ? '—' : String(value))
+
+/**
+ * Parse a numeric input into `number | null`. An empty field stays null ("not
+ * recorded"); a real 0 is kept. Values are clamped to the instrument's range so
+ * a typo cannot produce 12 errors out of a possible 10.
+ */
+const numOrNull = (raw: string, min: number, max: number): number | null => {
+  if (raw.trim() === '') return null
+  const parsed = parseInt(raw, 10)
+  if (isNaN(parsed)) return null
+  return Math.max(min, Math.min(max, parsed))
 }
 
 export default function ChildSCAT6Client() {
@@ -79,17 +100,22 @@ export default function ChildSCAT6Client() {
     if (draft) {
       try {
         const parsed = JSON.parse(draft)
-        const draftData = parsed.data || parsed
         const draftTimestamp = parsed.timestamp || 0
         const isExpired = Date.now() - draftTimestamp > 86400000
 
         if (isExpired) {
           localStorage.removeItem('child-scat6-draft')
         } else {
-          // Show a non-blocking banner so the user can restore or start fresh
-          setPendingDraft({ data: draftData, timestamp: draftTimestamp })
+          // Normalised against the current shape: a draft written by an older
+          // build stored the adult symptom keys and 0/false where nothing had
+          // been recorded, and restoring it verbatim would reinstate those
+          // fabricated zeros.
+          setPendingDraft({
+            data: normalizeChildSCAT6Draft(parsed.data ?? parsed),
+            timestamp: draftTimestamp,
+          })
         }
-      } catch (e) {
+      } catch {
         console.error('Failed to load draft')
         localStorage.removeItem('child-scat6-draft')
       }
@@ -139,57 +165,139 @@ export default function ChildSCAT6Client() {
   // Input class shorthand
   const inputClass = 'w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white'
   const labelClass = 'block text-sm font-medium text-slate-700 mb-1'
+  const scoreBoxClass = 'p-3 bg-white rounded-lg border border-green-200 inline-block'
 
-  // Child symptom display names
-  const childSymptomLabels: { key: keyof ChildSCAT6FormData['childSymptoms']; label: string }[] = [
-    { key: 'headache', label: 'I have a headache' },
-    { key: 'pressureInHead', label: 'I feel pressure in my head' },
-    { key: 'neckPain', label: 'My neck hurts' },
-    { key: 'feelingSickOrNausea', label: 'I feel sick to my stomach' },
-    { key: 'dizziness', label: 'I feel dizzy' },
-    { key: 'blurredVision', label: 'I have blurry eyes' },
-    { key: 'balanceProblems', label: 'I have trouble with my balance' },
-    { key: 'sensitivityLight', label: 'Lights bother me' },
-    { key: 'sensitivityNoise', label: 'Noise bothers me' },
-    { key: 'feelingSlowedDown', label: 'I feel slowed down' },
-    { key: 'feelingInFog', label: 'I feel like I\'m "in a fog"' },
-    { key: 'dontFeelRight', label: 'I don\'t feel right' },
-    { key: 'difficultyConcentrating', label: 'It is hard to pay attention' },
-    { key: 'difficultyRemembering', label: 'I forget things' },
-    { key: 'tiredOrLowEnergy', label: 'I feel tired' },
-    { key: 'confused', label: 'I get confused' },
-    { key: 'drowsy', label: 'I feel drowsy' },
-    { key: 'moreEmotional', label: 'I feel more emotional' },
-    { key: 'irritable', label: 'I feel grumpy' },
-    { key: 'sad', label: 'I feel sad' },
-    { key: 'nervousOrAnxious', label: 'I feel nervous or worried' },
+  // Child SCAT6 symptom items, in the order they are printed on the form.
+  // These are the CHILD SCAT6 items — they are not the adult SCAT6 list.
+  const childSymptomLabels: { key: ChildSCAT6SymptomKey; label: string }[] = [
+    { key: 'headaches', label: 'I have headaches' },
+    { key: 'dizzy', label: 'I feel dizzy' },
+    { key: 'roomSpinning', label: 'I feel like the room is spinning' },
+    { key: 'goingToFaint', label: 'I feel like I\'m going to faint' },
+    { key: 'thingsBlurry', label: 'Things are blurry when I look at them' },
+    { key: 'seeDouble', label: 'I see double' },
+    { key: 'sickToStomach', label: 'I feel sick to my stomach' },
+    { key: 'tiredALot', label: 'I get tired a lot' },
+    { key: 'tiredEasily', label: 'I get tired easily' },
+    { key: 'troublePayingAttention', label: 'I have trouble paying attention' },
+    { key: 'distractedEasily', label: 'I get distracted easily' },
+    { key: 'hardTimeConcentrating', label: 'I have a hard time concentrating' },
+    { key: 'problemsRemembering', label: 'I have problems remembering what people tell me' },
+    { key: 'problemsFollowingDirections', label: 'I have problems following directions' },
+    { key: 'daydreams', label: 'I daydream too much' },
+    { key: 'getsConfused', label: 'I get confused' },
+    { key: 'forgetful', label: 'I forget things' },
+    { key: 'problemsFinishingThings', label: 'I have problems finishing things' },
+    { key: 'problemSolving', label: 'I have trouble figuring things out' },
+    { key: 'problemsLearning', label: 'It\'s hard for me to learn new things' },
+    { key: 'neckHurts', label: 'My neck hurts' },
   ]
 
-  const parentSymptomLabels: { key: keyof ChildSCAT6FormData['parentSymptoms']; label: string }[] = [
-    { key: 'headache', label: 'Headache' },
-    { key: 'pressureInHead', label: 'Pressure in head' },
-    { key: 'neckPain', label: 'Neck pain' },
-    { key: 'sickOrNausea', label: 'Nausea / vomiting' },
-    { key: 'dizziness', label: 'Dizziness' },
-    { key: 'blurredVision', label: 'Blurred vision' },
-    { key: 'balanceProblems', label: 'Balance problems' },
-    { key: 'sensitivityLight', label: 'Sensitivity to light' },
-    { key: 'sensitivityNoise', label: 'Sensitivity to noise' },
-    { key: 'feelingSlowedDown', label: 'Feeling slowed down' },
-    { key: 'feelingInFog', label: 'Feeling like "in a fog"' },
-    { key: 'doesntFeelRight', label: 'Doesn\'t feel right' },
-    { key: 'difficultyConcentrating', label: 'Difficulty concentrating' },
-    { key: 'difficultyRemembering', label: 'Difficulty remembering' },
-    { key: 'tiredOrLowEnergy', label: 'Fatigue / low energy' },
-    { key: 'confused', label: 'Confusion' },
-    { key: 'drowsy', label: 'Drowsiness' },
-    { key: 'moreEmotional', label: 'More emotional' },
-    { key: 'irritable', label: 'Irritability' },
-    { key: 'sad', label: 'Sadness' },
-    { key: 'nervousOrAnxious', label: 'Nervous / anxious' },
+  const parentSymptomLabels: { key: ChildSCAT6SymptomKey; label: string }[] = [
+    { key: 'headaches', label: 'has headaches' },
+    { key: 'dizzy', label: 'feels dizzy' },
+    { key: 'roomSpinning', label: 'has a feeling that the room is spinning' },
+    { key: 'goingToFaint', label: 'feels faint' },
+    { key: 'thingsBlurry', label: 'has blurred vision' },
+    { key: 'seeDouble', label: 'has double vision' },
+    { key: 'sickToStomach', label: 'experiences nausea' },
+    { key: 'tiredALot', label: 'gets tired a lot' },
+    { key: 'tiredEasily', label: 'gets tired easily' },
+    { key: 'troublePayingAttention', label: 'has trouble sustaining attention' },
+    { key: 'distractedEasily', label: 'is distracted easily' },
+    { key: 'hardTimeConcentrating', label: 'has difficulty concentrating' },
+    { key: 'problemsRemembering', label: 'has problems remembering what he/she is told' },
+    { key: 'problemsFollowingDirections', label: 'has difficulty following directions' },
+    { key: 'daydreams', label: 'tends to daydream' },
+    { key: 'getsConfused', label: 'gets confused' },
+    { key: 'forgetful', label: 'is forgetful' },
+    { key: 'problemsFinishingThings', label: 'has difficulty completing tasks' },
+    { key: 'problemSolving', label: 'has poor problem-solving skills' },
+    { key: 'problemsLearning', label: 'has problems learning' },
+    { key: 'neckHurts', label: 'has a sore neck' },
   ]
 
-  const ratingLabels = ['Not at all', 'A little bit', 'Somewhat', 'A lot']
+  const ratingLabels = ['Not at all/never', 'A little/rarely', 'Somewhat/sometimes', 'A lot/often']
+
+  const setSymptom = (scale: 'childSymptoms' | 'parentSymptoms', key: ChildSCAT6SymptomKey, val: number) =>
+    setFormData(prev => ({ ...prev, [scale]: { ...prev[scale], [key]: val } }))
+
+  const clearSymptom = (scale: 'childSymptoms' | 'parentSymptoms', key: ChildSCAT6SymptomKey) =>
+    setFormData(prev => ({ ...prev, [scale]: { ...prev[scale], [key]: null } }))
+
+  const renderSymptomScale = (
+    scale: 'childSymptoms' | 'parentSymptoms',
+    labels: { key: ChildSCAT6SymptomKey; label: string }[]
+  ) => (
+    <>
+      <div className="grid grid-cols-[1fr_72px_72px_72px_72px_56px] gap-1 mb-2 text-center">
+        <div></div>
+        {ratingLabels.map(label => (
+          <div key={label} className="text-[11px] font-medium text-slate-500 leading-tight">{label}</div>
+        ))}
+        <div className="text-[11px] font-medium text-slate-500">Clear</div>
+      </div>
+
+      {labels.map(({ key, label }) => (
+        <div key={key} className="grid grid-cols-[1fr_72px_72px_72px_72px_56px] gap-1 items-center py-1 border-b border-slate-100">
+          <span className={`text-sm ${formData[scale][key] === null ? 'text-slate-400 italic' : 'text-slate-700'}`}>
+            {label}
+          </span>
+          {[0, 1, 2, 3].map(val => (
+            <div key={val} className="flex justify-center">
+              <input
+                type="radio"
+                name={`${scale}-${key}`}
+                checked={formData[scale][key] === val}
+                onChange={() => setSymptom(scale, key, val)}
+                className="w-4 h-4 text-green-600"
+              />
+            </div>
+          ))}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => clearSymptom(scale, key)}
+              disabled={formData[scale][key] === null}
+              className="text-[11px] text-slate-500 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
+            >
+              clear
+            </button>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+
+  const renderSymptomTotals = (
+    numberScore: number | null,
+    severityScore: number | null,
+    rated: number,
+    complete: boolean
+  ) => (
+    <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <span className="text-sm font-medium text-slate-700">Total Symptoms:</span>
+          <span className="ml-2 text-lg font-bold text-green-700">
+            {score(numberScore)} / {CHILD_SCAT6_MAX.symptomNumber}
+          </span>
+        </div>
+        <div>
+          <span className="text-sm font-medium text-slate-700">Severity Score:</span>
+          <span className="ml-2 text-lg font-bold text-green-700">
+            {score(severityScore)} / {CHILD_SCAT6_MAX.symptomSeverity}
+          </span>
+        </div>
+      </div>
+      {!complete && (
+        <p className="mt-2 text-xs text-amber-700">
+          {rated} of {CHILD_SCAT6_SYMPTOM_COUNT} items rated — an unrated item is not scored as
+          &ldquo;not at all&rdquo;. The exported form shows the rated count alongside any partial total.
+        </p>
+      )}
+    </div>
+  )
 
   return (
     <div className="space-y-6 pb-20">
@@ -276,11 +384,16 @@ export default function ChildSCAT6Client() {
         </div>
 
         <div className="p-8 space-y-6">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 leading-relaxed">
+            Fields left blank are exported as <strong>not administered</strong> (a dash), never as a
+            score of zero. Record a genuine zero by entering 0.
+          </div>
+
           {/* ===== DEMOGRAPHICS ===== */}
           <SectionHeader id="demographics" title="Athlete Information" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Athlete Name:</label>
+                <label className={labelClass}>Child Name:</label>
                 <input type="text" value={formData.athleteName} onChange={(e) => setFormData(prev => ({ ...prev, athleteName: e.target.value }))} className={inputClass} />
               </div>
               <div>
@@ -306,7 +419,7 @@ export default function ChildSCAT6Client() {
               <div>
                 <label className={labelClass}>Sex:</label>
                 <div className="flex flex-wrap gap-3">
-                  {(['Male', 'Female', 'Prefer Not To Say', 'Other'] as const).map(option => (
+                  {(['Male', 'Female', 'Prefer Not To Say'] as const).map(option => (
                     <label key={option} className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="sex" value={option} checked={formData.sex === option}
                         onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as ChildSCAT6FormData['sex'] }))} className="w-4 h-4 text-green-600" />
@@ -327,17 +440,13 @@ export default function ChildSCAT6Client() {
                   ))}
                 </div>
               </div>
-              <div className="md:col-span-2">
+              <div>
                 <label className={labelClass}>Sport/Team/School:</label>
                 <input type="text" value={formData.sportTeamSchool} onChange={(e) => setFormData(prev => ({ ...prev, sportTeamSchool: e.target.value }))} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Current Year in School:</label>
+                <label className={labelClass}>Current Year/Grade Level in School:</label>
                 <input type="text" value={formData.currentYear} onChange={(e) => setFormData(prev => ({ ...prev, currentYear: e.target.value }))} className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Years of Education:</label>
-                <input type="text" value={formData.yearsEducation} onChange={(e) => setFormData(prev => ({ ...prev, yearsEducation: e.target.value }))} className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>First Language:</label>
@@ -358,7 +467,7 @@ export default function ChildSCAT6Client() {
           <SectionHeader id="history" title="Concussion History" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
               <div>
-                <label className={labelClass}>How many diagnosed concussions has the child had?</label>
+                <label className={labelClass}>How many diagnosed concussions has the child had in the past?</label>
                 <input type="number" min="0" value={formData.previousConcussions} onChange={(e) => setFormData(prev => ({ ...prev, previousConcussions: e.target.value }))} className={inputClass} />
               </div>
               <div>
@@ -370,26 +479,26 @@ export default function ChildSCAT6Client() {
                 <textarea value={formData.primarySymptoms} onChange={(e) => setFormData(prev => ({ ...prev, primarySymptoms: e.target.value }))} className={inputClass} rows={2} />
               </div>
               <div>
-                <label className={labelClass}>Typical recovery time:</label>
+                <label className={labelClass}>How long was the recovery from the most recent concussion? (days)</label>
                 <input type="text" value={formData.recoveryTime} onChange={(e) => setFormData(prev => ({ ...prev, recoveryTime: e.target.value }))} className={inputClass} />
               </div>
             </div>
           </SectionHeader>
 
-          {/* ===== ATHLETE BACKGROUND ===== */}
-          <SectionHeader id="background" title="Athlete Background" expandedSections={expandedSections} toggleSection={toggleSection}>
+          {/* ===== CHILD BACKGROUND ===== */}
+          <SectionHeader id="background" title="Child Background" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
-              <p className="text-sm text-slate-600 font-medium">Has the child ever:</p>
-              {[
-                { key: 'hospitalizedForHeadInjury' as const, label: 'Been hospitalized for a head injury?' },
-                { key: 'headacheDisorder' as const, label: 'Been diagnosed with headache disorder?' },
-                { key: 'learningDisability' as const, label: 'Been diagnosed with a learning disability?' },
-                { key: 'adhd' as const, label: 'Been diagnosed with ADHD?' },
-                { key: 'psychologicalDisorder' as const, label: 'Been diagnosed with a psychological disorder?' },
-              ].map(item => (
+              <p className="text-sm text-slate-600 font-medium">Has the child ever been:</p>
+              {([
+                { key: 'hospitalizedForHeadInjury', label: 'Hospitalised for head injury?' },
+                { key: 'headacheDisorder', label: 'Diagnosed/treated for headache disorder or migraine?' },
+                { key: 'learningDisability', label: 'Diagnosed with a learning disability/dyslexia?' },
+                { key: 'adhd', label: 'Diagnosed with attention deficit hyperactivity disorder (ADHD)?' },
+                { key: 'psychologicalDisorder', label: 'Diagnosed with depression, anxiety, or other psychological disorder?' },
+              ] as const).map(item => (
                 <div key={item.key} className="flex items-center gap-4">
                   <span className="text-sm text-slate-700 flex-1">{item.label}</span>
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 items-center">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name={item.key} checked={formData[item.key] === true}
                         onChange={() => setFormData(prev => ({ ...prev, [item.key]: true }))} className="w-4 h-4 text-green-600" />
@@ -400,6 +509,14 @@ export default function ChildSCAT6Client() {
                         onChange={() => setFormData(prev => ({ ...prev, [item.key]: false }))} className="w-4 h-4 text-green-600" />
                       <span className="text-sm">No</span>
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, [item.key]: null }))}
+                      disabled={formData[item.key] === null}
+                      className="text-[11px] text-slate-500 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
+                    >
+                      clear
+                    </button>
                   </div>
                 </div>
               ))}
@@ -408,185 +525,126 @@ export default function ChildSCAT6Client() {
                 <textarea value={formData.athleteBackgroundNotes} onChange={(e) => setFormData(prev => ({ ...prev, athleteBackgroundNotes: e.target.value }))} className={inputClass} rows={2} />
               </div>
               <div>
-                <label className={labelClass}>Current Medications:</label>
+                <label className={labelClass}>Is the child on any medications? If yes, please list:</label>
                 <textarea value={formData.currentMedications} onChange={(e) => setFormData(prev => ({ ...prev, currentMedications: e.target.value }))} className={inputClass} rows={2} />
               </div>
             </div>
           </SectionHeader>
 
           {/* ===== CHILD SYMPTOM REPORT ===== */}
-          <SectionHeader id="childSymptoms" title="Child Symptom Report (0-3 Scale)" expandedSections={expandedSections} toggleSection={toggleSection}>
+          <SectionHeader id="childSymptoms" title="Symptom Evaluation — Child Report (0-3 Scale)" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-2">
-              <p className="text-sm text-slate-600 mb-4">Ask the child: &quot;Do you have any of these problems right now?&quot; Rate each: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
+              <p className="text-sm text-slate-600 mb-4">Hand the form to the child. Rate each item: <strong>Not at all/never (0), A little/rarely (1), Somewhat/sometimes (2), A lot/often (3)</strong></p>
 
-              {/* Header row */}
-              <div className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 mb-2 text-center">
-                <div></div>
-                {ratingLabels.map(label => (
-                  <div key={label} className="text-xs font-medium text-slate-500">{label}</div>
-                ))}
-              </div>
+              {renderSymptomScale('childSymptoms', childSymptomLabels)}
 
-              {childSymptomLabels.map(({ key, label }) => (
-                <div key={key} className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 items-center py-1 border-b border-slate-100">
-                  <span className="text-sm text-slate-700">{label}</span>
-                  {[0, 1, 2, 3].map(val => (
-                    <div key={val} className="flex justify-center">
-                      <input
-                        type="radio"
-                        name={`child-${key}`}
-                        checked={formData.childSymptoms[key] === val}
-                        onChange={() => setFormData(prev => ({
-                          ...prev,
-                          childSymptoms: { ...prev.childSymptoms, [key]: val }
-                        }))}
-                        className="w-4 h-4 text-green-600"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ))}
+              {renderSymptomTotals(
+                calculated.childSymptomNumber,
+                calculated.childSymptomSeverity,
+                calculated.childSymptomsRated,
+                calculated.childSymptomScaleComplete
+              )}
 
-              {/* Totals */}
-              <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">Total Symptoms:</span>
-                    <span className="ml-2 text-lg font-bold text-green-700">{calculated.childSymptomNumber} / 21</span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">Severity Score:</span>
-                    <span className="ml-2 text-lg font-bold text-green-700">{calculated.childSymptomSeverity} / 63</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Overall rating */}
               <div className="mt-4">
-                <label className={labelClass}>Child Overall Rating: &quot;On a scale of 0-10, how do you feel?&quot; (0 = worst, 10 = best)</label>
-                <input type="number" min="0" max="10" value={formData.childOverallRating}
-                  onChange={(e) => setFormData(prev => ({ ...prev, childOverallRating: parseInt(e.target.value) || 0 }))}
+                <label className={labelClass}>
+                  On a scale of 0 to 10 (where <strong>10 is normal</strong>), how do you feel now?
+                </label>
+                <input type="number" min="0" max="10" value={formData.childOverallRating ?? ''}
+                  placeholder="—"
+                  onChange={(e) => setFormData(prev => ({ ...prev, childOverallRating: numOrNull(e.target.value, 0, 10) }))}
                   className="w-24 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white" />
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {([
+                  { key: 'childSymptomsWorseWithPhysical', label: 'Do the symptoms get worse with physical activity?' },
+                  { key: 'childSymptomsWorseWithMental', label: 'Do the symptoms get worse with trying to think?' },
+                ] as const).map(item => (
+                  <div key={item.key}>
+                    <label className={labelClass}>{item.label}</label>
+                    <div className="flex gap-4 items-center">
+                      {[true, false].map(val => (
+                        <label key={String(val)} className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name={item.key} checked={formData[item.key] === val}
+                            onChange={() => setFormData(prev => ({ ...prev, [item.key]: val }))} className="w-4 h-4 text-green-600" />
+                          <span className="text-sm">{val ? 'Yes' : 'No'}</span>
+                        </label>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, [item.key]: null }))}
+                        disabled={formData[item.key] === null}
+                        className="text-[11px] text-slate-500 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
+                      >
+                        clear
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </SectionHeader>
 
           {/* ===== PARENT SYMPTOM REPORT ===== */}
-          <SectionHeader id="parentSymptoms" title="Parent/Guardian Symptom Report (0-3 Scale)" expandedSections={expandedSections} toggleSection={toggleSection}>
+          <SectionHeader id="parentSymptoms" title="Symptom Evaluation — Parent Report (0-3 Scale)" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-2">
-              <p className="text-sm text-slate-600 mb-4">Ask the parent/guardian to rate the child&apos;s symptoms: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
+              <p className="text-sm text-slate-600 mb-4">Hand the form to the parent/guardian/carer. <em>The child…</em> <strong>Not at all/never (0), A little/rarely (1), Somewhat/sometimes (2), A lot/often (3)</strong></p>
 
-              <div className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 mb-2 text-center">
-                <div></div>
-                {ratingLabels.map(label => (
-                  <div key={label} className="text-xs font-medium text-slate-500">{label}</div>
+              {renderSymptomScale('parentSymptoms', parentSymptomLabels)}
+
+              {renderSymptomTotals(
+                calculated.parentSymptomNumber,
+                calculated.parentSymptomSeverity,
+                calculated.parentSymptomsRated,
+                calculated.parentSymptomScaleComplete
+              )}
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {([
+                  { key: 'parentSymptomsWorseWithPhysical', label: 'Do the symptoms get worse with physical activity?' },
+                  { key: 'parentSymptomsWorseWithMental', label: 'Do the symptoms get worse with trying to think?' },
+                ] as const).map(item => (
+                  <div key={item.key}>
+                    <label className={labelClass}>{item.label}</label>
+                    <div className="flex gap-4 items-center">
+                      {[true, false].map(val => (
+                        <label key={String(val)} className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name={item.key} checked={formData[item.key] === val}
+                            onChange={() => setFormData(prev => ({ ...prev, [item.key]: val }))} className="w-4 h-4 text-green-600" />
+                          <span className="text-sm">{val ? 'Yes' : 'No'}</span>
+                        </label>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, [item.key]: null }))}
+                        disabled={formData[item.key] === null}
+                        className="text-[11px] text-slate-500 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
+                      >
+                        clear
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
 
-              {parentSymptomLabels.map(({ key, label }) => (
-                <div key={key} className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 items-center py-1 border-b border-slate-100">
-                  <span className="text-sm text-slate-700">{label}</span>
-                  {[0, 1, 2, 3].map(val => (
-                    <div key={val} className="flex justify-center">
-                      <input
-                        type="radio"
-                        name={`parent-${key}`}
-                        checked={formData.parentSymptoms[key] === val}
-                        onChange={() => setFormData(prev => ({
-                          ...prev,
-                          parentSymptoms: { ...prev.parentSymptoms, [key]: val }
-                        }))}
-                        className="w-4 h-4 text-green-600"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ))}
-
-              <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">Total Symptoms:</span>
-                    <span className="ml-2 text-lg font-bold text-green-700">{calculated.parentSymptomNumber} / 21</span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">Severity Score:</span>
-                    <span className="ml-2 text-lg font-bold text-green-700">{calculated.parentSymptomSeverity} / 63</span>
-                  </div>
-                </div>
-              </div>
-
               <div className="mt-4">
-                <label className={labelClass}>Parent Overall Rating: (0 = worst, 10 = best)</label>
-                <input type="number" min="0" max="10" value={formData.parentOverallRating}
-                  onChange={(e) => setFormData(prev => ({ ...prev, parentOverallRating: parseInt(e.target.value) || 0 }))}
-                  className="w-24 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white" />
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Symptoms worse with physical activity?</label>
-                  <div className="flex gap-4">
-                    {[true, false].map(val => (
-                      <label key={String(val)} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="worsePhysical" checked={formData.symptomsWorseWithPhysical === val}
-                          onChange={() => setFormData(prev => ({ ...prev, symptomsWorseWithPhysical: val }))} className="w-4 h-4 text-green-600" />
-                        <span className="text-sm">{val ? 'Yes' : 'No'}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className={labelClass}>Symptoms worse with mental activity?</label>
-                  <div className="flex gap-4">
-                    {[true, false].map(val => (
-                      <label key={String(val)} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="worseMental" checked={formData.symptomsWorseWithMental === val}
-                          onChange={() => setFormData(prev => ({ ...prev, symptomsWorseWithMental: val }))} className="w-4 h-4 text-green-600" />
-                        <span className="text-sm">{val ? 'Yes' : 'No'}</span>
-                      </label>
-                    ))}
-                  </div>
+                <label className={labelClass}>
+                  On a scale of 0 to 100% (where <strong>100% is normal</strong>), how would you rate the child now?
+                </label>
+                <div className="flex items-center gap-2">
+                  <input type="number" min="0" max="100" value={formData.parentOverallPercent ?? ''}
+                    placeholder="—"
+                    onChange={(e) => setFormData(prev => ({ ...prev, parentOverallPercent: numOrNull(e.target.value, 0, 100) }))}
+                    className="w-24 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white" />
+                  <span className="text-sm font-semibold text-slate-700">%</span>
                 </div>
               </div>
             </div>
           </SectionHeader>
 
           {/* ===== COGNITIVE SCREENING ===== */}
-          <SectionHeader id="cognitive" title="Cognitive Screening" expandedSections={expandedSections} toggleSection={toggleSection}>
+          <SectionHeader id="cognitive" title="Cognitive Screening (SAC)" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-6">
-              {/* Orientation */}
-              <div>
-                <h4 className="text-base font-bold text-slate-800 mb-3">Orientation (Score 0 or 1 for each)</h4>
-                {[
-                  { key: 'orientationMonth' as const, label: 'What month is it?' },
-                  { key: 'orientationDate' as const, label: 'What is the date today?' },
-                  { key: 'orientationDayOfWeek' as const, label: 'What day of the week is it?' },
-                  { key: 'orientationYear' as const, label: 'What year is it?' },
-                  { key: 'orientationTime' as const, label: 'What time is it right now? (within 1 hour)' },
-                ].map(item => (
-                  <div key={item.key} className="flex items-center gap-4 py-1">
-                    <span className="text-sm text-slate-700 flex-1">{item.label}</span>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name={item.key} checked={formData[item.key] === true}
-                          onChange={() => setFormData(prev => ({ ...prev, [item.key]: true }))} className="w-4 h-4 text-green-600" />
-                        <span className="text-sm">1</span>
-                      </label>
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name={item.key} checked={formData[item.key] === false}
-                          onChange={() => setFormData(prev => ({ ...prev, [item.key]: false }))} className="w-4 h-4 text-green-600" />
-                        <span className="text-sm">0</span>
-                      </label>
-                    </div>
-                  </div>
-                ))}
-                <div className="mt-2 p-3 bg-white rounded-lg border border-green-200 inline-block">
-                  <span className="text-sm font-medium text-slate-700">Orientation Score: </span>
-                  <span className="text-lg font-bold text-green-700">{calculated.orientation} / 5</span>
-                </div>
-              </div>
-
               {/* Immediate Memory */}
               <div>
                 <h4 className="text-base font-bold text-slate-800 mb-3">Immediate Memory</h4>
@@ -615,7 +673,7 @@ export default function ChildSCAT6Client() {
                         </tr>
                       </thead>
                       <tbody>
-                        {WORD_LISTS[formData.wordListUsed as WordListKey].map((word, i) => (
+                        {WORD_LISTS[CHILD_SCAT6_WORD_LIST_SOURCE[formData.wordListUsed]].map((word, i) => (
                           <tr key={i} className="border-b border-slate-100">
                             <td className="px-3 py-2 font-medium">{word}</td>
                             {[formData.immediateMemoryTrial1, formData.immediateMemoryTrial2, formData.immediateMemoryTrial3].map((trial, t) => (
@@ -649,12 +707,14 @@ export default function ChildSCAT6Client() {
                 )}
 
                 <div className="mt-3 flex gap-4 items-center">
-                  <div className="p-3 bg-white rounded-lg border border-green-200 inline-block">
+                  <div className={scoreBoxClass}>
                     <span className="text-sm font-medium text-slate-700">Immediate Memory Score: </span>
-                    <span className="text-lg font-bold text-green-700">{calculated.immediateMemory} / 30</span>
+                    <span className="text-lg font-bold text-green-700">
+                      {score(calculated.immediateMemory)} / {CHILD_SCAT6_MAX.immediateMemory}
+                    </span>
                   </div>
                   <div>
-                    <label className={labelClass}>Time Completed:</label>
+                    <label className={labelClass}>Time last trial completed:</label>
                     <input type="time" value={formData.immediateMemoryTimeCompleted}
                       onChange={(e) => setFormData(prev => ({ ...prev, immediateMemoryTimeCompleted: e.target.value }))} className={inputClass} />
                   </div>
@@ -675,34 +735,54 @@ export default function ChildSCAT6Client() {
                       </label>
                     ))}
                   </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Read the digit strings from the printed Child SCAT6 — the child list starts at
+                    two digits and scores out of 5.
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                   <div>
-                    <label className={labelClass}>Digits Backward Score (0-4):</label>
-                    <input type="number" min="0" max="4" value={formData.digitsBackward}
-                      onChange={(e) => setFormData(prev => ({ ...prev, digitsBackward: parseInt(e.target.value) || 0 }))} className={inputClass} />
+                    <label className={labelClass}>Digits Backward Score (0-{CHILD_SCAT6_MAX.digitsBackward}):</label>
+                    <input type="number" min="0" max={CHILD_SCAT6_MAX.digitsBackward} value={formData.digitsBackward ?? ''}
+                      placeholder="—"
+                      onChange={(e) => setFormData(prev => ({ ...prev, digitsBackward: numOrNull(e.target.value, 0, CHILD_SCAT6_MAX.digitsBackward) }))} className={inputClass} />
                   </div>
                   <div>
-                    <label className={labelClass}>Months in Reverse - Time (sec):</label>
-                    <input type="text" value={formData.monthsReverseTime}
-                      onChange={(e) => setFormData(prev => ({ ...prev, monthsReverseTime: e.target.value }))} className={inputClass} />
+                    <label className={labelClass}>Days in Reverse — Time (sec):</label>
+                    <input type="text" value={formData.daysReverseTime}
+                      onChange={(e) => setFormData(prev => ({ ...prev, daysReverseTime: e.target.value }))} className={inputClass} />
                   </div>
                   <div>
-                    <label className={labelClass}>Months in Reverse - Errors:</label>
-                    <input type="number" min="0" value={formData.monthsReverseErrors}
-                      onChange={(e) => setFormData(prev => ({ ...prev, monthsReverseErrors: parseInt(e.target.value) || 0 }))} className={inputClass} />
+                    <label className={labelClass}>Days in Reverse — Errors:</label>
+                    <input type="number" min="0" max="7" value={formData.daysReverseErrors ?? ''}
+                      placeholder="—"
+                      onChange={(e) => setFormData(prev => ({ ...prev, daysReverseErrors: numOrNull(e.target.value, 0, 7) }))} className={inputClass} />
                   </div>
                 </div>
-                <div className="p-3 bg-white rounded-lg border border-green-200 inline-block">
-                  <span className="text-sm font-medium text-slate-700">Concentration Score: </span>
-                  <span className="text-lg font-bold text-green-700">{calculated.concentration} / 5</span>
+                <p className="text-xs text-slate-500 mb-3">
+                  Days of the week in reverse (Sunday → Monday). 1 point if no errors and completed
+                  under 30 seconds. The Child SCAT6 does not use months in reverse.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <div className={scoreBoxClass}>
+                    <span className="text-sm font-medium text-slate-700">Days Score: </span>
+                    <span className="text-lg font-bold text-green-700">
+                      {score(calculated.daysReverse)} / {CHILD_SCAT6_MAX.daysReverse}
+                    </span>
+                  </div>
+                  <div className={scoreBoxClass}>
+                    <span className="text-sm font-medium text-slate-700">Concentration Score (Digits + Days): </span>
+                    <span className="text-lg font-bold text-green-700">
+                      {score(calculated.concentration)} / {CHILD_SCAT6_MAX.concentration}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </SectionHeader>
 
           {/* ===== BALANCE ===== */}
-          <SectionHeader id="balance" title="Balance Examination (mBESS)" expandedSections={expandedSections} toggleSection={toggleSection}>
+          <SectionHeader id="balance" title="Coordination and Balance Examination" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -729,32 +809,57 @@ export default function ChildSCAT6Client() {
                 </div>
               </div>
 
-              <h4 className="text-sm font-bold text-slate-800">Firm Surface (errors out of 10)</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className={labelClass}>Double Leg:</label>
-                  <input type="number" min="0" max="10" value={formData.mBessDoubleErrors}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mBessDoubleErrors: parseInt(e.target.value) || 0 }))} className={inputClass} />
+              <h4 className="text-sm font-bold text-slate-800">Modified BESS — errors out of {CHILD_SCAT6_MAX.mBessPerStance} per stance (20 seconds each)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-slate-600">Firm surface</p>
+                  {([
+                    { key: 'mBessDoubleErrors', label: 'Double Leg Stance' },
+                    { key: 'mBessTandemErrors', label: 'Tandem Stance' },
+                    { key: 'mBessSingleErrors', label: 'Single Leg Stance' },
+                  ] as const).map(item => (
+                    <div key={item.key}>
+                      <label className={labelClass}>{item.label}:</label>
+                      <input type="number" min="0" max={CHILD_SCAT6_MAX.mBessPerStance} value={formData[item.key] ?? ''}
+                        placeholder="—"
+                        onChange={(e) => setFormData(prev => ({ ...prev, [item.key]: numOrNull(e.target.value, 0, CHILD_SCAT6_MAX.mBessPerStance) }))} className={inputClass} />
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className={labelClass}>Tandem:</label>
-                  <input type="number" min="0" max="10" value={formData.mBessTandemErrors}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mBessTandemErrors: parseInt(e.target.value) || 0 }))} className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Single Leg:</label>
-                  <input type="number" min="0" max="10" value={formData.mBessSingleErrors}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mBessSingleErrors: parseInt(e.target.value) || 0 }))} className={inputClass} />
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-slate-600">On foam (optional)</p>
+                  {([
+                    { key: 'mBessFoamDoubleErrors', label: 'Double Leg Stance' },
+                    { key: 'mBessFoamTandemErrors', label: 'Tandem Stance' },
+                    { key: 'mBessFoamSingleErrors', label: 'Single Leg Stance' },
+                  ] as const).map(item => (
+                    <div key={item.key}>
+                      <label className={labelClass}>{item.label}:</label>
+                      <input type="number" min="0" max={CHILD_SCAT6_MAX.mBessPerStance} value={formData[item.key] ?? ''}
+                        placeholder="—"
+                        onChange={(e) => setFormData(prev => ({ ...prev, [item.key]: numOrNull(e.target.value, 0, CHILD_SCAT6_MAX.mBessPerStance) }))} className={inputClass} />
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="p-3 bg-white rounded-lg border border-green-200 inline-block">
-                <span className="text-sm font-medium text-slate-700">mBESS Total Errors: </span>
-                <span className="text-lg font-bold text-green-700">{calculated.mBessTotal} / 30</span>
+              <div className="flex flex-wrap gap-3">
+                <div className={scoreBoxClass}>
+                  <span className="text-sm font-medium text-slate-700">mBESS Total Errors: </span>
+                  <span className="text-lg font-bold text-green-700">
+                    {score(calculated.mBessTotal)} / {CHILD_SCAT6_MAX.mBessTotal}
+                  </span>
+                </div>
+                <div className={scoreBoxClass}>
+                  <span className="text-sm font-medium text-slate-700">On Foam Total Errors: </span>
+                  <span className="text-lg font-bold text-green-700">
+                    {score(calculated.mBessFoamTotal)} / {CHILD_SCAT6_MAX.mBessTotal}
+                  </span>
+                </div>
               </div>
 
               {/* Tandem Gait */}
-              <h4 className="text-sm font-bold text-slate-800 mt-4">Tandem Gait (seconds)</h4>
+              <h4 className="text-sm font-bold text-slate-800 mt-4">Timed Tandem Gait (seconds)</h4>
               <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
                 <div>
                   <label className={labelClass}>Trial 1:</label>
@@ -772,17 +877,81 @@ export default function ChildSCAT6Client() {
                     onChange={(e) => setFormData(prev => ({ ...prev, tandemGaitTrial3: e.target.value }))} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Average:</label>
+                  <label className={labelClass}>Average 3 Trials:</label>
                   <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm font-bold text-green-700">
                     {calculated.tandemGaitAverage || '—'}
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>Fastest:</label>
+                  <label className={labelClass}>Fastest Trial:</label>
                   <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm font-bold text-green-700">
                     {calculated.tandemGaitFastest || '—'}
                   </div>
                 </div>
+              </div>
+              <p className="text-xs text-slate-500">
+                The average is reported only once all three trials are timed.
+              </p>
+
+              {/* Complex Tandem Gait */}
+              <h4 className="text-sm font-bold text-slate-800 mt-4">Complex Tandem Gait (points: 1 per step off the line, 1 for truncal sway)</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {([
+                  { key: 'complexTandemForwardEyesOpen', label: 'Forward — Eyes Open' },
+                  { key: 'complexTandemForwardEyesClosed', label: 'Forward — Eyes Closed' },
+                  { key: 'complexTandemBackwardEyesOpen', label: 'Backward — Eyes Open' },
+                  { key: 'complexTandemBackwardEyesClosed', label: 'Backward — Eyes Closed' },
+                ] as const).map(item => (
+                  <div key={item.key}>
+                    <label className={labelClass}>{item.label}:</label>
+                    <input type="number" min="0" max="20" value={formData[item.key] ?? ''}
+                      placeholder="—"
+                      onChange={(e) => setFormData(prev => ({ ...prev, [item.key]: numOrNull(e.target.value, 0, 20) }))} className={inputClass} />
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <div className={scoreBoxClass}>
+                  <span className="text-sm font-medium text-slate-700">Forward Total: </span>
+                  <span className="text-lg font-bold text-green-700">{score(calculated.complexTandemForward)}</span>
+                </div>
+                <div className={scoreBoxClass}>
+                  <span className="text-sm font-medium text-slate-700">Backward Total: </span>
+                  <span className="text-lg font-bold text-green-700">{score(calculated.complexTandemBackward)}</span>
+                </div>
+                <div className={scoreBoxClass}>
+                  <span className="text-sm font-medium text-slate-700">Total Points: </span>
+                  <span className="text-lg font-bold text-green-700">{score(calculated.complexTandemTotal)}</span>
+                </div>
+              </div>
+
+              {/* Trials not completed */}
+              <div className="mt-4">
+                <label className={labelClass}>
+                  Were any single- or dual-task timed tandem gait trials not completed (walking errors or other reasons)?
+                </label>
+                <div className="flex gap-4 items-center">
+                  {[true, false].map(val => (
+                    <label key={String(val)} className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="trialsNotCompleted" checked={formData.trialsNotCompleted === val}
+                        onChange={() => setFormData(prev => ({ ...prev, trialsNotCompleted: val }))} className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">{val ? 'Yes' : 'No'}</span>
+                    </label>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, trialsNotCompleted: null }))}
+                    disabled={formData.trialsNotCompleted === null}
+                    className="text-[11px] text-slate-500 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
+                  >
+                    clear
+                  </button>
+                </div>
+                {formData.trialsNotCompleted === true && (
+                  <textarea value={formData.trialsNotCompletedReason}
+                    onChange={(e) => setFormData(prev => ({ ...prev, trialsNotCompletedReason: e.target.value }))}
+                    className={`${inputClass} mt-2`} rows={2} placeholder="If yes, please explain why" />
+                )}
               </div>
             </div>
           </SectionHeader>
@@ -790,8 +959,12 @@ export default function ChildSCAT6Client() {
           {/* ===== DELAYED RECALL ===== */}
           <SectionHeader id="delayed" title="Delayed Recall" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
+              <p className="text-sm text-slate-600">
+                Perform at least 5 minutes after the end of Immediate Memory. Score 1 point for each
+                correct response.
+              </p>
               <div className="flex gap-4 items-center mb-3">
-                <label className={labelClass}>Start Time:</label>
+                <label className={labelClass}>Time started:</label>
                 <input type="time" value={formData.delayedRecallStartTime}
                   onChange={(e) => setFormData(prev => ({ ...prev, delayedRecallStartTime: e.target.value }))} className={inputClass} />
               </div>
@@ -800,7 +973,7 @@ export default function ChildSCAT6Client() {
                 <div>
                   <p className="text-sm text-slate-600 mb-2">Words recalled (same list as Immediate Memory - List {formData.wordListUsed}):</p>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    {WORD_LISTS[formData.wordListUsed as WordListKey].map((word, i) => (
+                    {WORD_LISTS[CHILD_SCAT6_WORD_LIST_SOURCE[formData.wordListUsed]].map((word, i) => (
                       <label key={i} className="flex items-center gap-2 cursor-pointer p-2 bg-white rounded-lg border border-slate-200 hover:bg-green-50">
                         <input
                           type="checkbox"
@@ -821,27 +994,32 @@ export default function ChildSCAT6Client() {
                 </div>
               )}
 
-              <div className="p-3 bg-white rounded-lg border border-green-200 inline-block">
+              <div className={scoreBoxClass}>
                 <span className="text-sm font-medium text-slate-700">Delayed Recall Score: </span>
-                <span className="text-lg font-bold text-green-700">{calculated.delayedRecall} / 10</span>
+                <span className="text-lg font-bold text-green-700">
+                  {score(calculated.delayedRecall)} / {CHILD_SCAT6_MAX.delayedRecall}
+                </span>
               </div>
 
               {/* Total Cognitive Score */}
               <div className="mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-300">
-                <h4 className="text-base font-bold text-slate-800 mb-2">Total Cognitive Score</h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                  <div><span className="text-slate-600">Orientation:</span> <span className="font-bold">{calculated.orientation}/5</span></div>
-                  <div><span className="text-slate-600">Memory:</span> <span className="font-bold">{calculated.immediateMemory}/30</span></div>
-                  <div><span className="text-slate-600">Concentration:</span> <span className="font-bold">{calculated.concentration}/5</span></div>
-                  <div><span className="text-slate-600">Delayed Recall:</span> <span className="font-bold">{calculated.delayedRecall}/10</span></div>
-                  <div><span className="text-slate-600">Total:</span> <span className="text-lg font-bold text-green-700">{calculated.totalCognitive}/50</span></div>
+                <h4 className="text-base font-bold text-slate-800 mb-2">Cognitive Total Score</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div><span className="text-slate-600">Immediate Memory:</span> <span className="font-bold">{score(calculated.immediateMemory)}/{CHILD_SCAT6_MAX.immediateMemory}</span></div>
+                  <div><span className="text-slate-600">Concentration:</span> <span className="font-bold">{score(calculated.concentration)}/{CHILD_SCAT6_MAX.concentration}</span></div>
+                  <div><span className="text-slate-600">Delayed Recall:</span> <span className="font-bold">{score(calculated.delayedRecall)}/{CHILD_SCAT6_MAX.delayedRecall}</span></div>
+                  <div><span className="text-slate-600">Total:</span> <span className="text-lg font-bold text-green-700">{score(calculated.totalCognitive)}/{CHILD_SCAT6_MAX.cognitiveTotal}</span></div>
                 </div>
+                <p className="mt-2 text-xs text-slate-600">
+                  The Child SCAT6 has no orientation subtest; the cognitive total is out of {CHILD_SCAT6_MAX.cognitiveTotal}
+                  {' '}and is reported only when all three subtests were administered.
+                </p>
               </div>
             </div>
           </SectionHeader>
 
           {/* ===== DISPOSITION ===== */}
-          <SectionHeader id="disposition" title="Disposition" expandedSections={expandedSections} toggleSection={toggleSection}>
+          <SectionHeader id="disposition" title="Decision" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
               <div>
                 <label className={labelClass}>Concussion Diagnosed:</label>
@@ -859,18 +1037,22 @@ export default function ChildSCAT6Client() {
           </SectionHeader>
 
           {/* ===== HCP ATTESTATION ===== */}
-          <SectionHeader id="hcp" title="HCP Attestation" expandedSections={expandedSections} toggleSection={toggleSection}>
+          <SectionHeader id="hcp" title="Health Care Professional Attestation" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>HCP Name:</label>
+                <label className={labelClass}>Name:</label>
                 <input type="text" value={formData.hcpName} onChange={(e) => setFormData(prev => ({ ...prev, hcpName: e.target.value }))} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Title/Designation:</label>
+                <label className={labelClass}>Signature (typed):</label>
+                <input type="text" value={formData.hcpSignature} onChange={(e) => setFormData(prev => ({ ...prev, hcpSignature: e.target.value }))} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Title/Speciality:</label>
                 <input type="text" value={formData.hcpTitle} onChange={(e) => setFormData(prev => ({ ...prev, hcpTitle: e.target.value }))} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Registration Number:</label>
+                <label className={labelClass}>Registration/License Number:</label>
                 <input type="text" value={formData.hcpRegistration} onChange={(e) => setFormData(prev => ({ ...prev, hcpRegistration: e.target.value }))} className={inputClass} />
               </div>
               <div>

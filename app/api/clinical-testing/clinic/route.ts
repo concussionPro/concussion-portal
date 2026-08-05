@@ -52,20 +52,33 @@ function serialise(clinic: SstClinic) {
   }
 }
 
-export async function GET(req: NextRequest) {
-  // Demo viewers get the synthetic DEMO00 clinic — the workspace fully
-  // populated, keyless, nothing real behind it.
-  if (
+/** The synthetic DEMO00 workspace — fully populated, keyless, nothing real
+ *  behind it. Only ever the FALLBACK: demo is a floor, never a downgrade. */
+function demoWorkspaceResponse() {
+  return NextResponse.json({
+    clinic: { code: 'DEMO00', clinicName: 'Demo Clinic', viewKey: '' },
+    usage: { plan: 'active', patientCount: 4, cap: null, window: '30d', canAddPatient: true },
+  })
+}
+
+function hasDemoCookie(req: NextRequest): boolean {
+  return (
     req.cookies.get('demo_key')?.value === DEMO_KEY ||
     req.cookies.get('clinic_demo')?.value === CLINIC_DEMO_KEY
-  ) {
-    return NextResponse.json({
-      clinic: { code: 'DEMO00', clinicName: 'Demo Clinic', viewKey: '' },
-      usage: { plan: 'active', patientCount: 4, cap: null, window: '30d', canAddPatient: true },
-    })
-  }
+  )
+}
+
+export async function GET(req: NextRequest) {
+  // ORDER MATTERS — a REAL entitlement must win over a lingering demo cookie.
+  // The /demo/clinic cookie lives 30 days, so an entitled clinician who once
+  // took the tour was served the DEMO00 workspace instead of their own clinic
+  // (demo patients in their hub, their real code + viewKey unreachable) for a
+  // month. Same rule the access route already applies.
   const session = await clinicalSession(req)
-  if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!session) {
+    if (hasDemoCookie(req)) return demoWorkspaceResponse()
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   if (!process.env.KV_REST_API_URL) {
     return NextResponse.json({ error: 'Clinic service not configured' }, { status: 503 })
   }

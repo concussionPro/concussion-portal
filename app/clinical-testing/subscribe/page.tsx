@@ -186,7 +186,11 @@ function Shell() {
             ))}
           </div>
           {error && <p className="mt-4 text-sm font-semibold text-red-600">{error}</p>}
-          <p className="mt-5 text-xs text-muted-foreground">Prices in AUD ex GST. Billed monthly via Stripe; cancel anytime from your billing portal.</p>
+          {/* GST: CEA quotes and charges GST-INCLUSIVE prices (lib/tax-invoice.ts
+              breaks GST out of the total at 1/11). "ex GST" advertised a 10%
+              surcharge that Stripe never adds — the amount shown IS the amount
+              billed. */}
+          <p className="mt-5 text-xs text-muted-foreground">Prices in AUD, inclusive of GST. Billed monthly via Stripe; cancel anytime from your billing portal.</p>
         </div>
       </main>
     </div>

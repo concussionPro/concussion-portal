@@ -40,7 +40,10 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { cn } from '@/lib/utils'
 import { CONFIG } from '@/lib/config'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
+import { CrmPracticalUpsell } from '@/components/ep-course/CrmPracticalUpsell'
+import { CourseSearch } from '@/components/course/CourseSearch'
 import { REFERENCE_COUNT } from '@/data/reference-count'
+import type { SessionUser } from '@/contexts/SessionContext'
 
 // Upgrade offer for unauthenticated visitors — mirrors the module page screen.
 function UpgradeOfferScreen() {
@@ -91,6 +94,7 @@ function UpgradeOfferScreen() {
 export default function EpCourseDashboard() {
   const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<SessionUser | null>(null)
   const [checkingAuth, setCheckingAuth] = useState(true)
 
   // Replicate the module page's access gate: /api/auth/session returns a synthetic
@@ -112,6 +116,7 @@ export default function EpCourseDashboard() {
               router.push('/ep-course/modules/1')
               return
             }
+            setUser(data.user)
             setIsAuthenticated(true)
             setCheckingAuth(false)
             return
@@ -149,7 +154,7 @@ export default function EpCourseDashboard() {
         </div>
       }
     >
-      <DashboardContent />
+      <DashboardContent user={user} />
     </Suspense>
   )
 }
@@ -201,7 +206,7 @@ function ProgressRing({ pct }: { pct: number }) {
   )
 }
 
-function DashboardContent() {
+function DashboardContent({ user }: { user: SessionUser | null }) {
   const router = useRouter()
   const { isModuleComplete, getModuleProgress } = useProgress()
   const modules = getEpModulesMeta()
@@ -421,6 +426,32 @@ function DashboardContent() {
                   Email failed — use the download button instead.
                 </p>
               )}
+            </div>
+          )}
+
+          {/* In-portal practical-day upgrade — the CRM analogue of CCM's
+              `accessLevel === 'online-only'` upsell surfaces. Shown only to a
+              real buyer who owns the online course but not the SHARED practical
+              day; demo/reviewer sessions never see a sales CTA. */}
+          {user && !user.isDemo && user.ownsCrm && !user.ownsCrmPractical && (
+            <div className="mb-9">
+              <CrmPracticalUpsell
+                email={user.email}
+                workshopLocation={user.workshopLocation}
+                source="ep_dashboard"
+              />
+            </div>
+          )}
+
+          {/* Cross-course search — /api/course-search scopes the corpus to what
+              this user actually owns, so a CRM buyer searches the EP modules and
+              their references (CCM had this at /learning; CRM had nothing). */}
+          {user && !user.isDemo && (
+            <div className="mb-9">
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.12em] text-slate-500">
+                Search the course
+              </h2>
+              <CourseSearch />
             </div>
           )}
 

@@ -734,7 +734,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
       >
         <div className="backdrop-blur-lg bg-background/90 border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-foreground">
-            From $497 · 8 CPD
+            From ${CONFIG.COURSE.PRICE_ONLINE} · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD
           </span>
           <a
             href="#pricing-cards"

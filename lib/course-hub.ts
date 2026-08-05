@@ -1,5 +1,6 @@
 import { sql } from '@/lib/db'
 import crypto from 'crypto'
+import { CONFIG } from '@/lib/config'
 
 /**
  * Course Hub = a clinic's "full clinic access" purchase. The buyer declares a
@@ -36,6 +37,9 @@ export type RedeemResult = 'ok' | 'already' | 'full' | 'no-hub'
 export const HUB_MAX_CLINICIANS = 12
 /** Included admin/front-desk seats on top of the clinician seats. */
 export const HUB_ADMIN_SEATS = 3
+/** Clinician seats the Hub Pack BASE price already covers (CONFIG is the
+ *  single source — the price and the seat cap must never diverge). */
+export const HUB_BASE_CLINICIAN_SEATS = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
 
 let tablesReady = false
 async function ensureHubTables(): Promise<void> {
@@ -86,6 +90,19 @@ export function clampClinicianSeats(n: unknown): number {
   return Math.min(v, HUB_MAX_CLINICIANS)
 }
 
+/**
+ * Seats a Hub Pack buyer is ENTITLED TO for a declared clinician headcount.
+ *
+ * The single definition shared by the price (lib/stripe.ts bills only the
+ * seats ABOVE the included base) and the provisioning (the webhook caps the
+ * access key). They were computed independently, and the two disagreed below
+ * the base: a buyer who dialled the picker to 3 still paid the full 5-seat
+ * base and then got a key that locked out clinicians 4 and 5.
+ */
+export function hubSeatsForDeclaredCount(n: unknown): number {
+  return Math.max(HUB_BASE_CLINICIAN_SEATS, clampClinicianSeats(n ?? HUB_BASE_CLINICIAN_SEATS))
+}
+
 export async function createCourseHub(opts: {
   ownerEmail: string
   clinicName?: string | null
@@ -94,6 +111,17 @@ export async function createCourseHub(opts: {
   stripeSessionId?: string
 }): Promise<string> {
   await ensureHubTables()
+  // IDEMPOTENT PER STRIPE SESSION. The webhook deletes its idempotency row and
+  // lets Stripe retry whenever any later fulfilment step throws, so this can be
+  // re-entered for a checkout that already minted a hub. Without this guard the
+  // retry created a SECOND key for the same payment — two welcome emails, two
+  // different codes, and double the seats the clinic actually bought.
+  if (opts.stripeSessionId) {
+    const { rows: prior } = await sql<{ code: string }>`
+      SELECT code FROM course_hubs WHERE stripe_session_id = ${opts.stripeSessionId} LIMIT 1
+    `
+    if (prior[0]) return prior[0].code
+  }
   const code = genHubCode()
   await sql`
     INSERT INTO course_hubs (code, owner_email, clinic_name, clinician_seats, admin_seats, stripe_session_id)

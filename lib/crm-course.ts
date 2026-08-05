@@ -30,6 +30,36 @@ export function userOwnsCrmPractical(email: string): Promise<boolean> {
 }
 
 /**
+ * Both CRM entitlements for ONE buyer in ONE query.
+ *
+ * The session route needs both — `ownsCrm` to admit them to /ep-course at all,
+ * `ownsCrmPractical` to know whether the practical day is still an upsell — and
+ * it is a hot path. Calling userOwnsCrm + userOwnsCrmPractical would double its
+ * round trips.
+ *
+ * A DB error PROPAGATES, exactly as userOwnsCrm does today — swallowing it
+ * would silently render a paying CRM buyer as a non-owner, which is the whole
+ * defect class tests/crm-ccm-entitlement-parity.test.ts exists to prevent.
+ */
+export async function crmEntitlementsFor(
+  email: string,
+): Promise<{ ownsCrm: boolean; ownsCrmPractical: boolean }> {
+  const normalised = email?.trim().toLowerCase()
+  if (!normalised) return { ownsCrm: false, ownsCrmPractical: false }
+  await ensureCoursePurchasesTable()
+  const { rows } = await sql<{ course_slug: string }>`
+    SELECT course_slug FROM course_purchases
+    WHERE user_email = ${normalised}
+      AND course_slug IN (${CRM_COURSE_SLUG}, ${CRM_PRACTICAL_SLUG})
+  `
+  const slugs = new Set(rows.map((r) => r.course_slug))
+  return {
+    ownsCrm: slugs.has(CRM_COURSE_SLUG),
+    ownsCrmPractical: slugs.has(CRM_PRACTICAL_SLUG),
+  }
+}
+
+/**
  * What a CRM buyer owns, and WHEN they bought it.
  *
  * The timestamp is not decoration. Every CCM lifecycle lane keys its day

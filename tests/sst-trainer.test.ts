@@ -4,7 +4,7 @@ import {
   type TestInput, type SessionLog, PROVOCATION_RISE,
 } from '@/lib/sst-trainer/protocol'
 
-const stage = (minute: number, hr: number, sym: number) => ({ minute, heartRate: hr, symptomScore: sym })
+const stage = (minute: number, hr: number, sym: number, rpe?: number) => ({ minute, heartRate: hr, symptomScore: sym, rpe })
 
 describe('detectThreshold — HRt = first stage with >=3-point symptom rise', () => {
   it('symptom-limited: flags HRt at the provoking stage', () => {
@@ -21,9 +21,13 @@ describe('detectThreshold — HRt = first stage with >=3-point symptom rise', ()
   })
 
   it('exhaustion-limited with no provocation → no intolerance, refer', () => {
+    // The terminal Borg is what makes this exhaustion-limited: 'no-intolerance'
+    // is clearance-grade, so detectThreshold requires an endpoint to have been
+    // reached (RPE >= 17, or the full stage cap). Without it the same stages
+    // are an incomplete test — see tests/sst-clinical-integrity.test.ts.
     const input: TestInput = {
       restingSymptomScore: 0,
-      stages: [stage(1, 120, 0), stage(2, 150, 1), stage(3, 175, 1)],
+      stages: [stage(1, 120, 0), stage(2, 150, 1), stage(3, 175, 1, 17)],
       termination: 'exhaustion-limited',
     }
     const r = detectThreshold(input)

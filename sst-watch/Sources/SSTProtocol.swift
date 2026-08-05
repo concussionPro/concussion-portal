@@ -18,6 +18,15 @@ enum SSTProtocol {
     static let provocationRise = 3   // graded-test HRt = first stage with a ≥3-pt rise over rest
     static let sessionStopRise = 2   // within-session: ≥2-pt rise → stop
     static let maxRestingToTest = 8  // resting symptoms ≥8/10 → don't test today
+    // The OTHER validated BCTT termination criterion: volitional exhaustion.
+    // The manual phrases it as RPE > 17; the applied rule on every surface is
+    // ≥ 17 (EXHAUSTION_RPE in protocol.ts) — one point conservative.
+    static let exhaustionRPE = 17
+    // Length of the graded ramp in 60-second stages (PROTOCOL_STAGE_CAP in
+    // protocol.ts). Reaching it without provocation = the whole protocol
+    // completed symptom-free, the second way a test can honestly report no
+    // exercise intolerance.
+    static let protocolStageCap = 20
 
     // Progression
     static let cleanNeeded = 3            // consecutive live-verified clean sessions to advance
@@ -74,7 +83,19 @@ enum SSTProtocol {
             return ThresholdResult(interpretation: .physiologic, hrt: s.heartRate,
                                    bandLow: lo, bandHigh: hi)
         }
-        // No provocation across the whole test.
+        // No provocation across the whole test. `.noIntolerance` is the
+        // CLEARANCE-GRADE read — it drives the hub's clearance banner and the GP
+        // report's "tolerance recovered" line — so it needs one of the two
+        // validated endpoints to have actually been reached: a recorded terminal
+        // Borg ≥ 17, or the full protocol ramp completed symptom-free. A test
+        // that simply stopped early evidences neither and fails closed to
+        // `.invalid`, exactly as detectThreshold does server-side (a mismatch
+        // here would show the patient a clearance the clinician never receives).
+        let reachedExhaustion = stages.compactMap(\.rpe).contains { $0 >= exhaustionRPE }
+        let completedProtocol = stages.count >= protocolStageCap
+        guard reachedExhaustion || completedProtocol else {
+            return ThresholdResult(interpretation: .invalid, hrt: nil, bandLow: nil, bandHigh: nil)
+        }
         return ThresholdResult(interpretation: .noIntolerance, hrt: nil, bandLow: nil, bandHigh: nil)
     }
 

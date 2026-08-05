@@ -6,6 +6,7 @@ import {
   isVerifiedReading,
   EXHAUSTION_RPE,
   HR_JUMP_CONFIRM,
+  PROTOCOL_STAGE_CAP,
   PROVOCATION_RISE,
   type Condition,
   type TestModality,
@@ -27,7 +28,9 @@ import { useWakeLock } from './use-wake-lock'
 // BCTT max test duration (modified Balke ~15 incline stages + speed ramp; the
 // test runs well under ~20 min). Reaching this without a >=3-pt rise ends the
 // test as exhaustion-limited (no exercise-driven threshold).
-const MAX_STAGES = 20
+// Sourced from the engine so the web cap, the watch cap and the completed-
+// protocol arm of detectThreshold can never drift apart.
+const MAX_STAGES = PROTOCOL_STAGE_CAP
 /**
  * Each stage is one minute — the Buffalo protocol steps effort every minute.
  * Overridable ONLY for automated end-to-end testing via
@@ -643,6 +646,13 @@ export default function GuidedTest({
           <p className="m-0 text-[12.5px] font-bold leading-snug text-(--sst-warn-ink)">
             That&rsquo;s maximal effort — log this as your final stage.
           </p>
+          {!hrValid && (
+            <p className="m-0 mt-1 text-[11.5px] leading-snug text-(--sst-warn-ink-2)">
+              Type this minute&rsquo;s heart rate first — a final stage without a reading isn&rsquo;t a
+              result. If you&rsquo;d rather stop with nothing recorded, use &ldquo;End test without a
+              result&rdquo; at the top.
+            </p>
+          )}
         </div>
       )}
 
@@ -760,12 +770,21 @@ export default function GuidedTest({
       </div>
 
       <div className="flex gap-2 border-t border-(--sst-line-soft) pt-3">
+        {/* Declaring exhaustion is a CLINICAL CLAIM: an exhaustion-limited test
+            with no symptom rise reads as "no exercise intolerance", which
+            drives the clinician's clearance banner and the GP report. So this
+            button no longer ends the test on one tap from any second of any
+            minute — it records the voluntary-exhaustion endpoint (RPE
+            >= EXHAUSTION_RPE) and hands over to the maximal-effort panel, which
+            still needs this minute's heart rate and a second deliberate tap
+            before any result exists. Leaving with NO result is the "End test
+            without a result" link at the top, which syncs as an aborted test. */}
         <button
           type="button"
-          onClick={() => endEarly('exhaustion-limited')}
+          onClick={() => setRpe(EXHAUSTION_RPE)}
           className="flex-1 rounded-[14px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) p-3 text-[13px] font-semibold text-(--sst-muted) transition active:scale-[0.98]"
         >
-          Stop — exhausted
+          Stop — at my limit
         </button>
         <button
           type="button"

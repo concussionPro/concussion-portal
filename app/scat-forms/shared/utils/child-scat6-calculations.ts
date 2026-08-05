@@ -1,149 +1,192 @@
 // Auto-calculation functions for Child SCAT6 form
+//
+// Maximums are the ones PRINTED on the Child SCAT6 (BJSM 2023) Step 6 decision
+// table: symptom number of 21, severity of 63, Immediate Memory of 30,
+// Concentration of 6, Delayed Recall of 10, Cognitive Total of 46, mBESS of 30.
+// There is no orientation subtest on the Child SCAT6.
+//
+// Every function returns `null` for "not administered / not recorded" and a
+// number (including 0) only when the clinician actually recorded something.
+// Callers must print the null case as blank or a dash — never as 0.
 
-import { ChildSCAT6FormData } from '../types/child-scat6.types'
+import {
+  ChildSCAT6FormData,
+  ChildSCAT6SymptomScores,
+  CHILD_SCAT6_SYMPTOM_KEYS,
+  CHILD_SCAT6_SYMPTOM_COUNT,
+} from '../types/child-scat6.types'
 
-/**
- * Calculate number of child-reported symptoms (count > 0)
- * Max: 21
- */
-export function calculateChildSymptomNumber(symptoms: ChildSCAT6FormData['childSymptoms']): number {
-  return Object.values(symptoms).filter(value => value > 0).length
+export const CHILD_SCAT6_MAX = {
+  symptomNumber: CHILD_SCAT6_SYMPTOM_COUNT, // 21
+  symptomSeverity: CHILD_SCAT6_SYMPTOM_COUNT * 3, // 63
+  immediateMemory: 30,
+  digitsBackward: 5,
+  daysReverse: 1,
+  concentration: 6,
+  delayedRecall: 10,
+  cognitiveTotal: 46,
+  mBessPerStance: 10,
+  mBessTotal: 30,
+} as const
+
+/** Number of the 21 items that carry a rating. */
+export function countSymptomsRated(symptoms: ChildSCAT6SymptomScores): number {
+  return CHILD_SCAT6_SYMPTOM_KEYS.filter(key => symptoms[key] !== null).length
+}
+
+/** True only when every one of the 21 items has been rated. */
+export function isSymptomScaleComplete(symptoms: ChildSCAT6SymptomScores): boolean {
+  return countSymptomsRated(symptoms) === CHILD_SCAT6_SYMPTOM_COUNT
 }
 
 /**
- * Calculate child symptom severity score (sum of all ratings)
- * Max: 63 (21 symptoms x 3 max rating)
+ * Number of symptoms endorsed (rating > 0). Max 21.
+ * null when not a single item was rated — an unrated scale is not "0 symptoms".
  */
-export function calculateChildSymptomSeverity(symptoms: ChildSCAT6FormData['childSymptoms']): number {
-  return Object.values(symptoms).reduce((sum, value) => sum + value, 0)
+export function calculateSymptomNumber(symptoms: ChildSCAT6SymptomScores): number | null {
+  if (countSymptomsRated(symptoms) === 0) return null
+  return CHILD_SCAT6_SYMPTOM_KEYS.filter(key => (symptoms[key] ?? 0) > 0).length
 }
 
 /**
- * Calculate number of parent-reported symptoms (count > 0)
- * Max: 21
+ * Symptom severity (sum of ratings). Max 63 (21 items x 3).
+ * null when nothing was rated.
  */
-export function calculateParentSymptomNumber(symptoms: ChildSCAT6FormData['parentSymptoms']): number {
-  return Object.values(symptoms).filter(value => value > 0).length
+export function calculateSymptomSeverity(symptoms: ChildSCAT6SymptomScores): number | null {
+  if (countSymptomsRated(symptoms) === 0) return null
+  return CHILD_SCAT6_SYMPTOM_KEYS.reduce((sum, key) => sum + (symptoms[key] ?? 0), 0)
 }
 
 /**
- * Calculate parent symptom severity score (sum of all ratings)
- * Max: 63 (21 symptoms x 3 max rating)
+ * Was Immediate Memory administered? The word list is chosen before the trials
+ * are run, so a recorded list (or a completion time, or any ticked word) is
+ * evidence; three empty trials with no list is not.
  */
-export function calculateParentSymptomSeverity(symptoms: ChildSCAT6FormData['parentSymptoms']): number {
-  return Object.values(symptoms).reduce((sum, value) => sum + value, 0)
+export function isImmediateMemoryAdministered(formData: ChildSCAT6FormData): boolean {
+  return (
+    formData.wordListUsed !== '' ||
+    formData.immediateMemoryTimeCompleted !== '' ||
+    formData.immediateMemoryTrial1.some(Boolean) ||
+    formData.immediateMemoryTrial2.some(Boolean) ||
+    formData.immediateMemoryTrial3.some(Boolean)
+  )
 }
 
 /**
- * Calculate Orientation score (count of correct answers)
- * Max: 5
+ * Immediate Memory score (sum of all 3 trials). Max 30.
+ * null when the subtest was not administered.
  */
-export function calculateOrientation(formData: ChildSCAT6FormData): number {
-  let score = 0
-  if (formData.orientationMonth) score++
-  if (formData.orientationDate) score++
-  if (formData.orientationDayOfWeek) score++
-  if (formData.orientationYear) score++
-  if (formData.orientationTime) score++
-  return score
+export function calculateImmediateMemory(formData: ChildSCAT6FormData): number | null {
+  if (!isImmediateMemoryAdministered(formData)) return null
+  return (
+    formData.immediateMemoryTrial1.filter(Boolean).length +
+    formData.immediateMemoryTrial2.filter(Boolean).length +
+    formData.immediateMemoryTrial3.filter(Boolean).length
+  )
 }
 
 /**
- * Calculate Immediate Memory score (sum of all 3 trials)
- * Max: 30 (3 trials x 10 words)
+ * Days in reverse: 1 point for no errors AND completion under 30 seconds.
+ * (The Child SCAT6 uses DAYS of the week, not months.) null until an error
+ * count is recorded; a recorded error count with no time cannot earn the point,
+ * because the under-30-seconds half of the criterion is unverified.
  */
-export function calculateImmediateMemory(formData: ChildSCAT6FormData): number {
-  const trial1Score = formData.immediateMemoryTrial1.filter(Boolean).length
-  const trial2Score = formData.immediateMemoryTrial2.filter(Boolean).length
-  const trial3Score = formData.immediateMemoryTrial3.filter(Boolean).length
-  return trial1Score + trial2Score + trial3Score
+export function calculateDaysReverse(formData: ChildSCAT6FormData): number | null {
+  if (formData.daysReverseErrors === null) return null
+  const seconds = parseFloat(formData.daysReverseTime)
+  const withinTime = !isNaN(seconds) && seconds > 0 && seconds < 30
+  return formData.daysReverseErrors === 0 && withinTime ? 1 : 0
 }
 
 /**
- * Calculate Concentration score (Digits Backwards + Months in Reverse)
- * Max: 5 (4 from digits + 1 from months)
+ * Concentration = Digits Backward (of 5) + Days in reverse (of 1). Max 6.
+ * null unless BOTH halves were administered — a total built from one half
+ * understates concentration against a printed "of 6".
  */
-export function calculateConcentration(formData: ChildSCAT6FormData): number {
-  let score = formData.digitsBackward // 0-4
-
-  const monthsTime = parseFloat(formData.monthsReverseTime) || 0
-  if (monthsTime > 0 && monthsTime < 30 && formData.monthsReverseErrors === 0) {
-    score += 1
-  }
-
-  return score
+export function calculateConcentration(formData: ChildSCAT6FormData): number | null {
+  const days = calculateDaysReverse(formData)
+  if (formData.digitsBackward === null || days === null) return null
+  return formData.digitsBackward + days
 }
 
 /**
- * Calculate Delayed Recall score (count of words recalled)
- * Max: 10
+ * Was Delayed Recall administered? The start time is recorded when the recall
+ * is given, so it (or any ticked word) is the evidence.
  */
-export function calculateDelayedRecall(formData: ChildSCAT6FormData): number {
+export function isDelayedRecallAdministered(formData: ChildSCAT6FormData): boolean {
+  return formData.delayedRecallStartTime !== '' || formData.delayedRecall.some(Boolean)
+}
+
+/**
+ * Delayed Recall score (words recalled). Max 10.
+ * null when not administered.
+ */
+export function calculateDelayedRecall(formData: ChildSCAT6FormData): number | null {
+  if (!isDelayedRecallAdministered(formData)) return null
   return formData.delayedRecall.filter(Boolean).length
 }
 
 /**
- * Calculate Total Cognitive Score
- * Max: 50 (5 + 30 + 5 + 10)
+ * Cognitive total = Immediate Memory + Concentration + Delayed Recall. Max 46.
+ * null unless all three contributors were administered — a total that sums two
+ * of three subtests against a printed "of 46" reads as impairment.
  */
-export function calculateTotalCognitive(formData: ChildSCAT6FormData): number {
-  return (
-    calculateOrientation(formData) +
-    calculateImmediateMemory(formData) +
-    calculateConcentration(formData) +
-    calculateDelayedRecall(formData)
-  )
+export function calculateTotalCognitive(formData: ChildSCAT6FormData): number | null {
+  const memory = calculateImmediateMemory(formData)
+  const concentration = calculateConcentration(formData)
+  const recall = calculateDelayedRecall(formData)
+  if (memory === null || concentration === null || recall === null) return null
+  return memory + concentration + recall
 }
 
 /**
- * Calculate mBESS Total Errors
- * Max: 30 (3 stances x 10 errors each)
+ * mBESS total errors. Max 30 (3 stances x 10).
+ * null unless all three stances were scored — 0 errors of 30 is a PERFECT
+ * balance result and must never be produced by an untouched form.
  */
-export function calculateMBESS(formData: ChildSCAT6FormData): number {
-  return (
-    formData.mBessDoubleErrors +
-    formData.mBessTandemErrors +
-    formData.mBessSingleErrors
-  )
+export function calculateMBESS(formData: ChildSCAT6FormData): number | null {
+  const { mBessDoubleErrors, mBessTandemErrors, mBessSingleErrors } = formData
+  if (mBessDoubleErrors === null || mBessTandemErrors === null || mBessSingleErrors === null) {
+    return null
+  }
+  return mBessDoubleErrors + mBessTandemErrors + mBessSingleErrors
 }
 
 /**
- * Calculate mBESS on Foam Total Errors (optional)
- * Max: 30
+ * mBESS on foam total errors (optional section). Max 30.
  */
 export function calculateMBESSFoam(formData: ChildSCAT6FormData): number | null {
+  const { mBessFoamDoubleErrors, mBessFoamTandemErrors, mBessFoamSingleErrors } = formData
   if (
-    formData.mBessFoamDoubleErrors === null ||
-    formData.mBessFoamTandemErrors === null ||
-    formData.mBessFoamSingleErrors === null
+    mBessFoamDoubleErrors === null ||
+    mBessFoamTandemErrors === null ||
+    mBessFoamSingleErrors === null
   ) {
     return null
   }
-  return (
-    formData.mBessFoamDoubleErrors +
-    formData.mBessFoamTandemErrors +
-    formData.mBessFoamSingleErrors
-  )
+  return mBessFoamDoubleErrors + mBessFoamTandemErrors + mBessFoamSingleErrors
 }
 
 /**
- * Calculate average tandem gait time (3 trials)
+ * Average tandem gait time. Returns '' unless all three trials were timed —
+ * averaging one or two trials against a box labelled "Average 3 Trials" would
+ * report a number the child never produced.
  */
 export function calculateTandemGaitAverage(formData: ChildSCAT6FormData): string {
   const times = [
-    parseFloat(formData.tandemGaitTrial1),
-    parseFloat(formData.tandemGaitTrial2),
-    parseFloat(formData.tandemGaitTrial3),
-  ].filter(t => !isNaN(t) && t > 0)
+    formData.tandemGaitTrial1,
+    formData.tandemGaitTrial2,
+    formData.tandemGaitTrial3,
+  ].map(t => parseFloat(t))
 
-  if (times.length === 0) return ''
+  if (times.some(t => isNaN(t) || t <= 0)) return ''
 
   const average = times.reduce((sum, t) => sum + t, 0) / times.length
   return average.toFixed(2)
 }
 
 /**
- * Calculate fastest tandem gait time (3 trials)
+ * Fastest tandem gait time of the trials actually completed.
  */
 export function calculateTandemGaitFastest(formData: ChildSCAT6FormData): string {
   const times = [
@@ -154,34 +197,32 @@ export function calculateTandemGaitFastest(formData: ChildSCAT6FormData): string
 
   if (times.length === 0) return ''
 
-  const fastest = Math.min(...times)
-  return fastest.toFixed(2)
+  return Math.min(...times).toFixed(2)
 }
 
-/**
- * Calculate Complex Tandem Gait Forward Total
- */
-export function calculateComplexTandemForward(formData: ChildSCAT6FormData): number {
-  return formData.complexTandemForwardEyesOpen + formData.complexTandemForwardEyesClosed
+/** Complex tandem gait forward total points (eyes open + eyes closed). */
+export function calculateComplexTandemForward(formData: ChildSCAT6FormData): number | null {
+  const { complexTandemForwardEyesOpen: open, complexTandemForwardEyesClosed: closed } = formData
+  if (open === null || closed === null) return null
+  return open + closed
 }
 
-/**
- * Calculate Complex Tandem Gait Backward Total
- */
-export function calculateComplexTandemBackward(formData: ChildSCAT6FormData): number {
-  return formData.complexTandemBackwardEyesOpen + formData.complexTandemBackwardEyesClosed
+/** Complex tandem gait backward total points (eyes open + eyes closed). */
+export function calculateComplexTandemBackward(formData: ChildSCAT6FormData): number | null {
+  const { complexTandemBackwardEyesOpen: open, complexTandemBackwardEyesClosed: closed } = formData
+  if (open === null || closed === null) return null
+  return open + closed
 }
 
-/**
- * Calculate Complex Tandem Gait Total
- */
-export function calculateComplexTandemTotal(formData: ChildSCAT6FormData): number {
-  return calculateComplexTandemForward(formData) + calculateComplexTandemBackward(formData)
+/** Complex tandem gait total points (forward + backward). */
+export function calculateComplexTandemTotal(formData: ChildSCAT6FormData): number | null {
+  const forward = calculateComplexTandemForward(formData)
+  const backward = calculateComplexTandemBackward(formData)
+  if (forward === null || backward === null) return null
+  return forward + backward
 }
 
-/**
- * Calculate fastest dual task gait time (3 trials)
- */
+/** Fastest dual task gait time of the trials actually completed. */
 export function calculateDualTaskFastest(formData: ChildSCAT6FormData): string {
   const times = [
     parseFloat(formData.dualTask1Time),
@@ -191,21 +232,25 @@ export function calculateDualTaskFastest(formData: ChildSCAT6FormData): string {
 
   if (times.length === 0) return ''
 
-  const fastest = Math.min(...times)
-  return fastest.toFixed(2)
+  return Math.min(...times).toFixed(2)
 }
 
 /**
- * Get all calculated scores for display
+ * Get all calculated scores for display.
+ * `null` anywhere means "not administered" — render it as a dash, never as 0.
  */
 export function getAllCalculatedScores(formData: ChildSCAT6FormData) {
   return {
-    childSymptomNumber: calculateChildSymptomNumber(formData.childSymptoms),
-    childSymptomSeverity: calculateChildSymptomSeverity(formData.childSymptoms),
-    parentSymptomNumber: calculateParentSymptomNumber(formData.parentSymptoms),
-    parentSymptomSeverity: calculateParentSymptomSeverity(formData.parentSymptoms),
-    orientation: calculateOrientation(formData),
+    childSymptomNumber: calculateSymptomNumber(formData.childSymptoms),
+    childSymptomSeverity: calculateSymptomSeverity(formData.childSymptoms),
+    childSymptomsRated: countSymptomsRated(formData.childSymptoms),
+    childSymptomScaleComplete: isSymptomScaleComplete(formData.childSymptoms),
+    parentSymptomNumber: calculateSymptomNumber(formData.parentSymptoms),
+    parentSymptomSeverity: calculateSymptomSeverity(formData.parentSymptoms),
+    parentSymptomsRated: countSymptomsRated(formData.parentSymptoms),
+    parentSymptomScaleComplete: isSymptomScaleComplete(formData.parentSymptoms),
     immediateMemory: calculateImmediateMemory(formData),
+    daysReverse: calculateDaysReverse(formData),
     concentration: calculateConcentration(formData),
     delayedRecall: calculateDelayedRecall(formData),
     totalCognitive: calculateTotalCognitive(formData),

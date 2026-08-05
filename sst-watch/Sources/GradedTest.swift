@@ -22,7 +22,7 @@ struct GradedTestView: View {
     // Matches the web engine (MAX_STAGES = 20) and the BCTT protocol: +1° incline
     // each minute for 15 stages, then +speed per minute — the test runs to
     // provocation / exhaustion / ≥90% age-max, capped at 20 minutes.
-    private let maxStages = 20
+    private let maxStages = SSTProtocol.protocolStageCap
 
     @State private var stages: [TestStage] = []
     @State private var remaining = 60
@@ -31,7 +31,10 @@ struct GradedTestView: View {
     @State private var stageStartedAt = Date()
     @State private var symptom = 0
     // Terminal RPE (Borg 6–20), asked once when the patient stops for exhaustion.
-    @State private var exhaustionRPE = 17
+    // Seeded at the Borg midpoint, NOT at 17: this answer is what qualifies a
+    // no-provocation test as clearance-grade, so the pre-filled value must not
+    // be the one that unlocks it. The patient dials up to 17 deliberately.
+    @State private var exhaustionRPE = 13
     @State private var askExhaustionRPE = false
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()

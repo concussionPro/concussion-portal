@@ -10,6 +10,7 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
+import { SST_TIERS } from '@/lib/config'
 
 /**
  * CRM (Concussion Rehab Mastery) — INTERNATIONAL landing.
@@ -29,6 +30,15 @@ import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/Instr
  * "published". No EP authored the course.
  */
 
+/**
+ * What the bundled platform costs once the included first year ends. The
+ * webhook attaches the REAL single-clinician SST subscription
+ * (STRIPE_SST_SINGLE_PRICE_ID) at the 12-month mark, so this copy must track
+ * that tier's amount from CONFIG — never a literal that can drift away from
+ * what the card is actually charged.
+ */
+const PLATFORM_MONTHLY_AUD = SST_TIERS.find((t) => t.plan === 'single')!.monthlyAud
+
 export interface IntlPriceView {
   display: string // e.g. "£275"
   code: string // e.g. "GBP"
@@ -45,7 +55,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Is there an ongoing cost?',
-    a: 'The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$49/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
+    a: 'The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
   },
   {
     q: 'What’s the refund policy?',
@@ -310,7 +320,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
                   <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
                   The clinical platform (the SST Trainer) is <strong>included free for your
-                  first year</strong>, then <strong>A$49/month</strong> to keep it — starts
+                  first year</strong>, then <strong>A${PLATFORM_MONTHLY_AUD}/month</strong> to keep it — starts
                   automatically at 12 months, cancel anytime.
                 </p>
               </div>
@@ -581,7 +591,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
                   <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>
                 )}
                 <p className="text-[11px] text-muted-foreground mt-3">
-                  {price.display} {price.code} one-time · lifetime course + first year of the platform free · then A$49/mo to keep the platform
+                  {price.display} {price.code} one-time · lifetime course + first year of the platform free · then A${PLATFORM_MONTHLY_AUD}/mo to keep the platform
                 </p>
               </div>
             </>

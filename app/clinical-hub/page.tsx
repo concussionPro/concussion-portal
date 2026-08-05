@@ -52,6 +52,9 @@ type Patient = {
   /** stable grouping key — patientRef UUID when the app sent one, else the normalised label */
   patientKey?: string
   name: string
+  /** The stored patient_label — `name` may carry a display-only "(2)" suffix.
+   *  Everything that QUERIES or PRINTS must use this. */
+  label?: string
   age?: number | null
   sport?: string | null
   code: string
@@ -423,6 +426,10 @@ type ApiSession = {
 
 type ApiPatient = {
   name?: string
+  /** The REAL stored patient_label. `name` may carry the display-only "(2)"
+   *  disambiguation suffix, which exists nowhere in the DB and must never reach
+   *  a query or a printed clinical document (2026-08-05). */
+  label?: string
   patientRef?: string
   condition?: string | null
   hrt?: number | null
@@ -564,6 +571,18 @@ function refOf(p: Patient): string | null {
   return p.patientKey && !p.patientKey.startsWith('label:') ? p.patientKey : null
 }
 
+/**
+ * The label as STORED — what a report query and a printed document must use.
+ * `name` can carry the roster's display-only "(2)" disambiguation suffix, which
+ * matches nothing in the DB: for a label-only patient it 404'd the report, and
+ * where a `ref` rescued the lookup it still printed "James M (2)" as the
+ * patient's name on the ACC884 / GP letter / filed PMS note. The patient-list
+ * page already stripped it; the hub did not (2026-08-05).
+ */
+function labelOf(p: Patient): string {
+  return (p.label || '').trim() || p.name.replace(/\s\(\d+\)$/, '')
+}
+
 function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
   const patientKey = extractRef(p) ?? `label:${normLabel(p.name) || 'unidentified'}`
   const hrtPoints: TrajectoryPoint[] = (p.hrtTrajectory ?? []).map((t) => ({
@@ -591,6 +610,7 @@ function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
     id: `real-${patientKey}`,
     patientKey,
     name: p.name?.trim() || 'Unidentified',
+    label: (p.label || '').trim() || undefined,
     // Real SST intake doesn't capture these yet — leave them unknown and the
     // card simply omits them (never "0 · — · 0d post-injury").
     age: null,
@@ -704,7 +724,7 @@ export default function ClinicalHubPage() {
   // (loaded with the roster) is the record; localStorage only pre-fills so the
   // acting clinician's own screen doesn't flash the banner back on reload.
   const [acks, setAcks] = useState<Record<string, AckRecord>>({})
-  // Raw server acks, keyed `${patientKey} ${dateKey}` — merged into `acks`
+  // Raw server acks, keyed `${patientKey}\u0000${dateKey}` — merged into `acks`
   // once the roster is mapped (a patient's escalating event decides the key).
   const [serverAcks, setServerAcks] = useState<Record<string, AckRecord>>({})
 
@@ -750,7 +770,7 @@ export default function ClinicalHubPage() {
           const next: Record<string, AckRecord> = {}
           for (const a of data.acks) {
             if (!a?.patientKey || !a?.dateKey) continue
-            next[`${a.patientKey} ${a.dateKey}`] = {
+            next[`${a.patientKey}\u0000${a.dateKey}`] = {
               by: typeof a.acknowledgedBy === 'string' && a.acknowledgedBy.trim() ? a.acknowledgedBy.trim() : null,
               at: typeof a.acknowledgedAt === 'string' ? a.acknowledgedAt : null,
             }
@@ -1081,7 +1101,7 @@ export default function ClinicalHubPage() {
                       ] as const).map(([skin, label]) => (
                         <a
                           key={skin}
-                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(p.name)}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}`}
+                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(labelOf(p))}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
@@ -1089,7 +1109,7 @@ export default function ClinicalHubPage() {
                           <FileText className="w-3.5 h-3.5" /> {label} <ArrowUpRight className="w-3.5 h-3.5" />
                         </a>
                       ))}
-                      <PmsFileButton clinicCode={isDemo ? 'DEMO00' : clinicCode} viewKey={viewKey ?? ''} patientName={p.name} patientRef={refOf(p)} demo={isDemo} />
+                      <PmsFileButton clinicCode={isDemo ? 'DEMO00' : clinicCode} viewKey={viewKey ?? ''} patientName={labelOf(p)} patientRef={refOf(p)} demo={isDemo} />
                     </>
                   )}
                 </div>

@@ -142,9 +142,18 @@ describe('CRM buyers see their own course, unlocked', () => {
 
   it('the session API exposes ownsCrm (the client cannot infer it)', () => {
     const src = read('app/api/auth/session/route.ts')
-    expect(src).toMatch(/ownsCrm: await userOwnsCrm\(user\.email\)/)
+    // Sourced from course_purchases, never inferred from access_level.
+    expect(src).toMatch(/crmEntitlementsFor\(user\.email\)/)
     // Both real-user response paths, not just one.
-    expect((src.match(/ownsCrm: await userOwnsCrm\(user\.email\)/g) ?? []).length).toBe(2)
+    expect((src.match(/ownsCrm: crm\.ownsCrm/g) ?? []).length).toBe(2)
+  })
+
+  it('the session API also exposes ownsCrmPractical (the CRM upgrade signal)', () => {
+    // Without it no client can tell "CRM online" from "CRM complete", and the
+    // EP course cannot render a practical-day upsell without mis-selling a
+    // seat the buyer already holds.
+    const src = read('app/api/auth/session/route.ts')
+    expect((src.match(/ownsCrmPractical: crm\.ownsCrmPractical/g) ?? []).length).toBe(2)
   })
 })
 

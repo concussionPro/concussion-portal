@@ -120,6 +120,54 @@ function verifiedShare(sessions: PersistedSession[]): { verified: number; total:
   return { verified, total }
 }
 
+/**
+ * What the LAST graded test actually established. Distinguishing 'none' from
+ * 'symptom-limited' matters: with no valid graded test on record, a skin that
+ * says "tolerance remains symptom-limited ON GRADED TESTING" is describing a
+ * test that never happened — a fabricated finding on a document that goes to a
+ * GP or an insurer. Missing data must read as missing.
+ */
+type TestedOutcome = 'recovered' | 'symptom-limited' | 'red-flag' | 'none'
+
+function testedOutcome(input: ReportInput): TestedOutcome {
+  const i = input.latestTest?.interpretation
+  if (!i || i === 'invalid') return 'none'
+  if (i === 'no-intolerance') return 'recovered'
+  if (i === 'red-flag') return 'red-flag'
+  return 'symptom-limited'
+}
+
+/**
+ * Red-flag graded tests in this episode.
+ *
+ * A red flag is a SAFETY event, and until 2026-08-05 it appeared on NO report
+ * except the medicolegal audit trail — so an RTP data summary or an ACC884
+ * could state "objective exercise tolerance recovered" for an episode that had
+ * contained a red-flag test, with nothing on the page to say so. Returns null
+ * when there are none, so the section only ever renders off real data.
+ */
+function redFlagSection(input: ReportInput): ReportSection | null {
+  const flagged = input.thresholdHistory.filter((t) => t.interpretation === 'red-flag')
+  if (flagged.length === 0) return null
+  const n = flagged.length
+  return {
+    heading: 'Red-flag events during this episode',
+    kind: 'audit',
+    body: [
+      `${n} graded test${n === 1 ? ' was' : 's were'} stopped on a red-flag response; training was held pending clinician review. Read any progression, capacity or clearance statement in this report in that context.`,
+    ],
+    fields: flagged.map((t) => ({
+      label: fmtDate(t.at),
+      value: `graded test stopped — red-flag response${typeof t.hrt === 'number' ? ` (HR at stop ${t.hrt} bpm)` : ''}`,
+    })),
+  }
+}
+
+/** Drop the sections a skin decided not to render (null = no data for it). */
+function sections(list: Array<ReportSection | null>): ReportSection[] {
+  return list.filter((s): s is ReportSection => s != null)
+}
+
 /** Header/identity fields shared by every skin. */
 function patientHeader(input: ReportInput): ReportSection {
   const p = input.patient
@@ -241,10 +289,11 @@ function prescriptionSection(input: ReportInput): ReportSection {
 export function gpReport(input: ReportInput): ReportContent {
   return {
     title: `SST progress report — ${fullName(input.patient)}`,
-    sections: [
+    sections: sections([
       patientHeader(input),
       prescriptionSection(input),
       trajectorySection(input),
+      redFlagSection(input),
       adherenceReviewSection(input),
       {
         heading: 'Summary',
@@ -254,7 +303,7 @@ export function gpReport(input: ReportInput): ReportContent {
             'Clinician-supervised sub-symptom-threshold aerobic training is in progress; measured exercise tolerance is tracked by serial graded testing (see trajectory).',
         ],
       },
-    ],
+    ]),
   }
 }
 
@@ -276,7 +325,8 @@ export function gpReport(input: ReportInput): ReportContent {
  */
 export function acc884(input: ReportInput): ReportContent {
   const goals = input.goals ?? []
-  const recovered = input.latestTest?.interpretation === 'no-intolerance'
+  const outcome = testedOutcome(input)
+  const recovered = outcome === 'recovered'
   const goalFields: ReportField[] =
     goals.length > 0
       ? goals.map((g, i) => ({
@@ -287,7 +337,7 @@ export function acc884(input: ReportInput): ReportContent {
 
   return {
     title: `ACC884 Client Summary Report — ${fullName(input.patient)}`,
-    sections: [
+    sections: sections([
       patientHeader(input),
       {
         heading: 'Service provided',
@@ -298,6 +348,7 @@ export function acc884(input: ReportInput): ReportContent {
       },
       prescriptionSection(input),
       trajectorySection(input),
+      redFlagSection(input),
       adherenceReviewSection(input, { accFraming: true }),
       { heading: 'Goals', kind: 'goals', fields: goalFields },
       {
@@ -307,16 +358,26 @@ export function acc884(input: ReportInput): ReportContent {
           input.prescription?.prolongedRecoveryRisk
             ? (input.prescription.clinicianNote ??
               'Measured threshold sits below the validated prolonged-recovery cut-off — flagged for closer review.')
-            : 'No prolonged-recovery risk flag raised on the measured threshold.',
+            : // NO prescription = no measured threshold was ever established, so
+              // there is nothing to have raised (or not raised) a flag against.
+              // Printing "no risk flag raised" off absent data reads to ACC as a
+              // negative finding (2026-08-05 reporting-integrity sweep).
+              input.prescription
+              ? 'No prolonged-recovery risk flag raised on the measured threshold.'
+              : 'Not assessed — no measured heart-rate threshold is on record for this episode.',
         ],
       },
       {
         heading: 'Outcome',
         kind: 'outcome',
         body: [
-          recovered
+          outcome === 'recovered'
             ? 'Most recent graded re-test provoked no symptom exacerbation to volitional exhaustion — objective exercise tolerance recovered.'
-            : 'Exercise tolerance remains symptom-limited on graded testing at service exit.',
+            : outcome === 'symptom-limited'
+              ? 'Exercise tolerance remains symptom-limited on graded testing at service exit.'
+              : outcome === 'red-flag'
+                ? 'The most recent graded test was stopped on a red-flag response. Exercise tolerance was NOT established at service exit.'
+                : 'No valid graded test is on record for this episode — exercise tolerance was not established.',
         ],
       },
       {
@@ -328,7 +389,7 @@ export function acc884(input: ReportInput): ReportContent {
             : 'Further clinician-supervised SSTAE may be indicated; any additional ACC-funded treatment is requested separately via ACC32 (Request for Prior Approval of Treatment).',
         ],
       },
-    ],
+    ]),
   }
 }
 
@@ -338,10 +399,11 @@ export function acc884(input: ReportInput): ReportContent {
  * makes the call; this template records the objective basis for it.
  */
 export function rtpClearance(input: ReportInput): ReportContent {
-  const recovered = input.latestTest?.interpretation === 'no-intolerance'
+  const outcome = testedOutcome(input)
+  const recovered = outcome === 'recovered'
   return {
     title: `Return-to-play record — ${fullName(input.patient)}`,
-    sections: [
+    sections: sections([
       patientHeader(input),
       {
         heading: 'Graduated return-to-sport status',
@@ -352,26 +414,41 @@ export function rtpClearance(input: ReportInput): ReportContent {
           { label: 'Minimum stand-down met', value: 'Clinician to confirm' },
           {
             label: 'Objective exercise tolerance',
-            value: recovered ? 'Recovered on graded re-test' : 'Still symptom-limited',
+            // 'Still symptom-limited' is a TEST FINDING — never assert it for an
+            // episode with no valid graded test on record.
+            value:
+              outcome === 'recovered'
+                ? 'Recovered on graded re-test'
+                : outcome === 'symptom-limited'
+                  ? 'Still symptom-limited'
+                  : outcome === 'red-flag'
+                    ? 'Not established — last graded test stopped on a red-flag response'
+                    : 'Not established — no valid graded test on record',
           },
           {
             label: 'Recommendation',
-            value: recovered ? 'Basis to progress the RTS pathway' : 'Extend — not yet cleared',
+            value: recovered
+              ? 'Basis to progress the RTS pathway'
+              : outcome === 'none'
+                ? 'Not cleared — no objective basis recorded'
+                : 'Extend — not yet cleared',
           },
         ],
       },
       trajectorySection(input),
+      redFlagSection(input),
       prescriptionSection(input),
-    ],
+    ]),
   }
 }
 
 /** Return-to-work summary (WorkCover-style) — capacity framed by measured tolerance. */
 export function rtwSummary(input: ReportInput): ReportContent {
   const { verified, total } = verifiedShare(input.sessions)
+  const outcome = testedOutcome(input)
   return {
     title: `Return-to-work summary — ${fullName(input.patient)}`,
-    sections: [
+    sections: sections([
       patientHeader(input),
       {
         heading: 'Work-capacity basis',
@@ -385,16 +462,21 @@ export function rtwSummary(input: ReportInput): ReportContent {
         ],
       },
       trajectorySection(input),
+      redFlagSection(input),
       {
         heading: 'Recommendation',
         kind: 'narrative',
         body: [
-          input.latestTest?.interpretation === 'no-intolerance'
+          outcome === 'recovered'
             ? 'Objective exercise tolerance has recovered; graded return-to-work can be progressed per the treating clinician.'
-            : 'Exercise tolerance remains symptom-limited; a graded, tolerance-paced work return is indicated.',
+            : outcome === 'symptom-limited'
+              ? 'Exercise tolerance remains symptom-limited; a graded, tolerance-paced work return is indicated.'
+              : outcome === 'red-flag'
+                ? 'The most recent graded test was stopped on a red-flag response; exercise tolerance is NOT established. No capacity statement can be made from this data.'
+                : 'No valid graded test is on record for this episode; exercise tolerance is not established and no capacity statement can be made from this data.',
         ],
       },
-    ],
+    ]),
   }
 }
 
@@ -410,7 +492,16 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
     const parts: string[] = [
       `avg ${s.avgHeartRate} / peak ${s.peakHeartRate} bpm`,
       `symptom ${s.preSymptom}→${s.peakSymptom}/10`,
-      s.hrVerified === false ? 'UNVERIFIED (manual/camera)' : 'verified (live HR)',
+      // STRICT === true. `hrVerified` is optional on SessionLog, and the old
+      // `=== false ? unverified : verified` branch printed "verified (live HR)"
+      // for every session whose provenance was simply NOT RECORDED — a positive
+      // claim manufactured from missing data, on the one export whose entire
+      // purpose is defensibility (2026-08-05 reporting-integrity sweep).
+      s.hrVerified === true
+        ? 'verified (live HR)'
+        : s.hrVerified === false
+          ? 'UNVERIFIED (manual/camera)'
+          : 'HR provenance NOT RECORDED',
     ]
     if (s.symptomLimited) parts.push('STOP-RULE triggered (≥2-pt rise)')
     if (s.overrodeStop) parts.push('patient override used')
@@ -425,10 +516,11 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
 
   return {
     title: `Medicolegal record — ${fullName(input.patient)}`,
-    sections: [
+    sections: sections([
       patientHeader(input),
       prescriptionSection(input),
       trajectorySection(input),
+      redFlagSection(input),
       adherenceReviewSection(input),
       {
         heading: 'Decision audit trail (graded tests)',
@@ -443,7 +535,7 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
         ],
         fields: sessionRows.length ? sessionRows : [{ label: '—', value: 'No sessions on record.' }],
       },
-    ],
+    ]),
   }
 }
 
@@ -462,8 +554,15 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
  */
 export function acc885(
   input: ReportInput,
-  missedAppointment?: { at?: string; note?: string },
+  missedAppointment?: { at?: string; note?: string; notifiedInAdvance?: boolean },
 ): ReportContent {
+  // "Client notified in advance: No" was HARDCODED. The attendance signal
+  // (PmsAdapter.pollAppointments → did-not-arrive) knows only that the client
+  // did not arrive — it cannot know whether they phoned ahead. Asserting "No"
+  // to ACC about a client who DID give notice is a false statement on a
+  // prescribed form, so it is only stated when the caller actually supplies it
+  // (2026-08-05 reporting-integrity sweep).
+  const notified = missedAppointment?.notifiedInAdvance
   return {
     title: `ACC885 Did Not Attend Report — ${fullName(input.patient)}`,
     sections: [
@@ -473,11 +572,16 @@ export function acc885(
         kind: 'summary',
         fields: [
           { label: 'Scheduled appointment', value: fmtDate(missedAppointment?.at) },
-          { label: 'Client notified in advance', value: 'No' },
+          {
+            label: 'Client notified in advance',
+            value: notified === true ? 'Yes' : notified === false ? 'No' : 'Not recorded — clinician to confirm',
+          },
         ],
         body: [
           missedAppointment?.note ??
-            'The client did not attend the scheduled appointment and did not provide prior notice. Notified to ACC per the Concussion Services attendance-reporting requirement.',
+            (notified === false
+              ? 'The client did not attend the scheduled appointment and did not provide prior notice. Notified to ACC per the Concussion Services attendance-reporting requirement.'
+              : 'The client did not attend the scheduled appointment. Whether prior notice was given is not recorded in the practice data — confirm before submitting. Notified to ACC per the Concussion Services attendance-reporting requirement.'),
         ],
       },
     ],

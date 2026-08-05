@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { PlayCircle, TrendingUp, Sparkles, Activity, ArrowLeft } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+const VAGUS = COURSES.find((c) => c.id === 'vagus-nerve')
+const VAGUS_PRICE = VAGUS ? getEffectivePrice(VAGUS).price : null
 
 /**
  * Mock clinician-state sidebar shown on the AI course landing inside
@@ -99,7 +103,7 @@ export function ClinicianMockDashboard() {
                 The Vagus Nerve in Clinical Practice
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mb-1">
-                1 CPD hour · A$97
+                {VAGUS?.cpdHours ?? 1} CPD hour{VAGUS_PRICE !== null && <> · A${VAGUS_PRICE}</>}
               </p>
               <p className="text-[10px] text-accent leading-snug">
                 Matches your recent scribe topics (autonomic, POTS)
@@ -110,7 +114,7 @@ export function ClinicianMockDashboard() {
                 Concussion Clinical Mastery
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mb-1">
-                16 CPD hours · A${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} · OA-endorsed
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours · A${workshopPriceFor(null).toLocaleString()} · OA-endorsed
               </p>
               <p className="text-[10px] text-accent leading-snug">
                 Matches sports-medicine case patterns

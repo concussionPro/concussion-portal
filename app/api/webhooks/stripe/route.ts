@@ -6,7 +6,7 @@ import { provisionPlatformForBuyer } from '@/lib/sst-trainer/bundle'
 export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
 import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail } from '@/lib/resend-client'
-import { createCourseHub, redeemHubSeat, revokeHub, clampClinicianSeats, HUB_ADMIN_SEATS } from '@/lib/course-hub'
+import { createCourseHub, redeemHubSeat, revokeHub, hubSeatsForDeclaredCount, HUB_ADMIN_SEATS } from '@/lib/course-hub'
 import { createMagicToken, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
@@ -282,6 +282,15 @@ export async function POST(request: NextRequest) {
         await handleDisputeCreated(event.data.object as Stripe.Dispute)
         break
 
+      // A dispute that CLOSES in our favour reverses the money but NOT the
+      // revocation handleDisputeCreated applied — the customer paid, kept
+      // paying, and has no access, with nothing anywhere telling anyone.
+      // Restoring automatically is unsafe (we can't know what they've bought
+      // since), so this alerts the owner with exactly what to put back.
+      case 'charge.dispute.closed':
+        await handleDisputeClosed(event.data.object as Stripe.Dispute)
+        break
+
       // SST Trainer subscriptions — flip the clinic's plan (lifts/re-applies
       // the 3-patient trial cap). checkout.session.completed already routes
       // to handleCheckoutCompleted, which branches on product='sst-trainer'.
@@ -356,7 +365,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       })
       console.log(`SST subscription active for clinic ${clinicCode}`)
     } else {
+      // Money taken, nothing activated, and the webhook 200s so Stripe never
+      // retries — a console line alone means the clinic stays capped while
+      // paying and nobody finds out. Alert loudly.
       console.error('SST subscription checkout without clinicCode:', session.id)
+      try {
+        await sendEmail({
+          to: CONFIG.CONTACT_EMAIL,
+          subject: `ACTION REQUIRED: SST subscription paid with no clinic code`,
+          html: `<p>A Clinical Testing subscription was paid but the checkout session carried <strong>no clinicCode</strong> — the clinic is still on the trial cap.</p><p><strong>Customer:</strong> ${escapeHtml(customerEmail)}<br><strong>Plan:</strong> ${escapeHtml(session.metadata?.plan || '—')}<br><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></p><p>Find their clinic in admin and flip the plan manually.</p>`,
+          tags: [{ name: 'type', value: 'sst-subscription-orphan' }],
+        })
+      } catch (alertErr) { console.error('SST orphan-subscription alert failed:', alertErr) }
     }
     return
   }
@@ -1124,7 +1144,10 @@ async function provisionPlatformBestEffort(
 async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerEmail: string, customerName: string) {
   const currency = (session.currency || 'aud').toUpperCase()
   const amount = (session.amount_total || 0) / 100
-  const clinicianSeats = clampClinicianSeats(Number(session.metadata?.clinicianCount) || 5)
+  // SAME helper the checkout priced from — the key can never cap below the
+  // seats the base price already bought (a buyer who dialled the picker to 3
+  // paid the full 5-seat base and was then locked out of seats 4 and 5).
+  const clinicianSeats = hubSeatsForDeclaredCount(session.metadata?.clinicianCount)
   const clinicName = session.metadata?.clinicName || null
 
   // Create the hub + claim the owner's own clinician seat.
@@ -1286,7 +1309,7 @@ async function handleBookPurchase(
             <strong>What you paid:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}<br>
             <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>${bookInvoice ? '<br><strong>Tax invoice:</strong> attached to this email' : ''}
           </div>
-          <p style="margin: 20px 0 0; font-size: 14px; color: #475569;">Next — the text pairs with the online course. Book owners get <strong>A$100 off</strong> the full course. I'll send you the details in a few days so you can read before deciding. No pressure.</p>
+          <p style="margin: 20px 0 0; font-size: 14px; color: #475569;">Next — the text pairs with the online course. Book owners get <strong>A$${CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD} off</strong> the full course. I'll send you the details in a few days so you can read before deciding. No pressure.</p>
           <p style="margin: 14px 0 0; font-size: 14px; color: #475569;">Questions — just reply to this email.</p>
           <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">Zac Lewis<br>Concussion Education Australia</div>
         </div>
@@ -1979,6 +2002,60 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
   } catch (alertErr) {
     console.error('Dispute admin alert failed:', alertErr)
     throw alertErr
+  }
+}
+
+/**
+ * charge.dispute.closed — the outcome of a dispute we already revoked for.
+ *
+ * status 'won' / 'warning_closed' means the money came back to us but the
+ * customer's entitlements are still revoked from handleDisputeCreated. That is
+ * a paying customer locked out of what they bought, and it is invisible: no
+ * surface tells them, and no other event ever fires. Alert the owner with the
+ * charge so it can be reinstated. 'lost' needs nothing — the revocation stands.
+ */
+async function handleDisputeClosed(dispute: Stripe.Dispute) {
+  const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id
+  const won = dispute.status === 'won' || dispute.status === 'warning_closed'
+  const amount = (dispute.amount || 0) / 100
+  const currency = (dispute.currency || 'aud').toUpperCase()
+
+  try {
+    await logAnalyticsEvent('charge_dispute_closed', {
+      disputeId: dispute.id,
+      chargeId: chargeId || null,
+      status: dispute.status,
+      amount,
+      currency,
+    })
+  } catch (err) {
+    console.error('Failed to log dispute-closed analytics:', err)
+  }
+
+  if (!won) {
+    console.log(`Dispute ${dispute.id} closed as ${dispute.status} — revocation stands`)
+    return
+  }
+
+  try {
+    await sendEmail({
+      to: CONFIG.CONTACT_EMAIL,
+      subject: `ACTION REQUIRED: dispute WON — restore access (${currency} $${amount.toFixed(2)})`,
+      html: `
+        <p><strong>A dispute closed in your favour, but the customer's access was revoked when it opened and has NOT been restored.</strong> They are paying and locked out — reinstate them manually.</p>
+        <ul>
+          <li><strong>Outcome:</strong> ${escapeHtml(dispute.status || 'won')}</li>
+          <li><strong>Amount:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}</li>
+          <li><strong>Charge:</strong> <code>${escapeHtml(chargeId || '—')}</code></li>
+          <li><strong>Dispute:</strong> <code>${escapeHtml(dispute.id)}</code></li>
+        </ul>
+        <p>Look the charge up in Stripe for the buyer's email, then restore the entitlement it paid for (course access level, hub key, CRM/short-course row, or clinic plan).</p>
+      `,
+      tags: [{ name: 'type', value: 'admin-dispute-won' }],
+    })
+  } catch (alertErr) {
+    console.error('Dispute-won admin alert failed:', alertErr)
+    throw alertErr // 500 → Stripe retries; this must not be silently dropped
   }
 }
 

@@ -108,7 +108,13 @@ const CONDITION_DEFAULTS: Record<Condition, { lowerPct: number; upperPct: number
 export const PROVOCATION_RISE = 3
 /** Within-session stop rule during training: a rise of >=2 points. */
 export const SESSION_STOP_RISE = 2
-/** Voluntary-exhaustion RPE (Borg) without symptom provocation. */
+/**
+ * Voluntary-exhaustion RPE (Borg 6-20) without symptom provocation. The BCTT
+ * manual phrases the criterion as RPE > 17; the applied rule everywhere in this
+ * codebase (engine, guided test, public calculator) is RPE >= 17, i.e. the test
+ * is treated as having reached voluntary exhaustion one point earlier than the
+ * manual's wording — the conservative direction for a TERMINATION rule.
+ */
 export const EXHAUSTION_RPE = 17
 /** Resting symptoms at or above this on the readiness screen → today is not a test day. */
 export const MAX_RESTING_TO_TEST = 8
@@ -118,6 +124,17 @@ export const HR_JUMP_CONFIRM = 40
 export const RETEST_MIN_HOURS = 48
 /** A session is verified only when at least this share of readings were live-feed-verified. */
 export const VERIFIED_READING_MIN_PCT = 80
+/**
+ * Length of the graded ramp, in 60-second stages. The modified Balke BCTT is
+ * +1deg incline per minute for 15 stages then +0.4 mph/min; 20 minutes is the
+ * point at which every surface ends the test. Reaching it without provocation
+ * means the patient completed the WHOLE protocol symptom-free — the second way
+ * (besides a recorded RPE >= EXHAUSTION_RPE) that a test can honestly report no
+ * exercise intolerance. Single source of truth for the web GuidedTest
+ * (MAX_STAGES) and the watch (SSTProtocol.protocolStageCap); the two surfaces
+ * must never cap at different numbers.
+ */
+export const PROTOCOL_STAGE_CAP = 20
 
 /**
  * Detect the heart-rate threshold (HRt) from a guided graded test.
@@ -148,7 +165,33 @@ export function detectThreshold(input: TestInput): ThresholdResult {
     }
   }
 
-  // No >=3-point rise. If they reached exhaustion, there is no symptom ceiling.
+  // No >=3-point rise. 'no-intolerance' is the CLEARANCE-GRADE read — it drives
+  // clearanceReady, the hub's clearance banner and the GP report's "tolerance
+  // recovered" recommendation — so it may only be returned when the test
+  // actually reached the OTHER validated BCTT endpoint: voluntary exhaustion
+  // (RPE >= EXHAUSTION_RPE). A test that stopped before EITHER endpoint proves
+  // nothing: a walk-out at minute 2 has no >=3-point rise either, and must
+  // never read as "your symptoms are not exercise-driven". Fail closed to
+  // 'invalid' — the same bucket an aborted test lands in.
+  // There are exactly TWO ways to evidence that, and an absent Borg score is
+  // neither. (An earlier version of this gate grandfathered stage sets with no
+  // RPE at all; that was a live hole, not a legacy allowance — the watch writes
+  // rpe: nil on every stage and only attaches the terminal Borg on its
+  // exhaustion-stop path, so its stage-cap finish arrived RPE-less and was
+  // waved through as clearance-grade.)
+  const rpes = input.stages
+    .map((s) => s.rpe)
+    .filter((r): r is number => typeof r === 'number' && Number.isFinite(r))
+  const reachedExhaustion = rpes.some((r) => r >= EXHAUSTION_RPE)
+  const completedProtocol = input.stages.length >= PROTOCOL_STAGE_CAP
+  if (!reachedExhaustion && !completedProtocol) {
+    return {
+      hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'invalid',
+      message: `The test ended before either stopping point was reached — your symptoms did not rise ${PROVOCATION_RISE} points, and you did not record reaching your limit. There is no threshold to read from it. Repeat the test another day and take the effort up until you genuinely cannot go harder.`,
+    }
+  }
+
+  // Exhaustion reached with no provocation → there is no symptom ceiling.
   return {
     hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'no-intolerance',
     message: 'You reached your exercise limit without provoking your symptoms. That suggests your symptoms are unlikely to be driven by exercise intolerance — share this with your clinician, who may direct a different pathway (cervical, vestibular, mood).',

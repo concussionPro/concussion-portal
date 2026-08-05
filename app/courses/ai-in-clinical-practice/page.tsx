@@ -8,11 +8,16 @@ import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { ClinicianMockDashboard } from '@/components/ai-course/ClinicianMockDashboard'
 import { Library, FileQuestion, Award, ArrowRight, Wrench, BookMarked, PlayCircle, Clock, BookOpen, GraduationCap, Check } from 'lucide-react'
 
+// Catalogue-derived so the search snippet and the buy card can never quote a
+// price /api/courses/checkout does not charge.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_COURSE_PRICE = AI_COURSE ? getEffectivePrice(AI_COURSE).price : null
+
 export const metadata: Metadata = {
   // No "| CEA" suffix — the root layout's title template appends the brand.
   title: 'AI in Clinical Practice — CPD Course for Australian Clinicians',
   description:
-    'AHPRA-aligned AI compliance course for Australian clinicians — scribes, Privacy Act, documentation, indemnity positions. 2 CPD hours, A$99, certificate on completion.',
+    `AHPRA-aligned AI compliance course for Australian clinicians — scribes, Privacy Act, documentation, indemnity positions. ${AI_COURSE?.cpdHours ?? 2} CPD hours, A$${AI_COURSE_PRICE ?? ''}, certificate on completion.`,
   alternates: { canonical: '/courses/ai-in-clinical-practice' },
 }
 
@@ -26,8 +31,8 @@ export default async function CoursePage() {
   const totalHours = Math.round((totalMin / 60) * 10) / 10
 
   if (!access.ok) {
-    const entry = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
-    const price = (entry ? getEffectivePrice(entry).price : null) ?? 99
+    const entry = AI_COURSE
+    const price = AI_COURSE_PRICE
     return (
       <div className="min-h-screen bg-background">
         <SiteNav />
@@ -53,7 +58,7 @@ export default async function CoursePage() {
             <BuyCourseCard
               courseSlug="ai-in-clinical-practice"
               courseTitle="AI in Clinical Practice"
-              priceAUD={price ?? 99}
+              priceAUD={price ?? 0}
               cpdHours={entry?.cpdHours ?? 2}
               prefillEmail={access.email ?? ''}
             />

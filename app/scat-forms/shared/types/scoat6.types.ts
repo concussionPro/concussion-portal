@@ -113,20 +113,23 @@ export interface SCOAT6FormData {
   alternate15WordTotal: number | null
 
   digitListUsed: 'A' | 'B' | 'C' | ''
-  digitsBackward: number // 0-4
+  /** 0-4. `null` = not administered — a scored 0 is a real (severe) finding. */
+  digitsBackward: number | null
 
   monthsReverseTime: string
-  monthsReverseErrors: number
+  /** `null` = not administered; 0 = a genuine error-free recitation. */
+  monthsReverseErrors: number | null
 
   // Pages 7-8: Examination
   // Orthostatic Vital Signs
   orthostaticsSupineBP: string
   orthostaticsSupineHR: string
-  orthostaticsSupineSymptoms: boolean
+  /** `null` = not asked. `false` is the clinical assertion "no orthostatic symptoms". */
+  orthostaticsSupineSymptoms: boolean | null
   orthostaticsSupineSymptomsDescription: string
   orthostaticsStandingBP: string
   orthostaticsStandingHR: string
-  orthostaticsStandingSymptoms: boolean
+  orthostaticsStandingSymptoms: boolean | null
   orthostaticsStandingSymptomsDescription: string
   orthostaticsSupineResult: 'Normal' | 'Abnormal' | ''
   orthostaticsStandingResult: 'Normal' | 'Abnormal' | ''
@@ -154,9 +157,11 @@ export interface SCOAT6FormData {
 
   // Balance - mBESS
   footTested: 'Left' | 'Right' | ''
-  mBessDoubleErrors: number
-  mBessTandemErrors: number
-  mBessSingleErrors: number
+  /** Errors per stance, 0-10. `null` = stance not performed — 0 errors is a
+   *  PERFECT balance result and must never be manufactured by a default. */
+  mBessDoubleErrors: number | null
+  mBessTandemErrors: number | null
+  mBessSingleErrors: number | null
   mBessFoamDoubleErrors: number | null
   mBessFoamTandemErrors: number | null
   mBessFoamSingleErrors: number | null
@@ -168,79 +173,84 @@ export interface SCOAT6FormData {
   tandemGaitAbnormal: boolean
 
   // Page 9: Complex & Dual Task Gait
-  complexTandemForwardEyesOpen: number
-  complexTandemForwardEyesClosed: number
-  complexTandemBackwardEyesOpen: number
-  complexTandemBackwardEyesClosed: number
+  // `null` = not performed; 0 points = a genuine flawless performance.
+  complexTandemForwardEyesOpen: number | null
+  complexTandemForwardEyesClosed: number | null
+  complexTandemBackwardEyesOpen: number | null
+  complexTandemBackwardEyesClosed: number | null
 
   dualTaskCognitiveTask: 'Words' | 'Serial 7s' | 'Months' | ''
-  dualTaskTrialsAttempted: number
-  dualTaskTrialsCorrect: number
+  dualTaskTrialsAttempted: number | null
+  dualTaskTrialsCorrect: number | null
   dualTaskAverageTime: string
   dualTaskComments: string
 
   // Page 10: mVOMS
+  // Provocation ratings 0-10. `null` = not rated; 0 = "no provocation", which is
+  // a real (reassuring) finding and must be entered, never defaulted.
   mvomsBaseline: {
-    headache: number
-    dizziness: number
-    nausea: number
-    fogginess: number
+    headache: number | null
+    dizziness: number | null
+    nausea: number | null
+    fogginess: number | null
   }
   mvomsSmoothPursuits: {
     notTested: boolean
-    headache: number
-    dizziness: number
-    nausea: number
-    fogginess: number
+    headache: number | null
+    dizziness: number | null
+    nausea: number | null
+    fogginess: number | null
     comments: string
   }
   mvomsSaccadesHorizontal: {
     notTested: boolean
-    headache: number
-    dizziness: number
-    nausea: number
-    fogginess: number
+    headache: number | null
+    dizziness: number | null
+    nausea: number | null
+    fogginess: number | null
     comments: string
   }
   mvomsVORHorizontal: {
     notTested: boolean
-    headache: number
-    dizziness: number
-    nausea: number
-    fogginess: number
+    headache: number | null
+    dizziness: number | null
+    nausea: number | null
+    fogginess: number | null
     comments: string
   }
   mvomsVMS: {
     notTested: boolean
-    headache: number
-    dizziness: number
-    nausea: number
-    fogginess: number
+    headache: number | null
+    dizziness: number | null
+    nausea: number | null
+    fogginess: number | null
     comments: string
   }
 
   // GAD-7 Anxiety Screen
+  // `null` = unanswered. 0 is the patient's answer "not at all", which sums to
+  // a real screen result ("minimal anxiety") and must never be a default.
   gad7NotDone: boolean
-  gad7_1: number // 0-3
-  gad7_2: number
-  gad7_3: number
-  gad7_4: number
-  gad7_5: number
-  gad7_6: number
-  gad7_7: number
+  gad7_1: number | null // 0-3
+  gad7_2: number | null
+  gad7_3: number | null
+  gad7_4: number | null
+  gad7_5: number | null
+  gad7_6: number | null
+  gad7_7: number | null
 
   // PHQ-2 Depression Screen
   phq2NotDone: boolean
-  phq2_1: number // 0-3
-  phq2_2: number
+  phq2_1: number | null // 0-3
+  phq2_2: number | null
 
   // Page 11: Sleep Screen
   sleepNotDone: boolean
-  sleep1: number // Hours of sleep (0-4)
-  sleep2: number // Satisfaction (0-4)
-  sleep3: number // Time to fall asleep (0-3)
-  sleep4: number // Trouble staying asleep (0-3)
-  sleep5: number // Medicine to sleep (0-3)
+  sleep1: number | null // Hours of sleep (0-4)
+  sleep2: number | null // Satisfaction (0-4)
+  sleep3: number | null // Time to fall asleep (0-3)
+  sleep4: number | null // Trouble staying asleep (0-3)
+  sleep5: number | null // Medicine to sleep (0-3)
 
   // Page 12: Delayed Recall
   delayedRecallStartTime: string
@@ -416,19 +426,19 @@ export const getDefaultSCOAT6FormData = (): SCOAT6FormData => ({
   alternate15WordTotal: null,
 
   digitListUsed: '',
-  digitsBackward: 0,
+  digitsBackward: null,
 
   monthsReverseTime: '',
-  monthsReverseErrors: 0,
+  monthsReverseErrors: null,
 
   // Examination
   orthostaticsSupineBP: '',
   orthostaticsSupineHR: '',
-  orthostaticsSupineSymptoms: false,
+  orthostaticsSupineSymptoms: null,
   orthostaticsSupineSymptomsDescription: '',
   orthostaticsStandingBP: '',
   orthostaticsStandingHR: '',
-  orthostaticsStandingSymptoms: false,
+  orthostaticsStandingSymptoms: null,
   orthostaticsStandingSymptomsDescription: '',
   orthostaticsSupineResult: '',
   orthostaticsStandingResult: '',
@@ -453,9 +463,9 @@ export const getDefaultSCOAT6FormData = (): SCOAT6FormData => ({
   neurologicalComments: '',
 
   footTested: '',
-  mBessDoubleErrors: 0,
-  mBessTandemErrors: 0,
-  mBessSingleErrors: 0,
+  mBessDoubleErrors: null,
+  mBessTandemErrors: null,
+  mBessSingleErrors: null,
   mBessFoamDoubleErrors: null,
   mBessFoamTandemErrors: null,
   mBessFoamSingleErrors: null,
@@ -466,77 +476,77 @@ export const getDefaultSCOAT6FormData = (): SCOAT6FormData => ({
   tandemGaitAbnormal: false,
 
   // Complex & Dual Task
-  complexTandemForwardEyesOpen: 0,
-  complexTandemForwardEyesClosed: 0,
-  complexTandemBackwardEyesOpen: 0,
-  complexTandemBackwardEyesClosed: 0,
+  complexTandemForwardEyesOpen: null,
+  complexTandemForwardEyesClosed: null,
+  complexTandemBackwardEyesOpen: null,
+  complexTandemBackwardEyesClosed: null,
 
   dualTaskCognitiveTask: '',
-  dualTaskTrialsAttempted: 0,
-  dualTaskTrialsCorrect: 0,
+  dualTaskTrialsAttempted: null,
+  dualTaskTrialsCorrect: null,
   dualTaskAverageTime: '',
   dualTaskComments: '',
 
   // mVOMS
   mvomsBaseline: {
-    headache: 0,
-    dizziness: 0,
-    nausea: 0,
-    fogginess: 0,
+    headache: null,
+    dizziness: null,
+    nausea: null,
+    fogginess: null,
   },
   mvomsSmoothPursuits: {
     notTested: false,
-    headache: 0,
-    dizziness: 0,
-    nausea: 0,
-    fogginess: 0,
+    headache: null,
+    dizziness: null,
+    nausea: null,
+    fogginess: null,
     comments: '',
   },
   mvomsSaccadesHorizontal: {
     notTested: false,
-    headache: 0,
-    dizziness: 0,
-    nausea: 0,
-    fogginess: 0,
+    headache: null,
+    dizziness: null,
+    nausea: null,
+    fogginess: null,
     comments: '',
   },
   mvomsVORHorizontal: {
     notTested: false,
-    headache: 0,
-    dizziness: 0,
-    nausea: 0,
-    fogginess: 0,
+    headache: null,
+    dizziness: null,
+    nausea: null,
+    fogginess: null,
     comments: '',
   },
   mvomsVMS: {
     notTested: false,
-    headache: 0,
-    dizziness: 0,
-    nausea: 0,
-    fogginess: 0,
+    headache: null,
+    dizziness: null,
+    nausea: null,
+    fogginess: null,
     comments: '',
   },
 
   // Mental Health Screens
   gad7NotDone: false,
-  gad7_1: 0,
-  gad7_2: 0,
-  gad7_3: 0,
-  gad7_4: 0,
-  gad7_5: 0,
-  gad7_6: 0,
-  gad7_7: 0,
+  gad7_1: null,
+  gad7_2: null,
+  gad7_3: null,
+  gad7_4: null,
+  gad7_5: null,
+  gad7_6: null,
+  gad7_7: null,
 
   phq2NotDone: false,
-  phq2_1: 0,
-  phq2_2: 0,
+  phq2_1: null,
+  phq2_2: null,
 
   sleepNotDone: false,
-  sleep1: 0,
-  sleep2: 0,
-  sleep3: 0,
-  sleep4: 0,
-  sleep5: 0,
+  sleep1: null,
+  sleep2: null,
+  sleep3: null,
+  sleep4: null,
+  sleep5: null,
 
   // Delayed Recall
   delayedRecallStartTime: '',

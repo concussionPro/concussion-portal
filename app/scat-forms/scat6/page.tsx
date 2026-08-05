@@ -150,6 +150,7 @@ export default function SCAT6Page() {
             <a href="/docs/SCAT6_Fillable.pdf" className="text-blue-600 hover:underline">
               official SCAT6 PDF
             </a>{' '}
+            (free — sign-in required){' '}
             (or the sideline card) for them, and record the outcome in the clinical notes field of
             this form.
           </p>

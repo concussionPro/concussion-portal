@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, AlertCircle, ArrowLeft, Check, Brain, Shield, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -9,7 +9,6 @@ import { useSession } from '@/contexts/SessionContext'
 import { isSafeRelativePath } from '@/lib/safe-redirect'
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { user, isLoading: sessionLoading } = useSession()
   const [email, setEmail] = useState(searchParams.get('email') || '')
@@ -21,12 +20,16 @@ function LoginForm() {
   // isSafeRelativePath — the same rule /api/auth/verify applies server-side.
   const redirectParam = searchParams.get('redirect')
 
-  // Redirect authenticated users — no need to log in again
+  // Redirect authenticated users — no need to log in again.
+  // HARD navigation, not router.replace: the redirect target can be a gated
+  // STATIC asset (the middleware bounces /docs/*.pdf and the course brochure
+  // here with ?redirect=<file>), which the App Router cannot resolve as a
+  // route. window.location always works and re-runs the middleware gate.
   useEffect(() => {
     if (sessionLoading || !user) return
     const dest = (redirectParam && isSafeRelativePath(redirectParam)) ? redirectParam : '/dashboard'
-    router.replace(dest)
-  }, [user, sessionLoading, router, redirectParam])
+    window.location.replace(dest)
+  }, [user, sessionLoading, redirectParam])
 
   // Persist redirect destination so it survives the magic link email flow
   useEffect(() => {

@@ -158,5 +158,5 @@ export interface PricingBreakdown {
     badge: string
     recommended: boolean
   }>
-  publicRetailRate: number    // 1400, individual CCM Complete
+  publicRetailRate: number    // individual CCM Complete, workshopPriceFor(null)
 }

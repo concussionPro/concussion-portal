@@ -4,6 +4,8 @@ import { createCrmCheckoutSession } from '@/lib/stripe'
 import { CONFIG } from '@/lib/config'
 import { VALID_LOCATIONS } from '@/lib/stripe'
 import { userOwnsCrm } from '@/lib/crm-course'
+import { rateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/get-client-ip'
 
 /**
  * POST /api/crm/checkout — Concussion Rehab Mastery (EP stream) purchase.
@@ -31,6 +33,15 @@ export async function POST(request: NextRequest) {
       { error: 'Concussion Rehab Mastery enrolment opens on ESSA endorsement — register your interest and we’ll notify you.' },
       { status: 403 },
     )
+  }
+
+
+  // Rate limit, same as /api/create-checkout and the international CRM route:
+  // this endpoint mints a real Stripe Checkout Session on an unauthenticated
+  // POST, so without one a script can spray sessions at the account.
+  const rl = await rateLimit({ key: `crm-checkout:${getClientIp(request)}`, limit: 10, windowSec: 60 })
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Too many checkout attempts. Please wait a minute.' }, { status: 429 })
   }
 
   let raw: unknown

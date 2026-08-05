@@ -119,8 +119,14 @@ export async function GET(request: Request) {
     }
     /** CRM entitlements for this user, or undefined. Keyed on lowercased email. */
     const crmFor = (email: string) => crmOwners.get(email.toLowerCase())
-    /** Owns the online CRM course — i.e. a PAYING customer, not a free lead. */
+    /** Owns the online CRM COURSE CONTENT (progress ids 201-208 apply). */
     const ownsCrmCourse = (email: string) => !!crmFor(email)?.crmAt
+    /**
+     * Has paid CEA anything on the CRM side — course, practical seat, or both.
+     * The predicate for every FREE-LEAD lane: a paying customer must never be
+     * pitched the free-course ladder, whichever CRM product they bought.
+     */
+    const paysForCrm = (email: string) => !!crmFor(email)
     /** Holds a seat at the SHARED practical day, whichever stream sold it. */
     const holdsWorkshopSeat = (u: { accessLevel: string; email: string }) =>
       u.accessLevel === 'full-course' || !!crmFor(u.email)?.practicalAt
@@ -277,6 +283,11 @@ export async function GET(request: Request) {
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
       if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
+      // A free lead who LATER bought CRM keeps signupSource 'free-course' and
+      // access_level 'preview' (isolated streams), so the allowlist below waves
+      // them through — straight into a free-course drip that upsells /pricing
+      // to a paying customer. They have their own lifecycle (section 2).
+      if (paysForCrm(user.email)) continue
       // Allowlist: SCAT intenders only (also gates the Day-0 catch-up below).
       // Covers the old ai-safety-checklist exclusion — it has its own sequence.
       if (user.signupSource && !SCAT_DRIP_SOURCES.has(user.signupSource)) continue
@@ -949,7 +960,7 @@ export async function GET(request: Request) {
       // A CRM (EP stream) buyer's access_level stays 'preview' because the two
       // streams are isolated (lib/crm-course.ts). This is a FREE-LEAD lane —
       // never pitch the ladder to someone who has already paid for a course.
-      if (ownsCrmCourse(user.email)) continue
+      if (paysForCrm(user.email)) continue
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
@@ -1012,7 +1023,7 @@ export async function GET(request: Request) {
       // A CRM (EP stream) buyer's access_level stays 'preview' because the two
       // streams are isolated (lib/crm-course.ts). This is a FREE-LEAD lane —
       // never pitch the ladder to someone who has already paid for a course.
-      if (ownsCrmCourse(user.email)) continue
+      if (paysForCrm(user.email)) continue
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
@@ -1076,7 +1087,7 @@ export async function GET(request: Request) {
       // Bought into a course already, just not via access_level — the CRM (EP
       // stream) entitlement lives in course_purchases. This lane sells the
       // course ladder, so an owner must never be in it.
-      if (ownsCrmCourse(user.email)) continue
+      if (paysForCrm(user.email)) continue
       if (!user.referenceBookPurchasedAt) continue
 
       const purchaseDate = new Date(user.referenceBookPurchasedAt)

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
 
 export default function TermsPage() {
   return (
@@ -39,7 +39,7 @@ export default function TermsPage() {
         {/* Complete Course */}
         <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">
-            Complete Course (${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} AUD)
+            Complete Course (${workshopPriceFor(null).toLocaleString()} AUD)
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             The complete course includes online modules and a hands-on workshop. Each component has its own refund terms:

@@ -198,6 +198,14 @@ export async function POST(request: NextRequest) {
           minute: Number(s.minute),
           heartRate: Number(s.heartRate),
           symptomScore: Number(s.symptomScore),
+          // RPE must ride along: it is the SECOND validated BCTT termination
+          // criterion, and detectThreshold needs it to tell a genuine
+          // exhaustion-limited test (RPE >= 17 → 'no-intolerance', the
+          // clearance signal) from one that simply stopped early ('invalid').
+          // Dropping it here meant the server ran a DIFFERENT computation from
+          // the client it claims to reconcile against, so a forged
+          // 'no-intolerance' only had to omit RPE to survive re-derivation.
+          rpe: Number.isFinite(Number(s.rpe)) ? Number(s.rpe) : undefined,
           hrVerified: s.hrVerified === true,
         }))
         .filter((s) => Number.isFinite(s.minute) && Number.isFinite(s.heartRate) && Number.isFinite(s.symptomScore))

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
-import { isRegisteredClinic, verifyViewKey, getClinicUsage, getClinic, getClinicProfile } from '@/lib/sst-trainer/clinic-registry'
+import { verifySessionToken } from '@/lib/jwt-session'
+import { isRegisteredClinic, verifyViewKey, getClinicUsage, getClinic, getClinicProfile, resolveActingClinician } from '@/lib/sst-trainer/clinic-registry'
 import { loadReportInput, renderSkin } from '@/lib/sst-trainer/reports/load'
 import { renderReportContentToHtml } from '@/lib/sst-trainer/reports/render'
 import { type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
@@ -59,7 +60,28 @@ export async function GET(request: NextRequest) {
   // Request-scoped identity (never persisted). Blank fields simply fall back to
   // the de-identified label, so an omitted identity degrades gracefully.
   const str = (k: string) => sp.get(k)?.trim() || undefined
-  const clinicianName = str('clinician')
+  // ATTRIBUTION — SESSION FIRST, same rule as /api/sst/pms/file. The viewKey is
+  // CLINIC-wide (all 15 seats share it), so `?clinician=` is a free-text field
+  // any holder of the link can set to any name; and the hub's report links
+  // don't send it at all, which left the "Reporting clinician" row absent on
+  // every report generated from the hub. An authenticated identity always wins;
+  // the query param stays as the fallback for the keyed-hub-link case where
+  // there is no portal session to resolve (2026-08-05).
+  let clinicianName = str('clinician')
+  let clinicianCredential = str('credential')
+  try {
+    const tok = request.cookies.get('session')?.value
+    const sess = tok ? verifySessionToken(tok) : null
+    if (sess?.email && code !== 'DEMO00') {
+      const resolved = await resolveActingClinician(sess.email, code)
+      if (resolved) {
+        clinicianName = resolved
+        clinicianCredential = undefined
+      }
+    }
+  } catch {
+    /* unreadable session → fall back to the request-scoped value */
+  }
 
   try {
     const input = await loadReportInput(code, patientLabel, jurisdiction, {
@@ -72,7 +94,7 @@ export async function GET(request: NextRequest) {
         claimRef: str('claim'),
         diagnosis: str('diagnosis'),
       },
-      clinician: clinicianName ? { name: clinicianName, credential: str('credential') } : undefined,
+      clinician: clinicianName ? { name: clinicianName, credential: clinicianCredential } : undefined,
     })
     if (!input) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
     const content = renderSkin(skin, input)

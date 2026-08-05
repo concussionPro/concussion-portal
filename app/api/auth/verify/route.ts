@@ -8,6 +8,7 @@ import { sql } from '@/lib/db'
 import { userOwnsCrm } from '@/lib/crm-course'
 import { hasSstEntitlement } from '@/lib/users'
 import { isSafeRelativePath } from '@/lib/safe-redirect'
+import { isAuthDoc } from '@/lib/gated-docs'
 import { isUserEnrolled } from '@/lib/ai-course/access'
 
 /** Ensure the used_magic_tokens table exists (runs once per cold start) */
@@ -104,6 +105,12 @@ export async function resolveLandingTarget(
   // surfaces (users.ai_course_enrolled — the page gate admits exactly these).
   const allowed =
     PREVIEW_FREE_PREFIXES.some(p => redirect.startsWith(p)) ||
+    // The SCAT/SCOAT forms: free to any authenticated account, and the exact
+    // target the middleware bounces an anonymous clinician from. Without this
+    // the login round-trip dropped them on /modules/101 instead of the form
+    // they tapped mid-assessment. The middleware still enforces the gate — this
+    // only decides where an authenticated user lands.
+    isAuthDoc(redirect) ||
     (ownsCrm && redirect.startsWith('/ep-course')) ||
     (isSstClinic && redirect.startsWith('/clinical-testing')) ||
     // Entitlement lookup runs ONLY when the target needs it — normal logins

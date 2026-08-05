@@ -32,6 +32,89 @@ const parseIntOrNull = (raw: string): number | null => {
   return Number.isNaN(parsed) ? null : parsed
 }
 
+/**
+ * Parse a bounded numeric <input>, preserving a typed 0 and clamping to the
+ * instrument's own range (mBESS 0-10 per stance, mVOMS 0-10) so a slipped
+ * keystroke cannot print an out-of-range score against a fixed denominator.
+ */
+const parseBoundedIntOrNull = (raw: string, min: number, max: number): number | null => {
+  const parsed = parseIntOrNull(raw)
+  if (parsed === null) return null
+  return Math.min(max, Math.max(min, parsed))
+}
+
+/**
+ * What the screen shows wherever nothing was recorded. Blank must never render
+ * as a score: 0 mBESS errors, 0 symptoms or 0/30 memory are all real findings.
+ * Mirrors the marker used by the PDF export.
+ */
+const NA = '—'
+
+/** Bumped when the saved-draft shape changes in a clinically meaningful way. */
+const DRAFT_SCHEMA_VERSION = 2
+
+/**
+ * Drafts written before the nullable-score model stored 0 / false where the
+ * clinician had entered nothing, which now reads as a real finding (0 mBESS
+ * errors, "no orthostatic symptoms"). Restoring one unchanged would resurrect
+ * exactly the fabrication this model exists to prevent, so those defaults are
+ * downgraded to "not recorded" on restore. Everything actually typed survives.
+ */
+const migrateDraft = (draft: SCOAT6FormData, version: number): SCOAT6FormData => {
+  if (version >= DRAFT_SCHEMA_VERSION) return draft
+  const unzero = (v: number | null | undefined): number | null =>
+    v === 0 || v === undefined ? null : v
+  const unfalse = (v: boolean | null | undefined): boolean | null =>
+    v === false || v === undefined ? null : v
+  const unzeroRow = <T extends { headache: number | null; dizziness: number | null; nausea: number | null; fogginess: number | null }>(row: T): T => ({
+    ...row,
+    headache: unzero(row.headache),
+    dizziness: unzero(row.dizziness),
+    nausea: unzero(row.nausea),
+    fogginess: unzero(row.fogginess),
+  })
+  return {
+    ...draft,
+    digitsBackward: unzero(draft.digitsBackward),
+    monthsReverseErrors: unzero(draft.monthsReverseErrors),
+    orthostaticsSupineSymptoms: unfalse(draft.orthostaticsSupineSymptoms),
+    orthostaticsStandingSymptoms: unfalse(draft.orthostaticsStandingSymptoms),
+    mBessDoubleErrors: unzero(draft.mBessDoubleErrors),
+    mBessTandemErrors: unzero(draft.mBessTandemErrors),
+    mBessSingleErrors: unzero(draft.mBessSingleErrors),
+    complexTandemForwardEyesOpen: unzero(draft.complexTandemForwardEyesOpen),
+    complexTandemForwardEyesClosed: unzero(draft.complexTandemForwardEyesClosed),
+    complexTandemBackwardEyesOpen: unzero(draft.complexTandemBackwardEyesOpen),
+    complexTandemBackwardEyesClosed: unzero(draft.complexTandemBackwardEyesClosed),
+    dualTaskTrialsAttempted: unzero(draft.dualTaskTrialsAttempted),
+    dualTaskTrialsCorrect: unzero(draft.dualTaskTrialsCorrect),
+    gad7_1: unzero(draft.gad7_1),
+    gad7_2: unzero(draft.gad7_2),
+    gad7_3: unzero(draft.gad7_3),
+    gad7_4: unzero(draft.gad7_4),
+    gad7_5: unzero(draft.gad7_5),
+    gad7_6: unzero(draft.gad7_6),
+    gad7_7: unzero(draft.gad7_7),
+    phq2_1: unzero(draft.phq2_1),
+    phq2_2: unzero(draft.phq2_2),
+    sleep1: unzero(draft.sleep1),
+    sleep2: unzero(draft.sleep2),
+    sleep3: unzero(draft.sleep3),
+    sleep4: unzero(draft.sleep4),
+    sleep5: unzero(draft.sleep5),
+    mvomsBaseline: {
+      headache: unzero(draft.mvomsBaseline?.headache),
+      dizziness: unzero(draft.mvomsBaseline?.dizziness),
+      nausea: unzero(draft.mvomsBaseline?.nausea),
+      fogginess: unzero(draft.mvomsBaseline?.fogginess),
+    },
+    mvomsSmoothPursuits: unzeroRow(draft.mvomsSmoothPursuits),
+    mvomsSaccadesHorizontal: unzeroRow(draft.mvomsSaccadesHorizontal),
+    mvomsVORHorizontal: unzeroRow(draft.mvomsVORHorizontal),
+    mvomsVMS: unzeroRow(draft.mvomsVMS),
+  }
+}
+
 const SectionHeader = ({
   id,
   title,
@@ -89,6 +172,7 @@ export default function SCOAT6Client() {
       const draftWithTimestamp = {
         data: formData,
         timestamp: Date.now(),
+        schemaVersion: DRAFT_SCHEMA_VERSION,
       }
       localStorage.setItem('scoat6-draft', JSON.stringify(draftWithTimestamp))
     }, 3000)
@@ -101,7 +185,10 @@ export default function SCOAT6Client() {
     if (draft) {
       try {
         const parsed = JSON.parse(draft)
-        const draftData = parsed.data || parsed // Handle both old and new format
+        const draftData = migrateDraft(
+          parsed.data || parsed, // Handle both old and new format
+          parsed.schemaVersion || 1
+        )
         const draftTimestamp = parsed.timestamp || 0
 
         // Check if draft is older than 24 hours (86400000 ms)
@@ -1006,40 +1093,42 @@ export default function SCOAT6Client() {
 
                   {/* Auto-calculated Totals */}
                   <div className="grid grid-cols-7 gap-2 mt-4 pt-4 border-t-2 border-purple-300">
+                    {/* A column nobody filled in shows '—', not "0 symptoms,
+                        severity 0" — that reads as an asymptomatic athlete. */}
                     <div className="col-span-2 text-xs font-bold text-slate-900">Number of Symptoms:</div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomNumberPreInjury}
+                      {calculated.symptomsAdministered.preInjury ? calculated.symptomNumberPreInjury : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomNumberDayInjured}
+                      {calculated.symptomsAdministered.dayInjured ? calculated.symptomNumberDayInjured : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomNumberConsult1}
+                      {calculated.symptomsAdministered.consult1 ? calculated.symptomNumberConsult1 : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomNumberConsult2}
+                      {calculated.symptomsAdministered.consult2 ? calculated.symptomNumberConsult2 : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomNumberConsult3}
+                      {calculated.symptomsAdministered.consult3 ? calculated.symptomNumberConsult3 : NA}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-7 gap-2 mt-2">
                     <div className="col-span-2 text-xs font-bold text-slate-900">Symptom Severity:</div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomSeverityPreInjury}
+                      {calculated.symptomsAdministered.preInjury ? calculated.symptomSeverityPreInjury : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomSeverityDayInjured}
+                      {calculated.symptomsAdministered.dayInjured ? calculated.symptomSeverityDayInjured : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomSeverityConsult1}
+                      {calculated.symptomsAdministered.consult1 ? calculated.symptomSeverityConsult1 : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomSeverityConsult2}
+                      {calculated.symptomsAdministered.consult2 ? calculated.symptomSeverityConsult2 : NA}
                     </div>
                     <div className="bg-purple-600 text-white rounded px-2 py-2 text-center font-bold text-sm">
-                      {calculated.symptomSeverityConsult3}
+                      {calculated.symptomsAdministered.consult3 ? calculated.symptomSeverityConsult3 : NA}
                     </div>
                   </div>
                 </div>
@@ -1212,7 +1301,10 @@ export default function SCOAT6Client() {
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <div className="bg-purple-600 text-white rounded-lg p-4 text-center">
                     <div className="text-sm opacity-90 mb-1">Immediate Memory Total:</div>
-                    <div className="text-3xl font-bold">{calculated.immediateMemory} <span className="text-lg opacity-75">of 30</span></div>
+                    <div className="text-3xl font-bold">
+                      {calculated.immediateMemoryAdministered ? calculated.immediateMemory : NA}
+                      {' '}<span className="text-lg opacity-75">of 30</span>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Time Last Trial Completed:</label>
@@ -1298,7 +1390,7 @@ export default function SCOAT6Client() {
 
                 <div className="bg-purple-600 text-white rounded-lg p-4 text-center">
                   <span className="text-sm opacity-90">Digits Score: </span>
-                  <span className="text-2xl font-bold">{formData.digitsBackward}</span>
+                  <span className="text-2xl font-bold">{formData.digitsBackward ?? NA}</span>
                   <span className="text-sm opacity-75"> of 4</span>
                 </div>
               </div>
@@ -1335,8 +1427,8 @@ export default function SCOAT6Client() {
                     <input
                       type="number"
                       min="0"
-                      value={formData.monthsReverseErrors}
-                      onChange={(e) => setFormData(prev => ({ ...prev, monthsReverseErrors: parseInt(e.target.value) || 0 }))}
+                      value={formData.monthsReverseErrors ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, monthsReverseErrors: parseIntOrNull(e.target.value) }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
                     />
                   </div>
@@ -1345,7 +1437,7 @@ export default function SCOAT6Client() {
                 <div className="bg-purple-600 text-white rounded-lg p-4 text-center">
                   <span className="text-sm opacity-90">Months Score: </span>
                   <span className="text-2xl font-bold">
-                    {(parseFloat(formData.monthsReverseTime) > 0 && parseFloat(formData.monthsReverseTime) < 30 && formData.monthsReverseErrors === 0) ? 1 : 0}
+                    {calculated.monthsPoint ?? NA}
                   </span>
                   <span className="text-sm opacity-75"> of 1</span>
                 </div>
@@ -1355,7 +1447,7 @@ export default function SCOAT6Client() {
               <div className="bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg p-6">
                 <div className="text-center">
                   <div className="text-sm opacity-90 mb-2">Concentration Score (Digits + Months):</div>
-                  <div className="text-5xl font-bold">{calculated.concentration} <span className="text-2xl opacity-75">of 5</span></div>
+                  <div className="text-5xl font-bold">{calculated.concentration ?? NA} <span className="text-2xl opacity-75">of 5</span></div>
                 </div>
               </div>
             </div>
@@ -1414,10 +1506,13 @@ export default function SCOAT6Client() {
                     <div className="text-sm text-slate-700">Symptoms</div>
                     <div>
                       <div className="flex gap-3 mb-2">
+                        {/* Neither option is pre-selected: "No" is the clinical
+                            assertion that the athlete had no orthostatic
+                            symptoms, and only the clinician can make it. */}
                         <label className="flex items-center gap-1">
                           <input
                             type="radio"
-                            checked={!formData.orthostaticsSupineSymptoms}
+                            checked={formData.orthostaticsSupineSymptoms === false}
                             onChange={() => setFormData(prev => ({ ...prev, orthostaticsSupineSymptoms: false }))}
                             className="w-3 h-3 text-purple-600"
                           />
@@ -1426,7 +1521,7 @@ export default function SCOAT6Client() {
                         <label className="flex items-center gap-1">
                           <input
                             type="radio"
-                            checked={formData.orthostaticsSupineSymptoms}
+                            checked={formData.orthostaticsSupineSymptoms === true}
                             onChange={() => setFormData(prev => ({ ...prev, orthostaticsSupineSymptoms: true }))}
                             className="w-3 h-3 text-purple-600"
                           />
@@ -1448,7 +1543,7 @@ export default function SCOAT6Client() {
                         <label className="flex items-center gap-1">
                           <input
                             type="radio"
-                            checked={!formData.orthostaticsStandingSymptoms}
+                            checked={formData.orthostaticsStandingSymptoms === false}
                             onChange={() => setFormData(prev => ({ ...prev, orthostaticsStandingSymptoms: false }))}
                             className="w-3 h-3 text-purple-600"
                           />
@@ -1457,7 +1552,7 @@ export default function SCOAT6Client() {
                         <label className="flex items-center gap-1">
                           <input
                             type="radio"
-                            checked={formData.orthostaticsStandingSymptoms}
+                            checked={formData.orthostaticsStandingSymptoms === true}
                             onChange={() => setFormData(prev => ({ ...prev, orthostaticsStandingSymptoms: true }))}
                             className="w-3 h-3 text-purple-600"
                           />
@@ -1685,8 +1780,8 @@ export default function SCOAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mBessDoubleErrors}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessDoubleErrors: parseInt(e.target.value) || 0 }))}
+                        value={formData.mBessDoubleErrors ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessDoubleErrors: parseBoundedIntOrNull(e.target.value, 0, 10) }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1697,8 +1792,8 @@ export default function SCOAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mBessTandemErrors}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessTandemErrors: parseInt(e.target.value) || 0 }))}
+                        value={formData.mBessTandemErrors ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessTandemErrors: parseBoundedIntOrNull(e.target.value, 0, 10) }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1709,8 +1804,8 @@ export default function SCOAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mBessSingleErrors}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessSingleErrors: parseInt(e.target.value) || 0 }))}
+                        value={formData.mBessSingleErrors ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessSingleErrors: parseBoundedIntOrNull(e.target.value, 0, 10) }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1718,7 +1813,9 @@ export default function SCOAT6Client() {
                   </div>
                   <div className="mt-4 bg-purple-600 text-white rounded-lg p-4 text-center">
                     <span className="text-sm opacity-90">Total Errors: </span>
-                    <span className="text-3xl font-bold">{calculated.mBessTotal}</span>
+                    {/* All 3 stances required — a partial sum reads as better
+                        balance than was actually tested. */}
+                    <span className="text-3xl font-bold">{calculated.mBessTotal ?? NA}</span>
                     <span className="text-lg opacity-75"> of 30</span>
                   </div>
                 </div>
@@ -1763,8 +1860,8 @@ export default function SCOAT6Client() {
                             type="number"
                             min="0"
                             max="10"
-                            value={formData.mBessFoamDoubleErrors}
-                            onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamDoubleErrors: parseInt(e.target.value) || 0 }))}
+                            value={formData.mBessFoamDoubleErrors ?? ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamDoubleErrors: parseBoundedIntOrNull(e.target.value, 0, 10) }))}
                             className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                           />
                           <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1776,7 +1873,7 @@ export default function SCOAT6Client() {
                             min="0"
                             max="10"
                             value={formData.mBessFoamTandemErrors ?? ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamTandemErrors: parseInt(e.target.value) || 0 }))}
+                            onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamTandemErrors: parseBoundedIntOrNull(e.target.value, 0, 10) }))}
                             className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                           />
                           <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1788,7 +1885,7 @@ export default function SCOAT6Client() {
                             min="0"
                             max="10"
                             value={formData.mBessFoamSingleErrors ?? ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamSingleErrors: parseInt(e.target.value) || 0 }))}
+                            onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamSingleErrors: parseBoundedIntOrNull(e.target.value, 0, 10) }))}
                             className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                           />
                           <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1796,7 +1893,7 @@ export default function SCOAT6Client() {
                       </div>
                       <div className="mt-4 bg-orange-600 text-white rounded-lg p-4 text-center">
                         <span className="text-sm opacity-90">Total Errors (Foam): </span>
-                        <span className="text-3xl font-bold">{calculated.mBessFoamTotal}</span>
+                        <span className="text-3xl font-bold">{calculated.mBessFoamTotal ?? NA}</span>
                         <span className="text-lg opacity-75"> of 30</span>
                       </div>
                     </>
@@ -1886,8 +1983,8 @@ export default function SCOAT6Client() {
                       <input
                         type="number"
                         min="0"
-                        value={formData.complexTandemForwardEyesOpen}
-                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemForwardEyesOpen: parseInt(e.target.value) || 0 }))}
+                        value={formData.complexTandemForwardEyesOpen ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemForwardEyesOpen: parseBoundedIntOrNull(e.target.value, 0, 99) }))}
                         className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                       />
                     </div>
@@ -1896,15 +1993,15 @@ export default function SCOAT6Client() {
                       <input
                         type="number"
                         min="0"
-                        value={formData.complexTandemForwardEyesClosed}
-                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemForwardEyesClosed: parseInt(e.target.value) || 0 }))}
+                        value={formData.complexTandemForwardEyesClosed ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemForwardEyesClosed: parseBoundedIntOrNull(e.target.value, 0, 99) }))}
                         className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                       />
                     </div>
                     <div className="bg-orange-100 rounded-lg p-3 flex items-center justify-center">
                       <div className="text-center">
                         <div className="text-xs text-slate-600">Forward Total</div>
-                        <div className="text-2xl font-bold text-orange-700">{calculated.complexTandemForward}</div>
+                        <div className="text-2xl font-bold text-orange-700">{calculated.complexTandemForward ?? NA}</div>
                       </div>
                     </div>
                   </div>
@@ -1922,8 +2019,8 @@ export default function SCOAT6Client() {
                       <input
                         type="number"
                         min="0"
-                        value={formData.complexTandemBackwardEyesOpen}
-                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemBackwardEyesOpen: parseInt(e.target.value) || 0 }))}
+                        value={formData.complexTandemBackwardEyesOpen ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemBackwardEyesOpen: parseBoundedIntOrNull(e.target.value, 0, 99) }))}
                         className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                       />
                     </div>
@@ -1932,15 +2029,15 @@ export default function SCOAT6Client() {
                       <input
                         type="number"
                         min="0"
-                        value={formData.complexTandemBackwardEyesClosed}
-                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemBackwardEyesClosed: parseInt(e.target.value) || 0 }))}
+                        value={formData.complexTandemBackwardEyesClosed ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, complexTandemBackwardEyesClosed: parseBoundedIntOrNull(e.target.value, 0, 99) }))}
                         className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                       />
                     </div>
                     <div className="bg-orange-100 rounded-lg p-3 flex items-center justify-center">
                       <div className="text-center">
                         <div className="text-xs text-slate-600">Backward Total</div>
-                        <div className="text-2xl font-bold text-orange-700">{calculated.complexTandemBackward}</div>
+                        <div className="text-2xl font-bold text-orange-700">{calculated.complexTandemBackward ?? NA}</div>
                       </div>
                     </div>
                   </div>
@@ -1949,7 +2046,7 @@ export default function SCOAT6Client() {
                 {/* Total Points */}
                 <div className="bg-orange-600 text-white rounded-lg p-4 text-center">
                   <span className="text-sm opacity-90">Total Points (Forward + Backward): </span>
-                  <span className="text-3xl font-bold">{calculated.complexTandemTotal}</span>
+                  <span className="text-3xl font-bold">{calculated.complexTandemTotal ?? NA}</span>
                 </div>
 
                 <p className="text-xs text-slate-500 mt-2">
@@ -1998,8 +2095,8 @@ export default function SCOAT6Client() {
                     <input
                       type="number"
                       min="0"
-                      value={formData.dualTaskTrialsAttempted}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dualTaskTrialsAttempted: parseInt(e.target.value) || 0 }))}
+                      value={formData.dualTaskTrialsAttempted ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dualTaskTrialsAttempted: parseBoundedIntOrNull(e.target.value, 0, 99) }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                     />
                   </div>
@@ -2008,8 +2105,8 @@ export default function SCOAT6Client() {
                     <input
                       type="number"
                       min="0"
-                      value={formData.dualTaskTrialsCorrect}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dualTaskTrialsCorrect: parseInt(e.target.value) || 0 }))}
+                      value={formData.dualTaskTrialsCorrect ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dualTaskTrialsCorrect: parseBoundedIntOrNull(e.target.value, 0, 99) }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                     />
                   </div>
@@ -2029,7 +2126,7 @@ export default function SCOAT6Client() {
                   <div className="bg-orange-100 rounded-lg p-3 flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-xs text-slate-600">Cognitive Accuracy</div>
-                      <div className="text-2xl font-bold text-orange-700">{calculated.dualTaskAccuracy}</div>
+                      <div className="text-2xl font-bold text-orange-700">{calculated.dualTaskAccuracy || NA}</div>
                       <div className="text-xs text-slate-500">(Correct / Attempted)</div>
                     </div>
                   </div>
@@ -2079,10 +2176,10 @@ export default function SCOAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mvomsBaseline.headache}
+                        value={formData.mvomsBaseline.headache ?? ''}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
-                          mvomsBaseline: { ...prev.mvomsBaseline, headache: parseInt(e.target.value) || 0 }
+                          mvomsBaseline: { ...prev.mvomsBaseline, headache: parseBoundedIntOrNull(e.target.value, 0, 10) }
                         }))}
                         className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                       />
@@ -2090,10 +2187,10 @@ export default function SCOAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mvomsBaseline.dizziness}
+                        value={formData.mvomsBaseline.dizziness ?? ''}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
-                          mvomsBaseline: { ...prev.mvomsBaseline, dizziness: parseInt(e.target.value) || 0 }
+                          mvomsBaseline: { ...prev.mvomsBaseline, dizziness: parseBoundedIntOrNull(e.target.value, 0, 10) }
                         }))}
                         className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                       />
@@ -2101,10 +2198,10 @@ export default function SCOAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mvomsBaseline.nausea}
+                        value={formData.mvomsBaseline.nausea ?? ''}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
-                          mvomsBaseline: { ...prev.mvomsBaseline, nausea: parseInt(e.target.value) || 0 }
+                          mvomsBaseline: { ...prev.mvomsBaseline, nausea: parseBoundedIntOrNull(e.target.value, 0, 10) }
                         }))}
                         className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                       />
@@ -2112,10 +2209,10 @@ export default function SCOAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mvomsBaseline.fogginess}
+                        value={formData.mvomsBaseline.fogginess ?? ''}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
-                          mvomsBaseline: { ...prev.mvomsBaseline, fogginess: parseInt(e.target.value) || 0 }
+                          mvomsBaseline: { ...prev.mvomsBaseline, fogginess: parseBoundedIntOrNull(e.target.value, 0, 10) }
                         }))}
                         className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                       />
@@ -2145,10 +2242,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].headache}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].headache ?? ''}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], headache: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], headache: parseBoundedIntOrNull(e.target.value, 0, 10) }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2156,10 +2253,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].dizziness}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].dizziness ?? ''}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], dizziness: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], dizziness: parseBoundedIntOrNull(e.target.value, 0, 10) }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2167,10 +2264,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].nausea}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].nausea ?? ''}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], nausea: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], nausea: parseBoundedIntOrNull(e.target.value, 0, 10) }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2178,10 +2275,10 @@ export default function SCOAT6Client() {
                           type="number"
                           min="0"
                           max="10"
-                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].fogginess}
+                          value={(formData as unknown as Record<string, Scoat6MvomsRow>)[key].fogginess ?? ''}
                           onChange={(e) => setFormData(prev => ({
                             ...prev,
-                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], fogginess: parseInt(e.target.value) || 0 }
+                            [key]: { ...(prev as unknown as Record<string, Scoat6MvomsRow>)[key], fogginess: parseBoundedIntOrNull(e.target.value, 0, 10) }
                           }))}
                           className="w-full px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-xs text-center"
                         />
@@ -2236,7 +2333,9 @@ export default function SCOAT6Client() {
                             <div key={val} className="flex justify-center">
                               <input
                                 type="radio"
-                                checked={(formData as unknown as Record<string, number>)[key] === val}
+                                // Nothing pre-selected — "Not at all (0)" is the
+                                // patient's answer, not a default.
+                                checked={(formData as unknown as Record<string, number | null>)[key] === val}
                                 onChange={() => setFormData(prev => ({ ...prev, [key]: val }))}
                                 className="w-4 h-4 text-orange-600"
                               />
@@ -2249,8 +2348,8 @@ export default function SCOAT6Client() {
                     <div className="mt-4 bg-orange-600 text-white rounded-lg p-4">
                       <div className="text-center">
                         <div className="text-sm opacity-90 mb-1">Anxiety Screen Score:</div>
-                        <div className="text-3xl font-bold">{calculated.gad7Score} <span className="text-lg opacity-75">of 21</span></div>
-                        <div className="text-sm opacity-90 mt-2">{calculated.gad7Severity}</div>
+                        <div className="text-3xl font-bold">{calculated.gad7Score ?? NA} <span className="text-lg opacity-75">of 21</span></div>
+                        <div className="text-sm opacity-90 mt-2">{calculated.gad7Severity ?? 'Answer all 7 items to score'}</div>
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mt-2">
@@ -2300,7 +2399,9 @@ export default function SCOAT6Client() {
                             <div key={val} className="flex justify-center">
                               <input
                                 type="radio"
-                                checked={(formData as unknown as Record<string, number>)[key] === val}
+                                // Nothing pre-selected — "Not at all (0)" is the
+                                // patient's answer, not a default.
+                                checked={(formData as unknown as Record<string, number | null>)[key] === val}
                                 onChange={() => setFormData(prev => ({ ...prev, [key]: val }))}
                                 className="w-4 h-4 text-orange-600"
                               />
@@ -2312,7 +2413,7 @@ export default function SCOAT6Client() {
 
                     <div className="mt-4 bg-orange-600 text-white rounded-lg p-4 text-center">
                       <div className="text-sm opacity-90 mb-1">Depression Screen Score:</div>
-                      <div className="text-3xl font-bold">{calculated.phq2Score} <span className="text-lg opacity-75">of 6</span></div>
+                      <div className="text-3xl font-bold">{calculated.phq2Score ?? NA} <span className="text-lg opacity-75">of 6</span></div>
                       <div className="text-sm opacity-90 mt-2">(Cutpoint: 3 to screen for depression)</div>
                     </div>
                   </>
@@ -2468,8 +2569,8 @@ export default function SCOAT6Client() {
                     <div className="mt-4 bg-orange-600 text-white rounded-lg p-4">
                       <div className="text-center">
                         <div className="text-sm opacity-90 mb-1">Sleep Screen Score:</div>
-                        <div className="text-3xl font-bold">{calculated.sleepScore} <span className="text-lg opacity-75">of 17</span></div>
-                        <div className="text-sm opacity-90 mt-2">{calculated.sleepSeverity}</div>
+                        <div className="text-3xl font-bold">{calculated.sleepScore ?? NA} <span className="text-lg opacity-75">of 17</span></div>
+                        <div className="text-sm opacity-90 mt-2">{calculated.sleepSeverity ?? 'Answer all 5 items to score'}</div>
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mt-2">

@@ -58,6 +58,18 @@ const isVerified = (p: Record<string, unknown> | null): boolean => {
   const src = p?.hrSource as string | undefined
   return p?.hrVerified === true && src !== 'manual' && src !== undefined
 }
+/**
+ * Did this row record its HR provenance AT ALL? Collapsing "unknown" to `false`
+ * made the medicolegal skin print "UNVERIFIED (manual/camera)" — a positive
+ * claim about a source — for pre-verification legacy rows that recorded no
+ * source whatsoever. Undefined stays undefined so the skin says "NOT RECORDED"
+ * (2026-08-05 reporting-integrity sweep).
+ */
+const hasHrProvenance = (p: Record<string, unknown> | null): boolean => {
+  if (!p) return false
+  if (typeof p.hrVerified === 'boolean') return true
+  return typeof p.hrSource === 'string' && p.hrSource.trim() !== ''
+}
 /** payload.eventType, lower-cased ('' when absent). */
 const evTypeOf = (p: Record<string, unknown> | null): string =>
   typeof p?.eventType === 'string' ? p.eventType.toLowerCase() : ''
@@ -226,9 +238,18 @@ export async function loadReportInput(
   // acknowledgement is not a graded test, and a 'session-abandoned' record is
   // an audit row, not a delivered session — it must not count toward the
   // skins' "Sessions delivered", adherence, or medicolegal per-session rows.
-  const thresholds = rows.filter((r) => r.session_type === 'threshold' && !isThresholdEventRow(r))
-  const trainings = rows.filter(
-    (r) => r.session_type !== 'threshold' && evTypeOf(r.payload) !== 'session-abandoned',
+  // ORDER BY WHEN IT HAPPENED, not when it landed. The SQL orders by
+  // created_at (insert time), so a test taken offline and flushed days later
+  // sorted AFTER tests taken since — and `latest` (which picks the clearance
+  // interpretation and the whole recommendation branch) resolved to a STALE
+  // test. A queued 'no-intolerance' landing after a later symptomatic re-test
+  // would have printed "recommend clearance review" (2026-08-05
+  // reporting-integrity sweep).
+  const byOccurred = <T extends Row>(list: T[]): T[] =>
+    [...list].sort((a, b) => Date.parse(occurredIso(a)) - Date.parse(occurredIso(b)))
+  const thresholds = byOccurred(rows.filter((r) => r.session_type === 'threshold' && !isThresholdEventRow(r)))
+  const trainings = byOccurred(
+    rows.filter((r) => r.session_type !== 'threshold' && evTypeOf(r.payload) !== 'session-abandoned'),
   )
   const latest = thresholds[thresholds.length - 1]
   const condition = ((latest?.condition as Condition) || 'concussion') as Condition
@@ -254,7 +275,7 @@ export async function loadReportInput(
     preSymptom: num(t.payload?.preSymptom) ?? 0,
     peakSymptom: num(t.payload?.peakSymptom) ?? 0,
     completedMinutes: num(t.payload?.completedMinutes) ?? 0,
-    hrVerified: isVerified(t.payload),
+    hrVerified: hasHrProvenance(t.payload) ? isVerified(t.payload) : undefined,
     nextDayFlare: t.payload?.nextDayFlare === true,
     // Stop-rule + override provenance for the medicolegal skin. The web app
     // sends `symptomLimited` (SessionLog); the watch sends `flare`, which at
@@ -307,7 +328,7 @@ export async function loadReportInput(
     thresholdHistory,
     sessions,
     goals: opts.goals,
-    episode: { startedAt: occurredIso(rows[0]), reportedAt: new Date().toISOString() },
+    episode: { startedAt: byOccurred(rows)[0] ? occurredIso(byOccurred(rows)[0]) : rows[0].created_at, reportedAt: new Date().toISOString() },
   }
 }
 

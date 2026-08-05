@@ -146,7 +146,7 @@ export default function SCATCoursePage() {
                 Concussion Education Australia Home
               </Link>
               <h1 className="text-3xl font-bold mb-2">Free SCAT6/SCOAT6 Mastery Course</h1>
-              <p className="text-blue-100">Welcome back! Finish all modules and get <span className="font-bold text-white">$50 off</span> the full online course.</p>
+              <p className="text-blue-100">Welcome back! Finish all modules and get <span className="font-bold text-white">${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off</span> the full online course.</p>
             </div>
             <div className="text-right">
               <div className="text-sm text-blue-100 mb-1">Logged in as</div>
@@ -263,7 +263,7 @@ export default function SCATCoursePage() {
                     href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
                   >
-                    Claim $50 Off &amp; See Pricing
+                    Claim ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} Off &amp; See Pricing
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>

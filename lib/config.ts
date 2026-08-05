@@ -40,6 +40,12 @@ export const CONFIG = {
     PRICE_EARLY_BIRD: 1190,
     // SCAT6 completion code — dollar amount must match the Stripe coupon.
     SCAT_DISCOUNT_AUD: 50,
+    // Reference+Toolkit ("book") owner credit, applied server-side at checkout
+    // to online-only / full-course. The SAME number has to drive the price the
+    // /pricing cards show and the discount lib/stripe.ts subtracts from the
+    // line item — they were two independent literals, so a change to one shipped
+    // a page quoting a price the buyer would not be charged.
+    BUNDLE_OWNER_DISCOUNT_AUD: 100,
     // International (USD) — CRM course + first year on the platform, with the
     // annual renewal covering the concussion-update module + platform access.
     // Consumed by lib/stripe.ts (international-online checkout) and the

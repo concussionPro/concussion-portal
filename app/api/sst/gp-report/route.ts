@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
+import { SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 import { isRegisteredClinic, verifyViewKey, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
 import { buildGpReportHtml } from '@/lib/sst-trainer/gp-report-html'
 import { loadGpReportData, renderGpReportPdf } from '@/lib/sst-trainer/gp-report-pdf'
@@ -30,7 +31,7 @@ a.btn{display:inline-block;margin-top:18px;background:#16243f;color:#fff;font-we
 <li>Parent / patient symptom &amp; recovery plan</li>
 </ul>
 <a class="btn" href="${origin}/clinical-testing/subscribe">Unlock documents — subscribe</a>
-<p class="sub">Plans from A$49/month — cancel anytime. Your first 3 patients are free, and a watermarked preview of every document is available from your Clinical Hub during the trial.</p>
+<p class="sub">Plans from A$${SST_TIER_FROM_AUD}/month — cancel anytime. Your first ${SST_TRIAL_PATIENT_CAP} patients are free, and a watermarked preview of every document is available from your Clinical Hub during the trial.</p>
 </div></body></html>`
 }
 

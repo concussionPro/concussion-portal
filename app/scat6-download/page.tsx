@@ -152,6 +152,17 @@ export default function SCAT6DownloadPage() {
 
       const data = await res.json()
 
+      // Existing account that OWNS something: the API deliberately sets NO
+      // session cookie and emails a login link instead (anti-takeover — see
+      // lib/account-escalation.ts). Navigating on would land them on gated
+      // content with no session, so say what actually happened.
+      if (data.requiresEmailLogin) {
+        setError(
+          "You already have an account \u2014 we've emailed you a login link. Open it and you'll be signed straight in.",
+        )
+        return
+      }
+
       if (data.success) {
         // Fire gtag lead conversion with value + enhanced data
         trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 10, email.trim().toLowerCase())

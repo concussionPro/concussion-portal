@@ -26,6 +26,7 @@ import {
 } from '@/components/clinical/ClinicProfileCard'
 import type { DischargeTemplate } from '@/data/hub-program-content'
 import { Lock, ArrowRight, FileText, ChevronLeft } from 'lucide-react'
+import { SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 
 export interface DocumentsContent {
   templates: DischargeTemplate[]
@@ -283,7 +284,10 @@ function DocumentsPaywall({ clinicName }: { clinicName: string | null }) {
       >
         Unlock documents — subscribe <ArrowRight className="h-4 w-4" />
       </Link>
-      <p className="mt-3 text-xs text-slate-400">A$49/month, locked for life. First 3 patients free.</p>
+      {/* "locked for life" was the RETIRED founding model — lib/config.ts is
+          explicit that founding pricing is not sold and must not reappear on any
+          surface. Amount + trial allowance now derive from CONFIG. */}
+      <p className="mt-3 text-xs text-slate-400">From A${SST_TIER_FROM_AUD}/month. First {SST_TRIAL_PATIENT_CAP} patients free.</p>
     </div>
   )
 }

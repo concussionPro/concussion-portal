@@ -6,6 +6,8 @@ import { getEpModulesMeta as getModulesMeta, epProgressId } from '@/data/ep-modu
 import { useProgress } from '@/contexts/ProgressContext'
 import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award, Wrench, Stethoscope } from 'lucide-react'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
+import { CrmPracticalUpsell } from '@/components/ep-course/CrmPracticalUpsell'
+import type { SessionUser } from '@/contexts/SessionContext'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -44,7 +46,12 @@ export function EpCourseNavigation({
     Number.isNaN(currentModuleId) ? [] : [currentModuleId]
   )
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
+  // Session user, for the practical-day upgrade card below. (This used to hold
+  // only `accessLevel`, which nothing in this file ever read — and accessLevel
+  // is the WRONG signal for the EP course anyway: a CRM buyer carries
+  // 'preview'. `ownsCrm && !ownsCrmPractical` is the CRM analogue of CCM's
+  // 'online-only'.)
+  const [user, setUser] = useState<SessionUser | null>(null)
   const allModulesComplete =
     modules.length > 0 && modules.every((m) => isModuleComplete(epProgressId(m.id)))
 
@@ -55,7 +62,7 @@ export function EpCourseNavigation({
         if (response.ok) {
           const data = await response.json()
           if (data.user) {
-            setAccessLevel(data.user.accessLevel)
+            setUser(data.user)
           }
         }
       } catch (error) {
@@ -343,6 +350,20 @@ export function EpCourseNavigation({
             Certificate
             <span className="ml-auto text-[10px]">{allModulesComplete ? 'ready' : 'on completion'}</span>
           </Link>
+
+          {/* Practical-day upgrade — CCM has had a persistent sidebar card for
+              online-only buyers since launch; the EP sidebar had no commercial
+              surface at all. Demo/reviewer sessions never see it. */}
+          {user && !user.isDemo && user.ownsCrm && !user.ownsCrmPractical && (
+            <div className="mt-4">
+              <CrmPracticalUpsell
+                email={user.email}
+                workshopLocation={user.workshopLocation}
+                variant="sidebar"
+                source="ep_sidebar"
+              />
+            </div>
+          )}
         </div>
       </div>
 

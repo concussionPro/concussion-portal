@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { stripe } from '@/lib/stripe'
 import { COURSES, getEffectiveStatus, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { CONFIG } from '@/lib/config'
+import { rateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/get-client-ip'
 
 const schema = z.object({
   courseSlug: z.string().min(1).max(80),
@@ -22,6 +24,14 @@ const schema = z.object({
  * the course_purchases table on the checkout.session.completed event.
  */
 export async function POST(request: NextRequest) {
+  // Rate limit, same as /api/create-checkout and the international CRM route:
+  // this endpoint mints a real Stripe Checkout Session on an unauthenticated
+  // POST, so without one a script can spray sessions at the account.
+  const rl = await rateLimit({ key: `short-course-checkout:${getClientIp(request)}`, limit: 10, windowSec: 60 })
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Too many checkout attempts. Please wait a minute.' }, { status: 429 })
+  }
+
   let raw: unknown
   try {
     raw = await request.json()

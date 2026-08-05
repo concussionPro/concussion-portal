@@ -18,6 +18,18 @@ import {
   calculatePHQ2,
   calculateSleepScore,
   getSleepSeverity,
+  isSymptomColumnAdministered,
+  isImmediateMemoryAdministered,
+  isDigitsAdministered,
+  isDelayedRecallAdministered,
+  isBalanceAdministered,
+  isComplexTandemAdministered,
+  isDualTaskAdministered,
+  isMvomsBaselineAdministered,
+  isMvomsRowAdministered,
+  isGAD7Administered,
+  isPHQ2Administered,
+  isSleepAdministered,
 } from './scoat6-calculations'
 import {
   drawText,
@@ -28,7 +40,6 @@ import {
   drawYesNo,
   drawNotAdministered,
   notAdministeredMark,
-  anyProvided,
   embedStandardFonts,
   loadFlatPDF,
   savePDFAndDownload,
@@ -59,94 +70,26 @@ export async function exportSCOAT6ToFlatPDF(
     // ========================================================================
     // "WAS THIS SECTION ADMINISTERED?" — clinical-record integrity gate
     // ========================================================================
-    // Booleans default false and numbers default 0, so an untouched subtest is
-    // indistinguishable from a subtest scored zero. For each scored section we
-    // derive `administered` = "any field in the section differs from its
-    // default", and the explicit not-done flags the SCOAT6 model already
-    // carries (gad7NotDone / phq2NotDone / sleepNotDone / mvoms*.notTested)
-    // FORCE the not-administered path regardless of any other value.
-    // Unadministered sections draw no item marks and print a dash in their
-    // score box; administered sections print their real value, including 0.
+    // Scored fields are `number | null` so "never tested" and "scored zero"
+    // are distinguishable, and the predicates live in scoat6-calculations so
+    // the on-screen totals and this PDF can never disagree. The explicit
+    // not-done flags (gad7NotDone / phq2NotDone / sleepNotDone /
+    // mvoms*.notTested) FORCE the not-administered path regardless of any
+    // other value. Unadministered sections draw no item marks and print a dash
+    // in their score box; administered sections print their real value,
+    // including a genuine 0.
     const na = notAdministeredMark(font)
 
-    const immediateMemoryAdministered = anyProvided(
-      formData.wordListUsed,
-      formData.immediateMemoryTimeCompleted,
-      ...formData.immediateMemoryTrial1,
-      ...formData.immediateMemoryTrial2,
-      ...formData.immediateMemoryTrial3,
-    )
-
-    const digitsAdministered = anyProvided(
-      formData.digitListUsed,
-      formData.digitsBackward,
-    )
-
-    const monthsAdministered = anyProvided(
-      formData.monthsReverseTime,
-      formData.monthsReverseErrors,
-    )
-
-    // Concentration /5 aggregates digits + months — needs both halves.
-    const concentrationAdministered = digitsAdministered && monthsAdministered
-
-    // Word list is shared with immediate memory, so it is not evidence here.
-    const delayedRecallAdministered = anyProvided(
-      formData.delayedRecallStartTime,
-      formData.delayedRecallMinutesSinceImmediate,
-      ...formData.delayedRecall,
-    )
-
-    const balanceAdministered = anyProvided(
-      formData.footTested,
-      formData.mBessDoubleErrors,
-      formData.mBessTandemErrors,
-      formData.mBessSingleErrors,
-    )
-
-    const complexTandemAdministered = anyProvided(
-      formData.complexTandemForwardEyesOpen,
-      formData.complexTandemForwardEyesClosed,
-      formData.complexTandemBackwardEyesOpen,
-      formData.complexTandemBackwardEyesClosed,
-    )
-
-    const dualTaskAdministered = anyProvided(
-      formData.dualTaskCognitiveTask,
-      formData.dualTaskTrialsAttempted,
-      formData.dualTaskTrialsCorrect,
-      formData.dualTaskAverageTime,
-    )
-
-    // mVOMS baseline has no not-tested flag of its own; treat the whole mVOMS
-    // block as run if the baseline has any rating or ANY sub-test was tested.
-    const mvomsRows = [
-      formData.mvomsSmoothPursuits,
-      formData.mvomsSaccadesHorizontal,
-      formData.mvomsVORHorizontal,
-      formData.mvomsVMS,
-    ]
-    const mvomsBaselineAdministered = anyProvided(
-      formData.mvomsBaseline.headache,
-      formData.mvomsBaseline.dizziness,
-      formData.mvomsBaseline.nausea,
-      formData.mvomsBaseline.fogginess,
-    ) || mvomsRows.some(r => !r.notTested && anyProvided(
-      r.headache, r.dizziness, r.nausea, r.fogginess, r.comments,
-    ))
-
-    // Explicit not-done flags win outright.
-    const gad7Administered = !formData.gad7NotDone && anyProvided(
-      formData.gad7_1, formData.gad7_2, formData.gad7_3, formData.gad7_4,
-      formData.gad7_5, formData.gad7_6, formData.gad7_7,
-    )
-    const phq2Administered = !formData.phq2NotDone && anyProvided(
-      formData.phq2_1, formData.phq2_2,
-    )
-    const sleepAdministered = !formData.sleepNotDone && anyProvided(
-      formData.sleep1, formData.sleep2, formData.sleep3,
-      formData.sleep4, formData.sleep5,
-    )
+    const immediateMemoryAdministered = isImmediateMemoryAdministered(formData)
+    const digitsAdministered = isDigitsAdministered(formData)
+    const delayedRecallAdministered = isDelayedRecallAdministered(formData)
+    const balanceAdministered = isBalanceAdministered(formData)
+    const complexTandemAdministered = isComplexTandemAdministered(formData)
+    const dualTaskAdministered = isDualTaskAdministered(formData)
+    const mvomsBaselineAdministered = isMvomsBaselineAdministered(formData)
+    const gad7Administered = isGAD7Administered(formData)
+    const phq2Administered = isPHQ2Administered(formData)
+    const sleepAdministered = isSleepAdministered(formData)
 
     // ==================== PAGE 1 (index 0): DEMOGRAPHICS ====================
     const p1 = pages[0]
@@ -333,6 +276,13 @@ export async function exportSCOAT6ToFlatPDF(
     const totalColumns: ('preInjury' | 'dayInjured' | 'consult1' | 'consult2' | 'consult3')[] =
       ['preInjury', 'dayInjured', 'consult1', 'consult2', 'consult3']
     totalColumns.forEach(col => {
+      // "Symptom number 0 / severity 0" is the assertion that the athlete is
+      // ASYMPTOMATIC at that visit. A column nobody filled in gets a dash.
+      if (!isSymptomColumnAdministered(formData, col)) {
+        drawTextCentered(p5, colPositions[col] - 10, totalsY, 30, na, { font: fontBold, size: fsm })
+        drawTextCentered(p5, colPositions[col] - 10, totalsY - 18, 30, na, { font: fontBold, size: fsm })
+        return
+      }
       const num = calculateSymptomNumber(formData.symptoms, col)
       const sev = calculateSymptomSeverity(formData.symptoms, col)
       drawTextCentered(p5, colPositions[col] - 10, totalsY, 30, num.toString(), { font: fontBold, size: fsm })
@@ -394,22 +344,23 @@ export async function exportSCOAT6ToFlatPDF(
     if (formData.digitListUsed === 'C') drawCheckmark(p6, 220, H - 250, 10)
 
     if (digitsAdministered) {
-      drawText(p6, 430, H - 340, formData.digitsBackward.toString(), { font: fontBold, size: fsl })
+      drawText(p6, 430, H - 340, String(formData.digitsBackward), { font: fontBold, size: fsl })
     } else {
       drawNotAdministered(p6, 430, H - 340, { font: fontBold, size: fsl })
     }
 
     // Months in reverse
     drawText(p6, 300, H - 430, formData.monthsReverseTime, { font, size: fs })
-    if (monthsAdministered) {
-      drawText(p6, 430, H - 430, formData.monthsReverseErrors.toString(), { font, size: fs })
+    if (formData.monthsReverseErrors !== null) {
+      drawText(p6, 430, H - 430, String(formData.monthsReverseErrors), { font, size: fs })
     } else {
       drawNotAdministered(p6, 430, H - 430, { font, size: fs })
     }
 
-    // Concentration Score (Digits + Months) — needs BOTH halves.
-    if (concentrationAdministered) {
-      drawText(p6, 430, H - 460, calculateConcentration(formData).toString(), { font: fontBold, size: fsl })
+    // Concentration Score (Digits + Months) — null unless BOTH halves ran.
+    const concentration = calculateConcentration(formData)
+    if (concentration !== null) {
+      drawText(p6, 430, H - 460, concentration.toString(), { font: fontBold, size: fsl })
     } else {
       drawNotAdministered(p6, 430, H - 460, { font: fontBold, size: fsl })
     }
@@ -429,6 +380,24 @@ export async function exportSCOAT6ToFlatPDF(
     if (formData.orthostaticsStandingResult) {
       drawText(p7, 450, H - 195, formData.orthostaticsStandingResult, { font, size: fsm })
     }
+
+    // Orthostatic symptoms (dizziness/syncope/blurred vision/nausea/fatigue).
+    // Collected on screen but previously never exported, so a positive
+    // orthostatic response vanished from the record. `null` = never asked.
+    const orthostaticSymptomLine = (
+      value: boolean | null,
+      description: string
+    ): string => {
+      if (value === null) return na
+      if (!value) return 'No'
+      return description.trim() ? `Yes — ${description.trim()}` : 'Yes'
+    }
+    drawText(p7, 200, H - 230,
+      `Supine symptoms: ${orthostaticSymptomLine(formData.orthostaticsSupineSymptoms, formData.orthostaticsSupineSymptomsDescription)}`,
+      { font, size: fsm, maxWidth: 160 })
+    drawText(p7, 370, H - 230,
+      `Standing symptoms: ${orthostaticSymptomLine(formData.orthostaticsStandingSymptoms, formData.orthostaticsStandingSymptomsDescription)}`,
+      { font, size: fsm, maxWidth: 170 })
 
     // Cervical Spine Assessment
     const cervicalItems = [
@@ -480,16 +449,22 @@ export async function exportSCOAT6ToFlatPDF(
     if (formData.footTested === 'Left') drawFilledCircle(p8, 200, H - 310, 3.5)
     if (formData.footTested === 'Right') drawFilledCircle(p8, 260, H - 310, 3.5)
 
-    if (balanceAdministered) {
-      drawText(p8, 400, H - 350, formData.mBessDoubleErrors.toString(), { font, size: fs })
-      drawText(p8, 400, H - 370, formData.mBessTandemErrors.toString(), { font, size: fs })
-      drawText(p8, 400, H - 390, formData.mBessSingleErrors.toString(), { font, size: fs })
-      drawText(p8, 400, H - 410, calculateMBESS(formData).toString(), { font: fontBold, size: fs })
+    // 0 errors of 30 = a PERFECT balance result. Never assert it by default —
+    // each stance prints only its own recorded value, and the /30 total only
+    // once all three stances exist.
+    const mBessStances: Array<[number, number | null]> = [
+      [H - 350, formData.mBessDoubleErrors],
+      [H - 370, formData.mBessTandemErrors],
+      [H - 390, formData.mBessSingleErrors],
+    ]
+    mBessStances.forEach(([y, value]) => {
+      if (value !== null) drawText(p8, 400, y, String(value), { font, size: fs })
+      else drawNotAdministered(p8, 400, y, { font, size: fs })
+    })
+    const mBessTotal = calculateMBESS(formData)
+    if (balanceAdministered && mBessTotal !== null) {
+      drawText(p8, 400, H - 410, mBessTotal.toString(), { font: fontBold, size: fs })
     } else {
-      // 0 errors of 30 = a PERFECT balance result. Never assert it by default.
-      drawNotAdministered(p8, 400, H - 350, { font, size: fs })
-      drawNotAdministered(p8, 400, H - 370, { font, size: fs })
-      drawNotAdministered(p8, 400, H - 390, { font, size: fs })
       drawNotAdministered(p8, 400, H - 410, { font: fontBold, size: fs })
     }
 
@@ -514,43 +489,63 @@ export async function exportSCOAT6ToFlatPDF(
     drawText(p8, 440, H - 480, calculateTandemGaitAverage(formData), { font, size: fs })
     drawText(p8, 490, H - 480, calculateTandemGaitFastest(formData), { font: fontBold, size: fs })
 
+    // Qualitative failure flag — times alone read as a normal gait, so an
+    // athlete who swayed, over-stepped, fell or could not complete must say so.
+    if (formData.tandemGaitAbnormal) {
+      drawText(p8, 65, H - 505,
+        'Abnormal / failed to complete — unstable or sway, fall or over-step, dizzy or nauseous',
+        { font: fontBold, size: fsm, maxWidth: 470 })
+    }
+
     // ==================== PAGE 9 (index 8): COMPLEX TANDEM + DUAL TASK ====================
     const p9 = pages[8]
 
-    // Complex Tandem Gait — four error counts, all defaulting to 0.
-    if (complexTandemAdministered) {
-      drawText(p9, 350, H - 160, formData.complexTandemForwardEyesOpen.toString(), { font, size: fs })
-      drawText(p9, 450, H - 160, formData.complexTandemForwardEyesClosed.toString(), { font, size: fs })
-      drawText(p9, 500, H - 160, calculateComplexTandemForward(formData).toString(), { font: fontBold, size: fs })
-
-      drawText(p9, 350, H - 195, formData.complexTandemBackwardEyesOpen.toString(), { font, size: fs })
-      drawText(p9, 450, H - 195, formData.complexTandemBackwardEyesClosed.toString(), { font, size: fs })
-      drawText(p9, 500, H - 195, calculateComplexTandemBackward(formData).toString(), { font: fontBold, size: fs })
-
-      drawText(p9, 500, H - 230, calculateComplexTandemTotal(formData).toString(), { font: fontBold, size: fsl })
+    // Complex Tandem Gait — a printed 0 asserts a flawless walk, so each cell
+    // prints only what was actually recorded and totals need every component.
+    const complexTandemCells: Array<[number, number, number | null]> = [
+      [350, H - 160, formData.complexTandemForwardEyesOpen],
+      [450, H - 160, formData.complexTandemForwardEyesClosed],
+      [500, H - 160, calculateComplexTandemForward(formData)],
+      [350, H - 195, formData.complexTandemBackwardEyesOpen],
+      [450, H - 195, formData.complexTandemBackwardEyesClosed],
+      [500, H - 195, calculateComplexTandemBackward(formData)],
+    ]
+    complexTandemCells.forEach(([x, y, value]) => {
+      const bold = x === 500 ? { font: fontBold, size: fs } : { font, size: fs }
+      if (value !== null) drawText(p9, x, y, String(value), bold)
+      else drawNotAdministered(p9, x, y, bold)
+    })
+    const complexTandemTotal = calculateComplexTandemTotal(formData)
+    if (complexTandemAdministered && complexTandemTotal !== null) {
+      drawText(p9, 500, H - 230, complexTandemTotal.toString(), { font: fontBold, size: fsl })
     } else {
-      drawNotAdministered(p9, 350, H - 160, { font, size: fs })
-      drawNotAdministered(p9, 450, H - 160, { font, size: fs })
-      drawNotAdministered(p9, 500, H - 160, { font: fontBold, size: fs })
-      drawNotAdministered(p9, 350, H - 195, { font, size: fs })
-      drawNotAdministered(p9, 450, H - 195, { font, size: fs })
-      drawNotAdministered(p9, 500, H - 195, { font: fontBold, size: fs })
       drawNotAdministered(p9, 500, H - 230, { font: fontBold, size: fsl })
     }
 
     // Dual Task Gait
     drawText(p9, 200, H - 320, formData.dualTaskCognitiveTask, { font, size: fs })
     if (dualTaskAdministered) {
-      drawText(p9, 350, H - 350, formData.dualTaskTrialsAttempted.toString(), { font, size: fs })
-      drawText(p9, 450, H - 350, formData.dualTaskTrialsCorrect.toString(), { font, size: fs })
-      drawText(p9, 350, H - 370, formData.dualTaskAverageTime, { font, size: fs })
-      // calculateDualTaskAccuracy already returns '-' when 0 trials attempted.
-      drawText(p9, 450, H - 370, calculateDualTaskAccuracy(formData), { font: fontBold, size: fs })
+      if (formData.dualTaskTrialsAttempted !== null) {
+        drawText(p9, 350, H - 350, String(formData.dualTaskTrialsAttempted), { font, size: fs })
+      } else {
+        drawNotAdministered(p9, 350, H - 350, { font, size: fs })
+      }
+      if (formData.dualTaskTrialsCorrect !== null) {
+        drawText(p9, 450, H - 350, String(formData.dualTaskTrialsCorrect), { font, size: fs })
+      } else {
+        drawNotAdministered(p9, 450, H - 350, { font, size: fs })
+      }
+      // Accuracy is '' unless both counts exist; an empty string draws nothing.
+      const accuracy = calculateDualTaskAccuracy(formData)
+      if (accuracy) drawText(p9, 450, H - 370, accuracy, { font: fontBold, size: fs })
+      else drawNotAdministered(p9, 450, H - 370, { font: fontBold, size: fs })
     } else {
       drawNotAdministered(p9, 350, H - 350, { font, size: fs })
       drawNotAdministered(p9, 450, H - 350, { font, size: fs })
       drawNotAdministered(p9, 450, H - 370, { font: fontBold, size: fs })
     }
+    // Recorded time stands on its own — it is a measurement, not a derived score.
+    drawText(p9, 350, H - 370, formData.dualTaskAverageTime, { font, size: fs })
     if (formData.dualTaskComments) {
       drawWrappedText(p9, 65, H - 400, formData.dualTaskComments, 470, { font, size: fsm })
     }
@@ -560,15 +555,15 @@ export async function exportSCOAT6ToFlatPDF(
 
     // mVOMS Baseline — 0/0/0/0 asserts "no symptom provocation at rest", which
     // is a real clinical finding and must not be manufactured by default.
-    const mvomsBaselineCols: Array<[number, number]> = [
+    const mvomsBaselineCols: Array<[number, number | null]> = [
       [200, formData.mvomsBaseline.headache],
       [280, formData.mvomsBaseline.dizziness],
       [360, formData.mvomsBaseline.nausea],
       [440, formData.mvomsBaseline.fogginess],
     ]
     mvomsBaselineCols.forEach(([x, value]) => {
-      if (mvomsBaselineAdministered) {
-        drawText(p10, x, H - 130, value.toString(), { font, size: fs })
+      if (mvomsBaselineAdministered && value !== null) {
+        drawText(p10, x, H - 130, String(value), { font, size: fs })
       } else {
         drawNotAdministered(p10, x, H - 130, { font, size: fs })
       }
@@ -584,23 +579,25 @@ export async function exportSCOAT6ToFlatPDF(
 
     mvomsTests.forEach(test => {
       // `notTested` is the explicit flag and wins outright; otherwise the row
-      // must show some evidence it was run before its 0s can be asserted.
-      const rowAdministered = !test.data.notTested && anyProvided(
-        test.data.headache, test.data.dizziness,
-        test.data.nausea, test.data.fogginess, test.data.comments,
-      )
+      // prints each provocation rating it actually has. A blank cell is NOT
+      // "no provocation" — that finding has to be typed as a 0.
+      const rowAdministered = isMvomsRowAdministered(test.data)
       if (test.data.notTested) {
         drawText(p10, 200, test.y, 'Not tested', { font, size: fsm })
-      } else if (rowAdministered) {
-        drawText(p10, 200, test.y, test.data.headache.toString(), { font, size: fs })
-        drawText(p10, 280, test.y, test.data.dizziness.toString(), { font, size: fs })
-        drawText(p10, 360, test.y, test.data.nausea.toString(), { font, size: fs })
-        drawText(p10, 440, test.y, test.data.fogginess.toString(), { font, size: fs })
       } else {
-        drawNotAdministered(p10, 200, test.y, { font, size: fs })
-        drawNotAdministered(p10, 280, test.y, { font, size: fs })
-        drawNotAdministered(p10, 360, test.y, { font, size: fs })
-        drawNotAdministered(p10, 440, test.y, { font, size: fs })
+        const cells: Array<[number, number | null]> = [
+          [200, test.data.headache],
+          [280, test.data.dizziness],
+          [360, test.data.nausea],
+          [440, test.data.fogginess],
+        ]
+        cells.forEach(([x, value]) => {
+          if (rowAdministered && value !== null) {
+            drawText(p10, x, test.y, String(value), { font, size: fs })
+          } else {
+            drawNotAdministered(p10, x, test.y, { font, size: fs })
+          }
+        })
       }
       if (test.data.comments) {
         drawText(p10, 500, test.y, test.data.comments, { font, size: 7, maxWidth: 60 })
@@ -615,14 +612,17 @@ export async function exportSCOAT6ToFlatPDF(
       const gad7Items = [formData.gad7_1, formData.gad7_2, formData.gad7_3, formData.gad7_4,
         formData.gad7_5, formData.gad7_6, formData.gad7_7]
       gad7Items.forEach((val, i) => {
+        if (val === null) return // unanswered item: no circle at all
         const y = gad7StartY - (i * gad7RowH)
         // Draw the value (0-3) at the appropriate column
         const colX = 350 + (val * 40)
         drawFilledCircle(p10, colX, y + 4, 3.5)
       })
-      // GAD-7 total
+      // GAD-7 total — the severity band is only ever derived from a real score
       const gad7Total = calculateGAD7(formData)
-      drawText(p10, 430, gad7StartY - (7 * gad7RowH), `${gad7Total} — ${getGAD7Severity(gad7Total)}`, { font: fontBold, size: fsm })
+      drawText(p10, 430, gad7StartY - (7 * gad7RowH),
+        gad7Total === null ? na : `${gad7Total} — ${getGAD7Severity(gad7Total)}`,
+        { font: fontBold, size: fsm })
     } else {
       // No item circles; the score box states not-done rather than "0".
       drawText(p10, 430, gad7StartY - (7 * gad7RowH),
@@ -632,9 +632,9 @@ export async function exportSCOAT6ToFlatPDF(
     // PHQ-2 — same rule.
     const phq2StartY = H - 560
     if (phq2Administered) {
-      drawText(p10, 400, phq2StartY, formData.phq2_1.toString(), { font, size: fs })
-      drawText(p10, 400, phq2StartY - 18, formData.phq2_2.toString(), { font, size: fs })
-      drawText(p10, 400, phq2StartY - 40, `Total: ${calculatePHQ2(formData)}`, { font: fontBold, size: fsm })
+      drawText(p10, 400, phq2StartY, String(formData.phq2_1), { font, size: fs })
+      drawText(p10, 400, phq2StartY - 18, String(formData.phq2_2), { font, size: fs })
+      drawText(p10, 400, phq2StartY - 40, `Total: ${calculatePHQ2(formData) ?? na}`, { font: fontBold, size: fsm })
     } else {
       drawNotAdministered(p10, 400, phq2StartY, { font, size: fs })
       drawNotAdministered(p10, 400, phq2StartY - 18, { font, size: fs })
@@ -652,11 +652,13 @@ export async function exportSCOAT6ToFlatPDF(
       const sleepItems = [formData.sleep1, formData.sleep2, formData.sleep3, formData.sleep4, formData.sleep5]
       sleepItems.forEach((val, i) => {
         const y = sleepStartY - (i * sleepRowH)
-        drawText(p11, 430, y, val.toString(), { font, size: fs })
+        if (val === null) drawNotAdministered(p11, 430, y, { font, size: fs })
+        else drawText(p11, 430, y, String(val), { font, size: fs })
       })
       const sleepTotal = calculateSleepScore(formData)
       drawText(p11, 430, sleepStartY - (5 * sleepRowH),
-        `${sleepTotal} — ${getSleepSeverity(sleepTotal)}`, { font: fontBold, size: fsm })
+        sleepTotal === null ? na : `${sleepTotal} — ${getSleepSeverity(sleepTotal)}`,
+        { font: fontBold, size: fsm })
     } else {
       for (let i = 0; i < 5; i++) {
         drawNotAdministered(p11, 430, sleepStartY - (i * sleepRowH), { font, size: fs })
@@ -688,10 +690,13 @@ export async function exportSCOAT6ToFlatPDF(
     drawText(p12, 200, H - 420, formData.delayedRecallStartTime, { font, size: fs })
     drawText(p12, 350, H - 420, formData.delayedRecallMinutesSinceImmediate, { font, size: fs })
 
-    // Computerized Tests
+    // Computerized Tests — the post-injury results are the clinically load-
+    // bearing half and were previously collected but never exported.
     if (!formData.computerizedTestNotDone && formData.computerizedTestBattery) {
       drawText(p12, 200, H - 470, formData.computerizedTestBattery, { font, size: fs })
       drawText(p12, 200, H - 488, formData.computerizedTestBaselineDate, { font, size: fs })
+      drawText(p12, 200, H - 502, formData.computerizedTestPostInjuryRest, { font, size: fsm, maxWidth: 340 })
+      drawText(p12, 200, H - 514, formData.computerizedTestPostInjuryExercise, { font, size: fsm, maxWidth: 340 })
     }
 
     // Aerobic Exercise

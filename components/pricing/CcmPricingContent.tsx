@@ -22,7 +22,7 @@ import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { trackEvent } from '@/lib/analytics'
 
@@ -168,7 +168,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
   const faqs: FaqItem[] = [
     {
       q: 'Can I upgrade from online-only to the full course later?',
-      a: 'Yes — self-serve from your dashboard. You pay the difference between your online course and the Complete Course ($693 at the early-bird rate), and nominate your workshop city at checkout.',
+      a: `Yes — self-serve from your dashboard. You pay the difference between your online course and the Complete Course ($${upgradePriceFor(null)} at the current rate), and nominate your workshop city at checkout.`,
     },
     {
       q: 'When do I get access to the online modules?',
@@ -205,7 +205,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: 'Where are workshops held and when is the next one?',
-      a: 'Workshops run city by city as each city fills — the June 2026 Melbourne workshop ran at Rydges Melbourne with a full hands-on day (max 12 per session to keep practice time high). When you enrol in the Complete Course you nominate your city; the date launches once enough clinicians in your city have enrolled, and you get at least 6 weeks\' notice. Enrolling before your city\'s date is announced locks in the $1,190 early-bird rate.',
+      a: 'Workshops run city by city as each city fills — the June 2026 Melbourne workshop ran at Rydges Melbourne with a full hands-on day (max 12 per session to keep practice time high). When you enrol in the Complete Course you nominate your city; the date launches once enough clinicians in your city have enrolled, and you get at least ' + CONFIG.WORKSHOP.LEAD_TIME_WEEKS + ' weeks\' notice. Enrolling before your city\'s date is announced locks in the $' + CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() + ' early-bird rate.',
     },
     {
       q: 'Can I pay in instalments?',

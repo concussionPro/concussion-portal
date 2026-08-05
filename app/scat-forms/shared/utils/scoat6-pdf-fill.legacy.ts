@@ -93,15 +93,15 @@ export async function exportSCOAT6ToFilledPDF(
     setTextFieldIfExists(form, 'wordListUsed', formData.wordListUsed)
     setTextFieldIfExists(form, 'immediateMemoryTimeCompleted', formData.immediateMemoryTimeCompleted)
     setTextFieldIfExists(form, 'digitListUsed', formData.digitListUsed)
-    setTextFieldIfExists(form, 'digitsBackward', formData.digitsBackward.toString())
+    setTextFieldIfExists(form, 'digitsBackward', (formData.digitsBackward ?? '').toString())
     setTextFieldIfExists(form, 'monthsReverseTime', formData.monthsReverseTime)
-    setTextFieldIfExists(form, 'monthsReverseErrors', formData.monthsReverseErrors.toString())
+    setTextFieldIfExists(form, 'monthsReverseErrors', (formData.monthsReverseErrors ?? '').toString())
 
     // Balance
     setTextFieldIfExists(form, 'footTested', formData.footTested)
-    setTextFieldIfExists(form, 'mBessDoubleErrors', formData.mBessDoubleErrors.toString())
-    setTextFieldIfExists(form, 'mBessTandemErrors', formData.mBessTandemErrors.toString())
-    setTextFieldIfExists(form, 'mBessSingleErrors', formData.mBessSingleErrors.toString())
+    setTextFieldIfExists(form, 'mBessDoubleErrors', (formData.mBessDoubleErrors ?? '').toString())
+    setTextFieldIfExists(form, 'mBessTandemErrors', (formData.mBessTandemErrors ?? '').toString())
+    setTextFieldIfExists(form, 'mBessSingleErrors', (formData.mBessSingleErrors ?? '').toString())
 
     // Tandem Gait
     setTextFieldIfExists(form, 'tandemGaitTrial1', formData.tandemGaitTrial1)

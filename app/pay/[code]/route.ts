@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { createCourseCheckoutSession, type CourseType } from '@/lib/stripe'
+import { createCourseCheckoutSession, VALID_COURSE_TYPES, VALID_LOCATIONS, type CourseType } from '@/lib/stripe'
 import { findUserByEmail } from '@/lib/users'
 
 /**
@@ -37,6 +37,35 @@ export async function GET(
     }
     const { email, location, course_type } = rows[0]
     const courseType = (course_type ?? 'workshop-upgrade') as CourseType
+
+    // The row is admin-authored free text. An unrecognised course_type used to
+    // fall through to createCourseCheckoutSession's final `else`, which prices
+    // the COMPLETE COURSE — so a typo billed a recipient $1,190 for a product
+    // nobody chose. And the two Hub Pack add-ons have no webhook fulfilment at
+    // all (same refusal as /api/create-checkout), so a charge would deliver
+    // nothing. Refuse both rather than take the money.
+    if (!VALID_COURSE_TYPES.includes(courseType)) {
+      return NextResponse.json(
+        { error: 'This payment link is misconfigured. Please contact zac@concussion-education-australia.com.' },
+        { status: 409, headers: NOINDEX_HEADERS },
+      )
+    }
+    if (courseType === 'clinic-hub-extra-seat' || courseType === 'clinic-workshop-upgrade') {
+      return NextResponse.json(
+        { error: 'This add-on is not yet available. Contact zac@concussion-education-australia.com to add seats or workshop places to your Hub Pack.' },
+        { status: 409, headers: NOINDEX_HEADERS },
+      )
+    }
+    // A city that isn't a real workshop location silently becomes a nomination
+    // for a place that has no Ready-to-Train pipeline — the buyer pays and
+    // never appears in any city's count.
+    const needsLocation = courseType === 'full-course' || courseType === 'workshop-upgrade'
+    if (needsLocation && !VALID_LOCATIONS.includes(location as (typeof VALID_LOCATIONS)[number])) {
+      return NextResponse.json(
+        { error: 'This payment link is missing a valid workshop city. Please contact zac@concussion-education-australia.com.' },
+        { status: 409, headers: NOINDEX_HEADERS },
+      )
+    }
 
     // Validate the user is still in a state where this upgrade makes sense.
     const user = await findUserByEmail(email)

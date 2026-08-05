@@ -1,11 +1,18 @@
-import { ChildSCAT6FormData } from '../types/child-scat6.types'
 import {
-  calculateChildSymptomNumber,
-  calculateChildSymptomSeverity,
-  calculateParentSymptomNumber,
-  calculateParentSymptomSeverity,
-  calculateOrientation,
+  ChildSCAT6FormData,
+  ChildSCAT6SymptomScores,
+  CHILD_SCAT6_SYMPTOM_KEYS,
+  CHILD_SCAT6_SYMPTOM_COUNT,
+} from '../types/child-scat6.types'
+import {
+  calculateSymptomNumber,
+  calculateSymptomSeverity,
+  countSymptomsRated,
+  isSymptomScaleComplete,
+  isImmediateMemoryAdministered,
+  isDelayedRecallAdministered,
   calculateImmediateMemory,
+  calculateDaysReverse,
   calculateConcentration,
   calculateDelayedRecall,
   calculateTotalCognitive,
@@ -22,31 +29,36 @@ import {
   drawText,
   drawTextCentered,
   drawCheckmark,
-  drawFilledCircle,
+  drawCircleOutline,
   drawWrappedText,
   drawYesNo,
-  drawNotAdministered,
   notAdministeredMark,
-  anyProvided,
   embedStandardFonts,
   loadFlatPDF,
   savePDFAndDownload,
-  BLACK,
 } from './pdf-draw-helpers'
 import type { PDFFont, PDFPage } from 'pdf-lib'
 
 /**
  * Child SCAT6 Flat PDF Export — draws values at precise coordinates.
  *
- * Page dimensions: 595.28 x 793.70 pts.
- * 12 pages total. Pages 1, 11, 12 are editorial (no data).
+ * Page dimensions: 595.28 x 793.70 pts. 12 pages; pages 1, 3, 11, 12 carry no
+ * data we model.
  *
- * COORDINATE CAVEAT: unlike SCAT6, there is no Child_SCAT6_Fillable.pdf in
- * public/docs, so none of the coordinates in this file are derived from real
- * AcroForm widget geometry — they are hand-estimated. Newly added draw calls
- * (testing surface, footwear, dual-task practice errors, HCP signature) are
- * placed on the same estimated grid as their neighbours and should be checked
- * visually against a printed export before this form is relied on clinically.
+ * COORDINATES: there is no Child_SCAT6_Fillable.pdf to read AcroForm widget
+ * geometry from, so every coordinate below was measured off the shipped
+ * public/docs/Child_SCAT6_Flat.pdf by locating the pale-blue answer boxes in a
+ * 288 dpi render and converting to PDF points (bottom-left origin). They are
+ * measured, not estimated — but they are measured from the artwork, so a
+ * printed export should still be eyeballed after any template change.
+ *
+ * NOT-ADMINISTERED RULE: every scored field in the form model is nullable and
+ * defaults to null. A null prints a dash in its score box and NO item marks —
+ * it must never print as 0. "0 errors of 30" is a perfect balance result and
+ * "0 of 21 symptoms" is an asymptomatic child; neither may be asserted by a
+ * form nobody filled in. A partially rated symptom scale prints its running
+ * total WITH the number of items actually rated, because the "of 21" / "of 63"
+ * denominators are pre-printed on the page.
  */
 export async function exportChildSCAT6ToFlatPDF(
   formData: ChildSCAT6FormData,
@@ -60,457 +72,347 @@ export async function exportChildSCAT6ToFlatPDF(
     const fs = 9    // default font size
     const fsm = 8   // small
     const fsl = 10  // large
-    const H = 793.70 // page height
+    const fsx = 6   // extra small (qualifiers inside narrow boxes)
 
-    // ========================================================================
-    // "WAS THIS SECTION ADMINISTERED?" — clinical-record integrity gate
-    // ========================================================================
-    // Booleans default false and numbers default 0, so an untouched subtest is
-    // indistinguishable from a subtest scored zero. For each scored section we
-    // derive `administered` = "any field in the section differs from its
-    // default". Unadministered sections draw NO item marks and print a dash in
-    // their score box; administered sections print their real value, including
-    // a genuine 0. Mirrors the adult SCAT6 exporter.
-    const orientationAdministered = anyProvided(
-      formData.orientationMonth,
-      formData.orientationDate,
-      formData.orientationDayOfWeek,
-      formData.orientationYear,
-      formData.orientationTime,
-    )
+    const na = notAdministeredMark(font)
 
-    const immediateMemoryAdministered = anyProvided(
-      formData.wordListUsed,
-      formData.immediateMemoryTimeCompleted,
-      ...formData.immediateMemoryTrial1,
-      ...formData.immediateMemoryTrial2,
-      ...formData.immediateMemoryTrial3,
-    )
+    /** Draw a score into a box, or the not-administered dash when it is null. */
+    const drawScoreBox = (
+      page: PDFPage,
+      x: number,
+      width: number,
+      baseline: number,
+      value: number | string | null,
+      options: { font?: PDFFont; size?: number } = {}
+    ) => {
+      const text = value === null || value === '' ? na : String(value)
+      drawTextCentered(page, x, baseline, width, text, { font: options.font ?? font, size: options.size ?? fs })
+    }
 
-    const digitsAdministered = anyProvided(
-      formData.digitListUsed,
-      formData.digitsBackward,
-    )
+    /**
+     * Text for a symptom total box. The denominators ("of 21" / "of 63") are
+     * printed on the form, so a partial scale must say how much of it was
+     * actually rated rather than quietly under-report against a full scale.
+     */
+    const symptomBoxText = (scores: ChildSCAT6SymptomScores, value: number | null): string => {
+      if (value === null) return na
+      if (isSymptomScaleComplete(scores)) return String(value)
+      return `${value} (${countSymptomsRated(scores)}/${CHILD_SCAT6_SYMPTOM_COUNT} rated)`
+    }
 
-    const monthsAdministered = anyProvided(
-      formData.monthsReverseTime,
-      formData.monthsReverseErrors,
-    )
+    const drawSymptomTotal = (
+      page: PDFPage,
+      x: number,
+      width: number,
+      baseline: number,
+      scores: ChildSCAT6SymptomScores,
+      value: number | null
+    ) => {
+      const complete = isSymptomScaleComplete(scores)
+      drawTextCentered(page, x, baseline, width, symptomBoxText(scores, value), {
+        font: complete ? fontBold : font,
+        size: complete ? fsl : fsx,
+      })
+    }
 
-    const concentrationAdministered = digitsAdministered && monthsAdministered
-
-    // Word list is shared with immediate memory, so it is not evidence here.
-    const delayedRecallAdministered = anyProvided(
-      formData.delayedRecallStartTime,
-      ...formData.delayedRecall,
-    )
-
-    const balanceAdministered = anyProvided(
-      formData.footTested,
-      formData.testingSurface,
-      formData.footwear,
-      formData.mBessDoubleErrors,
-      formData.mBessTandemErrors,
-      formData.mBessSingleErrors,
-    )
-
-    // Complex tandem gait: four error counts, all defaulting to 0.
-    const complexTandemAdministered = anyProvided(
-      formData.complexTandemForwardEyesOpen,
-      formData.complexTandemForwardEyesClosed,
-      formData.complexTandemBackwardEyesOpen,
-      formData.complexTandemBackwardEyesClosed,
-    )
-
-    const cognitiveTotalAdministered =
-      orientationAdministered &&
-      immediateMemoryAdministered &&
-      concentrationAdministered &&
-      delayedRecallAdministered
+    /** Ring the chosen 0/1/2/3 column of a symptom row (the digits are pre-printed). */
+    const drawSymptomScale = (
+      page: PDFPage,
+      scores: ChildSCAT6SymptomScores,
+      firstRowBottom: number,
+      rowHeight: number,
+      colCentres: number[]
+    ) => {
+      CHILD_SCAT6_SYMPTOM_KEYS.forEach((key, i) => {
+        const value = scores[key]
+        if (value === null || value < 0 || value > 3) return
+        const cy = firstRowBottom - rowHeight * i + 5.5
+        drawCircleOutline(page, colCentres[value], cy, 5.5)
+      })
+    }
 
     // ==================== PAGE 2 (index 1): DEMOGRAPHICS + CONCUSSION HISTORY ====================
     const p2 = pages[1]
 
-    drawText(p2, 128, H - 130, formData.athleteName, { font, size: fs })
-    drawText(p2, 407, H - 130, formData.idNumber, { font, size: fs })
-    drawText(p2, 128, H - 150, formData.dateOfBirth, { font, size: fs })
-    drawText(p2, 284, H - 150, formData.dateOfExamination, { font, size: fs })
-    drawText(p2, 420, H - 150, formData.dateOfInjury, { font, size: fs })
-    drawText(p2, 128, H - 170, formData.timeOfInjury, { font, size: fs })
-    drawText(p2, 438, H - 170, formData.dominantHand, { font, size: fs })
-    drawText(p2, 376, H - 188, formData.sportTeamSchool, { font, size: fs })
-    drawText(p2, 207, H - 206, formData.currentYear, { font, size: fs })
-    drawText(p2, 437, H - 206, formData.yearsEducation, { font, size: fs })
-    drawText(p2, 128, H - 224, formData.firstLanguage, { font, size: fs })
-    drawText(p2, 377, H - 224, formData.preferredLanguage, { font, size: fs })
-    drawText(p2, 109, H - 242, formData.examiner, { font, size: fs })
+    drawText(p2, 116, 668, formData.athleteName, { font, size: fs })
+    drawText(p2, 100, 649, formData.idNumber, { font, size: fs })
+    drawText(p2, 335, 649, formData.dateOfBirth, { font, size: fs })
+    drawText(p2, 133, 630.5, formData.dateOfExamination, { font, size: fs })
+    drawText(p2, 263.5, 630.5, formData.dateOfInjury, { font, size: fs })
+    drawText(p2, 410.5, 630.5, formData.timeOfInjury, { font, size: fs })
 
-    // Sex
-    if (formData.sex === 'Male') drawFilledCircle(p2, 150, H - 188, 3.5)
-    else if (formData.sex === 'Female') drawFilledCircle(p2, 192, H - 188, 3.5)
-    else if (formData.sex) drawFilledCircle(p2, 265, H - 188, 3.5)
+    // Sex / dominant hand tick boxes
+    if (formData.sex === 'Male') drawCheckmark(p2, 98.5, 610.7, 8)
+    else if (formData.sex === 'Female') drawCheckmark(p2, 152.5, 610.7, 8)
+    else if (formData.sex === 'Prefer Not To Say') drawCheckmark(p2, 244.5, 610.7, 8)
+
+    if (formData.dominantHand === 'Left') drawCheckmark(p2, 358.5, 610.7, 8)
+    else if (formData.dominantHand === 'Right') drawCheckmark(p2, 400, 610.7, 8)
+    else if (formData.dominantHand === 'Ambidextrous') drawCheckmark(p2, 472, 610.7, 8)
+
+    drawText(p2, 130.5, 592.5, formData.sportTeamSchool, { font, size: fs })
+    drawText(p2, 416.5, 592.5, formData.currentYear, { font, size: fs })
+    drawText(p2, 116, 573.5, formData.firstLanguage, { font, size: fs })
+    drawText(p2, 362.5, 573.5, formData.preferredLanguage, { font, size: fs })
+    drawText(p2, 96.5, 555, formData.examiner, { font, size: fs })
 
     // Concussion History
-    drawText(p2, 316, H - 290, formData.previousConcussions, { font, size: fs })
-    drawText(p2, 219, H - 310, formData.mostRecentConcussion, { font, size: fs })
-    drawText(p2, 143, H - 330, formData.primarySymptoms, { font, size: fs })
-    drawText(p2, 409, H - 350, formData.recoveryTime, { font, size: fs })
+    drawText(p2, 302.5, 508, formData.previousConcussions, { font, size: fs })
+    drawText(p2, 207, 489, formData.mostRecentConcussion, { font, size: fs })
+    drawText(p2, 132.5, 470, formData.primarySymptoms, { font, size: fs })
+    drawText(p2, 394.5, 451.5, formData.recoveryTime, { font, size: fs })
 
-    // ==================== PAGE 3 (index 2): OBSERVABLE SIGNS + GCS ====================
-    // Page 3 contains Red Flags, Observable Signs, GCS, Cervical Spine, Coordination
-    // Most of these are clinical observation fields — structural data not in our form model
+    // ==================== PAGE 3 (index 2): IMMEDIATE ASSESSMENT / NEURO SCREEN ====================
+    // Red flags, observable signs, GCS and cervical spine are clinician
+    // observations this form model does not capture. Left blank deliberately —
+    // a blank is honest, an unconditional "No" would not be.
 
-    // ==================== PAGE 4 (index 3): ATHLETE BACKGROUND + CHILD SYMPTOMS ====================
+    // ==================== PAGE 4 (index 3): CHILD BACKGROUND + CHILD SYMPTOM REPORT ====================
     const p4 = pages[3]
 
-    // Athlete Background Y/N
-    drawYesNo(p4, 237, 253, H - 160, formData.hospitalizedForHeadInjury, font, fs)
-    drawYesNo(p4, 237, 253, H - 180, formData.headacheDisorder, font, fs)
-    drawYesNo(p4, 237, 253, H - 200, formData.learningDisability, font, fs)
-    drawYesNo(p4, 467, 483, H - 160, formData.adhd, font, fs)
-    drawYesNo(p4, 467, 483, H - 180, formData.psychologicalDisorder, font, fs)
+    // "Has the child ever been..." Y/N — null (never asked) leaves both blank.
+    drawYesNo(p4, 232, 246, 641.5, formData.hospitalizedForHeadInjury, font, fs)
+    drawYesNo(p4, 232, 246, 620.5, formData.headacheDisorder, font, fs)
+    drawYesNo(p4, 231.5, 245.5, 602, formData.learningDisability, font, fs)
+    drawYesNo(p4, 458, 472, 641.5, formData.adhd, font, fs)
+    drawYesNo(p4, 458, 472, 620.5, formData.psychologicalDisorder, font, fs)
 
     // Notes and Medications
-    drawWrappedText(p4, 63, H - 230, formData.athleteBackgroundNotes, 200, { font, size: fsm })
-    drawWrappedText(p4, 293, H - 230, formData.currentMedications, 200, { font, size: fsm })
+    drawWrappedText(p4, 55, 571.7, formData.athleteBackgroundNotes, 198, { font, size: fsm })
+    drawWrappedText(p4, 283, 572.7, formData.currentMedications, 197, { font, size: fsm })
 
-    // Child Symptom Report (21 items, 0-3 scale)
-    // Columns: 0 ("Not at all"), 1 ("A little bit"), 2 ("Somewhat"), 3 ("A lot")
-    const childSymptomColX = [310, 360, 410, 460] // x positions for 0, 1, 2, 3
-    const childSymptomStartY = H - 310
-    const childSymptomRowH = 16
+    // Child Symptom Report — 21 rows, columns 0 / 1 / 2 / 3
+    const childSymptomColX = [256.5, 321, 386, 451]
+    drawSymptomScale(p4, formData.childSymptoms, 386.7, 13, childSymptomColX)
 
-    const childSymptomKeys: (keyof ChildSCAT6FormData['childSymptoms'])[] = [
-      'headache', 'pressureInHead', 'neckPain', 'feelingSickOrNausea', 'dizziness',
-      'blurredVision', 'balanceProblems', 'sensitivityLight', 'sensitivityNoise',
-      'feelingSlowedDown', 'feelingInFog', 'dontFeelRight', 'difficultyConcentrating',
-      'difficultyRemembering', 'tiredOrLowEnergy', 'confused', 'drowsy',
-      'moreEmotional', 'irritable', 'sad', 'nervousOrAnxious',
-    ]
+    // "Do the symptoms get worse with...?" (child page)
+    drawYesNo(p4, 228, 250, 105.5, formData.childSymptomsWorseWithPhysical, font, fs)
+    drawYesNo(p4, 228, 250, 91, formData.childSymptomsWorseWithMental, font, fs)
 
-    childSymptomKeys.forEach((key, i) => {
-      const value = formData.childSymptoms[key]
-      const y = childSymptomStartY - (i * childSymptomRowH)
-      if (value >= 0 && value <= 3) {
-        drawFilledCircle(p4, childSymptomColX[value], y + 4, 3.5)
-      }
-    })
-
-    // Child Symptom Totals
-    drawText(p4, 420, H - 660, calculateChildSymptomNumber(formData.childSymptoms).toString(), { font: fontBold, size: fsl })
-    drawText(p4, 420, H - 680, calculateChildSymptomSeverity(formData.childSymptoms).toString(), { font: fontBold, size: fsl })
-
-    // ==================== PAGE 5 (index 4): CHILD OVERALL + PARENT SYMPTOMS ====================
+    // ==================== PAGE 5 (index 4): CHILD OVERALL + PARENT REPORT ====================
     const p5 = pages[4]
 
-    // Child overall rating (0-10, where 0 = worst). The old `>= 0` guard was
-    // always true, so an untouched form asserted "the child feels as bad as
-    // possible". Only print a rating the clinician actually recorded.
-    if (anyProvided(formData.childOverallRating)) {
-      drawText(p5, 400, H - 120, formData.childOverallRating.toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p5, 400, H - 120, { font: fontBold, size: fsl })
+    // "On a scale of 0 to 10 (where 10 is normal), how do you feel now?"
+    // 0 is the WORST possible answer, so an unrecorded rating must not print as
+    // 0 — ring the digit only when the child actually gave one.
+    if (formData.childOverallRating !== null) {
+      const rating = Math.max(0, Math.min(10, formData.childOverallRating))
+      drawCircleOutline(p5, 290 + 16.4 * rating, 664.5, 6)
     }
 
-    // Parent Report (21 items, 0-3 scale)
-    const parentSymptomStartY = H - 180
-    const parentSymptomRowH = 16
+    // Child Report totals (of 21 / of 63)
+    const childNumber = calculateSymptomNumber(formData.childSymptoms)
+    const childSeverity = calculateSymptomSeverity(formData.childSymptoms)
+    drawSymptomTotal(p5, 210.5, 45, 585.5, formData.childSymptoms, childNumber)
+    drawSymptomTotal(p5, 414, 45, 585.5, formData.childSymptoms, childSeverity)
 
-    const parentSymptomKeys: (keyof ChildSCAT6FormData['parentSymptoms'])[] = [
-      'headache', 'pressureInHead', 'neckPain', 'sickOrNausea', 'dizziness',
-      'blurredVision', 'balanceProblems', 'sensitivityLight', 'sensitivityNoise',
-      'feelingSlowedDown', 'feelingInFog', 'doesntFeelRight', 'difficultyConcentrating',
-      'difficultyRemembering', 'tiredOrLowEnergy', 'confused', 'drowsy',
-      'moreEmotional', 'irritable', 'sad', 'nervousOrAnxious',
-    ]
+    // Parent Report — same 21 items, parent wording
+    const parentSymptomColX = [256, 320.5, 385.5, 450]
+    drawSymptomScale(p5, formData.parentSymptoms, 500.7, 13.05, parentSymptomColX)
 
-    parentSymptomKeys.forEach((key, i) => {
-      const value = formData.parentSymptoms[key]
-      const y = parentSymptomStartY - (i * parentSymptomRowH)
-      if (value >= 0 && value <= 3) {
-        drawFilledCircle(p5, childSymptomColX[value], y + 4, 3.5)
-      }
-    })
+    drawYesNo(p5, 228, 250, 220, formData.parentSymptomsWorseWithPhysical, font, fs)
+    drawYesNo(p5, 228, 250, 205, formData.parentSymptomsWorseWithMental, font, fs)
 
-    // Parent Symptom Totals
-    drawText(p5, 420, H - 530, calculateParentSymptomNumber(formData.parentSymptoms).toString(), { font: fontBold, size: fsl })
-    drawText(p5, 420, H - 550, calculateParentSymptomSeverity(formData.parentSymptoms).toString(), { font: fontBold, size: fsl })
-
-    // Parent overall rating (0-10, 0 = worst) — same rule as the child rating.
-    if (anyProvided(formData.parentOverallRating)) {
-      drawText(p5, 400, H - 580, formData.parentOverallRating.toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p5, 400, H - 580, { font: fontBold, size: fsl })
+    // "On a scale of 0 to 100% (where 100% is normal)" — a PERCENTAGE, not /10.
+    if (formData.parentOverallPercent !== null) {
+      drawText(p5, 335.5, 159, `${Math.max(0, Math.min(100, formData.parentOverallPercent))}%`, {
+        font: fontBold,
+        size: fs,
+      })
     }
 
-    // Worse with physical/mental
-    drawYesNo(p5, 400, 440, H - 620, formData.symptomsWorseWithPhysical, font, fs)
-    drawYesNo(p5, 400, 440, H - 640, formData.symptomsWorseWithMental, font, fs)
+    // Parent Report totals (of 21 / of 63)
+    const parentNumber = calculateSymptomNumber(formData.parentSymptoms)
+    const parentSeverity = calculateSymptomSeverity(formData.parentSymptoms)
+    drawSymptomTotal(p5, 213, 44.5, 87, formData.parentSymptoms, parentNumber)
+    drawSymptomTotal(p5, 414, 45, 86.5, formData.parentSymptoms, parentSeverity)
 
-    // ==================== PAGE 6 (index 5): IMMEDIATE MEMORY + CONCENTRATION ====================
+    // ==================== PAGE 6 (index 5): IMMEDIATE MEMORY + DIGITS BACKWARD ====================
+    // The Child SCAT6 has NO orientation subtest — nothing is drawn for one.
     const p6 = pages[5]
 
-    // Orientation
-    const oriYPositions = [H - 130, H - 150, H - 170, H - 190, H - 210]
-    const oriBooleans = [
-      formData.orientationMonth,
-      formData.orientationDate,
-      formData.orientationDayOfWeek,
-      formData.orientationYear,
-      formData.orientationTime,
-    ]
-    if (orientationAdministered) {
-      oriBooleans.forEach((val, i) => {
-        if (val) {
-          drawFilledCircle(p6, 459, oriYPositions[i] + 4, 3.5)
-        } else {
-          drawFilledCircle(p6, 432, oriYPositions[i] + 4, 3.5)
-        }
-      })
-      // Orientation Score
-      drawText(p6, 430, H - 240, calculateOrientation(formData).toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p6, 430, H - 240, { font: fontBold, size: fsl })
-    }
+    const wordListBoxX: Record<string, number> = { A: 133, B: 173.5, C: 213.5 }
+    if (formData.wordListUsed) drawCheckmark(p6, wordListBoxX[formData.wordListUsed], 592.2, 8)
 
-    // Word List Used
-    if (formData.wordListUsed === 'A') drawCheckmark(p6, 140, H - 270, 10)
-    if (formData.wordListUsed === 'B') drawCheckmark(p6, 181, H - 270, 10)
-    if (formData.wordListUsed === 'C') drawCheckmark(p6, 221, H - 270, 10)
-
-    // Immediate Memory — 3 trials x 10 words
-    const imTrialXPositions = [200, 250, 300]
-    const imWordStartY = H - 310
-    const imWordRowH = 22
-
+    const memoryAdministered = isImmediateMemoryAdministered(formData)
     const trials = [
       formData.immediateMemoryTrial1,
       formData.immediateMemoryTrial2,
       formData.immediateMemoryTrial3,
     ]
+    // Each trial cell prints "0   1"; ring the score given for that word.
+    const trialCellX = [181, 223.5, 266.5]
+    const trialCellW = 41
 
-    if (immediateMemoryAdministered) {
+    if (memoryAdministered) {
       trials.forEach((trial, t) => {
         trial.forEach((correct, w) => {
-          const y = imWordStartY - (w * imWordRowH)
-          if (correct) {
-            drawCheckmark(p6, imTrialXPositions[t], y, 8)
-          }
+          const cy = 559.2 - 14.444 * w + 5.5
+          drawCircleOutline(p6, trialCellX[t] + (correct ? 30 : 10), cy, 5)
         })
       })
 
-      // Trial totals
-      const trial1Total = formData.immediateMemoryTrial1.filter(Boolean).length
-      const trial2Total = formData.immediateMemoryTrial2.filter(Boolean).length
-      const trial3Total = formData.immediateMemoryTrial3.filter(Boolean).length
-      drawText(p6, 200, H - 540, trial1Total.toString(), { font: fontBold, size: fs })
-      drawText(p6, 250, H - 540, trial2Total.toString(), { font: fontBold, size: fs })
-      drawText(p6, 300, H - 540, trial3Total.toString(), { font: fontBold, size: fs })
-
-      // Immediate Memory Score
-      drawText(p6, 400, H - 560, calculateImmediateMemory(formData).toString(), { font: fontBold, size: fsl })
+      trials.forEach((trial, t) => {
+        drawTextCentered(p6, trialCellX[t], 417.5, trialCellW, trial.filter(Boolean).length.toString(), {
+          font: fontBold,
+          size: fs,
+        })
+      })
     } else {
-      drawNotAdministered(p6, 200, H - 540, { font: fontBold, size: fs })
-      drawNotAdministered(p6, 250, H - 540, { font: fontBold, size: fs })
-      drawNotAdministered(p6, 300, H - 540, { font: fontBold, size: fs })
-      drawNotAdministered(p6, 400, H - 560, { font: fontBold, size: fsl })
-    }
-    drawText(p6, 300, H - 560, formData.immediateMemoryTimeCompleted, { font, size: fs })
-
-    // Digits Backward
-    if (formData.digitListUsed === 'A') drawCheckmark(p6, 140, H - 600, 10)
-    if (formData.digitListUsed === 'B') drawCheckmark(p6, 181, H - 600, 10)
-    if (formData.digitListUsed === 'C') drawCheckmark(p6, 221, H - 600, 10)
-
-    if (digitsAdministered) {
-      drawText(p6, 430, H - 680, formData.digitsBackward.toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p6, 430, H - 680, { font: fontBold, size: fsl })
+      trials.forEach((_, t) => {
+        drawTextCentered(p6, trialCellX[t], 417.5, trialCellW, na, { font: fontBold, size: fs })
+      })
     }
 
-    // ==================== PAGE 7 (index 6): MONTHS REVERSE + BALANCE + TANDEM ====================
+    drawText(p6, 190, 398.5, formData.immediateMemoryTimeCompleted, { font, size: fs })
+    drawScoreBox(p6, 204.5, 49, 372, calculateImmediateMemory(formData), { font: fontBold, size: fsl })
+
+    // Digits Backward — score of 5 on the Child SCAT6 (levels of 2,3,4,5,6 digits)
+    if (formData.digitListUsed) drawCheckmark(p6, wordListBoxX[formData.digitListUsed], 275.2, 8)
+    drawScoreBox(p6, 415.5, 66, 87.5, formData.digitsBackward, { font: fontBold, size: fsl })
+
+    // ==================== PAGE 7 (index 6): DAYS IN REVERSE + BALANCE + TANDEM GAIT ====================
     const p7 = pages[6]
 
-    // Months in Reverse
-    drawText(p7, 300, H - 130, formData.monthsReverseTime, { font, size: fs })
-    if (monthsAdministered) {
-      drawText(p7, 430, H - 130, formData.monthsReverseErrors.toString(), { font, size: fs })
-    } else {
-      drawNotAdministered(p7, 430, H - 130, { font, size: fs })
-    }
+    // DAYS of the week in reverse (the adult SCAT6 uses months; the child form does not)
+    drawText(p7, 178, 613, formData.daysReverseTime, { font, size: fs })
+    drawScoreBox(p7, 351.5, 132, 613, formData.daysReverseErrors, { font, size: fs })
+    drawScoreBox(p7, 111, 40.5, 583, calculateDaysReverse(formData), { font: fontBold, size: fs })
 
-    // Concentration Score (Digits + Months) — needs BOTH halves to be honest.
-    if (concentrationAdministered) {
-      drawText(p7, 430, H - 160, calculateConcentration(formData).toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p7, 430, H - 160, { font: fontBold, size: fsl })
-    }
+    // Concentration Score (Digits + Days) — of 6, and only once BOTH halves exist
+    drawScoreBox(p7, 203, 49.5, 557, calculateConcentration(formData), { font: fontBold, size: fsl })
 
-    // mBESS
-    if (formData.footTested === 'Left') drawFilledCircle(p7, 200, H - 220, 3.5)
-    if (formData.footTested === 'Right') drawFilledCircle(p7, 260, H - 220, 3.5)
+    // mBESS setup
+    if (formData.footTested === 'Left') drawCheckmark(p7, 122, 466.2, 8)
+    if (formData.footTested === 'Right') drawCheckmark(p7, 170, 466.2, 8)
+    drawText(p7, 195, 448, formData.testingSurface, { font, size: fsm })
+    drawText(p7, 222, 429.5, formData.footwear, { font, size: fsm })
 
-    // Testing surface / footwear — collected but never drawn. Placed on the
-    // setup line just under the foot-tested row (Child SCAT6 has no fillable
-    // template to derive exact widget geometry from — see file header note).
-    drawText(p7, 200, H - 240, formData.testingSurface, { font, size: fsm })
-    drawText(p7, 380, H - 240, formData.footwear, { font, size: fsm })
+    // mBESS firm surface — 0 errors of 30 is a PERFECT result, never a default.
+    drawScoreBox(p7, 128.5, 39.5, 364.7, formData.mBessDoubleErrors, { font, size: fs })
+    drawScoreBox(p7, 128.5, 39.5, 345.7, formData.mBessTandemErrors, { font, size: fs })
+    drawScoreBox(p7, 128.5, 39.5, 326.7, formData.mBessSingleErrors, { font, size: fs })
+    drawScoreBox(p7, 128.5, 39.5, 308.2, calculateMBESS(formData), { font: fontBold, size: fs })
 
-    if (balanceAdministered) {
-      drawText(p7, 400, H - 260, formData.mBessDoubleErrors.toString(), { font, size: fs })
-      drawText(p7, 400, H - 280, formData.mBessTandemErrors.toString(), { font, size: fs })
-      drawText(p7, 400, H - 300, formData.mBessSingleErrors.toString(), { font, size: fs })
-      drawText(p7, 400, H - 320, calculateMBESS(formData).toString(), { font: fontBold, size: fs })
-    } else {
-      // 0 errors of 30 = a PERFECT balance result. Never assert it by default.
-      drawNotAdministered(p7, 400, H - 260, { font, size: fs })
-      drawNotAdministered(p7, 400, H - 280, { font, size: fs })
-      drawNotAdministered(p7, 400, H - 300, { font, size: fs })
-      drawNotAdministered(p7, 400, H - 320, { font: fontBold, size: fs })
-    }
-
+    // mBESS on foam is OPTIONAL — an unperformed optional section stays blank
+    // rather than being marked "not administered".
     if (formData.mBessFoamDoubleErrors !== null) {
-      drawText(p7, 490, H - 260, (formData.mBessFoamDoubleErrors ?? '').toString(), { font, size: fs })
+      drawTextCentered(p7, 363.5, 364.7, 38.5, formData.mBessFoamDoubleErrors.toString(), { font, size: fs })
     }
     if (formData.mBessFoamTandemErrors !== null) {
-      drawText(p7, 490, H - 280, (formData.mBessFoamTandemErrors ?? '').toString(), { font, size: fs })
+      drawTextCentered(p7, 363.5, 345.7, 38.5, formData.mBessFoamTandemErrors.toString(), { font, size: fs })
     }
     if (formData.mBessFoamSingleErrors !== null) {
-      drawText(p7, 490, H - 300, (formData.mBessFoamSingleErrors ?? '').toString(), { font, size: fs })
+      drawTextCentered(p7, 363.5, 326.7, 38.5, formData.mBessFoamSingleErrors.toString(), { font, size: fs })
     }
     const foamTotal = calculateMBESSFoam(formData)
     if (foamTotal !== null) {
-      drawText(p7, 490, H - 320, foamTotal.toString(), { font: fontBold, size: fs })
+      drawTextCentered(p7, 363.5, 308.2, 38.5, foamTotal.toString(), { font: fontBold, size: fs })
     }
 
-    // Tandem Gait
-    drawText(p7, 150, H - 420, formData.tandemGaitTrial1, { font, size: fs })
-    drawText(p7, 240, H - 420, formData.tandemGaitTrial2, { font, size: fs })
-    drawText(p7, 330, H - 420, formData.tandemGaitTrial3, { font, size: fs })
-    drawText(p7, 420, H - 420, calculateTandemGaitAverage(formData), { font, size: fs })
-    drawText(p7, 490, H - 420, calculateTandemGaitFastest(formData), { font: fontBold, size: fs })
+    // Timed tandem gait — trials, average of 3, fastest
+    const tandemX = [53.5, 139.5, 225, 311, 396.5]
+    drawTextCentered(p7, tandemX[0], 126, 84, formData.tandemGaitTrial1, { font, size: fs })
+    drawTextCentered(p7, tandemX[1], 126, 84, formData.tandemGaitTrial2, { font, size: fs })
+    drawTextCentered(p7, tandemX[2], 126, 84, formData.tandemGaitTrial3, { font, size: fs })
+    drawTextCentered(p7, tandemX[3], 126, 84, calculateTandemGaitAverage(formData), { font, size: fs })
+    drawTextCentered(p7, tandemX[4], 126, 83.5, calculateTandemGaitFastest(formData), { font: fontBold, size: fs })
 
     // ==================== PAGE 8 (index 7): COMPLEX TANDEM + DUAL TASK ====================
     const p8 = pages[7]
 
-    // Complex Tandem Gait — four error counts, all defaulting to 0, so an
-    // untouched section otherwise reads as a flawless performance.
-    if (complexTandemAdministered) {
-      drawText(p8, 350, H - 160, formData.complexTandemForwardEyesOpen.toString(), { font, size: fs })
-      drawText(p8, 430, H - 160, formData.complexTandemForwardEyesClosed.toString(), { font, size: fs })
-      drawText(p8, 490, H - 160, calculateComplexTandemForward(formData).toString(), { font: fontBold, size: fs })
+    // Complex tandem gait error POINTS (1 per step off the line, 1 for truncal sway)
+    drawScoreBox(p8, 217.5, 39, 620.9, formData.complexTandemForwardEyesOpen, { font, size: fs })
+    drawScoreBox(p8, 217.5, 39, 602.4, formData.complexTandemForwardEyesClosed, { font, size: fs })
+    drawScoreBox(p8, 217.5, 39, 583.4, calculateComplexTandemForward(formData), { font: fontBold, size: fs })
+    drawScoreBox(p8, 445, 39, 620.9, formData.complexTandemBackwardEyesOpen, { font, size: fs })
+    drawScoreBox(p8, 445, 39, 602.4, formData.complexTandemBackwardEyesClosed, { font, size: fs })
+    drawScoreBox(p8, 445, 39, 583.4, calculateComplexTandemBackward(formData), { font: fontBold, size: fs })
+    drawScoreBox(p8, 191.5, 39, 559.4, calculateComplexTandemTotal(formData), { font: fontBold, size: fsl })
 
-      drawText(p8, 350, H - 200, formData.complexTandemBackwardEyesOpen.toString(), { font, size: fs })
-      drawText(p8, 430, H - 200, formData.complexTandemBackwardEyesClosed.toString(), { font, size: fs })
-      drawText(p8, 490, H - 200, calculateComplexTandemBackward(formData).toString(), { font: fontBold, size: fs })
-
-      drawText(p8, 490, H - 240, calculateComplexTandemTotal(formData).toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p8, 350, H - 160, { font, size: fs })
-      drawNotAdministered(p8, 430, H - 160, { font, size: fs })
-      drawNotAdministered(p8, 490, H - 160, { font: fontBold, size: fs })
-      drawNotAdministered(p8, 350, H - 200, { font, size: fs })
-      drawNotAdministered(p8, 430, H - 200, { font, size: fs })
-      drawNotAdministered(p8, 490, H - 200, { font: fontBold, size: fs })
-      drawNotAdministered(p8, 490, H - 240, { font: fontBold, size: fsl })
-    }
-
-    // Dual Task Gait — practice row. Practice errors were collected but never
-    // drawn. `!== null` (not truthiness) so a real 0-error practice prints.
+    // Dual task gait is OPTIONAL — blank when not run, real values (including 0
+    // errors) when it was. `!== null` so a genuine zero prints.
     if (formData.dualTaskPracticeErrors !== null) {
-      drawText(p8, 280, H - 340, formData.dualTaskPracticeErrors.toString(), { font, size: fs })
+      drawTextCentered(p8, 394.5, 414, 40, formData.dualTaskPracticeErrors.toString(), { font, size: fs })
     }
-    if (formData.dualTaskPracticeTime) {
-      drawText(p8, 350, H - 340, formData.dualTaskPracticeTime, { font, size: fs })
-    }
-    if (formData.dualTask1Time) {
-      drawText(p8, 420, H - 380, formData.dualTask1Time, { font, size: fs })
-    }
-    if (formData.dualTask2Time) {
-      drawText(p8, 420, H - 400, formData.dualTask2Time, { font, size: fs })
-    }
-    if (formData.dualTask3Time) {
-      drawText(p8, 420, H - 420, formData.dualTask3Time, { font, size: fs })
-    }
+    drawTextCentered(p8, 436.5, 414, 40, formData.dualTaskPracticeTime, { font, size: fs })
 
-    if (formData.dualTask1Errors !== null) {
-      drawText(p8, 380, H - 380, (formData.dualTask1Errors ?? '').toString(), { font, size: fs })
-    }
-    if (formData.dualTask2Errors !== null) {
-      drawText(p8, 380, H - 400, (formData.dualTask2Errors ?? '').toString(), { font, size: fs })
-    }
-    if (formData.dualTask3Errors !== null) {
-      drawText(p8, 380, H - 420, (formData.dualTask3Errors ?? '').toString(), { font, size: fs })
-    }
+    const dualTaskRows: { errors: number | null; time: string; baseline: number }[] = [
+      { errors: formData.dualTask1Errors, time: formData.dualTask1Time, baseline: 328.7 },
+      { errors: formData.dualTask2Errors, time: formData.dualTask2Time, baseline: 307.7 },
+      { errors: formData.dualTask3Errors, time: formData.dualTask3Time, baseline: 287.2 },
+    ]
+    dualTaskRows.forEach(row => {
+      if (row.errors !== null) {
+        drawTextCentered(p8, 386, row.baseline, 31, row.errors.toString(), { font, size: fs })
+      }
+      drawTextCentered(p8, 419, row.baseline, 57, row.time, { font, size: fs })
+    })
 
-    if (formData.dualTaskAlternateStartingInteger) {
-      drawText(p8, 350, H - 460, formData.dualTaskAlternateStartingInteger, { font, size: fs })
-    }
+    drawTextCentered(p8, 122, 211.6, 52, formData.dualTaskAlternateStartingInteger, { font, size: fs })
 
-    const dtFastest = calculateDualTaskFastest(formData)
-    if (dtFastest) {
-      drawText(p8, 200, H - 480, dtFastest, { font: fontBold, size: fs })
+    // "Were any timed tandem gait trials not completed?" — the record must say
+    // so, otherwise the times above read as a complete assessment.
+    if (formData.trialsNotCompleted === true) drawCheckmark(p8, 73, 161.2, 8)
+    else if (formData.trialsNotCompleted === false) drawCheckmark(p8, 121, 161.2, 8)
+    if (formData.trialsNotCompletedReason) {
+      drawWrappedText(p8, 55, 129.7, formData.trialsNotCompletedReason, 424, { font, size: fsm })
     }
 
     // ==================== PAGE 9 (index 8): DELAYED RECALL + DECISION + DISPOSITION ====================
     const p9 = pages[8]
 
-    // Word List Used for Delayed Recall
-    if (formData.wordListUsed === 'A') drawCheckmark(p9, 140, H - 130, 10)
-    if (formData.wordListUsed === 'B') drawCheckmark(p9, 181, H - 130, 10)
-    if (formData.wordListUsed === 'C') drawCheckmark(p9, 221, H - 130, 10)
-
-    // Delayed Recall — 10 words
-    const drStartY = H - 170
-    const drRowH = 22
-    if (delayedRecallAdministered) {
-      formData.delayedRecall.forEach((correct, i) => {
-        const y = drStartY - (i * drRowH)
-        if (correct) {
-          drawCheckmark(p9, 350, y, 8)
-        }
-      })
-
-      // Delayed Recall Score
-      drawText(p9, 400, H - 400, calculateDelayedRecall(formData).toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p9, 400, H - 400, { font: fontBold, size: fsl })
+    drawText(p9, 108, 654.5, formData.delayedRecallStartTime, { font, size: fs })
+    if (formData.wordListUsed) {
+      drawCheckmark(p9, wordListBoxX[formData.wordListUsed] + 0.5, 631.2, 8)
     }
 
-    // Delayed Recall Start Time
-    drawText(p9, 300, H - 400, formData.delayedRecallStartTime, { font, size: fs })
+    const delayedRecallRowBottoms = [
+      599.2, 585.2, 571.7, 558.2, 544.2, 530.7, 516.7, 502.7, 489.2, 475.7,
+    ]
+    if (isDelayedRecallAdministered(formData)) {
+      formData.delayedRecall.forEach((correct, i) => {
+        drawCircleOutline(p9, correct ? 233 : 215, delayedRecallRowBottoms[i] + 6, 5)
+      })
+    }
+    drawScoreBox(p9, 196, 58.5, 461, calculateDelayedRecall(formData), { font: fontBold, size: fsl })
 
-    // Cognitive Score Summary — each row shows a dash when its subtest was not
-    // administered; the /50 total needs all four contributors.
-    const na = notAdministeredMark(font)
-    const cog = (administered: boolean, value: () => number) =>
-      administered ? value().toString() : na
+    // Step 6 decision table — first date column. Every row prints a dash when
+    // its subtest was not administered; the printed denominators are of 21,
+    // of 63, of 30, of 6, of 10, of 46 and of 30.
+    const decCol = { x: 192.5, w: 95 }
+    drawTextCentered(p9, decCol.x, 367.5, decCol.w, formData.dateOfExamination, { font, size: fsm })
 
-    drawText(p9, 200, H - 440, `Orientation: ${cog(orientationAdministered, () => calculateOrientation(formData))}/5`, { font, size: fsm })
-    drawText(p9, 200, H - 455, `Immediate Memory: ${cog(immediateMemoryAdministered, () => calculateImmediateMemory(formData))}/30`, { font, size: fsm })
-    drawText(p9, 200, H - 470, `Concentration: ${cog(concentrationAdministered, () => calculateConcentration(formData))}/5`, { font, size: fsm })
-    drawText(p9, 200, H - 485, `Delayed Recall: ${cog(delayedRecallAdministered, () => calculateDelayedRecall(formData))}/10`, { font, size: fsm })
-    drawText(p9, 200, H - 505, `Total Cognitive: ${cog(cognitiveTotalAdministered, () => calculateTotalCognitive(formData))}/50`, { font: fontBold, size: fs })
+    drawTextCentered(p9, decCol.x, 330.7, decCol.w, symptomBoxText(formData.childSymptoms, childNumber), { font, size: fsx })
+    drawTextCentered(p9, decCol.x, 318.7, decCol.w, symptomBoxText(formData.parentSymptoms, parentNumber), { font, size: fsx })
+    drawTextCentered(p9, decCol.x, 300.7, decCol.w, symptomBoxText(formData.childSymptoms, childSeverity), { font, size: fsx })
+    drawTextCentered(p9, decCol.x, 288.7, decCol.w, symptomBoxText(formData.parentSymptoms, parentSeverity), { font, size: fsx })
 
-    // Concussion Diagnosed
-    if (formData.concussionDiagnosed === 'Yes') drawFilledCircle(p9, 200, H - 560, 3.5)
-    else if (formData.concussionDiagnosed === 'No') drawFilledCircle(p9, 260, H - 560, 3.5)
-    else if (formData.concussionDiagnosed === 'Deferred') drawFilledCircle(p9, 340, H - 560, 3.5)
+    drawScoreBox(p9, decCol.x, decCol.w, 273.5, calculateImmediateMemory(formData), { size: fsm })
+    drawScoreBox(p9, decCol.x, decCol.w, 261, calculateConcentration(formData), { size: fsm })
+    drawScoreBox(p9, decCol.x, decCol.w, 248.5, calculateDelayedRecall(formData), { size: fsm })
+    drawScoreBox(p9, decCol.x, decCol.w, 236.5, calculateTotalCognitive(formData), { font: fontBold, size: fsm })
+    drawScoreBox(p9, decCol.x, decCol.w, 224, calculateMBESS(formData), { size: fsm })
+    drawTextCentered(p9, decCol.x, 212, decCol.w, calculateTandemGaitFastest(formData), { font, size: fsm })
+    drawScoreBox(p9, decCol.x, decCol.w, 200, calculateComplexTandemTotal(formData), { size: fsm })
+    drawTextCentered(p9, decCol.x, 187.5, decCol.w, calculateDualTaskFastest(formData), { font, size: fsm })
 
-    // ==================== PAGE 10 (index 9): HCP + CLINICAL NOTES ====================
+    // Concussion diagnosed
+    if (formData.concussionDiagnosed === 'Yes') drawCheckmark(p9, 171.5, 145.7, 8)
+    else if (formData.concussionDiagnosed === 'No') drawCheckmark(p9, 219.5, 145.7, 8)
+    else if (formData.concussionDiagnosed === 'Deferred') drawCheckmark(p9, 287, 145.7, 8)
+
+    // ==================== PAGE 10 (index 9): HCP ATTESTATION + CLINICAL NOTES ====================
     const p10 = pages[9]
 
-    drawText(p10, 200, H - 160, formData.hcpName, { font, size: fs })
-    // Attestation signature — collected but never drawn, so every exported
-    // Child SCAT6 was an unsigned attestation.
-    drawText(p10, 200, H - 240, formData.hcpSignature, { font, size: fs })
-    drawText(p10, 200, H - 180, formData.hcpTitle, { font, size: fs })
-    drawText(p10, 200, H - 200, formData.hcpRegistration, { font, size: fs })
-    drawText(p10, 200, H - 220, formData.hcpDate, { font, size: fs })
+    drawText(p10, 83, 682, formData.hcpName, { font, size: fs })
+    drawText(p10, 96, 663, formData.hcpSignature, { font, size: fs })
+    drawText(p10, 343, 663, formData.hcpTitle, { font, size: fs })
+    drawText(p10, 216, 644.5, formData.hcpRegistration, { font, size: fs })
+    drawText(p10, 411, 644.5, formData.hcpDate, { font, size: fs })
 
-    // Additional Clinical Notes
     if (formData.additionalClinicalNotes) {
-      drawWrappedText(p10, 65, H - 300, formData.additionalClinicalNotes, 470, { font, size: fsm })
+      drawWrappedText(p10, 56, 593, formData.additionalClinicalNotes, 422, { font, size: fsm })
     }
 
     // Pages 11-12 (index 10-11) are editorial — no data

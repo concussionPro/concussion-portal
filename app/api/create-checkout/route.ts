@@ -11,8 +11,9 @@ import { detectCountry } from '@/lib/geo'
 import { CONFIG } from '@/lib/config'
 
 // Bundle owner discount applied automatically to course purchases.
-// Sales page promises "$100 off the course" for Reference+Toolkit owners.
-const BUNDLE_OWNER_DISCOUNT_AUD = 100
+// Single source (CONFIG) — the /pricing cards subtract the SAME number, so the
+// price a bundle owner is shown is always the price they are charged.
+const BUNDLE_OWNER_DISCOUNT_AUD = CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD
 
 /**
  * POST /api/create-checkout

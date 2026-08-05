@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 /**
  * Quiet inline pointer for clinicians who land on the prospect dashboard
@@ -12,7 +13,7 @@ export function IndividualInterestCard({ slug }: { slug?: string }) {
   return (
     <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-accent/15 bg-white px-5 py-4">
       <p className="text-[13px] text-foreground/80 leading-snug">
-        Want to enrol just yourself? <span className="text-muted-foreground">Online-only access from $497 · lifetime access · 8 CPD hours online (up to 16 with the in-person day).</span>
+        Want to enrol just yourself? <span className="text-muted-foreground">Online-only access from ${CONFIG.COURSE.PRICE_ONLINE} · lifetime access · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online (up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day).</span>
       </p>
       <Link
         data-track-cta="individual-pricing"

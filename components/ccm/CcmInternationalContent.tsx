@@ -11,6 +11,11 @@ import { SiteNav } from '@/components/SiteNav'
 import { trackEvent } from '@/lib/analytics'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { REFERENCE_COUNT } from '@/data/reference-count'
+import { SST_TIERS } from '@/lib/config'
+
+/** The bundled platform's year-2 rate = the REAL single-clinician SST tier the
+ *  webhook attaches (STRIPE_SST_SINGLE_PRICE_ID). Never a literal. */
+const PLATFORM_MONTHLY_AUD = SST_TIERS.find((t) => t.plan === 'single')!.monthlyAud
 
 /**
  * CCM (Concussion Clinical Mastery) — INTERNATIONAL landing.
@@ -51,7 +56,7 @@ const INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Is there an ongoing cost?',
-    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + SCAT6 baseline testing) is included free for your first year. After that, keeping the platform is A$49/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
+    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + SCAT6 baseline testing) is included free for your first year. After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (the standard single-clinician rate); it starts automatically at the 12-month mark and you can cancel anytime.',
   },
   {
     q: 'What’s the refund policy?',
@@ -430,7 +435,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
                   <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
                   The clinical platform (SST Trainer + baseline testing) is <strong>included free for your
-                  first year</strong>, then <strong>A$49/month</strong> to keep it — starts automatically
+                  first year</strong>, then <strong>A${PLATFORM_MONTHLY_AUD}/month</strong> to keep it — starts automatically
                   at 12 months, cancel anytime.
                 </p>
               </div>

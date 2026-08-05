@@ -14,11 +14,18 @@
  *
  * Same three counts for the paid course (modules 1-8).
  *
+ * CRM (the exercise-physiology stream) is audited SEPARATELY. Its entitlement
+ * lives in `course_purchases`, not `users.access_level` (the streams are
+ * isolated, lib/crm-course.ts), and its modules are namespaced 201-208 — so a
+ * CRM buyer was invisible to this audit in both dimensions: never counted as a
+ * paid user, and their module progress never counted at all.
+ *
  * Plus a per-user list with their actual progress shape so we can see
  * what's happening.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
+import { crmOwnerEmails, crmPracticalOwnerEmails } from '@/lib/crm-course'
 import { isAdminRequest } from '@/lib/require-admin'
 
 interface ModuleProgressRow {
@@ -70,18 +77,58 @@ export async function GET(req: NextRequest) {
     LEFT JOIN users u ON u.id = up.user_id
   `
 
+  // CRM (EP stream) ownership — course_purchases, never access_level.
+  const [crmOwners, crmPracticalOwners] = await Promise.all([
+    crmOwnerEmails(),
+    crmPracticalOwnerEmails(),
+  ])
+  const ownsCrm = (email: string | null | undefined) =>
+    !!email && !!crmOwners?.has(email.toLowerCase())
+
   // Also pull paid users who have NO progress row at all — they bought but
   // never touched the course. That's the genuine "ghost paid users" bucket.
+  // CRM buyers belong here too: they PAID, and "bought but never opened a
+  // module" is exactly the activation leak this audit exists to surface.
   const { rows: paidUsersAll } = await sql<{ id: string; email: string; access_level: string }>`
-    SELECT id, email, access_level
-    FROM users
-    WHERE access_level IN ('online-only', 'full-course')
+    SELECT u.id, u.email, u.access_level
+    FROM users u
+    WHERE u.access_level IN ('online-only', 'full-course')
+       OR EXISTS (
+         SELECT 1 FROM course_purchases cp
+         WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = 'crm'
+       )
   `
   const paidUsersAllIds = new Set(paidUsersAll.map((u) => u.id))
   const paidUsersWithProgress = new Set(
-    progressRows.filter((r) => r.access_level === 'online-only' || r.access_level === 'full-course').map((r) => r.user_id),
+    progressRows
+      .filter((r) => r.access_level === 'online-only' || r.access_level === 'full-course' || ownsCrm(r.email))
+      .map((r) => r.user_id),
   )
   const paidUsersZeroProgressRecord = [...paidUsersAllIds].filter((id) => !paidUsersWithProgress.has(id))
+
+  // CRM module completion (progress ids 201-208, data/ep-module-meta.ts).
+  const crmBuckets = { all8: 0, partial: 0, none: 0, total: 0 }
+  for (const row of progressRows) {
+    if (!ownsCrm(row.email)) continue
+    crmBuckets.total += 1
+    const p = row.progress || {}
+    let done = 0
+    let started = 0
+    for (let m = 201; m <= 208; m++) {
+      if (p[String(m)]?.completed) done += 1
+      if (p[String(m)]) started += 1
+    }
+    if (done === 8) crmBuckets.all8 += 1
+    else if (started > 0 || done > 0) crmBuckets.partial += 1
+    else crmBuckets.none += 1
+  }
+  // Owners with no progress ROW at all — invisible to the loop above.
+  const crmOwnerIdsWithProgress = new Set(
+    progressRows.filter((r) => ownsCrm(r.email)).map((r) => r.user_id),
+  )
+  const crmOwnersZeroProgressRecord = paidUsersAll
+    .filter((u) => ownsCrm(u.email) && !crmOwnerIdsWithProgress.has(u.id))
+    .map((u) => u.id)
 
   const scatBuckets = {
     progressShowsAll3Completed: [] as Array<{ userId: string }>,
@@ -196,6 +243,15 @@ export async function GET(req: NextRequest) {
       certUsersWithNoProgressRowAtAll: certHasNoProgressRow.length,
     },
     paidByTier: byTier,
+    // CRM is its own stream, counted on its own module namespace — never
+    // folded into paidByTier, whose keys are access_level values.
+    crm: {
+      owners: crmOwners?.size ?? 0,
+      practicalDaySeats: crmPracticalOwners?.size ?? 0,
+      ...crmBuckets,
+      ownersWithNoProgressRow: crmOwnersZeroProgressRecord.length,
+      ownersZeroProgressIds: crmOwnersZeroProgressRecord.slice(0, 50),
+    },
     paidUsersTotal: paidUsersAll.length,
     paidUsersWithNoProgressRow: paidUsersZeroProgressRecord.length,
     paidUsersZeroProgressIds: paidUsersZeroProgressRecord.slice(0, 50),

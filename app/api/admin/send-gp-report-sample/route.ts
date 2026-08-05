@@ -44,12 +44,14 @@ export async function POST(req: NextRequest) {
       tests,
       sessionRows: [26, 24, 21, 19, 17, 14, 12, 10, 8, 6].map((n, i) => ({
         date: day(n), pre: i < 4 ? 2 : 1, peak: i === 1 ? 4 : i < 4 ? 3 : 1,
-        minutes: 20, verified: i !== 7, flare: i === 1,
+        minutes: 20, verified: i !== 7, hrRecorded: true, flare: i === 1,
       })),
       sessionsTotal: 24,
       sessionsVerified: 21,
       weeks: 5,
       flares: 2,
+      sessionsWithSymptomData: 24,
+      redFlagTests: [],
     }
   }
 

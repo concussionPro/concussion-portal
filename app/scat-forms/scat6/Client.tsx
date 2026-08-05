@@ -24,6 +24,24 @@ const parseIntOrNull = (raw: string): number | null => {
   return Number.isNaN(parsed) ? null : parsed
 }
 
+/**
+ * Parse an error count that the instrument caps (mBESS: max 10 errors per
+ * 20-second stance). `max` / `min` on a number input is only a hint — a typed
+ * 15 was accepted and produced totals like "36 of 30".
+ */
+const parseCappedCountOrNull = (raw: string, max: number): number | null => {
+  const parsed = parseIntOrNull(raw)
+  if (parsed === null) return null
+  return Math.min(Math.max(parsed, 0), max)
+}
+
+/** Render a score that may not have been administered. */
+const DRAFT_KEY = 'scat6-draft-v2'
+
+const NOT_ADMINISTERED = '—'
+const showScore = (value: number | null): string =>
+  value === null ? NOT_ADMINISTERED : value.toString()
+
 const SectionHeader = ({
   id,
   title,
@@ -82,14 +100,18 @@ export default function SCAT6Client() {
         data: formData,
         timestamp: Date.now(),
       }
-      localStorage.setItem('scat6-draft', JSON.stringify(draftWithTimestamp))
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draftWithTimestamp))
     }, 3000)
     return () => clearTimeout(timer)
   }, [formData, pendingDraft])
 
   // Load draft on mount - with expiration check and non-blocking restore banner
   useEffect(() => {
-    const draft = localStorage.getItem('scat6-draft')
+    // Drafts written before scored fields became nullable carried 0/false for
+    // "never administered". Restoring one would turn blanks into asserted
+    // zeros, so pre-v2 drafts are discarded rather than reinterpreted.
+    localStorage.removeItem('scat6-draft')
+    const draft = localStorage.getItem(DRAFT_KEY)
     if (draft) {
       try {
         const parsed = JSON.parse(draft)
@@ -101,14 +123,14 @@ export default function SCAT6Client() {
 
         if (isExpired) {
           // Auto-clear expired draft
-          localStorage.removeItem('scat6-draft')
+          localStorage.removeItem(DRAFT_KEY)
         } else {
           // Show a non-blocking banner so the user can restore or start fresh
           setPendingDraft({ data: draftData, timestamp: draftTimestamp })
         }
       } catch (e) {
         console.error('Failed to load draft')
-        localStorage.removeItem('scat6-draft')
+        localStorage.removeItem(DRAFT_KEY)
       }
     }
   }, [])
@@ -147,7 +169,7 @@ export default function SCAT6Client() {
 
   const handleClearForm = () => {
     if (confirm('Start a new assessment? All current form data will be cleared.\n\nThis cannot be undone.')) {
-      localStorage.removeItem('scat6-draft')
+      localStorage.removeItem(DRAFT_KEY)
       setFormData(getDefaultSCAT6FormData())
       alert('New assessment started - form cleared successfully')
     }
@@ -168,14 +190,18 @@ export default function SCAT6Client() {
       {pendingDraft && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-amber-50 border border-amber-300 rounded-xl p-4">
           <p className="text-sm text-amber-900 flex-1">
-            {pendingDraft.timestamp
-              ? `A saved draft from ${new Date(pendingDraft.timestamp).toLocaleString()} was found.`
-              : 'A saved draft was found.'}
+            {/* Name the athlete: on a shared clinic device the draft may
+                belong to a DIFFERENT patient assessed by a different clinician. */}
+            {`A saved draft${pendingDraft.data?.athleteName ? ` for ${pendingDraft.data.athleteName}` : ''}${
+              pendingDraft.timestamp ? ` from ${new Date(pendingDraft.timestamp).toLocaleString()}` : ''
+            } was found.`}
           </p>
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => {
-                setFormData(pendingDraft.data)
+                // Merge over the defaults so a draft written against an older
+                // field set can't leave required arrays/objects undefined.
+                setFormData({ ...getDefaultSCAT6FormData(), ...pendingDraft.data })
                 setPendingDraft(null)
               }}
               className="px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
@@ -184,7 +210,7 @@ export default function SCAT6Client() {
             </button>
             <button
               onClick={() => {
-                localStorage.removeItem('scat6-draft')
+                localStorage.removeItem(DRAFT_KEY)
                 setPendingDraft(null)
               }}
               className="px-4 py-2 bg-white border border-amber-300 text-amber-800 text-sm font-semibold rounded-lg hover:bg-amber-100 transition-colors"
@@ -676,11 +702,11 @@ export default function SCAT6Client() {
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <div className="bg-blue-600 text-white rounded-lg p-6 text-center">
                   <div className="text-sm opacity-90 mb-2">Total number of symptoms:</div>
-                  <div className="text-4xl font-bold">{calculated.symptomNumber} <span className="text-xl font-normal opacity-75">of 22</span></div>
+                  <div className="text-4xl font-bold">{calculated.symptomsAdministered ? calculated.symptomNumber : NOT_ADMINISTERED} <span className="text-xl font-normal opacity-75">of 22</span></div>
                 </div>
                 <div className="bg-blue-600 text-white rounded-lg p-6 text-center">
                   <div className="text-sm opacity-90 mb-2">Symptom severity score:</div>
-                  <div className="text-4xl font-bold">{calculated.symptomSeverity} <span className="text-xl font-normal opacity-75">of 132</span></div>
+                  <div className="text-4xl font-bold">{calculated.symptomsAdministered ? calculated.symptomSeverity : NOT_ADMINISTERED} <span className="text-xl font-normal opacity-75">of 132</span></div>
                 </div>
               </div>
             </div>
@@ -727,7 +753,7 @@ export default function SCAT6Client() {
                 </div>
                 <div className="mt-3 bg-blue-600 text-white rounded-lg p-4 text-center">
                   <span className="text-sm opacity-90">Orientation Score: </span>
-                  <span className="text-2xl font-bold">{calculated.orientation}</span>
+                  <span className="text-2xl font-bold">{calculated.orientationAdministered ? calculated.orientation : NOT_ADMINISTERED}</span>
                   <span className="text-sm opacity-75"> of 5</span>
                 </div>
               </div>
@@ -826,7 +852,7 @@ export default function SCAT6Client() {
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <div className="bg-blue-600 text-white rounded-lg p-4 text-center">
                     <div className="text-sm opacity-90 mb-1">Immediate Memory Score:</div>
-                    <div className="text-3xl font-bold">{calculated.immediateMemory} <span className="text-lg opacity-75">of 30</span></div>
+                    <div className="text-3xl font-bold">{calculated.immediateMemoryAdministered ? calculated.immediateMemory : NOT_ADMINISTERED} <span className="text-lg opacity-75">of 30</span></div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Time Last Trial Completed:</label>
@@ -887,7 +913,7 @@ export default function SCAT6Client() {
 
                 <div className="bg-blue-600 text-white rounded-lg p-4 text-center">
                   <span className="text-sm opacity-90">Digits Score: </span>
-                  <span className="text-2xl font-bold">{formData.digitsBackward}</span>
+                  <span className="text-2xl font-bold">{showScore(formData.digitsBackward)}</span>
                   <span className="text-sm opacity-75"> of 4</span>
                 </div>
               </div>
@@ -922,8 +948,8 @@ export default function SCAT6Client() {
                     <input
                       type="number"
                       min="0"
-                      value={formData.monthsReverseErrors}
-                      onChange={(e) => setFormData(prev => ({ ...prev, monthsReverseErrors: parseInt(e.target.value) || 0 }))}
+                      value={formData.monthsReverseErrors ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, monthsReverseErrors: parseIntOrNull(e.target.value) }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                     />
                   </div>
@@ -932,7 +958,7 @@ export default function SCAT6Client() {
                 <div className="bg-blue-600 text-white rounded-lg p-4 text-center">
                   <span className="text-sm opacity-90">Months Score: </span>
                   <span className="text-2xl font-bold">
-                    {(parseFloat(formData.monthsReverseTime) > 0 && parseFloat(formData.monthsReverseTime) < 30 && formData.monthsReverseErrors === 0) ? 1 : 0}
+                    {showScore(calculated.monthsScore)}
                   </span>
                   <span className="text-sm opacity-75"> of 1</span>
                 </div>
@@ -942,7 +968,7 @@ export default function SCAT6Client() {
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-6">
                 <div className="text-center">
                   <div className="text-sm opacity-90 mb-2">Concentration Score (Digits + Months):</div>
-                  <div className="text-5xl font-bold">{calculated.concentration} <span className="text-2xl opacity-75">of 5</span></div>
+                  <div className="text-5xl font-bold">{showScore(calculated.concentration)} <span className="text-2xl opacity-75">of 5</span></div>
                 </div>
               </div>
 
@@ -952,24 +978,24 @@ export default function SCAT6Client() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="text-center">
                     <div className="text-xs opacity-75">Orientation</div>
-                    <div className="text-2xl font-bold">{calculated.orientation}/5</div>
+                    <div className="text-2xl font-bold">{calculated.orientationAdministered ? calculated.orientation : NOT_ADMINISTERED}/5</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xs opacity-75">Immediate Memory</div>
-                    <div className="text-2xl font-bold">{calculated.immediateMemory}/30</div>
+                    <div className="text-2xl font-bold">{calculated.immediateMemoryAdministered ? calculated.immediateMemory : NOT_ADMINISTERED}/30</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xs opacity-75">Concentration</div>
-                    <div className="text-2xl font-bold">{calculated.concentration}/5</div>
+                    <div className="text-2xl font-bold">{showScore(calculated.concentration)}/5</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xs opacity-75">Delayed Recall</div>
-                    <div className="text-2xl font-bold">{calculated.delayedRecall}/10</div>
+                    <div className="text-2xl font-bold">{calculated.delayedRecallAdministered ? calculated.delayedRecall : NOT_ADMINISTERED}/10</div>
                   </div>
                 </div>
                 <div className="text-center pt-4 border-t border-white/20">
                   <div className="text-sm opacity-90 mb-1">TOTAL COGNITIVE SCORE:</div>
-                  <div className="text-6xl font-bold">{calculated.totalCognitive} <span className="text-3xl opacity-75">/ 50</span></div>
+                  <div className="text-6xl font-bold">{showScore(calculated.totalCognitive)} <span className="text-3xl opacity-75">/ 50</span></div>
                 </div>
               </div>
             </div>
@@ -1037,8 +1063,8 @@ export default function SCAT6Client() {
                       type="number"
                       min="0"
                       max="10"
-                      value={formData.mBessDoubleErrors}
-                      onChange={(e) => setFormData(prev => ({ ...prev, mBessDoubleErrors: parseInt(e.target.value) || 0 }))}
+                      value={formData.mBessDoubleErrors ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, mBessDoubleErrors: parseCappedCountOrNull(e.target.value, 10) }))}
                       className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-lg font-bold text-center"
                     />
                     <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1049,8 +1075,8 @@ export default function SCAT6Client() {
                       type="number"
                       min="0"
                       max="10"
-                      value={formData.mBessTandemErrors}
-                      onChange={(e) => setFormData(prev => ({ ...prev, mBessTandemErrors: parseInt(e.target.value) || 0 }))}
+                      value={formData.mBessTandemErrors ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, mBessTandemErrors: parseCappedCountOrNull(e.target.value, 10) }))}
                       className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-lg font-bold text-center"
                     />
                     <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1061,8 +1087,8 @@ export default function SCAT6Client() {
                       type="number"
                       min="0"
                       max="10"
-                      value={formData.mBessSingleErrors}
-                      onChange={(e) => setFormData(prev => ({ ...prev, mBessSingleErrors: parseInt(e.target.value) || 0 }))}
+                      value={formData.mBessSingleErrors ?? ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, mBessSingleErrors: parseCappedCountOrNull(e.target.value, 10) }))}
                       className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-lg font-bold text-center"
                     />
                     <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1070,12 +1096,14 @@ export default function SCAT6Client() {
                 </div>
                 <div className="mt-4 bg-blue-600 text-white rounded-lg p-4 text-center">
                   <span className="text-sm opacity-90">Total Errors: </span>
-                  <span className="text-3xl font-bold">{calculated.mBessTotal}</span>
+                  <span className="text-3xl font-bold">{showScore(calculated.mBessTotal)}</span>
                   <span className="text-lg opacity-75"> of 30</span>
                 </div>
               </div>
 
-              {/* Optional On Foam */}
+              {/* Optional On Foam — the "Perform foam assessment" checkbox IS the
+                  administered flag (it nulls all three stances when unticked), so
+                  the inputs inside it stay non-null. */}
               <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h5 className="font-bold text-slate-900">On Foam <span className="text-xs font-normal bg-orange-500 text-white px-2 py-1 rounded">Optional</span></h5>
@@ -1114,8 +1142,8 @@ export default function SCAT6Client() {
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.mBessFoamDoubleErrors}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamDoubleErrors: parseInt(e.target.value) || 0 }))}
+                        value={formData.mBessFoamDoubleErrors ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamDoubleErrors: parseCappedCountOrNull(e.target.value, 10) ?? 0 }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1127,7 +1155,7 @@ export default function SCAT6Client() {
                         min="0"
                         max="10"
                         value={formData.mBessFoamTandemErrors ?? ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamTandemErrors: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamTandemErrors: parseCappedCountOrNull(e.target.value, 10) ?? 0 }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1139,7 +1167,7 @@ export default function SCAT6Client() {
                         min="0"
                         max="10"
                         value={formData.mBessFoamSingleErrors ?? ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamSingleErrors: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamSingleErrors: parseCappedCountOrNull(e.target.value, 10) ?? 0 }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1327,6 +1355,17 @@ export default function SCAT6Client() {
                   onChange={(e) => setFormData(prev => ({ ...prev, delayedRecallStartTime: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
+                {/* The 5-minute delay is part of the instrument: a recall taken
+                    too early is not a delayed recall and its /10 is not
+                    comparable. Warn, never silently score it. */}
+                {calculated.delayedRecallIntervalMinutes !== null && calculated.delayedRecallIntervalMinutes < 5 && (
+                  <p className="mt-2 text-sm font-medium text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-3">
+                    Only {calculated.delayedRecallIntervalMinutes} minute
+                    {calculated.delayedRecallIntervalMinutes === 1 ? '' : 's'} since the last immediate-memory trial
+                    ({formData.immediateMemoryTimeCompleted}). SCAT6 requires a minimum of 5 minutes — wait before
+                    administering delayed recall, or note the shortened interval in Additional Clinical Notes.
+                  </p>
+                )}
               </div>
 
               {!formData.wordListUsed ? (
@@ -1524,12 +1563,12 @@ export default function SCAT6Client() {
                             key={key}
                             type={key.includes('Fastest') ? 'text' : 'number'}
                             min="0"
-                            value={formData.decisionDates[key as keyof typeof formData.decisionDates]}
+                            value={formData.decisionDates[key as keyof typeof formData.decisionDates] ?? ''}
                             onChange={(e) => setFormData(prev => ({
                               ...prev,
                               decisionDates: {
                                 ...prev.decisionDates,
-                                [key]: key.includes('Fastest') ? e.target.value : (parseInt(e.target.value) || 0)
+                                [key]: key.includes('Fastest') ? e.target.value : parseIntOrNull(e.target.value)
                               }
                             }))}
                             className="px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-xs text-center"
@@ -1688,7 +1727,8 @@ export default function SCAT6Client() {
                 <a href="/docs/SCAT6_Fillable.pdf" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
                   official SCAT6 PDF
                 </a>{' '}
-                or a sideline card, and record the outcome in Additional Clinical Notes above.
+                (free — sign-in required) or a sideline card, and record the outcome in Additional
+                Clinical Notes above.
               </p>
             </div>
             <div className="mt-4 pt-4 border-t border-green-200">

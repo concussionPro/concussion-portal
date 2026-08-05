@@ -1,10 +1,69 @@
 // Child SCAT6 form data structure
-// For children aged 5-12 years
-// Key differences from adult SCAT6:
-// - 21 child-report symptoms rated 0-3 (not 0-6)
-// - 21 parent-report symptoms rated 0-3
-// - Overall "how do you feel" rating 0-10
-// - Parent overall rating 0-10
+// For children aged 8-12 years
+//
+// GROUND TRUTH: public/docs/Child_SCAT6_Flat.pdf (Davis GA et al, BJSM 2023;57:637-648).
+// Every item list and printed maximum below was read off that document, NOT
+// inferred from the adult SCAT6. The two instruments differ:
+//   - 21 child-report symptoms rated 0-3 (adult: 22 items rated 0-6)
+//   - 21 parent-report symptoms rated 0-3, WORDED DIFFERENTLY to the child items
+//   - NO orientation subtest at all (the adult SCAT6 has 5 items / 5 points)
+//   - Concentration = Digits Backward (of 5) + Days in reverse (of 1) = of 6
+//     (adult: digits of 4 + MONTHS in reverse of 1 = of 5)
+//   - Cognitive total = Immediate Memory 30 + Concentration 6 + Delayed Recall 10 = of 46
+//   - Child overall rating 0-10 (10 = normal); parent overall rating 0-100% (100% = normal)
+//
+// NULLABLE NUMBERS: every scored field where 0 is a real clinical finding is
+// `number | null` and defaults to null. `null` means "not administered / not
+// recorded" and prints blank or a dash; 0 means the clinician recorded a zero.
+// Collapsing the two is how an untouched form ends up asserting "0 errors of
+// 30" (perfect balance) or "0 of 21 symptoms" (an asymptomatic child).
+
+/** Symptom item keys, in the order the items are PRINTED on the Child SCAT6. */
+export const CHILD_SCAT6_SYMPTOM_KEYS = [
+  'headaches',
+  'dizzy',
+  'roomSpinning',
+  'goingToFaint',
+  'thingsBlurry',
+  'seeDouble',
+  'sickToStomach',
+  'tiredALot',
+  'tiredEasily',
+  'troublePayingAttention',
+  'distractedEasily',
+  'hardTimeConcentrating',
+  'problemsRemembering',
+  'problemsFollowingDirections',
+  'daydreams',
+  'getsConfused',
+  'forgetful',
+  'problemsFinishingThings',
+  'problemSolving',
+  'problemsLearning',
+  'neckHurts',
+] as const
+
+export type ChildSCAT6SymptomKey = (typeof CHILD_SCAT6_SYMPTOM_KEYS)[number]
+
+/**
+ * The Child SCAT6 prints its three immediate-memory word lists in a DIFFERENT
+ * order to the adult SCAT6 that `shared/constants/wordLists.ts` encodes:
+ * child List A is adult List B, child List B is adult List C, child List C is
+ * adult List A. Showing the clinician the adult list for the selected letter
+ * means the words read to the child are not the words printed (and ticked) on
+ * the exported form.
+ */
+export const CHILD_SCAT6_WORD_LIST_SOURCE: Record<'A' | 'B' | 'C', 'A' | 'B' | 'C'> = {
+  A: 'B',
+  B: 'C',
+  C: 'A',
+}
+
+/** One 0-3 rating per item; null = the item was not rated. */
+export type ChildSCAT6SymptomScores = Record<ChildSCAT6SymptomKey, number | null>
+
+export const CHILD_SCAT6_SYMPTOM_COUNT = CHILD_SCAT6_SYMPTOM_KEYS.length // 21
+export const CHILD_SCAT6_SYMPTOM_MAX_SEVERITY = CHILD_SCAT6_SYMPTOM_COUNT * 3 // 63
 
 export interface ChildSCAT6FormData {
   // Demographics
@@ -14,11 +73,10 @@ export interface ChildSCAT6FormData {
   dateOfExamination: string
   dateOfInjury: string
   timeOfInjury: string
-  sex: 'Male' | 'Female' | 'Prefer Not To Say' | 'Other' | ''
+  sex: 'Male' | 'Female' | 'Prefer Not To Say' | ''
   dominantHand: 'Left' | 'Right' | 'Ambidextrous' | ''
   sportTeamSchool: string
   currentYear: string
-  yearsEducation: string
   firstLanguage: string
   preferredLanguage: string
   examiner: string
@@ -29,78 +87,29 @@ export interface ChildSCAT6FormData {
   primarySymptoms: string
   recoveryTime: string
 
-  // Athlete Background
-  hospitalizedForHeadInjury: boolean
-  headacheDisorder: boolean
-  learningDisability: boolean
-  adhd: boolean
-  psychologicalDisorder: boolean
+  // Child Background ("Has the child ever been...") — null = not asked
+  hospitalizedForHeadInjury: boolean | null
+  headacheDisorder: boolean | null
+  learningDisability: boolean | null
+  adhd: boolean | null
+  psychologicalDisorder: boolean | null
   athleteBackgroundNotes: string
   currentMedications: string
 
   // Child Symptom Report (21 items, 0-3 scale)
-  // 0 = "Not at all", 1 = "A little bit", 2 = "Somewhat", 3 = "A lot"
-  childSymptoms: {
-    headache: number
-    pressureInHead: number
-    neckPain: number
-    feelingSickOrNausea: number
-    dizziness: number
-    blurredVision: number
-    balanceProblems: number
-    sensitivityLight: number
-    sensitivityNoise: number
-    feelingSlowedDown: number
-    feelingInFog: number
-    dontFeelRight: number
-    difficultyConcentrating: number
-    difficultyRemembering: number
-    tiredOrLowEnergy: number
-    confused: number
-    drowsy: number
-    moreEmotional: number
-    irritable: number
-    sad: number
-    nervousOrAnxious: number
-  }
-  childOverallRating: number // 0-10 scale "How do you feel?"
+  // 0 = "Not at all/never", 1 = "A little/rarely", 2 = "Somewhat/sometimes", 3 = "A lot/often"
+  childSymptoms: ChildSCAT6SymptomScores
+  /** "On a scale of 0 to 10 (where 10 is normal), how do you feel now?" */
+  childOverallRating: number | null
+  childSymptomsWorseWithPhysical: boolean | null
+  childSymptomsWorseWithMental: boolean | null
 
-  // Parent Report (21 items, 0-3 scale)
-  parentSymptoms: {
-    headache: number
-    pressureInHead: number
-    neckPain: number
-    sickOrNausea: number
-    dizziness: number
-    blurredVision: number
-    balanceProblems: number
-    sensitivityLight: number
-    sensitivityNoise: number
-    feelingSlowedDown: number
-    feelingInFog: number
-    doesntFeelRight: number
-    difficultyConcentrating: number
-    difficultyRemembering: number
-    tiredOrLowEnergy: number
-    confused: number
-    drowsy: number
-    moreEmotional: number
-    irritable: number
-    sad: number
-    nervousOrAnxious: number
-  }
-  parentOverallRating: number // 0-10 scale
-
-  // Worse with physical/mental
-  symptomsWorseWithPhysical: boolean | null
-  symptomsWorseWithMental: boolean | null
-
-  // Cognitive Screening - Orientation (5 items, 1 point each)
-  orientationMonth: boolean
-  orientationDate: boolean
-  orientationDayOfWeek: boolean
-  orientationYear: boolean
-  orientationTime: boolean
+  // Parent Report (same 21 items, 0-3 scale, parent wording)
+  parentSymptoms: ChildSCAT6SymptomScores
+  /** "On a scale of 0 to 100% (where 100% is normal), how would you rate the child now?" */
+  parentOverallPercent: number | null
+  parentSymptomsWorseWithPhysical: boolean | null
+  parentSymptomsWorseWithMental: boolean | null
 
   // Immediate Memory (3 trials of 10 words, List A/B/C)
   wordListUsed: 'A' | 'B' | 'C' | ''
@@ -109,21 +118,21 @@ export interface ChildSCAT6FormData {
   immediateMemoryTrial3: boolean[] // 10 words
   immediateMemoryTimeCompleted: string
 
-  // Concentration - Digits Backwards
+  // Concentration — Digits Backwards (5 levels: 2,3,4,5,6 digits → score of 5)
   digitListUsed: 'A' | 'B' | 'C' | ''
-  digitsBackward: number // 0-4 score
+  digitsBackward: number | null // 0-5
 
-  // Concentration - Months in Reverse
-  monthsReverseTime: string
-  monthsReverseErrors: number
+  // Concentration — DAYS of the week in reverse (Child SCAT6 does NOT use months)
+  daysReverseTime: string
+  daysReverseErrors: number | null
 
   // Balance - mBESS (3 stances, 10 errors each)
   footTested: 'Left' | 'Right' | ''
   testingSurface: string
   footwear: string
-  mBessDoubleErrors: number
-  mBessTandemErrors: number
-  mBessSingleErrors: number
+  mBessDoubleErrors: number | null
+  mBessTandemErrors: number | null
+  mBessSingleErrors: number | null
   mBessFoamDoubleErrors: number | null
   mBessFoamTandemErrors: number | null
   mBessFoamSingleErrors: number | null
@@ -133,11 +142,11 @@ export interface ChildSCAT6FormData {
   tandemGaitTrial2: string
   tandemGaitTrial3: string
 
-  // Complex Tandem Gait (child-specific: forward/backward)
-  complexTandemForwardEyesOpen: number
-  complexTandemForwardEyesClosed: number
-  complexTandemBackwardEyesOpen: number
-  complexTandemBackwardEyesClosed: number
+  // Complex Tandem Gait (child-specific: forward/backward, error POINTS)
+  complexTandemForwardEyesOpen: number | null
+  complexTandemForwardEyesClosed: number | null
+  complexTandemBackwardEyesOpen: number | null
+  complexTandemBackwardEyesClosed: number | null
 
   // Dual Task Gait
   dualTaskPracticeErrors: number | null
@@ -150,8 +159,8 @@ export interface ChildSCAT6FormData {
   dualTask3Time: string
   dualTaskAlternateStartingInteger: string
 
-  // Trials not completed
-  trialsNotCompleted: boolean
+  // "Were any single- or dual-task timed tandem gait trials not completed?"
+  trialsNotCompleted: boolean | null
   trialsNotCompletedReason: string
 
   // Delayed Recall (same 10 words after 5+ minutes)
@@ -172,6 +181,13 @@ export interface ChildSCAT6FormData {
   additionalClinicalNotes: string
 }
 
+/** All 21 items unrated. */
+export const getDefaultChildSCAT6Symptoms = (): ChildSCAT6SymptomScores =>
+  CHILD_SCAT6_SYMPTOM_KEYS.reduce((acc, key) => {
+    acc[key] = null
+    return acc
+  }, {} as ChildSCAT6SymptomScores)
+
 // Initialize with default values
 export const getDefaultChildSCAT6FormData = (): ChildSCAT6FormData => ({
   athleteName: '',
@@ -184,7 +200,6 @@ export const getDefaultChildSCAT6FormData = (): ChildSCAT6FormData => ({
   dominantHand: '',
   sportTeamSchool: '',
   currentYear: '',
-  yearsEducation: '',
   firstLanguage: '',
   preferredLanguage: '',
   examiner: '',
@@ -194,72 +209,23 @@ export const getDefaultChildSCAT6FormData = (): ChildSCAT6FormData => ({
   primarySymptoms: '',
   recoveryTime: '',
 
-  hospitalizedForHeadInjury: false,
-  headacheDisorder: false,
-  learningDisability: false,
-  adhd: false,
-  psychologicalDisorder: false,
+  hospitalizedForHeadInjury: null,
+  headacheDisorder: null,
+  learningDisability: null,
+  adhd: null,
+  psychologicalDisorder: null,
   athleteBackgroundNotes: '',
   currentMedications: '',
 
-  childSymptoms: {
-    headache: 0,
-    pressureInHead: 0,
-    neckPain: 0,
-    feelingSickOrNausea: 0,
-    dizziness: 0,
-    blurredVision: 0,
-    balanceProblems: 0,
-    sensitivityLight: 0,
-    sensitivityNoise: 0,
-    feelingSlowedDown: 0,
-    feelingInFog: 0,
-    dontFeelRight: 0,
-    difficultyConcentrating: 0,
-    difficultyRemembering: 0,
-    tiredOrLowEnergy: 0,
-    confused: 0,
-    drowsy: 0,
-    moreEmotional: 0,
-    irritable: 0,
-    sad: 0,
-    nervousOrAnxious: 0,
-  },
-  childOverallRating: 0,
+  childSymptoms: getDefaultChildSCAT6Symptoms(),
+  childOverallRating: null,
+  childSymptomsWorseWithPhysical: null,
+  childSymptomsWorseWithMental: null,
 
-  parentSymptoms: {
-    headache: 0,
-    pressureInHead: 0,
-    neckPain: 0,
-    sickOrNausea: 0,
-    dizziness: 0,
-    blurredVision: 0,
-    balanceProblems: 0,
-    sensitivityLight: 0,
-    sensitivityNoise: 0,
-    feelingSlowedDown: 0,
-    feelingInFog: 0,
-    doesntFeelRight: 0,
-    difficultyConcentrating: 0,
-    difficultyRemembering: 0,
-    tiredOrLowEnergy: 0,
-    confused: 0,
-    drowsy: 0,
-    moreEmotional: 0,
-    irritable: 0,
-    sad: 0,
-    nervousOrAnxious: 0,
-  },
-  parentOverallRating: 0,
-
-  symptomsWorseWithPhysical: null,
-  symptomsWorseWithMental: null,
-
-  orientationMonth: false,
-  orientationDate: false,
-  orientationDayOfWeek: false,
-  orientationYear: false,
-  orientationTime: false,
+  parentSymptoms: getDefaultChildSCAT6Symptoms(),
+  parentOverallPercent: null,
+  parentSymptomsWorseWithPhysical: null,
+  parentSymptomsWorseWithMental: null,
 
   wordListUsed: '',
   immediateMemoryTrial1: Array(10).fill(false),
@@ -268,17 +234,17 @@ export const getDefaultChildSCAT6FormData = (): ChildSCAT6FormData => ({
   immediateMemoryTimeCompleted: '',
 
   digitListUsed: '',
-  digitsBackward: 0,
+  digitsBackward: null,
 
-  monthsReverseTime: '',
-  monthsReverseErrors: 0,
+  daysReverseTime: '',
+  daysReverseErrors: null,
 
   footTested: '',
   testingSurface: '',
   footwear: '',
-  mBessDoubleErrors: 0,
-  mBessTandemErrors: 0,
-  mBessSingleErrors: 0,
+  mBessDoubleErrors: null,
+  mBessTandemErrors: null,
+  mBessSingleErrors: null,
   mBessFoamDoubleErrors: null,
   mBessFoamTandemErrors: null,
   mBessFoamSingleErrors: null,
@@ -287,10 +253,10 @@ export const getDefaultChildSCAT6FormData = (): ChildSCAT6FormData => ({
   tandemGaitTrial2: '',
   tandemGaitTrial3: '',
 
-  complexTandemForwardEyesOpen: 0,
-  complexTandemForwardEyesClosed: 0,
-  complexTandemBackwardEyesOpen: 0,
-  complexTandemBackwardEyesClosed: 0,
+  complexTandemForwardEyesOpen: null,
+  complexTandemForwardEyesClosed: null,
+  complexTandemBackwardEyesOpen: null,
+  complexTandemBackwardEyesClosed: null,
 
   dualTaskPracticeErrors: null,
   dualTaskPracticeTime: '',
@@ -302,7 +268,7 @@ export const getDefaultChildSCAT6FormData = (): ChildSCAT6FormData => ({
   dualTask3Time: '',
   dualTaskAlternateStartingInteger: '',
 
-  trialsNotCompleted: false,
+  trialsNotCompleted: null,
   trialsNotCompletedReason: '',
 
   delayedRecallStartTime: '',
@@ -318,3 +284,49 @@ export const getDefaultChildSCAT6FormData = (): ChildSCAT6FormData => ({
 
   additionalClinicalNotes: '',
 })
+
+/**
+ * Merge an untrusted saved draft into the current shape.
+ *
+ * Drafts are localStorage JSON written by older builds of this form, whose
+ * symptom keys were the ADULT SCAT6 item names and whose "not recorded" values
+ * were 0/false rather than null. Restoring one of those verbatim would
+ * silently re-introduce fabricated zeros, so anything that is not recognisably
+ * of the current shape is dropped back to its default.
+ */
+export const normalizeChildSCAT6Draft = (raw: unknown): ChildSCAT6FormData => {
+  const base = getDefaultChildSCAT6FormData()
+  if (!raw || typeof raw !== 'object') return base
+  const draft = raw as Record<string, unknown>
+
+  const out = { ...base }
+  for (const key of Object.keys(base) as (keyof ChildSCAT6FormData)[]) {
+    const value = draft[key]
+    if (value === undefined) continue
+    if (key === 'childSymptoms' || key === 'parentSymptoms') continue
+    const expected = base[key]
+    if (Array.isArray(expected)) {
+      if (Array.isArray(value) && value.length === expected.length) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(out as any)[key] = value
+      }
+      continue
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(out as any)[key] = value
+  }
+
+  for (const scale of ['childSymptoms', 'parentSymptoms'] as const) {
+    const saved = draft[scale]
+    if (!saved || typeof saved !== 'object') continue
+    const savedScores = saved as Record<string, unknown>
+    const merged = getDefaultChildSCAT6Symptoms()
+    for (const key of CHILD_SCAT6_SYMPTOM_KEYS) {
+      const v = savedScores[key]
+      if (typeof v === 'number' && v >= 0 && v <= 3) merged[key] = v
+    }
+    out[scale] = merged
+  }
+
+  return out
+}

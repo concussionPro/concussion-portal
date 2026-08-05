@@ -280,7 +280,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // Complete Course price is early-bird-aware per selected city ($1,190 with
   // no live scheduled date; $1,400 only inside the final window of a
   // scheduled round). Server (lib/stripe.ts) is the source of truth at checkout.
-  const BUNDLE_DISCOUNT = 100
+  const BUNDLE_DISCOUNT = CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD
   const onlinePrice = bookOwner ? CONFIG.COURSE.PRICE_ONLINE - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_ONLINE
   const earlyBird = isEarlyBirdForLocation(selectedLocation)
   const fullCourseBase = workshopPriceFor(selectedLocation)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, createJWTSession } from '@/lib/jwt-session'
 import { findUserById, isBookOwner } from '@/lib/users'
-import { userOwnsCrm } from '@/lib/crm-course'
+import { crmEntitlementsFor } from '@/lib/crm-course'
 import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 /**
@@ -166,6 +166,14 @@ export async function GET(request: NextRequest) {
       return response
     }
 
+    // Both CRM entitlements in ONE query (see crmEntitlementsFor): `ownsCrm`
+    // admits them to /ep-course, `ownsCrmPractical` tells the UI whether the
+    // SHARED practical day is still an upsell for them. Without the second
+    // flag no client component could distinguish "CRM online" from "CRM
+    // complete", which is why the EP course had no in-portal upgrade path at
+    // all while CCM had eleven.
+    const crm = await crmEntitlementsFor(user.email)
+
     if (user.accessLevel !== sessionData.accessLevel) {
       // Access level changed — issue a refreshed session cookie
       // Detect if original session was rememberMe (30 days) by checking remaining time
@@ -185,7 +193,8 @@ export async function GET(request: NextRequest) {
           // CRM entitlement lives in course_purchases, NOT access_level (the two
           // streams are deliberately isolated). The client needs it or a paying
           // CRM buyer renders as a free 'preview' user.
-          ownsCrm: await userOwnsCrm(user.email),
+          ownsCrm: crm.ownsCrm,
+          ownsCrmPractical: crm.ownsCrmPractical,
           workshopLocation: user.workshopLocation || null,
           createdAt: user.createdAt,
           nurtureUnsubscribed: user.nurtureUnsubscribed || false,
@@ -212,7 +221,8 @@ export async function GET(request: NextRequest) {
         name: user.name,
         accessLevel: user.accessLevel,
         // See above — CRM ownership is course_purchases-based, not access_level.
-        ownsCrm: await userOwnsCrm(user.email),
+        ownsCrm: crm.ownsCrm,
+        ownsCrmPractical: crm.ownsCrmPractical,
         // Book ownership is a DB flag on a preview-level account — omitting it
         // here (the path nearly every request takes) locked paying book
         // buyers out of /complete-reference and the $50 bundle discount

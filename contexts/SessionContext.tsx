@@ -15,6 +15,13 @@ export interface SessionUser {
    * render a paying customer as a free user. Check this too.
    */
   ownsCrm?: boolean
+  /**
+   * Holds a seat at the SHARED CCM/CRM practical day via the CRM side
+   * (course_purchases slug 'crm-practical'). `ownsCrm && !ownsCrmPractical`
+   * is the CRM analogue of CCM's `accessLevel === 'online-only'` — the
+   * audience for the in-portal practical-day upgrade.
+   */
+  ownsCrmPractical?: boolean
   /** Synthetic demo identity (reviewer preview or /demo/clinic prospect) —
    *  nothing persists; UI hides account affordances (sync, sign-out, settings). */
   isDemo?: boolean

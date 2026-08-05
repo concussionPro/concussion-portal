@@ -26,8 +26,8 @@ import { isOwnerEmail } from '@/lib/owner'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { useCourseTier } from './useCourseTier'
 import Link from 'next/link'
-import { CONFIG, upgradePriceFor } from '@/lib/config'
-import { COURSES, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
+import { CONFIG, upgradePriceFor, SST_TIER_FROM_AUD } from '@/lib/config'
+import { COURSES, getEffectiveStatus, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 import { epModulesMeta, epProgressId } from '@/data/ep-module-meta'
 
@@ -387,7 +387,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold text-foreground leading-tight truncate">{c.title}</span>
                       <span className="block text-[11px] text-muted-foreground leading-tight">
-                        {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
+                        {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{getEffectivePrice(c).price !== null && <> · A${getEffectivePrice(c).price!.toLocaleString('en-AU')}</>}
                       </span>
                     </span>
                     <ArrowUpRight className="w-3.5 h-3.5 text-teal-600/60 flex-shrink-0" />
@@ -475,7 +475,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
                       posted a plan the API no longer accepts and swallowed the
                       400 silently. Route to the live tier page instead. */}
                   <a href="/clinical-testing/subscribe" className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg bg-accent text-white hover:opacity-90 transition">
-                    View clinic plans — from A$49/month
+                    View clinic plans — from A${SST_TIER_FROM_AUD}/month
                   </a>
                 </div>
               </div>

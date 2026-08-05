@@ -24,38 +24,41 @@ export interface SCAT6FormData {
   recoveryTime: string
 
   // Athlete Background
-  hospitalizedForHeadInjury: boolean
-  headacheDisorder: boolean
-  learningDisability: boolean
-  adhd: boolean
-  psychologicalDisorder: boolean
+  // `null` = never asked. These print as Yes/No on the exported record, so a
+  // `false` default would assert a negative medical history the athlete was
+  // never asked about (no head-injury admission, no ADHD, no depression).
+  hospitalizedForHeadInjury: boolean | null
+  headacheDisorder: boolean | null
+  learningDisability: boolean | null
+  adhd: boolean | null
+  psychologicalDisorder: boolean | null
   athleteBackgroundNotes: string
   currentMedications: string
 
-  // Symptoms (22 items rated 0-6)
+  // Symptoms (22 items rated 0-6). `null` = not rated; 0 = rated "none".
   symptoms: {
-    headaches: number
-    pressureInHead: number
-    neckPain: number
-    nauseaVomiting: number
-    dizziness: number
-    blurredVision: number
-    balanceProblems: number
-    sensitivityLight: number
-    sensitivityNoise: number
-    feelingSlowedDown: number
-    feelingInFog: number
-    dontFeelRight: number
-    difficultyConcentrating: number
-    difficultyRemembering: number
-    fatigueOrLowEnergy: number
-    confusion: number
-    drowsiness: number
-    moreEmotional: number
-    irritability: number
-    sadness: number
-    nervousAnxious: number
-    troubleFallingAsleep: number
+    headaches: number | null
+    pressureInHead: number | null
+    neckPain: number | null
+    nauseaVomiting: number | null
+    dizziness: number | null
+    blurredVision: number | null
+    balanceProblems: number | null
+    sensitivityLight: number | null
+    sensitivityNoise: number | null
+    feelingSlowedDown: number | null
+    feelingInFog: number | null
+    dontFeelRight: number | null
+    difficultyConcentrating: number | null
+    difficultyRemembering: number | null
+    fatigueOrLowEnergy: number | null
+    confusion: number | null
+    drowsiness: number | null
+    moreEmotional: number | null
+    irritability: number | null
+    sadness: number | null
+    nervousAnxious: number | null
+    troubleFallingAsleep: number | null
   }
   percentOfNormal: string
   whyNotHundredPercent: string
@@ -63,11 +66,14 @@ export interface SCAT6FormData {
   symptomsWorseWithMental: boolean | null
 
   // Cognitive Screening - Orientation (5 items, 1 point each)
-  orientationMonth: boolean
-  orientationDate: boolean
-  orientationDayOfWeek: boolean
-  orientationYear: boolean
-  orientationTime: boolean
+  // `null` = not asked, `false` = asked and answered incorrectly. Without the
+  // null state a genuine 0/5 (profound disorientation) is indistinguishable
+  // from an untouched form, so neither can be reported honestly.
+  orientationMonth: boolean | null
+  orientationDate: boolean | null
+  orientationDayOfWeek: boolean | null
+  orientationYear: boolean | null
+  orientationTime: boolean | null
 
   // Immediate Memory (3 trials of 10 words, List A/B/C)
   wordListUsed: 'A' | 'B' | 'C' | ''
@@ -78,19 +84,21 @@ export interface SCAT6FormData {
 
   // Concentration - Digits Backwards
   digitListUsed: 'A' | 'B' | 'C' | ''
-  digitsBackward: number // 0-4 score
+  digitsBackward: number | null // 0-4 score, null = not administered
 
   // Concentration - Months in Reverse
   monthsReverseTime: string
-  monthsReverseErrors: number
+  monthsReverseErrors: number | null
 
   // Balance - mBESS (3 stances, 10 errors each)
   footTested: 'Left' | 'Right' | ''
   testingSurface: string
   footwear: string
-  mBessDoubleErrors: number
-  mBessTandemErrors: number
-  mBessSingleErrors: number
+  // null = stance not performed. 0 errors of 10 is a PERFECT result and must
+  // never be asserted by default.
+  mBessDoubleErrors: number | null
+  mBessTandemErrors: number | null
+  mBessSingleErrors: number | null
   // Optional foam
   mBessFoamDoubleErrors: number | null
   mBessFoamTandemErrors: number | null
@@ -128,40 +136,40 @@ export interface SCAT6FormData {
   decisionDates: {
     date1: string
     neurologicalExam1: 'Normal' | 'Abnormal' | ''
-    symptomNumber1: number
-    symptomSeverity1: number
-    orientation1: number
-    immediateMemory1: number
-    concentration1: number
-    delayedRecall1: number
-    cognitiveTotal1: number
-    mBessTotal1: number
+    symptomNumber1: number | null
+    symptomSeverity1: number | null
+    orientation1: number | null
+    immediateMemory1: number | null
+    concentration1: number | null
+    delayedRecall1: number | null
+    cognitiveTotal1: number | null
+    mBessTotal1: number | null
     tandemGaitFastest1: string
     dualTaskFastest1: string
 
     date2: string
     neurologicalExam2: 'Normal' | 'Abnormal' | ''
-    symptomNumber2: number
-    symptomSeverity2: number
-    orientation2: number
-    immediateMemory2: number
-    concentration2: number
-    delayedRecall2: number
-    cognitiveTotal2: number
-    mBessTotal2: number
+    symptomNumber2: number | null
+    symptomSeverity2: number | null
+    orientation2: number | null
+    immediateMemory2: number | null
+    concentration2: number | null
+    delayedRecall2: number | null
+    cognitiveTotal2: number | null
+    mBessTotal2: number | null
     tandemGaitFastest2: string
     dualTaskFastest2: string
 
     date3: string
     neurologicalExam3: 'Normal' | 'Abnormal' | ''
-    symptomNumber3: number
-    symptomSeverity3: number
-    orientation3: number
-    immediateMemory3: number
-    concentration3: number
-    delayedRecall3: number
-    cognitiveTotal3: number
-    mBessTotal3: number
+    symptomNumber3: number | null
+    symptomSeverity3: number | null
+    orientation3: number | null
+    immediateMemory3: number | null
+    concentration3: number | null
+    delayedRecall3: number | null
+    cognitiveTotal3: number | null
+    mBessTotal3: number | null
     tandemGaitFastest3: string
     dualTaskFastest3: string
   }
@@ -202,48 +210,48 @@ export const getDefaultSCAT6FormData = (): SCAT6FormData => ({
   primarySymptoms: '',
   recoveryTime: '',
 
-  hospitalizedForHeadInjury: false,
-  headacheDisorder: false,
-  learningDisability: false,
-  adhd: false,
-  psychologicalDisorder: false,
+  hospitalizedForHeadInjury: null,
+  headacheDisorder: null,
+  learningDisability: null,
+  adhd: null,
+  psychologicalDisorder: null,
   athleteBackgroundNotes: '',
   currentMedications: '',
 
   symptoms: {
-    headaches: 0,
-    pressureInHead: 0,
-    neckPain: 0,
-    nauseaVomiting: 0,
-    dizziness: 0,
-    blurredVision: 0,
-    balanceProblems: 0,
-    sensitivityLight: 0,
-    sensitivityNoise: 0,
-    feelingSlowedDown: 0,
-    feelingInFog: 0,
-    dontFeelRight: 0,
-    difficultyConcentrating: 0,
-    difficultyRemembering: 0,
-    fatigueOrLowEnergy: 0,
-    confusion: 0,
-    drowsiness: 0,
-    moreEmotional: 0,
-    irritability: 0,
-    sadness: 0,
-    nervousAnxious: 0,
-    troubleFallingAsleep: 0,
+    headaches: null,
+    pressureInHead: null,
+    neckPain: null,
+    nauseaVomiting: null,
+    dizziness: null,
+    blurredVision: null,
+    balanceProblems: null,
+    sensitivityLight: null,
+    sensitivityNoise: null,
+    feelingSlowedDown: null,
+    feelingInFog: null,
+    dontFeelRight: null,
+    difficultyConcentrating: null,
+    difficultyRemembering: null,
+    fatigueOrLowEnergy: null,
+    confusion: null,
+    drowsiness: null,
+    moreEmotional: null,
+    irritability: null,
+    sadness: null,
+    nervousAnxious: null,
+    troubleFallingAsleep: null,
   },
   percentOfNormal: '',
   whyNotHundredPercent: '',
   symptomsWorseWithPhysical: null,
   symptomsWorseWithMental: null,
 
-  orientationMonth: false,
-  orientationDate: false,
-  orientationDayOfWeek: false,
-  orientationYear: false,
-  orientationTime: false,
+  orientationMonth: null,
+  orientationDate: null,
+  orientationDayOfWeek: null,
+  orientationYear: null,
+  orientationTime: null,
 
   wordListUsed: '',
   immediateMemoryTrial1: Array(10).fill(false),
@@ -252,17 +260,17 @@ export const getDefaultSCAT6FormData = (): SCAT6FormData => ({
   immediateMemoryTimeCompleted: '',
 
   digitListUsed: '',
-  digitsBackward: 0,
+  digitsBackward: null,
 
   monthsReverseTime: '',
-  monthsReverseErrors: 0,
+  monthsReverseErrors: null,
 
   footTested: '',
   testingSurface: '',
   footwear: '',
-  mBessDoubleErrors: 0,
-  mBessTandemErrors: 0,
-  mBessSingleErrors: 0,
+  mBessDoubleErrors: null,
+  mBessTandemErrors: null,
+  mBessSingleErrors: null,
   mBessFoamDoubleErrors: null,
   mBessFoamTandemErrors: null,
   mBessFoamSingleErrors: null,
@@ -293,40 +301,40 @@ export const getDefaultSCAT6FormData = (): SCAT6FormData => ({
   decisionDates: {
     date1: '',
     neurologicalExam1: '',
-    symptomNumber1: 0,
-    symptomSeverity1: 0,
-    orientation1: 0,
-    immediateMemory1: 0,
-    concentration1: 0,
-    delayedRecall1: 0,
-    cognitiveTotal1: 0,
-    mBessTotal1: 0,
+    symptomNumber1: null,
+    symptomSeverity1: null,
+    orientation1: null,
+    immediateMemory1: null,
+    concentration1: null,
+    delayedRecall1: null,
+    cognitiveTotal1: null,
+    mBessTotal1: null,
     tandemGaitFastest1: '',
     dualTaskFastest1: '',
 
     date2: '',
     neurologicalExam2: '',
-    symptomNumber2: 0,
-    symptomSeverity2: 0,
-    orientation2: 0,
-    immediateMemory2: 0,
-    concentration2: 0,
-    delayedRecall2: 0,
-    cognitiveTotal2: 0,
-    mBessTotal2: 0,
+    symptomNumber2: null,
+    symptomSeverity2: null,
+    orientation2: null,
+    immediateMemory2: null,
+    concentration2: null,
+    delayedRecall2: null,
+    cognitiveTotal2: null,
+    mBessTotal2: null,
     tandemGaitFastest2: '',
     dualTaskFastest2: '',
 
     date3: '',
     neurologicalExam3: '',
-    symptomNumber3: 0,
-    symptomSeverity3: 0,
-    orientation3: 0,
-    immediateMemory3: 0,
-    concentration3: 0,
-    delayedRecall3: 0,
-    cognitiveTotal3: 0,
-    mBessTotal3: 0,
+    symptomNumber3: null,
+    symptomSeverity3: null,
+    orientation3: null,
+    immediateMemory3: null,
+    concentration3: null,
+    delayedRecall3: null,
+    cognitiveTotal3: null,
+    mBessTotal3: null,
     tandemGaitFastest3: '',
     dualTaskFastest3: '',
   },

@@ -1,4 +1,10 @@
 import { Metadata } from 'next'
+import { intlPriceForCountry } from '@/lib/international-pricing'
+
+// USD anchor from the SAME table the page body and the Stripe charge use
+// (lib/international-pricing). Buyers outside the USD bucket are charged their
+// local equivalent — the snippet quotes the anchor, never a stale literal.
+const USD = intlPriceForCountry(null).display
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /acsm — ACSM asset A10. This page must be LIVE BEFORE approval so that
@@ -18,7 +24,7 @@ import { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Concussion Rehab Mastery — for ACSM-EP and ACSM-CEP Professionals',
   description:
-    'The consensus made a heart-rate-threshold exercise prescription the first-line treatment for concussion — derived from a graded exercise test. That is your competency. This is the course that turns it into a new patient population, with the tools to deliver it. USD $347.',
+    `The consensus made a heart-rate-threshold exercise prescription the first-line treatment for concussion — derived from a graded exercise test. That is your competency. This is the course that turns it into a new patient population, with the tools to deliver it. ${USD}.`,
   keywords:
     'ACSM CEC concussion, ACSM-EP concussion, ACSM-CEP concussion, clinical exercise physiologist concussion, sub-symptom threshold aerobic exercise, Buffalo concussion treadmill test, FITT concussion prescription',
   openGraph: {

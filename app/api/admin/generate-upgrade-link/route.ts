@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { findUserByEmail } from '@/lib/users'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
+import { VALID_LOCATIONS } from '@/lib/stripe'
 
 /**
  * POST /api/admin/generate-upgrade-link
@@ -30,6 +31,15 @@ export async function POST(request: NextRequest) {
   const location = body.location?.trim().toLowerCase()
   if (!email || !location) {
     return NextResponse.json({ error: 'email and location required' }, { status: 400 })
+  }
+  // Catch a mistyped city HERE rather than at /pay/[code], where it would
+  // create a real Stripe session nominating a workshop city that no
+  // Ready-to-Train pipeline knows about.
+  if (!VALID_LOCATIONS.includes(location as (typeof VALID_LOCATIONS)[number])) {
+    return NextResponse.json(
+      { error: `location must be one of: ${VALID_LOCATIONS.join(', ')}` },
+      { status: 400 },
+    )
   }
 
   const user = await findUserByEmail(email)

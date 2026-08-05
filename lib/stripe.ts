@@ -16,7 +16,7 @@
 import Stripe from 'stripe'
 import { CONFIG, isEarlyBirdForLocation } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
-import { clampClinicianSeats } from '@/lib/course-hub'
+import { hubSeatsForDeclaredCount } from '@/lib/course-hub'
 
 // Lazy init: Stripe is only needed at request time, not during build page collection
 let _stripe: Stripe | null = null
@@ -255,6 +255,18 @@ export async function createCourseCheckoutSession({
   const scat6OnIneligibleCourse =
     promoCode?.toUpperCase() === CONFIG.COURSE.PROMO_CODE && courseType !== 'online-only'
 
+  // Stripe's manual promo field is OPEN TO EVERY ACTIVE CODE IN THE ACCOUNT —
+  // it cannot be scoped to a product, because every line item here is an
+  // ad-hoc `price_data` product with no dashboard Price behind it. So handing
+  // a Complete Course / Hub Pack / international buyer that field is the same
+  // as publishing SCAT6 ($50, ONLINE-ONLY by policy) against those products:
+  // they just type it in. Blocking the code when it arrives as a PARAMETER
+  // (scat6OnIneligibleCourse, below) never closed that door, because the
+  // default path passes no promoCode at all. Offer the field only where a code
+  // is genuinely redeemable; a targeted promo still auto-applies through the
+  // `promoCode` parameter on any course type.
+  const promoFieldEligible = courseType === 'online-only'
+
   // Apply bundle-owner discount to AUD course purchases (online-only / full-course).
   // Stored as metadata so the webhook can reconcile and the finance record is clear.
   let bundleDiscountApplied = 0
@@ -292,13 +304,13 @@ export async function createCourseCheckoutSession({
         discounts = [{ promotion_code: promoCodes.data[0].id }]
       } else {
         // Promo code not found — fall back to manual entry field
-        allowPromotionCodes = true
+        allowPromotionCodes = promoFieldEligible
       }
     } catch {
-      allowPromotionCodes = true
+      allowPromotionCodes = promoFieldEligible
     }
   } else {
-    allowPromotionCodes = true
+    allowPromotionCodes = promoFieldEligible
   }
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
@@ -321,8 +333,8 @@ export async function createCourseCheckoutSession({
   // 12), so the cap the buyer gets is always the cap they paid for.
   // HubPackBuyCard shows the identical computed total — display = charge.
   if (courseType === 'clinic-hub-pack') {
-    const declaredSeats = clampClinicianSeats(clinicianCount ?? CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED)
-    const extraSeats = Math.max(0, declaredSeats - CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED)
+    const declaredSeats = hubSeatsForDeclaredCount(clinicianCount)
+    const extraSeats = declaredSeats - CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
     if (extraSeats > 0) {
       lineItems.push({
         price_data: {

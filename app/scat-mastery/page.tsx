@@ -27,12 +27,17 @@ import { createCourseSchema } from '@/lib/schema-markup'
 const FREE_SIGNUP_CONVERSION = 'AW-17984048021/TVzUCLHT0IccEJWXu_9C'
 
 // Flagship-course structured data for the upgrade CTA on this page.
-// CPD truth: 8 hours online; up to 16 ONLY with the optional in-person day.
+// The credential MUST match the price it is published alongside: this node is
+// priced at PRICE_EARLY_BIRD, which buys the Complete Course (online + the
+// in-person practical day) = TOTAL_CPD_POINTS. It previously carried
+// ONLINE_CPD_POINTS against that price, publishing "8 CPD hours for A$1,190"
+// to Google and the AI answer engines — half of what the money actually buys,
+// and contradicting the identical node on /course.
 const courseSchema = createCourseSchema({
   name: 'Concussion Clinical Mastery',
   description:
-    'Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. 8 CPD hours online, up to 16 CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.',
-  cpdHours: 8,
+    `Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.`,
+  cpdHours: CONFIG.COURSE.TOTAL_CPD_POINTS,
   priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
 })
 
@@ -185,6 +190,17 @@ export default function SCATMasteryPage() {
 
       const data = await res.json()
 
+      // Existing account that OWNS something: the API deliberately sets NO
+      // session cookie and emails a login link instead (anti-takeover — see
+      // lib/account-escalation.ts). Navigating on would land them on gated
+      // content with no session, so say what actually happened.
+      if (data.requiresEmailLogin) {
+        setError(
+          "You already have an account \u2014 we've emailed you a login link. Open it and you'll be signed straight in.",
+        )
+        return
+      }
+
       if (data.success) {
         // Show success state (cookie already set by API), fire the gtag lead
         // conversion, then navigate from gtag's event_callback so the hit is
@@ -259,7 +275,7 @@ export default function SCATMasteryPage() {
             </p>
             <div className="inline-flex items-center gap-2 mb-8 rounded-lg bg-[#5b9aa6]/10 border border-[#5b9aa6]/25 px-4 py-2.5">
               <span className="text-sm font-semibold text-slate-800">
-                Finish it and get <span className="text-[#5b9aa6] font-bold">$50 off</span> the full online course
+                Finish it and get <span className="text-[#5b9aa6] font-bold">${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off</span> the full online course
               </span>
             </div>
 
@@ -495,7 +511,8 @@ export default function SCATMasteryPage() {
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                Want more than SCAT6? Get up to 16 CPD hours (8 online + optional in-person day).
+                Want more than SCAT6? Get up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours (
+                {CONFIG.COURSE.ONLINE_CPD_POINTS} online + optional in-person day).
               </h2>
               <p className="text-sm text-slate-500">
                 The complete course covers everything the free training doesn&apos;t.

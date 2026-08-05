@@ -8,8 +8,9 @@ import { CheckCircle2, Award, AlertCircle, ArrowRight, Clock, Loader2 } from 'lu
 import { cn } from '@/lib/utils'
 import { trackEvent, ANALYTICS_EVENTS, trackFreeCourseCompletion, trackModuleProgress } from '@/lib/analytics'
 import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
-import { DownloadableResources } from '@/components/course/DownloadableResources'
-import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
+import { DownloadableResources, hasDownloadableResources } from '@/components/course/DownloadableResources'
+import { ApplyTomorrow, hasApplyTomorrow } from '@/components/course/ApplyTomorrow'
+import { SectionDataInteractives } from '@/components/course/SectionDataInteractives'
 import { ContentLockedBanner } from '@/components/course/ContentLockedBanner'
 import { SectionStepper, type VirtualSection } from '@/components/course/SectionStepper'
 import { SectionNavButtons } from '@/components/course/SectionNavButtons'
@@ -88,9 +89,11 @@ export interface CourseModuleDescriptor {
   passMarkPercent: number
   /**
    * Append the Downloadable Resources / Apply Tomorrow virtual sections for
-   * full-access users. EP suppresses them: those components are keyed by
-   * moduleId and the EP modules share ids 1-8 with the flagship, so they'd
-   * leak flagship content. Content sections + the Knowledge Check only.
+   * full-access users. Both components are keyed by (course, moduleId) — EP
+   * modules share display ids 1-8 with the flagship, and keying on moduleId
+   * ALONE is what used to leak flagship resources into the EP course (the
+   * reason EP suppressed them entirely). Each step still only renders when
+   * that course/module actually has content for it.
    */
   showResources: boolean
   /**
@@ -452,14 +455,16 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
           })
         }
       })
-      // Add resources, apply-tomorrow at end. Suppressed when !showResources
-      // (EP: those components are moduleId-keyed → would leak flagship content
-      // since EP shares ids 1-8).
+      // Add resources, apply-tomorrow at end. Each step only appears when the
+      // course/module actually has content for it (see hasDownloadableResources
+      // / hasApplyTomorrow) — an empty step is worse than no step.
       if (showResources && hasFullAccess) {
-        sections.push(
-          { type: 'resources', label: 'Downloadable Resources', index: sections.length },
-          { type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length + 1 },
-        )
+        if (hasDownloadableResources(course, moduleId)) {
+          sections.push({ type: 'resources', label: 'Downloadable Resources', index: sections.length })
+        }
+        if (hasApplyTomorrow(course, moduleId)) {
+          sections.push({ type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length })
+        }
       }
       return sections
     }
@@ -471,15 +476,17 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
       index: i,
     }))
     if (hasFullAccess) {
-      // Downloadable Resources / Apply Tomorrow steps are descriptor-gated —
-      // EP suppresses them (moduleId-keyed components + EP modules share ids
-      // 1-8 with the flagship, so they'd leak flagship content: content
-      // sections + the Knowledge Check only).
+      // Downloadable Resources / Apply Tomorrow steps are descriptor-gated AND
+      // content-gated: both components are keyed by (course, moduleId), so a
+      // course only ever sees its own resources, and a module with none gets
+      // no step at all rather than an empty panel.
       if (showResources) {
-        sections.push(
-          { type: 'resources', label: 'Downloadable Resources', index: sections.length },
-          { type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length + 1 },
-        )
+        if (hasDownloadableResources(course, moduleId)) {
+          sections.push({ type: 'resources', label: 'Downloadable Resources', index: sections.length })
+        }
+        if (hasApplyTomorrow(course, moduleId)) {
+          sections.push({ type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length })
+        }
       }
       sections.push(
         { type: 'quiz', label: 'Knowledge Check', index: sections.length },
@@ -951,12 +958,12 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
 
               {/* Promo offer */}
               <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border-2 border-emerald-200 mb-6 text-left">
-                <p className="text-sm font-bold text-emerald-800 mb-2">You&apos;ve earned $50 off the full course</p>
+                <p className="text-sm font-bold text-emerald-800 mb-2">You&apos;ve earned ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off the full course</p>
                 <p className="text-sm text-slate-600 mb-3">
                   SCAT6 is one assessment tool — but confident concussion management requires more. The full course teaches you to administer VOMS vestibular screening, score BESS accurately, identify concussion phenotypes, and make evidence-based return-to-play decisions. Online ({CONFIG.COURSE.ONLINE_CPD_POINTS} CPD) or complete with hands-on workshop ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD).
                 </p>
                 <div className="flex items-center gap-2 text-xs text-emerald-700 font-semibold bg-emerald-100 rounded-lg px-3 py-2 w-fit">
-                  Code: {CONFIG.COURSE.PROMO_CODE} · $50 off · applied automatically
+                  Code: {CONFIG.COURSE.PROMO_CODE} · ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off · applied automatically
                 </div>
               </div>
 
@@ -965,7 +972,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                   href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
                   className="px-8 py-3.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
                 >
-                  Claim $50 Off — View Full Course
+                  Claim ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} Off — View Full Course
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <button
@@ -1010,7 +1017,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <p className="text-xs text-teal-700 font-medium mt-2">
-                    Use code {CONFIG.COURSE.PROMO_CODE} for $50 off
+                    Use code {CONFIG.COURSE.PROMO_CODE} for ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off
                   </p>
                 </div>
               )}
@@ -1285,6 +1292,10 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                       section={section}
                       sectionIndex={currentSectionIndex}
                     />
+                    {/* Interactives authored as DATA on the section (both
+                        courses). Specs arrive inside the gated module payload,
+                        so paid answer keys never sit in a public chunk. */}
+                    <SectionDataInteractives specs={section.interactives} isPreview={!hasFullAccess} />
                   </div>
 
                   {/* Show lock banner with remaining titles after last free section */}
@@ -1305,7 +1316,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
             if (currentVS.type === 'resources') {
               return (
                 <div key="resources" className="animate-fadeInUp">
-                  <DownloadableResources moduleId={moduleId} />
+                  <DownloadableResources moduleId={moduleId} course={course} />
                 </div>
               )
             }
@@ -1314,7 +1325,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
             if (currentVS.type === 'apply-tomorrow') {
               return (
                 <div key="apply-tomorrow" className="animate-fadeInUp">
-                  <ApplyTomorrow moduleId={moduleId} />
+                  <ApplyTomorrow moduleId={moduleId} course={course} />
                 </div>
               )
             }

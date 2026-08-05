@@ -1,10 +1,16 @@
 /**
  * GET /api/admin/workshop-alumni
  *
- * The warm base: full-course buyers whose workshop has RUN (completed cohort),
+ * The warm base: everyone who SAT the practical day in a completed cohort,
  * grouped by location — ready for Level 2 / continuing-ed outreach. Auto-derived
- * (completed location + full-course access), so it stays current with no manual
+ * (completed location + a paid seat), so it stays current with no manual
  * re-tagging as each workshop date passes.
+ *
+ * BOTH streams, because the practical day is shared: CCM via
+ * users.access_level='full-course', and CRM via the 'crm-practical' entitlement
+ * in course_purchases (a CRM buyer's access_level stays 'preview' — isolated
+ * streams, lib/crm-course.ts). Mirrors isWorkshopAlumnus(), which the nurture
+ * cron uses to suppress the same people from post-workshop nurture.
  *
  * Auth: admin.
  */
@@ -23,11 +29,19 @@ export async function GET(req: NextRequest) {
 
   try {
     const { rows } = await sql.query(
-      `SELECT email, name, workshop_location, created_at
-       FROM users
-       WHERE access_level = 'full-course'
-         AND workshop_location = ANY($1)
-       ORDER BY workshop_location, created_at DESC`,
+      `SELECT u.email, u.name, u.workshop_location, u.created_at,
+              CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
+       FROM users u
+       WHERE u.workshop_location = ANY($1)
+         AND (
+           u.access_level = 'full-course'
+           OR EXISTS (
+             SELECT 1 FROM course_purchases cp
+             WHERE LOWER(cp.user_email) = LOWER(u.email)
+               AND cp.course_slug = 'crm-practical'
+           )
+         )
+       ORDER BY u.workshop_location, u.created_at DESC`,
       [slugs],
     )
 
@@ -36,6 +50,7 @@ export async function GET(req: NextRequest) {
       name: r.name,
       location: r.workshop_location,
       since: r.created_at,
+      stream: r.stream as 'ccm' | 'crm',
     }))
 
     // Group counts per completed location.

@@ -6,6 +6,12 @@ import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { requireCourseAccess } from '@/lib/course-access'
 import { VagusCourseSidebar } from '@/components/ai-course/VagusCourseSidebar'
 import { ArrowRight, BookMarked, FileQuestion, Award, Wrench } from 'lucide-react'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+// The price the checkout route would actually charge for this slug — never the
+// raw catalogue list price (they differ whenever an early-bird is configured).
+const VAGUS = COURSES.find((c) => c.id === 'vagus-nerve')
+const VAGUS_PRICE = VAGUS ? getEffectivePrice(VAGUS).price : null
 
 export const metadata: Metadata = {
   title: 'The Vagus Nerve in Clinical Practice',
@@ -26,7 +32,7 @@ export default async function VagusCoursePage() {
           <AdminPreviewBadge access={access} />
 
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent mb-2">
-            Course · 6 modules · A$97 · 1 CPD hour
+            Course · {VAGUS_MODULES.length} modules{VAGUS_PRICE !== null && ` · A$${VAGUS_PRICE}`} · {VAGUS?.cpdHours ?? 1} CPD hour
           </p>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
             The Vagus Nerve in Clinical Practice

@@ -110,7 +110,8 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
     try { return window.localStorage.getItem(clinicianKey) || '' } catch { return '' }
   })
   const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
+  // `unknown` = we never got an answer, so we must NOT claim "Not filed".
+  const [result, setResult] = useState<{ ok: boolean; msg: string; unknown?: boolean } | null>(null)
 
   const search = async () => {
     setSearching(true)
@@ -123,11 +124,19 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
     }
     try {
       const r = await fetch(`/api/sst/pms/patients?${auth}&q=${encodeURIComponent(q.trim())}`)
-      const d = await r.json()
-      setResults(d.patients ?? [])
+      const d = await r.json().catch(() => null)
+      setResults(d?.patients ?? [])
+      // A FAILED search rendered as "No matches — refine the search", so an
+      // expired key or a PMS outage looked like the patient wasn't in the PMS.
       if (r.status === 404) setResult({ ok: false, msg: 'No PMS connected' })
+      else if (!r.ok) {
+        setResult({
+          ok: false,
+          msg: d?.error || `${pms} could not be searched just now — this is a connection problem, not an empty result. Try again in a moment.`,
+        })
+      }
     } catch {
-      setResult({ ok: false, msg: 'Search failed' })
+      setResult({ ok: false, msg: `Could not reach ${pms} to search — this is a connection problem, not an empty result.` })
     } finally {
       setSearching(false)
     }
@@ -165,7 +174,16 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
         ? { ok: true, msg: `Filed to ${picked.name}'s record in ${pms}.` }
         : { ok: false, msg: d.error || `${pms} refused the note — nothing was filed. Try again in a moment.` })
     } catch {
-      setResult({ ok: false, msg: `Could not reach ${pms} — nothing was filed. Check your connection and try again.` })
+      // A dropped/timed-out request leaves the outcome UNKNOWN — the write may
+      // well have landed. Claiming "nothing was filed" here and inviting a
+      // retry is how a patient record ends up with two copies of the same
+      // report (there is no idempotency key on a PMS note). Say what is
+      // actually true (2026-08-05 reporting-integrity sweep).
+      setResult({
+        ok: false,
+        unknown: true,
+        msg: `The connection to ${pms} dropped before we got an answer, so we can't confirm whether the note was filed. Check ${picked.name}'s record in ${pms} before filing again — a second attempt would create a duplicate note.`,
+      })
     } finally {
       setBusy(false)
     }
@@ -247,7 +265,9 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
             <div className="m-0 mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
               <AlertTriangle className="mt-0.5 w-3.5 h-3.5 flex-shrink-0 text-red-600" />
               <div>
-                <p className="m-0 text-[12px] font-bold text-red-800">Not filed</p>
+                <p className="m-0 text-[12px] font-bold text-red-800">
+                  {result.unknown ? 'Filing status unknown — check the record' : 'Not filed'}
+                </p>
                 <p className="m-0 mt-0.5 text-[12px] leading-snug text-red-700">{result.msg}</p>
               </div>
             </div>

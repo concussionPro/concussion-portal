@@ -108,7 +108,11 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
             <p className="text-[11px] text-muted-foreground leading-snug">Sets your team access key. {baseSeats} seats included; extras A${extraSeatPrice}/clinician. Front-desk / admin staff are included on top.</p>
           </div>
           <div className="flex items-center gap-2 flex-none">
-            <button type="button" aria-label="Fewer" onClick={() => setCount((c) => Math.max(1, c - 1))}
+            {/* Floor at the included seats — the base price buys them whether or
+                not the picker shows them, and the webhook provisions the key at
+                that same floor. Letting it drop lower advertised fewer seats than
+                the buyer was charged for. */}
+            <button type="button" aria-label="Fewer" onClick={() => setCount((c) => Math.max(baseSeats, c - 1))}
               className="w-8 h-8 rounded-lg border border-slate-300 text-lg font-bold text-slate-600 hover:bg-slate-50">−</button>
             <span className="w-7 text-center text-lg font-extrabold text-foreground">{count}</span>
             <button type="button" aria-label="More" onClick={() => setCount((c) => Math.min(HUB_MAX, c + 1))}

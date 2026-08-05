@@ -266,7 +266,7 @@ export function StatsInfographic({ title, stats }: {
 }
 
 // Clinical Scenario — Branching case study
-interface ScenarioStep {
+export interface ScenarioStep {
   id: string
   narrative: string
   clinicalData?: string[]

@@ -5,6 +5,7 @@ import {
   calculateOrientation,
   calculateImmediateMemory,
   calculateConcentration,
+  calculateMonthsScore,
   calculateDelayedRecall,
   calculateTotalCognitive,
   calculateMBESS,
@@ -12,6 +13,11 @@ import {
   calculateTandemGaitAverage,
   calculateTandemGaitFastest,
   calculateDualTaskFastest,
+  isSymptomsAdministered,
+  isOrientationAdministered,
+  isImmediateMemoryAdministered,
+  isDigitsAdministered,
+  isDelayedRecallAdministered,
 } from './scat6-calculations'
 import {
   drawText,
@@ -22,7 +28,6 @@ import {
   drawWrappedText,
   drawYesNo,
   drawNotAdministered,
-  anyProvided,
   embedStandardFonts,
   loadFlatPDF,
   savePDFAndDownload,
@@ -53,73 +58,22 @@ export async function exportSCAT6ToFlatPDF(
     // ========================================================================
     // "WAS THIS SECTION ADMINISTERED?" — clinical-record integrity gate
     // ========================================================================
-    // Every boolean defaults false and every number 0, so an untouched subtest
-    // is indistinguishable from a subtest scored zero. For each scored section
-    // we derive `administered` = "any field in the section differs from its
-    // default". Unadministered sections draw NO item circles and print a dash
-    // in their score box. Administered sections behave exactly as before, so a
-    // genuine 0 (e.g. a real 0/5 orientation) still prints as 0.
+    // Every scored field that can be skipped is nullable in the model, so
+    // "never administered" is carried explicitly rather than guessed from
+    // setup fields. Unadministered sections draw NO item circles and print a
+    // dash in their score box; an administered section prints its real value
+    // INCLUDING a genuine 0 (a true 0/5 orientation is a clinical finding and
+    // must reach the record, not be suppressed as "not done").
+    const symptomsAdministered = isSymptomsAdministered(formData.symptoms)
+    const orientationAdministered = isOrientationAdministered(formData)
+    const immediateMemoryAdministered = isImmediateMemoryAdministered(formData)
+    const digitsAdministered = isDigitsAdministered(formData)
+    const delayedRecallAdministered = isDelayedRecallAdministered(formData)
 
-    // Orientation: the 5 booleans are the ONLY signal the model carries.
-    const orientationAdministered = anyProvided(
-      formData.orientationMonth,
-      formData.orientationDate,
-      formData.orientationDayOfWeek,
-      formData.orientationYear,
-      formData.orientationTime,
-    )
-
-    // Immediate memory: word-list selection and completion time are strong
-    // "this test was run" signals, so a genuine 0/30 still prints.
-    const immediateMemoryAdministered = anyProvided(
-      formData.wordListUsed,
-      formData.immediateMemoryTimeCompleted,
-      ...formData.immediateMemoryTrial1,
-      ...formData.immediateMemoryTrial2,
-      ...formData.immediateMemoryTrial3,
-    )
-
-    // Digits backward: digit-list selection means the test was run, so a
-    // genuine 0/4 still prints.
-    const digitsAdministered = anyProvided(
-      formData.digitListUsed,
-      formData.digitsBackward,
-    )
-
-    // Months in reverse: a recorded time means it was run, so 0 errors prints.
-    const monthsAdministered = anyProvided(
-      formData.monthsReverseTime,
-      formData.monthsReverseErrors,
-    )
-
-    // Concentration /5 aggregates digits + months — a partial total is
-    // misleading, so it needs BOTH halves.
-    const concentrationAdministered = digitsAdministered && monthsAdministered
-
-    // Delayed recall: word list is shared with immediate memory, so it is NOT
-    // usable as evidence here. Start time or any recalled word only.
-    const delayedRecallAdministered = anyProvided(
-      formData.delayedRecallStartTime,
-      ...formData.delayedRecall,
-    )
-
-    // mBESS firm surface: foot tested / surface / footwear are setup fields
-    // that mean the stance test was run, so a genuine 0-error mBESS prints.
-    const balanceAdministered = anyProvided(
-      formData.footTested,
-      formData.testingSurface,
-      formData.footwear,
-      formData.mBessDoubleErrors,
-      formData.mBessTandemErrors,
-      formData.mBessSingleErrors,
-    )
-
-    // Total cognitive /50 is only meaningful when all four contributors ran.
-    const cognitiveTotalAdministered =
-      orientationAdministered &&
-      immediateMemoryAdministered &&
-      concentrationAdministered &&
-      delayedRecallAdministered
+    // Concentration /5 aggregates digits + months; total cognitive /50
+    // aggregates all four subtests. Both are null unless every contributor ran.
+    const concentrationScore = calculateConcentration(formData)
+    const cognitiveTotal = calculateTotalCognitive(formData)
 
     // ==================== PAGE 2 (index 1): DEMOGRAPHICS ====================
     const p2 = pages[1]
@@ -173,7 +127,11 @@ export async function exportSCAT6ToFlatPDF(
     // Symptom count — header area (right side of symptom section: Text23 x=388.8, y=501)
     const symNum = calculateSymptomNumber(formData.symptoms)
     const symSev = calculateSymptomSeverity(formData.symptoms)
-    drawText(p4, 390, 503, symNum.toString(), { font: fontBold, size: fsl })
+    if (symptomsAdministered) {
+      drawText(p4, 390, 503, symNum.toString(), { font: fontBold, size: fsl })
+    } else {
+      drawNotAdministered(p4, 390, 503, { font: fontBold, size: fsl })
+    }
 
     // Symptoms (22 items, 0-6 scale)
     // Column center x positions from fillable field data (s1 radio widgets + half width)
@@ -192,17 +150,24 @@ export async function exportSCAT6ToFlatPDF(
       'moreEmotional', 'irritability', 'sadness', 'nervousAnxious', 'troubleFallingAsleep',
     ]
 
+    // An unrated symptom leaves its whole row blank. Marking the "0" column by
+    // default asserted that the athlete denied all 22 symptoms.
     symptomKeys.forEach((key, i) => {
       const value = formData.symptoms[key]
-      if (value >= 0 && value <= 6) {
+      if (value !== null && value >= 0 && value <= 6) {
         drawFilledCircle(p4, symptomColX[value], symptomYPositions[i], 3.5)
       }
     })
 
-    // Bottom summary: Total number of symptoms (Text26: x=165.2, y=76)
-    drawText(p4, 167, 78, symNum.toString(), { font: fontBold, size: fsl })
-    // Bottom summary: Symptom severity score (Text27: x=388.8, y=75.6)
-    drawText(p4, 390, 77, symSev.toString(), { font: fontBold, size: fsl })
+    if (symptomsAdministered) {
+      // Bottom summary: Total number of symptoms (Text26: x=165.2, y=76)
+      drawText(p4, 167, 78, symNum.toString(), { font: fontBold, size: fsl })
+      // Bottom summary: Symptom severity score (Text27: x=388.8, y=75.6)
+      drawText(p4, 390, 77, symSev.toString(), { font: fontBold, size: fsl })
+    } else {
+      drawNotAdministered(p4, 167, 78, { font: fontBold, size: fsl })
+      drawNotAdministered(p4, 390, 77, { font: fontBold, size: fsl })
+    }
 
     // Percent of normal (Text24: x=292.4, y=322.6, w=204.7, h=15.7 — the answer
     // box under "If 100% is feeling perfectly normal, what percent of normal do
@@ -236,6 +201,7 @@ export async function exportSCAT6ToFlatPDF(
     ]
     if (orientationAdministered) {
       oriBooleans.forEach((val, i) => {
+        if (val === null) return // item not asked — leave the row blank
         if (val) {
           drawFilledCircle(p5, 460, oriYPositions[i], 3.5) // "1" position (x=454.2+5.5)
         } else {
@@ -309,7 +275,7 @@ export async function exportSCAT6ToFlatPDF(
     if (formData.digitListUsed === 'C') drawCheckmark(p6, 221, 583, 10)
 
     // Digits Backward Score (Text34: x=427.3, y=389.6)
-    if (digitsAdministered) {
+    if (digitsAdministered && formData.digitsBackward !== null) {
       drawText(p6, 429, 391, formData.digitsBackward.toString(), { font: fontBold, size: fsl })
     } else {
       drawNotAdministered(p6, 429, 391, { font: fontBold, size: fsl })
@@ -320,12 +286,18 @@ export async function exportSCAT6ToFlatPDF(
     drawText(p6, 185, 284, formData.monthsReverseTime, { font, size: fs })
     // Errors (Text35aa: x=362.2, y=282.1)
     // Months Score (Text36: x=117.8, y=249.8 — "Months Score: __ of 1")
-    if (monthsAdministered) {
+    if (formData.monthsReverseErrors !== null) {
       drawText(p6, 364, 284, formData.monthsReverseErrors.toString(), { font, size: fs })
-      const monthsScore = (formData.monthsReverseErrors === 0 && parseFloat(formData.monthsReverseTime || '999') < 30) ? 1 : 0
-      drawText(p6, 122, 254, monthsScore.toString(), { font: fontBold, size: fsl })
     } else {
       drawNotAdministered(p6, 364, 284, { font, size: fs })
+    }
+    // SCAT6: "1 point if no errors and completion under 30 seconds." Without a
+    // recorded time the point cannot be decided, so it is dashed rather than
+    // scored 0 — a fabricated 0 here also drags the /5 and the /50 down.
+    const monthsScore = calculateMonthsScore(formData)
+    if (monthsScore !== null) {
+      drawText(p6, 122, 254, monthsScore.toString(), { font: fontBold, size: fsl })
+    } else {
       drawNotAdministered(p6, 122, 254, { font: fontBold, size: fsl })
     }
 
@@ -333,8 +305,8 @@ export async function exportSCAT6ToFlatPDF(
     // "Concentration Score (Digits + Months) __ of 5" box. Verified against
     // SCAT6_Fillable.pdf geometry + the flat PDF's own label positions; the
     // previous (448, 237) put the score in blank margin.)
-    if (concentrationAdministered) {
-      drawText(p6, 217, 228, calculateConcentration(formData).toString(), { font: fontBold, size: fsl })
+    if (concentrationScore !== null) {
+      drawText(p6, 217, 228, concentrationScore.toString(), { font: fontBold, size: fsl })
     } else {
       drawNotAdministered(p6, 217, 228, { font: fontBold, size: fsl })
     }
@@ -359,16 +331,20 @@ export async function exportSCAT6ToFlatPDF(
     // Text40: x=135.7, y=669.7 (Double Leg)
     // Text41: x=135.7, y=651.1 (Tandem)
     // Text42: x=135.7, y=631.6 (Single Leg)
-    if (balanceAdministered) {
-      drawText(p7, 137, 671, formData.mBessDoubleErrors.toString(), { font, size: fs })
-      drawText(p7, 137, 653, formData.mBessTandemErrors.toString(), { font, size: fs })
-      drawText(p7, 137, 633, formData.mBessSingleErrors.toString(), { font, size: fs })
-    } else {
-      // 0 errors of 30 = a PERFECT balance result. Never assert it by default.
-      drawNotAdministered(p7, 137, 671, { font, size: fs })
-      drawNotAdministered(p7, 137, 653, { font, size: fs })
-      drawNotAdministered(p7, 137, 633, { font, size: fs })
-    }
+    // 0 errors of 10 = a PERFECT stance. Never assert it by default — each
+    // stance prints only if that stance was actually scored.
+    const firmStances: Array<[number, number | null]> = [
+      [671, formData.mBessDoubleErrors],
+      [653, formData.mBessTandemErrors],
+      [633, formData.mBessSingleErrors],
+    ]
+    firmStances.forEach(([y, errors]) => {
+      if (errors !== null) {
+        drawText(p7, 137, y, errors.toString(), { font, size: fs })
+      } else {
+        drawNotAdministered(p7, 137, y, { font, size: fs })
+      }
+    })
 
     // mBESS Errors - Foam (optional, page 7 right side)
     // Text43: x=371.6, y=683.2 (Double Leg foam)
@@ -385,8 +361,8 @@ export async function exportSCAT6ToFlatPDF(
     }
 
     // mBESS Total Errors (Text42A: x=135.7, y=612.7 firm; Text45: x=371.6, y=613.6 foam)
-    if (balanceAdministered) {
-      const mBessTotal = calculateMBESS(formData)
+    const mBessTotal = calculateMBESS(formData)
+    if (mBessTotal !== null) {
       drawText(p7, 137, 614, mBessTotal.toString(), { font: fontBold, size: fsl })
     } else {
       drawNotAdministered(p7, 137, 614, { font: fontBold, size: fsl })
@@ -460,6 +436,20 @@ export async function exportSCAT6ToFlatPDF(
     // ==================== PAGE 8 (index 7): DELAYED RECALL + COGNITIVE TOTALS ====================
     const p8 = pages[7]
 
+    // "Were any single- or dual-task, timed tandem gait trials not completed
+    // due to walking errors or other reasons?" (widget centres: Yes 84.8, No
+    // 133.5 at y=680; explanation box x=58.5-495.6, y=597.8-656.8).
+    // This caveat was collected but NEVER drawn, so a record with abandoned
+    // tandem/dual-task trials exported as if those times were clean, complete
+    // trials. Only an affirmative Yes is marked — the form models the question
+    // as a single checkbox, so "unticked" is not evidence of a No.
+    if (formData.trialsNotCompleted) {
+      drawFilledCircle(p8, 85, 680, 3.5)
+      if (formData.trialsNotCompletedReason) {
+        drawWrappedText(p8, 61, 645, formData.trialsNotCompletedReason, 430, { font, size: fsm })
+      }
+    }
+
     // Word List Used for Delayed Recall (A_3/B_3/C_3)
     if (formData.wordListUsed === 'A') drawCheckmark(p8, 140, 479, 10)
     if (formData.wordListUsed === 'B') drawCheckmark(p8, 181, 479, 10)
@@ -499,16 +489,16 @@ export async function exportSCAT6ToFlatPDF(
     // Each row carries its own section's administered flag; the /50 total is
     // only printed when ALL FOUR contributors ran — a partial total silently
     // understates the athlete, which is worse than reporting nothing.
-    const summary: Array<[number, number, boolean, () => number]> = [
-      [131, 193, orientationAdministered, () => calculateOrientation(formData)],
-      [131, 173, immediateMemoryAdministered, () => calculateImmediateMemory(formData)],
-      [131, 154, concentrationAdministered, () => calculateConcentration(formData)],
-      [131, 135, delayedRecallAdministered, () => calculateDelayedRecall(formData)],
-      [130, 116, cognitiveTotalAdministered, () => calculateTotalCognitive(formData)],
+    const summary: Array<[number, number, number | null]> = [
+      [131, 193, orientationAdministered ? calculateOrientation(formData) : null],
+      [131, 173, immediateMemoryAdministered ? calculateImmediateMemory(formData) : null],
+      [131, 154, concentrationScore],
+      [131, 135, delayedRecallAdministered ? calculateDelayedRecall(formData) : null],
+      [130, 116, cognitiveTotal],
     ]
-    summary.forEach(([x, y, administered, value]) => {
-      if (administered) {
-        drawText(p8, x, y, value().toString(), { font: fontBold, size: fsl })
+    summary.forEach(([x, y, value]) => {
+      if (value !== null) {
+        drawText(p8, x, y, value.toString(), { font: fontBold, size: fsl })
       } else {
         drawNotAdministered(p8, x, y, { font: fontBold, size: fsl })
       }
@@ -553,14 +543,16 @@ export async function exportSCAT6ToFlatPDF(
 
     // Serial-assessment columns.
     //
-    // These numeric fields are typed `number` and default to 0, so the old
-    // `dd.symptomNumber1?.toString() || ''` guard never fired ("0" is truthy):
-    // an untouched form printed a full three-column follow-up table of zeros —
-    // three assessments that never happened, each asserting 0 symptoms, 0/5
-    // orientation, 0/30 memory and 0 balance errors.
+    // These numeric fields used to be typed `number` and default to 0, so the
+    // old `dd.symptomNumber1?.toString() || ''` guard never fired ("0" is
+    // truthy): an untouched form printed a full three-column follow-up table
+    // of zeros — three assessments that never happened, each asserting 0
+    // symptoms, 0/5 orientation, 0/30 memory and 0 balance errors.
     //
-    // A column only exists if it has a DATE. With a date present the recorded
-    // numbers print as-is, so a genuine 0 in a real follow-up still appears.
+    // A column only exists if it has a DATE, and within a dated column each
+    // cell prints only if it was actually filled in (they are nullable now), so
+    // a genuine 0 in a real follow-up still appears while an untouched row of a
+    // real follow-up stays blank instead of claiming 0.
     const decisionColumns = [
       {
         x: decColX[0],
@@ -608,14 +600,18 @@ export async function exportSCAT6ToFlatPDF(
 
     decisionColumns.forEach(col => {
       if (!col.date || !col.date.trim()) return
+      const cell = (y: number, value: number | null) => {
+        if (value === null) return
+        drawText(p9, col.x, y, value.toString(), { font, size: fsm })
+      }
       drawText(p9, col.x, decRowY.neuroExam, col.neurologicalExam, { font, size: fsm })
-      drawText(p9, col.x, decRowY.symptomNum, col.symptomNumber.toString(), { font, size: fsm })
-      drawText(p9, col.x, decRowY.symptomSev, col.symptomSeverity.toString(), { font, size: fsm })
-      drawText(p9, col.x, decRowY.orientation, col.orientation.toString(), { font, size: fsm })
-      drawText(p9, col.x, decRowY.immMemory, col.immediateMemory.toString(), { font, size: fsm })
-      drawText(p9, col.x, decRowY.concentration, col.concentration.toString(), { font, size: fsm })
-      drawText(p9, col.x, decRowY.delRecall, col.delayedRecall.toString(), { font, size: fsm })
-      drawText(p9, col.x, decRowY.mBess, col.mBessTotal.toString(), { font, size: fsm })
+      cell(decRowY.symptomNum, col.symptomNumber)
+      cell(decRowY.symptomSev, col.symptomSeverity)
+      cell(decRowY.orientation, col.orientation)
+      cell(decRowY.immMemory, col.immediateMemory)
+      cell(decRowY.concentration, col.concentration)
+      cell(decRowY.delRecall, col.delayedRecall)
+      cell(decRowY.mBess, col.mBessTotal)
       drawText(p9, col.x, decRowY.tandem, col.tandemGaitFastest, { font, size: fsm })
       drawText(p9, col.x, decRowY.dualTask, col.dualTaskFastest, { font, size: fsm })
     })

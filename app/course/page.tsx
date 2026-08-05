@@ -125,6 +125,12 @@ export default function CoursePage() {
                 <p className="text-sm text-muted-foreground">
                   Download complete module breakdown (PDF)
                 </p>
+                {/* The file is gated to enrolled accounts (middleware PAID
+                    gate). Say so here — an unsignalled gate on a public page
+                    is what sent anonymous visitors into a 401. */}
+                <p className="text-xs text-muted-foreground/80 mt-1">
+                  Included with enrolment — sign in to download
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-accent font-semibold text-sm">

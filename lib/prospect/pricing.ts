@@ -1,5 +1,5 @@
 import type { ClinicTeam, TravelBand, PricingBreakdown, Discipline } from './types'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
 
 /**
  * Clinic size bucket — used by:
@@ -108,7 +108,12 @@ const TRAVEL_SURCHARGE: Record<TravelBand, number> = {
 // below so "on-site from A$8,000" is one consistent number everywhere
 // (reconciled 2026-07-08 — the old $7,500 teaser contradicted the $8,000 tier).
 const TIER2_BASE = 8000
-const PUBLIC_RETAIL_RATE = 1400
+// The individual Complete Course rate a clinician would ACTUALLY pay today —
+// every "save A$x/clinician" line on the prospect portal is anchored to it.
+// Hardcoding 1400 anchored the saving to the sticker price while checkout
+// charges the early-bird rate, i.e. a saving quoted against a price nobody is
+// being charged (ACL: a comparison price must be a genuine current price).
+const PUBLIC_RETAIL_RATE = workshopPriceFor(null)
 
 /**
  * Resolve the per-discipline cohort tier price (Essential 8 / Recommended 10 /

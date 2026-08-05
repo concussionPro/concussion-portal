@@ -5,6 +5,7 @@ import { SstWatchAnimation } from '@/components/platform/SstWatchAnimation'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 import { Clock, Link2, FileText } from 'lucide-react'
 import { REFERENCE_COUNT } from '@/data/reference-count'
+import { SST_TIERS, SST_TIER_FROM_AUD, sstTierAllowance } from '@/lib/config'
 
 /**
  * /sst — the Clinical Testing landing with a top toggle between TWO FULL
@@ -24,14 +25,26 @@ const TABS = [
 ] as const
 type TabId = (typeof TABS)[number]['id']
 
-const TIERS = [
-  { name: 'Starter', who: 'Up to 5 active patients', price: 'A$49', popular: false,
-    features: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians, each with their own login', 'Measured trajectory, flare flags & auto GP report', 'A$49/mo standalone — or included with course enrolment'] },
-  { name: 'Clinic', who: 'Up to 10 active patients', price: 'A$99', popular: true,
-    features: ['Everything in Starter, for a bigger caseload', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team', 'A$99/mo standalone — or included with course enrolment'] },
-  { name: 'Unlimited', who: 'Unlimited patients', price: 'A$149', popular: false,
-    features: ['Everything in Clinic, unlimited active patients', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us', 'A$149/mo standalone — or included with course enrolment'] },
-]
+// Plan names, monthly amounts and caseload allowances come from CONFIG's
+// SST_TIERS — the same source the /clinical-testing/subscribe page and the
+// enforced TIER_ACTIVE_PATIENT_CAP read. Hardcoding them here meant a pricing
+// change had to be remembered in four places to keep display == charge.
+const TIER_EXTRAS: Record<string, string[]> = {
+  single: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians, each with their own login', 'Measured trajectory, flare flags & auto GP report'],
+  clinic: ['Everything in Starter, for a bigger caseload', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team'],
+  enterprise: ['Everything in Clinic, unlimited active patients', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us'],
+}
+
+const TIERS = SST_TIERS.map((t) => ({
+  name: t.name,
+  who: sstTierAllowance(t),
+  price: `A$${t.monthlyAud}`,
+  popular: t.popular,
+  features: [
+    ...(TIER_EXTRAS[t.plan] ?? []),
+    `A$${t.monthlyAud}/mo standalone — or included with course enrolment`,
+  ],
+}))
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <section className={`mx-auto max-w-[1180px] px-6 md:px-8 ${className}`}>{children}</section>
@@ -57,7 +70,7 @@ function FreeBadge({ note }: { note: string }) {
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
         Included with your CCM / CRM course enrolment
       </span>
-      <span className="text-[12.5px] font-bold text-emerald-700">Standalone from A$49/month — A$49 / A$99 / A$149 by caseload.</span>
+      <span className="text-[12.5px] font-bold text-emerald-700">Standalone from A${SST_TIER_FROM_AUD}/month — {SST_TIERS.map((t) => `A$${t.monthlyAud}`).join(' / ')} by caseload.</span>
       <span className="text-[12px] font-medium text-slate-400">{note}</span>
     </div>
   )
@@ -273,7 +286,10 @@ function SharedPricing() {
             </div>
           ))}
         </div>
-        <p className="mt-5 text-center text-[12px] text-slate-400">Prices in AUD ex GST. Included with CCM / CRM enrolment; A$49/mo standalone thereafter.</p>
+        {/* GST: every CEA price is quoted and charged GST-INCLUSIVE (see
+            lib/tax-invoice.ts, which breaks GST out of the total at 1/11) —
+            "ex GST" implied a 10% surcharge that is never added at checkout. */}
+        <p className="mt-5 text-center text-[12px] text-slate-400">Prices in AUD, inclusive of GST. Included with CCM / CRM enrolment; from A${SST_TIER_FROM_AUD}/mo standalone thereafter.</p>
       </Section>
 
       <Section className="pb-20">

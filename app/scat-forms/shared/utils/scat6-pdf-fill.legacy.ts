@@ -1,6 +1,10 @@
 import { PDFDocument, type PDFForm } from 'pdf-lib'
 import { SCAT6FormData } from '../types/scat6.types'
-import { calculateSymptomNumber, calculateSymptomSeverity } from './scat6-calculations'
+import {
+  calculateSymptomNumber,
+  calculateSymptomSeverity,
+  isSymptomsAdministered,
+} from './scat6-calculations'
 
 /**
  * SCAT6 PDF Export - CORRECTED Field Mapping
@@ -66,18 +70,20 @@ export async function exportSCAT6ToFilledPDF(
     filledCount += setTextField(form, 'Text14', formData.recoveryTime)         // WAS Text17
 
     // ==================== PAGE 4: ATHLETE BACKGROUND ====================
-    filledCount += setCheckBox(form, 'Check Box1', formData.hospitalizedForHeadInjury)
-    filledCount += setCheckBox(form, 'Check Box2', formData.headacheDisorder)
-    filledCount += setCheckBox(form, 'Check Box3', formData.learningDisability)
-    filledCount += setCheckBox(form, 'Check Box4', formData.adhd)
-    filledCount += setCheckBox(form, 'Check Box5', formData.psychologicalDisorder)
-
-    // Y/N radio buttons for medical history
-    filledCount += setRadioButtonByValue(form, 'athelete1', formData.hospitalizedForHeadInjury ? '/0' : '/1')
-    filledCount += setRadioButtonByValue(form, 'athelete2', formData.headacheDisorder ? '/0' : '/1')
-    filledCount += setRadioButtonByValue(form, 'athelete3', formData.learningDisability ? '/0' : '/1')
-    filledCount += setRadioButtonByValue(form, 'athelete4', formData.adhd ? '/0' : '/1')
-    filledCount += setRadioButtonByValue(form, 'athelete5', formData.psychologicalDisorder ? '/0' : '/1')
+    // `null` = the question was never asked. Ticking "No" for an unasked
+    // history question asserts a negative the athlete never gave.
+    const background: Array<[string, string, boolean | null]> = [
+      ['Check Box1', 'athelete1', formData.hospitalizedForHeadInjury],
+      ['Check Box2', 'athelete2', formData.headacheDisorder],
+      ['Check Box3', 'athelete3', formData.learningDisability],
+      ['Check Box4', 'athelete4', formData.adhd],
+      ['Check Box5', 'athelete5', formData.psychologicalDisorder],
+    ]
+    background.forEach(([checkbox, radio, value]) => {
+      if (value === null) return
+      filledCount += setCheckBox(form, checkbox, value)
+      filledCount += setRadioButtonByValue(form, radio, value ? '/0' : '/1')
+    })
 
     filledCount += setTextField(form, 'Text21', formData.athleteBackgroundNotes)   // WAS Text18
     filledCount += setTextField(form, 'Text22', formData.currentMedications)       // WAS Text19
@@ -106,9 +112,11 @@ export async function exportSCAT6ToFilledPDF(
     filledCount += setSymptomRadio(form, 's21', formData.symptoms.nervousAnxious)
     filledCount += setSymptomRadio(form, 's22', formData.symptoms.troubleFallingAsleep)
 
-    // Symptom totals (calculated)
-    filledCount += setTextField(form, 'Text23', calculateSymptomNumber(formData.symptoms).toString())
-    filledCount += setTextField(form, 'Text24', calculateSymptomSeverity(formData.symptoms).toString())
+    // Symptom totals (calculated) — only if the scale was actually rated
+    if (isSymptomsAdministered(formData.symptoms)) {
+      filledCount += setTextField(form, 'Text23', calculateSymptomNumber(formData.symptoms).toString())
+      filledCount += setTextField(form, 'Text24', calculateSymptomSeverity(formData.symptoms).toString())
+    }
 
     filledCount += setTextField(form, 'Text26', formData.percentOfNormal)
     filledCount += setTextField(form, 'Text25', formData.whyNotHundredPercent || '')
@@ -122,11 +130,18 @@ export async function exportSCAT6ToFilledPDF(
     }
 
     // ==================== PAGE 5: ORIENTATION (5 items) ====================
-    filledCount += setRadioButtonByValue(form, 'ori1', formData.orientationMonth ? '/1' : '/0')
-    filledCount += setRadioButtonByValue(form, 'ori2', formData.orientationDate ? '/1' : '/0')
-    filledCount += setRadioButtonByValue(form, 'ori3', formData.orientationDayOfWeek ? '/1' : '/0')
-    filledCount += setRadioButtonByValue(form, 'ori4', formData.orientationYear ? '/1' : '/0')
-    filledCount += setRadioButtonByValue(form, 'ori5', formData.orientationTime ? '/1' : '/0')
+    // An unasked item stays blank; an asked-and-wrong item still scores 0.
+    const orientation: Array<[string, boolean | null]> = [
+      ['ori1', formData.orientationMonth],
+      ['ori2', formData.orientationDate],
+      ['ori3', formData.orientationDayOfWeek],
+      ['ori4', formData.orientationYear],
+      ['ori5', formData.orientationTime],
+    ]
+    orientation.forEach(([field, value]) => {
+      if (value === null) return
+      filledCount += setRadioButtonByValue(form, field, value ? '/1' : '/0')
+    })
 
     // ==================== PAGE 5: IMMEDIATE MEMORY ====================
     const trial1Fields = ['Tri1a', 'Tri1b', 'Tri1c', 'Tri1d', 'Tri1e', 'Tri1f', 'Tri1g', 'Tri1h', 'Tri1i', 'Tri1j']
@@ -155,9 +170,13 @@ export async function exportSCAT6ToFilledPDF(
     if (formData.digitListUsed === 'B') filledCount += setCheckBox(form, 'B_2', true)
     if (formData.digitListUsed === 'C') filledCount += setCheckBox(form, 'C_2', true)
 
-    filledCount += setTextField(form, 'Text34', formData.digitsBackward.toString())        // WAS Text20
+    if (formData.digitsBackward !== null) {
+      filledCount += setTextField(form, 'Text34', formData.digitsBackward.toString())      // WAS Text20
+    }
     filledCount += setTextField(form, 'Text35', formData.monthsReverseTime)                // WAS Text21
-    filledCount += setTextField(form, 'Text35aa', formData.monthsReverseErrors.toString()) // WAS Text22
+    if (formData.monthsReverseErrors !== null) {
+      filledCount += setTextField(form, 'Text35aa', formData.monthsReverseErrors.toString()) // WAS Text22
+    }
 
     // ==================== PAGE 6-7: BALANCE - mBESS ====================
     if (formData.footTested === 'Left') filledCount += setRadioButtonByValue(form, 'Foot', '/0')
@@ -166,10 +185,17 @@ export async function exportSCAT6ToFilledPDF(
     filledCount += setTextField(form, 'Text40', formData.testingSurface)
     filledCount += setTextField(form, 'Text41', formData.footwear)
 
-    // mBESS errors on FIRM surface
-    filledCount += setTextField(form, 'Text38', formData.mBessDoubleErrors.toString())
-    filledCount += setTextField(form, 'Text39', formData.mBessTandemErrors.toString())
-    filledCount += setTextField(form, 'Text46', formData.mBessSingleErrors.toString())
+    // mBESS errors on FIRM surface — 0 errors of 10 is a perfect stance, so a
+    // stance that was never performed must stay blank.
+    const firmStances: Array<[string, number | null]> = [
+      ['Text38', formData.mBessDoubleErrors],
+      ['Text39', formData.mBessTandemErrors],
+      ['Text46', formData.mBessSingleErrors],
+    ]
+    firmStances.forEach(([field, errors]) => {
+      if (errors === null) return
+      filledCount += setTextField(form, field, errors.toString())
+    })
 
     // mBESS errors on FOAM (optional)
     if (formData.mBessFoamDoubleErrors !== null) {
@@ -336,7 +362,7 @@ function setCheckBox(form: PDFForm, fieldName: string, value: boolean): number {
  * Set a symptom radio button (0-6 scale).
  * The PDF radio buttons use /{value} format.
  */
-function setSymptomRadio(form: PDFForm, fieldName: string, value: number): number {
+function setSymptomRadio(form: PDFForm, fieldName: string, value: number | null): number {
   try {
     if (value === undefined || value === null) return 0
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 
 /**
  * /clinical-suite/start — the self-serve trial signup form. Cold-inbound
@@ -140,7 +141,7 @@ export function SstTrialStart({ source }: { source?: string }) {
           {busy ? 'Setting up your clinic…' : 'Create my clinic — free trial'}
         </button>
         <p className="m-0 text-center text-[12px] leading-[1.5] text-slate-400">
-          First 3 patients free · no card required · A$49/mo standalone thereafter (single clinician).
+          First {SST_TRIAL_PATIENT_CAP} patients free · no card required · from A${SST_TIER_FROM_AUD}/mo standalone thereafter.
           <br />
           Already have a code? Submitting again re-sends it. By continuing you agree to the{' '}
           <Link href="/terms" className="underline" style={{ color: ACCENT }}>terms</Link> and{' '}

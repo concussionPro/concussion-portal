@@ -148,3 +148,144 @@ describe('CRM pass mark and CPD figures stay stream-correct', () => {
     expect(src).toMatch(/ESSA/)
   })
 })
+
+/**
+ * DEPTH PARITY (2026-08-05). The entitlement rows above are about a CRM buyer
+ * being let IN. These are about what they find once inside: the course
+ * machinery CCM has been wired into since launch that CRM was never connected
+ * to — module resources, a searchable reference database, server-rendered
+ * first paint, an in-portal upgrade path.
+ */
+describe('the CRM course is wired into the shared course machinery', () => {
+  it('CRM modules render their OWN downloadable resources, never the flagship’s', () => {
+    const src = read('components/course/DownloadableResources.tsx')
+    // Keyed by (course, moduleId). Keying on moduleId alone is what made EP
+    // suppress the section entirely — EP display ids are also 1-8.
+    expect(src).toMatch(/RESOURCES_BY_COURSE/)
+    expect(src).toMatch(/const EP_RESOURCES/)
+    // The EP course must never be pointed at /api/download: those are CCM
+    // binaries and that route's entitlement is access_level-shaped, so a CRM
+    // buyer (access_level 'preview') would be refused their own resources.
+    const epMap = src.match(/const EP_RESOURCES[\s\S]*?\n\}/)?.[0] ?? ''
+    expect(epMap, 'EP_RESOURCES not found').not.toBe('')
+    expect(epMap, 'EP resources must not be served by the CCM /api/download route').not.toContain('/api/download')
+  })
+
+  it('every CRM module resource points at a document that actually exists', async () => {
+    const { EP_DOCUMENTS } = await import('../data/ep-documents')
+    const slugs = new Set(EP_DOCUMENTS.map((d) => d.slug))
+    const src = read('components/course/DownloadableResources.tsx')
+    const epMap = src.match(/const EP_RESOURCES[\s\S]*?\n\}/)?.[0] ?? ''
+    const linked = [...epMap.matchAll(/\/ep-course\/documents\/([a-z0-9-]+)/g)].map((m) => m[1])
+    expect(linked.length, 'the EP resource map is empty').toBeGreaterThan(0)
+    for (const slug of linked) {
+      expect(slugs.has(slug), `EP resource links to /ep-course/documents/${slug}, which has no document`).toBe(true)
+    }
+  })
+
+  it('a resources / apply-tomorrow step only appears when that module has content', () => {
+    const src = code(read('components/course/CourseModulePage.tsx'))
+    // An empty step in the stepper is worse than no step.
+    expect(src).toMatch(/hasDownloadableResources\(course, moduleId\)/)
+    expect(src).toMatch(/hasApplyTomorrow\(course, moduleId\)/)
+  })
+
+  it('the CRM module route is a server component with a first-paint payload', () => {
+    const src = read('app/ep-course/modules/[id]/page.tsx')
+    // CCM has had server-rendered first paint since app/modules/[id] was
+    // converted; CRM buyers were still getting spinner → session → content.
+    expect(src, 'the CRM module page must not be a client component').not.toMatch(/^'use client'/m)
+    expect(src).toContain('initialModuleData')
+    // …resolved through the SAME gate the content API uses.
+    expect(src).toContain('checkCrmServerAccess')
+  })
+
+  it('the CRM reference repository is searchable, not a flat list', () => {
+    const page = read('app/ep-course/references/page.tsx')
+    expect(page).toContain('EpReferenceSearch')
+    const lib = read('lib/ep-references.ts')
+    // Derived from the modules' own citations — no second list to drift.
+    expect(lib).toContain('getEpModules')
+  })
+
+  it('the reference repository loses no citation and invents none', async () => {
+    const { getEpReferences } = await import('../lib/ep-references')
+    const { getEpModules } = await import('../data/ep-modules')
+    // Compared on the same normalised key the repository dedupes by, so the
+    // SAME paper written with an en-dash in one module and a hyphen in another
+    // counts as present (it is one row, showing the text as first authored).
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').replace(/[^a-z0-9 ]/g, '').trim()
+    const authored = getEpModules().flatMap((m) => (m.clinicalReferences ?? []).map((r) => norm(r)))
+    const derived = getEpReferences()
+    const rendered = new Set(derived.map((r) => norm(r.citation)))
+    for (const ref of authored) {
+      expect(rendered.has(ref), `citation dropped by the repository: ${ref.slice(0, 80)}`).toBe(true)
+    }
+    // Nothing may be added that no module cites.
+    const authoredSet = new Set(authored)
+    for (const r of derived) {
+      expect(authoredSet.has(norm(r.citation)), `repository invented a citation: ${r.citation.slice(0, 80)}`).toBe(true)
+    }
+    // Every module that cites a paper is tagged on it.
+    const giza = derived.find((r) => r.citation.includes('Giza') && r.citation.includes('2014'))
+    expect(giza?.modules.length, 'multi-module citations must carry every citing module').toBeGreaterThan(1)
+  })
+
+  it('the EP course has an in-portal practical-day upgrade path', () => {
+    const src = read('components/ep-course/CrmPracticalUpsell.tsx')
+    // The CRM analogue of CCM's accessLevel === 'online-only'.
+    for (const surface of ['app/ep-course/dashboard/page.tsx', 'components/ep-course/EpCourseNavigation.tsx']) {
+      const s = code(read(surface))
+      expect(s, `${surface} must gate the upsell on ownsCrm && !ownsCrmPractical`).toMatch(
+        /ownsCrm && !user\.ownsCrmPractical/,
+      )
+    }
+    // Price derived from config, never a literal — same rule CCM's sidebar has.
+    expect(src).toMatch(/upgradePriceFor\(/)
+    expect(src).not.toMatch(/\$693|\$903|\$600\b|\$1,190|\$1,400/)
+    // It must sell the CRM upgrade tier, not bounce into the CCM /upgrade page
+    // (which redirects a CRM buyer to the CCM sales page).
+    expect(src).toContain("tier: 'upgrade'")
+    expect(src).toContain('/api/crm/checkout')
+    expect(src, 'the CCM upgrade route rejects CRM buyers').not.toMatch(/href="\/upgrade"/)
+  })
+
+  it('the EP dashboard carries the cross-course search CCM has at /learning', () => {
+    const src = code(read('app/ep-course/dashboard/page.tsx'))
+    expect(src).toContain('CourseSearch')
+  })
+})
+
+describe('interactive elements can be authored as course content, not code', () => {
+  it('sections accept data-authored interactives and the player renders them', () => {
+    // CCM's ~150 interactive elements are hardcoded JSX keyed by
+    // (moduleId, sectionId); CRM has no such file and gained interactivity
+    // only by someone writing more JSX. Specs on the section travel inside the
+    // ENTITLEMENT-GATED module payload instead, so a paid answer key never
+    // reaches an unentitled visitor and adding one is a content edit.
+    const types = read('data/modules.ts')
+    expect(types).toMatch(/export type SectionInteractive/)
+    expect(types).toMatch(/interactives\?: SectionInteractive\[\]/)
+
+    const renderer = read('components/course/SectionDataInteractives.tsx')
+    // Same widgets the flagship course uses — not a parallel implementation.
+    for (const widget of ['QuickCheck', 'ClinicalScenario', 'OrderingExercise', 'MatchingExercise', 'MultiSelectQuiz']) {
+      expect(renderer, `${widget} must render through the shared component`).toContain(widget)
+    }
+
+    const player = code(read('components/course/CourseModulePage.tsx'))
+    expect(player).toMatch(/<SectionDataInteractives specs=\{section\.interactives\}/)
+  })
+
+  it('the flagship course keeps every resources / apply-tomorrow step it had', async () => {
+    // The (course, moduleId) rekey must not quietly drop a CCM step.
+    const resources = read('components/course/DownloadableResources.tsx')
+    const flagshipResources = resources.match(/const FLAGSHIP_RESOURCES[\s\S]*?\n\}/)?.[0] ?? ''
+    const apply = read('components/course/ApplyTomorrow.tsx')
+    const flagshipActions = apply.match(/const FLAGSHIP_ACTIONS[\s\S]*?\n\}/)?.[0] ?? ''
+    for (let id = 1; id <= 8; id++) {
+      expect(new RegExp(`^  ${id}: \\[`, 'm').test(flagshipResources), `CCM module ${id} lost its resources`).toBe(true)
+      expect(new RegExp(`^  ${id}: \\[`, 'm').test(flagshipActions), `CCM module ${id} lost its apply-tomorrow`).toBe(true)
+    }
+  })
+})
