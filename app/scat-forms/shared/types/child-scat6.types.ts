@@ -1,7 +1,7 @@
 // Child SCAT6 form data structure
 // For children aged 8-12 years
 //
-// GROUND TRUTH: public/docs/Child_SCAT6_Flat.pdf (Davis GA et al, BJSM 2023;57:637-648).
+// GROUND TRUTH: public/docs/Child_SCAT6_Flat.pdf (Davis GA et al, BJSM 2023;57:636-647).
 // Every item list and printed maximum below was read off that document, NOT
 // inferred from the adult SCAT6. The two instruments differ:
 //   - 21 child-report symptoms rated 0-3 (adult: 22 items rated 0-6)

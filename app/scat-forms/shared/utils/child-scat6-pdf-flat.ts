@@ -213,9 +213,13 @@ export async function exportChildSCAT6ToFlatPDF(
     // "On a scale of 0 to 10 (where 10 is normal), how do you feel now?"
     // 0 is the WORST possible answer, so an unrecorded rating must not print as
     // 0 — ring the digit only when the child actually gave one.
+    // The 0-10 digits are NOT evenly spaced on the artwork (and "10" is two
+    // glyphs), so each centre is measured off the template rather than derived
+    // from a stride.
+    const childRatingX = [292.5, 308.4, 324.6, 340.8, 356.9, 373.2, 389.2, 405.4, 421.6, 437.7, 456.1]
     if (formData.childOverallRating !== null) {
-      const rating = Math.max(0, Math.min(10, formData.childOverallRating))
-      drawCircleOutline(p5, 290 + 16.4 * rating, 664.5, 6)
+      const rating = Math.max(0, Math.min(10, Math.round(formData.childOverallRating)))
+      drawCircleOutline(p5, childRatingX[rating], 664.5, 6)
     }
 
     // Child Report totals (of 21 / of 63)
@@ -259,14 +263,17 @@ export async function exportChildSCAT6ToFlatPDF(
       formData.immediateMemoryTrial3,
     ]
     // Each trial cell prints "0   1"; ring the score given for that word.
+    // Offsets to the printed digits within the cell, measured off the template
+    // (the "1" sits 31.5pt in, not 30 — at 30 the ring clips the glyph).
     const trialCellX = [181, 223.5, 266.5]
     const trialCellW = 41
+    const trialDigitDx = { incorrect: 9.6, correct: 31.5 }
 
     if (memoryAdministered) {
       trials.forEach((trial, t) => {
         trial.forEach((correct, w) => {
           const cy = 559.2 - 14.444 * w + 5.5
-          drawCircleOutline(p6, trialCellX[t] + (correct ? 30 : 10), cy, 5)
+          drawCircleOutline(p6, trialCellX[t] + (correct ? trialDigitDx.correct : trialDigitDx.incorrect), cy, 5)
         })
       })
 
@@ -388,9 +395,12 @@ export async function exportChildSCAT6ToFlatPDF(
     const delayedRecallRowBottoms = [
       599.2, 585.2, 571.7, 558.2, 544.2, 530.7, 516.7, 502.7, 489.2, 475.7,
     ]
+    // The Score cell prints "0   1" at 214.6 and 236.5 (measured off the
+    // template). Ringing the "1" at 233 put the stroke through the glyph, so a
+    // recalled word read as an unringed — i.e. not recalled — row.
     if (isDelayedRecallAdministered(formData)) {
       formData.delayedRecall.forEach((correct, i) => {
-        drawCircleOutline(p9, correct ? 233 : 215, delayedRecallRowBottoms[i] + 6, 5)
+        drawCircleOutline(p9, correct ? 236.5 : 214.6, delayedRecallRowBottoms[i] + 6, 5)
       })
     }
     drawScoreBox(p9, 196, 58.5, 461, calculateDelayedRecall(formData), { font: fontBold, size: fsl })

@@ -56,6 +56,21 @@ const score = (value: number | null) => (value === null ? '—' : String(value))
  * recorded"); a real 0 is kept. Values are clamped to the instrument's range so
  * a typo cannot produce 12 errors out of a possible 10.
  */
+/**
+ * Age in whole years at the examination date (today if no exam date is set).
+ * null when the dates are missing or nonsensical, so nothing is asserted.
+ */
+const ageAtExam = (dateOfBirth: string, dateOfExamination: string): number | null => {
+  if (!dateOfBirth) return null
+  const dob = new Date(dateOfBirth)
+  const exam = dateOfExamination ? new Date(dateOfExamination) : new Date()
+  if (isNaN(dob.getTime()) || isNaN(exam.getTime()) || exam < dob) return null
+  let years = exam.getFullYear() - dob.getFullYear()
+  const monthDelta = exam.getMonth() - dob.getMonth()
+  if (monthDelta < 0 || (monthDelta === 0 && exam.getDate() < dob.getDate())) years -= 1
+  return years
+}
+
 const numOrNull = (raw: string, min: number, max: number): number | null => {
   if (raw.trim() === '') return null
   const parsed = parseInt(raw, 10)
@@ -123,6 +138,8 @@ export default function ChildSCAT6Client() {
   }, [])
 
   const calculated = getAllCalculatedScores(formData)
+  const age = ageAtExam(formData.dateOfBirth, formData.dateOfExamination)
+  const outsideAgeBand = age !== null && (age < 8 || age > 12)
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => {
@@ -388,6 +405,24 @@ export default function ChildSCAT6Client() {
             Fields left blank are exported as <strong>not administered</strong> (a dash), never as a
             score of zero. Record a genuine zero by entering 0.
           </div>
+
+          {/* Age band. Printed on the Child SCAT6: "The Child SCAT6 is used for
+              evaluating children aged 8-12 years. For athletes aged 13 years or
+              older, please use the SCAT6." Advisory only — it never blocks. */}
+          {outsideAgeBand && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 leading-relaxed">
+              This child is <strong>{age}</strong> at the examination date. The Child SCAT6 is used
+              for evaluating children aged 8–12 years.{' '}
+              {age !== null && age >= 13 ? (
+                <>
+                  For athletes aged 13 years or older, use the{' '}
+                  <Link href="/scat-forms/scat6" className="underline font-semibold">SCAT6</Link>.
+                </>
+              ) : (
+                <>Below 8 years, the instrument is outside its stated age band — clinical judgement applies.</>
+              )}
+            </div>
+          )}
 
           {/* ===== DEMOGRAPHICS ===== */}
           <SectionHeader id="demographics" title="Athlete Information" expandedSections={expandedSections} toggleSection={toggleSection}>

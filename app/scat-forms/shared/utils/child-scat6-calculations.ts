@@ -86,16 +86,24 @@ export function calculateImmediateMemory(formData: ChildSCAT6FormData): number |
 }
 
 /**
- * Days in reverse: 1 point for no errors AND completion under 30 seconds.
- * (The Child SCAT6 uses DAYS of the week, not months.) null until an error
- * count is recorded; a recorded error count with no time cannot earn the point,
- * because the under-30-seconds half of the criterion is unverified.
+ * Days in reverse. The Child SCAT6 prints the criterion verbatim: "1 point if
+ * no errors and completion under 30 seconds" (and uses DAYS of the week, not
+ * the adult form's months).
+ *
+ * Three states, because the printed criterion only determines two of them:
+ *   - errors > 0                      -> 0. The point is lost whatever the time.
+ *   - errors = 0 AND time < 30s       -> 1.
+ *   - errors = 0 AND no/invalid time  -> null. Neither half of the criterion is
+ *     satisfied nor failed. Printing 0 would assert a failed subtest on the
+ *     strength of a stopwatch nobody wrote down.
+ * null also covers "no error count recorded at all".
  */
 export function calculateDaysReverse(formData: ChildSCAT6FormData): number | null {
   if (formData.daysReverseErrors === null) return null
+  if (formData.daysReverseErrors > 0) return 0
   const seconds = parseFloat(formData.daysReverseTime)
-  const withinTime = !isNaN(seconds) && seconds > 0 && seconds < 30
-  return formData.daysReverseErrors === 0 && withinTime ? 1 : 0
+  if (isNaN(seconds) || seconds <= 0) return null
+  return seconds < 30 ? 1 : 0
 }
 
 /**
