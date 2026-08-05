@@ -4,6 +4,32 @@ import { join } from 'path'
 import { getAllModules } from '../data/modules'
 import { getEpModules } from '../data/ep-modules'
 import { getSCATModules } from '../data/scat-modules'
+import { epDisplayId } from '../data/ep-modules'
+
+/**
+ * The distinctive prose of every interactive belonging to a section the public
+ * trial does NOT unlock — questions, explanations, scenario narratives and
+ * clinical reasoning. None of it may appear in the trial payload.
+ *
+ * Long strings only: a widget's short TITLE is often the section title too, and
+ * section titles ship on purpose (the lock overlay advertises what's behind the
+ * paywall). Prose is what must never leak.
+ */
+function lockedInteractives(course: 'ccm' | 'crm', displayId: number, unlocked: Set<string>): string[] {
+  const modules = course === 'crm' ? getEpModules() : getAllModules()
+  const module = modules.find((m) => (course === 'crm' ? epDisplayId(m.id) : m.id) === displayId)
+  if (!module) return []
+  const strings: string[] = []
+  const collect = (value: unknown) => {
+    if (typeof value === 'string') {
+      if (value.length > 60) strings.push(value)
+    } else if (value && typeof value === 'object') {
+      Object.values(value).forEach(collect)
+    }
+  }
+  module.sections.filter((s) => !unlocked.has(s.id)).forEach((s) => collect(s.interactives ?? []))
+  return strings
+}
 
 /**
  * COURSE CONTENT INTEGRITY.
@@ -197,8 +223,18 @@ describe('module structure is sound', () => {
       for (const m of data) {
         const expected = m.id === 1 ? MODULE_1_PREVIEW_COUNT : 1
         expect(m.previewSections.length, `${course} module ${m.id} unlocked too much`).toBeLessThanOrEqual(expected)
-        // The payload must carry no quiz field at all — answers must never ship.
-        expect(JSON.stringify(m)).not.toContain('correctAnswer')
+        // The payload carries no `quiz` field at all — the graded assessment's
+        // answers must never ship to an unentitled visitor.
+        expect(m).not.toHaveProperty('quiz')
+        // Interactives ARE carried, but only for the unlocked sections: those
+        // widgets are the trial itself (Module 1's myths quiz), and they have
+        // always rendered on this page. Anything belonging to a LOCKED section
+        // must be absent — that is the leak this file guards.
+        const payload = JSON.stringify(m)
+        const unlocked = new Set(m.previewSections.map((s) => s.id))
+        for (const spec of lockedInteractives(course, m.id, unlocked)) {
+          expect(payload, `${course} module ${m.id} leaked a locked interactive`).not.toContain(spec)
+        }
       }
     }
   })

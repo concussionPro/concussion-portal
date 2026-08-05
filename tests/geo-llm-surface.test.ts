@@ -99,7 +99,49 @@ describe('accreditation claims stay honest', () => {
     expect(llms).not.toMatch(/\d+\s*(ACSM )?CECs? (awarded|granted|earned)/i)
     expect(llms).not.toMatch(/HPCSA[- ]accredited/i)
     // And it should say so explicitly.
-    expect(llms).toMatch(/PENDING and are never claimed as held|pending/i)
+    expect(llms).toMatch(/PENDING and is never claimed as held|PENDING and are never claimed as held|pending/i)
+  })
+
+  it('does not describe the PARKED ACSM application as pending', () => {
+    // 2026-08-05: this file said overseas recognitions including ACSM were
+    // "PENDING", while app/acsm/page.tsx correctly says CEA holds no
+    // Approved-Provider status and is NOT pursuing one. "Pending" implies an
+    // application in train — a different, and untrue, claim from "parked".
+    expect(llms).toMatch(/ACSM[^.]*\bNOT\b[^.]*(pursued|parked)/i)
+  })
+
+  it('scopes the Osteopathy Australia endorsement to the course, not the entity', () => {
+    // The endorsement covers Concussion Clinical Mastery only. An entity-level
+    // claim ("Concussion Education Australia is OA endorsed") also sweeps in
+    // CRM, the AI course and the international offerings, where OA has no
+    // standing at all.
+    expect(llms).not.toMatch(/Concussion Education Australia[^.]{0,40}(is )?Osteopathy Australia[- ]endorsed/i)
+    expect(llms).toMatch(/Osteopathy Australia endorses the Concussion Clinical Mastery course only/i)
+  })
+
+  it('never claims one offering holds both the OA endorsement and ESSA accreditation', () => {
+    expect(llms).not.toMatch(/only Australian[^.]*endorsed[^.]*accredited/i)
+    expect(llms).toMatch(/No course holds both/i)
+  })
+
+  it('never ASSERTS AHPRA accreditation — AHPRA accredits no CPD', () => {
+    // Blunt matching on "AHPRA-accredited" is wrong here, and flagged a line we
+    // want to keep: the FAQ heading "Is this course AHPRA-accredited?", whose
+    // answer is "AHPRA does not accredit CPD courses". That is the exact query
+    // clinicians search, and answering it is how the correction reaches an AI
+    // summariser at all — deleting it would remove the rebuttal, not the myth.
+    //
+    // So: strip the interrogative headings and any sentence that DENIES
+    // accreditation, then assert nothing left over makes the claim.
+    const assertions = llms
+      .split('\n')
+      .filter((l) => !/^#{1,6}\s.*\?\s*$/.test(l.trim()))
+      .filter((l) => !/(does not|doesn't|no longer|never)\s+accredit/i.test(l))
+      .filter((l) => !/AHPRA accredits no CPD/i.test(l))
+      .join('\n')
+    expect(assertions).not.toMatch(/AHPRA[- ]accredited|accredited by AHPRA|AHPRA CPD (hours|points)/i)
+    // …and the correction itself must still be present.
+    expect(llms).toMatch(/AHPRA (does not accredit|accredits no)/i)
   })
 })
 

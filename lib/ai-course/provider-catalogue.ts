@@ -125,7 +125,13 @@ export const PROVIDERS: ProviderProfile[] = [
     id: 'cea',
     name: 'Concussion Education Australia',
     shortName: 'CEA',
-    description: 'Osteopathy Australia–endorsed CPD for concussion management and AI use in clinical practice.',
+    // ENDORSEMENT SCOPE: Osteopathy Australia endorses the Concussion Clinical
+    // Mastery course ONLY — not CEA as a provider, and specifically NOT the AI
+    // in Clinical Practice course (app/courses/build-status/page.tsx: "an
+    // AI-course-specific endorsement has not been granted"). This field is one
+    // `{provider.description}` away from rendering, so it must not carry a
+    // claim the AI course cannot support.
+    description: 'CPD for Australian clinicians: concussion management (Concussion Clinical Mastery, endorsed by Osteopathy Australia) and AI use in clinical practice.',
     url: 'https://concussion-education-australia.com',
     verified: true,
     brandColor: 'teal',

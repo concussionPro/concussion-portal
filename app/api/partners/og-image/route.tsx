@@ -19,7 +19,20 @@ export const runtime = 'edge'
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
 
+/**
+ * DISABLED 2026-08-05 alongside app/api/prospect/og-image — same shape, same
+ * unauthenticated third-party screenshot service (api.microlink.io), no callers.
+ * This one renders a PUBLIC partner page rather than a keyed private portal, so
+ * it leaks no access key, but it still ships a partner's details to a processor
+ * disclosed nowhere and is the other of the tree's two edge-runtime Neon
+ * queries. Re-enable with PARTNER_OG_SCREENSHOTS=1 once Microlink is disclosed
+ * on /privacy and /security.
+ */
 export async function GET(req: NextRequest) {
+  if (process.env.PARTNER_OG_SCREENSHOTS !== '1') {
+    return new Response('disabled', { status: 410 })
+  }
+
   const url = new URL(req.url)
   const slug = url.searchParams.get('slug')
   if (!slug) {

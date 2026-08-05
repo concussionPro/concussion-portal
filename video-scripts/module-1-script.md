@@ -3,7 +3,7 @@
 
 **Duration:** 15 minutes
 **Target Audience:** Australian health practitioners (physiotherapists, doctors, sports medicine professionals)
-**CPD Hours:** 5
+**CPD Hours:** 1 (one per online module; 8 modules = 8 online CPD hours)
 
 ---
 
@@ -14,7 +14,7 @@
 **NARRATOR:**
 "Welcome to Module 1 of the Concussion Clinical Mastery course. I'm [Your Name], and over the next 15 minutes, we'll explore the fundamental science behind concussion injuries—from the biomechanical forces that cause them, to the complex neurometabolic cascade that occurs at the cellular level.
 
-This module forms the foundation for your clinical practice and is accredited for 5 AHPRA CPD hours. By the end, you'll understand not just what a concussion is, but why it behaves the way it does in your patients."
+This module forms the foundation for your clinical practice and carries 1 AHPRA-aligned CPD hour — the eight online modules total eight. (AHPRA does not accredit CPD courses or award hours; registrants self-claim these against their board's requirements.) By the end, you'll understand not just what a concussion is, but why it behaves the way it does in your patients."
 
 ---
 

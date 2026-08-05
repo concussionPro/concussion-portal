@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Lock, ArrowRight, Award, BookOpen, ShieldCheck, Star, Loader2 } from 'lucide-react'
-import { CONFIG, workshopPriceFor } from '@/lib/config'
+import { CONFIG, defaultNominationCity, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
@@ -20,11 +20,18 @@ const CITIES = [
 export function ContentLockedBanner({ remainingSections }: { remainingSections?: string[] }) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [city, setCity] = useState('melbourne')
+  // Default = the first city the nurture crons still cover, never a hardcoded
+  // slug: a 'completed' city (Melbourne) drops the buyer out of the reservation,
+  // momentum and pre-workshop lanes. Every city stays selectable below.
+  const [city, setCity] = useState(defaultNominationCity() ?? '')
 
   const fullPrice = workshopPriceFor(city)
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
+    if (courseType === 'full-course' && !city) {
+      setError('Please choose your workshop city.')
+      return
+    }
     setLoading(courseType)
     setError(null)
     trackEvent('checkout_start', { courseType, source: 'content_locked_banner', location: city })
@@ -163,6 +170,9 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
               className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
               aria-label="Workshop city"
             >
+              {/* Only rendered when no city is open to nominate into — the
+                  select must never LOOK pre-selected while state is empty. */}
+              {!city && <option value="">Choose your city</option>}
               {CITIES.map((c) => (
                 <option key={c.slug} value={c.slug}>{c.label}</option>
               ))}

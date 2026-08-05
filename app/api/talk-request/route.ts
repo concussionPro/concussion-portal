@@ -21,6 +21,7 @@ import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { getClientIp } from '@/lib/get-client-ip'
 import { rateLimit } from '@/lib/rate-limit'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 
 export const runtime = 'nodejs'
 
@@ -129,7 +130,12 @@ export async function POST(req: NextRequest) {
       INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${confirmKey}, NOW())
       ON CONFLICT (audit_key) DO NOTHING
     `
-    if ((confirmFresh ?? 0) > 0) sendEmail({
+    // MASTER BLACKLIST — PUBLIC unauthenticated POST that mails a
+    // `sequence`-tagged confirmation to whatever address was typed in. Same
+    // class as the eleven lanes gated in 89f206c6 and missed by that sweep.
+    // Zac's own notification above is deliberately NOT gated: the request must
+    // still reach him so he can reply personally.
+    if ((confirmFresh ?? 0) > 0 && !(await isEmailSuppressed(email))) sendEmail({
       to: email,
       subject: 'Got it — I\'ll be in touch within 24 hours',
       html: `

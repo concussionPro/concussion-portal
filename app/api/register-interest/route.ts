@@ -4,6 +4,7 @@ import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { CONFIG } from '@/lib/config'
 import { getClientIp } from '@/lib/get-client-ip'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -104,21 +105,32 @@ export async function POST(request: NextRequest) {
     const unsubToken = generateUnsubscribeToken(cleanEmail)
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(cleanEmail)}&token=${unsubToken}`
 
-    // Send confirmation email to registrant (best effort)
+    // MASTER BLACKLIST — PUBLIC unauthenticated endpoint. This send carries
+    // List-Unsubscribe / One-Click headers, i.e. the code already classifies it
+    // as a bulk lane, yet nothing checked the blacklist: anyone who replied STOP
+    // re-entered marketing by registering interest. Fails closed. The
+    // workshop_interest row is still written above — the admin campaigns that
+    // read it (nomination-campaign, workshop-date-float) each run their own
+    // suppression filter, so the seat count stays honest without mailing anyone
+    // who opted out.
     try {
-      await sendEmail({
-        to: cleanEmail,
-        subject: `You're on the list — ${cityLabel} Workshop`,
-        html: buildConfirmationEmail(cleanName, cityLabel),
-        tags: [
-          { name: 'type', value: 'interest-confirmation' },
-          { name: 'city', value: city },
-        ],
-        headers: {
-          'List-Unsubscribe': `<${unsubscribeUrl}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        },
-      })
+      if (await isEmailSuppressed(cleanEmail)) {
+        console.log('[register-interest] recipient suppressed — confirmation skipped')
+      } else {
+        await sendEmail({
+          to: cleanEmail,
+          subject: `You're on the list — ${cityLabel} Workshop`,
+          html: buildConfirmationEmail(cleanName, cityLabel),
+          tags: [
+            { name: 'type', value: 'interest-confirmation' },
+            { name: 'city', value: city },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+      }
     } catch (emailErr) {
       console.error('Failed to send interest confirmation email:', emailErr)
     }

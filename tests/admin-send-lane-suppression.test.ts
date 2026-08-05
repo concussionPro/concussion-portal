@@ -172,3 +172,146 @@ describe('the shared suppression helper fails closed', () => {
     expect(set.has('mixed@example.com')).toBe(true)
   })
 })
+
+/**
+ * DIRECTORY WALK — the part that is actually load-bearing.
+ *
+ * Everything above iterates HARDCODED path arrays, and those arrays are exactly
+ * the files the commit that wrote them had already fixed. A test that only
+ * checks the routes you just fixed cannot tell you about the route you missed:
+ * this suite was fully green while app/api/lead-magnet/team-training-inquiry
+ * (the THIRD route in a directory whose other two it does list),
+ * app/api/preseason/register, app/api/register-interest and
+ * app/api/talk-request were all mailing suppressed addresses.
+ *
+ * So: walk app/api/** ourselves. Any route that can send mail must either
+ * consult the master blacklist or be named below with a reason. Adding a new
+ * mailing route now fails CI until someone makes that call explicitly.
+ */
+const API_ROOT = path.join(ROOT, 'app/api')
+
+function walkRoutes(dir: string, out: string[] = []): string[] {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) walkRoutes(full, out)
+    else if (/^route\.tsx?$/.test(entry.name)) out.push(path.relative(ROOT, full))
+  }
+  return out
+}
+
+/** Does this file send mail at all (directly or via the shared client)? */
+function sendsMail(src: string): boolean {
+  return /\bsendEmail\s*\(/.test(src)
+    || /\bsendEmailWithAttachment\s*\(/.test(src)
+    || /resend\.emails\.send/.test(src)
+    || /api\.resend\.com\/emails/.test(src)
+}
+
+/**
+ * Routes that may mail a suppressed address, each for a stated reason.
+ * TRANSACTIONAL = the recipient paid for or requested this specific thing and
+ * withholding it breaks their access. INTERNAL = only ever mails Zac.
+ * Nothing here may carry a `sequence` tag or List-Unsubscribe headers.
+ */
+const MAY_MAIL_SUPPRESSED: Record<string, string> = {
+  // --- transactional: access, money, clinical ---
+  'app/api/admin/create-user/route.ts': 'transactional — operator-created account + its login link',
+  'app/api/admin/resend-purchase-welcome/route.ts': 'transactional — replaces a paid buyer’s magic link',
+  'app/api/admin/tax-invoice/send/route.ts': 'transactional — ATO tax invoice for a completed purchase',
+  'app/api/clinical-testing/clinic/route.ts': 'transactional — clinic provisioning + access code',
+  'app/api/platform/founding/route.ts': 'transactional — clinic code and hub link; doubles as link recovery',
+  'app/api/preseason/submit/route.ts': 'transactional — the athlete’s own baseline result',
+  'app/api/sst/start/route.ts': 'transactional — trial clinic code + magic login',
+  // --- internal: recipient is always CONFIG.CONTACT_EMAIL ---
+  'app/api/admin/send-gp-report-sample/route.ts': 'internal — sample to Zac',
+  'app/api/admin/send-portal-preview/route.ts': 'internal — preview to Zac',
+  'app/api/admin/send-prospect-brief/route.ts': 'internal — brief to Zac',
+  'app/api/admin/send-sample-pitch/route.ts': 'internal — sample to Zac',
+  'app/api/admin/send-sample-partner-pitch/route.ts': 'internal — sample to Zac',
+  'app/api/admin/send-sst-sequence-preview/route.ts': 'internal — preview to Zac',
+  'app/api/admin/system-health/route.ts': 'internal — health alert to Zac',
+  'app/api/admin/test-emails/route.ts': 'internal — admin-key gated test harness',
+  'app/api/prospect/[token]/track/route.ts': 'internal — engagement alert to Zac',
+  'app/api/cron/ai-course-content-refresh/route.ts': 'internal — owner digest',
+  'app/api/cron/analytics-review/route.ts': 'internal — owner digest',
+  'app/api/cron/daily-outreach-report/route.ts': 'internal — owner digest',
+  'app/api/cron/lead-scoring/route.ts': 'internal — owner digest',
+  'app/api/cron/monitoring/route.ts': 'internal — owner digest',
+  'app/api/cron/publish-scheduled-blog/route.ts': 'internal — owner digest',
+  'app/api/cron/video-link-check/route.ts': 'internal — owner digest',
+}
+
+describe('EVERY mailing route under app/api is accounted for', () => {
+  const mailing = walkRoutes(API_ROOT).filter((rel) => sendsMail(read(rel))).sort()
+
+  it('finds a non-trivial number of mailing routes (the walk itself works)', () => {
+    expect(mailing.length).toBeGreaterThan(30)
+  })
+
+  for (const rel of mailing) {
+    it(`${rel} checks suppression or is an explicit exception`, () => {
+      const guarded = checksSuppression(read(rel))
+      const exempt = rel in MAY_MAIL_SUPPRESSED
+      if (!guarded && !exempt) {
+        throw new Error(
+          `${rel} can send email but never consults email_suppression.\n` +
+          'Either gate the send on isEmailSuppressed(), or add it to ' +
+          'MAY_MAIL_SUPPRESSED with the reason it is transactional/internal.'
+        )
+      }
+      expect(guarded || exempt).toBe(true)
+    })
+  }
+
+  it('the exception list has no stale entries', () => {
+    const all = new Set(walkRoutes(API_ROOT))
+    for (const rel of Object.keys(MAY_MAIL_SUPPRESSED)) {
+      expect(all.has(rel), `${rel} is exempted but no longer exists`).toBe(true)
+    }
+  })
+
+  it('no route exempted as TRANSACTIONAL carries bulk-mail markers', () => {
+    // One-Click unsubscribe headers mean the code itself considers the send
+    // bulk — which disqualifies it from a "transactional" exemption. This is
+    // how app/api/ready-to-train was caught: a logged-in buyer's city
+    // nomination confirmation, shipped with List-Unsubscribe and no blacklist
+    // check, because being authenticated was mistaken for consent.
+    //
+    // INTERNAL routes are deliberately not checked: a preview or sample of a
+    // marketing email sent to Zac legitimately contains the header, because it
+    // is a copy of the real thing.
+    for (const [rel, reason] of Object.entries(MAY_MAIL_SUPPRESSED)) {
+      if (!reason.startsWith('transactional')) continue
+      expect(
+        /List-Unsubscribe/i.test(read(rel)),
+        `${rel} is exempted as transactional but sets List-Unsubscribe — it is a marketing lane`
+      ).toBe(false)
+    }
+  })
+})
+
+/**
+ * The inverse failure mode: over-suppression. A transactional path that bails
+ * on the blacklist locks a paying customer out of what they bought. Two were
+ * shipped that way and are fixed above; these lock the fix in.
+ */
+describe('suppression never blocks access, only marketing', () => {
+  it('signup-free sets the session cookie even for a suppressed address', () => {
+    const src = read('app/api/signup-free/route.ts')
+    const guard = src.indexOf('isEmailSuppressed(email)')
+    const cookie = src.indexOf("response.cookies.set('session'")
+    expect(guard).toBeGreaterThan(-1)
+    expect(cookie).toBeGreaterThan(-1)
+    // the guard must NOT return before the cookie is issued
+    expect(src.slice(guard, cookie)).not.toMatch(/return NextResponse\.json\([^)]*suppressed/)
+  })
+
+  it('clinical-testing/team grants the SST entitlement outside the suppression branch', () => {
+    const src = read('app/api/clinical-testing/team/route.ts')
+    const grant = src.indexOf('grantSstEntitlement(')
+    const guard = src.indexOf('FROM email_suppression')
+    expect(grant).toBeGreaterThan(-1)
+    expect(guard).toBeGreaterThan(-1)
+    expect(grant, 'the seat entitlement must be granted before the send-lane check').toBeLessThan(guard)
+  })
+})

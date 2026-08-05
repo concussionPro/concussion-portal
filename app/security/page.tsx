@@ -27,7 +27,15 @@ const SECTIONS = [
   {
     icon: Globe,
     title: 'Data residency',
-    body: 'Application processing and data storage run in Australia (Sydney — AWS ap-southeast-2 via our hosting providers). This satisfies AU/NZ residency requirements including NZ ACC supplier obligations for client information held in New Zealand and/or Australia.',
+    // Corrected 2026-08-05: this said processing ran in Australia full stop,
+    // which /privacy had already been corrected NOT to claim — the two pages
+    // contradicted each other on the one fact ACC and PMS security reviewers
+    // check. middleware.ts matches '/api/:path*' and runs at the edge in the
+    // reviewer's own region: it decrypts the session and queries Neon from
+    // there. Clinical records, reports and account data are still stored and
+    // processed in Sydney; the edge layer routes and authenticates. Say what
+    // actually runs where.
+    body: 'All data is stored in Australia (Sydney — Neon Postgres, ap-southeast-2) and the application functions that handle clinical records, reports and account data execute in the Sydney region. A thin routing and session-authentication layer runs at the network edge, which may be geographically near the visitor; it reads the session and routes the request, and clinical records are neither stored nor processed there. This satisfies AU/NZ residency requirements including NZ ACC supplier obligations for client information held in New Zealand and/or Australia.',
   },
   {
     icon: KeyRound,
@@ -47,7 +55,11 @@ const SECTIONS = [
   {
     icon: Server,
     title: 'Subprocessors',
-    body: 'Vercel (application hosting), Neon (Postgres database), Stripe (payments — card data never touches our servers), Resend (transactional email), Cloudflare (DNS/edge). Each is engaged under its own security and privacy terms.',
+    // Kept in step with the fuller list on /privacy (2026-08-05): the two pages
+    // must not name different subprocessor sets. PMS vendors are listed because
+    // a write-back sends a finished clinical document to the clinic's own
+    // system — Gensolve in particular carries the NZ/ACC fields.
+    body: 'Vercel (application hosting), Neon (Postgres database), Vercel KV / Upstash (rate limiting and short-lived operational state), Stripe (payments — card data never touches our servers), Resend (transactional email), Cloudflare (DNS/edge), Google (analytics and conversion measurement — email addresses are SHA-256 hashed before they leave our systems), Cal.com (booking) and Squarespace (marketing site). Where a clinic enables practice-management write-back, its own PMS vendor (Cliniko, PracSuite, Gensolve or Core Plus) receives the finished document. Each is engaged under its own security and privacy terms.',
   },
   {
     icon: FileText,

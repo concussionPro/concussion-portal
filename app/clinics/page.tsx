@@ -68,7 +68,11 @@ const PACKAGE = [
   {
     tag: 'The competency layer',
     title: 'Certificated training',
-    body: `Concussion Clinical Mastery — endorsed by Osteopathy Australia, with the exercise stream ${CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA-accredited' : 'designed to ESSA CPD standards (accreditation pending)'}. Your clinicians certificated to prescribe measured sub-threshold rehab properly, with the tools as their instruments.`,
+    // TWO SEPARATE COURSES, TWO SEPARATE BODIES. Concussion Clinical Mastery
+    // holds the OA endorsement; Concussion Rehab Mastery (the EP stream) holds
+    // the ESSA accreditation. Neither holds both — don't collapse them into one
+    // sentence that reads as a single course carrying both credentials.
+    body: `Concussion Clinical Mastery — endorsed by Osteopathy Australia; and for exercise physiologists, Concussion Rehab Mastery, ${CONFIG.FEATURES.ESSA_ACCREDITED ? 'accredited by ESSA' : 'designed to ESSA CPD standards'}. Your clinicians certificated to prescribe measured sub-threshold rehab properly, with the tools as their instruments.`,
   },
 ]
 
@@ -95,7 +99,10 @@ export default function AuClinicsPage() {
             verified on the patient&rsquo;s own watch between visits, with the reports your funders
             ask for drawing straight from the episode record.{' '}
             <strong className="text-slate-800">And your team trained and certificated to run it</strong> —
-            OA-endorsed for allied health, ESSA-accredited for exercise physiologists.
+            OA-endorsed for allied health,{' '}
+            {CONFIG.FEATURES.ESSA_ACCREDITED
+              ? 'ESSA-accredited for exercise physiologists'
+              : 'designed to ESSA CPD standards for exercise physiologists'}.
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1.5">
             {[

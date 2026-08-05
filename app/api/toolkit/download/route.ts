@@ -11,7 +11,7 @@ import {
 } from '@/data/hub-program-content'
 import { isAdminRequest } from '@/lib/require-admin'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { isBookOwner } from '@/lib/users'
+import { isBookOwner, getCurrentAccessLevel } from '@/lib/users'
 
 type Kit = 'all' | 'clinical' | 'outreach' | 'admin'
 
@@ -40,9 +40,18 @@ export async function GET(req: NextRequest) {
     if (!sessionData) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-    const paidAccess =
+    // Revocation re-check, matching /api/download and lib/toolkit-access.ts:
+    // the session JWT lives 365 days and outlives a refund downgrade, so a PAID
+    // CLAIM is confirmed against the users row before the zip is built. A DB
+    // blip (no row returned) keeps the JWT claim — this must never lock out a
+    // legitimate buyer — and the bundle path below is unchanged.
+    let paidAccess =
       sessionData.accessLevel === 'online-only' ||
       sessionData.accessLevel === 'full-course'
+    if (paidAccess) {
+      const dbLevel = await getCurrentAccessLevel(sessionData.userId).catch(() => null)
+      if (dbLevel && dbLevel !== 'online-only' && dbLevel !== 'full-course') paidAccess = false
+    }
     const bundleOwner = !paidAccess ? await isBookOwner(sessionData.email) : false
     if (!paidAccess && !bundleOwner) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

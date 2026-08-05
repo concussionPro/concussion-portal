@@ -1,3 +1,5 @@
+import { MODULE_INTERACTIVES } from './module-interactives'
+
 export interface ModulePart {
   id: string
   title: string
@@ -93,7 +95,7 @@ export interface QuizQuestion {
   explanation: string
 }
 
-export const modules: Module[] = [
+const rawModules: Module[] = [
   {
     id: 1,
     title: 'What is a Concussion?',
@@ -4596,6 +4598,27 @@ export const modules: Module[] = [
     ],
   },
 ]
+
+/**
+ * The course, with each section's interactive elements attached.
+ *
+ * The specs live in data/module-interactives.ts (see the header there for why
+ * they are no longer JSX). Attaching them HERE — at the one exported value —
+ * rather than hand-editing 85 section literals means no section can be missed,
+ * and every consumer of the course (the gated module API, preview-content,
+ * course-search, the proposal pages) sees the identical shape.
+ */
+export const modules: Module[] = rawModules.map((module) => {
+  const forModule = MODULE_INTERACTIVES[module.id]
+  if (!forModule) return module
+  return {
+    ...module,
+    sections: module.sections.map((section) => {
+      const interactives = forModule[section.id]
+      return interactives ? { ...section, interactives } : section
+    }),
+  }
+})
 
 export function getModuleById(id: number): Module | undefined {
   return modules.find((module) => module.id === id)

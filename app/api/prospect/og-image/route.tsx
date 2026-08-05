@@ -17,7 +17,34 @@ export const runtime = 'edge'
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
 
+/**
+ * DISABLED 2026-08-05 (adversarial round on the privacy sweep).
+ *
+ * This route has NO callers — mergeTemplate no longer embeds it — but it was
+ * still live, unauthenticated, and publicly callable with any slug. What it did
+ * on each call:
+ *
+ *   1. looked the clinic up and minted `/p/<slug>?k=<accessKey>` — a WORKING
+ *      access key for that prospect's private portal;
+ *   2. handed that URL to api.microlink.io, a free-tier, unauthenticated
+ *      third-party headless browser, which rendered the personalised dashboard
+ *      (contact name, clinic name, pitch) and CACHED THE IMAGE ON ITS OWN CDN.
+ *
+ * So it is both an access-control bypass on the prospect portal and a transfer
+ * of B2B personal information to a processor named on neither /privacy nor
+ * /security. It is also one of only two `runtime = 'edge'` handlers in the
+ * tree, i.e. it queried Neon from outside the Sydney region.
+ *
+ * Left in the tree rather than deleted so the owner can decide. To bring it
+ * back, set PROSPECT_OG_SCREENSHOTS=1 AND first: use a short-lived signed token
+ * instead of the durable accessKey, disclose Microlink on /privacy + /security,
+ * and drop `runtime = 'edge'`.
+ */
 export async function GET(req: NextRequest) {
+  if (process.env.PROSPECT_OG_SCREENSHOTS !== '1') {
+    return new Response('disabled', { status: 410 })
+  }
+
   const url = new URL(req.url)
   const slug = url.searchParams.get('slug')
   if (!slug) {

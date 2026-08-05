@@ -5,6 +5,7 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { userOwnsCrm, userOwnsCrmPractical } from '@/lib/crm-course'
 import { CONFIG } from '@/lib/config'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 
 const VALID_CITIES = ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'] as const
 type ValidCity = (typeof VALID_CITIES)[number]
@@ -115,21 +116,30 @@ export async function POST(request: NextRequest) {
     const unsubToken = generateUnsubscribeToken(session.email)
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(session.email)}&token=${unsubToken}`
 
-    // Send confirmation email to user (best effort)
+    // MASTER BLACKLIST — this confirmation carries List-Unsubscribe /
+    // One-Click headers, so the code itself classifies it as a bulk lane, yet
+    // nothing checked the blacklist. Being logged in is not consent: a buyer
+    // who replied STOP is still suppressed. The nomination row is written above
+    // either way, so the pool count and Zac's notification below are unaffected
+    // — only the marketing confirmation is withheld. Fails closed.
     try {
-      await sendEmail({
-        to: session.email,
-        subject: `You're in the ${cityLabel} Training Pool`,
-        html: buildConfirmationEmail(session.name, cityLabel),
-        tags: [
-          { name: 'type', value: 'ready-to-train-confirmation' },
-          { name: 'city', value: city },
-        ],
-        headers: {
-          'List-Unsubscribe': `<${unsubscribeUrl}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        },
-      })
+      if (await isEmailSuppressed(session.email)) {
+        console.log('[ready-to-train] recipient suppressed — confirmation skipped')
+      } else {
+        await sendEmail({
+          to: session.email,
+          subject: `You're in the ${cityLabel} Training Pool`,
+          html: buildConfirmationEmail(session.name, cityLabel),
+          tags: [
+            { name: 'type', value: 'ready-to-train-confirmation' },
+            { name: 'city', value: city },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+      }
     } catch (emailErr) {
       console.error('Failed to send ready-to-train confirmation email:', emailErr)
     }

@@ -133,11 +133,20 @@ export async function POST(req: NextRequest) {
   // which is what report attribution stamps.
   if (email) {
     try {
-      // suppression fail-closed on every send lane
+      // ENTITLEMENT FIRST, SUPPRESSION ONLY ON THE SEND (2026-08-05 adversarial
+      // round). grantSstEntitlement used to sit INSIDE the suppression branch,
+      // so a colleague whose address is on the marketing blacklist — which
+      // holds cold-outreach unsubscribes, not just bounces — had their
+      // sst_clinic_members row inserted (unconditionally, above) but NO SST
+      // entitlement and no way to log in. The owner saw "member added" and the
+      // colleague was silently locked out of a workspace their clinic pays for.
+      // Access is not marketing; only the invite email is.
+      const userId = await grantSstEntitlement(email, name)
+
+      // suppression fail-closed on the SEND lane
       const { rows: sup } = await sql`
-        SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email} LIMIT 1`
+        SELECT 1 FROM email_suppression WHERE LOWER(email) = LOWER(${email}) LIMIT 1`
       if (sup.length === 0) {
-        const userId = await grantSstEntitlement(email, name)
         const token = createMagicToken(userId, email, name, 'preview', 7 * 24 * 60 * 60 * 1000)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
         const loginUrl = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent('/clinical-testing')}`

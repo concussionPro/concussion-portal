@@ -125,7 +125,6 @@ export default async function PreviewModulePage({
           {data.previewSections.map((section, i) => (
             <PreviewSectionContent
               key={section.id}
-              moduleId={data.id}
               section={section}
               sectionNumber={i + 1}
             />

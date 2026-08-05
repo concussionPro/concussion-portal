@@ -1,23 +1,24 @@
 'use client'
 
 import { DynamicContentRenderer } from './DynamicContentRenderer'
-import { SectionInteractiveElements } from './SectionInteractiveElements'
+import { SectionDataInteractives } from './SectionDataInteractives'
 import { SectionTypeBadge, estimateReadingTime } from './SectionTypeBadge'
 import { Clock } from 'lucide-react'
+import type { SectionInteractive } from '@/data/modules'
 
 interface PreviewSection {
   id: string
   title: string
   content: string[]
+  interactives?: SectionInteractive[]
 }
 
 interface PreviewSectionContentProps {
-  moduleId: number
   section: PreviewSection
   sectionNumber?: number
 }
 
-export function PreviewSectionContent({ moduleId, section, sectionNumber = 1 }: PreviewSectionContentProps) {
+export function PreviewSectionContent({ section, sectionNumber = 1 }: PreviewSectionContentProps) {
   const readingTime = estimateReadingTime(section.content)
 
   return (
@@ -40,12 +41,11 @@ export function PreviewSectionContent({ moduleId, section, sectionNumber = 1 }: 
       {/* Section content */}
       <div className="p-6">
         <DynamicContentRenderer content={section.content} sectionIndex={0} />
-        <SectionInteractiveElements
-          moduleId={moduleId}
-          section={section}
-          sectionIndex={0}
-          isPreview
-        />
+        {/* Only the UNLOCKED section's own specs, handed down by the server
+            (lib/preview-content.ts). The old component was keyed by
+            (moduleId, sectionId) and therefore had to carry every module's
+            answer keys into this public page to render the few shown here. */}
+        <SectionDataInteractives specs={section.interactives} isPreview />
       </div>
     </div>
   )

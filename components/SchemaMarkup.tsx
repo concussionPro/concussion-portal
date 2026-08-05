@@ -83,13 +83,20 @@ export function buildCourseSchema(
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: 'Concussion Management Clinical Course',
-    description: 'Comprehensive concussion management training covering SCAT6, VOMS, BESS protocols. 8 online modules plus an optional hands-on practical day. 8 CPD hours online (up to 16 with the in-person day), AHPRA-aligned, endorsed by Osteopathy Australia.',
+    description: `Comprehensive concussion management training covering SCAT6, VOMS, BESS protocols. ${CONFIG.COURSE.TOTAL_MODULES} online modules plus an optional hands-on practical day. ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online (up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day), AHPRA-aligned, endorsed by Osteopathy Australia.`,
     provider: {
       '@type': 'Organization',
       name: 'Concussion Education Australia',
       url: CONFIG.SEO.SITE_URL,
     },
-    educationalCredentialAwarded: 'Up to 16 CPD hours (8 online + 8 in-person) - AHPRA Aligned, Endorsed by Osteopathy Australia',
+    // CREDENTIAL MUST MATCH THE PRICE PUBLISHED BESIDE IT. `offers.price` below
+    // is PRICE_ONLINE ($497) — the online-only tier, which awards
+    // ONLINE_CPD_POINTS. Advertising the full online+practical total against
+    // the online-only price published "up to 16 CPD hours for A$497" to Google
+    // and the answer engines (same defect fixed on /scat-mastery). The
+    // in-person hours are named as a separately-purchased extra, not as part of
+    // this offer. Numbers derive from CONFIG — never hardcode (CLAUDE.md).
+    educationalCredentialAwarded: `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours (online modules) - AHPRA Aligned, Endorsed by Osteopathy Australia. Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours with the separately-priced in-person practical day (+${CONFIG.COURSE.IN_PERSON_CPD_POINTS}).`,
     timeRequired: 'P2W',
     offers: {
       '@type': 'Offer',

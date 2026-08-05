@@ -164,7 +164,11 @@ export default function PrivacyPage() {
             <li><strong className="text-foreground">Resend</strong> — transactional and educational email delivery, including delivery and engagement events; United States.</li>
             <li><strong className="text-foreground">Stripe</strong> — payment processing; United States. Stripe receives your payment details directly.</li>
             <li><strong className="text-foreground">Google</strong> — website analytics and advertising measurement. Where a purchase is measured, your email address is sent only as an irreversible cryptographic hash, never in readable form; United States.</li>
-            <li><strong className="text-foreground">Practice-management systems</strong> (for example Cliniko or PracSuite) — only where your clinic connects one, and only for the information a clinician chooses to file.</li>
+            {/* Named in full 2026-08-05, not "for example": the tree ships four
+                PMS adapters, and Gensolve is the NZ/ACC rail — the one that
+                carries ethnicity and ACC claim numbers, so precisely the vendor
+                an ACC reviewer needs to see named. */}
+            <li><strong className="text-foreground">Practice-management systems</strong> (Cliniko, PracSuite, Gensolve or Core Plus) — only where your clinic connects one, and only for the information a clinician chooses to file.</li>
             <li><strong className="text-foreground">Cal.com</strong> — appointment booking, where you book a call with us.</li>
             <li><strong className="text-foreground">Squarespace</strong> — our marketing website and its enquiry forms.</li>
           </ul>

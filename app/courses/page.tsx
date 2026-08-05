@@ -9,8 +9,11 @@ import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Courses — Concussion Clinical Mastery & Concussion Rehab Mastery | Concussion Education Australia',
+  // The ESSA claim is gated: CONFIG.FEATURES.ESSA_ACCREDITED auto-expires from
+  // CONFIG.ESSA_ACCREDITATION.VALID_UNTIL, and a bare literal here would keep
+  // asserting accreditation in the SERP description after it lapses.
   description:
-    `Two concussion CPD streams: Concussion Clinical Mastery for physiotherapists, osteopaths and chiropractors (Osteopathy Australia endorsed) and Concussion Rehab Mastery for exercise physiologists (ESSA accredited, ${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD). Plus evidence-graded short courses.`,
+    `Two concussion CPD streams: Concussion Clinical Mastery for physiotherapists, osteopaths and chiropractors (Osteopathy Australia endorsed) and Concussion Rehab Mastery for exercise physiologists (${CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA accredited' : 'designed to ESSA CPD standards'}, ${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD). Plus evidence-graded short courses.`,
 }
 
 /**

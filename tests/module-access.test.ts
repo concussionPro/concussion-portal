@@ -17,9 +17,29 @@ describe('paid content never reaches the free tier', () => {
     expect(r.module.sections.length).toBe(PREVIEW_SECTION_COUNT)
     // The locked banner needs every title, but no further CONTENT.
     expect(r.allSectionTitles!.length).toBeGreaterThan(PREVIEW_SECTION_COUNT)
+    // The module QUIZ is the graded assessment — its answers are stripped.
+    const quiz = JSON.stringify(r.module.quiz)
+    expect(quiz).not.toContain('correctAnswer')
+    expect(quiz).not.toContain('explanation')
+
+    // Section INTERACTIVES are a different thing: the myths quiz on Module 1's
+    // opening section IS the public trial, and has always rendered for free
+    // users (it used to reach them through a public JS chunk instead of this
+    // payload — see tests/course-answer-key-exposure). What must hold is that
+    // the free tier receives ONLY the trial sections' interactives, never one
+    // belonging to a section it cannot read.
+    const paid = resolveModuleForAccess(1, 'full-course')
+    expect(paid.ok).toBe(true)
+    if (!paid.ok) return
+    const freeIds = new Set(r.module.sections.map((s: { id: string }) => s.id))
+    const withheldQuestions = paid.module.sections
+      .filter((s: { id: string }) => !freeIds.has(s.id))
+      .flatMap((s) => s.interactives ?? [])
+      .map((spec) => ('question' in spec ? spec.question : spec.title))
+    expect(withheldQuestions.length).toBeGreaterThan(0)
+
     const payload = JSON.stringify(r.module)
-    expect(payload).not.toContain('correctAnswer')
-    expect(payload).not.toContain('explanation')
+    for (const q of withheldQuestions) expect(payload).not.toContain(q)
   })
 
   it('the truncated payload contains no withheld section CONTENT', () => {

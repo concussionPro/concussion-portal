@@ -217,7 +217,6 @@ export function PreviewClient({
                         {preview.previewSections.map((section, sIdx) => (
                           <PreviewSectionContent
                             key={section.id}
-                            moduleId={module.id}
                             section={section}
                             sectionNumber={sIdx + 1}
                           />

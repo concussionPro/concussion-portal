@@ -3,7 +3,7 @@
 
 **Duration:** 15 minutes
 **Target Audience:** Australian health practitioners
-**CPD Hours:** 5
+**CPD Hours:** 1 (one per online module; 8 modules = 8 online CPD hours)
 
 ---
 
@@ -16,7 +16,7 @@
 
 Over the next 15 minutes, we'll master the essential diagnostic tools you'll use daily—SCAT6, VOMS, BESS, cranial nerve screening, and cervical evaluation. By the end, you'll have a systematic approach to assess any suspected concussion across all age groups.
 
-This module is worth 5 AHPRA CPD hours. Let's begin."
+This module is worth 1 AHPRA-aligned CPD hour — the eight online modules total eight. (AHPRA does not accredit CPD courses or award hours; registrants self-claim these against their board's requirements.) Let's begin."
 
 ---
 

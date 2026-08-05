@@ -109,8 +109,10 @@ export default function AccSupplierPage() {
             which records the objective outcome as it goes. Your six-monthly becomes
             review-and-transcribe instead of reconstruct-from-notes.{' '}
             <strong className="text-slate-800">And your team trained and certificated to run it</strong> —
-            Osteopathy Australia endorses the clinical stream; the exercise-physiology stream is
-            ESSA-accredited.
+            Osteopathy Australia endorses the clinical stream; the exercise-physiology stream is{' '}
+            {CONFIG.FEATURES.ESSA_ACCREDITED
+              ? 'ESSA-accredited'
+              : 'designed to ESSA CPD standards'}.
           </p>
           {/* Evidence chips — the email leads 17→13; the page must echo it
               above the fold, not bury it in the legal footnote. */}
@@ -199,8 +201,11 @@ export default function AccSupplierPage() {
               <p className="m-0 mt-1.5 text-[17px] font-extrabold text-slate-900">Certificated team training</p>
               <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-slate-600">
                 For the physios and OTs your contract already mandates — OA-endorsed and
-                certificated per clinician (the exercise-physiology stream is separately
-                ESSA-accredited): the documented competency Cl.&nbsp;15.2 requires.
+                certificated per clinician (the exercise-physiology stream is separately{' '}
+                {CONFIG.FEATURES.ESSA_ACCREDITED
+                  ? 'ESSA-accredited'
+                  : 'designed to ESSA CPD standards'}): the documented competency
+                Cl.&nbsp;15.2 requires.
               </p>
             </div>
           </div>
@@ -440,7 +445,9 @@ export default function AccSupplierPage() {
               <p className="m-0 mt-3 text-[13.5px] font-bold text-slate-800">Training seats NZ$895<span className="font-semibold text-slate-500"> → $425 at 40+</span></p>
               <p className="m-0 mt-0.5 text-[12.5px] leading-[1.5] text-slate-600">
                 One-off per clinician, across the whole allied team — physios, osteos and OTs
-                (OA-endorsed) and exercise physiologists (ESSA-accredited, 16 CPD) — each
+                (OA-endorsed) and exercise physiologists ({CONFIG.FEATURES.ESSA_ACCREDITED
+                  ? 'ESSA-accredited'
+                  : 'designed to ESSA CPD standards'}, {CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD) — each
                 certificated for the Cl. 15.2 quality file. On-site practical days available.
               </p>
             </div>

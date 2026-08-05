@@ -14,7 +14,7 @@
  * search. The API route stays (the client accordion and any external caller
  * still use it) and now shares this single source, so the two can never drift.
  */
-import { getAllModules } from '@/data/modules'
+import { getAllModules, type SectionInteractive } from '@/data/modules'
 import { getEpModules, epDisplayId } from '@/data/ep-modules'
 
 /** How many of Module 1's sections are unlocked in the public trial. */
@@ -24,6 +24,15 @@ export interface PreviewSection {
   id: string
   title: string
   content: string[]
+  /**
+   * The interactives belonging to an UNLOCKED section only. These used to be
+   * hardcoded JSX that the trial page pulled in wholesale — which meant the
+   * whole course's answer keys shipped publicly to render the handful the trial
+   * actually shows. Carrying the specs per unlocked section keeps the trial
+   * exactly as it was (Module 1's myths quiz, clinical pearl and branching
+   * scenario) while the other 140 stay behind the paywall.
+   */
+  interactives?: SectionInteractive[]
 }
 
 export interface PreviewModuleData {
@@ -71,6 +80,7 @@ export function getPreviewContent(course: PreviewCourse = 'ccm'): PreviewModuleD
         id: s.id,
         title: s.title,
         content: s.content,
+        interactives: s.interactives,
       })),
       sectionTitles: module.sections.map((s) => s.title),
     }

@@ -1,7 +1,6 @@
 'use client'
 
 import { CourseNavigation } from '@/components/course/CourseNavigation'
-import { SectionInteractiveElements } from '@/components/course/SectionInteractiveElements'
 import { CourseModulePage, type CourseModuleDescriptor } from '@/components/course/CourseModulePage'
 import type { InitialModuleData } from '@/hooks/useModuleData'
 
@@ -13,7 +12,11 @@ import type { InitialModuleData } from '@/hooks/useModuleData'
 const FLAGSHIP_COURSE: CourseModuleDescriptor = {
   course: 'flagship',
   NavComponent: CourseNavigation,
-  InteractiveComponent: SectionInteractiveElements,
+  // No InteractiveComponent: all 152 flagship interactives are authored as
+  // DATA (data/module-interactives.ts -> Section.interactives) and render via
+  // SectionDataInteractives from the entitlement-gated module payload. They
+  // used to be hardcoded JSX imported here, which shipped every answer key and
+  // every scenario's clinical reasoning in a PUBLIC client chunk.
   // Flagship progress ids ARE the display ids (1-8, 101-103).
   progressIdFor: (id) => id,
   checkpointKeyFor: (id) => `module-${id}-checkpoint`,

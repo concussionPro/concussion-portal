@@ -11,7 +11,9 @@ Owner: Zac Lewis.
 
 **Concussion Education Australia (CEA)** — an AHPRA-aligned concussion CPD provider for Australian clinicians. Customer-facing brand and domain: `concussion-education-australia.com`. Internal portal codename: ConcussionPro.
 
-**Flagship product:** Concussion Clinical Mastery — 14 CPD hours, Osteopathy Australia endorsed, 8 online modules + full-day hands-on workshop.
+**Flagship product:** Concussion Clinical Mastery — 16 CPD hours (8 online + 8 in-person; OA re-rated the practical day 2026-07-30), Osteopathy Australia endorsed, 8 online modules + full-day hands-on workshop.
+
+> **Claim discipline — read before writing a single line of copy.** AHPRA accredits no CPD and awards no hours: only "AHPRA-aligned" is permitted, and hours are self-claimed by the registrant. Osteopathy Australia endorses the Concussion Clinical Mastery COURSE only — not CEA as a company, not the free SCAT course, not the AI course, not the clinical tools, not the reference text, not Concussion Rehab Mastery, not international offerings. ESSA accredits Concussion Rehab Mastery only. No course holds both — never write "endorsed by OA and accredited by ESSA" about one offering. Never use "the only Australian..." or any comparable superlative: it is unsubstantiated and breaches the AHPRA advertising guidelines. Never hardcode CPD numbers into product code — derive from `CONFIG.COURSE` in `lib/config.ts`.
 
 **Other products:**
 - Online-only course (8 CPD hours, $X)
@@ -20,7 +22,9 @@ Owner: Zac Lewis.
 - Free SCAT Mastery short course (lead magnet)
 
 **Core value proposition:**
-> The only Australian concussion CPD course that gives a clinician everything they need — assessment (SCAT6/SCOAT6/VOMS/BESS), management, return-to-play, and rehabilitation by phenotype — in one weekend, with hands-on practice and 14 CPD hours that any AHPRA registrant can self-claim.
+> A concussion CPD course that gives a clinician everything they need — assessment (SCAT6/SCOAT6/VOMS/BESS), management, return-to-play, and rehabilitation by phenotype — in one weekend, with hands-on practice and 16 CPD hours that any AHPRA registrant can self-claim.
+
+(Do not restore the "only Australian..." superlative that used to open this line: comparative and exclusivity claims are unsubstantiated and prohibited under the AHPRA advertising guidelines.)
 
 ---
 
@@ -79,7 +83,7 @@ Tier 2 — secondary:
 - "My MDO sent a concussion-management reminder"
 
 ### Pull (CEA's draw)
-- 14 CPD hours in one weekend (compresses time)
+- 16 CPD hours across the online modules + one workshop weekend (compresses time)
 - Osteopathy Australia endorsement (audit-safe)
 - Hands-on practice with SCAT6/VOMS/BESS — not just lectures
 - Clinical toolkit (referral templates, RTP forms, clearance letters) — usable Monday morning
@@ -93,7 +97,7 @@ Tier 2 — secondary:
 
 ### Anxiety (what blocks the click)
 - "Is the workshop date even confirmed for my city?" (real for Sydney/Byron — collecting status)
-- "$X is a lot — is it really 14 CPD hours? Will they accept it?"
+- "$X is a lot — is it really 16 CPD hours? Will they accept it?"
 - "Will it be too theoretical / too generic?"
 - "Can I claim this as a tax deduction?" (yes — see tax-invoice pipeline)
 - "What if I can't make the workshop date?" (online-only fallback exists)
@@ -124,7 +128,7 @@ Tier 2 — secondary:
 
 | Objection | Best response |
 |---|---|
-| "Is it really 14 CPD hours / will my board accept it?" | Endorsed by Osteopathy Australia, AHPRA-aligned. All AHPRA registrants can self-claim under their board's CPD requirements. We supply the certificate; the board accepts it. |
+| "Is it really 16 CPD hours / will my board accept it?" | Endorsed by Osteopathy Australia, AHPRA-aligned. All AHPRA registrants can self-claim under their board's CPD requirements. We supply the certificate; the board accepts it. |
 | "$X is a lot." | Compare to one missed concussion or one MDO complaint. Online-only at $[X] is the entry point. Workshop adds practical skills you can't get from video. |
 | "I might not be able to attend the workshop date." | All workshops 6+ weeks lead time once confirmed. Can't make it? Online-only path costs less and can upgrade later (pay the difference). |
 | "Is the workshop in my city actually happening?" | Melbourne 13 Jun 2026 confirmed. Sydney/Byron — register interest, you'll get 6 weeks notice once threshold hit. Your seat is secured either way once you pay. |
@@ -146,7 +150,7 @@ Tier 2 — secondary:
 
 ## 8. Proof points
 
-- **14 CPD hours, Osteopathy Australia endorsed**
+- **16 CPD hours (8 online + 8 in-person), Osteopathy Australia endorsed** (the endorsement covers this course only)
 - **AHPRA-aligned** — all registrants can self-claim
 - **{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+ SCAT6 forms** downloaded by Australian clinicians
 - **Q1 2026 workshops completed** — used for "we've run this before" social proof

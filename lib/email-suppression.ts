@@ -21,8 +21,15 @@ import { sql } from '@/lib/db'
  */
 export async function isEmailSuppressed(email: string): Promise<boolean> {
   try {
+    // trim() as well as toLowerCase(): several callers hand us an address taken
+    // straight from a request body without format validation (the Squarespace
+    // webhook's arbitrary form fields, the admin test-send route), and a single
+    // trailing space would otherwise miss the row and send. LOWER() on the
+    // stored column too — the table is plain TEXT with no lowercase constraint,
+    // so a mixed-case row from a manual insert or an import must still match.
     const { rows } = await sql`
-      SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email.toLowerCase()} LIMIT 1
+      SELECT 1 FROM email_suppression
+      WHERE LOWER(TRIM(email)) = ${email.trim().toLowerCase()} LIMIT 1
     `
     return rows.length > 0
   } catch (err) {

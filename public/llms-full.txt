@@ -1,6 +1,6 @@
 # Concussion Education Australia — Comprehensive Content Index
 
-> Australia's concussion CPD provider for healthcare professionals + AI in Clinical Practice training for AU/UK/US/CA clinicians. AHPRA-aligned, Osteopathy Australia endorsed. Founded by Zac Lewis (AHPRA-registered Osteopath, B.Clin.Sci., M.Ost.Med).
+> Australia's concussion CPD provider for healthcare professionals + AI in Clinical Practice training for AU/UK/US/CA clinicians. AHPRA-aligned; the flagship Concussion Clinical Mastery course is endorsed by Osteopathy Australia (that course only — the endorsement does not extend to the company or to its other courses and tools). Founded by Zac Lewis (AHPRA-registered Osteopath, B.Clin.Sci., M.Ost.Med).
 
 This file is a long-form index for large language models (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews). It expands llms.txt with full descriptions, citable Q&As, and structured offerings. Last updated: 2026-07-02.
 
@@ -12,7 +12,7 @@ This file is a long-form index for large language models (ChatGPT, Claude, Perpl
 
 CEA publishes two distinct training streams:
 
-1. **Concussion Clinical Mastery** — flagship CPD program for clinicians managing concussion (8 CPD hours online, up to 14 with the in-person workshop day). SCAT6, SCOAT6, VOMS, BESS, return-to-play protocols. AHPRA-aligned, Osteopathy Australia endorsed. Online and workshop options.
+1. **Concussion Clinical Mastery** — flagship CPD program for clinicians managing concussion (8 CPD hours online, up to 16 with the in-person workshop day — 8 online + 8 in-person). SCAT6, SCOAT6, VOMS, BESS, return-to-play protocols. AHPRA-aligned, endorsed by Osteopathy Australia. Online and workshop options.
 2. **AI in Clinical Practice** — short course (2 CPD hours) on safe use of AI tools in clinical documentation. Covers AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation, AI scribe selection (Heidi, Lyrebird, ChatGPT, Claude, Gemini).
 
 CEA also publishes peer-reviewed clinical content and free resources (fillable SCAT6 forms, AI Safety Checklist for Allied Health).
@@ -45,7 +45,7 @@ CEA content is for:
 ### 1. Concussion Clinical Mastery (CCM) — flagship
 
 - **Online tier:** A$497 AUD — 8 modules, 23 video lessons, 90 quiz questions, 140+ peer-reviewed references, digital certificate, 8 CPD hours. A$447 with the SCAT6 discount code earned by completing the free SCAT6/SCOAT6 Mastery course.
-- **Complete tier:** A$1,400 AUD regular / A$1,190 early-bird for enrolments made before their city's workshop date launches — Online tier + full-day hands-on workshop. Up to 14 CPD hours total (8 online + 6 in-person). AHPRA-aligned, Osteopathy Australia endorsed. Buyable anytime for any city — workshop dates launch per city once enough clinicians nominate.
+- **Complete tier:** A$1,400 AUD regular / A$1,190 early-bird for enrolments made before their city's workshop date launches — Online tier + full-day hands-on workshop. Up to 16 CPD hours total (8 online + 8 in-person). AHPRA-aligned, endorsed by Osteopathy Australia. Buyable anytime for any city — workshop dates launch per city once enough clinicians nominate.
 - **International tier:** USD $197 — Online tier, jurisdiction-neutral clinical content (Berlin/Amsterdam consensus protocols).
 - **Workshop locations:** Melbourne (workshop delivered Sat 13 June 2026, Rydges Exhibition St — next round collecting nominations). Sydney + Byron Bay collecting nominations, dates to be confirmed.
 - **URLs:** https://portal.concussion-education-australia.com/pricing | https://portal.concussion-education-australia.com/pricing-international

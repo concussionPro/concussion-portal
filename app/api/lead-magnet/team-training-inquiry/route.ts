@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 import { getClientIp } from '@/lib/get-client-ip'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -117,16 +118,27 @@ export async function POST(request: NextRequest) {
       AHPRA-registered Osteopath</p>
       <p style="font-size:12px;color:#888">If this email landed in the wrong inbox, just delete it &mdash; no further messages will be sent.</p>
     `
+    // MASTER BLACKLIST — this is Day 0 of a sequence on a PUBLIC unauthenticated
+    // endpoint, the same shape as the other two routes in app/api/lead-magnet/.
+    // Those two were gated in 89f206c6 and this one was missed, so anyone who
+    // hard-bounced, complained or replied STOP re-entered marketing simply by
+    // filling in the team-training form. Fails closed. The internal
+    // notification to CONFIG.CONTACT_EMAIL above is unaffected — the inquiry
+    // still reaches Zac, who can reply personally.
     try {
-      await sendEmail({
-        to: normalizedEmail,
-        subject: 'Team training inquiry received — I\'ll be in touch',
-        html: inquirerHtml,
-        tags: [
-          { name: 'sequence', value: 'team-training-inquiry' },
-          { name: 'day', value: '0' },
-        ],
-      })
+      if (await isEmailSuppressed(normalizedEmail)) {
+        console.log('[team-training-inquiry] recipient suppressed — confirmation skipped')
+      } else {
+        await sendEmail({
+          to: normalizedEmail,
+          subject: 'Team training inquiry received — I\'ll be in touch',
+          html: inquirerHtml,
+          tags: [
+            { name: 'sequence', value: 'team-training-inquiry' },
+            { name: 'day', value: '0' },
+          ],
+        })
+      }
     } catch (err) {
       console.error('team-training confirmation failed:', err)
     }

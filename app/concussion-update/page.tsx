@@ -27,12 +27,18 @@ import { createCourseSchema } from '@/lib/schema-markup'
 const FREE_SIGNUP_CONVERSION = 'AW-17984048021/TVzUCLHT0IccEJWXu_9C'
 
 // Flagship-course structured data for the upgrade CTA on this page.
-// CPD truth: 8 hours online; up to 16 ONLY with the optional in-person day.
+// The credential MUST match the price it is published alongside: this node is
+// priced at PRICE_EARLY_BIRD, which buys the Complete Course (online + the
+// in-person practical day) = TOTAL_CPD_POINTS. It previously carried a
+// hardcoded 8 (ONLINE_CPD_POINTS) against that price, publishing "8 CPD hours
+// for A$1,190" to Google and the AI answer engines — half of what the money
+// actually buys, and contradicting the identical node on /course. Same defect,
+// same fix as app/scat-mastery/page.tsx. Numbers derive from CONFIG.
 const courseSchema = createCourseSchema({
   name: 'Concussion Clinical Mastery',
   description:
-    'Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. 8 CPD hours online, up to 16 CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.',
-  cpdHours: 8,
+    `Complete concussion assessment and management training for Australian healthcare professionals — SCAT6, SCOAT6, VOMS, BESS, and return-to-play protocols. ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours with the optional in-person practical day. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.`,
+  cpdHours: CONFIG.COURSE.TOTAL_CPD_POINTS,
   priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
   recognizedBy: { name: 'Osteopathy Australia', url: 'https://osteopathy.org.au' },
 })

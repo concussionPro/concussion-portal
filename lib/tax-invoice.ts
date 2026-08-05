@@ -263,12 +263,18 @@ export function generateTaxInvoicePdf(input: InvoiceInput): Buffer {
     810,
     { align: 'center' },
   )
-  doc.text(
-    'AHPRA-aligned CPD course · Endorsed by Osteopathy Australia',
-    PAGE_W / 2,
-    822,
-    { align: 'center' },
-  )
+  // NO accreditation/endorsement claim here. This footer prints on EVERY
+  // invoice this module generates, and the callers (app/api/webhooks/stripe)
+  // issue invoices for products the claim is false about: the CRM course
+  // (ESSA-accredited, NOT OA-endorsed), the AI in Clinical Practice and Vagus
+  // Nerve short courses (neither), the 256-page reference PDF, the Hub Pack
+  // and the clinical-tools subscriptions. Osteopathy Australia endorses the
+  // Concussion Clinical Mastery course only — an unconditional footer turns
+  // that into an entity-wide claim on a financial document. Product-level
+  // accreditation belongs in the line-item description, not the footer.
+  // (The second footer line was removed rather than replaced — biz.website and
+  // biz.address already print in the header block, so there is nothing true and
+  // non-redundant to put here.)
 
   // jsPDF returns base64 by default — convert to Buffer
   const arrayBuffer = doc.output('arraybuffer')

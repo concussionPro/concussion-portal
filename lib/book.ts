@@ -43,8 +43,12 @@ export async function createBookCheckoutSession({
           unit_amount: unitAmount,
           product_data: {
             name: BOOK_CONFIG.title,
+            // NO OA endorsement here. Osteopathy Australia endorses the
+            // Concussion Clinical Mastery COURSE — not this reference PDF, and
+            // not CEA as an entity. The claim rendered on the Stripe checkout
+            // page (and on the receipt) for a book OA has never assessed.
             description:
-              'Digital PDF · 256 pages · Instant access · Lifetime download · AHPRA-aligned · Endorsed by Osteopathy Australia',
+              'Digital PDF · 256 pages · Instant access · Lifetime download · AHPRA-aligned',
           },
         },
         quantity: 1,

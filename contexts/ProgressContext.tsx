@@ -297,7 +297,18 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
         try {
           setSyncState('syncing')
-          const response = await fetch('/api/progress', { credentials: 'include' })
+          // TIMEOUT, because `isInitialized` gates the save effect below —
+          // and that effect is the ONLY writer of localStorage and the only
+          // thing that arms `hasPendingSaveRef` for the pagehide beacon. On
+          // flaky clinic wifi a fetch can hang for minutes rather than reject,
+          // and for that whole window a clinician's work exists only in React
+          // state: nothing on disk, nothing beaconed if the tab dies. Aborting
+          // drops us into the localStorage fallback, which initialises the
+          // store and starts persisting.
+          const response = await fetch('/api/progress', {
+            credentials: 'include',
+            signal: AbortSignal.timeout(15000),
+          })
           if (response.ok) {
             const data = await response.json()
             if (data.success && data.progress) {

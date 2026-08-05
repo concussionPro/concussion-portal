@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CONFIG, afterpayInstalment, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
+import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 
@@ -231,9 +231,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
   // Read pre-selected location, promo code, and UTM params from URL.
   //
-  // Default nomination = Melbourne (largest interest pool; its first round
-  // DELIVERED June 2026 and the next round collects). Buyers can pick any city.
-  const [selectedLocation, setSelectedLocation] = useState<string>('melbourne')
+  // Default nomination = the first city the nurture crons still cover
+  // (defaultNominationCity, derived from CONFIG.LOCATIONS status). It was
+  // hardcoded to Melbourne, which is 'completed' — a buyer who accepted the
+  // default was nominated into a city the reservation, momentum and
+  // pre-workshop lanes all skip. Buyers can still pick any city, Melbourne
+  // included; only the untouched default is constrained.
+  const [selectedLocation, setSelectedLocation] = useState<string>(defaultNominationCity() ?? '')
   const [cityProgress, setCityProgress] = useState<Record<string, CityProgress>>({})
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
@@ -293,6 +297,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const showMomentum = !!selectedProgress && selectedProgress.enrolled >= MOMENTUM_MIN_ENROLLED
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
+    // Only reachable when no city is open (defaultNominationCity() === null).
+    // lib/schemas rejects a full-course without a location, so ask for one
+    // instead of letting the buyer hit a generic "Invalid request."
+    if (courseType === 'full-course' && !selectedLocation) {
+      setError('Please choose your workshop city.')
+      return
+    }
     try {
       setLoading(courseType)
       setError(null)

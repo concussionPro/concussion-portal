@@ -161,12 +161,22 @@ export async function POST(request: NextRequest) {
     // MASTER BLACKLIST — Day-0 of the SCAT nurture sequence on a PUBLIC
     // endpoint. Without it, a clinician who hard-bounced, complained or replied
     // STOP re-enters marketing just by filling in the form. Fails closed.
-    if (await isEmailSuppressed(email)) {
-      return NextResponse.json({ success: true, userId, suppressed: true })
-    }
+    //
+    // SUPPRESSES THE EMAIL, NOT THE ENROLMENT (2026-08-05 adversarial round).
+    // This guard originally `return`ed here — which is BEFORE the session
+    // cookie is set at the bottom of this handler. Every caller
+    // (app/scat-mastery, app/concussion-update, app/scat6-download,
+    // components/ExitIntentPopup, components/EmailCaptureInline) reads
+    // `success` and navigates straight to /modules/101 assuming the cookie
+    // exists, so a suppressed address got an account, no cookie, no email and a
+    // bounce to /login — a dead end with no way out. email_suppression holds
+    // cold-outreach unsubscribes as well as bounces, so that locked a clinician
+    // who opted out of cold email out of the FREE course permanently.
+    // app/api/email-gate/route.ts already had this ordering right.
+    const suppressed = await isEmailSuppressed(email)
 
     // Send welcome email (Day 0 of nurture sequence)
-    const emailSent = await sendEmail({
+    const emailSent = suppressed ? false : await sendEmail({
       to: email,
       subject: 'Module 1 is ready — 20 minutes to confident SCAT6 use',
       headers: {
@@ -239,7 +249,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (!emailSent) {
-      console.warn(`[signup-free] Day 0 email failed for ${email.slice(0, 3)}*** — user has session cookie, can access course`)
+      console.warn(
+        `[signup-free] Day 0 email ${suppressed ? 'suppressed' : 'failed'} for ${email.slice(0, 3)}*** — user has session cookie, can access course`
+      )
     }
 
     const response = NextResponse.json({

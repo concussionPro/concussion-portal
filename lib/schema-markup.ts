@@ -73,8 +73,16 @@ export const organizationSchema = {
   // Logo must live where the file actually resolves — /logo.png 404s on the
   // apex marketing domain but exists in the portal's public/ dir.
   logo: `${SITE_URL}/logo.png`,
+  // ENDORSEMENT SCOPE: this node is emitted from app/layout.tsx — i.e. on EVERY
+  // route, including the CRM (ESSA) and international pages. An entity-level
+  // "Osteopathy Australia endorsed" here asserts OA endorsement over the whole
+  // company and every offering, which is false: OA endorses the Concussion
+  // Clinical Mastery course only (not CEA, not CRM, not the AI course, not the
+  // clinical tools, not international offerings). Keep the endorsement scoped
+  // to the named course. `memberOf: Osteopathy Australia` below is a separate,
+  // true fact (CEA is an OA member) — do not conflate the two.
   description:
-    'Australia\'s concussion CPD provider for GPs, physiotherapists, osteopaths and allied health clinicians. AHPRA-aligned, Osteopathy Australia endorsed. Also publishes AI in Clinical Practice training covering AHPRA AI guidelines, Australian Privacy Principles, NDIS-audit-safe documentation, and AI scribe selection (Heidi, Lyrebird, ChatGPT).',
+    'Australia\'s concussion CPD provider for GPs, physiotherapists, osteopaths and allied health clinicians. AHPRA-aligned; our flagship Concussion Clinical Mastery course is endorsed by Osteopathy Australia. Also publishes AI in Clinical Practice training covering AHPRA AI guidelines, Australian Privacy Principles, NDIS-audit-safe documentation, and AI scribe selection (Heidi, Lyrebird, ChatGPT).',
   founder: resolveAuthor('Zac Lewis'),
   address: {
     '@type': 'PostalAddress',

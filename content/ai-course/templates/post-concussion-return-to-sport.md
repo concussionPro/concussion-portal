@@ -139,7 +139,7 @@ Clinic contact: {clinic_name} on {clinic_phone}
 
 ## Want to go deeper?
 
-This template provides a structural plan. Comprehensive post-concussion management — including vestibular and ocular motor assessment, autonomic function, mental health monitoring, and persistent post-concussion symptoms — is covered in **Concussion Clinical Mastery**, our flagship course endorsed by Osteopathy Australia — 8 CPD hours online, up to 14 CPD hours with the in-person workshop day. Available through Concussion Education Australia.
+This template provides a structural plan. Comprehensive post-concussion management — including vestibular and ocular motor assessment, autonomic function, mental health monitoring, and persistent post-concussion symptoms — is covered in **Concussion Clinical Mastery**, our flagship course endorsed by Osteopathy Australia — 8 CPD hours online, up to 16 CPD hours with the in-person workshop day. Available through Concussion Education Australia.
 
 ---
 

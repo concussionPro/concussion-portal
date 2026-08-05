@@ -6,6 +6,7 @@ import { progressSchema } from '@/lib/schemas'
 import { isDemoUserId } from '@/lib/demo-session'
 import { userOwnsCrm } from '@/lib/crm-course'
 import { getCurrentAccessLevel } from '@/lib/users'
+import { hasRealProgress, retainStoredProgress } from '@/lib/progress-merge'
 
 // Entitlement geography of the module id space (mirrors lib/module-access):
 // flagship 2-8 need a paid CCM level; CRM 201-208 need CRM ownership; SCAT
@@ -175,12 +176,9 @@ export async function POST(request: NextRequest) {
     // seeded zero-progress defaults for EVERY module (ProgressContext
     // getDefaultProgress) — gate only entries carrying ACTUAL progress, or
     // every legitimate save 403s (2026-08-05 regression check).
-    const hasRealProgress = (p: Record<string, unknown>) =>
-      p.completed === true ||
-      p.quizCompleted === true ||
-      Boolean(p.startedAt) ||
-      (p.quizAnswers != null && typeof p.quizAnswers === 'object' && Object.keys(p.quizAnswers).length > 0) ||
-      (typeof p.activeStudyMinutes === 'number' && p.activeStudyMinutes > 0)
+    // hasRealProgress is shared with the retention merge below — one definition,
+    // so the entitlement gate and the merge can never disagree about what
+    // counts as work worth keeping.
     const progressMap = progress as Record<string, Record<string, unknown>>
     const moduleIds = Object.entries(progressMap)
       .filter(([, v]) => v && hasRealProgress(v))
@@ -238,33 +236,23 @@ export async function POST(request: NextRequest) {
     // strips unentitled entries — without this merge, a downgraded account's
     // first save durably erased the retained paid history. Stored entries
     // for ids the CLIENT can no longer see are carried over server-side.
+    //
+    // FIELD-LEVEL, not entry-level (2026-08-05 adversarial round). Choosing
+    // whole entries only ever protected the stale tab that had never OPENED the
+    // module. You have to open a module to complete it and markModuleStarted
+    // stamps startedAt on mount, so a second tab sitting on the SAME module
+    // holds a "real" entry, sailed through the old !incomingReal guard, and
+    // replaced the completion the first tab had just recorded — the exact loss
+    // the retention pass was added to stop. lib/progress-merge keeps the more
+    // advanced value per field, so a save can never move a module backwards.
     try {
       const { rows: existingRows } = await sql<{ progress: Record<string, unknown> | null }>`
         SELECT progress FROM user_progress WHERE user_id = ${sessionData.userId} LIMIT 1
       `
-      const stored = existingRows[0]?.progress
-      if (stored && typeof stored === 'object') {
-        for (const [k, v] of Object.entries(stored)) {
-          // EVERY module id, not just the gated ones (2026-08-05 CCM sweep):
-          // the full-overwrite semantics hurt the ordinary two-tab case just as
-          // badly. A second tab opened before Module 1 was finished holds a
-          // snapshot where module 1 is a zero-progress default; its next
-          // autosave (the 60-second active-study tick is enough) erased the
-          // completion the first tab had just recorded. Module 1 and the free
-          // SCAT ids were the only ones NOT protected — i.e. the first module
-          // every buyer studies.
-          if (!v) continue
-          // The client round-trips SEEDED zero-progress defaults for every
-          // module id, so key-absence alone never fires (round-M): stored
-          // real history also wins over an incoming empty default.
-          const incoming = (toPersist as Record<string, unknown>)[k]
-          const incomingReal =
-            incoming != null && typeof incoming === 'object' && hasRealProgress(incoming as Record<string, unknown>)
-          if (!incomingReal && typeof v === 'object' && hasRealProgress(v as Record<string, unknown>)) {
-            ;(toPersist as Record<string, unknown>)[k] = v
-          }
-        }
-      }
+      toPersist = retainStoredProgress(
+        { ...toPersist },
+        existingRows[0]?.progress,
+      ) as Record<string, Record<string, unknown>>
     } catch { /* retention is best-effort — never block the save */ }
 
     // Prevent abuse: size cap even after schema validation

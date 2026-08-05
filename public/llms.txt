@@ -1,6 +1,6 @@
 # Concussion Education Australia
 
-> Australia's most comprehensive concussion management training for healthcare professionals. Two accredited streams: Concussion Clinical Mastery (diagnosis and management — physiotherapists, osteopaths, chiropractors; endorsed by Osteopathy Australia) and Concussion Rehab Mastery (exercise rehabilitation — accredited by ESSA for Accredited Exercise Physiologists). Covers SCAT6/SCOAT6 assessment, VOMS, BESS, heart-rate-threshold exercise rehabilitation and return-to-play protocols. Includes clinician-led clinical tools (SST Trainer, Pre-Season Baseline Testing). Available online worldwide. 140+ peer-reviewed references.
+> Australia's most comprehensive concussion management training for healthcare professionals. Two streams — one endorsed, one accredited: Concussion Clinical Mastery (diagnosis and management — physiotherapists, osteopaths, chiropractors; endorsed by Osteopathy Australia) and Concussion Rehab Mastery (exercise rehabilitation — accredited by ESSA for Accredited Exercise Physiologists). Covers SCAT6/SCOAT6 assessment, VOMS, BESS, heart-rate-threshold exercise rehabilitation and return-to-play protocols. Includes clinician-led clinical tools (SST Trainer, Pre-Season Baseline Testing). Available online worldwide. 140+ peer-reviewed references.
 
 ## About
 
@@ -15,7 +15,7 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 - Duration: 2 CPD hours, fully online
 - Certificate: Yes, on completion
 - Covers: AHPRA AI guidelines explained, Australian Privacy Principles for clinicians (APP 8 offshore disclosure), Heidi vs Lyrebird vs ChatGPT decision framework, NDIS-audit-safe documentation workflows, indemnity insurer positions (Avant, Guild, MIPS, MIGA), Tier A/B/C tool framework, when NOT to use AI in clinical notes
-- Tagged for: AHPRA-aligned, By Osteopathy Australia–endorsed provider
+- Tagged for: AHPRA-aligned. NOTE: Osteopathy Australia's endorsement covers the Concussion Clinical Mastery course only — no AI-course-specific endorsement has been granted, and this short course is not OA-endorsed
 - URL: https://portal.concussion-education-australia.com/courses/ai-in-clinical-practice
 
 ### Free SCAT6/SCOAT6 Mastery Course
@@ -28,9 +28,9 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 ### Comprehensive Concussion Management Course
 - Cost: Online-only $497 AUD ($447 with the SCAT6 discount code earned by completing the free SCAT6/SCOAT6 Mastery course). Full course (online + full-day workshop) $1,400 AUD, or $1,190 early-bird for enrolments made before their city's workshop date launches
 - Enrolment model: the full course can be purchased anytime for any city — workshop dates launch per city once enough clinicians nominate
-- Duration: ~8 hours online + 1 full-day workshop (6 hours)
-- CPD Points: 8 (online only), or up to 14 with the in-person workshop day (8 online + 6 in-person)
-- Endorsed by: Osteopathy Australia
+- Duration: ~8 hours online + 1 full-day workshop (8 hours)
+- CPD Points: 8 (online only), or up to 16 with the in-person workshop day (8 online + 8 in-person)
+- Endorsed by: Osteopathy Australia (this course only — the endorsement does not extend to Concussion Education Australia as an entity or to its other offerings)
 - Content: 8 modules, 23 video lessons, 90 quiz questions, 140+ references
 - Covers: SCAT6, SCOAT6, VOMS (Vestibular/Ocular Motor Screening), BESS (Balance Error Scoring System), return-to-play/return-to-learn protocols, paediatric concussion management, medicolegal documentation
 - Workshop locations: Melbourne (workshop delivered 13 June 2026 — next round collecting nominations), Sydney and Byron Bay (collecting nominations, dates to be confirmed)
@@ -68,7 +68,7 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 
 ## International availability
 
-Concussion Education Australia teaches internationally, online only — the in-person practical day is Australia-only, so international enrolments are 8 online modules / 8 hours and never 14.
+Concussion Education Australia teaches internationally, online only — the in-person practical day is Australia-only, so international enrolments are 8 online modules / 8 hours and never 16.
 
 - United Kingdom (physiotherapists, via CSP): https://portal.concussion-education-australia.com/uk
 - United Kingdom (clinical exercise physiologists): https://portal.concussion-education-australia.com/cep-uk
@@ -76,7 +76,7 @@ Concussion Education Australia teaches internationally, online only — the in-p
 - United States (ACSM-certified exercise physiologists): https://portal.concussion-education-australia.com/acsm
 - All international pricing: https://portal.concussion-education-australia.com/pricing-international
 
-Accreditation honesty: ESSA (Australia) accreditation is held. ACSM CECs, CIMSPA and other overseas recognitions are PENDING and are never claimed as held — those pages state hours of learning, which is verifiable, rather than a credit currency that has not been granted.
+Accreditation honesty: ESSA (Australia) accreditation is held (Concussion Rehab Mastery, Accreditation No. PDNF26077). Osteopathy Australia endorses the Concussion Clinical Mastery course only — not Concussion Education Australia as an entity, and not its other courses or tools. No course holds both the OA endorsement and the ESSA accreditation. ACSM Approved-Provider status is NOT held and is NOT being pursued — the application is parked, no ACSM CECs are claimed. CIMSPA and other overseas recognitions are NOT held either. Where an application is open it is PENDING and is never claimed as held; where it is not open we say so rather than implying one is in train. Those pages state hours of learning, which is verifiable, rather than a credit currency that has not been granted. AHPRA accredits no CPD and awards no hours — CEA courses are AHPRA-aligned, and hours are self-claimed by the registrant.
 
 ## Free Lead Magnets (no cost, email-gated)
 
@@ -129,7 +129,7 @@ Concussion Education Australia provides free fillable SCAT6 and SCOAT6 PDFs to d
 Yes. The free SCAT6 & SCOAT6 Mastery course is a ~1-hour online course covering administration, scoring, interpretation, red-flag recognition and documentation — free, self-paced, no credit card, with a certificate on completion. Enrol: https://portal.concussion-education-australia.com/scat-mastery
 
 ### What concussion CPD courses are available for physiotherapists, osteopaths and exercise physiologists in Australia?
-Concussion Education Australia's Concussion Clinical Mastery course covers SCAT6, SCOAT6, VOMS, BESS and return-to-play protocols — 8 CPD hours online, or 14 CPD hours as online plus the optional full-day in-person practical workshop combined. Endorsed by Osteopathy Australia. Details: https://portal.concussion-education-australia.com/course
+Concussion Education Australia's Concussion Clinical Mastery course covers SCAT6, SCOAT6, VOMS, BESS and return-to-play protocols — 8 CPD hours online, or 16 CPD hours as online plus the optional full-day in-person practical workshop combined. Endorsed by Osteopathy Australia (that course only). Details: https://portal.concussion-education-australia.com/course
 
 ### How are Concussion Education Australia's courses endorsed?
 The Concussion Clinical Mastery course is endorsed by Osteopathy Australia. AHPRA does not accredit CPD courses — hours from CEA courses count toward practitioners' AHPRA registration CPD requirements. Content is aligned with the 2022 Amsterdam consensus and Australian (Concussion in Sport Australia) guidance. Details: https://portal.concussion-education-australia.com/course
@@ -164,7 +164,7 @@ No. The 2023 Amsterdam Consensus Statement considers "wait until symptom-free" a
 Any clinician managing concussion patients: osteopaths, physiotherapists, GPs, sports medicine doctors, exercise physiologists, chiropractors, athletic trainers, emergency clinicians, and university clinical educators.
 
 ### Is this course AHPRA-accredited?
-AHPRA does not accredit CPD courses. The course provides CPD hours that count toward your AHPRA registration requirements — 8 CPD hours online-only, or up to 14 (8 online + 6 in-person) with the in-person workshop day — and is endorsed by Osteopathy Australia.
+AHPRA does not accredit CPD courses. The course provides CPD hours that count toward your AHPRA registration requirements — 8 CPD hours online-only, or up to 16 (8 online + 8 in-person) with the in-person workshop day — and is endorsed by Osteopathy Australia.
 
 ## AI in Clinical Practice — Knowledge Base (Frequently Asked Questions)
 

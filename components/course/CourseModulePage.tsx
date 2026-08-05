@@ -57,8 +57,13 @@ export interface CourseModuleDescriptor {
   course: CourseKey
   /** Sidebar navigation component. */
   NavComponent: ComponentType<CourseModuleNavProps>
-  /** Per-section supplementary interactive elements. */
-  InteractiveComponent: ComponentType<CourseModuleInteractiveProps>
+  /**
+   * Per-section supplementary elements that are CODE, not content — currently
+   * only CRM's one bespoke infographic. Optional: a course whose interactives
+   * are all data-authored (Section.interactives) omits it entirely, which is
+   * what keeps its answer keys out of the public client bundle.
+   */
+  InteractiveComponent?: ComponentType<CourseModuleInteractiveProps>
   /**
    * Maps the DISPLAY id from the URL to the ProgressContext id. The shared
    * progress store namespaces EP modules to 201-208 (EP shares the store with
@@ -1303,11 +1308,13 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
 
                     {/* Content — full width, no flex constraint */}
                     <DynamicContentRenderer content={section.content} sectionIndex={currentSectionIndex} />
-                    <InteractiveComponent
-                      moduleId={moduleId}
-                      section={section}
-                      sectionIndex={currentSectionIndex}
-                    />
+                    {InteractiveComponent && (
+                      <InteractiveComponent
+                        moduleId={moduleId}
+                        section={section}
+                        sectionIndex={currentSectionIndex}
+                      />
+                    )}
                     {/* Interactives authored as DATA on the section (both
                         courses). Specs arrive inside the gated module payload,
                         so paid answer keys never sit in a public chunk. */}

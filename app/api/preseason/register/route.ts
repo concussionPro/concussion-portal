@@ -5,6 +5,7 @@ import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { createUser } from '@/lib/users'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 
 function escapeHtml(str: string): string {
   return str
@@ -121,24 +122,39 @@ export async function POST(request: Request) {
     const sanitizedProspectSlug = typeof prospectSlug === 'string'
       ? prospectSlug.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80) || undefined
       : undefined
-    try {
-      await createUser({
-        email: email.toLowerCase(),
-        name: contactName,
-        accessLevel: 'preview',
-        signupSource: 'preseason',
-        sourceProspectSlug: sanitizedProspectSlug,
-      })
-    } catch (err) {
-      console.error('Failed to add preseason registrant to user list:', err)
+    // MASTER BLACKLIST — this is a PUBLIC unauthenticated endpoint that both
+    // ENROLS the address in nurture and mails it. Structurally identical to
+    // app/api/webhooks/squarespace, which 89f206c6 fixed by bailing before
+    // createUser for exactly this reason; this route was missed, so anyone who
+    // replied STOP was re-added to the users table and sent Day 0 just by
+    // filling in the preseason form. Fails closed.
+    //
+    // The registration itself still succeeds: the clinic row is written above
+    // and the response below returns the code and athlete link, so the screen
+    // shows everything the clinic needs. Only the marketing enrolment and the
+    // confirmation email are withheld.
+    const suppressed = await isEmailSuppressed(email)
+
+    if (!suppressed) {
+      try {
+        await createUser({
+          email: email.toLowerCase(),
+          name: contactName,
+          accessLevel: 'preview',
+          signupSource: 'preseason',
+          sourceProspectSlug: sanitizedProspectSlug,
+        })
+      } catch (err) {
+        console.error('Failed to add preseason registrant to user list:', err)
+      }
     }
 
     // Build athlete link
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
     const athleteLink = `${baseUrl}/preseason/b/${code}`
 
-    // Send confirmation email
-    const emailSent = await sendEmail({
+    // Send confirmation email (never to a suppressed address — see above)
+    const emailSent = suppressed ? false : await sendEmail({
       to: email,
       subject: 'Your Pre-Season Baseline Testing Link — Concussion Education Australia',
       html: `

@@ -348,6 +348,34 @@ export function upgradePriceFor(locationSlug?: string | null): number {
 }
 
 /**
+ * Cities whose NEXT round is live for the nurture crons, in CONFIG.LOCATIONS
+ * declaration order.
+ *
+ * app/api/cron/send-nurture-emails gates every post-purchase workshop lane on
+ * this status: the Day-1 reservation email and the momentum sequence require
+ * 'collecting', the pre-workshop logistics/reminder lane requires 'confirmed'.
+ * A seat holder nominated into a 'completed' (or 'closed') city matches none of
+ * them and is silently dropped from all three.
+ */
+export function openNominationLocations(): LocationConfig[] {
+  return Object.values(CONFIG.LOCATIONS).filter(
+    (loc) => loc.status === 'collecting' || loc.status === 'confirmed'
+  )
+}
+
+/**
+ * The city slug a picker may PRE-SELECT for a buyer who touches nothing.
+ *
+ * Any city stays selectable — a 'completed' city is still nominatable for its
+ * next round — but the default must never be one the nurture crons ignore.
+ * Null when no city is open, in which case the picker must force an explicit
+ * choice rather than nominate silently.
+ */
+export function defaultNominationCity(): string | null {
+  return openNominationLocations()[0]?.slug ?? null
+}
+
+/**
  * SST Trainer / Clinical Testing plans — the LIVE model (owner 2026-08-05).
  *
  * Priced on ACTIVE CASELOAD, not seats: clinicians are UNLIMITED on every paid
