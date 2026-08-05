@@ -74,9 +74,12 @@ async function handle(request: NextRequest, dryRun: boolean) {
   return NextResponse.json({ ok: true, action, found: ghosts.length, updated })
 }
 
+// GET is ALWAYS a dry run. The admin cookie is sameSite 'lax', so a top-level
+// cross-site navigation carries it — and middleware's CSRF check only guards
+// unsafe methods. A `?dryRun=0` escape hatch on GET meant one clicked link
+// could mass-unsubscribe. Mutating requires POST.
 export async function GET(request: NextRequest) {
-  const dry = new URL(request.url).searchParams.get('dryRun') !== '0'
-  return handle(request, dry)
+  return handle(request, true)
 }
 export async function POST(request: NextRequest) {
   return handle(request, false)

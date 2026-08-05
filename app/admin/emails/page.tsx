@@ -15,6 +15,7 @@ interface EmailEntry {
    * reported PAYING EP customers as free leads on this board.
    */
   ownsCrm?: boolean
+  ownsReferenceBook?: boolean
   createdAt: string
   lastLogin: string | null
   nurtureUnsubscribed: boolean
@@ -22,9 +23,14 @@ interface EmailEntry {
   convertedFrom: string | null
 }
 
-/** Paid in EITHER stream: CCM via access_level, CRM via course_purchases. */
+/**
+ * Paid in ANY stream: CCM via access_level, CRM via course_purchases, and the
+ * Reference+Toolkit bundle via reference_book_purchased_at (those buyers stay
+ * accessLevel 'preview', so testing the first two alone filed them as free).
+ */
 function isPaid(e: EmailEntry): boolean {
-  return e.accessLevel === 'online-only' || e.accessLevel === 'full-course' || !!e.ownsCrm
+  return e.accessLevel === 'online-only' || e.accessLevel === 'full-course'
+    || !!e.ownsCrm || !!e.ownsReferenceBook
 }
 
 export default function AdminEmailsPage() {

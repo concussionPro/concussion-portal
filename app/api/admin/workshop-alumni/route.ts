@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
-import { completedWorkshopSlugs } from '@/lib/workshop-alumni'
+import { completedWorkshopSlugs, isWorkshopAlumnus } from '@/lib/workshop-alumni'
 
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -29,7 +29,18 @@ export async function GET(req: NextRequest) {
 
   try {
     const { rows } = await sql.query(
-      `SELECT u.email, u.name, u.workshop_location, u.created_at,
+      `SELECT u.email, u.name, u.workshop_location, u.access_level, u.created_at,
+              COALESCE(
+                (SELECT MAX(cp2.purchased_at) FROM course_purchases cp2
+                  WHERE LOWER(cp2.user_email) = LOWER(u.email)
+                    AND (cp2.course_slug = 'crm-practical' OR cp2.course_slug LIKE 'ccm-complete%')),
+                u.workshop_location_set_at
+              ) AS registered_at,
+              EXISTS (
+                SELECT 1 FROM course_purchases cp
+                WHERE LOWER(cp.user_email) = LOWER(u.email)
+                  AND cp.course_slug = 'crm-practical'
+              ) AS owns_crm_practical,
               CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
        FROM users u
        WHERE u.workshop_location = ANY($1)
@@ -41,17 +52,31 @@ export async function GET(req: NextRequest) {
                AND cp.course_slug = 'crm-practical'
            )
          )
+         AND u.is_test IS NOT TRUE
        ORDER BY u.workshop_location, u.created_at DESC`,
       [slugs],
     )
 
-    const alumni = rows.map((r) => ({
-      email: r.email,
-      name: r.name,
-      location: r.workshop_location,
-      since: r.created_at,
-      stream: r.stream as 'ccm' | 'crm',
-    }))
+    // Round-scope through the SAME predicate the nurture cron suppresses on.
+    // Sydney/Byron sit in completedWorkshopSlugs() permanently (a past round
+    // ran) while collecting for the NEXT one — without this the roster listed
+    // buyers for a workshop that hasn't happened as "alumni · no outreach".
+    const alumni = rows
+      .filter((r) =>
+        isWorkshopAlumnus({
+          accessLevel: r.access_level,
+          workshopLocation: r.workshop_location,
+          ownsCrmPractical: r.owns_crm_practical === true,
+          registeredAt: r.registered_at ?? null,
+        }),
+      )
+      .map((r) => ({
+        email: r.email,
+        name: r.name,
+        location: r.workshop_location,
+        since: r.created_at,
+        stream: r.stream as 'ccm' | 'crm',
+      }))
 
     // Group counts per completed location.
     const byLocation: Record<string, number> = {}

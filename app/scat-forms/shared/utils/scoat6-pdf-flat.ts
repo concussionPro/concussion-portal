@@ -3,7 +3,6 @@ import {
   calculateSymptomNumber,
   calculateSymptomSeverity,
   calculateImmediateMemory,
-  calculateConcentration,
   calculateDelayedRecall,
   calculateMBESS,
   calculateMBESSFoam,
@@ -357,13 +356,15 @@ export async function exportSCOAT6ToFlatPDF(
       drawNotAdministered(p6, 430, H - 430, { font, size: fs })
     }
 
-    // Concentration Score (Digits + Months) — null unless BOTH halves ran.
-    const concentration = calculateConcentration(formData)
-    if (concentration !== null) {
-      drawText(p6, 430, H - 460, concentration.toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p6, 430, H - 460, { font: fontBold, size: fsl })
-    }
+    // NO combined "Concentration (Digits + Months) of 5" box is drawn.
+    // Verified against the sheet's own text (public/docs/SCOAT6_Flat.pdf): SCOAT6
+    // prints "Digits score __ of 4", "Time Taken to Complete (secs) __ (N <30
+    // sec)" and "Number of Errors __" — and NO months-score or concentration
+    // total. That box is a SCAT6 feature. Writing the app's /5 into unlabelled
+    // space on a SCOAT6 puts a bold number next to whatever happens to be
+    // nearest, and the reader has no way to know what it counts. The screen
+    // still shows the derived total as a clinician aid; the record carries only
+    // the fields the instrument defines.
 
     // ==================== PAGE 7 (index 6): ORTHOSTATIC + CERVICAL ====================
     const p7 = pages[6]

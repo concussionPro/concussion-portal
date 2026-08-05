@@ -2,7 +2,7 @@
  * Daily Monitoring Cron — /api/cron/monitoring
  *
  * Runs at 6am AEST (8pm UTC) via Vercel cron.
- * Performs 5 health checks and sends a single alert email if any anomaly is found.
+ * Performs 6 health checks and sends a single alert email if any anomaly is found.
  *
  * Checks:
  *   1. Checkout ratio — pricing views vs Stripe sessions created
@@ -10,6 +10,7 @@
  *   3. Cron health — last nurture email timestamp
  *   4. New free-course completions — upgrade opportunities
  *   5. Ad spend with zero signups — wasted ad budget detection
+ *   6. Cold-outreach engine dark — prospects due but nothing sent in 48h
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -204,7 +205,13 @@ export async function GET(request: NextRequest) {
         AND (up.progress->'101'->>'completed')::boolean = true
         AND (up.progress->'102'->>'completed')::boolean = true
         AND (up.progress->'103'->>'completed')::boolean = true
-        AND u.last_login_at > NOW() - INTERVAL '24 hours'
+        AND COALESCE(u.is_test, false) = false
+        -- The COMPLETION must be recent, not the login. Keying this on
+        -- last_login_at counted anyone who finished up to 90 days ago and
+        -- happened to log in today — the same people re-reported as "new
+        -- completions" every morning. user_progress.updated_at is when the
+        -- progress row last changed, i.e. when they finished.
+        AND up.updated_at > NOW() - INTERVAL '24 hours'
     `
     const newCompletions = completionRows[0]?.count || 0
 
@@ -337,7 +344,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Findings detected but alert email failed to send',
-      checks: 5,
+      checks: 6,
       alerts: alerts.length,
       infos: infos.length,
       findings,
@@ -346,7 +353,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    checks: 5,
+    checks: 6,
     alerts: alerts.length,
     infos: infos.length,
   })

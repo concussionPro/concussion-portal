@@ -138,12 +138,17 @@ export async function GET(request: Request) {
     // CRM attendees sat in the SAME room — ownsCrmPractical puts them in the
     // same cohort instead of leaving them in new-buyer nurture forever.
     const allUsers = await loadUsers()
+    // Seat purchase dates — also the round-scoping input for isWorkshopAlumnus
+    // below, so a buyer for a round that HASN'T run isn't filtered out of every
+    // lane as an alumnus. Loaded before the filter for exactly that reason.
+    const enrolmentDates = await loadWorkshopEnrolmentDates()
     const alumniFilteredUsers = allUsers.filter(
       (u) =>
         !isWorkshopAlumnus({
           accessLevel: u.accessLevel,
           workshopLocation: u.workshopLocation,
           ownsCrmPractical: !!crmFor(u.email)?.practicalAt,
+          registeredAt: enrolmentDates.get(u.email.toLowerCase()) ?? null,
         }) &&
         // Past attendees granted portal access (signup_source 'alumni-grant', and
         // any future 'alumni-*') are NOT new buyers — they did the course months
@@ -252,7 +257,6 @@ export async function GET(request: Request) {
     // day they joined the free list: buy on day 56, and every workshop window
     // had already closed on the day the $693 cleared. Best-effort — an empty
     // map falls straight back to created_at (the pre-fix behaviour).
-    const enrolmentDates = await loadWorkshopEnrolmentDates()
     /** Days since this user bought their seat (falls back to account age). */
     function daysSinceEnrolment(user: { email: string; createdAt: string }): number {
       const enrolled = enrolmentDates.get(user.email.toLowerCase())

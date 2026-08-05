@@ -66,6 +66,12 @@ async function findTargets(): Promise<Target[]> {
         WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = 'crm'
       )
       AND COALESCE(u.nurture_unsubscribed, false) = false
+      AND COALESCE(u.is_test, false) = false
+      -- Master blacklist — nurture_unsubscribed alone misses bounces,
+      -- complaints, STOP replies and cold-prospect unsubs.
+      AND NOT EXISTS (
+        SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(u.email)
+      )
       AND u.created_at > NOW() - INTERVAL '90 days'
   `
 

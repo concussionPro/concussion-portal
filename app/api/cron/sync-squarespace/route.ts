@@ -4,7 +4,11 @@
  * Polls the Squarespace Profiles API for new subscribers/form submitters
  * and creates preview portal accounts, entering them into the nurture sequence.
  *
- * Runs every 4 hours via Vercel Cron.
+ * NOT SCHEDULED. It has no entry in vercel.json, so nothing runs it — the
+ * "every 4 hours" this docblock used to claim was never true and the route is
+ * manual-only (x-admin-key, or Bearer CRON_SECRET). It creates accounts and
+ * sends the welcome email, so adding a schedule is a live-send decision, not a
+ * cleanup: add a `crons` entry deliberately if this lane should be running.
  *
  * Squarespace has no Forms API or form_submission webhook topic,
  * so polling Profiles is the only reliable integration path.

@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { loadUsers } from '@/lib/users'
 import { isAdminRequest } from '@/lib/require-admin'
 import { sendEmail } from '@/lib/resend-client'
+import { loadSuppressedEmails } from '@/lib/email-suppression'
 import { sql } from '@/lib/db'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
@@ -60,9 +61,26 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
   const url = new URL(request.url)
   if (url.searchParams.get('dryRun') === 'true') dryRun = true
 
-  // Reset: clear stale catchup_ audit keys (e.g. from a previous dry run bug)
-  if (url.searchParams.get('reset') === 'true') {
+  // Reset: clear stale catchup_ audit keys (e.g. from a previous dry run bug).
+  // Gated on !dryRun: it ran BEFORE the dry-run branch, so a GET (which the
+  // sameSite-'lax' admin cookie makes cross-site reachable) deleted the send-
+  // dedupe keys and the next real run re-emailed everyone.
+  if (!dryRun && url.searchParams.get('reset') === 'true') {
     await sql`DELETE FROM email_audit_log WHERE audit_key LIKE 'catchup_%'`
+  }
+
+  // Master blacklist — loadUsers() only carries nurture_unsubscribed, which
+  // misses hard bounces, complaints, STOP replies and cold-prospect unsubs.
+  // FAIL CLOSED: abort the run rather than proceed with an empty set.
+  let suppressedEmails: Set<string>
+  try {
+    suppressedEmails = await loadSuppressedEmails()
+  } catch (err) {
+    console.error('[CatchUp] Failed to load email_suppression — ABORTING run (fail closed):', err)
+    return NextResponse.json(
+      { error: 'email_suppression load failed — run aborted (fail closed)' },
+      { status: 503 },
+    )
   }
 
   const users = await loadUsers()
@@ -74,6 +92,8 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
 
   for (const user of users) {
     if (user.nurtureUnsubscribed) { skipped++; continue }
+    if (suppressedEmails.has(user.email.toLowerCase())) { skipped++; continue }
+    if (user.isTest) { skipped++; continue }
 
     const signupDate = new Date(user.createdAt)
     const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))

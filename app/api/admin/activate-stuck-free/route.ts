@@ -39,6 +39,12 @@ async function findTargets() {
       )
       AND u.last_login_at IS NOT NULL
       AND COALESCE(u.nurture_unsubscribed, false) = false
+      AND COALESCE(u.is_test, false) = false
+      -- Master blacklist — nurture_unsubscribed alone misses bounces,
+      -- complaints, STOP replies and cold-prospect unsubs.
+      AND NOT EXISTS (
+        SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(u.email)
+      )
   `
   const targets: Array<{ id: string; email: string; name: string }> = []
   for (const r of rows) {
@@ -107,9 +113,12 @@ async function handle(request: NextRequest, dryRun: boolean) {
   return NextResponse.json({ ok: true, found: targets.length, sent, skipped, errors })
 }
 
+// GET is ALWAYS a dry run — the admin cookie is sameSite 'lax' and middleware's
+// CSRF check only guards unsafe methods, so `?dryRun=0` on GET meant one clicked
+// cross-site link could blast real email at every stuck free user. Sending
+// requires POST.
 export async function GET(request: NextRequest) {
-  const dry = new URL(request.url).searchParams.get('dryRun') !== '0'
-  return handle(request, dry)
+  return handle(request, true)
 }
 export async function POST(request: NextRequest) {
   return handle(request, false)

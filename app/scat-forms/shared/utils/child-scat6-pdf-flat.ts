@@ -31,7 +31,6 @@ import {
   drawCheckmark,
   drawCircleOutline,
   drawWrappedText,
-  drawYesNo,
   notAdministeredMark,
   embedStandardFonts,
   loadFlatPDF,
@@ -108,11 +107,30 @@ export async function exportChildSCAT6ToFlatPDF(
       scores: ChildSCAT6SymptomScores,
       value: number | null
     ) => {
-      const complete = isSymptomScaleComplete(scores)
+      // A complete (or entirely unrated) scale gets the normal score-box
+      // treatment; a partial one is set small so the "(n/21 rated)" qualifier
+      // fits inside the box next to the pre-printed denominator.
+      const full = value === null || isSymptomScaleComplete(scores)
       drawTextCentered(page, x, baseline, width, symptomBoxText(scores, value), {
-        font: complete ? fontBold : font,
-        size: complete ? fsl : fsx,
+        font: full ? fontBold : font,
+        size: full ? fsl : fsx,
       })
+    }
+
+    /**
+     * Ring the printed "Y" or "N". null (never asked) rings neither — the
+     * Child SCAT6 prints letters rather than tick boxes here, so a filled mark
+     * would obscure the very letter it is answering.
+     */
+    const ringYesNo = (
+      page: PDFPage,
+      yesX: number,
+      noX: number,
+      centreY: number,
+      value: boolean | null
+    ) => {
+      if (value === null) return
+      drawCircleOutline(page, value ? yesX : noX, centreY, 6)
     }
 
     /** Ring the chosen 0/1/2/3 column of a symptom row (the digits are pre-printed). */
@@ -171,11 +189,11 @@ export async function exportChildSCAT6ToFlatPDF(
     const p4 = pages[3]
 
     // "Has the child ever been..." Y/N — null (never asked) leaves both blank.
-    drawYesNo(p4, 232, 246, 641.5, formData.hospitalizedForHeadInjury, font, fs)
-    drawYesNo(p4, 232, 246, 620.5, formData.headacheDisorder, font, fs)
-    drawYesNo(p4, 231.5, 245.5, 602, formData.learningDisability, font, fs)
-    drawYesNo(p4, 458, 472, 641.5, formData.adhd, font, fs)
-    drawYesNo(p4, 458, 472, 620.5, formData.psychologicalDisorder, font, fs)
+    ringYesNo(p4, 231.5, 245.5, 644.5, formData.hospitalizedForHeadInjury)
+    ringYesNo(p4, 231.5, 245.5, 623.7, formData.headacheDisorder)
+    ringYesNo(p4, 231.5, 245.5, 605, formData.learningDisability)
+    ringYesNo(p4, 458, 472, 644.5, formData.adhd)
+    ringYesNo(p4, 458, 472, 623.7, formData.psychologicalDisorder)
 
     // Notes and Medications
     drawWrappedText(p4, 55, 571.7, formData.athleteBackgroundNotes, 198, { font, size: fsm })
@@ -186,8 +204,8 @@ export async function exportChildSCAT6ToFlatPDF(
     drawSymptomScale(p4, formData.childSymptoms, 386.7, 13, childSymptomColX)
 
     // "Do the symptoms get worse with...?" (child page)
-    drawYesNo(p4, 228, 250, 105.5, formData.childSymptomsWorseWithPhysical, font, fs)
-    drawYesNo(p4, 228, 250, 91, formData.childSymptomsWorseWithMental, font, fs)
+    ringYesNo(p4, 234.5, 251, 108.7, formData.childSymptomsWorseWithPhysical)
+    ringYesNo(p4, 234.5, 251, 94.2, formData.childSymptomsWorseWithMental)
 
     // ==================== PAGE 5 (index 4): CHILD OVERALL + PARENT REPORT ====================
     const p5 = pages[4]
@@ -210,8 +228,8 @@ export async function exportChildSCAT6ToFlatPDF(
     const parentSymptomColX = [256, 320.5, 385.5, 450]
     drawSymptomScale(p5, formData.parentSymptoms, 500.7, 13.05, parentSymptomColX)
 
-    drawYesNo(p5, 228, 250, 220, formData.parentSymptomsWorseWithPhysical, font, fs)
-    drawYesNo(p5, 228, 250, 205, formData.parentSymptomsWorseWithMental, font, fs)
+    ringYesNo(p5, 234.5, 251, 223, formData.parentSymptomsWorseWithPhysical)
+    ringYesNo(p5, 234.5, 251, 208.5, formData.parentSymptomsWorseWithMental)
 
     // "On a scale of 0 to 100% (where 100% is normal)" — a PERCENTAGE, not /10.
     if (formData.parentOverallPercent !== null) {

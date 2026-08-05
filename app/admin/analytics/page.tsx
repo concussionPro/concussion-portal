@@ -527,8 +527,20 @@ function normaliseMetrics(data: unknown): MetricRow[] {
  * customers as free users in every count on this page, and understated the
  * free-to-paid conversion rate that drives its insights.
  */
-function isPaidUser(u: { accessLevel: string; ownsCrm?: boolean }): boolean {
-  return u.accessLevel === 'online-only' || u.accessLevel === 'full-course' || !!u.ownsCrm
+/**
+ * One CSV cell: RFC-4180 quoting (a name containing a comma used to shift every
+ * later column on that row) plus a leading apostrophe on anything a spreadsheet
+ * would evaluate as a formula.
+ */
+function csvCell(value: unknown): string {
+  const raw = value === null || value === undefined ? '' : String(value)
+  const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
+  return `"${safe.replace(/"/g, '""')}"`
+}
+
+function isPaidUser(u: { accessLevel: string; ownsCrm?: boolean; ownsReferenceBook?: boolean }): boolean {
+  return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
+    || !!u.ownsCrm || !!u.ownsReferenceBook
 }
 
 function generateDailyReport(
@@ -537,7 +549,7 @@ function generateDailyReport(
   funnelData: FunnelData | null,
   preseasonData: { totalClinics: number; totalBaselines: number } | null,
   channelsData: ChannelsData | null,
-  usersData: Array<{ accessLevel: string; ownsCrm?: boolean; createdAt: string; signupSource?: string | null; isTest?: boolean }>,
+  usersData: Array<{ accessLevel: string; ownsCrm?: boolean; ownsReferenceBook?: boolean; createdAt: string; signupSource?: string | null; isTest?: boolean }>,
   period: string,
 ): string {
   const parts: string[] = []
@@ -674,7 +686,7 @@ function generateDailyReport(
 }
 
 function buildUserInsights(
-  users: Array<{ accessLevel: string; ownsCrm?: boolean; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedScatModules?: number }>,
+  users: Array<{ accessLevel: string; ownsCrm?: boolean; ownsReferenceBook?: boolean; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedScatModules?: number }>,
 ): Insight[] {
   const insights: Insight[] = []
   if (users.length === 0) return insights
@@ -731,13 +743,19 @@ function buildUserInsights(
   )
   const paidUsers = users.filter(isPaidUser)
   if (users.length > 5) {
-    const convRate = users.length > 0 ? paidUsers.length / users.length : 0
+    // Denominator is the CONVERSION base (engaged free + paid), not every row.
+    // Using users.length divided by the whole base — including Squarespace
+    // form-only ghosts the line below deliberately excludes — reported a rate
+    // lower than reality, and the headline % then disagreed with its own detail
+    // string, which already quotes freeUsers.
+    const convBase = paidUsers.length + freeUsers.length
+    const convRate = convBase > 0 ? paidUsers.length / convBase : 0
     if (convRate < 0.05) {
       insights.push({
         type: 'critical',
         category: 'users',
         title: `Free-to-paid conversion at ${(convRate * 100).toFixed(1)}%`,
-        detail: `${paidUsers.length} paid out of ${users.length} total users. ${freeUsers.length} free users haven't upgraded.`,
+        detail: `${paidUsers.length} paid out of ${convBase} engaged users. ${freeUsers.length} free users haven't upgraded.`,
         metric: `${(convRate * 100).toFixed(1)}% conversion`,
         action: 'Review the upgrade path. Add nudges in the free course completion flow. Consider limited-time pricing or email nurture sequences targeting free users.',
       })
@@ -746,7 +764,7 @@ function buildUserInsights(
         type: 'positive',
         category: 'users',
         title: `Strong ${(convRate * 100).toFixed(1)}% free-to-paid conversion`,
-        detail: `${paidUsers.length} paid out of ${users.length} total users. Your free-to-paid funnel is working well.`,
+        detail: `${paidUsers.length} paid out of ${convBase} engaged users. Your free-to-paid funnel is working well.`,
         metric: `${(convRate * 100).toFixed(1)}% conversion`,
         action: 'Focus on driving more top-of-funnel signups — the conversion engine is healthy.',
       })
@@ -786,7 +804,7 @@ function buildUserInsights(
         type: 'positive',
         category: 'users',
         title: `${allModules} free user${allModules !== 1 ? 's' : ''} completed all SCAT modules`,
-        detail: `Of ${freeUsers.length} free users: ${zeroModules} at 0, ${someModules} in progress, ${allModules} completed all 5. These completers are prime upgrade targets.`,
+        detail: `Of ${freeUsers.length} free users: ${zeroModules} at 0, ${someModules} in progress, ${allModules} completed all 3. These completers are prime upgrade targets.`,
         metric: `${allModules} completers`,
         action: 'Target users who completed all free modules with a personalised upgrade email highlighting paid content they\'re missing.',
       })
@@ -1323,7 +1341,12 @@ export default function AnalyticsDashboard() {
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
-  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; ownsCrm?: boolean; ownsCrmPractical?: boolean; completedCrmModules?: number; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; ownsCrm?: boolean; ownsReferenceBook?: boolean; ownsCrmPractical?: boolean; completedCrmModules?: number; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  // Internal test accounts are excluded from every count on the Users tab.
+  // The tiles read raw `usersData` while the daily report and the insight
+  // engine below both filter on `!isTest`, so the headline said N and the
+  // report underneath said N-k with no explanation.
+  const realUsersData = useMemo(() => usersData.filter(u => !u.isTest), [usersData])
   const [usersError, setUsersError] = useState<string | null>(null)
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
@@ -2855,28 +2878,28 @@ export default function AnalyticsDashboard() {
                       <Users size={14} className="text-[var(--accent)]" />
                       <span className="text-xs font-bold text-[var(--foreground)]">Total Users</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.length}</p>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{realUsersData.length}</p>
                   </div>
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Eye size={14} className="text-emerald-600" />
                       <span className="text-xs font-bold text-[var(--foreground)]">Free</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => !isPaidUser(u)).length}</p>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{realUsersData.filter(u => !isPaidUser(u)).length}</p>
                   </div>
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <TrendingUp size={14} className="text-purple-600" />
                       <span className="text-xs font-bold text-[var(--foreground)]">Paid</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(isPaidUser).length}</p>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{realUsersData.filter(isPaidUser).length}</p>
                   </div>
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock size={14} className="text-orange-600" />
                       <span className="text-xs font-bold text-[var(--foreground)]">Today</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => new Date(u.createdAt).toDateString() === new Date().toDateString()).length}</p>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{realUsersData.filter(u => new Date(u.createdAt).toDateString() === new Date().toDateString()).length}</p>
                   </div>
                 </div>
 
@@ -2893,20 +2916,30 @@ export default function AnalyticsDashboard() {
                             : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                         }`}
                       >
-                        {label} ({key === 'all' ? usersData.length : key === 'preview' ? usersData.filter(u => !isPaidUser(u)).length : usersData.filter(isPaidUser).length})
+                        {label} ({key === 'all' ? realUsersData.length : key === 'preview' ? realUsersData.filter(u => !isPaidUser(u)).length : realUsersData.filter(isPaidUser).length})
                       </button>
                     ))}
                   </div>
                   <button
                     onClick={() => {
-                      const filtered = usersData.filter(u => {
+                      const filtered = realUsersData.filter(u => {
                         if (usersFilter === 'preview') return !isPaidUser(u)
                         if (usersFilter === 'paid') return isPaidUser(u)
                         return true
                       })
-                      const csv = ['Email,Name,Access Level,Modules Completed,SCAT Modules,CPD Hours,Created,Last Login', ...filtered.map(u =>
-                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/3,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
-                      )].join('\n')
+                      const csv = [
+                        ['Email', 'Name', 'Access Level', 'Modules Completed', 'SCAT Modules', 'CPD Hours', 'Created', 'Last Login'],
+                        ...filtered.map(u => [
+                          u.email,
+                          u.name,
+                          u.accessLevel,
+                          `${u.completedModules || 0}/8`,
+                          `${u.completedScatModules || 0}/3`,
+                          u.totalCPDPoints || 0,
+                          new Date(u.createdAt).toLocaleDateString(),
+                          u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never',
+                        ]),
+                      ].map(row => row.map(csvCell).join(',')).join('\n')
                       const blob = new Blob([csv], { type: 'text/csv' })
                       const url = URL.createObjectURL(blob)
                       const a = document.createElement('a')
@@ -2935,7 +2968,7 @@ export default function AnalyticsDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {usersData.filter(u => {
+                      {realUsersData.filter(u => {
                         if (usersFilter === 'preview') return !isPaidUser(u)
                         if (usersFilter === 'paid') return isPaidUser(u)
                         return true

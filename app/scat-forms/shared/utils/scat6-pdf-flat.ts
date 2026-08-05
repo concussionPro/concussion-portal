@@ -14,6 +14,7 @@ import {
   calculateTandemGaitFastest,
   calculateDualTaskFastest,
   isSymptomsAdministered,
+  countSymptomsRated,
   isOrientationAdministered,
   isImmediateMemoryAdministered,
   isDigitsAdministered,
@@ -127,11 +128,26 @@ export async function exportSCAT6ToFlatPDF(
     // Symptom count — header area (right side of symptom section: Text23 x=388.8, y=501)
     const symNum = calculateSymptomNumber(formData.symptoms)
     const symSev = calculateSymptomSeverity(formData.symptoms)
-    if (symptomsAdministered) {
-      drawText(p4, 390, 503, symNum.toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p4, 390, 503, { font: fontBold, size: fsl })
+    const symptomsRated = countSymptomsRated(formData.symptoms)
+    const symptomScaleComplete = symptomsRated === 22
+
+    /**
+     * The form prints the denominators ("of 22" / "of 132"), so a partially
+     * rated scale must say how much of it was actually rated — otherwise a
+     * 9-item scale reads as a full 22-item scale with 13 symptoms denied.
+     */
+    const drawSymptomTotal = (x: number, y: number, value: number) => {
+      if (!symptomsAdministered) {
+        drawNotAdministered(p4, x, y, { font: fontBold, size: fsl })
+        return
+      }
+      drawText(p4, x, y, value.toString(), { font: fontBold, size: fsl })
+      if (!symptomScaleComplete) {
+        drawText(p4, x + 14, y, `(${symptomsRated}/22 rated)`, { font, size: 6 })
+      }
     }
+
+    drawSymptomTotal(390, 503, symNum)
 
     // Symptoms (22 items, 0-6 scale)
     // Column center x positions from fillable field data (s1 radio widgets + half width)
@@ -159,15 +175,10 @@ export async function exportSCAT6ToFlatPDF(
       }
     })
 
-    if (symptomsAdministered) {
-      // Bottom summary: Total number of symptoms (Text26: x=165.2, y=76)
-      drawText(p4, 167, 78, symNum.toString(), { font: fontBold, size: fsl })
-      // Bottom summary: Symptom severity score (Text27: x=388.8, y=75.6)
-      drawText(p4, 390, 77, symSev.toString(), { font: fontBold, size: fsl })
-    } else {
-      drawNotAdministered(p4, 167, 78, { font: fontBold, size: fsl })
-      drawNotAdministered(p4, 390, 77, { font: fontBold, size: fsl })
-    }
+    // Bottom summary: Total number of symptoms (Text26: x=165.2, y=76) and
+    // Symptom severity score (Text27: x=388.8, y=75.6)
+    drawSymptomTotal(167, 78, symNum)
+    drawSymptomTotal(390, 77, symSev)
 
     // Percent of normal (Text24: x=292.4, y=322.6, w=204.7, h=15.7 — the answer
     // box under "If 100% is feeling perfectly normal, what percent of normal do

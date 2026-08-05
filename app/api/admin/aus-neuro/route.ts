@@ -25,7 +25,13 @@ export async function GET(request: NextRequest) {
   const { rows: traffic } = await sql`
     SELECT
       COUNT(*) FILTER (WHERE event_type = 'page_view' AND path = '/clinics')::int AS visits,
-      COUNT(*) FILTER (WHERE event_type = 'demo_tour_start')::int AS tours,
+      -- Scope to THIS lane. An unscoped demo_tour_start count attributed every
+      -- /demo/clinic entry portal-wide to the Aus Neuro stream, over-crediting a
+      -- lane that has its own send budget (the sibling counters are both scoped).
+      COUNT(*) FILTER (
+        WHERE event_type = 'demo_tour_start'
+          AND (event_data->>'source' LIKE 'auneuro%' OR path = '/clinics')
+      )::int AS tours,
       COUNT(*) FILTER (WHERE event_type = 'cal_click' AND event_data->>'source' LIKE 'auneuro%')::int AS cal_clicks
     FROM analytics_events
     WHERE timestamp_ms > ${since}

@@ -124,6 +124,11 @@ export async function POST(request: NextRequest) {
         SELECT 1 FROM course_purchases cp
         WHERE LOWER(cp.user_email) = LOWER(email) AND cp.course_slug = 'crm'
       )
+      -- Master blacklist — nurture_unsubscribed alone misses bounces,
+      -- complaints, STOP replies and cold-prospect unsubs.
+      AND NOT EXISTS (
+        SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(users.email)
+      )
     ORDER BY created_at DESC
   `
 

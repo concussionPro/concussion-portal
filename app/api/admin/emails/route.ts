@@ -85,6 +85,11 @@ export async function GET(request: NextRequest) {
         // PAYING customer, and ownsCrmPractical is a paid practical-day seat.
         ownsCrm,
         ownsCrmPractical,
+        // THIRD paid door: the Reference+Toolkit bundle. These buyers keep
+        // accessLevel 'preview' with only reference_book_purchased_at set, so
+        // every "Paid"/"Free" tile on the admin boards was filing paying
+        // customers under Free and inflating the unconverted-lead denominator.
+        ownsReferenceBook: !!user.referenceBookPurchasedAt,
         createdAt: user.createdAt,
         lastLogin: user.lastLoginAt || null,
         workshopLocation: user.workshopLocation || null,

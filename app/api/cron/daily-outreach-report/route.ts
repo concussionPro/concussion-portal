@@ -23,6 +23,8 @@ import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { decideOutreach, type OutreachDecision } from '@/lib/prospect/outreach-decision'
+import { hubPackPriceFor, computePricing } from '@/lib/prospect/pricing'
+import type { ClinicTeam, TravelBand } from '@/lib/prospect/types'
 
 export const maxDuration = 60
 
@@ -37,10 +39,34 @@ interface EngagedClinicRow {
   contact_full_name: string | null
   contact_first_name: string | null
   contact_email: string | null
-  deal_value: number | string | null
+  team: ClinicTeam | null
+  travel_band: string | null
+  cohort_recommendation: string | null
   section_funnel: Record<string, number>
   max_dwell_ms: number | string | null
   engaged_sessions: number | string | null
+}
+
+/**
+ * Headline deal value — the SAME offer-matched figure the admin pipeline
+ * shows (app/api/admin/prospect-engagement): Hub Pack base for a clinic that
+ * gets the Hub Pack offer, on-site cohort total for one that gets on-site.
+ *
+ * This used to be a hand-rolled SQL CASE with literal 9000 / 1400 / 700 in it,
+ * so the morning digest quoted a per-clinic value the dashboard disagreed with
+ * and that no longer tracked lib/prospect/pricing.ts at all.
+ */
+function dealValueFor(row: EngagedClinicRow): number {
+  const t = row.team ?? ({} as ClinicTeam)
+  const hub = hubPackPriceFor(t)
+  if (hub.recommendedOffer !== 'on-site-cohort') return hub.totalBase
+  const pricing = computePricing(t, (row.travel_band as TravelBand) ?? 'within-2hr')
+  const wanted =
+    row.cohort_recommendation === 'essential' ? 'Essential'
+    : row.cohort_recommendation === 'full-team' ? 'Full team'
+    : 'Recommended'
+  const reco = pricing.cohortTiers.find((c) => c.name === wanted) ?? pricing.cohortTiers[0]
+  return reco?.total ?? hub.totalBase
 }
 
 interface DecidedClinic {
@@ -139,28 +165,9 @@ export async function GET(request: NextRequest) {
         agg.max_dwell_ms,
         agg.engaged_sessions,
         COALESCE((SELECT jsonb_object_agg(section_visited, n) FROM sec WHERE clinic_id = pc.id), '{}'::jsonb) AS section_funnel,
-        -- Headline deal value: on-site cohort estimate for >=6 clinical, else
-        -- a Hub-Pack-style per-clinician figure. Approximate — for sorting /
-        -- display in the digest only.
-        (
-          CASE
-            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
-                + COALESCE((pc.team->>'physiotherapists')::int, 0)
-                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
-                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
-                + COALESCE((pc.team->>'exercisePhys')::int, 0)
-                + COALESCE((pc.team->>'myotherapists')::int, 0)
-                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6
-            THEN 9000
-            ELSE GREATEST(1400, (COALESCE((pc.team->>'osteopaths')::int, 0)
-                + COALESCE((pc.team->>'physiotherapists')::int, 0)
-                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
-                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
-                + COALESCE((pc.team->>'exercisePhys')::int, 0)
-                + COALESCE((pc.team->>'myotherapists')::int, 0)
-                + COALESCE((pc.team->>'remedialMassage')::int, 0)) * 700)
-          END
-        ) AS deal_value
+        pc.team,
+        pc.travel_band,
+        pc.cohort_recommendation
       FROM prospect_clinics pc
       JOIN agg ON agg.clinic_id = pc.id
       WHERE pc.status NOT IN ('archived', 'lost', 'bounced', 'won', 'replied', 'engaged-elsewhere')
@@ -267,7 +274,7 @@ function buildReportEmail(direct: DecidedClinic[], nurture: DecidedClinic[], eng
   const directSection = direct.length > 0
     ? direct.map((d) => {
         const r = d.row
-        const dv = fmtMoney(r.deal_value)
+        const dv = fmtMoney(dealValueFor(r))
         const mailto = r.contact_email
           ? `<a href="mailto:${escapeHtml(r.contact_email)}?subject=${encodeURIComponent(`Concussion training for ${r.short_name}`)}" style="color: #047857; font-weight: 600; text-decoration: none;">${escapeHtml(r.contact_email)}</a>`
           : '<span style="color:#94a3b8;">no email on file</span>'

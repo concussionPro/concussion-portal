@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { loadSuppressedEmails } from '@/lib/email-suppression'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
@@ -113,6 +114,22 @@ export async function POST(request: NextRequest) {
     const filteredContacts = contacts.filter(c => c.acceptsMarketing !== false)
     const skippedNoConsent = contacts.length - filteredContacts.length
 
+    // Master blacklist. A pasted export routinely contains addresses that have
+    // since hard-bounced, complained, replied STOP, or unsubscribed on the cold
+    // side — importing them recreates the account AND fires the Day-0 welcome.
+    // FAIL CLOSED: abort rather than import with an empty blacklist.
+    let suppressedEmails: Set<string>
+    try {
+      suppressedEmails = await loadSuppressedEmails()
+    } catch (err) {
+      console.error('[Import] Failed to load email_suppression — ABORTING (fail closed):', err)
+      return NextResponse.json(
+        { error: 'email_suppression load failed — import aborted (fail closed)' },
+        { status: 503 },
+      )
+    }
+    let skippedSuppressed = 0
+
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const preseasonLink = `${baseUrl}/preseason`
     const now = Date.now()
@@ -130,6 +147,11 @@ export async function POST(request: NextRequest) {
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         errors++
+        continue
+      }
+
+      if (suppressedEmails.has(email)) {
+        skippedSuppressed++
         continue
       }
 
@@ -193,7 +215,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`[Import] Done: ${created} created, ${emailed} emailed, ${skipped} skipped, ${errors} errors, ${skippedNoConsent} no-consent`)
+    console.log(`[Import] Done: ${created} created, ${emailed} emailed, ${skipped} skipped, ${errors} errors, ${skippedNoConsent} no-consent, ${skippedSuppressed} suppressed`)
 
     return NextResponse.json({
       success: true,
@@ -202,6 +224,7 @@ export async function POST(request: NextRequest) {
       skipped,
       errors,
       skippedNoConsent,
+      skippedSuppressed,
       total: contacts.length,
     })
   } catch (error) {

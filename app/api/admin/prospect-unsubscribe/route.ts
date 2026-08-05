@@ -14,7 +14,8 @@
  *     T1/T2 fires even after suppression unless cancelled at Resend).
  *  4. users-table fallback: nurture_unsubscribed=true if they're a user.
  *
- * Body: { email: string, pullDomain?: boolean (default true) }
+ * Body: { email: string, pullDomain?: boolean (default true; forced OFF for
+ *         freemail domains — see FREEMAIL_DOMAINS) }
  * Auth: admin.
  */
 import { NextRequest, NextResponse } from 'next/server'
@@ -25,6 +26,15 @@ import { suppress } from '@/lib/prospect/repo'
 import { unsubscribeUser } from '@/lib/users'
 
 export const maxDuration = 60
+
+/** Shared mailbox hosts — a domain pull here would hit unrelated clinics. */
+const FREEMAIL_DOMAINS = new Set([
+  'gmail.com', 'googlemail.com', 'outlook.com', 'outlook.com.au', 'hotmail.com',
+  'hotmail.com.au', 'live.com', 'live.com.au', 'msn.com', 'yahoo.com',
+  'yahoo.com.au', 'ymail.com', 'icloud.com', 'me.com', 'mac.com',
+  'bigpond.com', 'bigpond.net.au', 'optusnet.com.au', 'iinet.net.au',
+  'internode.on.net', 'tpg.com.au', 'aol.com', 'proton.me', 'protonmail.com',
+])
 
 export async function POST(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -41,8 +51,13 @@ export async function POST(req: NextRequest) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'A valid email is required' }, { status: 400 })
   }
-  const pullDomain = body.pullDomain !== false
   const domain = email.split('@')[1]
+  // Domain pull catches the info@/reception@ variants of the SAME practice —
+  // which only makes sense for a practice-owned domain. On a shared mailbox
+  // host it would set every unrelated clinic on gmail.com to 'lost' and
+  // permanently suppress them off one typo, with no reverse. Never pull a
+  // freemail domain, whatever the caller asked for.
+  const pullDomain = body.pullDomain !== false && !FREEMAIL_DOMAINS.has(domain)
 
   // 1. Master blacklist — the one write that guarantees no lane ever sends.
   await suppress(email, 'unsubscribed', 'admin-manual')
@@ -116,5 +131,7 @@ export async function POST(req: NextRequest) {
     resendCancelled: cancelled,
     resendNotCancellable: notCancellable,
     wasNurtureUser: wasUser,
+    domainPulled: pullDomain,
+    ...(pullDomain ? {} : { domainPullSkipped: `${domain} is a shared mailbox host — exact address only` }),
   })
 }

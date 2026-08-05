@@ -40,10 +40,18 @@ export async function GET(request: NextRequest) {
           ELSE 'Unknown'
         END AS discipline,
         COUNT(*)::int AS total,
+        -- Must match the discipline CASE above ('crm' AND 'crm-practical') or a
+        -- clinician classified as Exercise Physiology BECAUSE they bought
+        -- crm-practical is then counted as free — understating the EP stream's
+        -- conversion, which is the number the ESSA launch is judged on.
+        -- reference_book_purchased_at is the third paid door (those buyers keep
+        -- access_level 'preview').
         COUNT(*) FILTER (WHERE u.access_level IN ('online-only', 'full-course')
+          OR u.reference_book_purchased_at IS NOT NULL
           OR EXISTS (
             SELECT 1 FROM course_purchases cp2
-            WHERE LOWER(cp2.user_email) = LOWER(u.email) AND cp2.course_slug = 'crm'
+            WHERE LOWER(cp2.user_email) = LOWER(u.email)
+              AND cp2.course_slug IN ('crm', 'crm-practical')
           ))::int AS paid
       FROM users u
       WHERE COALESCE(u.is_test, false) = false

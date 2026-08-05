@@ -69,6 +69,13 @@ async function findTargets(): Promise<Target[]> {
     LEFT JOIN engaged e ON e.email = LOWER(u.email)
     WHERE u.access_level IN ('preview', 'online-only')
       AND COALESCE(u.nurture_unsubscribed, false) = false
+      AND COALESCE(u.is_test, false) = false
+      -- Master blacklist. nurture_unsubscribed alone MISSES hard bounces,
+      -- complaints, STOP replies and cold-prospect unsubs (lib/email-suppression.ts).
+      -- The query throwing is the fail-closed path — nothing sends.
+      AND NOT EXISTS (
+        SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(u.email)
+      )
       AND u.created_at > NOW() - INTERVAL '120 days'
       AND (COALESCE(e.opens_60d, 0) > 0 OR COALESCE(e.clicks_60d, 0) > 0)
       AND NOT EXISTS (

@@ -127,6 +127,18 @@ describe('SCAT6 export — an untouched form', () => {
 })
 
 describe('SCAT6 export — real findings still reach the record', () => {
+  it('prints a fully rated symptom scale without a partial-scale qualifier', async () => {
+    const fd = getDefaultSCAT6FormData()
+    ;(Object.keys(fd.symptoms) as Array<keyof typeof fd.symptoms>).forEach(k => {
+      fd.symptoms[k] = 0
+    })
+    fd.symptoms.headaches = 6
+    await run(fd)
+    expect(at(BOX.symptomCountBottom)?.text).toBe('1')
+    expect(at(BOX.symptomSeverity)?.text).toBe('6')
+    expect(calls.text.some(c => c.text.includes('rated)'))).toBe(false)
+  })
+
   it('prints a genuine 0/5 orientation and marks all five "0" columns', async () => {
     const fd: SCAT6FormData = {
       ...getDefaultSCAT6FormData(),
@@ -170,6 +182,9 @@ describe('SCAT6 export — real findings still reach the record', () => {
     await run(fd)
     expect(at(BOX.symptomCountBottom)?.text).toBe('1')
     expect(at(BOX.symptomSeverity)?.text).toBe('5')
+    // ...and says the scale was only partly rated, so "1 of 22" cannot be read
+    // as the athlete denying the other 20 symptoms.
+    expect(calls.text.filter(c => c.text === '(2/22 rated)')).toHaveLength(3)
     // exactly two marks on the symptom grid — the two rated items
     expect(calls.circles.filter(c => c.page === 3 && c.y >= 137 && c.y <= 393)).toHaveLength(2)
   })
