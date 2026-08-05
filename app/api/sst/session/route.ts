@@ -5,7 +5,7 @@ import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
-import { getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
+import { getClinicUsage, getClinic } from '@/lib/sst-trainer/clinic-registry'
 import { detectThreshold, computePrescription } from '@/lib/sst-trainer/protocol'
 import type { TestStage, TestInput, Condition } from '@/lib/sst-trainer/protocol'
 
@@ -20,6 +20,33 @@ import type { TestStage, TestInput, Condition } from '@/lib/sst-trainer/protocol
  * users or billing. Best-effort: a failure must never block the patient's
  * session UI, so the client fires this fire-and-forget.
  */
+async function notifyPlanFull(clinicCode: string, usage: { patientCount: number; cap: number | null }) {
+  const rec = await getClinic(clinicCode)
+  const email = rec?.email?.trim().toLowerCase()
+  if (!email) return
+  const monthKey = new Date().toISOString().slice(0, 7)
+  const auditKey = `sst_planfull_${clinicCode}_${monthKey}`
+  await sql`CREATE TABLE IF NOT EXISTS email_audit_log (audit_key TEXT PRIMARY KEY, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`
+  const { rowCount: fresh } = await sql`
+    INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW())
+    ON CONFLICT (audit_key) DO NOTHING
+  `
+  if (!fresh) return
+  try {
+    const { rows: sup } = await sql`SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email} LIMIT 1`
+    if (sup.length > 0) return
+  } catch {
+    return // fail closed
+  }
+  const first = (rec?.contactName || '').trim().split(/\s+/)[0] || ''
+  await sendEmail({
+    to: email,
+    subject: 'A new patient couldn’t start — your SST plan is at its limit',
+    html: `<p style="margin:0 0 1em 0;">Hi${first ? ' ' + escapeHtml(first) : ''},</p><p style="margin:0 0 1em 0;">A new patient just tried to start a session at ${escapeHtml(rec?.clinicName || 'your clinic')} but your plan is at its active-patient limit (${usage.patientCount}${usage.cap != null ? ` of ${usage.cap}` : ''} active in the last 30 days). Existing patients are unaffected — only new admissions are paused.</p><p style="margin:0 0 1em 0;"><a href="https://portal.concussion-education-australia.com/clinical-testing">Upgrade from your workspace</a> (Manage billing → change plan) and the patient can start straight away.</p><p style="margin:0;">Zac Lewis<br/>Concussion Education Australia</p>`,
+    tags: [{ name: 'type', value: 'sst-plan-full' }],
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request)
@@ -94,6 +121,14 @@ export async function POST(request: NextRequest) {
       if (seen.length === 0) {
         const usage = await getClinicUsage(clinicCode)
         if (!usage.canAddPatient) {
+          // AUTO-PROMPT (owner 2026-08-05): the moment a paid clinic loses an
+          // admission to its caseload cap, tell the owner — audit-keyed to
+          // once per clinic per month. Suppression fail-closed per doctrine.
+          if (usage.plan === 'active') {
+            void notifyPlanFull(clinicCode, usage).catch((err) =>
+              console.error('[sst-session] plan-full notify failed:', err),
+            )
+          }
           return NextResponse.json(
             usage.plan === 'trial'
               ? { error: 'trial-full', message: 'This clinic’s free trial is full — ask your clinician to add you.' }
