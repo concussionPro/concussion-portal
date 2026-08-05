@@ -6,6 +6,7 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import { useCourseTier } from './useCourseTier'
 import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
+import { epDisplayId, epProgressId, epModulesMeta } from '@/data/ep-module-meta'
 import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2, Lock, GraduationCap } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -172,10 +173,52 @@ export function NextActionCard() {
   }
 
   // CRM-only buyers have their own stream dashboard (/ep-course/dashboard).
-  // This card speaks CCM/SCAT — modules, progress, certificate type — so
-  // rendering it for them would offer a CCM certificate they haven't earned.
+  // This card speaks CCM/SCAT — modules, progress, certificate type — so the
+  // CCM body must not render for them. Returning null left their /dashboard
+  // with NO continue affordance at all, so render the CRM equivalent instead
+  // (2026-08-05 CRM/CCM parity audit).
   if (ownsCrm && accessLevel !== 'online-only' && accessLevel !== 'full-course') {
-    return null
+    const CRM_IDS = epModulesMeta.map((m) => epProgressId(m.id))
+    const crmDone = CRM_IDS.filter((id) => isModuleComplete(id)).length
+    const nextCrm = CRM_IDS.find((id) => !isModuleComplete(id))
+    const crmComplete = crmDone === CRM_IDS.length
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="glass-premium rounded-2xl p-5 sm:p-7 mb-6 sm:mb-8 border border-accent/20 relative overflow-hidden"
+      >
+        <div className="flex items-start gap-4 sm:gap-5">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/20">
+            <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+              <span className="text-xs font-bold text-accent uppercase tracking-wider">
+                Concussion Rehab Mastery
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2 tracking-tight">
+              {crmComplete ? 'All modules complete' : crmDone === 0 ? 'Start your first module' : 'Pick up where you left off'}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              {crmComplete
+                ? 'Claim your ESSA CPD certificate from your course dashboard.'
+                : `${crmDone} of ${CRM_IDS.length} modules complete.`}
+            </p>
+            <Link
+              href={crmComplete || !nextCrm ? '/ep-course/dashboard' : `/ep-course/modules/${epDisplayId(nextCrm)}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+            >
+              {crmComplete ? 'Go to your certificate' : 'Continue the course'}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+    )
   }
 
   /* ── All Complete ───────────────────────────── */
