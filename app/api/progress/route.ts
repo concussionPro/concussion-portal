@@ -191,7 +191,9 @@ export async function POST(request: NextRequest) {
     // session claims a paid level, prefer the DB's current access_level over
     // the JWT claim. Free/demo payloads never trigger the extra select.
     let effectiveLevel: string = sessionData.accessLevel
-    if (needsPaid && (effectiveLevel === 'online-only' || effectiveLevel === 'full-course')) {
+    if (needsPaid) {
+      // BIDIRECTIONAL (round-M): a stale free JWT after a re-purchase must
+      // not strip legitimately-earned new paid progress either.
       const dbLevel = await getCurrentAccessLevel(sessionData.userId)
       if (dbLevel) effectiveLevel = dbLevel
     }
@@ -245,7 +247,16 @@ export async function POST(request: NextRequest) {
         for (const [k, v] of Object.entries(stored)) {
           const id = Number(k)
           const gated = isPaidGatedId(id) || isCrmGatedId(id)
-          if (gated && !(k in toPersist) && v) (toPersist as Record<string, unknown>)[k] = v
+          if (!gated || !v) continue
+          // The client round-trips SEEDED zero-progress defaults for every
+          // module id, so key-absence alone never fires (round-M): stored
+          // real history also wins over an incoming empty default.
+          const incoming = (toPersist as Record<string, unknown>)[k]
+          const incomingReal =
+            incoming != null && typeof incoming === 'object' && hasRealProgress(incoming as Record<string, unknown>)
+          if (!incomingReal && typeof v === 'object' && hasRealProgress(v as Record<string, unknown>)) {
+            ;(toPersist as Record<string, unknown>)[k] = v
+          }
         }
       }
     } catch { /* retention is best-effort — never block the save */ }
