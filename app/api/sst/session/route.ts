@@ -155,7 +155,25 @@ export async function POST(request: NextRequest) {
     let storedBandHigh = intOrNull(body.bandHigh)
     const payloadForStore: Record<string, unknown> = { ...(payload as Record<string, unknown>) }
 
-    if (sessionType === 'threshold' && Array.isArray((payload as { stages?: unknown }).stages)) {
+    // CRITICAL (2026-08-05 final sweep #1): an ABORTED test must never be
+    // re-derived — a walk-out at minute 2 has no ≥3-pt rise, so detectThreshold
+    // returns 'no-intolerance' and every downstream surface (hub clearance
+    // banner, ACC884 "tolerance recovered", RTP/RTW progression) presents a
+    // quitter as recovered. Event rows (test-aborted / red-flag-cleared) are
+    // NOT tests: interpretation forced 'invalid', hrt/band nulled so they can
+    // never become the "latest threshold" a report or hub card reads.
+    const evType = typeof (payload as { eventType?: unknown }).eventType === 'string'
+      ? String((payload as { eventType?: unknown }).eventType)
+      : ''
+    const isEventRow = evType === 'test-aborted' || evType === 'red-flag-cleared'
+    if (sessionType === 'threshold' && isEventRow) {
+      payloadForStore.interpretation = 'invalid'
+      delete payloadForStore.thresholdStage
+      storedHrt = null
+      storedBandLow = null
+      storedBandHigh = null
+    }
+    if (sessionType === 'threshold' && !isEventRow && Array.isArray((payload as { stages?: unknown }).stages)) {
       const rawStages = (payload as { stages: unknown[] }).stages
       const stages: TestStage[] = rawStages
         .filter((s): s is Record<string, unknown> => !!s && typeof s === 'object')

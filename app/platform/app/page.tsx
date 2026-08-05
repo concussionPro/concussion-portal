@@ -694,6 +694,10 @@ export default function PlatformAppPage({
                   stages: info.stages,
                   restingSymptomScore,
                   symptoms: selectedSymptomIds,
+                  // belt to the server's event-row guard: an abort must never
+                  // re-derive as a completed test (final sweep #1)
+                  termination: 'aborted',
+                  interpretation: 'invalid',
                 },
               })
             }

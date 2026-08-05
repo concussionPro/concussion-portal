@@ -63,6 +63,13 @@ export async function GET(request: NextRequest) {
     }
 
     const courseType = request.nextUrl.searchParams.get('type') || 'scat-mastery'
+    // WHITELIST (2026-08-05 final sweep #2): the access checks below are
+    // exact-string matches and the data chain DEFAULTS to the paid
+    // online-course certificate — any unknown type string skipped every
+    // entitlement check and minted the 8-CPD document.
+    if (!['scat-mastery', 'online-course', 'crm', 'full-course'].includes(courseType)) {
+      return NextResponse.json({ error: 'Unknown certificate type' }, { status: 400 })
+    }
 
     // The full-course (16 CPD) certificate is issued manually by the workshop instructor.
     // scat-mastery (1 CPD). online-course (8 CPD). Both are auto-generated.
@@ -186,6 +193,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const courseType = body.type || 'scat-mastery'
+    // Same whitelist as GET (final sweep #2) — unknown types defaulted into
+    // the paid certificate chain past every entitlement check.
+    if (!['scat-mastery', 'online-course', 'crm', 'full-course'].includes(courseType)) {
+      return NextResponse.json({ error: 'Unknown certificate type' }, { status: 400 })
+    }
 
     // The full-course (16 CPD) certificate is issued manually by the workshop instructor.
     if (courseType === 'full-course') {
