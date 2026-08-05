@@ -16,7 +16,17 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
+
+/**
+ * The public per-seat rate a clinician is ACTUALLY charged, in AUD — derived
+ * from workshopPriceFor() (the same function that sets the Stripe charge), not
+ * the A$1,400 sticker, which is only charged in the final
+ * EARLY_BIRD_DAYS_BEFORE window of a confirmed date. There is no CAD list
+ * price, so this page states the comparison in AUD rather than quoting a
+ * saving against a CAD figure nobody is charged.
+ */
+const PUBLIC_SEAT_RATE_AUD = workshopPriceFor(null)
 import {
   Brain,
   ArrowUpRight,
@@ -687,10 +697,17 @@ function Pricing() {
     {
       name: 'Team training',
       badge: '12+ clinicians',
-      regular: 'CAD $1,400',
+      // The public per-seat rate is AUD and comes from workshopPriceFor() —
+      // the same helper that sets the Stripe charge. There is no CAD list
+      // price: 'CAD $1,400' was a price nobody is charged, and the
+      // 'CAD $500 less' arithmetic derived from it. The cohort rate below is
+      // the real bespoke quote and is unchanged; the comparison is now stated
+      // in the currency it is actually charged in, with no cross-currency
+      // saving claim.
+      regular: `A$${PUBLIC_SEAT_RATE_AUD.toLocaleString()} public rate`,
       price: 'CAD $900',
       unit: '/ clinician',
-      save: 'Save CAD $500 / clinician',
+      save: '',
       body: 'When 12 or more of your team train together — the full program per clinician: 8 online modules, the on-site practical day, toolkit and certification.',
       recommended: false,
     },
@@ -712,9 +729,10 @@ function Pricing() {
         Priced for the whole team, not the seat.
       </h3>
       <p className="text-sm sm:text-base text-foreground/85 leading-relaxed max-w-2xl mb-6">
-        The program is <strong>CAD&nbsp;$1,400</strong> per clinician at the standard rate. Train your team together
-        (12+) and it&apos;s <strong>CAD&nbsp;$900 each — CAD&nbsp;$500 less per clinician</strong>. Every tier includes the 8 online
-        modules, the on-site practical day, the toolkit and certification; final scope is tailored on a 20-minute call.
+        The public per-seat rate is <strong>A${PUBLIC_SEAT_RATE_AUD.toLocaleString()}</strong> per clinician. Train your team
+        together (12+) and it&apos;s <strong>CAD&nbsp;$900 each</strong>, quoted in your currency. Every tier includes the{' '}
+        {CONFIG.COURSE.ONLINE_CPD_POINTS} online modules, the on-site practical day, the toolkit and certification; final
+        scope is tailored on a 20-minute call.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -738,8 +756,12 @@ function Pricing() {
               </span>
             </div>
             <div className="mb-1 flex items-baseline gap-1.5">
+              {/* Reference rate, NOT a struck-through "was" price: the cohort
+                  rate is quoted in CAD and the public rate is charged in AUD,
+                  so striking one through the other would imply a discount that
+                  cannot be computed. */}
               {tier.regular ? (
-                <span className="text-base font-semibold text-muted-foreground/60 line-through">{tier.regular}</span>
+                <span className="text-xs font-semibold text-muted-foreground/70">{tier.regular}</span>
               ) : null}
               <span className={`text-3xl font-bold leading-none ${tier.recommended ? 'text-accent' : 'text-foreground'}`}>
                 {tier.price}

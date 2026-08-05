@@ -12,6 +12,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useState, useEffect } from 'react'
 import { CONFIG, workshopPriceFor } from '@/lib/config'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
+import { holdsPracticalDaySeat, holdsOnlineWithoutPracticalDay } from '@/lib/practical-day-seat'
 
 export default function LearningSuite() {
   return (
@@ -48,6 +49,10 @@ function LearningSuiteInner() {
   const freeShortCourseComplete = isModuleComplete(freeShortCourse.id)
 
   const accessLevel = user?.accessLevel || ''
+  // A Clinic Hub Pack seat is 'full-course' but bought ONLINE seats only — it
+  // must not be told it holds the in-person hours (lib/practical-day-seat.ts).
+  const holdsPracticalSeat = holdsPracticalDaySeat({ accessLevel, hubPackSeat: user?.hubPackSeat })
+  const needsPracticalDay = holdsOnlineWithoutPracticalDay({ accessLevel, hubPackSeat: user?.hubPackSeat })
   // THREE tiers (see Sidebar). CRM ownership is course_purchases-based, NOT
   // access_level, so a CRM-only buyer carries 'preview'. They are NOT a
   // free-trial lead (don't show them the SCAT funnel as "their" course) and NOT
@@ -178,7 +183,7 @@ function LearningSuiteInner() {
                     ? 'Free SCAT6, SCOAT6 & Child SCAT6 Assessment Training'
                     : !isPaidCcm
                     ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD Points · Exercise Rehabilitation for Concussion`
-                    : accessLevel === 'full-course'
+                    : holdsPracticalSeat
                     ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} Online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management`
                     : `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD Hours · Evidence-Based Concussion Management`}
                 </p>
@@ -430,15 +435,16 @@ function LearningSuiteInner() {
               </div>
             </div>
 
-            {/* Upgrade banner for online-only users */}
-            {accessLevel === 'online-only' && (
+            {/* Add-the-practical-day banner: online-only buyers AND Clinic Hub
+                Pack seats (online entitlement, no practical-day seat). */}
+            {needsPracticalDay && (
               <div className="mt-6 glass rounded-xl p-5 border-l-4 border-orange-400">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
                     <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-foreground mb-1">Complete your 16 CPD hours — add the workshop</h3>
+                    <h3 className="text-sm font-bold text-foreground mb-1">Complete your {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours — add the workshop</h3>
                     <p className="text-xs text-muted-foreground mb-3">
                       Your online modules teach the theory. The full-day workshop is where you practice SCAT6 administration, VOMS testing &amp; BESS scoring with expert feedback — the skills you can&apos;t learn from a screen.
                     </p>

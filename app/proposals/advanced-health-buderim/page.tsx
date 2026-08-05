@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import { workshopPriceFor } from '@/lib/config'
 import {
   Home,
   BookOpen,
@@ -399,6 +400,18 @@ function OnsiteHubHeadline() {
 // PRICING TIERS — 3 cohort sizes, per-clinician rate scales down
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * The public per-clinician rate a clinician would ACTUALLY be charged today —
+ * derived from workshopPriceFor(), the same function lib/stripe.ts uses to set
+ * the charge. NOT the A$1,400 sticker: outside the final EARLY_BIRD_DAYS_BEFORE
+ * window of a confirmed date nobody pays it, so a saving quoted against
+ * A$1,400 overstates the discount (ACL price representation). Buderim has no
+ * CONFIG.LOCATIONS entry, so the rate is the no-city (nomination) rate — which
+ * is exactly what a Sunshine Coast buyer would be charged. Tier prices and
+ * totals below are the bespoke quote and are unchanged.
+ */
+const PUBLIC_RATE = workshopPriceFor(null)
+
 const COHORT_TIERS = [
   {
     name: 'Essential',
@@ -427,6 +440,10 @@ const COHORT_TIERS = [
   },
 ] as const
 
+/** Best per-clinician saving across the quoted tiers, derived — never typed. */
+const MAX_SAVING = Math.max(...COHORT_TIERS.map((t) => PUBLIC_RATE - t.perClinician))
+const LOWEST_PER_CLINICIAN = Math.min(...COHORT_TIERS.map((t) => t.perClinician))
+
 function PricingTiers() {
   return (
     <section id="pricing" className="mt-8 scroll-mt-8">
@@ -442,17 +459,17 @@ function PricingTiers() {
       <div className="mb-4 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-4 py-3 shadow-sm flex items-center gap-3 sm:gap-5 flex-wrap">
         <div className="flex items-baseline gap-1.5">
           <span className="text-[9px] uppercase tracking-wider font-bold text-white/85">Public rate</span>
-          <span className="text-base font-bold">A$1,400</span>
+          <span className="text-base font-bold">A${PUBLIC_RATE.toLocaleString()}</span>
           <span className="text-[10px] text-white/80">/ clinician</span>
         </div>
         <span className="text-white/60 text-sm">→</span>
         <div className="flex items-baseline gap-1.5">
           <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-300">On-site cohort</span>
-          <span className="text-base font-bold text-emerald-300">From A$900</span>
+          <span className="text-base font-bold text-emerald-300">From A${LOWEST_PER_CLINICIAN.toLocaleString()}</span>
           <span className="text-[10px] text-white/80">/ clinician</span>
         </div>
         <span className="text-[11px] text-white/90 sm:ml-auto">
-          Save up to A$500/clinician · whole team trains on your own cases
+          Save up to A${MAX_SAVING}/clinician · whole team trains on your own cases
         </span>
       </div>
 
@@ -504,7 +521,7 @@ function PricingTiers() {
 
 function CohortCard({ tier }: { tier: (typeof COHORT_TIERS)[number] }) {
   const recommended = 'recommended' in tier && tier.recommended
-  const savePerClinician = 1400 - tier.perClinician
+  const savePerClinician = PUBLIC_RATE - tier.perClinician
   return (
     <div
       className={`relative rounded-xl p-4 overflow-hidden ${

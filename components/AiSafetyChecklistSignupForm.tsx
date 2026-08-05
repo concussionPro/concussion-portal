@@ -44,8 +44,14 @@ export function AiSafetyChecklistSignupForm() {
         <p className="text-sm font-semibold text-emerald-900 flex items-center gap-1.5 mb-1">
           <Check className="w-4 h-4" /> Check your inbox
         </p>
+        {/* The route skips the send entirely for a suppressed address and still
+            answers {success:true}, so a flat "should arrive within 60 seconds"
+            is a promise this component cannot keep. Keep the expectation, add
+            a fallback that always works. */}
         <p className="text-xs text-emerald-800 leading-relaxed">
-          The checklist is on its way to <strong>{email}</strong>. Should arrive within 60 seconds. If you don&apos;t see it, check your Promotions tab or spam folder.
+          The checklist is on its way to <strong>{email}</strong> — usually within a minute. If
+          it doesn&apos;t turn up, check your Promotions tab or spam folder, or reply to
+          zac@concussion-education-australia.com and I&apos;ll send it straight over.
         </p>
       </div>
     )

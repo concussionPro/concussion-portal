@@ -22,6 +22,14 @@ export interface SessionUser {
    * audience for the in-portal practical-day upgrade.
    */
   ownsCrmPractical?: boolean
+  /**
+   * This account's course access came from a CLINIC HUB PACK seat — ONLINE
+   * entitlement with NO practical-day seat (the in-person day is a separate
+   * A$600 add-on). accessLevel stays 'full-course' so every paid online
+   * surface renders as before; anything that means "owns the in-person day"
+   * must go through holdsPracticalDaySeat() in lib/practical-day-seat.ts.
+   */
+  hubPackSeat?: boolean
   /** Synthetic demo identity (reviewer preview or /demo/clinic prospect) —
    *  nothing persists; UI hides account affordances (sync, sign-out, settings). */
   isDemo?: boolean

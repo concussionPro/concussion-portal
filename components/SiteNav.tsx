@@ -32,6 +32,18 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const onPricing = pathname === '/pricing'
+  // WHICH product "Enrol" means depends on which stream the reader is in.
+  //
+  // CONFIG.SHOP_URL is /pricing — Concussion Clinical Mastery, the physio/osteo
+  // stream. An exercise physiologist reading the ESSA-accredited CRM landing
+  // and clicking the persistent top-right "Enrol" was therefore taken to the
+  // wrong product for their registration, with no way to tell until the
+  // checkout named it. ESSA lists the course to its members on 20 Aug, so this
+  // is the nav that audience will arrive under. Keep EP readers in the EP
+  // stream; everyone else is unaffected.
+  const onCrmSurface =
+    pathname === '/concussion-rehab-mastery' || pathname.startsWith('/ep-course')
+  const enrolHref = onCrmSurface ? '/concussion-rehab-mastery#pricing-cards' : CONFIG.SHOP_URL
 
   // Auth-aware nav: detect login state
   const [auth, setAuth] = useState<AuthState>(null)
@@ -159,7 +171,7 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
               </button>
             ) : (
               <Link
-                href={CONFIG.SHOP_URL}
+                href={enrolHref}
                 className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
               >
                 Enrol
@@ -236,7 +248,7 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
               </button>
             ) : (
               <Link
-                href={CONFIG.SHOP_URL}
+                href={enrolHref}
                 onClick={() => setMobileMenuOpen(false)}
                 className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
               >

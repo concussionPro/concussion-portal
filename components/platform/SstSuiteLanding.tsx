@@ -101,7 +101,12 @@ function SstTab() {
             patient trains in it between appointments. SST Trainer is the delivery layer: you prescribe
             and oversee; they train on the wearable they own; the data and the GP report come back to you.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/clinical-suite/start">Start free trial →</Cta><Cta variant="ghost" href="/sst-trainer">Try it live</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/clinical-suite/start">Start free trial →</Cta>{/* "Try it live" promised a hands-on trial to an evaluating clinician, but
+    /sst-trainer is the PATIENT entry: its two CTAs are "I have a clinic code
+    — start" and "Start with your clinic code", which an evaluator does not
+    have. The clinician's actual try-it path is "Start free trial →" next to
+    this. Label it for what it shows. */}
+<Cta variant="ghost" href="/sst-trainer">See the patient app</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable · integrates with Cliniko" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>

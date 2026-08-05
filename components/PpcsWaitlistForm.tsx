@@ -8,6 +8,7 @@ export function PpcsWaitlistForm() {
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [alreadyOnList, setAlreadyOnList] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,6 +31,11 @@ export function PpcsWaitlistForm() {
         setSubmitting(false)
         return
       }
+      // The route already tells us whether this request created the signup.
+      // A repeat submission sends NO email (route line ~66) but still answers
+      // {success:true}, so the old unconditional "Confirmation email is on its
+      // way" was false for anyone re-checking they were on the list.
+      setAlreadyOnList(data.isNewSignup === false)
       setSubmitted(true)
     } catch {
       setError('Network error. Try again.')
@@ -45,7 +51,17 @@ export function PpcsWaitlistForm() {
           <Check className="w-4 h-4" /> You&apos;re on the list
         </p>
         <p className="text-xs text-emerald-800 leading-relaxed">
-          Confirmation email is on its way to <strong>{email}</strong>. Next email arrives on launch day with your 50%-off code. No spam between now and then.
+          {alreadyOnList ? (
+            <>
+              <strong>{email}</strong> was already on the list — nothing more to do. The next
+              email arrives on launch day with your 50%-off code. No spam between now and then.
+            </>
+          ) : (
+            <>
+              Confirmation email is on its way to <strong>{email}</strong>. Next email arrives on
+              launch day with your 50%-off code. No spam between now and then.
+            </>
+          )}
         </p>
       </div>
     )

@@ -20,6 +20,15 @@ import { enrolUser as enrolAiCourseUser, unenrolUser as unenrolAiCourseUser } fr
 import { findCourse } from '@/lib/ai-course/provider-catalogue'
 import { CRM_COURSE_SLUG, CRM_PRACTICAL_SLUG, crmInvoiceDescription, type CrmTier } from '@/lib/crm-course'
 
+/**
+ * course_purchases slug prefix for a Hub Pack sale (one row per purchased hub,
+ * suffixed with the Stripe session). Deliberately NOT 'ccm-complete…': the
+ * practical-day roster matches that prefix and a hub seat buys no practical day
+ * (users.practicalDayAttendees excludes hub_pack_seat_at rows for the same
+ * reason).
+ */
+const HUB_PACK_SLUG_PREFIX = 'ccm-hub-pack-'
+
 function labelForCourse(courseType: string, accessLevel: string): string {
   switch (courseType) {
     case 'full-course': return 'Complete Course (online + workshop)'
@@ -464,7 +473,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           email: customerEmail,
           courseSlug: `ccm-complete-repeat-${session.id.slice(-8)}`,
           stripeSessionId: session.id,
-          amountAud: (session.amount_total || 0) / 100,
+          amount: (session.amount_total || 0) / 100,
+          currency,
         })
         console.log(`Repeat full-course purchase recorded for ${redact(customerEmail)}${workshopCity ? ` — nominated ${workshopCity}` : ''}`)
       } catch (err) {
@@ -500,7 +510,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         email: customerEmail,
         courseSlug: accessLevel === 'full-course' ? 'ccm-complete' : 'ccm-online',
         stripeSessionId: session.id,
-        amountAud: Math.round((session.amount_total || 0) / 100),
+        amount: Math.round((session.amount_total || 0) / 100),
+        currency,
       })
     } catch (err) {
       // Best-effort: access_level is already provisioned above — never fail
@@ -749,7 +760,8 @@ async function handleShortCoursePurchase(
       email: customerEmail,
       courseSlug,
       stripeSessionId: session.id,
-      amountAud,
+      amount: amountAud,
+      currency,
     })
   } catch (err) {
     console.error(`[short-course] recordCoursePurchase failed for ${courseSlug}:`, err)
@@ -895,13 +907,15 @@ async function handleCrmPurchase(
   // upgrade add the shared practical-day nomination.
   try {
     if (tier === 'online' || tier === 'complete') {
-      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_COURSE_SLUG, stripeSessionId: session.id, amountAud })
+      // `currency` is Stripe's own — the international CRM lane charges USD, and
+      // recording that as AUD is what made the ledger unsummable.
+      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_COURSE_SLUG, stripeSessionId: session.id, amount: amountAud, currency })
     }
     if (tier === 'complete' || tier === 'upgrade') {
       // 'complete' is ONE charge recorded on TWO slugs; the full amount lives on
       // the CRM_COURSE_SLUG row above, so the practical row records $0 — any
       // revenue sum over course_purchases would otherwise double-count it.
-      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_PRACTICAL_SLUG, stripeSessionId: session.id, amountAud: tier === 'complete' ? 0 : amountAud })
+      await recordCoursePurchase({ email: customerEmail, courseSlug: CRM_PRACTICAL_SLUG, stripeSessionId: session.id, amount: tier === 'complete' ? 0 : amountAud, currency })
     }
   } catch (err) {
     console.error(`[crm] entitlement write failed for ${redact(customerEmail)} (${tier}):`, err)
@@ -1158,14 +1172,50 @@ async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerE
   const code = await createCourseHub({ ownerEmail: customerEmail, clinicName, clinicianSeats, stripeSessionId: session.id })
   await redeemHubSeat(code, customerEmail, customerName, 'clinician')
 
-  // Provision the buyer at real full-course access (the exact existing suite).
+  // Provision the buyer at real full-course access (the exact existing suite),
+  // marked as a HUB PACK seat: the pack sells ONLINE seats only — the in-person
+  // day is a separate A$600 add-on (CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE).
+  // Without the marker the buyer was badged "in-person day included", told they
+  // held CONFIG.COURSE.TOTAL_CPD_POINTS CPD hours, and could self-serve onto the
+  // practical-day roster for free (lib/practical-day-seat.ts).
   const userId = await createUser({
     email: customerEmail,
     name: customerName,
     accessLevel: 'full-course',
     stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
     signupSource: 'purchase',
+    hubPackSeat: true,
   })
+
+  // Record the sale in the revenue ledger. This path returns early (it never
+  // reaches the generic CCM `ccm-complete`/`ccm-online` write), so before this
+  // an A$1,497 Hub Pack appeared in NO revenue view over course_purchases at
+  // all. Slug carries the session suffix — the same shape the repeat-Complete
+  // path uses — so a clinic that buys a SECOND hub gets a second row instead of
+  // upserting over the first, while a webhook RETRY of the same session lands on
+  // the same (email, slug) and stays idempotent. Only the owner is recorded:
+  // redeemed seats are not separate sales.
+  //
+  // NOTE for the hub-seat marker in lib/users.ts: its historical backfill skips
+  // anyone holding ANY course_purchases row ("bought something in their own
+  // right"). A hub OWNER now holds one, so new hub seats must keep being marked
+  // at provisioning time (createUser hubPackSeat) and never inferred from the
+  // absence of a purchase row.
+  //
+  // Best-effort — the hub, the key and the buyer's access are already
+  // provisioned above; never fail fulfilment (and trigger endless Stripe
+  // retries) over the ledger.
+  try {
+    await recordCoursePurchase({
+      email: customerEmail,
+      courseSlug: `${HUB_PACK_SLUG_PREFIX}${session.id.slice(-8)}`,
+      stripeSessionId: session.id,
+      amount,
+      currency,
+    })
+  } catch (err) {
+    console.error(`[hub-pack] Failed to record purchase for ${redact(customerEmail)}:`, err)
+  }
 
   try {
     await sql`UPDATE abandoned_checkouts SET recovered = true WHERE email = ${customerEmail.toLowerCase()} AND recovered = false`
@@ -1704,6 +1754,19 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
         console.error(`[hub-pack] ${cause} for ${redact(email)} but no un-revoked hub matched session ${chargeSessionId || 'unknown'} — check manually`)
         return
       }
+      // Drop the refunded sale from the revenue ledger FIRST. Two reasons, and
+      // the order matters for the second: (1) a refunded A$1,497 must not keep
+      // counting as revenue — same as the CRM and short-course refund paths;
+      // (2) the member-downgrade guard below treats ANY course_purchases row
+      // other than 'ccm-online' as "bought something independently, leave them
+      // alone", and the owner's own hub row is not an independent purchase — it
+      // IS the charge being refunded. Left in place it would hand the refunded
+      // buyer permanent full-course access.
+      await sql`
+        DELETE FROM course_purchases
+        WHERE stripe_session_id = ${chargeSessionId}
+          AND course_slug LIKE ${HUB_PACK_SLUG_PREFIX + '%'}
+      `
       const chargeCustomerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null
       const { rows: downgraded } = await sql<{ email: string; access_level: string }>`
         UPDATE users SET access_level = CASE

@@ -370,6 +370,7 @@ export async function POST(request: NextRequest) {
         certificateId,
         pdfBuffer,
         userAccessLevel: resolvedUser?.accessLevel,
+        hubPackSeat: Boolean(resolvedUser?.hubPackSeatAt),
         courseType,
       })
 
@@ -443,6 +444,10 @@ async function sendCertificateEmail(opts: {
   pdfBuffer: Buffer
   /** access_level so we dont pitch the workshop to someone who already owns it */
   userAccessLevel?: 'preview' | 'online-only' | 'full-course'
+  /** Clinic Hub Pack seat — 'full-course' access but ONLINE only, no practical
+   *  day. Without this the "your in-person workshop seat is included" block
+   *  below fires for a seat that never bought one. */
+  hubPackSeat?: boolean
   /**
    * Certificate type — CRM buyers carry access_level 'preview' (isolated
    * streams), so WITHOUT this the CRM cert email fell into the free-tier
@@ -533,7 +538,7 @@ async function sendCertificateEmail(opts: {
                     Add the practical day →
                   </a>
                 </div>
-                ` : opts.userAccessLevel === 'full-course' ? `
+                ` : opts.userAccessLevel === 'full-course' && !opts.hubPackSeat ? `
                 <!-- Full-course buyer — they already own online + workshop. No upsell. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
@@ -546,7 +551,7 @@ async function sendCertificateEmail(opts: {
                     Questions about the workshop, your modules, or CPD logging? Reply to this email.
                   </p>
                 </div>
-                ` : opts.userAccessLevel === 'online-only' ? `
+                ` : opts.userAccessLevel === 'online-only' || opts.hubPackSeat ? `
                 <!-- Online-only buyer — pitch the workshop UPGRADE, not the full course. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">

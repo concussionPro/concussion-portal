@@ -70,7 +70,18 @@ export async function POST(request: NextRequest) {
   // result is 'ok' (new seat) or 'already' (idempotent) — both grant access.
   let userId: string
   try {
-    userId = await createUser({ email, name, accessLevel: 'full-course', signupSource: 'purchase' })
+    // hubPackSeat: the pack sells ONLINE seats — the in-person day is a
+    // separate A$600 add-on (CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE).
+    // access_level stays 'full-course' so every paid ONLINE surface opens
+    // exactly as before; the marker is what stops the practical-day surfaces
+    // (roster, threshold, "Included" badge, 16-CPD claim) counting this seat.
+    userId = await createUser({
+      email,
+      name,
+      accessLevel: 'full-course',
+      signupSource: 'purchase',
+      hubPackSeat: true,
+    })
   } catch (err) {
     console.error('Hub redeem provisioning failed:', err)
     return NextResponse.json({ error: 'We saved your seat but hit a snag setting up your login. Contact support@concussion-education-australia.com.' }, { status: 500 })

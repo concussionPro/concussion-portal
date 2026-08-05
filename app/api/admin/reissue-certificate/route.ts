@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
+import { recordAdminAction } from '@/lib/admin-audit'
 import { findUserByEmail } from '@/lib/users'
 
 export async function POST(req: NextRequest) {
@@ -50,6 +51,15 @@ export async function POST(req: NextRequest) {
     DELETE FROM email_audit_log
     WHERE audit_key = ${auditKey}
   `
+
+  // Refund-adjacent: clearing this audit key lets the holder re-trigger
+  // issuance, and a re-issue CLEARS any revocation on the certificate
+  // (lib/course-certificates.ts). That must be reconstructable.
+  await recordAdminAction(req, {
+    route: '/api/admin/reissue-certificate',
+    target: user.email,
+    detail: { courseType, auditKeyRemoved: rowCount === 1 },
+  })
 
   return NextResponse.json({
     success: true,

@@ -74,11 +74,13 @@ const INTL_FAQS: { q: string; a: string }[] = [
 function SyllabusCapture({ uk, price }: { uk: boolean; price: IntlPriceView }) {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (state === 'sending' || state === 'done') return
     setState('sending')
+    setErrorMsg(null)
     trackEvent('intl_syllabus_submit', { location: uk ? 'uk' : 'international' })
     try {
       const res = await fetch('/api/intl-syllabus', {
@@ -86,8 +88,25 @@ function SyllabusCapture({ uk, price }: { uk: boolean; price: IntlPriceView }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, location: uk ? 'uk' : 'international', priceDisplay: price.display }),
       })
-      setState(res.ok ? 'done' : 'error')
+      // The response body was never read, so a 429 rate-limit, a 400 invalid
+      // address and a 502 send failure all rendered the same "Something went
+      // wrong — please try again", which is the one instruction that cannot
+      // work for a rate-limited or malformed address. The route returns
+      // actionable copy for each; surface it. This is the ONLY capture on the
+      // UK/international lane, which takes real traffic and currently returns
+      // nothing (12 sessions / 28 days on /pricing-international, all one-page).
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.success) {
+        setErrorMsg(
+          (data && typeof data.error === 'string' && data.error) ||
+            'Something went wrong — please try again.',
+        )
+        setState('error')
+        return
+      }
+      setState('done')
     } catch {
+      setErrorMsg('Network error — please check your connection and try again.')
       setState('error')
     }
   }
@@ -95,9 +114,27 @@ function SyllabusCapture({ uk, price }: { uk: boolean; price: IntlPriceView }) {
   return (
     <div className="max-w-3xl mx-auto mb-6 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5">
       {state === 'done' ? (
-        <div className="flex items-center gap-2.5">
-          <Check className="w-5 h-5 text-teal-600 flex-shrink-0" strokeWidth={2.5} />
-          <p className="text-sm font-semibold text-foreground">Sent — the full syllabus is on its way to your inbox.</p>
+        <div className="flex items-start gap-2.5">
+          <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+          <div>
+            {/* /api/intl-syllabus records a PERMANENT Day-0 audit key and sends
+                only on the first capture, and skips the send entirely for a
+                suppressed address — both still answer {success:true}. "Sent —
+                on its way" was therefore false for every repeat request, with
+                no way for the reader to tell. Accurate either way now, with a
+                human fallback that always works. */}
+            <p className="text-sm font-semibold text-foreground">
+              Done — the full syllabus is in your inbox.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              If you&rsquo;ve asked for it before, it&rsquo;s the same email already sent to you —
+              check spam. Still nothing? Reply to zac@concussion-education-australia.com and
+              I&rsquo;ll send it straight over.
+            </p>
+            <a href="#pricing-cards" className="mt-2 inline-block text-xs font-semibold text-teal-700 hover:underline">
+              Or see the enrolment options →
+            </a>
+          </div>
         </div>
       ) : (
         <>
@@ -124,7 +161,9 @@ function SyllabusCapture({ uk, price }: { uk: boolean; price: IntlPriceView }) {
             </button>
           </form>
           {state === 'error' && (
-            <p className="text-xs text-red-600 mt-2">Something went wrong — please try again.</p>
+            <p role="alert" className="text-xs text-red-600 mt-2">
+              {errorMsg || 'Something went wrong — please try again.'}
+            </p>
           )}
         </>
       )}

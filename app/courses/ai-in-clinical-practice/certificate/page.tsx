@@ -48,7 +48,6 @@ export default async function CertificatePage() {
 
   const verifyUrl = `${CONFIG.SEO.SITE_URL}/courses/ai-in-clinical-practice/verify/${cert.certificateId}`
   const issuedDate = new Date(cert.issuedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
-  const expiresDate = new Date(cert.expiresAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,8 +76,10 @@ export default async function CertificatePage() {
               <p>Issued</p>
             </div>
             <div>
-              <p className="font-semibold text-foreground">{expiresDate}</p>
-              <p>Valid until</p>
+              {/* Completion evidence does not expire — see
+                  lib/ai-course/certificate.ts. */}
+              <p className="font-semibold text-foreground">No expiry</p>
+              <p>Validity</p>
             </div>
             <div>
               <p className="font-semibold text-foreground">{cert.certificateId.slice(0, 12)}</p>
@@ -90,18 +91,6 @@ export default async function CertificatePage() {
             Verify at: <span className="font-mono">{verifyUrl}</span>
           </p>
         </div>
-
-        {!cert.isValid && (
-          <div className="rounded-xl p-4 bg-amber-50 border border-amber-200 text-sm text-amber-900 mb-6 flex flex-wrap items-center justify-between gap-3">
-            <span>This certificate has expired. Re-take the (refreshed) quiz to renew for another 12 months.</span>
-            <Link
-              href="/courses/ai-in-clinical-practice/quiz"
-              className="px-4 py-2 rounded-lg bg-amber-700 text-white text-xs font-semibold hover:bg-amber-800 transition-colors"
-            >
-              Re-take quiz →
-            </Link>
-          </div>
-        )}
 
         <div className="grid sm:grid-cols-2 gap-3 mb-3">
           <a

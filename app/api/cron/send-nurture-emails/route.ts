@@ -15,9 +15,10 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { PDF_LEAD_TOOLS, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
+import { holdsPracticalDaySeat } from '@/lib/practical-day-seat'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { isWorkshopAlumnus } from '@/lib/workshop-alumni'
@@ -127,9 +128,17 @@ export async function GET(request: Request) {
      * pitched the free-course ladder, whichever CRM product they bought.
      */
     const paysForCrm = (email: string) => !!crmFor(email)
-    /** Holds a seat at the SHARED practical day, whichever stream sold it. */
-    const holdsWorkshopSeat = (u: { accessLevel: string; email: string }) =>
-      u.accessLevel === 'full-course' || !!crmFor(u.email)?.practicalAt
+    /**
+     * Holds a seat at the SHARED practical day, whichever stream sold it.
+     * A Clinic Hub Pack seat is 'full-course' but online-only, so it must NOT
+     * receive venue logistics or "your seat is reserved" copy.
+     */
+    const holdsWorkshopSeat = (u: { accessLevel: string; email: string; hubPackSeatAt?: string }) =>
+      holdsPracticalDaySeat({
+        accessLevel: u.accessLevel,
+        hubPackSeat: Boolean(u.hubPackSeatAt),
+        ownsCrmPractical: !!crmFor(u.email)?.practicalAt,
+      })
 
     // Completed-workshop ALUMNI are excluded from ALL nurture/lifecycle outreach
     // (Zac 2026-06-15): they've finished the workshop — no onboarding, momentum,
@@ -366,8 +375,17 @@ export async function GET(request: Request) {
       //   1+ SCAT modules done  → clinical case study (default sequence — handled below)
       if (email.day === 7 && (!user.lastLoginAt || scatCompletedCount === 0)) {
         const ghoster = !user.lastLoginAt
-        const variant = ghoster ? 'reengagement' : 'logged_in_no_progress'
-        const tpl = ghoster ? FREE_USER_REENGAGEMENT : FREE_LOGGED_IN_NO_PROGRESS
+        // Someone who came for the PDF is not a course lead who stalled — they
+        // never wanted the course. Both templates below ask them to go and
+        // start Module 1, which is why this segment has never converted.
+        // Offer them the tools instead (see PDF_LEAD_TOOLS). Course-intenders
+        // ('free-course') keep the existing copy, and they DO engage: 28 of 29
+        // open a module.
+        const camePdfHunting = user.signupSource === 'squarespace' || user.signupSource === 'scat-export'
+        const variant = camePdfHunting ? 'pdf_lead_tools' : ghoster ? 'reengagement' : 'logged_in_no_progress'
+        const tpl = camePdfHunting
+          ? PDF_LEAD_TOOLS
+          : ghoster ? FREE_USER_REENGAGEMENT : FREE_LOGGED_IN_NO_PROGRESS
         const auditKey = `scat_day7_${variant}_${user.id}`
         const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (inserted === 0) continue

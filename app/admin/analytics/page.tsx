@@ -57,10 +57,18 @@ import type { PipelineStage, StageMatrix } from '@/lib/prospect/stage'
 import { decideOutreach } from '@/lib/prospect/outreach-decision'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+// All three of uniques/bounces/totaltime are VISITOR-scoped (people, keyed on
+// the persistent visitorId), not session-scoped — see buildStats() in
+// /api/analytics/data. They move together: bounces ÷ uniques and
+// totaltime ÷ uniques are both per-VISITOR figures, so any label rendered off
+// them must say visitor, never session.
 interface AnalyticsStats {
   pageviews: { value: number; prev: number }
+  /** Unique people in the window. */
   uniques: { value: number; prev: number }
+  /** People who viewed exactly one page. */
   bounces: { value: number; prev: number }
+  /** Total engaged seconds — ÷ uniques = average time per visitor. */
   totaltime: { value: number; prev: number }
 }
 
@@ -569,7 +577,7 @@ function generateDailyReport(
       ? visitors > prevVisitors ? `up ${Math.round(((visitors - prevVisitors) / prevVisitors) * 100)}% from the previous period` : visitors < prevVisitors ? `down ${Math.round(((prevVisitors - visitors) / prevVisitors) * 100)}% from the previous period` : 'flat vs the previous period'
       : visitors > 0 ? '(first period with data)' : ''
     if (visitors > 0) {
-      parts.push(`${visitors} unique visitors ${periodLabel} across ${views} page views ${trend}. Bounce rate sits at ${bounce}% with an average session of ${avgLabel}.`)
+      parts.push(`${visitors} unique visitors ${periodLabel} across ${views} page views ${trend}. Bounce rate sits at ${bounce}% (visitors who saw one page) with an average of ${avgLabel} per visitor.`)
     } else {
       parts.push(`No visitor traffic recorded ${periodLabel}.`)
     }
@@ -1564,6 +1572,7 @@ export default function AnalyticsDashboard() {
     return () => abortRef.current?.abort()
   }, [period, loadAll])
 
+  // Both per VISITOR: bounced visitors ÷ visitors, engaged seconds ÷ visitors.
   const bounceRate = stats ? stats.bounces.value / Math.max(stats.uniques.value, 1) : 0
   const avgDuration = stats ? Math.round(stats.totaltime.value / Math.max(stats.uniques.value, 1)) : 0
   const maxPages = topPages[0]?.y ?? 1
@@ -1677,7 +1686,7 @@ export default function AnalyticsDashboard() {
           <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('overview'))} />
           <StatCard label="Page Views" value={stats?.pageviews.value ?? 0} prev={stats?.pageviews.prev ?? 0} icon={Eye} loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('overview'))} />
           <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('channels'))} invertColor />
-          <StatCard label="Avg. Session" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('flow'))} />
+          <StatCard label="Avg. Time / Visitor" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} onClick={() => setActiveGroup(groupForPanel('flow'))} />
         </div>
 
         {/* ── Retargeting summary cards ──────────────────────────────────── */}

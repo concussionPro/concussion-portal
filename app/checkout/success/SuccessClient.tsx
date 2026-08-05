@@ -229,6 +229,15 @@ function CheckoutSuccessContent() {
             (It also mislabelled workshop-upgrade and bundle-credit purchases,
             which are below PRICE_REGULAR without being early-bird.) */}
 
+        {/* CRM ONLINE — nominate the practical-day city, AFTER paying.
+            This used to be a REQUIRED field standing between the enrol button
+            and Stripe. Measured 2026-08-06: 6 sessions clicked enrol in 28 days
+            and every one of them abandoned at that form — zero reached
+            checkout. Asking an online-only buyer to commit to a practical-day
+            city before taking their money cost 100% of the sales; asking here
+            costs nothing and captures the same Ready-to-Train demand. */}
+        {isCrm && !isFullCourseType && !sessionData?.location && <CrmCityNomination />}
+
         {/* Workshop info for full-course and workshop-upgrade */}
         {isFullCourseType && sessionData?.location && (() => {
           const location = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === sessionData.location)
@@ -565,5 +574,96 @@ export default function SuccessClient() {
     }>
       <CheckoutSuccessContent />
     </Suspense>
+  )
+}
+
+/**
+ * Post-purchase practical-day nomination for CRM ONLINE buyers.
+ *
+ * The nomination feeds the shared CCM/CRM Ready-to-Train pool that decides
+ * which city gets a date. It used to be collected BEFORE payment, where it
+ * killed every sale (see the call site). Collected here it is free: the buyer
+ * has paid, the success page has already minted their session, and
+ * /api/ready-to-train admits exactly this person — a CRM online owner with no
+ * practical-day seat.
+ *
+ * Deliberately skippable. It is demand data, not a requirement of the purchase.
+ */
+function CrmCityNomination() {
+  const CITIES = [
+    { slug: 'sydney', label: 'Sydney' },
+    { slug: 'melbourne', label: 'Melbourne' },
+    { slug: 'byron-bay', label: 'Byron Bay' },
+    { slug: 'adelaide', label: 'Adelaide' },
+    { slug: 'wa', label: 'Perth (WA)' },
+  ]
+  const [city, setCity] = useState('')
+  const [state, setState] = useState<'idle' | 'saving' | 'done' | 'error'>('idle')
+  const [message, setMessage] = useState('')
+
+  async function submit() {
+    if (!city || state === 'saving') return
+    setState('saving')
+    try {
+      const res = await fetch('/api/ready-to-train', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ city }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        // Never present this as a failed PURCHASE — the money went through.
+        setState('error')
+        setMessage(data.error || 'Could not record your city. You can nominate later from your dashboard.')
+        return
+      }
+      setState('done')
+      setMessage(data.message || 'Noted — we’ll tell you when a date is confirmed.')
+    } catch {
+      setState('error')
+      setMessage('Could not record your city. You can nominate later from your dashboard.')
+    }
+  }
+
+  if (state === 'done') {
+    return (
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 mb-6">
+        <p className="text-sm font-semibold text-emerald-900 mb-1">Practical day — city noted</p>
+        <p className="text-sm text-emerald-800">{message}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 mb-6 text-left">
+      <p className="text-sm font-bold text-foreground mb-1">
+        Where would you take the practical day?
+      </p>
+      <p className="text-[13px] text-muted-foreground mb-3">
+        Optional — it tells us which city to schedule next. You can add the hands-on day
+        any time; nothing about your course depends on this.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-[14px] bg-white"
+        >
+          <option value="">Choose a city</option>
+          {CITIES.map((c) => (
+            <option key={c.slug} value={c.slug}>{c.label}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!city || state === 'saving'}
+          className="rounded-lg bg-accent px-4 py-2 text-[14px] font-semibold text-white disabled:opacity-50"
+        >
+          {state === 'saving' ? 'Saving…' : 'Nominate'}
+        </button>
+      </div>
+      {state === 'error' && <p className="text-[12px] text-amber-700 mt-2">{message}</p>}
+    </div>
   )
 }

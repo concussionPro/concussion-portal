@@ -25,6 +25,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
+import { recordAdminAction } from '@/lib/admin-audit'
 
 export const maxDuration = 60
 
@@ -174,6 +175,19 @@ export async function POST(req: NextRequest) {
         // Non-fatal
       }
     }
+  }
+
+  // Dry runs mutate nothing, so they are not audited.
+  if (!dryRun) {
+    await recordAdminAction(req, {
+      route: '/api/admin/squarespace-suppress',
+      target: `${results.length} addresses`,
+      detail: {
+        directSuppressed: results.filter(r => r.decision === 'direct-suppressed').length,
+        domainFlagged: results.filter(r => r.decision === 'domain-flagged').length,
+        uniqueClinicsAffected: new Set([...directHits, ...domainHits]).size,
+      },
+    })
   }
 
   return NextResponse.json({

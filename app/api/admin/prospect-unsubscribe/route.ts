@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
+import { recordAdminAction } from '@/lib/admin-audit'
 import { suppress } from '@/lib/prospect/repo'
 import { unsubscribeUser } from '@/lib/users'
 
@@ -123,6 +124,17 @@ export async function POST(req: NextRequest) {
       }
     }
   }
+
+  await recordAdminAction(req, {
+    route: '/api/admin/prospect-unsubscribe',
+    target: email,
+    detail: {
+      suppressed: allEmails,
+      clinicsPulled: clinics.map((c) => c.id),
+      domainPulled: pullDomain,
+      resendCancelled: cancelled,
+    },
+  })
 
   return NextResponse.json({
     ok: true,

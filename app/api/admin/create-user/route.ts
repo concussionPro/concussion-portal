@@ -4,6 +4,7 @@ import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { isAdminRequest } from '@/lib/require-admin'
+import { recordAdminAction } from '@/lib/admin-audit'
 
 // In-memory send dedup — prevents duplicate magic-link emails if the admin
 // UI double-submits (Enter key re-fires even when button is disabled).
@@ -75,6 +76,11 @@ export async function POST(request: NextRequest) {
     for (const [k, t] of recentSends) if (now - t > DEDUP_WINDOW_MS * 2) recentSends.delete(k)
 
     console.log(`\u2705 User created via admin: ${String(email).slice(0, 3)}*** (${accessLevel})`)
+    await recordAdminAction(request, {
+      route: '/api/admin/create-user',
+      target: String(email).toLowerCase(),
+      detail: { accessLevel, amount, workshopLocation: workshopLocation ?? null, emailSent },
+    })
 
     return NextResponse.json({
       success: true,

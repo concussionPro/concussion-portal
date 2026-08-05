@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { sql } from '@/lib/db';
 import { isAdminRequest } from '@/lib/require-admin';
+import {
+  isPageViewEvent,
+  countUniqueVisitors,
+  countBounceVisitors,
+} from '@/lib/analytics-visitor-scope';
 
 // Legacy blob support removed — all data now in Vercel Postgres
 
@@ -44,8 +49,11 @@ interface StatValue {
 
 interface StatsResponse {
   pageviews: StatValue;
+  /** Unique VISITORS (people), keyed on the persistent visitorId. */
   uniques: StatValue;
+  /** Visitors with exactly one pageview in the window — same scope as `uniques`. */
   bounces: StatValue;
+  /** Total engaged seconds; ÷ `uniques` = average time per visitor. */
   totaltime: StatValue;
 }
 
@@ -210,33 +218,38 @@ function excludeNonVisitorEvents(events: StoredEvent[]): StoredEvent[] {
   );
 }
 
-/** Match both 'page_view' (current client) and 'pageview' (legacy data) */
-function isPageView(e: StoredEvent): boolean {
-  return e.eventType === 'page_view' || e.eventType === 'pageview';
-}
+/**
+ * Match both 'page_view' (current client) and 'pageview' (legacy data).
+ * Definition lives in lib/analytics-visitor-scope.ts alongside the
+ * visitor-scoped counters that depend on it.
+ */
+const isPageView = isPageViewEvent;
 
 function countPageviews(events: StoredEvent[]): number {
   return events.filter(isPageView).length;
 }
 
-function countUniqueSessionIds(events: StoredEvent[]): number {
-  return new Set(events.map((e) => e.sessionId)).size;
-}
+/**
+ * uniques and bounces are VISITOR-scoped (see lib/analytics-visitor-scope.ts).
+ * "Unique Visitors" used to count unique SESSION ids — one clinician returning
+ * three times in a week read as three visitors, with session-bounces divided by
+ * that same inflated number. Both moved together so the rate stays a ratio of
+ * like to like.
+ */
+const countBounces = countBounceVisitors;
 
-function countBounces(events: StoredEvent[]): number {
-  const pvPerSession = new Map<string, number>();
-  for (const e of events) {
-    if (isPageView(e)) {
-      pvPerSession.set(e.sessionId, (pvPerSession.get(e.sessionId) ?? 0) + 1);
-    }
-  }
-  let bounces = 0;
-  for (const count of pvPerSession.values()) {
-    if (count === 1) bounces++;
-  }
-  return bounces;
-}
-
+/**
+ * TOTAL engaged seconds in the window. Deliberately still accumulated per
+ * SESSION: a sum over sessions IS the sum over visitors (sessions partition
+ * visitors), so this number is scope-invariant — but the 30-minute cap only
+ * does its job (killing idle tabs) per visit. Keying first/last by visitor
+ * instead would charge a returning visitor the whole span between their
+ * Monday and Friday visits, capped at 30 minutes, and quietly under- or
+ * over-state both.
+ *
+ * Its CONSUMER is what changed: totaltime ÷ uniques is now average time per
+ * VISITOR, not per session, and the dashboard card is labelled accordingly.
+ */
 function calcTotalTime(events: StoredEvent[]): number {
   const firstTs = new Map<string, number>();
   const lastTs = new Map<string, number>();
@@ -1077,8 +1090,8 @@ function buildStats(current: StoredEvent[], prev: StoredEvent[]): StatsResponse 
       prev: countPageviews(prv),
     },
     uniques: {
-      value: countUniqueSessionIds(cur),
-      prev: countUniqueSessionIds(prv),
+      value: countUniqueVisitors(cur),
+      prev: countUniqueVisitors(prv),
     },
     bounces: {
       value: countBounces(cur),

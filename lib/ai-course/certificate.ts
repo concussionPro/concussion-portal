@@ -5,21 +5,27 @@
  * (URL-safe random) is stored in users.ai_course_certificate_id and acts as
  * the public verification handle: /api/ai-course/certificate/verify/:id.
  *
- * Validity: 12 months. Renewal via re-attempting the (refreshed) quiz —
- * gated by Hub subscription in the future, free during preview.
+ * COMPLETION EVIDENCE DOES NOT EXPIRE (owner decision 2026-08-06) — same rule
+ * as lib/course-certificates.ts, which carries the full reasoning. A
+ * certificate records that a person completed a course on a date; that never
+ * stops being true, and the verify URL is printed on the document an auditor
+ * may follow years later. `ai_course_certificate_expires_at` is retired: still
+ * written by rows that predate this change, never read.
+ *
+ * NOTE (unchanged, pre-existing): this store has NO revocation concept, unlike
+ * course_certificates. The AI primer is bundled, not separately sold, so there
+ * is no refund path to revoke — if it ever becomes a paid SKU it needs the
+ * revoked_at treatment before it goes on sale.
  */
 
 import crypto from 'crypto'
 import { sql } from '@/lib/db'
-
-const CERT_VALIDITY_MS = 365 * 24 * 60 * 60 * 1000 // 12 months
 
 export interface CertificateRecord {
   certificateId: string
   email: string
   name: string
   issuedAt: string
-  expiresAt: string
   isValid: boolean
 }
 
@@ -29,8 +35,7 @@ function makeCertificateId(): string {
 }
 
 /**
- * Issue (or re-issue) the certificate for a user. Always stamps a fresh
- * 12-month validity window. Returns the certificate record.
+ * Issue (or re-issue) the certificate for a user. Returns the record.
  */
 export async function issueCertificate(email: string): Promise<CertificateRecord> {
   const { rows } = await sql`
@@ -43,14 +48,15 @@ export async function issueCertificate(email: string): Promise<CertificateRecord
 
   const certificateId = makeCertificateId()
   const issuedAt = new Date()
-  const expiresAt = new Date(issuedAt.getTime() + CERT_VALIDITY_MS)
 
   await sql`
     UPDATE users
     SET
       ai_course_certificate_id = ${certificateId},
       ai_course_certificate_issued_at = ${issuedAt.toISOString()},
-      ai_course_certificate_expires_at = ${expiresAt.toISOString()}
+      -- Retired column: clear it on re-issue so nothing can resurrect it as a
+      -- validity signal.
+      ai_course_certificate_expires_at = NULL
     WHERE LOWER(email) = LOWER(${email})
   `
 
@@ -59,7 +65,6 @@ export async function issueCertificate(email: string): Promise<CertificateRecord
     email: user.email,
     name: user.name,
     issuedAt: issuedAt.toISOString(),
-    expiresAt: expiresAt.toISOString(),
     isValid: true,
   }
 }
@@ -72,21 +77,19 @@ export async function verifyCertificate(
   certificateId: string
 ): Promise<CertificateRecord | null> {
   const { rows } = await sql`
-    SELECT email, name, ai_course_certificate_id, ai_course_certificate_issued_at, ai_course_certificate_expires_at
+    SELECT email, name, ai_course_certificate_id, ai_course_certificate_issued_at
     FROM users
     WHERE ai_course_certificate_id = ${certificateId}
     LIMIT 1
   `
   if (rows.length === 0) return null
   const r = rows[0]
-  const expiresAt = new Date(r.ai_course_certificate_expires_at)
   return {
     certificateId,
     email: r.email,
     name: r.name,
     issuedAt: new Date(r.ai_course_certificate_issued_at).toISOString(),
-    expiresAt: expiresAt.toISOString(),
-    isValid: Date.now() < expiresAt.getTime(),
+    isValid: true,
   }
 }
 
@@ -95,7 +98,7 @@ export async function verifyCertificate(
  */
 export async function getUserCertificate(email: string): Promise<CertificateRecord | null> {
   const { rows } = await sql`
-    SELECT email, name, ai_course_certificate_id, ai_course_certificate_issued_at, ai_course_certificate_expires_at
+    SELECT email, name, ai_course_certificate_id, ai_course_certificate_issued_at
     FROM users
     WHERE LOWER(email) = LOWER(${email}) AND ai_course_certificate_id IS NOT NULL
     LIMIT 1
@@ -103,13 +106,11 @@ export async function getUserCertificate(email: string): Promise<CertificateReco
   if (rows.length === 0) return null
   const r = rows[0]
   if (!r.ai_course_certificate_id) return null
-  const expiresAt = new Date(r.ai_course_certificate_expires_at)
   return {
     certificateId: r.ai_course_certificate_id,
     email: r.email,
     name: r.name,
     issuedAt: new Date(r.ai_course_certificate_issued_at).toISOString(),
-    expiresAt: expiresAt.toISOString(),
-    isValid: Date.now() < expiresAt.getTime(),
+    isValid: true,
   }
 }

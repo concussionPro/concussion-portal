@@ -26,7 +26,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   const issuedDate = new Date(cert.issuedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
-  const expiresDate = new Date(cert.expiresAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
   const verifyUrl = `${CONFIG.SEO.SITE_URL}/courses/ai-in-clinical-practice/verify/${cert.certificateId}`
 
   // A4 landscape, mm
@@ -82,14 +81,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   doc.setTextColor(120, 120, 120)
   const colY = 140
   doc.text('Issued', pageWidth / 4, colY, { align: 'center' })
-  doc.text('Valid until', pageWidth / 2, colY, { align: 'center' })
+  // Completion evidence does not expire — the column states that plainly
+  // rather than printing a date the /verify page would then contradict.
+  doc.text('Validity', pageWidth / 2, colY, { align: 'center' })
   doc.text('Certificate ID', (3 * pageWidth) / 4, colY, { align: 'center' })
 
   doc.setFontSize(11)
   doc.setTextColor(15, 23, 42)
   doc.setFont('helvetica', 'bold')
   doc.text(issuedDate, pageWidth / 4, colY + 6, { align: 'center' })
-  doc.text(expiresDate, pageWidth / 2, colY + 6, { align: 'center' })
+  doc.text('No expiry', pageWidth / 2, colY + 6, { align: 'center' })
   doc.text(cert.certificateId.slice(0, 12), (3 * pageWidth) / 4, colY + 6, { align: 'center' })
 
   // Verification footer

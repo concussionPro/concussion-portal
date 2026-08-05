@@ -19,7 +19,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
-import { trackLeadConversion } from '@/lib/analytics'
+import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat6-download'
@@ -87,6 +87,9 @@ export default function SCAT6DownloadPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  // "You already have an account" is a SUCCESS, not a failure — it must not
+  // render in the red error box. Separate state so the two read differently.
+  const [notice, setNotice] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   // Which forms they want — both on by default (SCAT6 = sideline, SCOAT6 = office).
@@ -116,6 +119,7 @@ export default function SCAT6DownloadPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNotice('')
 
     if (!name.trim()) {
       setError('Please enter your first name.')
@@ -157,13 +161,34 @@ export default function SCAT6DownloadPage() {
       // lib/account-escalation.ts). Navigating on would land them on gated
       // content with no session, so say what actually happened.
       if (data.requiresEmailLogin) {
-        setError(
-          "You already have an account \u2014 we've emailed you a login link. Open it and you'll be signed straight in.",
+        setNotice(
+          "You already have an account \u2014 we've emailed a login link to " +
+            email.trim().toLowerCase() +
+            ". Open it and you'll be signed straight in, and your forms will download.",
         )
         return
       }
 
       if (data.success) {
+        // INTERNAL event first — this is the one we can actually read.
+        //
+        // This page is the site's #1 landing surface (58 sessions / 28 days,
+        // ~9% of all traffic) and until now its ONLY success signal was the
+        // Google Ads pixel below, on a channel that has been retired — i.e.
+        // firing into nothing. The signup IS recorded server-side by
+        // /api/signup-free, but that row is written with a synthetic
+        // session_id ('server_<ts>') and path '/api/signup-free', so it can
+        // never be joined back to the visitor's session or landing page.
+        // Result: every one of these 58 sessions reads as a one-page bounce in
+        // any session-level funnel, and the page looks like a dead end when it
+        // is plausibly the best converter on the site. Named for what the page
+        // actually delivers (the fillable PDFs), so it does not collide with
+        // the server's 'free_course_signup' count.
+        void trackEvent('scat6_form_download', {
+          forms: [wantScat6 ? 'scat6' : null, wantScoat6 ? 'scoat6' : null].filter(Boolean),
+          ...(source ? { source } : {}),
+          userEmail: email.trim().toLowerCase(),
+        })
         // Fire gtag lead conversion with value + enhanced data
         trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 10, email.trim().toLowerCase())
         // Trigger browser download immediately
@@ -349,6 +374,15 @@ export default function SCAT6DownloadPage() {
                     <div className="flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
                       <p className="text-sm text-red-800">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {notice && (
+                  <div className="bg-teal-50 border border-teal-200 rounded-xl p-3 mb-4">
+                    <div className="flex items-start gap-2">
+                      <Mail className="w-4 h-4 text-teal-700 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-teal-900 leading-snug">{notice}</p>
                     </div>
                   </div>
                 )}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
+import { recordAdminAction } from '@/lib/admin-audit'
 
 /**
  * POST /api/admin/update-user-access
@@ -50,6 +51,15 @@ export async function POST(request: NextRequest) {
         UPDATE users SET access_level = ${accessLevel} WHERE LOWER(email) = ${email}
       `
     }
+
+    await recordAdminAction(request, {
+      route: '/api/admin/update-user-access',
+      target: email,
+      detail: {
+        previous: { accessLevel: before[0].access_level, workshopLocation: before[0].workshop_location },
+        updated: { accessLevel, workshopLocation: body.workshopLocation ?? null },
+      },
+    })
 
     return NextResponse.json({
       success: true,

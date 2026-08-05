@@ -5,7 +5,7 @@ import { createMedicalWebPageSchema, createFAQSchema, organizationSchema } from 
 import { Clock, Eye, Activity, ShieldCheck, Stethoscope, AlertTriangle } from 'lucide-react'
 
 const TITLE = "Persistent Post-Concussion Symptoms (PPCS) Course — Join the Demand-Validation List"
-const DESCRIPTION = 'Persistent post-concussion symptoms management course for AU/UK/US/CA clinicians. The chronic 5-20% who don\'t resolve in standard timeframes — vestibulo-ocular workup, cervical contribution, escalation pathways. Gauging demand before building. Waitlist gets first-look access + launch-week discount once the course is complete.'
+const DESCRIPTION = 'Persistent post-concussion symptoms management course for AU/UK/US/CA clinicians. The minority of concussions that don\'t resolve in standard timeframes — vestibulo-ocular workup, cervical contribution, escalation pathways. Gauging demand before building. Waitlist gets first-look access + launch-week discount once the course is complete.'
 const URL = 'https://portal.concussion-education-australia.com/ppcs-waitlist'
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ export default function PpcsWaitlistLanding() {
           __html: JSON.stringify(createFAQSchema([
             {
               question: 'What are persistent post-concussion symptoms (PPCS)?',
-              answer: '5-20% of concussion cases develop persistent post-concussive symptoms — symptoms that fail to resolve within the expected timeframe (typically >4 weeks in adults, >2 weeks in children). PPCS commonly involves vestibulo-ocular dysfunction (about 70% of cases) and cervical contribution (about 54% of cases). Standard acute concussion training focuses on the first 4 weeks; PPCS requires a different clinical workup.',
+              answer: 'A minority of concussion cases develop persistent post-concussive symptoms — symptoms that fail to resolve within the expected timeframe (typically >4 weeks in adults, >2 weeks in children). PPCS commonly involves vestibulo-ocular dysfunction and cervical contribution. Standard acute concussion training focuses on the first 4 weeks; PPCS requires a different clinical workup.',
             },
             {
               question: 'When will the PPCS course launch?',
@@ -63,15 +63,15 @@ export default function PpcsWaitlistLanding() {
             Demand-validation waitlist · Course in planning
           </div>
           <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
-            Persistent Post-Concussion Symptoms (PPCS) — The Chronic 5-20%
+            Persistent Post-Concussion Symptoms (PPCS) — The Cases That Don&apos;t Resolve
           </h1>
           <p className="text-lg text-purple-100 mb-6 max-w-2xl">
             Clinical mastery for the concussion cases that don&apos;t resolve in standard timeframes. Vestibulo-ocular workup, cervical contribution, escalation pathways. For clinicians who already work in acute concussion and want the chronic-case framework.
           </p>
           <div className="flex flex-wrap gap-2 text-xs text-purple-100">
-            <span className="bg-white/10 px-3 py-1 rounded-full">5-20% of concussion cases</span>
-            <span className="bg-white/10 px-3 py-1 rounded-full">~70% need vestibulo-ocular workup</span>
-            <span className="bg-white/10 px-3 py-1 rounded-full">~54% have cervical contribution</span>
+            <span className="bg-white/10 px-3 py-1 rounded-full">Beyond the standard timeframe</span>
+            <span className="bg-white/10 px-3 py-1 rounded-full">Vestibulo-ocular workup</span>
+            <span className="bg-white/10 px-3 py-1 rounded-full">Cervical contribution</span>
             <span className="bg-white/10 px-3 py-1 rounded-full">Waitlist gets 50% off launch week</span>
           </div>
         </div>
@@ -85,8 +85,8 @@ export default function PpcsWaitlistLanding() {
             <ul className="space-y-3 text-sm text-slate-700">
               {[
                 { i: Stethoscope, t: 'Identifying PPCS early', d: 'Clinical criteria, when "this isn\'t resolving" should change your plan, common missed presentations.' },
-                { i: Eye, t: 'Vestibulo-ocular workup beyond VOMS', d: 'The ~70% of PPCS cases that need it. Full clinical workup, treatment frameworks, when to refer.' },
-                { i: Activity, t: 'Cervical contribution to chronic symptoms', d: 'The ~54% of PPCS cases with cervical drivers. Differential, manual therapy applications, when whiplash overlap matters.' },
+                { i: Eye, t: 'Vestibulo-ocular workup beyond VOMS', d: 'The PPCS cases that need it — a frequent and frequently missed driver. Full clinical workup, treatment frameworks, when to refer.' },
+                { i: Activity, t: 'Cervical contribution to chronic symptoms', d: 'The PPCS cases with cervical drivers. Differential, manual therapy applications, when whiplash overlap matters.' },
                 { i: AlertTriangle, t: 'Escalation criteria + referral pathways', d: 'Who needs neurology, neuropsychology, vestibular specialist, headache clinic. When to refer and how to position the handoff.' },
                 { i: ShieldCheck, t: 'Active rehabilitation protocols', d: 'Beyond "wait until symptom-free" (now obsolete under Amsterdam 2023). Sub-threshold exercise, graded exposure, return-to-school/work.' },
               ].map((row, i) => (
@@ -105,7 +105,7 @@ export default function PpcsWaitlistLanding() {
             <h2 className="text-xl font-bold text-slate-900 mb-3">Why this course exists</h2>
             <div className="text-sm text-slate-700 leading-relaxed space-y-3">
               <p>
-                Most concussion CPD is acute-focused — the first 4 weeks, SCAT6, return-to-play. That training is essential, but it doesn&apos;t prepare clinicians for the 5-20% of cases that don&apos;t resolve.
+                Most concussion CPD is acute-focused — the first 4 weeks, SCAT6, return-to-play. That training is essential, but it doesn&apos;t prepare clinicians for the cases that don&apos;t resolve.
               </p>
               <p>
                 A 2018 scoping review explicitly identified persistent post-concussion symptoms as a clinician knowledge gap. The clinicians most affected aren&apos;t the sports-medicine specialists — they&apos;re the generalist physios, osteos, and GPs who see PPCS in the second week and don&apos;t have a framework for what comes next.

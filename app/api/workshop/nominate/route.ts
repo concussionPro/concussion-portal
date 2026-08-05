@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { findUserById } from '@/lib/users'
 import { userOwnsCrm, userOwnsCrmPractical } from '@/lib/crm-course'
+import { holdsPracticalDaySeat } from '@/lib/practical-day-seat'
 import { VALID_LOCATIONS } from '@/lib/stripe'
 import { sql } from '@/lib/db'
 
@@ -46,8 +47,16 @@ export async function POST(request: NextRequest) {
       userOwnsCrmPractical(user.email),
       userOwnsCrm(user.email),
     ])
-    const holdsPaidSeat = user.accessLevel === 'full-course' || ownsPractical
-    const ownsOnlineCourse = user.accessLevel === 'online-only' || ownsCrmOnline
+    // A Clinic Hub Pack seat is 'full-course' but buys ONLINE only — it must
+    // fall to the interest row below, not write workshop_location (the PAID
+    // seat column that feeds CONFIRMATION_THRESHOLD).
+    const holdsPaidSeat = holdsPracticalDaySeat({
+      accessLevel: user.accessLevel,
+      hubPackSeat: Boolean(user.hubPackSeatAt),
+      ownsCrmPractical: ownsPractical,
+    })
+    const ownsOnlineCourse =
+      user.accessLevel === 'online-only' || ownsCrmOnline || Boolean(user.hubPackSeatAt)
 
     if (!holdsPaidSeat && !ownsOnlineCourse) {
       return NextResponse.json({ error: 'Workshop nomination is available to enrolled users only' }, { status: 403 })

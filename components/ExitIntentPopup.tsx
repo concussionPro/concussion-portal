@@ -39,6 +39,9 @@ export function ExitIntentPopup() {
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  // True when the address already owns something, so /api/signup-free emailed a
+  // login link instead of minting a session (see handleSubmit).
+  const [needsEmailLogin, setNeedsEmailLogin] = useState(false)
   const [error, setError] = useState('')
 
   const isExcluded =
@@ -119,8 +122,22 @@ export function ExitIntentPopup() {
       })
 
       const data = await res.json()
+      // Existing account that already OWNS something: /api/signup-free
+      // deliberately sets NO session cookie and emails a login link instead
+      // (anti-takeover, lib/account-escalation.ts) — but it still answers
+      // {success:true}. This popup renders on EVERY public page, so without
+      // this branch every returning paying customer who triggered it was told
+      // "You're in! Your course is ready" and handed a "Start Course Now"
+      // button that bounces them to /login with no session. Say what actually
+      // happened, and point at the link that will actually sign them in.
+      if (res.ok && data.requiresEmailLogin) {
+        setNeedsEmailLogin(true)
+        setSubmitted(true)
+        return
+      }
       if (res.ok && data.success) {
         setSubmitted(true)
+        void trackEvent('exit_popup_signup', { path: pathname, userEmail: email.trim().toLowerCase() })
         // Track Google Ads lead conversion with proper label
         trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 25, email.trim())
       } else {
@@ -219,16 +236,37 @@ export function ExitIntentPopup() {
               <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
                 <Award className="w-7 h-7 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">You&apos;re in!</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Your course is ready. We also sent a login link to your email for future access.
-              </p>
-              <a
-                href="/scat-course"
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0d9488] text-white rounded-lg text-sm font-semibold hover:bg-[#0f766e] transition-colors"
-              >
-                Start Course Now <ArrowRight className="w-4 h-4" />
-              </a>
+              {needsEmailLogin ? (
+                <>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    You already have an account
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    We&apos;ve emailed a login link to <strong>{email.trim()}</strong>. Open it and
+                    you&apos;ll be signed straight in — everything you already have access to will
+                    be there.
+                  </p>
+                  <a
+                    href="/login"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0d9488] text-white rounded-lg text-sm font-semibold hover:bg-[#0f766e] transition-colors"
+                  >
+                    Go to login <ArrowRight className="w-4 h-4" />
+                  </a>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">You&apos;re in!</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Your course is ready. We also sent a login link to your email for future access.
+                  </p>
+                  <a
+                    href="/scat-course"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0d9488] text-white rounded-lg text-sm font-semibold hover:bg-[#0f766e] transition-colors"
+                  >
+                    Start Course Now <ArrowRight className="w-4 h-4" />
+                  </a>
+                </>
+              )}
             </div>
           ) : (
             /* Form state */

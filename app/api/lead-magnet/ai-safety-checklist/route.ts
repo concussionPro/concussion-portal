@@ -89,7 +89,18 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ success: true, userId, checklistLink })
+    // SECURITY — never return checklistLink (or userId) to the caller.
+    //
+    // checklistLink is a magic-link JWT: whoever holds it is logged in as the
+    // account for that address. This is a PUBLIC, unauthenticated POST that
+    // accepts an ARBITRARY email, so returning it handed anyone a login link
+    // for anyone else's account — POST victim@clinic.com.au, read the link out
+    // of the JSON. That is precisely the account takeover lib/account-escalation
+    // exists to prevent, and unlike /api/signup-free and /api/email-gate this
+    // route never consulted hasElevatedEntitlement(). The link must only ever
+    // travel to the address that owns it, i.e. by email — which the send above
+    // already does. No caller ever read this field.
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('AI checklist signup error:', error)
     return NextResponse.json({ error: 'Signup failed' }, { status: 500 })

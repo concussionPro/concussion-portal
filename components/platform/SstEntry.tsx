@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import PlatformApp from '@/app/platform/app/page'
 import SstLanding from '@/components/platform/SstLanding'
 import { STORE_KEY } from '@/lib/sst-trainer/store'
+import { trackEvent } from '@/lib/analytics'
 
 /**
  * /sst-trainer entry: the preseason-style animated landing for NEW visitors,
@@ -64,6 +65,12 @@ export default function SstEntry() {
   return (
     <SstLanding
       onStart={() => {
+        // The landing→app transition is a replaceState + local state swap, so
+        // it fires no page_view and, until now, no event at all. /sst-trainer
+        // is the #2 landing path on the site and every one of those sessions
+        // therefore read as a single-page bounce even when the visitor went
+        // straight into the app. Record the step.
+        void trackEvent('sst_landing_start', {})
         // push ?start=1 so a reload stays in the app, then swap in place
         const url = new URL(window.location.href)
         url.searchParams.set('start', '1')

@@ -18,7 +18,7 @@ const ALL_POSTS: Record<string, RelatedPost> = {
   },
   'voms-screening': {
     title: 'Beyond SCAT6: How Vestibular/Ocular Screening Improves Concussion Care',
-    description: '50-80% of concussed athletes report dizziness. Learn how VOMS screening fills this critical gap.',
+    description: '50-80% of concussed athletes report dizziness (Mucha et al., 2014; Kontos et al., 2017). Learn how VOMS screening fills this critical gap.',
     href: '/blog/vestibular-ocular-screening-voms-concussion',
     readTime: '12 min',
   },

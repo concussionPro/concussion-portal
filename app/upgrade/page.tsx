@@ -41,6 +41,12 @@ function UpgradeContent() {
       router.replace('/login?redirect=/upgrade')
       return
     }
+    // Bounced for BOTH real Complete buyers (already hold the day) and Clinic
+    // Hub Pack seats — deliberately. This page sells the SOLO online→Complete
+    // difference (upgradePriceFor). A hub seat's practical day is the clinic
+    // add-on at CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE per clinician, a
+    // different product with no self-serve checkout; their route to it is the
+    // dashboard/sidebar add-on card, not this checkout.
     if (user.accessLevel === 'full-course') {
       router.replace('/dashboard')
       return

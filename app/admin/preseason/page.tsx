@@ -20,7 +20,10 @@ interface SstClinicRow {
   contactName: string
   email: string
   createdAt: string
-  hubLink: string
+  // NO hubLink here on purpose: the hub link embeds the clinic's private
+  // viewKey, which reads that clinic's patient records with no further auth.
+  // /api/admin/sst-clinics returns keys ONE CLINIC AT A TIME (?code=), so the
+  // link is fetched on demand when Zac actually needs to re-send it.
 }
 
 interface Baseline {
@@ -36,6 +39,9 @@ interface Baseline {
 export default function AdminPreseasonPage() {
   const [clinics, setClinics] = useState<Clinic[]>([])
   const [sstClinics, setSstClinics] = useState<SstClinicRow[]>([])
+  // Hub links resolved on demand, keyed by clinic code (see SstClinicRow).
+  const [hubLinks, setHubLinks] = useState<Record<string, string>>({})
+  const [hubLinkLoading, setHubLinkLoading] = useState<string | null>(null)
   const [baselines, setBaselines] = useState<Baseline[]>([])
   const [totalClinics, setTotalClinics] = useState(0)
   const [totalBaselines, setTotalBaselines] = useState(0)
@@ -73,6 +79,29 @@ export default function AdminPreseasonPage() {
       if (res.ok && data.success) setSstClinics(data.clinics)
     } catch {
       /* section simply stays empty */
+    }
+  }
+
+  // Fetch ONE clinic's viewKey-bearing hub link, then open it. Keeps the key
+  // out of the bulk listing without changing what the button does.
+  const openHubLink = async (code: string) => {
+    const existing = hubLinks[code]
+    if (existing) {
+      window.open(existing, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setHubLinkLoading(code)
+    try {
+      const res = await fetch(`/api/admin/sst-clinics?code=${encodeURIComponent(code)}`, { cache: 'no-store' })
+      const data = await res.json()
+      if (res.ok && data.success && data.clinic?.hubLink) {
+        setHubLinks(prev => ({ ...prev, [code]: data.clinic.hubLink }))
+        window.open(data.clinic.hubLink, '_blank', 'noopener,noreferrer')
+      }
+    } catch {
+      /* leave the button idle — retry is a click away */
+    } finally {
+      setHubLinkLoading(null)
     }
   }
 
@@ -325,14 +354,13 @@ export default function AdminPreseasonPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <a
-                          href={c.hubLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-teal-700 hover:underline"
+                        <button
+                          onClick={() => openHubLink(c.code)}
+                          disabled={hubLinkLoading === c.code}
+                          className="text-xs font-semibold text-teal-700 hover:underline disabled:opacity-50"
                         >
-                          Clinical Hub
-                        </a>
+                          {hubLinkLoading === c.code ? 'Opening…' : 'Clinical Hub'}
+                        </button>
                         <button
                           onClick={() =>
                             setQrClinic({

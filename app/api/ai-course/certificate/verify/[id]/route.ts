@@ -35,7 +35,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     name: cert.name,
     emailDomain,
     issuedAt: cert.issuedAt,
-    expiresAt: cert.expiresAt,
+    // No expiresAt: completion evidence does not expire (lib/ai-course/certificate.ts).
+    expires: null,
     courseName: 'AI in Clinical Practice',
     issuer: 'Concussion Education Australia',
   })

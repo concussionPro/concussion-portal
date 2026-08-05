@@ -22,9 +22,10 @@ import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createCourseSchema } from '@/lib/schema-markup'
+import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from '@/lib/google-ads'
 
 
-const FREE_SIGNUP_CONVERSION = 'AW-17984048021/TVzUCLHT0IccEJWXu_9C'
+const FREE_SIGNUP_CONVERSION = `${GOOGLE_ADS_ID}/TVzUCLHT0IccEJWXu_9C`
 
 // Flagship-course structured data for the upgrade CTA on this page.
 // The credential MUST match the price it is published alongside: this node is
@@ -110,6 +111,15 @@ async function fireSignupConversionThenNavigate(email: string, destination: stri
     window.location.href = destination
   }
   const safetyTimer = setTimeout(navigate, 2000)
+
+  // Google Ads is retired (lib/google-ads.ts): there is no conversion to wait
+  // for, so don't make the signup sit behind a 2s ad-tag timer. The signup is
+  // already recorded server-side and in the Postgres event store.
+  if (!GOOGLE_ADS_ENABLED) {
+    clearTimeout(safetyTimer)
+    navigate()
+    return
+  }
 
   if (typeof window.gtag !== 'function') return // safety timer handles navigation
 

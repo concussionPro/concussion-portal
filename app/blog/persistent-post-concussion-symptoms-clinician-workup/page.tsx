@@ -6,7 +6,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 const TITLE = "Persistent Post-Concussion Symptoms (PPCS): A Clinician's Workup [2026]"
-const DESCRIPTION = "Persistent post-concussion symptoms management — the chronic 5-20% who don't resolve in standard timeframes. PPCS criteria, vestibulo-ocular + cervical workup, escalation pathways, active rehabilitation protocols for AU/UK/US/CA clinicians."
+const DESCRIPTION = "Persistent post-concussion symptoms management — the minority of concussions that don't resolve in standard timeframes. PPCS criteria, vestibulo-ocular + cervical workup, escalation pathways, active rehabilitation protocols for AU/UK/US/CA clinicians."
 const URL = 'https://portal.concussion-education-australia.com/blog/persistent-post-concussion-symptoms-clinician-workup'
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function PpcsWorkupPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org', '@type': 'FAQPage',
         mainEntity: [
-          { '@type': 'Question', name: 'What are persistent post-concussion symptoms (PPCS)?', acceptedAnswer: { '@type': 'Answer', text: 'PPCS describes the 5-20% of concussion cases where symptoms fail to resolve within the expected timeframe — typically >4 weeks in adults and >2 weeks in children. Common features include persistent headache, vestibulo-ocular dysfunction (about 70% of cases), cervical contribution (about 54%), cognitive fog, sleep disturbance, and mood symptoms. PPCS is not a single disease — it is a clinical syndrome with multiple contributing drivers requiring a multi-modal workup.' } },
+          { '@type': 'Question', name: 'What are persistent post-concussion symptoms (PPCS)?', acceptedAnswer: { '@type': 'Answer', text: 'PPCS describes concussion cases where symptoms fail to resolve within the expected timeframe — typically >4 weeks in adults and >2 weeks in children. Common features include persistent headache, vestibulo-ocular dysfunction, cervical contribution, cognitive fog, sleep disturbance, and mood symptoms. PPCS is not a single disease — it is a clinical syndrome with multiple contributing drivers requiring a multi-modal workup.' } },
           { '@type': 'Question', name: 'When does a concussion become PPCS?', acceptedAnswer: { '@type': 'Answer', text: 'Standard recovery timeframes are 4 weeks for adults and 2 weeks for children. Symptoms persisting beyond these points warrant a chronic-case workup, not just continued acute management. Earlier action (around week 2-3 if recovery has stalled) often improves outcomes vs waiting for the formal 4-week threshold.' } },
           { '@type': 'Question', name: 'Why do some concussions become persistent?', acceptedAnswer: { '@type': 'Answer', text: 'Multiple drivers contribute, often in combination: unresolved vestibulo-ocular dysfunction, cervical injury that was not assessed at acute presentation, autonomic dysregulation, post-traumatic headache with sensitisation, sleep disturbance feeding back into all of the above, and psychosocial factors (anxiety, fear-avoidance, return-to-work pressure). A workup must address each plausible driver, not just the most obvious symptom.' } },
           { '@type': 'Question', name: 'Who should manage PPCS — GP, physio, or specialist?', acceptedAnswer: { '@type': 'Answer', text: 'PPCS is best managed multi-modally. A primary clinician (physio with vestibular + cervical depth, or a GP coordinating) leads. Specialist referrals (neurology, vestibular specialist, neuropsychology, headache clinic, sports physician) are appropriate when red flags appear or when first-line management plateaus. The clinician seeing the patient most often is usually the right hub — they need a workup framework, not just a referral pad.' } },
@@ -37,7 +37,7 @@ export default function PpcsWorkupPage() {
           <div className="max-w-4xl mx-auto px-4">
             <div className="inline-block bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">Chronic Concussion Management</div>
             <h1 className="text-3xl md:text-5xl font-bold mb-4">Persistent Post-Concussion Symptoms (PPCS): A Clinician&apos;s Workup [2026]</h1>
-            <p className="text-lg text-purple-100 mb-4">The 5-20% of concussion cases that don&apos;t resolve in standard timeframes. Here&apos;s the clinical workup framework — vestibulo-ocular, cervical, autonomic, and when to escalate.</p>
+            <p className="text-lg text-purple-100 mb-4">The concussion cases that don&apos;t resolve in standard timeframes. Here&apos;s the clinical workup framework — vestibulo-ocular, cervical, autonomic, and when to escalate.</p>
             <div className="flex items-center gap-3 text-purple-200 text-sm"><Clock className="w-4 h-4" /><span>Zac Lewis, B.Clin.Sci., M.Ost.Med. (AHPRA-registered Osteopath) &mdash; 27 May 2026 &mdash; 10 min read</span></div>
           </div>
         </div>
@@ -46,10 +46,10 @@ export default function PpcsWorkupPage() {
 
           <div className="bg-white rounded-xl shadow-sm border-2 border-purple-300 p-8 mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Quick answer</h2>
-            <p className="text-slate-700 leading-relaxed mb-3">Persistent post-concussion symptoms (PPCS) describes the <strong>5-20% of concussion cases</strong> where symptoms fail to resolve within the standard timeframe — typically &gt;4 weeks in adults, &gt;2 weeks in children. A PPCS workup must cover four contributing systems:</p>
+            <p className="text-slate-700 leading-relaxed mb-3">Persistent post-concussion symptoms (PPCS) describes the <strong>minority of concussion cases</strong> where symptoms fail to resolve within the standard timeframe — typically &gt;4 weeks in adults, &gt;2 weeks in children. A PPCS workup must cover four contributing systems:</p>
             <ul className="list-disc pl-6 space-y-1.5 text-slate-700">
-              <li><strong>Vestibulo-ocular dysfunction</strong> — present in ~70% of PPCS cases</li>
-              <li><strong>Cervical contribution</strong> — present in ~54%, often missed at acute presentation</li>
+              <li><strong>Vestibulo-ocular dysfunction</strong> — a frequent driver, and the one most often left unresolved</li>
+              <li><strong>Cervical contribution</strong> — common, and routinely missed at acute presentation</li>
               <li><strong>Autonomic dysregulation</strong> — exercise intolerance, orthostatic symptoms</li>
               <li><strong>Post-traumatic headache + sensitisation</strong> — primary or migraine-overlap phenotype</li>
             </ul>
@@ -66,8 +66,8 @@ export default function PpcsWorkupPage() {
             <p>Earlier action matters. If recovery has clearly stalled by week 2-3 in an adult, starting the PPCS workup then improves outcomes vs waiting for the formal 4-week threshold. Don&apos;t use the timeframe as an excuse to do nothing.</p>
           </Section>
 
-          <Section icon={Eye} title="The vestibulo-ocular workup (~70% of PPCS)">
-            <p>Up to 70% of PPCS cases involve unresolved vestibulo-ocular dysfunction. The acute VOMS (Vestibular/Ocular Motor Screening) is your starting point, but PPCS requires going deeper.</p>
+          <Section icon={Eye} title="The vestibulo-ocular workup">
+            <p>Unresolved vestibulo-ocular dysfunction is one of the most frequent findings in PPCS. The acute VOMS (Vestibular/Ocular Motor Screening) is your starting point, but PPCS requires going deeper.</p>
             <p>Full workup includes:</p>
             <ul className="list-disc pl-6 space-y-1.5">
               <li><strong>VOMS components in detail</strong> — smooth pursuits, saccades, near-point convergence (NPC), VOR (horizontal + vertical), visual motion sensitivity. Provoking symptom + objective sign on each.</li>
@@ -78,7 +78,7 @@ export default function PpcsWorkupPage() {
             <p>See our existing guide: <Link href="/blog/vestibular-ocular-screening-voms-concussion" className="text-purple-700 underline">Vestibular/Ocular Motor Screening (VOMS) in Concussion Care</Link>.</p>
           </Section>
 
-          <Section icon={Activity} title="The cervical workup (~54% of PPCS)">
+          <Section icon={Activity} title="The cervical workup">
             <p>Cervical contribution is the most commonly missed driver in chronic concussion. Mechanism makes it inevitable — any head-impact mechanism is also a cervical-acceleration mechanism. But cervical assessment is rarely done at acute presentation because the head injury dominates clinical attention.</p>
             <p>Cervical workup for PPCS:</p>
             <ul className="list-disc pl-6 space-y-1.5">

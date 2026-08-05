@@ -26,7 +26,6 @@ export default async function VerifyCertificatePage({ params }: PageParams) {
 
   const emailDomain = cert.email.includes('@') ? cert.email.split('@')[1] : 'unknown'
   const issuedDate = new Date(cert.issuedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
-  const expiresDate = new Date(cert.expiresAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,8 +40,10 @@ export default async function VerifyCertificatePage({ params }: PageParams) {
             ? 'border-emerald-300 bg-emerald-50'
             : 'border-red-300 bg-red-50'
         }`}>
+          {/* Completion evidence does not expire — see
+              lib/ai-course/certificate.ts. */}
           <p className="text-xs font-bold uppercase tracking-wide mb-2">
-            {cert.isValid ? '✓ Valid' : '✗ Expired'}
+            {cert.isValid ? '✓ Valid' : '✗ Not valid'}
           </p>
           <h1 className="text-2xl font-bold text-foreground mb-1">{cert.name}</h1>
           <p className="text-sm text-muted-foreground">@{emailDomain}</p>
@@ -59,15 +60,12 @@ export default async function VerifyCertificatePage({ params }: PageParams) {
             <dt className="text-muted-foreground">Certificate ID</dt>
             <dd className="font-mono text-xs">{cert.certificateId}</dd>
 
-            <dt className="text-muted-foreground">Issued</dt>
+            <dt className="text-muted-foreground">Completed</dt>
             <dd>{issuedDate}</dd>
-
-            <dt className="text-muted-foreground">Expires</dt>
-            <dd>{expiresDate}</dd>
 
             <dt className="text-muted-foreground">Status</dt>
             <dd className={cert.isValid ? 'text-emerald-700 font-semibold' : 'text-red-700 font-semibold'}>
-              {cert.isValid ? 'Current' : 'Expired — re-certification required'}
+              {cert.isValid ? 'Valid — completion evidence, no expiry' : 'Not valid'}
             </dd>
           </dl>
         </div>

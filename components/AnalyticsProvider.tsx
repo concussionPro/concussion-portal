@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useCallback, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { getOrCreateSessionId, getVisitorContext, getIdentity } from '@/lib/analytics';
+import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from '@/lib/google-ads';
 
 // ---------------------------------------------------------------------------
 // UTM Parameter Tracking
@@ -128,6 +129,8 @@ function trackGtagConversion(
   value?: number,
   currency?: string
 ): void {
+  // Retired channel — no-op unless ad spend resumes (lib/google-ads.ts).
+  if (!GOOGLE_ADS_ENABLED) return;
   if (typeof window === 'undefined' || !window.gtag) return;
   window.gtag('event', 'conversion', {
     send_to: `${conversionId}/${conversionLabel}`,
@@ -155,12 +158,16 @@ const REMARKETING_PAGES: Record<string, string> = {
 };
 
 function fireRemarketingEvent(pathname: string): void {
+  // Audience-building for a channel with no live spend — off by default. The
+  // same 8 routes still record a page_view in the Postgres event store, which
+  // is where the intent signal is actually read from.
+  if (!GOOGLE_ADS_ENABLED) return;
   if (typeof window === 'undefined' || !window.gtag) return;
   // Exact match
   const event = REMARKETING_PAGES[pathname];
   if (event) {
     window.gtag('event', event, {
-      send_to: 'AW-17984048021',
+      send_to: GOOGLE_ADS_ID,
       page_path: pathname,
     });
     return;
@@ -168,7 +175,7 @@ function fireRemarketingEvent(pathname: string): void {
   // Prefix match for preseason baseline pages
   if (pathname.startsWith('/preseason/b/')) {
     window.gtag('event', 'baseline_test_user', {
-      send_to: 'AW-17984048021',
+      send_to: GOOGLE_ADS_ID,
       page_path: pathname,
     });
   }
@@ -303,9 +310,11 @@ export function AnalyticsProvider({
     (courseId: string, courseName: string): void => {
       trackEvent('enrol_click', { courseId, courseName });
 
-      // Google Ads enrol click conversion (ENROL_CLICK label, not FREE_SIGNUP)
+      // Google Ads enrol click conversion (ENROL_CLICK label, not FREE_SIGNUP).
+      // No-ops while the channel is retired; the enrol_click event above is the
+      // one that reaches the Postgres store either way.
       trackGtagConversion(
-        'AW-17984048021',
+        GOOGLE_ADS_ID,
         'vHoXCNKd6Y8cEJWXu_9C',
         undefined,
         undefined

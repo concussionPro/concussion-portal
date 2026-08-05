@@ -997,6 +997,49 @@ export const FREE_LOGGED_IN_NO_PROGRESS = {
 }
 
 /**
+ * PDF_LEAD_TOOLS — Day 7 for someone who came for the SCAT6 PDF, not a course.
+ *
+ * WHY THIS EXISTS (2026-08-06, measured). Two-thirds of all signups arrive via
+ * the Squarespace SCAT6 form -> /scat6-download: they type an email, the PDF
+ * downloads on that same page, and an account is created behind them. Over 90
+ * days, 70 of 109 of those leads never opened a module and 81 of 101 never
+ * returned after that first session — while people who actually signed up FOR
+ * the course opened a module 28 times out of 29. The content is fine; the
+ * audience is different. They wanted a tool, and the day-7 email answered with
+ * "come and do a course", which is why this segment has never converted (an
+ * earlier read found 0 conversions from 46 free-course completers).
+ *
+ * So this variant sells them nothing. It offers the same job they came to do,
+ * done better — the web forms score as you go and export a PDF for the record —
+ * and the one adjacent thing a sideline clinician usually does need: a
+ * pre-season baseline for their club. The course is not mentioned. If they ever
+ * want it, the tools are where they'll find it.
+ */
+export const PDF_LEAD_TOOLS = {
+  subject: 'The SCAT6 that scores itself (and keeps the record)',
+  // Signature matches the other day-7 variants (name, loginLink) so the cron can
+  // pick a template without branching the call. The login link is deliberately
+  // UNUSED: these links go to public tools, and sending a PDF-hunter a "log in"
+  // CTA is the friction that lost them in the first place.
+  template: (name: string, _loginLink?: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>You grabbed the SCAT6 PDF last week. If you&rsquo;ve since had to fill one in on a sideline or in clinic, you&rsquo;ll know the annoying part isn&rsquo;t the assessment &mdash; it&rsquo;s the adding up, and the fact that the paper copy ends up in a drawer.</p>
+    <p>We built the web versions for exactly that. Free, no cost, nothing to install:</p>
+    <div class="callout">
+      <strong>SCAT6, SCOAT6 and Child SCAT6 &mdash; in the browser</strong><br><br>
+      &#8226; Scores every section as you complete it &mdash; symptom totals, immediate memory, concentration, delayed recall, mBESS<br>
+      &#8226; Exports the finished assessment as a PDF for the medical record<br>
+      &#8226; Leaves blank what you didn&rsquo;t administer, instead of scoring it zero
+    </div>
+    <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/scat-forms`, 'pdf_lead_tools_d7', 'web_scat_forms')}" class="cta-btn">Open the web SCAT6</a></center>
+    <p><strong>One thing worth knowing if you cover a club or school.</strong> A SCAT6 taken after a head knock is far more useful when you can compare it to that athlete&rsquo;s own normal. You can send your squad one link and have them complete a pre-season baseline themselves in about five minutes each &mdash; the reports come back to you.</p>
+    <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/preseason`, 'pdf_lead_tools_d7', 'preseason_baseline')}" class="cta-btn">See how clubs run baselines</a></center>
+    <p>If the PDF was all you needed, that&rsquo;s genuinely fine &mdash; no follow-up required. And if there&rsquo;s a form or a workflow you wish existed, reply and tell me; I build these because I needed them in my own clinic.</p>
+    <div class="sig">Zac</div>
+  `),
+}
+
+/**
  * SCAT_DAY10_ENGAGEMENT — sent at Day 10 instead of promo code
  * for preview users with fewer than 3 SCAT modules completed.
  * Encourages them to keep going rather than selling too early.

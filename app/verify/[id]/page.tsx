@@ -55,7 +55,6 @@ export default async function VerifyPage({ params }: PageParams) {
   const holder = cert.name || cert.email
   const emailDomain = cert.email.includes('@') ? cert.email.split('@')[1] : 'unknown'
   const issuedDate = new Date(cert.issuedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
-  const expiresDate = new Date(cert.expiresAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,9 +70,11 @@ export default async function VerifyPage({ params }: PageParams) {
             : 'border-red-300 bg-red-50'
         }`}>
           {/* A refunded / charged-back certificate must NEVER read "Valid" —
-              it is a CPD document someone may be lodging with ESSA or OA. */}
+              it is a CPD document someone may be lodging with ESSA or OA.
+              Age alone is NOT invalidity: completion evidence does not expire
+              (lib/course-certificates.ts header), so there is no "Expired". */}
           <p className="text-xs font-bold uppercase tracking-wide mb-2">
-            {cert.isValid ? '✓ Valid' : cert.invalidReason === 'revoked' ? '✗ Revoked' : '✗ Expired'}
+            {cert.isValid ? '✓ Valid' : '✗ Revoked'}
           </p>
           <h1 className="text-2xl font-bold text-foreground mb-1">{holder}</h1>
           <p className="text-sm text-muted-foreground">@{emailDomain}</p>
@@ -93,25 +94,26 @@ export default async function VerifyPage({ params }: PageParams) {
             <dt className="text-muted-foreground">Certificate ID</dt>
             <dd className="font-mono text-xs">{cert.certificateId}</dd>
 
-            <dt className="text-muted-foreground">Issued</dt>
+            <dt className="text-muted-foreground">Completed</dt>
             <dd>{issuedDate}</dd>
-
-            <dt className="text-muted-foreground">Expires</dt>
-            <dd>{expiresDate}</dd>
 
             <dt className="text-muted-foreground">Status</dt>
             <dd className={cert.isValid ? 'text-emerald-700 font-semibold' : 'text-red-700 font-semibold'}>
               {cert.isValid
-                ? 'Current'
-                : cert.invalidReason === 'revoked'
-                  ? 'Revoked — the enrolment behind this certificate was refunded or charged back. This certificate is not valid and should not be accepted as CPD evidence.'
-                  : 'Expired — re-certification required'}
+                ? 'Valid — completion evidence, no expiry'
+                : 'Revoked — the enrolment behind this certificate was refunded or charged back. This certificate is not valid and should not be accepted as CPD evidence.'}
             </dd>
           </dl>
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed">
-          This certificate attests that the holder completed the named continuing-education course from Concussion Education Australia and passed its assessment. It is a CPD completion record, not a regulator-issued credential, and does not replace legal or indemnity advice.
+          This certificate attests that the holder completed the named continuing-education course from Concussion Education Australia on the date shown, and passed its assessment. It is a CPD completion record, not a regulator-issued credential, and does not replace legal or indemnity advice.
+        </p>
+        {/* Accreditation belongs to the OFFERING as delivered, not to the
+            holder's completion — so it is context here, never a reason to
+            invalidate a certificate. See lib/course-certificates.ts. */}
+        <p className="text-xs text-muted-foreground leading-relaxed mt-3">
+          A completion record does not expire: it states what the holder did and when, which stays true. Any accreditation or endorsement named on the certificate reflects the offering&apos;s status as at the date of issue. Certificates are withdrawn only if the enrolment behind them is refunded or charged back, and this page reports that.
         </p>
       </div>
     </div>

@@ -80,7 +80,13 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
     setLoading(true)
     setError('')
     try {
-      const derivedName = clean.split('@')[0].slice(0, 60) || 'Interested'
+      // This form has NO name field, so the name is derived from the address.
+      // /api/register-interest rejects anything under 2 characters with
+      // "Name is required (max 100 characters)" — an error about a field the
+      // visitor was never shown, on an address as ordinary as a@clinic.com.au.
+      // Pad short local parts rather than sending a value the route will bounce.
+      const localPart = clean.split('@')[0].slice(0, 60)
+      const derivedName = localPart.length >= 2 ? localPart : 'Interested'
       const res = await fetch('/api/register-interest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

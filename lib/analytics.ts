@@ -1,5 +1,7 @@
 // Analytics tracking library for user behavior monitoring
 
+import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from './google-ads'
+
 export interface AnalyticsEvent {
   id: string
   userId: string | null
@@ -276,7 +278,19 @@ export async function trackEvent(
       userEmail: userEmail || null,
     }
 
-    // Send to analytics API
+    // Send to analytics API.
+    //
+    // keepalive: the highest-value events on the site are fired IMMEDIATELY
+    // before a navigation — `trackEvent('checkout_start', …)` then
+    // `window.location.href = stripeUrl` (CrmCheckoutButton, PricingOptions),
+    // and the free-signup pages that navigate to /modules/*. Without keepalive
+    // the browser cancels the in-flight request the moment the document starts
+    // unloading, so exactly the conversions we most need to count are the ones
+    // most likely to be dropped. That is consistent with the 28-day funnel
+    // reading MORE expired Stripe sessions (10) than checkout_start events (6):
+    // a session cannot expire without having been started, so starts are
+    // undercounted. keepalive lets the request complete after unload.
+    // Payloads here are well under the 64 KB keepalive limit.
     await fetch('/api/analytics/track', {
       method: 'POST',
       headers: {
@@ -284,6 +298,7 @@ export async function trackEvent(
       },
       body: JSON.stringify(event),
       credentials: 'include',
+      keepalive: true,
     })
   } catch (error) {
     // Silent fail - don't disrupt user experience
@@ -314,7 +329,7 @@ export function trackShopClick(source: string, additionalData: Record<string, un
 
 // ── Google Ads conversion helpers ─────────────────────────────────────────────
 
-const GA_CONVERSION_ID = 'AW-17984048021'
+const GA_CONVERSION_ID = GOOGLE_ADS_ID
 
 // Google Ads conversion labels — safe to hardcode (public, baked into client JS)
 const CONVERSION_LABELS = {
@@ -355,6 +370,11 @@ async function waitForGtag(timeoutMs = 5000): Promise<boolean> {
  * Assign a value so Google's smart bidding can optimise for high-value leads.
  */
 export async function trackLeadConversion(label: string, value: number, email?: string, currency: string = 'AUD') {
+  // Retired channel (lib/google-ads.ts). Every caller of this helper ALSO
+  // records its own event in the Postgres store, so nothing measurable is lost
+  // by not shipping a lead — plus a hashed email — to Google for a campaign
+  // that isn't running. Flip NEXT_PUBLIC_GOOGLE_ADS_LIVE to resume.
+  if (!GOOGLE_ADS_ENABLED) return
   try {
     const ready = await waitForGtag()
     if (!ready) {
@@ -402,6 +422,9 @@ export function trackFreeCourseCompletion(email: string) {
  * Track purchase conversion with enhanced conversion data
  */
 export async function trackPurchaseConversion(value: number, transactionId: string, email?: string, currency?: string) {
+  // Retired channel — see trackLeadConversion above. The sale is recorded in
+  // Postgres (purchase_complete) by the Stripe webhook regardless.
+  if (!GOOGLE_ADS_ENABLED) return
   try {
     const ready = await waitForGtag()
     if (!ready) {

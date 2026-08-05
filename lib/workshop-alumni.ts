@@ -11,7 +11,7 @@
  * Derived automatically — no manual re-tagging. Works for every future workshop
  * the moment its date passes (no code change per round).
  */
-import { CONFIG } from '@/lib/config'
+import { CONFIG, roundStartInstant } from '@/lib/config'
 
 /** Location slugs whose workshop has run (completed status OR past dateObj). */
 export function completedWorkshopSlugs(now: Date = nowSafe()): string[] {
@@ -51,12 +51,15 @@ function roundCutoffMs(
   now: Date,
 ): number | null {
   if (loc.dateObj && loc.dateObj.getTime() < now.getTime()) return loc.dateObj.getTime()
-  const roundStart = CONFIG.WORKSHOP.ROUND_START[loc.slug]
-  // NOTE: parsed as UTC midnight, matching how practicalDayAttendees() hands
-  // the same bare 'YYYY-MM-DD' string to Postgres. Deliberately NOT localised
-  // to AEST here — doing so in one place only would desynchronise the seat
-  // counter from this classifier.
-  if (roundStart) return new Date(roundStart).getTime()
+  // 00:00 Australian Eastern on the round-start date. Previously `new
+  // Date('YYYY-MM-DD')` = UTC midnight, i.e. 10-11am Sydney — an 11-hour window
+  // in which this classifier and the SQL seat counter could disagree about
+  // which round a buyer belongs to (SQL resolved the same bare string against
+  // the database's own TimeZone). roundStartInstant() is now the single source
+  // for BOTH: practicalDayAttendees() sends its explicit-UTC ISO form to
+  // Postgres, this reads its milliseconds.
+  const roundStart = roundStartInstant(loc.slug)
+  if (roundStart) return roundStart.getTime()
   return null
 }
 

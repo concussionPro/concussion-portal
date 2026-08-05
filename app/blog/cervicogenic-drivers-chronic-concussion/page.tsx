@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
-const TITLE = "Cervicogenic Drivers in Chronic Concussion — Why ~54% of PPCS Patients Need Cervical Assessment [2026]"
-const DESCRIPTION = "Cervicogenic contribution to persistent post-concussion symptoms — present in about 54% of PPCS cases yet routinely missed at acute presentation. Clinical assessment, cervicogenic dizziness vs headache, differential diagnosis, manual therapy applications for AU/UK/US/CA clinicians."
+const TITLE = "Cervicogenic Drivers in Chronic Concussion — Why Every PPCS Patient Needs a Cervical Assessment [2026]"
+const DESCRIPTION = "Cervicogenic contribution to persistent post-concussion symptoms — a treatable driver that is routinely missed at acute presentation. Clinical assessment, cervicogenic dizziness vs headache, differential diagnosis, manual therapy applications for AU/UK/US/CA clinicians."
 const URL = 'https://portal.concussion-education-australia.com/blog/cervicogenic-drivers-chronic-concussion'
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function CervicogenicChronicConcussionPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org', '@type': 'FAQPage',
         mainEntity: [
-          { '@type': 'Question', name: 'Why is the cervical spine relevant in chronic concussion?', acceptedAnswer: { '@type': 'Answer', text: 'Any head-impact mechanism is also a cervical-acceleration mechanism. Whiplash-type forces transmit through the cervical spine on impact, often injuring soft tissue and joint structures simultaneously with the brain injury. About 54% of persistent post-concussion symptom (PPCS) cases have a cervical contribution to ongoing dizziness, headache, or both. Because acute clinical attention focuses on the brain injury, cervical assessment is routinely missed at first presentation — leaving a treatable driver active in chronic cases.' } },
+          { '@type': 'Question', name: 'Why is the cervical spine relevant in chronic concussion?', acceptedAnswer: { '@type': 'Answer', text: 'Any head-impact mechanism is also a cervical-acceleration mechanism. Whiplash-type forces transmit through the cervical spine on impact, often injuring soft tissue and joint structures simultaneously with the brain injury. A cervical contribution to ongoing dizziness, headache, or both is common in persistent post-concussion symptom (PPCS) cases. Because acute clinical attention focuses on the brain injury, cervical assessment is routinely missed at first presentation — leaving a treatable driver active in chronic cases.' } },
           { '@type': 'Question', name: 'How do you tell cervicogenic dizziness from vestibular dizziness?', acceptedAnswer: { '@type': 'Answer', text: 'Cervicogenic dizziness is provoked by neck position or movement, often without nystagmus. Vestibular dizziness is typically associated with nystagmus, may follow head position changes (BPPV) or vestibular hypofunction patterns, and is reproduced by vestibular-specific testing (Dix-Hallpike, head-impulse test). The cervical relocation test and neck torsion test can help differentiate. Both can coexist in PPCS.' } },
           { '@type': 'Question', name: 'What is cervicogenic headache?', acceptedAnswer: { '@type': 'Answer', text: 'Cervicogenic headache is unilateral headache referred from cervical spine structures (typically C0-C3 joints, sub-occipital musculature). Diagnostic features include reproduction by cervical movement or palpation, restricted cervical range of motion, and absence of migraine-typical features. Common after head-trauma mechanisms with whiplash component.' } },
           { '@type': 'Question', name: 'When should I assess the cervical spine after concussion?', acceptedAnswer: { '@type': 'Answer', text: 'At every presentation. Acute assessment should include at minimum a cervical screen even when the head injury dominates. For any patient with persistent symptoms beyond 2 weeks (children) or 4 weeks (adults), a full cervical workup is essential — this is one of the most commonly missed treatable drivers in PPCS.' } },
@@ -36,7 +36,7 @@ export default function CervicogenicChronicConcussionPage() {
         <div className="bg-gradient-to-br from-rose-700 to-pink-700 text-white pt-[120px] pb-16">
           <div className="max-w-4xl mx-auto px-4">
             <div className="inline-block bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">Chronic Concussion Management</div>
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">Cervicogenic Drivers in Chronic Concussion — Why ~54% of PPCS Patients Need Cervical Assessment [2026]</h1>
+            <h1 className="text-3xl md:text-5xl font-bold mb-4">Cervicogenic Drivers in Chronic Concussion — Why Every PPCS Patient Needs a Cervical Assessment [2026]</h1>
             <p className="text-lg text-rose-100 mb-4">Any concussion mechanism is also a whiplash mechanism. The cervical spine is the most commonly missed driver of persistent post-concussion symptoms — here&apos;s the clinical workup.</p>
             <div className="flex items-center gap-3 text-rose-200 text-sm"><Clock className="w-4 h-4" /><span>Zac Lewis, B.Clin.Sci., M.Ost.Med. (AHPRA-registered Osteopath) &mdash; 27 May 2026 &mdash; 7 min read</span></div>
           </div>
@@ -46,12 +46,12 @@ export default function CervicogenicChronicConcussionPage() {
 
           <div className="bg-white rounded-xl shadow-sm border-2 border-rose-300 p-8 mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Quick answer</h2>
-            <p className="text-slate-700 leading-relaxed mb-3">About <strong>54% of persistent post-concussion symptom (PPCS) cases have a cervical contribution</strong> to their ongoing dizziness, headache, or both. The mechanism is straightforward — any head-impact mechanism is also a cervical-acceleration mechanism. What&apos;s missing is the assessment habit: clinical attention at acute presentation goes to the brain injury, and the cervical spine doesn&apos;t get examined until the patient is still symptomatic weeks later.</p>
+            <p className="text-slate-700 leading-relaxed mb-3">A <strong>cervical contribution to ongoing dizziness, headache, or both is common in persistent post-concussion symptom (PPCS) cases</strong>. The mechanism is straightforward — any head-impact mechanism is also a cervical-acceleration mechanism. What&apos;s missing is the assessment habit: clinical attention at acute presentation goes to the brain injury, and the cervical spine doesn&apos;t get examined until the patient is still symptomatic weeks later.</p>
             <p className="text-slate-700 leading-relaxed">Cervicogenic contribution shows up as cervicogenic dizziness, cervicogenic headache, restricted cervical motion, or all three. It is highly treatable with manual therapy + deep neck flexor strengthening — but only if it&apos;s identified.</p>
           </div>
 
           <Section icon={Activity} title="Why the cervical spine matters in concussion">
-            <p>Concussion biomechanics involve linear and rotational acceleration of the head. The neck transmits and absorbs those forces. The same impact that produces brain injury produces cervical soft-tissue strain, facet joint irritation, and (in higher-velocity injuries) ligamentous injury.</p>
+            <p>Concussion biomechanics involve linear and rotational acceleration of the head. The neck transmits and absorbs those forces. The same impact that produces brain injury produces cervical soft-tissue strain, facet joint irritation, and (in higher-velocity injuries) ligamentous injury. Concurrent cervical injury occurs in up to 70% of sport-related concussions (Schneider et al., 2014, <em>British Journal of Sports Medicine</em> 48(17), 1294-1298).</p>
             <p>This is anatomically inevitable. Yet at acute presentation:</p>
             <ul className="list-disc pl-6 space-y-1.5">
               <li>Clinical attention focuses on the head — SCAT6, GCS, red flag screening</li>

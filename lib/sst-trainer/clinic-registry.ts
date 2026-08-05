@@ -421,6 +421,44 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
 }
 
 /**
+ * OWNER-only clinic lookup that THROWS instead of reporting "not provisioned".
+ *
+ * Two differences from getSstClinicByEmail, both deliberate:
+ *
+ *  1. NO member fallback. getSstClinicByEmail resolves a practitioner SEATED at
+ *     someone else's clinic to that employer's clinic — fine for "which hub do
+ *     I render", catastrophic for anything that MUTATES the clinic (a comped
+ *     plan, a cancelled subscription) on that person's behalf. Three call sites
+ *     already re-check `clinic.email === email` inline for exactly this reason.
+ *
+ *  2. Errors PROPAGATE. Swallowing a DB error to `null` reads as "no clinic
+ *     exists", so a caller whose next step is `createSstClinic` mints a
+ *     DUPLICATE clinic and a second view key for a clinic that was already
+ *     there — splitting one clinic's patients across two codes, silently.
+ */
+export async function getSstClinicOwnedByEmail(email: string): Promise<SstClinic | null> {
+  const { rows } = await sql`
+    SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier
+    FROM sst_clinics
+    WHERE email = ${email.toLowerCase()}
+    ORDER BY created_at ASC
+    LIMIT 1
+  `
+  const r = rows[0]
+  if (!r) return null
+  return {
+    code: r.code,
+    clinicName: r.clinic_name,
+    contactName: r.contact_name,
+    email: r.email,
+    viewKey: r.view_key,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    plan: r.plan || 'trial',
+    tier: r.tier || null,
+  }
+}
+
+/**
  * Mint a new SST clinic: unique 6-char code in the SHARED clinic:{code} KV
  * namespace (collision-checked against preseason codes too), a crypto-random
  * viewKey, plus a durable Postgres row. Throws on failure — callers decide

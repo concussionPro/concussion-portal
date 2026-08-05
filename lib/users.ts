@@ -1,5 +1,5 @@
 import { sql } from '@/lib/db'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, roundStartSqlInstant } from '@/lib/config'
 import { CRM_PRACTICAL_SLUG } from '@/lib/crm-course'
 import { ensureCoursePurchasesTable } from '@/lib/course-purchases'
 import crypto from 'crypto'
@@ -22,6 +22,17 @@ export interface User {
   isTest?: boolean
   referenceBookPurchasedAt?: string
   sstEntitledAt?: string
+  /**
+   * Set when this account's course access came from a CLINIC HUB PACK seat.
+   * The pack sells ONLINE seats only — the in-person practical day is a
+   * separate A$600 add-on (CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE) — but
+   * both hub provisioning paths write access_level 'full-course', which is the
+   * repo's marker for "owns a seat at the practical day". This column is the
+   * distinct signal: `full-course` still opens every paid ONLINE surface,
+   * `hubPackSeatAt != null` says the practical day is NOT held.
+   * See holdsPracticalDaySeat() in lib/practical-day-seat.ts.
+   */
+  hubPackSeatAt?: string
 }
 
 /**
@@ -50,6 +61,7 @@ interface UserRow {
   is_test?: boolean | null
   reference_book_purchased_at?: Date | string | null
   sst_entitled_at?: Date | string | null
+  hub_pack_seat_at?: Date | string | null
 }
 
 /** Map a snake_case DB row to a camelCase User object */
@@ -77,6 +89,9 @@ function rowToUser(row: UserRow): User {
       : undefined,
     sstEntitledAt: row.sst_entitled_at
       ? (row.sst_entitled_at instanceof Date ? row.sst_entitled_at.toISOString() : row.sst_entitled_at)
+      : undefined,
+    hubPackSeatAt: row.hub_pack_seat_at
+      ? (row.hub_pack_seat_at instanceof Date ? row.hub_pack_seat_at.toISOString() : row.hub_pack_seat_at)
       : undefined,
   }
 }
@@ -147,10 +162,49 @@ async function ensureColumns() {
     // round threshold that scopes on created_at >= ROUND_START. This column is
     // stamped whenever workshop_location is actually set/changed.
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS workshop_location_set_at TIMESTAMPTZ`
+    // Clinic Hub Pack seat marker (2026-08-06) — see User.hubPackSeatAt. The
+    // pack sells ONLINE seats; the practical day is a separate A$600 add-on.
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS hub_pack_seat_at TIMESTAMPTZ`
   } catch {
     // Column already exists or permissions differ — safe to continue
   }
+  await backfillHubPackSeats()
   columnMigrated = true
+}
+
+/**
+ * Mark hub-pack rows that were provisioned BEFORE the marker existed.
+ *
+ * Deliberately NOT a downgrade: access_level is untouched, so every member
+ * keeps the online course they paid for. All this does is stop those rows
+ * claiming a practical-day seat they never bought.
+ *
+ * Two guards keep a genuine Complete buyer who also sits in a clinic hub from
+ * being mis-marked:
+ *   - `hub_pack_seat_at IS NULL` — never re-stamp (idempotent, and a manual
+ *     $600 add-on sale clears it permanently via /api/admin/update-user-access);
+ *   - `NOT EXISTS course_purchases` — the hub path writes no purchase row
+ *     (app/api/webhooks/stripe/route.ts returns before recordCoursePurchase),
+ *     so anyone holding ANY purchase row bought something in their own right
+ *     and is left alone.
+ * Best-effort: the hub tables are created lazily and may not exist yet.
+ */
+async function backfillHubPackSeats(): Promise<void> {
+  try {
+    await sql`
+      UPDATE users u
+      SET hub_pack_seat_at = m.created_at
+      FROM course_hub_members m
+      WHERE LOWER(u.email) = LOWER(m.email)
+        AND u.hub_pack_seat_at IS NULL
+        AND u.access_level = 'full-course'
+        AND NOT EXISTS (
+          SELECT 1 FROM course_purchases cp WHERE LOWER(cp.user_email) = LOWER(u.email)
+        )
+    `
+  } catch {
+    // course_hub_members / course_purchases not created yet — nothing to backfill.
+  }
 }
 
 /**
@@ -221,6 +275,13 @@ export async function createUser(data: {
   signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist' | 'sst-clinic' | 'ep-course' | 'intl-syllabus' | 'cpd-tracker'
   /** prospect_clinics.slug if this signup came from the cold sequence via ?prospect= param */
   sourceProspectSlug?: string
+  /**
+   * True when this provisioning is a CLINIC HUB PACK seat — online entitlement
+   * with NO practical-day seat. Stamps User.hubPackSeatAt. Sticky like every
+   * other marker here: once set it is only cleared by an explicit practical-day
+   * grant (/api/admin/update-user-access), never by a later hub re-redeem.
+   */
+  hubPackSeat?: boolean
 }): Promise<string> {
   await ensureColumns()
   await ensureEmailIndex()
@@ -230,7 +291,7 @@ export async function createUser(data: {
   // Atomic upsert: INSERT or update on conflict
   // ON CONFLICT uses the unique index on LOWER(email)
   const { rows } = await sql`
-    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, workshop_location_set_at, signup_source, converted_from, source_prospect_slug)
+    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, workshop_location_set_at, signup_source, converted_from, source_prospect_slug, hub_pack_seat_at)
     VALUES (
       ${id},
       ${data.email},
@@ -244,7 +305,8 @@ export async function createUser(data: {
       ${data.workshopLocation ? new Date().toISOString() : null},
       ${data.signupSource || null},
       ${null},
-      ${data.sourceProspectSlug || null}
+      ${data.sourceProspectSlug || null},
+      ${data.hubPackSeat ? new Date().toISOString() : null}
     )
     ON CONFLICT (LOWER(email)) DO UPDATE SET
       access_level = CASE
@@ -271,7 +333,18 @@ export async function createUser(data: {
         THEN COALESCE(users.converted_from, users.signup_source)
         ELSE users.converted_from
       END,
-      source_prospect_slug = COALESCE(users.source_prospect_slug, EXCLUDED.source_prospect_slug)
+      source_prospect_slug = COALESCE(users.source_prospect_slug, EXCLUDED.source_prospect_slug),
+      -- A hub redemption never re-stamps a row that already holds a seat, and
+      -- a NON-hub provisioning at 'full-course' (a real Complete purchase, an
+      -- admin sale, a Squarespace import) CLEARS the marker — that sale does
+      -- buy the practical day, and leaving the marker set would deny the seat
+      -- they just paid for.
+      hub_pack_seat_at = CASE
+        WHEN EXCLUDED.hub_pack_seat_at IS NOT NULL
+          THEN COALESCE(users.hub_pack_seat_at, EXCLUDED.hub_pack_seat_at)
+        WHEN EXCLUDED.access_level = 'full-course' THEN NULL
+        ELSE users.hub_pack_seat_at
+      END
     RETURNING id
   `
 
@@ -364,7 +437,13 @@ export interface PracticalDayAttendee {
  */
 export async function practicalDayAttendees(location: string): Promise<PracticalDayAttendee[]> {
   await ensureCoursePurchasesTable()
-  const roundStart = CONFIG.WORKSHOP.ROUND_START[location]
+  // 00:00 Australian Eastern on the round-start date, as an explicit-UTC
+  // instant. The bare 'YYYY-MM-DD' used to be handed straight to Postgres,
+  // which resolved it against the server's TimeZone setting while
+  // lib/workshop-alumni.ts read the same string as UTC midnight in JS — so the
+  // seat counter and the alumni classifier could put a buyer in different
+  // rounds. Both now call the same helper (lib/config.ts).
+  const roundStart = roundStartSqlInstant(location)
   const { rows } = roundStart
     ? await sql<PracticalDayAttendeeRow>`
         SELECT DISTINCT ON (u.id)
@@ -377,13 +456,13 @@ export async function practicalDayAttendees(location: string): Promise<Practical
             u.workshop_location_set_at,
             u.created_at
           ) AS registered_at,
-          CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
+          CASE WHEN u.access_level = 'full-course' AND u.hub_pack_seat_at IS NULL THEN 'ccm' ELSE 'crm' END AS stream
         FROM users u
         LEFT JOIN course_purchases cp
           ON LOWER(cp.user_email) = LOWER(u.email)
          AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
         WHERE u.workshop_location = ${location}
-          AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
+          AND ((u.access_level = 'full-course' AND u.hub_pack_seat_at IS NULL) OR cp.id IS NOT NULL)
           AND COALESCE(
             cp.purchased_at,
             (SELECT MAX(c2.purchased_at) FROM course_purchases c2
@@ -407,13 +486,13 @@ export async function practicalDayAttendees(location: string): Promise<Practical
             u.workshop_location_set_at,
             u.created_at
           ) AS registered_at,
-          CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
+          CASE WHEN u.access_level = 'full-course' AND u.hub_pack_seat_at IS NULL THEN 'ccm' ELSE 'crm' END AS stream
         FROM users u
         LEFT JOIN course_purchases cp
           ON LOWER(cp.user_email) = LOWER(u.email)
          AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
         WHERE u.workshop_location = ${location}
-          AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
+          AND ((u.access_level = 'full-course' AND u.hub_pack_seat_at IS NULL) OR cp.id IS NOT NULL)
           AND u.is_test IS NOT TRUE
           AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}
         ORDER BY u.id, registered_at DESC
@@ -479,13 +558,13 @@ export async function getEnrollmentsWithoutLocation(): Promise<
         u.workshop_location_set_at,
         u.created_at
       ) AS registered_at,
-      CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
+      CASE WHEN u.access_level = 'full-course' AND u.hub_pack_seat_at IS NULL THEN 'ccm' ELSE 'crm' END AS stream
     FROM users u
     LEFT JOIN course_purchases cp
       ON LOWER(cp.user_email) = LOWER(u.email)
      AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
     WHERE u.workshop_location IS NULL
-      AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
+      AND ((u.access_level = 'full-course' AND u.hub_pack_seat_at IS NULL) OR cp.id IS NOT NULL)
       AND u.is_test IS NOT TRUE
       AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}
     ORDER BY u.id, registered_at DESC

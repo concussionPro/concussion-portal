@@ -354,7 +354,7 @@ export default function HowToUseSCAT6Page() {
           {/* PPCS retrofit — for patients beyond the acute SCAT6 window */}
           <div className="bg-purple-50 border-l-4 border-purple-600 rounded-lg p-5 mt-12">
             <p className="text-sm text-slate-700 leading-relaxed">
-              <strong className="text-purple-900">Patient still symptomatic past Day 30?</strong> SCAT6 covers the acute window (0-72h); SCOAT6 covers Day 3-30. Beyond that, 5-20% of cases develop persistent post-concussion symptoms (PPCS) requiring a different workup — vestibulo-ocular + cervical + autonomic. See our <Link href="/blog/persistent-post-concussion-symptoms-clinician-workup" className="text-purple-700 underline font-semibold">PPCS clinical workup guide</Link> and join the waitlist for the forthcoming <Link href="/ppcs-waitlist" className="text-purple-700 underline font-semibold">PPCS Clinical Mastery course</Link>.
+              <strong className="text-purple-900">Patient still symptomatic past Day 30?</strong> SCAT6 covers the acute window (0-72h); SCOAT6 covers Day 3-30. Beyond that, a minority of cases develop persistent post-concussion symptoms (PPCS) requiring a different workup — vestibulo-ocular + cervical + autonomic. See our <Link href="/blog/persistent-post-concussion-symptoms-clinician-workup" className="text-purple-700 underline font-semibold">PPCS clinical workup guide</Link> and join the waitlist for the forthcoming <Link href="/ppcs-waitlist" className="text-purple-700 underline font-semibold">PPCS Clinical Mastery course</Link>.
             </p>
           </div>
 

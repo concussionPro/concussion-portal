@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { unsubscribeUser } from '@/lib/users'
 import { isAdminRequest } from '@/lib/require-admin'
+import { recordAdminAction } from '@/lib/admin-audit'
 
 function timingSafeCompare(a: string, b: string): boolean {
   const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
   const success = await unsubscribeUser(email)
   if (success) {
     console.log(`Admin unsubscribed: ${email.slice(0, 3)}***`)
+    await recordAdminAction(request, { route: '/api/admin/unsubscribe', target: email })
     return NextResponse.json({ success: true, message: `${email} unsubscribed` })
   } else {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })

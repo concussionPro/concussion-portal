@@ -6,7 +6,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 const TITLE = "Vestibulo-Ocular Workup for Persistent Post-Concussion Symptoms — Beyond VOMS [2026]"
-const DESCRIPTION = 'Vestibulo-ocular dysfunction is present in about 70% of persistent post-concussion symptom (PPCS) cases. Full clinical workup beyond acute VOMS — convergence insufficiency, BPPV after head trauma, gaze stability, VOR exercises, when to refer for vestibular specialist.'
+const DESCRIPTION = 'Vestibulo-ocular dysfunction is a frequent — and frequently missed — driver of persistent post-concussion symptoms (PPCS). Full clinical workup beyond acute VOMS — convergence insufficiency, BPPV after head trauma, gaze stability, VOR exercises, when to refer for vestibular specialist.'
 const URL = 'https://portal.concussion-education-australia.com/blog/vestibulo-ocular-workup-ppcs'
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org', '@type': 'FAQPage',
         mainEntity: [
-          { '@type': 'Question', name: 'How common is vestibulo-ocular dysfunction in persistent post-concussion symptoms?', acceptedAnswer: { '@type': 'Answer', text: 'About 70% of PPCS cases have vestibulo-ocular dysfunction. This is one of the highest-yield workup targets in chronic concussion — when present and treated, symptom improvement is often substantial. The acute VOMS (Vestibular/Ocular Motor Screening) is your starting point, but PPCS requires going deeper.' } },
+          { '@type': 'Question', name: 'How common is vestibulo-ocular dysfunction in persistent post-concussion symptoms?', acceptedAnswer: { '@type': 'Answer', text: 'Vestibulo-ocular dysfunction is a frequent finding in PPCS and one of the highest-yield workup targets in chronic concussion — when present and treated, symptom improvement is often substantial. The acute VOMS (Vestibular/Ocular Motor Screening) is your starting point, but PPCS requires going deeper.' } },
           { '@type': 'Question', name: 'What is the difference between acute VOMS and the chronic vestibulo-ocular workup?', acceptedAnswer: { '@type': 'Answer', text: 'Acute VOMS is a screen — provoke-and-observe through smooth pursuits, saccades, convergence, VOR, and visual motion sensitivity. The chronic workup adds: quantified near-point convergence, dedicated BPPV testing (Dix-Hallpike, supine roll), gaze stability exercise tolerance, oculomotor screening for convergence insufficiency, and exercise prescription. Acute VOMS identifies dysfunction; chronic workup characterises and treats it.' } },
           { '@type': 'Question', name: 'Can BPPV occur after concussion?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. BPPV (benign paroxysmal positional vertigo) after head trauma is common. The mechanism — otoliths dislodged into semicircular canals — is exactly what head-impact mechanisms can produce. BPPV is highly treatable with positional manoeuvres (Epley, Semont). Missing it leaves a fixable cause of persistent dizziness active. Always include Dix-Hallpike and supine roll tests in any PPCS dizziness workup.' } },
           { '@type': 'Question', name: 'When should I refer for vestibular specialist assessment?', acceptedAnswer: { '@type': 'Answer', text: 'Refer when: BPPV-negative persistent vertigo, suspected vestibular hypofunction (positive head-impulse test, persistent gaze-evoked nystagmus), no improvement after 6-8 sessions of structured vestibulo-ocular rehab, complex bilateral involvement, or when instrumented testing (vHIT, caloric, posturography) is needed to characterise the dysfunction further.' } },
@@ -37,7 +37,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
           <div className="max-w-4xl mx-auto px-4">
             <div className="inline-block bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">Chronic Concussion Management</div>
             <h1 className="text-3xl md:text-5xl font-bold mb-4">Vestibulo-Ocular Workup for Persistent Post-Concussion Symptoms — Beyond VOMS [2026]</h1>
-            <p className="text-lg text-emerald-100 mb-4">Vestibulo-ocular dysfunction is present in about 70% of PPCS cases. Acute VOMS is the screen — here&apos;s the chronic-case workup that characterises and treats it.</p>
+            <p className="text-lg text-emerald-100 mb-4">Vestibulo-ocular dysfunction is a frequent driver of persistent symptoms. Acute VOMS is the screen — here&apos;s the chronic-case workup that characterises and treats it.</p>
             <div className="flex items-center gap-3 text-emerald-200 text-sm"><Clock className="w-4 h-4" /><span>Zac Lewis, B.Clin.Sci., M.Ost.Med. (AHPRA-registered Osteopath) &mdash; 27 May 2026 &mdash; 8 min read</span></div>
           </div>
         </div>
@@ -46,7 +46,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
 
           <div className="bg-white rounded-xl shadow-sm border-2 border-emerald-300 p-8 mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Quick answer</h2>
-            <p className="text-slate-700 leading-relaxed mb-3"><strong>About 70% of persistent post-concussion symptom (PPCS) cases have vestibulo-ocular dysfunction.</strong> The acute VOMS is your starting point but doesn&apos;t characterise the dysfunction enough to drive treatment. The chronic workup adds:</p>
+            <p className="text-slate-700 leading-relaxed mb-3"><strong>Vestibulo-ocular dysfunction is one of the findings you should expect to have to rule in or out in every persistent post-concussion symptom (PPCS) case.</strong> The acute VOMS is your starting point but doesn&apos;t characterise the dysfunction enough to drive treatment. The chronic workup adds:</p>
             <ul className="list-disc pl-6 space-y-1 text-slate-700">
               <li>Quantified near-point convergence (NPC)</li>
               <li>Dedicated BPPV testing (Dix-Hallpike + supine roll)</li>
@@ -85,7 +85,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
             <ul className="list-disc pl-6 space-y-1.5">
               <li><strong>Dix-Hallpike test</strong> (both sides) — for posterior canal BPPV, the most common type</li>
               <li><strong>Supine roll test</strong> — for horizontal canal BPPV</li>
-              <li><strong>If positive:</strong> Epley manoeuvre (posterior) or Lempert / Gufoni (horizontal). Effective in 80%+ of cases on first treatment.</li>
+              <li><strong>If positive:</strong> Epley manoeuvre (posterior) or Lempert / Gufoni (horizontal). Repositioning frequently resolves the vertigo, sometimes after a single treatment.</li>
             </ul>
             <p>Don&apos;t assume the patient&apos;s chronic dizziness can&apos;t be BPPV because it&apos;s been months. BPPV doesn&apos;t spontaneously resolve in everyone — repositioning treatment can produce dramatic improvement in patients who&apos;ve been managed unsuccessfully for months as &ldquo;chronic concussion dizziness.&rdquo;</p>
           </Section>

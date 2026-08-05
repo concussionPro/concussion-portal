@@ -3,6 +3,7 @@
 import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, MapPin, Stethoscope, Sparkles, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
+import { holdsOnlineWithoutPracticalDay } from '@/lib/practical-day-seat'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
@@ -71,6 +72,8 @@ export function Sidebar() {
     name: sessionUser.name || sessionUser.email?.split('@')[0] || 'Student',
     accessLevel: sessionUser.accessLevel || 'preview',
     enrolledAt: sessionUser.createdAt || '',
+    // Clinic Hub Pack seat — 'full-course' access, ONLINE only.
+    hubPackSeat: sessionUser.hubPackSeat === true,
   } : null
   // THREE tiers, not two. A CRM buyer's access_level stays 'preview' (streams
   // are isolated — lib/crm-course.ts), so a single isPreview flag was wrong in
@@ -88,6 +91,10 @@ export function Sidebar() {
   // early-bird difference, and /upgrade collects the nomination.
   const upgradeCitySlug = sessionUser?.workshopLocation || null
   const upgradePrice = upgradePriceFor(upgradeCitySlug)
+  // Hub Pack seat: paid ONLINE access with no practical-day seat. The add-on
+  // is priced per clinician for the clinic, not the solo online→Complete
+  // difference, and has no self-serve checkout — so it informs, not sells.
+  const isHubPackSeat = user?.accessLevel === 'full-course' && user?.hubPackSeat === true
   const upgradeCityLabel =
     Object.values(CONFIG.LOCATIONS).find((l) => l.slug === upgradeCitySlug)?.city ?? null
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -283,10 +290,18 @@ export function Sidebar() {
             completion, references, toolkit) but never on the sidebar, the one
             surface present throughout the dash. Price is DERIVED from
             upgradePriceFor() for the user's nominated city — never hardcoded —
-            so it tracks the early-bird window automatically. */}
-        {user?.accessLevel === 'online-only' && (
+            so it tracks the early-bird window automatically.
+
+            Clinic Hub Pack seats read as 'full-course' but bought ONLINE seats
+            only, so they belong in this audience too — with the CLINIC add-on
+            price (CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE) and NOT the solo
+            /upgrade checkout, which sells a different product. */}
+        {holdsOnlineWithoutPracticalDay({
+          accessLevel: user?.accessLevel,
+          hubPackSeat: user?.hubPackSeat,
+        }) && (
           <Link
-            href="/upgrade"
+            href={isHubPackSeat ? '/in-person' : '/upgrade'}
             onClick={closeMobileMenu}
             className="mt-3 block shrink-0 rounded-xl border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white p-3.5 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all group"
           >
@@ -301,7 +316,9 @@ export function Sidebar() {
               {' '}Takes you to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
             </p>
             <span className="inline-flex items-center gap-1 text-[12px] font-bold bg-amber-100 text-amber-900 rounded-lg px-2.5 py-1 group-hover:bg-amber-200 transition-colors">
-              Upgrade — A${upgradePrice}
+              {isHubPackSeat
+                ? `Add-on — A$${CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE}/clinician`
+                : `Upgrade — A$${upgradePrice}`}
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </Link>

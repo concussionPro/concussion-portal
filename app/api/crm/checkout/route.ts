@@ -20,7 +20,12 @@ import { getClientIp } from '@/lib/get-client-ip'
  */
 const schema = z.object({
   tier: z.enum(['online', 'complete', 'upgrade']),
-  email: z.string().trim().toLowerCase().email().max(254),
+  // OPTIONAL. Stripe Checkout collects the email itself; passing one only
+  // pre-fills the field (and, for 'upgrade', identifies the existing owner).
+  // Requiring it here forced a pre-checkout form in front of every buyer —
+  // the same class of friction as the city nomination below, and the CCM
+  // stream (/api/create-checkout) has never asked for it.
+  email: z.string().trim().toLowerCase().email().max(254).optional(),
   location: z.enum(VALID_LOCATIONS).optional(),
   utm: z.record(z.string(), z.string()).optional(),
   attribution: z.record(z.string(), z.string()).optional(),
@@ -56,22 +61,37 @@ export async function POST(request: NextRequest) {
   }
   const { tier, email, location, utm, attribution } = parsed.data
 
-  // A nominated city is required for every tier that touches the shared
-  // practical day, AND for online (owner: "make sure they nominate a city when
-  // they buy online"). Only the pure-online path could in theory skip it, but
-  // we require it there too so EP city-demand is captured from the first sale.
-  if (!location) {
+  // A nominated city is required for the tiers that actually BUY the shared
+  // practical day. It is no longer required for pure online.
+  //
+  // The original directive was to nominate on online purchases too, so EP
+  // city-demand was captured from the first sale. Measured 2026-08-06, that
+  // demand data cost every sale: 7 enrol clicks on the CRM page in 28 days and
+  // ZERO checkout_start — a 100% drop at the pre-checkout form, which asked an
+  // online-only buyer to commit to a practical-day city. Nomination now happens
+  // after payment (success page + welcome email), so it is captured without
+  // standing between a decided buyer and Stripe.
+  if (!location && tier !== 'online') {
     return NextResponse.json({ error: 'Please nominate your workshop city.' }, { status: 400 })
   }
 
   // The upgrade tier only makes sense (and is only priced) as an add-on for an
   // existing CRM Online owner — anyone else would pay $693 for a practical day
-  // with no course behind it.
-  if (tier === 'upgrade' && !(await userOwnsCrm(email))) {
-    return NextResponse.json(
-      { error: 'The practical-day upgrade is for existing CRM Online owners. New to CRM? Choose CRM Complete — it includes the online course and the practical day.' },
-      { status: 400 },
-    )
+  // with no course behind it. This is the ONE tier whose gate genuinely needs
+  // the address up front, so it stays required there and only there.
+  if (tier === 'upgrade') {
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Enter the email address you enrolled with so we can find your CRM Online purchase.' },
+        { status: 400 },
+      )
+    }
+    if (!(await userOwnsCrm(email))) {
+      return NextResponse.json(
+        { error: 'The practical-day upgrade is for existing CRM Online owners. New to CRM? Choose CRM Complete — it includes the online course and the practical day.' },
+        { status: 400 },
+      )
+    }
   }
 
   const base = CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'

@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     question: 'How does SCAT-6 differ from SCAT-5?',
-    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words for 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, a timed tandem gait (3 trials) with an optional dual-task component — counting backwards by 7s while walking heel-to-toe, which may instead be administered later in the office setting (see SCOAT6) — updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated, and continuing to use it may fall short of the standard of practice expected under current consensus guidance (Amsterdam 2023 Consensus) and Australian professional expectations.',
+    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words, which produced a ceiling effect — genuinely concussed athletes routinely scored 5/5), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, a timed tandem gait (3 trials) with an optional dual-task component — counting backwards by 7s while walking heel-to-toe, which may instead be administered later in the office setting (see SCOAT6) — updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated, and continuing to use it may fall short of the standard of practice expected under current consensus guidance (Amsterdam 2023 Consensus) and Australian professional expectations.',
   },
   {
     question: "What's the difference between SCAT-6 and SCOAT-6?",
@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     question: 'Can I use SCAT-6 on children under 13?',
-    answer: 'No. SCAT-6 is validated only for athletes aged 13 years and older. For children aged 5-12 years, you must use Child SCAT-6 which features age-appropriate modifications: 5-word memory lists instead of 10, simplified 3-point symptom scale (0=No, 1=A little, 2=A lot), no single-leg balance stance due to fall risk, mandatory parent symptom report, and simpler concentration tasks. Using adult SCAT-6 on children under 13 produces artificially low scores and misses 50-60% of concussions. Child SCAT-6 is freely available from bjsm.bmj.com.',
+    answer: 'No. SCAT-6 is validated only for athletes aged 13 years and older. For children aged 5-12 years, you must use Child SCAT-6 which features age-appropriate modifications: 5-word memory lists instead of 10, simplified 3-point symptom scale (0=No, 1=A little, 2=A lot), no single-leg balance stance due to fall risk, mandatory parent symptom report, and simpler concentration tasks. Using adult SCAT-6 on a child under 13 applies memory, symptom and balance items the age group was never normed on, so a genuinely concussed child can score within normal limits and be cleared. Child SCAT-6 is freely available from bjsm.bmj.com.',
   },
   {
     question: 'Is SCAT-6 mandatory under Australian sports law?',

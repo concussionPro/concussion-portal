@@ -21,9 +21,17 @@ type Variant = 'hero' | 'full'
 export default function EpLeadCapture({
   variant = 'full',
   location = 'unknown',
+  nextHref,
+  nextLabel,
 }: {
   variant?: Variant
   location?: string
+  /** Optional next action on the success card. Only pass it where the
+   *  destination is genuinely correct for that page — the accreditation-review
+   *  surfaces (/hpcsa, /csep, /cep-uk, /cases) deliberately carry no enrol
+   *  path, and /hpcsa is a hard compliance block until the CEU number issues. */
+  nextHref?: string
+  nextLabel?: string
 }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -94,13 +102,33 @@ export default function EpLeadCapture({
           <Check className="h-5 w-5" strokeWidth={3} />
         </div>
         <h3 className="mt-4 text-base font-bold tracking-tight text-foreground sm:text-lg">
-          Check your inbox — the Starter is on its way.
+          You&rsquo;re on the list — check your inbox for the Starter.
         </h3>
+        {/* Copy has to be true on EVERY path through /api/ep-lead, not just the
+            happy one. The route records a permanent Day-0 audit key and sends
+            ONLY on the first capture, and it skips the send entirely for a
+            suppressed address — both cases still return {success:true}. The old
+            copy ("the Starter is on its way", "We've emailed you…") asserted a
+            send that had not happened, so an EP who lost the first email
+            re-requested it, was told it was coming, and got nothing — for good,
+            with no way to tell. This wording is accurate whether this request
+            triggered the send or an earlier one did. */}
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-          We&rsquo;ve emailed you the EP&rsquo;s Concussion Rehab Starter — the measured-threshold
-          prescription workflow and scope guide. Not in your inbox in a minute? Check spam, and
-          add zac@concussion-education-australia.com to your contacts.
+          The EP&rsquo;s Concussion Rehab Starter — the measured-threshold prescription workflow
+          and scope guide — goes to <strong className="text-foreground">{email.trim()}</strong>.
+          If you&rsquo;ve requested it before, it&rsquo;s the same email already in your inbox.
+          Can&rsquo;t find it? Check spam, add zac@concussion-education-australia.com to your
+          contacts, or just reply to that address and I&rsquo;ll send it straight over.
         </p>
+        {nextHref && nextLabel && (
+          <a
+            href={nextHref}
+            className="btn-primary mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-sm font-semibold"
+          >
+            {nextLabel}
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        )}
       </div>
     )
   }

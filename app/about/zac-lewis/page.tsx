@@ -192,7 +192,7 @@ export default function ZacLewisAboutPage() {
               <h2 className="text-xl font-bold text-slate-900 mb-4">Areas of Clinical Authority</h2>
               <div className="grid md:grid-cols-2 gap-3 text-sm">
                 <Topic icon={Stethoscope} title="Concussion Clinical" detail="SCAT6, SCOAT6, VOMS, BESS, return-to-play protocols, Amsterdam 2023 consensus implementation." />
-                <Topic icon={Activity} title="Persistent Post-Concussion Symptoms" detail="The chronic 5-20% — vestibulo-ocular workup, cervical contribution, autonomic dysregulation, escalation criteria." />
+                <Topic icon={Activity} title="Persistent Post-Concussion Symptoms" detail="The cases that don&apos;t resolve in standard timeframes — vestibulo-ocular workup, cervical contribution, autonomic dysregulation, escalation criteria." />
                 <Topic icon={ShieldCheck} title="AI in Clinical Practice" detail="AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation, AI scribe tool selection (Heidi, Lyrebird, ChatGPT)." />
                 <Topic icon={BookOpen} title="Osteopathic Medicine" detail="Manual therapy applications, cervical assessment + treatment, biomechanical workup post-trauma." />
               </div>

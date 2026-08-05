@@ -27,6 +27,7 @@ import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { useCourseTier } from './useCourseTier'
 import Link from 'next/link'
 import { CONFIG, upgradePriceFor, SST_TIER_FROM_AUD } from '@/lib/config'
+import { holdsPracticalDaySeat, holdsOnlineWithoutPracticalDay } from '@/lib/practical-day-seat'
 import { COURSES, getEffectiveStatus, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 import { epModulesMeta, epProgressId } from '@/data/ep-module-meta'
@@ -361,6 +362,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
           {/* In-Person Workshop */}
           <WorkshopCard
             accessLevel={accessLevel}
+            hubPackSeat={user?.hubPackSeat === true}
             isPreview={isPreview}
             allModulesComplete={completedModules >= 8}
             workshopLocation={workshopLocation}
@@ -576,21 +578,27 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
 /* ──────────────── Workshop Card ──────────────── */
 function WorkshopCard({
   accessLevel,
+  hubPackSeat,
   isPreview,
   allModulesComplete,
   workshopLocation,
   onWorkshopNominated,
 }: {
   accessLevel?: string
+  hubPackSeat?: boolean
   isPreview: boolean
   allModulesComplete: boolean
   workshopLocation?: string | null
   onWorkshopNominated?: (location: string) => void
 }) {
-  const isFullCourse = accessLevel === 'full-course'
-  const isOnlineOnly = accessLevel === 'online-only'
-  const showNomination = isFullCourse && allModulesComplete && !workshopLocation
-  const hasNominated = isFullCourse && !!workshopLocation
+  // "Owns the in-person day" is NOT the same as "has paid course access": a
+  // Clinic Hub Pack seat is 'full-course' but bought ONLINE seats only, with
+  // the practical day sold separately (lib/practical-day-seat.ts).
+  const holdsSeat = holdsPracticalDaySeat({ accessLevel, hubPackSeat })
+  const needsPracticalDay = holdsOnlineWithoutPracticalDay({ accessLevel, hubPackSeat })
+  const isHubPackSeat = needsPracticalDay && accessLevel === 'full-course'
+  const showNomination = holdsSeat && allModulesComplete && !workshopLocation
+  const hasNominated = holdsSeat && !!workshopLocation
 
   const [selectedCity, setSelectedCity] = useState('')
   const [saving, setSaving] = useState(false)
@@ -614,13 +622,14 @@ function WorkshopCard({
       if (res.ok) {
         setFeedback({
           type: 'success',
-          message: isOnlineOnly
+          message: needsPracticalDay
             ? `Nominated for ${cityLabel(selectedCity)} — costs nothing. You'll get first notice the moment a ${cityLabel(selectedCity)} date is scheduled.`
             : `Nominated for ${cityLabel(selectedCity)}! When your city's round fills we confirm a date and give you ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.`,
         })
-        // Only paid (full-course) nominations set workshop_location — don't
-        // flip the parent's state for an online-only interest nomination.
-        if (isFullCourse) setTimeout(() => onWorkshopNominated?.(selectedCity), 1500)
+        // Only a PAID practical-day seat sets workshop_location — don't flip
+        // the parent's state for an interest-only nomination (online-only, or
+        // a Clinic Hub Pack seat that hasn't bought the add-on).
+        if (holdsSeat) setTimeout(() => onWorkshopNominated?.(selectedCity), 1500)
       } else {
         setFeedback({ type: 'error', message: 'Failed to save. Please try again.' })
       }
@@ -681,11 +690,16 @@ function WorkshopCard({
     )
   }
 
-  // Online-only user — no-charge city nomination (counts as demand signal for
-  // launching the city's date + first notice). The paid $693 early-bird
-  // upgrade is the SECONDARY action — never push pre-paying to wait
-  // indefinitely for a sparse city to fill.
-  if (isOnlineOnly) {
+  // Paid ONLINE access without a practical-day seat — classic online-only
+  // buyers AND Clinic Hub Pack seats (the pack sells online seats; the day is
+  // a separate per-clinician add-on). No-charge city nomination (a demand
+  // signal + first notice), with the paid add-on as the SECONDARY action —
+  // never push pre-paying to wait indefinitely for a sparse city to fill.
+  //
+  // This branch is what un-suppresses the add-on for a hub seat: before the
+  // hubPackSeat signal existed they rendered as full-course, saw "Included",
+  // and had no route to buy the practical day at all.
+  if (needsPracticalDay) {
     return (
       <Card>
         <div className="flex items-center gap-3 mb-3">
@@ -694,13 +708,14 @@ function WorkshopCard({
           </div>
           <p className="stat-label mb-0">In-Person Workshop</p>
           <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-wider">
-            Upgrade
+            {isHubPackSeat ? 'Add-on' : 'Upgrade'}
           </span>
         </div>
         <p className="text-sm text-foreground font-semibold mb-2">Nominate Your Workshop City</p>
         <p className="text-xs text-muted-foreground mb-3">
-          Nominating costs nothing and counts toward launching your city&apos;s date — you&apos;ll
-          get first notice when it&apos;s scheduled. Add the hands-on day whenever you&apos;re ready.
+          {isHubPackSeat
+            ? `Your clinic's pack covers the ${CONFIG.COURSE.ONLINE_CPD_POINTS} online CPD hours. Nominating costs nothing and counts toward launching your city's date — the practical day is a separate add-on.`
+            : 'Nominating costs nothing and counts toward launching your city\u2019s date — you\u2019ll get first notice when it\u2019s scheduled. Add the hands-on day whenever you\u2019re ready.'}
         </p>
         <select
           value={selectedCity}
@@ -729,10 +744,16 @@ function WorkshopCard({
           </p>
         )}
         <Link
-          href="/upgrade"
+          href={isHubPackSeat ? '/in-person' : '/upgrade'}
           className="mt-2.5 flex items-center justify-center gap-1 text-[11px] font-semibold text-accent hover:underline"
         >
-          Ready now? Add the workshop — ${upgradePriceFor(selectedCity || null)} early-bird
+          {isHubPackSeat
+            // Clinic add-on price, not the solo upgrade — and there is no
+            // self-serve checkout for it (lib/schemas.ts marks
+            // 'clinic-workshop-upgrade' unfulfilled), so this informs rather
+            // than pretending to sell.
+            ? `Add the practical day — A$${CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE}/clinician`
+            : `Ready now? Add the workshop — $${upgradePriceFor(selectedCity || null)} early-bird`}
           <ArrowUpRight className="w-3 h-3" />
         </Link>
       </Card>
@@ -760,30 +781,30 @@ function WorkshopCard({
     )
   }
 
-  // Default: preview/online-only/full-course pre-completion
+  // Default: preview / online-without-the-day / seat-holder pre-completion
   return (
-    <Card href={isPreview ? '/pricing' : isOnlineOnly ? '/upgrade' : '/in-person'}>
+    <Card href={isPreview ? '/pricing' : needsPracticalDay ? '/in-person' : '/in-person'}>
       <div className="flex items-center gap-3 mb-3">
         <div className={cn(
           'w-9 h-9 rounded-xl flex items-center justify-center',
-          isPreview || isOnlineOnly
+          isPreview || needsPracticalDay
             ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
             : 'bg-gradient-to-br from-rose-500/10 to-rose-400/5'
         )}>
-          {isPreview || isOnlineOnly
+          {isPreview || needsPracticalDay
             ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
             : <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
           }
         </div>
         <p className="stat-label mb-0">In-Person Workshop</p>
-        {isFullCourse && (
+        {holdsSeat && (
           <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
             Included
           </span>
         )}
-        {isOnlineOnly && (
+        {needsPracticalDay && (
           <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-wider">
-            Upgrade
+            {isHubPackSeat ? 'Add-on' : 'Upgrade'}
           </span>
         )}
         {isPreview && (
@@ -794,9 +815,13 @@ function WorkshopCard({
       </div>
       <p className="text-sm text-foreground font-semibold mb-1">{CONFIG.COURSE.IN_PERSON_CPD_POINTS} Practical CPD Hours</p>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        {isFullCourse && !allModulesComplete
+        {holdsSeat && !allModulesComplete
           ? 'Complete your online modules to nominate your workshop city.'
-          : isOnlineOnly
+          : isHubPackSeat
+          // The Hub Pack sells online seats; the practical day is the clinic
+          // add-on, priced per clinician from CONFIG (never hardcoded).
+          ? `Your clinic's pack covers the ${CONFIG.COURSE.ONLINE_CPD_POINTS} online CPD hours. Add the practical day for A$${CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE}/clinician to reach all ${CONFIG.COURSE.TOTAL_CPD_POINTS}.`
+          : needsPracticalDay
           ? `Add the hands-on workshop to earn all ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours. SCAT6, VOMS & BESS with expert feedback.`
           : 'Hands-on training with standardised assessments, sideline protocols, and case studies.'}
       </p>

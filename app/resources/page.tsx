@@ -8,6 +8,7 @@ import { SiteNav } from '@/components/SiteNav'
 export default function ResourcesPage() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [needsEmailLogin, setNeedsEmailLogin] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -20,13 +21,25 @@ export default function ResourcesPage() {
       const res = await fetch('/api/signup-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: 'Resource Download' }),
+        // No name field on this form. Sending the literal 'Resource Download'
+        // wrote that string to users.name, so the welcome email opened "Hi
+        // Resource" and the admin list showed a customer called Resource
+        // Download. Omitting it lets the route fall back to the email's local
+        // part, which is at least plausibly their name.
+        body: JSON.stringify({ email }),
       })
-      if (!res.ok) throw new Error('Signup failed')
+      const data = await res.json().catch(() => ({}))
+      // Surface the route's own message (rate-limit, invalid email, send
+      // failure) instead of collapsing every status into one generic string.
+      if (!res.ok || !data.success) {
+        setError(data?.error || 'Something went wrong. Please try again.')
+        return
+      }
+      setNeedsEmailLogin(!!data.requiresEmailLogin)
       setSubmitted(true)
       localStorage.setItem('resourceEmail', email)
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError('Network error. Please check your connection and try again.')
     } finally {
       setIsLoading(false)
     }
@@ -120,11 +133,27 @@ export default function ResourcesPage() {
         {!submitted ? (
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mb-12">
             <div className="text-center mb-6">
+              {/* HONESTY FIX. This block used to read "Download All 5 Resources
+                  — enter your email and we'll send the download links
+                  directly", with a button labelled "Download".
+                  It posts to /api/signup-free, which creates a free-course
+                  account and sends the SCAT6 Module 1 email. It has no
+                  knowledge of these five files, and never sends a link to any
+                  of them. Worse, all five ARE the paid Clinical Toolkit
+                  (app/clinical-toolkit/page.tsx; served through the
+                  entitlement-gated /api/download), so they cannot simply be
+                  handed over here. The copy now describes what the form
+                  actually does, and points at the genuinely free forms.
+                  OPEN QUESTION FOR THE OWNER: whether any of the five should
+                  become a real free lead magnet is a pricing decision, not a
+                  bug — left alone deliberately. */}
               <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                Download All 5 Resources
+                Get the free SCAT6 &amp; SCOAT6 forms
               </h2>
               <p className="text-slate-600">
-                Enter your email and we&apos;ll send the download links directly.
+                The five tools above are part of the Clinical Toolkit, included with
+                enrolment. Enter your email for the free SCAT6 &amp; SCOAT6 fillable
+                forms and the free ~1-hour SCAT6 Mastery course — no card required.
               </p>
             </div>
 
@@ -153,7 +182,7 @@ export default function ResourcesPage() {
                   disabled={isLoading}
                   className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
-                  {isLoading ? 'Sending...' : 'Download'}
+                  {isLoading ? 'Sending...' : 'Get free access'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -168,28 +197,44 @@ export default function ResourcesPage() {
               <div className="w-16 h-16 rounded-full bg-[#7ba8b0] flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8 text-white" strokeWidth={2.5} />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                Check Your Email
-              </h2>
-              <p className="text-slate-700 mb-4">
-                Download links sent to <span className="font-semibold">{email}</span>
-              </p>
-              <p className="text-sm text-slate-600">
-                Check your spam folder if you don&apos;t see it within a few minutes.
-              </p>
+              {needsEmailLogin ? (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                    You already have an account
+                  </h2>
+                  <p className="text-slate-700 mb-4">
+                    We&apos;ve emailed a login link to <span className="font-semibold">{email}</span>.
+                    Open it and you&apos;ll be signed straight in.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                    You&apos;re in — and signed in
+                  </h2>
+                  <p className="text-slate-700 mb-4">
+                    Your free SCAT6 Mastery course is unlocked, and we&apos;ve emailed a login
+                    link to <span className="font-semibold">{email}</span> for other devices.
+                  </p>
+                </>
+              )}
             </div>
 
-            <div className="text-center pt-6 border-t border-teal-200">
-              <p className="text-slate-700 mb-4">
-                Want structured training with 8 CPD hours (up to 16 with the in-person day)?
-              </p>
+            <div className="text-center pt-6 border-t border-teal-200 space-y-3">
               <Link
-                href="/scat-mastery"
+                href="/scat6-download"
                 className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
               >
-                Start Free SCAT6 Course
+                Download the SCAT6 &amp; SCOAT6 forms
                 <ArrowRight className="w-4 h-4" />
               </Link>
+              <p className="text-sm text-slate-600">
+                Or{' '}
+                <Link href="/modules/101" className="text-[#6b9da8] font-semibold hover:underline">
+                  start Module 1 of the free course
+                </Link>
+                .
+              </p>
             </div>
           </div>
         )}

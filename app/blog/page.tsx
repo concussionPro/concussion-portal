@@ -45,15 +45,15 @@ const blogPosts: Array<{
   },
   {
     title: "Persistent Post-Concussion Symptoms (PPCS): A Clinician's Workup [2026]",
-    description: 'The 5-20% of concussion cases that don\'t resolve in standard timeframes. PPCS criteria, vestibulo-ocular + cervical workup, escalation pathways, active rehabilitation protocols.',
+    description: 'The minority of concussion cases that don\'t resolve in standard timeframes. PPCS criteria, vestibulo-ocular + cervical workup, escalation pathways, active rehabilitation protocols.',
     date: 'May 27, 2026',
     href: '/blog/persistent-post-concussion-symptoms-clinician-workup',
     readTime: '10 min',
     category: 'clinical-tools',
   },
   {
-    title: "Cervicogenic Drivers in Chronic Concussion — Why ~54% of PPCS Patients Need Cervical Assessment [2026]",
-    description: 'Cervicogenic contribution to persistent post-concussion symptoms — present in ~54% of PPCS cases yet routinely missed at acute presentation. Clinical workup, cervicogenic dizziness vs headache differential, manual therapy applications.',
+    title: "Cervicogenic Drivers in Chronic Concussion — Why Every PPCS Patient Needs a Cervical Assessment [2026]",
+    description: 'Cervicogenic contribution to persistent post-concussion symptoms — a treatable driver routinely missed at acute presentation. Clinical workup, cervicogenic dizziness vs headache differential, manual therapy applications.',
     date: 'May 27, 2026',
     href: '/blog/cervicogenic-drivers-chronic-concussion',
     readTime: '7 min',
@@ -61,7 +61,7 @@ const blogPosts: Array<{
   },
   {
     title: "Vestibulo-Ocular Workup for Persistent Post-Concussion Symptoms — Beyond VOMS [2026]",
-    description: 'Vestibulo-ocular dysfunction is in ~70% of PPCS cases. Beyond acute VOMS — convergence insufficiency, BPPV after head trauma, gaze stability, VOR exercises, when to refer.',
+    description: 'Vestibulo-ocular dysfunction is a frequent driver of persistent symptoms. Beyond acute VOMS — convergence insufficiency, BPPV after head trauma, gaze stability, VOR exercises, when to refer.',
     date: 'May 27, 2026',
     href: '/blog/vestibulo-ocular-workup-ppcs',
     readTime: '8 min',
@@ -197,7 +197,7 @@ const blogPosts: Array<{
   },
   {
     title: 'Beyond SCAT6: How Vestibular/Ocular Screening Improves Concussion Care',
-    description: '50-80% of concussed athletes report dizziness, yet standard assessments miss the underlying vestibular-ocular deficits. Learn how VOMS screening fills this critical gap.',
+    description: '50-80% of concussed athletes report dizziness (Mucha et al., 2014; Kontos et al., 2017), yet standard assessments miss the underlying vestibular-ocular deficits. Learn how VOMS screening fills this critical gap.',
     date: 'October 18, 2025',
     href: '/blog/vestibular-ocular-screening-voms-concussion',
     readTime: '12 min',

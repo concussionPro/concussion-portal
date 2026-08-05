@@ -195,6 +195,7 @@ export async function GET(request: NextRequest) {
           // CRM buyer renders as a free 'preview' user.
           ownsCrm: crm.ownsCrm,
           ownsCrmPractical: crm.ownsCrmPractical,
+          hubPackSeat: Boolean(user.hubPackSeatAt),
           workshopLocation: user.workshopLocation || null,
           createdAt: user.createdAt,
           nurtureUnsubscribed: user.nurtureUnsubscribed || false,
@@ -223,6 +224,7 @@ export async function GET(request: NextRequest) {
         // See above — CRM ownership is course_purchases-based, not access_level.
         ownsCrm: crm.ownsCrm,
         ownsCrmPractical: crm.ownsCrmPractical,
+        hubPackSeat: Boolean(user.hubPackSeatAt),
         // Book ownership is a DB flag on a preview-level account — omitting it
         // here (the path nearly every request takes) locked paying book
         // buyers out of /complete-reference and the $50 bundle discount

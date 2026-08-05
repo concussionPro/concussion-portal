@@ -73,12 +73,12 @@ export async function POST(request: NextRequest) {
 
       const html = `
         <p>Hi ${escapeHtml(userName.split(' ')[0])},</p>
-        <p>You&rsquo;re on the waitlist for <strong>Persistent Post-Concussion Symptoms (PPCS) &mdash; The Chronic 5-20%</strong>.</p>
+        <p>You&rsquo;re on the waitlist for <strong>Persistent Post-Concussion Symptoms (PPCS) &mdash; the cases that don&rsquo;t resolve</strong>.</p>
         <p>Honest framing: this course is in the planning phase. I&rsquo;m gauging demand before building it. The topics it will cover:</p>
         <ul>
-          <li>The chronic 5-20% of concussion cases that fail to resolve in standard timeframes</li>
-          <li>Vestibulo-ocular workup (the ~70% of PPCS cases that need it)</li>
-          <li>Cervical contribution to persistent symptoms (~54% of cases)</li>
+          <li>The concussion cases that fail to resolve in standard timeframes</li>
+          <li>Vestibulo-ocular workup &mdash; a frequent and frequently missed driver</li>
+          <li>Cervical contribution to persistent symptoms</li>
           <li>Escalation criteria and multi-disciplinary referral pathways</li>
           <li>Active rehabilitation protocols beyond &ldquo;wait until symptom-free&rdquo;</li>
         </ul>

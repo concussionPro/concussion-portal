@@ -74,9 +74,14 @@ export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = 
   'full-course': 'full-course',
   'international-online': 'online-only',
   'workshop-upgrade': 'full-course',
-  // Clinic Hub Pack — purchaser gets full-course access (so they can verify
-  // content). Additional seats are provisioned manually post-checkout via
-  // redemption codes. Workshop upgrades are tracked separately as add-ons.
+  // Clinic Hub Pack — the buyer gets full-course ACCESS (the whole online
+  // suite, so they can verify what their team gets). It does NOT buy a
+  // practical-day seat: the pack sells ONLINE seats, the in-person day is the
+  // separate A$600/clinician add-on. Both hub provisioning paths therefore
+  // stamp users.hub_pack_seat_at, and everything that means "owns the day"
+  // goes through holdsPracticalDaySeat() in lib/practical-day-seat.ts rather
+  // than reading this level. Seats are auto-provisioned via /api/hub/redeem
+  // (the "manually post-checkout" note here was stale).
   'clinic-hub-pack': 'full-course',
   'clinic-hub-extra-seat': 'online-only',
   'clinic-workshop-upgrade': 'full-course',

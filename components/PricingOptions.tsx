@@ -46,6 +46,11 @@ function cityHasLiveDate(slug: string | null | undefined): boolean {
   )
 }
 
+/** True when ANY city currently has a confirmed, future-dated round. */
+function anyCityHasLiveDate(): boolean {
+  return CITY_OPTIONS.some((c) => cityHasLiveDate(c.slug))
+}
+
 function cityLabel(slug: string): string {
   const opt = CITY_OPTIONS.find((c) => c.slug === slug)
   return opt?.label ?? slug
@@ -151,7 +156,20 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
       <div className={`rounded-xl bg-emerald-50 border border-emerald-200 ${isCompact ? 'p-3' : 'p-4'}`}>
         <div className="flex items-start gap-2">
           <Check className={`text-emerald-600 flex-shrink-0 mt-0.5 ${isCompact ? 'w-4 h-4' : 'w-5 h-5'}`} strokeWidth={2.5} />
-          <p className={`text-emerald-900 leading-snug ${isCompact ? 'text-xs' : 'text-sm'}`}>{success}</p>
+          <div>
+            <p className={`text-emerald-900 leading-snug ${isCompact ? 'text-xs' : 'text-sm'}`}>{success}</p>
+            {/* Was a pure dead end: the visitor most likely to buy — they just
+                told us the city they want — was left with nothing to do next.
+                The online tier is the honest next step here, because it needs
+                no date and its full value is available immediately. */}
+            <p className={`mt-1.5 text-emerald-800/90 leading-snug ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
+              In the meantime you can{' '}
+              <Link href="/pricing#pricing-cards" className="font-semibold underline underline-offset-2">
+                start the 8 online modules today for ${CONFIG.COURSE.PRICE_ONLINE}
+              </Link>{' '}
+              — every dollar counts toward the Complete course when your date launches.
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -520,6 +538,39 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               ))}
             </ul>
 
+            {/* City picker — the COMPACT variant had none, so a /preview buyer
+                clicking "Enrol Now — $1,190" was silently nominated into
+                defaultNominationCity() (the first 'collecting' city, i.e.
+                Sydney) for a city they were never shown. workshopLocation is
+                the nomination: it feeds the Ready-to-Train threshold and
+                decides which pre-workshop nurture lane they land in, so a
+                default the buyer never saw is the wrong city in the pipeline
+                and the wrong emails afterwards. Same control as the full
+                variant, same state. */}
+            <div className="mb-3">
+              <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1">Your workshop city</p>
+              <div className="flex flex-wrap gap-1">
+                {CITY_OPTIONS.map((city) => (
+                  <button
+                    key={city.slug}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLocation(city.slug)
+                      trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_compact' })
+                    }}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                      selectedLocation === city.slug
+                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                        : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
+                    }`}
+                    aria-pressed={selectedLocation === city.slug}
+                  >
+                    {city.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button
               onClick={() => handleCheckout('full-course')}
               disabled={loading !== null}
@@ -876,7 +927,18 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   </span>
                 </div>
               )}
-              <details className="mt-2.5 group">
+              {/* Open by default while NO city anywhere has a scheduled date.
+                  In that state the date alert is not a footnote — it is the
+                  only forward action for a visitor who came to find a date,
+                  and hiding it behind a twisty made this card a dead end for
+                  them. Measured over the 28 days to 2026-08-06: four visitors
+                  clicked THROUGH THE WHOLE PICKER (one hit all five cities in
+                  ten seconds), 40 workshop_city_select events in total — and
+                  the page produced 2 workshop_interest_submit and no
+                  purchases. That is date-hunting behaviour finding nothing and
+                  leaving. Once a real date exists the picker answers the
+                  question by itself and this collapses again. */}
+              <details className="mt-2.5 group" open={!anyCityHasLiveDate()}>
                 <summary className="text-[11px] text-[var(--muted-foreground)] cursor-pointer hover:text-[var(--accent)] transition-colors list-none flex items-center gap-1">
                   <Bell className="w-3 h-3" />
                   Not ready to enrol? Get a date alert for {cityLabel(selectedLocation)} instead

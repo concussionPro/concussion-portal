@@ -1,4 +1,15 @@
 import type { Metadata } from 'next'
+import { workshopPriceFor } from '@/lib/config'
+
+/**
+ * Public per-clinician rate a Sydney clinician would ACTUALLY be charged today
+ * — derived from workshopPriceFor(), the same helper that sets the Stripe
+ * charge. NOT the A$1,400 sticker (only charged in the final
+ * EARLY_BIRD_DAYS_BEFORE window of a confirmed date), so the on-site cohort
+ * rates below are compared against a price that is really paid. Keep this file
+ * in step with ../page.tsx — same quote, print layout.
+ */
+const PUBLIC_RATE = workshopPriceFor('sydney')
 
 export const metadata: Metadata = {
   title: 'On-site Proposal — Sydney Physios',
@@ -418,7 +429,7 @@ function PageThree() {
       {/* 05 Investment */}
       <SectionHeading kicker="05" title="Investment — you choose the cohort" />
       <p className="text-[11.5px] leading-relaxed" style={{ color: INK_SOFT }}>
-        The public course is $1,400 per clinician. Run it on-site and your whole team trains together
+        The public course is A${PUBLIC_RATE.toLocaleString()} per clinician. Run it on-site and your whole team trains together
         on your own cases — and the per-head rate drops the more of you train. Minimum 10; 12–14 is
         the sweet spot for a team your size.
       </p>

@@ -3,16 +3,30 @@
  * Every certificate the portal issues must land here or public verification
  * returns a FALSE NEGATIVE on a genuine AHPRA CPD document.
  *
- * One row per (email, course_slug). Re-issuing refreshes the score/date and
- * the 12-month validity but KEEPS THE EXISTING CERTIFICATE ID — a re-take
- * used to mint a new id, silently breaking every /verify link the holder had
- * already shared with an employer or auditor. Lazy CREATE TABLE on first call.
+ * One row per (email, course_slug). Re-issuing refreshes the score/date but
+ * KEEPS THE EXISTING CERTIFICATE ID — a re-take used to mint a new id,
+ * silently breaking every /verify link the holder had already shared with an
+ * employer or auditor. Lazy CREATE TABLE on first call.
+ *
+ * COMPLETION EVIDENCE DOES NOT EXPIRE (owner decision 2026-08-06). A
+ * certificate records that a person completed a course on a date, and that
+ * never stops being true. Certificates used to carry a 12-month `expires_at`
+ * and /verify flipped them to "✗ Expired — re-certification required" the day
+ * after, while lib/certificate.ts prints no expiry on the PDF and its footer
+ * tells the holder to retain it for at least 5 years for audit. An AHPRA
+ * auditor following the printed /verify URL at 18 months therefore saw a red
+ * cross on a genuine certificate. The ONLY thing that invalidates a
+ * certificate now is REVOCATION (refund / chargeback) — see revokeCourseCertificates.
+ *
+ * Accreditation of the OFFERING (e.g. the ESSA period in
+ * CONFIG.ESSA_ACCREDITATION) does have an expiry, but that is a property of
+ * the offering at the time it was delivered, not of the holder's completion.
+ * /verify surfaces it as context ("accreditation as at the date of issue"),
+ * never as a reason to invalidate.
  */
 
 import crypto from 'crypto'
 import { sql } from './db'
-
-const CERT_VALIDITY_MS = 365 * 24 * 60 * 60 * 1000 // 12 months
 
 export interface CourseCertificateRecord {
   certificateId: string
@@ -22,13 +36,12 @@ export interface CourseCertificateRecord {
   courseTitle: string
   cpdHours: number
   issuedAt: string
-  expiresAt: string
-  /** false when expired OR revoked — the single thing /verify should trust. */
+  /** false ONLY when revoked — the single thing /verify should trust. */
   isValid: boolean
   /** set when the entitlement behind this certificate was refunded or charged back */
   revokedAt: string | null
   /** why the certificate is not valid — null when it is */
-  invalidReason: 'revoked' | 'expired' | null
+  invalidReason: 'revoked' | null
 }
 
 async function ensureTable(): Promise<void> {
@@ -42,10 +55,14 @@ async function ensureTable(): Promise<void> {
       course_title TEXT NOT NULL,
       cpd_hours NUMERIC(5,2) NOT NULL,
       issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      expires_at TIMESTAMPTZ NOT NULL,
+      expires_at TIMESTAMPTZ,
       UNIQUE (email, course_slug)
     )
   `
+  // Retired column (see the file header): completion evidence does not expire.
+  // Rows written before 2026-08-06 still carry a value; nothing reads it. The
+  // NOT NULL has to come off before inserts can stop supplying it.
+  await sql`ALTER TABLE course_certificates ALTER COLUMN expires_at DROP NOT NULL`
   // A refund or chargeback removes the entitlement but used to leave the
   // certificate permanently verifiable — so a charged-back buyer kept a CPD
   // document they could lodge with ESSA/OA, and /verify happily said "Valid".
@@ -64,22 +81,15 @@ interface CertRow {
   course_title: string
   cpd_hours: string
   issued_at: string
-  expires_at: string
   revoked_at?: string | Date | null
 }
 
 function toRecord(r: CertRow): CourseCertificateRecord {
-  const expires = new Date(r.expires_at)
   const revokedAt = r.revoked_at
     ? (r.revoked_at instanceof Date ? r.revoked_at.toISOString() : new Date(r.revoked_at).toISOString())
     : null
-  // REVOCATION WINS over expiry: a revoked certificate is not "expired", and
-  // saying so would imply it was ever validly held to term.
-  const invalidReason: CourseCertificateRecord['invalidReason'] = revokedAt
-    ? 'revoked'
-    : Date.now() >= expires.getTime()
-      ? 'expired'
-      : null
+  // REVOCATION is the only invalidity. Age is not — see the file header.
+  const invalidReason: CourseCertificateRecord['invalidReason'] = revokedAt ? 'revoked' : null
   return {
     certificateId: r.certificate_id,
     email: r.email,
@@ -88,7 +98,6 @@ function toRecord(r: CertRow): CourseCertificateRecord {
     courseTitle: r.course_title,
     cpdHours: parseFloat(r.cpd_hours),
     issuedAt: new Date(r.issued_at).toISOString(),
-    expiresAt: expires.toISOString(),
     isValid: invalidReason === null,
     revokedAt,
     invalidReason,
@@ -117,7 +126,6 @@ export async function issueCourseCertificate(args: {
   const email = args.email.trim().toLowerCase()
   const certificateId = args.certificateId || makeCertificateId()
   const issuedAt = new Date()
-  const expiresAt = new Date(issuedAt.getTime() + CERT_VALIDITY_MS)
 
   // Re-issue (a re-take, a re-download) refreshes the record but NEVER the
   // id: certificate_id is deliberately absent from the DO UPDATE SET list, so
@@ -125,9 +133,9 @@ export async function issueCourseCertificate(args: {
   // whichever id actually persisted.
   const { rows } = await sql<{ certificate_id: string; name: string | null }>`
     INSERT INTO course_certificates
-      (certificate_id, email, name, course_slug, course_title, cpd_hours, issued_at, expires_at)
+      (certificate_id, email, name, course_slug, course_title, cpd_hours, issued_at)
     VALUES
-      (${certificateId}, ${email}, ${args.name ?? null}, ${args.courseSlug}, ${args.courseTitle}, ${args.cpdHours}, ${issuedAt.toISOString()}, ${expiresAt.toISOString()})
+      (${certificateId}, ${email}, ${args.name ?? null}, ${args.courseSlug}, ${args.courseTitle}, ${args.cpdHours}, ${issuedAt.toISOString()})
     ON CONFLICT (email, course_slug) DO UPDATE
       SET -- Never wipe a previously-captured holder name with NULL on
           -- re-issue — keep the best name we have.
@@ -135,7 +143,9 @@ export async function issueCourseCertificate(args: {
           course_title = EXCLUDED.course_title,
           cpd_hours = EXCLUDED.cpd_hours,
           issued_at = EXCLUDED.issued_at,
-          expires_at = EXCLUDED.expires_at,
+          -- Clear the retired 12-month expiry on any row written before
+          -- 2026-08-06, so nothing can resurrect it as a validity signal.
+          expires_at = NULL,
           -- Re-issue CLEARS a revocation, and that is safe: every caller of
           -- this function has just re-checked the live entitlement (the
           -- certificate route reads access_level / CRM ownership from the DB,
@@ -155,7 +165,6 @@ export async function issueCourseCertificate(args: {
     courseTitle: args.courseTitle,
     cpdHours: args.cpdHours,
     issuedAt: issuedAt.toISOString(),
-    expiresAt: expiresAt.toISOString(),
     isValid: true,
     revokedAt: null,
     invalidReason: null,
@@ -207,7 +216,7 @@ export async function getCourseCertificate(
 ): Promise<CourseCertificateRecord | null> {
   await ensureTable()
   const { rows } = await sql<CertRow>`
-    SELECT certificate_id, email, name, course_slug, course_title, cpd_hours::text AS cpd_hours, issued_at, expires_at, revoked_at
+    SELECT certificate_id, email, name, course_slug, course_title, cpd_hours::text AS cpd_hours, issued_at, revoked_at
     FROM course_certificates
     WHERE LOWER(email) = LOWER(${email}) AND course_slug = ${courseSlug}
     LIMIT 1
@@ -227,7 +236,7 @@ export async function verifyCourseCertificate(
 ): Promise<CourseCertificateRecord | null> {
   await ensureTable()
   const { rows } = await sql<CertRow>`
-    SELECT certificate_id, email, name, course_slug, course_title, cpd_hours::text AS cpd_hours, issued_at, expires_at, revoked_at
+    SELECT certificate_id, email, name, course_slug, course_title, cpd_hours::text AS cpd_hours, issued_at, revoked_at
     FROM course_certificates
     WHERE certificate_id = ${certificateId}
     LIMIT 1

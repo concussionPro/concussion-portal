@@ -10,6 +10,7 @@ import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 import { Analytics } from "@vercel/analytics/next";
 import { CONFIG } from "@/lib/config";
 import { organizationSchema } from "@/lib/schema-markup";
+import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID, GA4_MEASUREMENT_ID } from "@/lib/google-ads";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -113,22 +114,27 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {/*
-          Google tag (gtag.js) — loaded with Google Ads ID so the Ads
-          verification crawler finds it in the raw server-rendered HTML.
-          GA4 still works via gtag('config', 'G-LRDRZBWJ2E') below.
+          Google tag (gtag.js) — GA4 MEASUREMENT ONLY by default.
 
-          IMPORTANT: Must be a plain <script> tag, NOT next/script with
-          afterInteractive, because Google's Ads tag verification checks
-          static HTML — afterInteractive injects via JS after hydration
-          and the crawler never sees it ("Misconfigured" status).
+          The Ads half (loading under the AW- id so Google's Ads verification
+          crawler finds it in static HTML, plus gtag('config', AW-…)) is gated
+          on GOOGLE_ADS_ENABLED — see lib/google-ads.ts. The channel is retired
+          and there is no live spend, so an advertising tag has no business
+          loading on every page of a healthcare site. Flip
+          NEXT_PUBLIC_GOOGLE_ADS_LIVE=true and redeploy to restore it exactly.
+
+          IMPORTANT (kept for the resume case): must be a plain <script> tag,
+          NOT next/script with afterInteractive, because Google's Ads tag
+          verification checks static HTML — afterInteractive injects via JS
+          after hydration and the crawler never sees it ("Misconfigured").
         */}
         <script
           async
-          src="https://www.googletagmanager.com/gtag/js?id=AW-17984048021"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ENABLED ? GOOGLE_ADS_ID : GA4_MEASUREMENT_ID}`}
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LRDRZBWJ2E');gtag('config','AW-17984048021');`,
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_MEASUREMENT_ID}');${GOOGLE_ADS_ENABLED ? `gtag('config','${GOOGLE_ADS_ID}');` : ''}`,
           }}
         />
       </head>

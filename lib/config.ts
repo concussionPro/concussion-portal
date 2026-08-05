@@ -146,6 +146,9 @@ export const CONFIG = {
     // active round. Melbourne 13 June 2026 round: demand capture ran through
     // 2026 before the date was confirmed (2026-04-18), so the round opens at
     // the start of 2026. Update when the next round is announced.
+    // Values are AUSTRALIAN EASTERN calendar dates — resolve them with
+    // roundStartInstant() / roundStartSqlInstant() below, never `new Date(str)`
+    // and never by handing the bare string to Postgres.
     ROUND_START: {
       melbourne: '2026-01-01',
       // Sydney ran 7 Mar 2026, Byron Bay ran 22 Nov 2025 — scope each next round
@@ -332,6 +335,72 @@ export function isEarlyBirdForLocation(locationSlug?: string | null): boolean {
   if (dateMs < Date.now()) return true // past date = next-round nomination
   const closeMs = dateMs - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
   return Date.now() < closeMs
+}
+
+// ---------------------------------------------------------------------------
+// Round-start boundary — ONE instant for JS and SQL.
+//
+// CONFIG.WORKSHOP.ROUND_START holds bare 'YYYY-MM-DD' strings. `new Date(str)`
+// parses those as UTC midnight, and the same bare string handed to Postgres is
+// resolved against the SERVER's TimeZone setting — so the boundary meant either
+// 00:00 UTC (= 10 or 11am Sydney) or something else entirely depending on a
+// database setting nothing in this repo pins. Either way it was never the thing
+// the business means: a round starts at midnight in Australia.
+//
+// Both sides now go through roundStartInstant(), which resolves the calendar
+// date to Australian Eastern midnight and yields an absolute instant. JS
+// compares milliseconds; SQL is handed that instant as an explicit-UTC ISO
+// string, which no server setting can reinterpret. The window in which the seat
+// counter and the alumni classifier could disagree is closed.
+//
+// Australia/Sydney covers every city that has a ROUND_START (Melbourne, Sydney,
+// Byron Bay — all AEST/AEDT) and matches both the analytics day-bucketing and
+// the +10:00 literals on CONFIG.LOCATIONS dateObj. A future Adelaide (+9:30) or
+// Perth (+8) round would shift the boundary by ≤2h — sub-day, so it cannot move
+// a buyer between rounds unless they purchased within hours of the cutover.
+// ---------------------------------------------------------------------------
+const AU_EASTERN_TZ = 'Australia/Sydney'
+
+/** Australian Eastern UTC offset in minutes at an instant — 600 (AEST) / 660 (AEDT). */
+function auEasternOffsetMinutes(at: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: AU_EASTERN_TZ, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(at).reduce<Record<string, string>>((acc, p) => { acc[p.type] = p.value; return acc }, {})
+  const asUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    Number(parts.hour) % 24, Number(parts.minute), Number(parts.second),
+  )
+  return Math.round((asUtc - at.getTime()) / 60_000)
+}
+
+/**
+ * The instant a city's current round opened: 00:00 Australian Eastern on its
+ * ROUND_START date. Null when the city has no round start configured (callers
+ * must fail safe — see lib/workshop-alumni.ts).
+ */
+export function roundStartInstant(locationSlug?: string | null): Date | null {
+  const dateKey = locationSlug ? CONFIG.WORKSHOP.ROUND_START[locationSlug] : undefined
+  if (!dateKey) return null
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey.trim())
+  if (!m) return null
+  const [, y, mo, d] = m
+  const utcMidnight = Date.UTC(Number(y), Number(mo) - 1, Number(d))
+  // Two passes so a date sitting on a DST changeover resolves to the offset in
+  // force AT the local midnight, not the offset of the UTC-midnight guess.
+  let ts = utcMidnight
+  for (let i = 0; i < 2; i++) ts = utcMidnight - auEasternOffsetMinutes(new Date(ts)) * 60_000
+  return new Date(ts)
+}
+
+/**
+ * Same boundary, as an explicit-UTC ISO string for SQL parameters. Never pass
+ * the bare 'YYYY-MM-DD' to Postgres — that is the divergence this exists to
+ * remove.
+ */
+export function roundStartSqlInstant(locationSlug?: string | null): string | null {
+  return roundStartInstant(locationSlug)?.toISOString() ?? null
 }
 
 /** Complete Course price for a city under the early-bird model (AUD). */

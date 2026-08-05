@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, CheckCircle, Mail } from 'lucide-react'
+import Link from 'next/link'
+import { Loader2, CheckCircle, Mail, ArrowRight } from 'lucide-react'
 
 export function EmailCaptureInline() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [needsEmailLogin, setNeedsEmailLogin] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,6 +26,12 @@ export function EmailCaptureInline() {
       const data = await res.json()
 
       if (res.ok && data.success) {
+        // requiresEmailLogin = the address already owns something, so
+        // /api/signup-free emailed a login link INSTEAD of setting a session
+        // (anti-takeover, lib/account-escalation.ts). Everyone else is signed
+        // in right now by the cookie the route just set — so they should be
+        // sent straight into the course, not to their inbox.
+        setNeedsEmailLogin(!!data.requiresEmailLogin)
         setSuccess(true)
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
@@ -39,10 +47,41 @@ export function EmailCaptureInline() {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
         <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
-        <p className="text-base font-semibold text-emerald-900 mb-1">You&apos;re in!</p>
-        <p className="text-sm text-emerald-700">
-          Check your email for your free SCAT6 Mastery course login link.
-        </p>
+        {needsEmailLogin ? (
+          <>
+            <p className="text-base font-semibold text-emerald-900 mb-1">
+              You already have an account
+            </p>
+            <p className="text-sm text-emerald-700">
+              We&apos;ve emailed a login link to <strong>{email}</strong> — open it and
+              you&apos;ll be signed straight in.
+            </p>
+          </>
+        ) : (
+          <>
+            {/* The route has already set a 1-year session cookie, so this
+                visitor is logged in RIGHT NOW. The previous copy — "check your
+                email for your login link" — sent a converted lead away from a
+                page they were already through, into an inbox, with no link
+                anywhere on the card. That is the activation gap the free-course
+                funnel already suffers from (roughly half of signups never open
+                Module 1). Give them the module instead. */}
+            <p className="text-base font-semibold text-emerald-900 mb-1">
+              You&apos;re in — and signed in.
+            </p>
+            <p className="text-sm text-emerald-700 mb-4">
+              Your free SCAT6 Mastery course is unlocked. We&apos;ve also emailed a login link
+              so you can pick it up on any device.
+            </p>
+            <Link
+              href="/modules/101"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
+            >
+              Start Module 1 now
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </>
+        )}
       </div>
     )
   }

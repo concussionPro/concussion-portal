@@ -160,8 +160,14 @@ describe('CRM buyers see their own course, unlocked', () => {
 describe('online-only buyers get an in-person upgrade path', () => {
   it('the sidebar carries a persistent upgrade CTA for online-only buyers', () => {
     const src = read('components/dashboard/Sidebar.tsx')
-    expect(src).toMatch(/user\?\.accessLevel === 'online-only' && \(/)
-    expect(src).toMatch(/href="\/upgrade"/)
+    // Widened 2026-08-06 from a bare accessLevel check to the shared
+    // predicate: Clinic Hub Pack seats read as 'full-course' but bought ONLINE
+    // seats only, so they belong in this same audience (lib/practical-day-seat.ts).
+    // Online-only buyers still qualify — asserted directly against the predicate
+    // in tests/hub-pack-practical-day.test.ts.
+    expect(src).toMatch(/holdsOnlineWithoutPracticalDay\(\{/)
+    expect(src).toMatch(/accessLevel: user\?\.accessLevel/)
+    expect(src).toMatch(/'\/upgrade'/)
   })
 
   it('the upgrade price is derived from config, never hardcoded', () => {

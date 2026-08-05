@@ -48,12 +48,6 @@ export default async function VagusCertificatePage() {
     month: 'long',
     year: 'numeric',
   })
-  const expiresDate = new Date(cert.expiresAt).toLocaleDateString('en-AU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
@@ -83,8 +77,12 @@ export default async function VagusCertificatePage() {
                 <p>Issued</p>
               </div>
               <div>
-                <p className="font-semibold text-foreground">{expiresDate}</p>
-                <p>Valid until</p>
+                {/* Completion evidence does not expire — the certificate
+                    records what the holder did and when. Only revocation
+                    (refund/chargeback) withdraws it. See
+                    lib/course-certificates.ts. */}
+                <p className="font-semibold text-foreground">No expiry</p>
+                <p>Validity</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground">{cert.certificateId.slice(0, 12)}</p>
@@ -99,7 +97,7 @@ export default async function VagusCertificatePage() {
 
           {!cert.isValid && (
             <div className="rounded-xl p-4 bg-amber-50 border border-amber-200 text-sm text-amber-900 mb-6">
-              This certificate has expired. Re-take the (refreshed) quiz to renew for another 12 months.
+              This certificate has been withdrawn — the enrolment behind it was refunded or charged back. It should not be lodged as CPD evidence.
             </div>
           )}
 

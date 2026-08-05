@@ -11,9 +11,11 @@
  *
  * Property: ConcussionPro Portal (G-LRDRZBWJ2E)
  * Stream ID: 13917185031
+ *
+ * GATED on GOOGLE_ADS_ENABLED — the channel is retired, see lib/google-ads.ts.
  */
 
-const GA4_MEASUREMENT_ID = 'G-LRDRZBWJ2E'
+import { GOOGLE_ADS_ENABLED, GA4_MEASUREMENT_ID } from './google-ads'
 
 export async function trackServerPurchase(
   transactionId: string,
@@ -21,6 +23,13 @@ export async function trackServerPurchase(
   currency: string,
   email?: string,
 ) {
+  // Google Ads is a RETIRED channel (lib/google-ads.ts). This function exists
+  // only to feed an Ads conversion import, and it ships the buyer's hashed
+  // address to Google from the Stripe webhook — so it stays off until spend
+  // resumes. The sale itself is recorded in Postgres by the caller
+  // (purchase_complete in analytics_events); nothing Zac reads depends on this.
+  if (!GOOGLE_ADS_ENABLED) return
+
   const apiSecret = process.env.GA4_API_SECRET
   if (!apiSecret) {
     console.warn('[Measurement Protocol] GA4_API_SECRET not set — skipping server-side purchase tracking')

@@ -243,7 +243,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
 
           {/* Email capture — the not-ready-to-buy majority. Secondary to the
               enrol CTA above; the same magnet repeats near the page bottom. */}
-          <EpLeadCapture variant="hero" location="hero" />
+          <EpLeadCapture variant="hero" location="hero" nextHref="#pricing-cards" nextLabel="See the course & pricing" />
 
           {/* Practical-day cities — surfaced at the TOP (owner 2026-07-27:
               "locations are buried… too much scroll"). Cities derive from
@@ -522,7 +522,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               2026-07-27): the not-ready-to-decide majority gets a one-field
               path that keeps them, instead of scrolling away. */}
           <div className="mt-6">
-            <EpLeadCapture variant="hero" location="under-pricing" />
+            <EpLeadCapture variant="hero" location="under-pricing" nextHref="#pricing-cards" nextLabel="Back to the enrolment options" />
           </div>
 
           {/* Trust Signals */}
@@ -702,12 +702,21 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             ))}
           </div>
 
+          {/* The page's LAST and largest CTA. While ESSA was pending, a mailto
+              asking the reader to hand-type name / profession / ESSA number was
+              the only thing on offer. ESSA is accredited now
+              (CONFIG.FEATURES.ESSA_ACCREDITED) and checkout is live, so leaving
+              it as a mailto sent a decided buyer into their mail client at the
+              bottom of the page instead of to the enrolment options — and did
+              it with a "register your interest" label, which understates what
+              they can actually do. Falls back to the mailto automatically if
+              accreditation ever lapses, matching CrmCheckoutButton. */}
           <div className="text-center mt-10">
             <a
-              href={INTEREST_HREF}
+              href={accredited ? '#pricing-cards' : INTEREST_HREF}
               className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"
             >
-              Register your interest
+              {accredited ? 'See enrolment options' : 'Register your interest'}
               <ArrowRight className="w-5 h-5" />
             </a>
             <p className="text-xs text-muted-foreground mt-4">
@@ -721,7 +730,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
         {/* Bottom email capture — one more chance to keep the not-ready-to-buy
             majority (this is the ESSA-newsletter cohort's primary conversion). */}
         <div className="max-w-2xl mx-auto mt-16">
-          <EpLeadCapture variant="full" location="footer" />
+          <EpLeadCapture variant="full" location="footer" nextHref="#pricing-cards" nextLabel="See the course & pricing" />
         </div>
 
       </div>
