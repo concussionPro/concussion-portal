@@ -25,7 +25,8 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Assessment Tool (6th Edition) - Fillable PDF for comprehensive concussion assessment',
     fileSize: '3.5 MB',
     category: 'assessment',
-    isFree: false,
+    // Genuinely free: public lead magnet at /scat6-download, AUTH_DOCS in middleware.
+    isFree: true,
     fileName: 'SCAT6_Fillable.pdf'
   },
   {
@@ -34,7 +35,8 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Office Assessment Tool (6th Edition) - Streamlined clinical assessment',
     fileSize: '12.6 MB',
     category: 'assessment',
-    isFree: false,
+    // Genuinely free: AUTH_DOCS in middleware — any authenticated user may download.
+    isFree: true,
     fileName: 'SCOAT6_Fillable.pdf'
   },
   {
@@ -197,8 +199,9 @@ export default function ClinicalToolkitPage() {
   const CDN_FILES = new Set(['SCAT6_Fillable.pdf', 'SCOAT6_Fillable.pdf'])
 
   const handleDownload = (resource: ToolkitResource) => {
-    // Both online-only and full-course users have access to toolkit
-    if (!accessLevel) {
+    // Both online-only and full-course users have access to toolkit; free
+    // resources (AUTH_DOCS in middleware) are open to any signed-in user.
+    if (!accessLevel && !resource.isFree) {
       trackShopClick('toolkit-locked-resource', { resourceId: resource.id, resourceTitle: resource.title })
       router.push('/pricing')
       return
@@ -379,9 +382,10 @@ export default function ClinicalToolkitPage() {
             {/* Resources Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredResources.map((resource) => {
-                // All resources are locked for unauthenticated users
-                // Both online-only and full-course users get full access
-                const isLocked = !accessLevel
+                // Paid resources are locked for preview users; free ones
+                // (AUTH_DOCS in middleware) stay open to any signed-in user.
+                // Both online-only and full-course users get full access.
+                const isLocked = !accessLevel && !resource.isFree
                 const catInfo = categoryIcons[resource.category]
                 const CategoryIcon = catInfo?.icon || FileText
                 const categoryColor = catInfo?.color || 'text-[#5b9aa6]'

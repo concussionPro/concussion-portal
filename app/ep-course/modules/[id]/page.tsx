@@ -2,7 +2,7 @@
 
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 import { EpInteractiveElements } from '@/components/ep-course/EpInteractiveElements'
-import { epProgressId } from '@/data/ep-modules'
+import { epProgressId } from '@/data/ep-module-meta'
 import { CourseModulePage, type CourseModuleDescriptor } from '@/components/course/CourseModulePage'
 
 /**

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { getEpModulesMeta as getModulesMeta, epProgressId } from '@/data/ep-modules'
+import { getEpModulesMeta as getModulesMeta, epProgressId } from '@/data/ep-module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
 import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award, Wrench, Stethoscope } from 'lucide-react'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'

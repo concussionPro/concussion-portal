@@ -4,6 +4,7 @@ import { sql } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { progressSchema } from '@/lib/schemas'
 import { isDemoUserId } from '@/lib/demo-session'
+import { userOwnsCrm } from '@/lib/crm-course'
 
 // GET - Load user progress
 export async function GET(request: NextRequest) {
@@ -124,6 +125,32 @@ export async function POST(request: NextRequest) {
       )
     }
     const { progress } = parsed.data
+
+    // Entitlement gate: only accept writes for module ids this session may
+    // actually study — mirrors lib/module-access resolution. Free tier keeps
+    // SCAT 101-104 and the truncated Module 1 preview (both stay writable);
+    // flagship 2-8 need a paid access level; CRM 201-208 need CRM ownership
+    // (stream-isolated in course_purchases, NOT access_level). Without this,
+    // any preview session could mark paid modules complete.
+    const moduleIds = Object.keys(progress).map(Number)
+    const hasPaidAccess =
+      sessionData.accessLevel === 'online-only' || sessionData.accessLevel === 'full-course'
+    const needsPaid = moduleIds.some((id) => id >= 2 && id <= 8)
+    if (needsPaid && !hasPaidAccess) {
+      return NextResponse.json(
+        { error: 'This module requires full course access' },
+        { status: 403 }
+      )
+    }
+    // CRM matches its content gate (/api/ep-course/modules): ownership only —
+    // a paid CCM level does NOT open the EP stream.
+    const needsCrm = moduleIds.some((id) => id >= 201 && id <= 208)
+    if (needsCrm && !(await userOwnsCrm(sessionData.email))) {
+      return NextResponse.json(
+        { error: 'This module requires the Concussion Rehab Mastery course' },
+        { status: 403 }
+      )
+    }
 
     // Prevent abuse: size cap even after schema validation
     const progressJson = JSON.stringify(progress)

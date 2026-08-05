@@ -34,7 +34,7 @@ import {
   Stethoscope,
 } from 'lucide-react'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
-import { getEpModulesMeta, epProgressId } from '@/data/ep-modules'
+import { getEpModulesMeta, epProgressId } from '@/data/ep-module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
 import { cn } from '@/lib/utils'
 import { CONFIG } from '@/lib/config'
