@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { SstPatientQrCard } from '@/components/sst-trainer/SstPatientQrCard'
@@ -56,14 +56,21 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   )
 }
 
-export function SstClinicCard() {
+export function SstClinicCard({
+  /** Lifts the resolved clinic to the page — on first load AND the moment it is
+   *  provisioned, so surfaces above this card (e.g. the clinic profile) stop
+   *  needing a full reload to notice (2026-08-05 crawl #1). */
+  onClinicResolved,
+}: {
+  onClinicResolved?: (clinic: Clinic | null) => void
+} = {}) {
   const [clinic, setClinic] = useState<Clinic | null>(null)
   const [usage, setUsage] = useState<Usage | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [clinicName, setClinicName] = useState('')
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
-  const [showQr, setShowQr] = useState(false)
+  const [qrVariant, setQrVariant] = useState<null | 'patient' | 'clinician'>(null)
   // patient invite
   const [patientEmail, setPatientEmail] = useState('')
   const [patientName, setPatientName] = useState('')
@@ -75,20 +82,37 @@ export function SstClinicCard() {
   // CTAs, and refetch shortly (2026-08-05 sweep #11).
   const [justSubscribed, setJustSubscribed] = useState(false)
 
+  // Truthful copy for the two states that legitimately have nothing to open:
+  // a comped clinic (plan=active, no Stripe customer — the 25 alumni) and a
+  // seated non-owner. Both used to flash "Opening…" then nothing, forever
+  // (2026-08-05 crawl #4).
+  const BILLING_COPY: Record<string, string> = {
+    'no-customer': 'This clinic’s access is complimentary — there’s no subscription to manage.',
+    'not-owner': 'Only the clinic owner can manage billing.',
+    'no-clinic': 'Create your clinic code before managing billing.',
+  }
+
   const openBillingPortal = async () => {
     if (billingBusy) return
+    // DEMO00 has no session and no billing — leave the demo workspace exactly
+    // as it was rather than surfacing a "Forbidden" to a prospect.
+    if (clinic?.code === 'DEMO00') return
     setBillingBusy(true)
+    setError('')
     try {
       const res = await fetch('/api/sst/billing-portal', { method: 'POST' })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data?.url) window.location.href = data.url
-      else setError(data?.error || 'Could not open billing portal.')
+      else setError(BILLING_COPY[data?.code as string] || data?.error || 'Could not open billing portal.')
     } catch {
-      setError('Could not open billing portal.')
+      setError('Could not open billing portal — check your connection and try again.')
     } finally {
       setBillingBusy(false)
     }
   }
+
+  const onClinicResolvedRef = useRef(onClinicResolved)
+  onClinicResolvedRef.current = onClinicResolved
 
   useEffect(() => {
     const load = () =>
@@ -97,6 +121,7 @@ export function SstClinicCard() {
         .then((d) => {
           setClinic(d?.clinic ?? null)
           setUsage(d?.usage ?? null)
+          onClinicResolvedRef.current?.(d?.clinic ?? null)
         })
         .catch(() => {})
         .finally(() => setLoaded(true))
@@ -123,6 +148,13 @@ export function SstClinicCard() {
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || 'Something went wrong.')
       setClinic(data.clinic)
+      onClinicResolvedRef.current?.(data.clinic ?? null)
+      // The freshly provisioned clinic starts on the trial plan — reflect it
+      // without waiting for a reload.
+      void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d?.usage) setUsage(d.usage) })
+        .catch(() => {})
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -242,8 +274,13 @@ export function SstClinicCard() {
                   : `Subscribed · ${usage.patientCount} of ${usage.cap} active patients (30 days)`}
               </span>
               {usage.cap != null && !usage.canAddPatient && (
-                <button type="button" onClick={openBillingPortal} className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-white hover:bg-accent/90">
-                  Plan full — upgrade →
+                <button
+                  type="button"
+                  onClick={openBillingPortal}
+                  disabled={billingBusy}
+                  className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-white hover:bg-accent/90 disabled:opacity-50"
+                >
+                  {billingBusy ? 'Opening…' : 'Plan full — upgrade →'}
                 </button>
               )}
               <button
@@ -260,6 +297,12 @@ export function SstClinicCard() {
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
               Payment received — activating your plan… this updates within a minute.
             </p>
+          )}
+          {/* Billing / plan errors were only rendered in the PRE-provisioning
+              branch, so every failure from "Manage billing" and "Plan full —
+              upgrade" was invisible (2026-08-05 crawl #4). */}
+          {error && (
+            <p className="mt-2 max-w-md text-[11.5px] font-semibold leading-snug text-amber-800">{error}</p>
           )}
           <SstTeamSection demo={isDemoClinic} />
         </div>
@@ -302,12 +345,25 @@ export function SstClinicCard() {
           {patientUrl}
         </code>
         <CopyButton text={patientUrl} label="Copy patient link" />
+        {/* The PATIENT card is the one clinicians hand out — it carries the
+            code only. The clinician card additionally prints the clinic's
+            private hub key, so it is a separate, explicitly-labelled action
+            (2026-08-05: the only printable card was the keyed one, beside a
+            warning to print a patient version that had no button). */}
         <button
           type="button"
-          onClick={() => setShowQr(true)}
+          onClick={() => setQrVariant('patient')}
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
         >
-          <QrCode className="w-3.5 h-3.5" /> QR card
+          <QrCode className="w-3.5 h-3.5" /> Patient QR card
+        </button>
+        <button
+          type="button"
+          onClick={() => setQrVariant('clinician')}
+          title="Includes your private hub key — for your own records, not for patients"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+        >
+          <QrCode className="w-3.5 h-3.5" /> Clinician card (has your key)
         </button>
         <CopyButton text={clinic.code} label="Copy code" />
       </div>
@@ -420,13 +476,13 @@ export function SstClinicCard() {
         <p className="mt-2 m-0">Full patient privacy policy: <a href="/sst-privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-700 underline">/sst-privacy</a>.</p>
       </details>
 
-      {showQr && (
+      {qrVariant && (
         <SstPatientQrCard
           clinicName={clinic.clinicName}
           code={clinic.code}
           viewKey={clinic.viewKey}
-          variant="clinician"
-          onClose={() => setShowQr(false)}
+          variant={qrVariant}
+          onClose={() => setQrVariant(null)}
         />
       )}
     </div>
