@@ -8,13 +8,19 @@ import { DIGIT_LISTS, type DigitListKey } from '@/app/scat-forms/shared/constant
 import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 
 // Age (in years) below which a parent/guardian must also consent before any
-// health information is collected. NOTE: 16 is a working threshold — the exact
-// age of capacity for health-data consent should be confirmed with legal advice
-// (it can vary by state and by the nature of the information).
+// health information is collected. This is CEA's policy position, stated in the
+// Privacy Policy: under 16, a parent or guardian consents on the athlete's
+// behalf. It is deliberately the protective end of the range — capacity to
+// consent to health-data collection is assessed individually and varies by state,
+// so requiring guardian consent below 16 cannot under-collect consent.
 const MINOR_CONSENT_AGE = 16
-// Version stamp stored with each consent record so we can tell which wording
-// the person agreed to if the consent copy changes later.
-const CONSENT_VERSION = 'v1'
+// Version stamp stored with each consent record so we can tell which wording the
+// person agreed to if the consent copy changes later. The consent text below
+// incorporates the Privacy Policy by reference ("as described above and in the
+// Privacy Policy"), so a materially new policy is a new consent version.
+// v2 = Privacy Policy 2.0 (2026-08-05): scope widened beyond the baseline tool to
+// the whole portal, and the counsel-review draft status removed.
+const CONSENT_VERSION = 'v2'
 
 // ── Draft persistence ────────────────────────────────────────────────────────
 // A baseline takes 10+ minutes. Without this, a refresh, a phone locking, or an
