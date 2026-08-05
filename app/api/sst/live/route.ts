@@ -58,7 +58,9 @@ export async function POST(request: Request) {
 
   const code = clean(body.clinicCode, 40).toUpperCase()
   if (code.length < 3) return NextResponse.json({ error: 'clinic code required' }, { status: 400 })
-  const rl = await rateLimit({ key: `sst-live:${code}`, limit: 120, windowSec: 60 })
+  // 300/min per clinic ≈ 25 concurrent patients at one beat/5s — headroom for
+  // supervised gym groups (2026-08-05 scale review; 120 clipped at ~10).
+  const rl = await rateLimit({ key: `sst-live:${code}`, limit: 300, windowSec: 60 })
   if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   if (!(await isRegisteredClinic(code))) {
     return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })

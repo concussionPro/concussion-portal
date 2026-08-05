@@ -621,12 +621,13 @@ function formatLocation(slug: string): string {
  */
 export type SstPlan = 'single' | 'clinic' | 'enterprise'
 
-// 2026-08-05 caseload pricing: labels/caps are DISPLAY metadata only — the
-// enforced caps live in clinic-registry TIER_ACTIVE_PATIENT_CAP.
-export const SST_PLANS: Record<SstPlan, { label: string; seats: number; priceId: string | undefined }> = {
-  single: { label: 'Starter', seats: 1, priceId: process.env.STRIPE_SST_SINGLE_PRICE_ID },
-  clinic: { label: 'Clinic', seats: 5, priceId: process.env.STRIPE_SST_CLINIC_PRICE_ID },
-  enterprise: { label: 'Unlimited', seats: 15, priceId: process.env.STRIPE_SST_ENTERPRISE_PRICE_ID },
+// 2026-08-05 caseload pricing: only priceId is consumed. Display copy lives
+// on the subscribe page; enforced caps live in clinic-registry
+// TIER_ACTIVE_PATIENT_CAP (5/10/unlimited active patients / 30d).
+export const SST_PLANS: Record<SstPlan, { label: string; priceId: string | undefined }> = {
+  single: { label: 'Starter', priceId: process.env.STRIPE_SST_SINGLE_PRICE_ID },
+  clinic: { label: 'Clinic', priceId: process.env.STRIPE_SST_CLINIC_PRICE_ID },
+  enterprise: { label: 'Unlimited', priceId: process.env.STRIPE_SST_ENTERPRISE_PRICE_ID },
 }
 
 /**

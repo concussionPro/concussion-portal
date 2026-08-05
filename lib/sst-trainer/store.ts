@@ -57,6 +57,8 @@ export interface QueuedSync {
   url: string
   body: Record<string, unknown>
   queuedAt: number
+  /** unique identity for safe removal — absent on legacy queued entries */
+  id?: string
 }
 
 export interface PersistedState {
@@ -249,15 +251,10 @@ const MAX_QUEUED_SYNCS = 50
 export function enqueuePendingSync(entry: QueuedSync): void {
   const state = loadState()
   if (!state) return
-  state.pendingSyncs = [...state.pendingSyncs, entry].slice(-MAX_QUEUED_SYNCS)
-  saveStateNow(state)
-}
-
-/** Replace the queue after a flush attempt (keep only what still failed). */
-export function setPendingSyncs(remaining: QueuedSync[]): void {
-  const state = loadState()
-  if (!state) return
-  state.pendingSyncs = remaining.slice(-MAX_QUEUED_SYNCS)
+  const withId = entry.id
+    ? entry
+    : { ...entry, id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${entry.queuedAt}-${Math.random().toString(36).slice(2)}` }
+  state.pendingSyncs = [...state.pendingSyncs, withId].slice(-MAX_QUEUED_SYNCS)
   saveStateNow(state)
 }
 
@@ -267,8 +264,13 @@ export function setPendingSyncs(remaining: QueuedSync[]): void {
 export function removePendingSync(entry: QueuedSync): void {
   const state = loadState()
   if (!state) return
-  const i = state.pendingSyncs.findIndex(
-    (q) => q.queuedAt === entry.queuedAt && q.url === entry.url,
+  // Unique id first; legacy entries (pre-id) fall back to queuedAt+url+body —
+  // same-millisecond distinct events must never remove each other
+  // (round-5: two events settling in one microtask batch shared queuedAt).
+  const i = state.pendingSyncs.findIndex((q) =>
+    entry.id
+      ? q.id === entry.id
+      : q.queuedAt === entry.queuedAt && q.url === entry.url && JSON.stringify(q.body) === JSON.stringify(entry.body),
   )
   if (i === -1) return
   state.pendingSyncs = [...state.pendingSyncs.slice(0, i), ...state.pendingSyncs.slice(i + 1)]
