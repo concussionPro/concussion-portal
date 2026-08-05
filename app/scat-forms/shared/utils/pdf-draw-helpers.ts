@@ -12,8 +12,86 @@ export interface DrawTextOptions {
 }
 
 /**
+ * ============================================================================
+ * "NOT ADMINISTERED" MARKER
+ * ============================================================================
+ *
+ * Every boolean in the SCAT/SCOAT form models defaults to `false` and every
+ * numeric to `0`. That makes "the clinician never ran this subtest" and "the
+ * clinician ran this subtest and the athlete scored zero" IDENTICAL in the
+ * data. Drawing the raw default therefore fabricates a clinical finding — an
+ * exported record can simultaneously assert profound impairment (orientation
+ * 0/5, immediate memory 0/30) and perfect normality (mBESS 0 errors of 30).
+ *
+ * The exporters must therefore decide, per scored section, whether it was
+ * administered (see `anyProvided` below) and:
+ *   - administered      -> draw the real value, INCLUDING a genuine 0
+ *   - not administered  -> draw NO item circles and put this marker in the
+ *                          score box instead of a number
+ *
+ * `drawText` intentionally still prints '0' (see its guard) — genuine zeros
+ * are legitimate clinical findings. Suppression is the CALLER's job.
+ */
+const NOT_ADMINISTERED_EM_DASH = '—' // em dash
+const NOT_ADMINISTERED_ASCII = '-'
+
+/**
+ * Resolve the marker glyph for a font. Standard-14 fonts are WinAnsi-encoded
+ * and do carry the em dash, but a custom/subsetted font may not — fall back to
+ * a plain hyphen rather than throwing mid-export.
+ */
+export function notAdministeredMark(font?: PDFFont): string {
+  if (!font) return NOT_ADMINISTERED_ASCII
+  try {
+    font.encodeText(NOT_ADMINISTERED_EM_DASH)
+    return NOT_ADMINISTERED_EM_DASH
+  } catch {
+    return NOT_ADMINISTERED_ASCII
+  }
+}
+
+/**
+ * Draw the not-administered marker in a score box.
+ */
+export function drawNotAdministered(
+  page: PDFPage,
+  x: number,
+  y: number,
+  options: DrawTextOptions = {}
+) {
+  drawText(page, x, y, notAdministeredMark(options.font), options)
+}
+
+/**
+ * "Did anything in this section differ from its default?"
+ *
+ * Default-detection rules (matching the `getDefault*FormData()` initialisers):
+ *   - boolean          -> `true` counts as provided
+ *   - number           -> any non-zero counts as provided
+ *   - string           -> any non-blank counts as provided
+ *   - null / undefined -> never counts
+ *
+ * NOTE: a nullable number where 0 is meaningful (e.g. `dualTask1Errors`) must
+ * be tested with an explicit `!== null` check, not with this helper.
+ */
+export function anyProvided(
+  ...values: Array<boolean | number | string | null | undefined>
+): boolean {
+  return values.some(v => {
+    if (v === null || v === undefined) return false
+    if (typeof v === 'boolean') return v
+    if (typeof v === 'number') return Number.isFinite(v) && v !== 0
+    return v.trim() !== ''
+  })
+}
+
+/**
  * Draw text at exact coordinates on a PDF page.
  * Coordinates use pdf-lib convention: origin at bottom-left.
+ *
+ * A literal '0' IS printed — a real 0/5 orientation is a legitimate clinical
+ * finding. Callers are responsible for not calling this for a section that was
+ * never administered (use `drawNotAdministered` instead).
  */
 export function drawText(
   page: PDFPage,

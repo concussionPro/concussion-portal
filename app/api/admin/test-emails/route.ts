@@ -66,7 +66,7 @@ function preseasonRegisterEmail(baseUrl: string): string {
             </div>
           </div>
           <div class="footer">
-            <p>ConcussionPro — Concussion Education Australia</p>
+            <p>Concussion Education Australia</p>
             <p>${CONFIG.CONTACT_EMAIL}</p>
           </div>
         </div>
@@ -130,7 +130,7 @@ function preseasonSubmitEmail(baseUrl: string): string {
             </div>
           </div>
           <div class="footer">
-            <p>ConcussionPro — Concussion Education Australia</p>
+            <p>Concussion Education Australia</p>
           </div>
         </div>
       </body>
@@ -156,10 +156,10 @@ function magicLinkEmail(baseUrl: string): string {
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>ConcussionPro</h1></div>
+          <div class="header"><h1>Concussion Education Australia</h1></div>
           <div class="content">
             <h2 style="margin-top: 0;">Login to Your Course</h2>
-            <p>Click the button below to access your ConcussionPro dashboard:</p>
+            <p>Click the button below to access your Concussion Education Australia dashboard:</p>
             <center>
               <a href="${baseUrl}/login" style="display: inline-block; padding: 16px 32px; background-color: #5b9aa6; color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 24px 0;">Access Your Course &rarr;</a>
             </center>
@@ -193,7 +193,7 @@ function welcomeEmail(baseUrl: string): string {
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>Welcome to ConcussionPro</h1></div>
+          <div class="header"><h1>Welcome to Concussion Education Australia</h1></div>
           <div class="content">
             <h2 style="margin-top: 0;">Hi Zac,</h2>
             <p>Your course is ready. Here's how to get started.</p>
@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'ConcussionPro <noreply@concussion-education-australia.com>',
+          from: 'Concussion Education Australia <noreply@concussion-education-australia.com>',
           to: [to],
           subject: email.subject,
           html: email.html,

@@ -115,7 +115,12 @@ export default async function CoursePage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
-      <ClinicianMockDashboard />
+      {/* MOCK data (fabricated CPD totals + "on track for re-registration").
+          Admin/demo previews only — a paying buyer was seeing a fake
+          regulatory status instead of their own course state (2026-08-05). */}
+      {(access.reason === 'admin-cookie' ||
+        access.reason === 'admin-header' ||
+        access.reason === 'demo-key') && <ClinicianMockDashboard />}
       <main className="md:pl-72">
         <div className="max-w-4xl mx-auto px-6 pt-[100px] pb-20">
           <AdminPreviewBadge access={access} />

@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         'List-ID': 'prospect-outreach.concussion-education-australia.com',
         Precedence: 'bulk',
-        'X-Mailer': 'ConcussionPro Outreach Sample',
+        'X-Mailer': 'Concussion Education Australia',
       },
       tags: [
         { name: 'category', value: 'sample-pitch' },

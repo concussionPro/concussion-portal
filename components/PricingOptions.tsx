@@ -539,7 +539,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       <div className="mt-12 max-w-2xl mx-auto rounded-2xl border-2 border-accent/25 bg-white p-6 text-center">
         <p className="text-lg font-bold text-foreground mb-1.5">Still deciding? Start online today.</p>
         <p className="text-sm text-muted-foreground mb-4">
-          ${'{'}CONFIG.COURSE.PRICE_ONLINE{'}'} gets you all 8 modules and the clinical platform now — and every
+          ${CONFIG.COURSE.PRICE_ONLINE} gets you all 8 modules and the clinical platform now — and every
           dollar counts toward the Complete course when your city&rsquo;s workshop date launches.
         </p>
         <button
@@ -547,7 +547,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           onClick={() => handleCheckout('online-only')}
           className="btn-primary inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm"
         >
-          Enrol online — ${'{'}CONFIG.COURSE.PRICE_ONLINE{'}'}
+          Enrol online — ${CONFIG.COURSE.PRICE_ONLINE}
           <ArrowRight className="w-4 h-4" />
         </button>
         <p className="text-[12px] text-muted-foreground mt-3">

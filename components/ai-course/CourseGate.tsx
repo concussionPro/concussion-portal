@@ -90,6 +90,10 @@ export function AdminPreviewBadge({ access }: { access: GateResult }) {
   // Demo-key viewers see the DemoWatermark globally — no need for a
   // separate badge. Admin viewers still see the preview marker.
   if (access.reason === 'demo-key') return null
+  // PAYING customers must never be told the product "is not public"
+  // (2026-08-05 crawl: 'enrolled' fell through to the admin badge on 15
+  // course pages, shown to people who had just bought).
+  if (access.reason === 'enrolled' || access.reason === 'entitled') return null
   return (
     <div className="mb-6 flex items-center gap-2">
       <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">

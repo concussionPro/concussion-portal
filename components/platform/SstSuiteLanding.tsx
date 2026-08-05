@@ -24,12 +24,12 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id']
 
 const TIERS = [
-  { name: 'Starter', who: 'Up to 5 active patients', price: 'A$49', full: 'A$98', popular: false,
-    features: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians, each with their own login', 'Measured trajectory, flare flags & auto GP report', 'A$49/mo standalone · 50% off'] },
-  { name: 'Clinic', who: 'Up to 10 active patients', price: 'A$99', full: 'A$198', popular: true,
-    features: ['Everything in Starter, for a bigger caseload', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team', 'A$99/mo standalone · 50% off'] },
-  { name: 'Unlimited', who: 'Unlimited patients', price: 'A$149', full: 'A$298', popular: false,
-    features: ['Everything in Clinic, unlimited active patients', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us', 'A$149/mo standalone · 50% off'] },
+  { name: 'Starter', who: 'Up to 5 active patients', price: 'A$49', popular: false,
+    features: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians, each with their own login', 'Measured trajectory, flare flags & auto GP report', 'A$49/mo standalone — or included with course enrolment'] },
+  { name: 'Clinic', who: 'Up to 10 active patients', price: 'A$99', popular: true,
+    features: ['Everything in Starter, for a bigger caseload', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team', 'A$99/mo standalone — or included with course enrolment'] },
+  { name: 'Unlimited', who: 'Unlimited patients', price: 'A$149', popular: false,
+    features: ['Everything in Clinic, unlimited active patients', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us', 'A$149/mo standalone — or included with course enrolment'] },
 ]
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -56,7 +56,7 @@ function FreeBadge({ note }: { note: string }) {
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
         Included with your CCM / CRM course enrolment
       </span>
-      <span className="text-[12.5px] font-bold text-emerald-700">50% off standalone — <s className="font-medium text-slate-400">A$98/198/298</s> A$49 / A$99 / A$149.</span>
+      <span className="text-[12.5px] font-bold text-emerald-700">Standalone from A$49/month — A$49 / A$99 / A$149 by caseload.</span>
       <span className="text-[12px] font-medium text-slate-400">{note}</span>
     </div>
   )
@@ -259,7 +259,6 @@ function SharedPricing() {
               {t.popular && <span className="absolute -top-3 left-6 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: ACCENT }}>Most clinics</span>}
               <p className="m-0 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t.name}</p>
               <p className="m-0 text-[13px] text-slate-500">{t.who}</p>
-              <p className="m-0 mt-3"><s className="text-[16px] font-semibold text-slate-300">{t.full}</s> <span className="ml-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">half price</span></p>
               <p className="m-0 mt-0.5 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}<span className="text-[14px] font-semibold text-slate-400"> / month</span></p>
               <Link href="/pricing" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Get with the course</Link>
               <Link href="/clinical-suite/start" className="mt-2 text-center text-[13px] font-bold underline-offset-2 hover:underline" style={{ color: ACCENT }}>or start a free trial →</Link>

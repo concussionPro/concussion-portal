@@ -227,7 +227,11 @@ export function CourseModulePage({
           if (data.success && data.user) {
             // Preview users trying to access paid modules (2-8): redirect to learning suite
             // Module 1 is allowed — API returns truncated content (first 2 sections) + ContentLockedBanner
-            if (data.user.accessLevel === 'preview' && moduleId >= 2 && moduleId <= 8) {
+            // CRM buyers ALSO carry accessLevel 'preview' (streams are isolated — a CRM
+            // purchase never touches users.access_level), so ownership admits them here.
+            // Without the ownsCrm check every paying CRM customer was bounced out of
+            // modules 2-8 forever and could never earn their certificate (2026-08-05).
+            if (data.user.accessLevel === 'preview' && !data.user.ownsCrm && moduleId >= 2 && moduleId <= 8) {
               router.push(backHref)
               return
             }
