@@ -31,7 +31,14 @@ interface SymptomData {
 }
 
 interface CognitiveData {
-  orientation: { month: string; date: string; dayOfWeek: string; year: string; time: string; score: number }
+  orientation: {
+    month: string; date: string; dayOfWeek: string; year: string; time: string
+    // null when the section was not administered. Legacy submissions always
+    // sent a number (and `administered` is absent) — those are treated as
+    // administered so historic reports are unchanged.
+    score: number | null
+    administered?: boolean
+  }
   immediateMemory: {
     listUsed: string; score?: number; trial1?: number; trial2?: number; trial3?: number; total?: number
     wordsSelected?: string[]
@@ -46,7 +53,24 @@ interface CognitiveData {
     score: number
     wordsSelected?: string[]
     targetWords?: string[]
+    /** TRUE seconds between the end of immediate memory and opening the recall list. */
+    delaySeconds?: number | null
+    requiredDelaySeconds?: number
+    delayIntervalMet?: boolean
+    /** Recall was started before the interval elapsed, by explicit override. */
+    earlyStartOverride?: boolean
   }
+}
+
+/** Orientation counts toward scoring only when it was actually administered. */
+function orientationAdministered(o: CognitiveData['orientation']): boolean {
+  if (o.administered === false) return false
+  return o.score !== null && o.score !== undefined
+}
+
+function fmtInterval(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds))
+  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 }
 
 interface AthleteBackground {
@@ -275,9 +299,16 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   const immTotal = imm.total ?? imm.score ?? 0
   const immMax = hasTrials ? '30' : '10'
 
+  // Orientation is only scored when it was administered. An unanswered
+  // orientation used to evaluate to 0 from empty strings and print as a real
+  // "0 / 5" — a fabricated clinical value. It now reports as not administered
+  // and is excluded from the total (and from the total's maximum).
+  const orientDone = orientationAdministered(data.cognitive.orientation)
+  const orientScore = orientDone ? (data.cognitive.orientation.score as number) : 0
+
   // Score table
   const scores: string[][] = [
-    ['Orientation', `${data.cognitive.orientation.score}`, '5'],
+    ['Orientation', orientDone ? `${orientScore}` : 'Not administered', orientDone ? '5' : '—'],
     ['Immediate Memory', `${immTotal}`, immMax],
   ]
   if (hasTrials) {
@@ -315,9 +346,9 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   doc.setFillColor(91, 154, 166)
   doc.rect(margin, y - 4, contentWidth, 10, 'F')
   doc.setTextColor(255, 255, 255)
-  const totalCognitive = data.cognitive.orientation.score + immTotal +
+  const totalCognitive = orientScore + immTotal +
     data.cognitive.concentration.total + data.cognitive.delayedRecall.score
-  const totalMax = hasTrials ? 50 : 30
+  const totalMax = (hasTrials ? 50 : 30) - (orientDone ? 0 : 5)
   addText('TOTAL COGNITIVE SCORE', margin + 2, y + 1, { fontSize: 11, fontStyle: 'bold' })
   addText(`${totalCognitive}/${totalMax}`, margin + contentWidth - 50, y + 1, { fontSize: 11, fontStyle: 'bold' })
   doc.setTextColor(0, 0, 0)
@@ -358,8 +389,12 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText('Orientation Responses:', margin, y, { fontSize: 9, fontStyle: 'bold' })
   y += 6
   const orient = data.cognitive.orientation
+  if (!orientDone) {
+    addText('  NOT ADMINISTERED — no orientation score is reported for this test.', margin, y, { fontSize: 8, fontStyle: 'bold' })
+    y += 5
+  }
   for (const [label, val] of [['Month', orient.month], ['Date', orient.date], ['Day', orient.dayOfWeek], ['Year', orient.year], ['Time', orient.time]]) {
-    addText(`  ${label}: ${val}`, margin, y, { fontSize: 8 })
+    addText(`  ${label}: ${val || '—'}`, margin, y, { fontSize: 8 })
     y += 5
   }
   y += 10
@@ -433,6 +468,21 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
     drawLine()
     addText('DELAYED RECALL — WORD RECOGNITION', margin, y, { fontSize: 10, fontStyle: 'bold' })
     y += 7
+    // Actual elapsed interval between immediate memory and recall. The 5-minute
+    // delay used to be bypassable from second 0 and was never recorded, so this
+    // number could not be checked at all.
+    if (dr.delaySeconds != null) {
+      const required = dr.requiredDelaySeconds ?? 300
+      const met = dr.delayIntervalMet ?? dr.delaySeconds >= required
+      addText(
+        `Delay interval: ${fmtInterval(dr.delaySeconds)} (protocol ${fmtInterval(required)}) — ${met ? 'met' : 'NOT MET, recall started early by explicit override'}`,
+        margin, y, { fontSize: 8, fontStyle: met ? 'normal' : 'bold', maxWidth: contentWidth }
+      )
+      y += 6
+    } else {
+      addText('Delay interval: not recorded (test submitted before interval tracking).', margin, y, { fontSize: 8 })
+      y += 6
+    }
     const drSelectedSet = new Set(dr.wordsSelected)
     const drTargetSet = new Set(dr.targetWords)
     const drHits = dr.targetWords.filter(w => drSelectedSet.has(w))
@@ -511,7 +561,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
     ['Symptom Number', `${symptomCount}`, '/ 22'],
     ['Symptom Severity', `${symptomTotal}`, '/ 132'],
     ['', '', ''],
-    ['Orientation', `${data.cognitive.orientation.score}`, '/ 5'],
+    ['Orientation', orientDone ? `${orientScore}` : 'Not administered', orientDone ? '/ 5' : ''],
     ['Immediate Memory', `${immTotal}`, `/ ${immMax}`],
     ['Concentration — Digits Backward', `${conc.digitsScore}`, '/ 4'],
     ['Concentration — Months in Reverse', `${conc.monthsScore}`, '/ 1'],
@@ -519,6 +569,15 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   ]
   if (conc.monthsTimeSeconds != null) {
     summaryRows.push(['Months in Reverse Time', `${conc.monthsTimeSeconds.toFixed(1)}s`, ''])
+  }
+  if (dr.delaySeconds != null) {
+    const required = dr.requiredDelaySeconds ?? 300
+    const met = dr.delayIntervalMet ?? dr.delaySeconds >= required
+    summaryRows.push([
+      'Delayed Recall Interval',
+      fmtInterval(dr.delaySeconds),
+      met ? '' : `(< ${fmtInterval(required)})`,
+    ])
   }
 
   for (const [label, score, max] of summaryRows) {
@@ -570,7 +629,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   const hasOculomotor = !!data.oculomotor
   const administered: string[] = [
     'Symptom Evaluation',
-    'Orientation',
+    ...(orientDone ? ['Orientation'] : []),
     'Immediate Memory',
     'Digits Backward',
     'Months in Reverse',
@@ -578,6 +637,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
     ...(hasOculomotor ? ['Oculomotor Screening'] : []),
   ]
   const notAdministered: string[] = [
+    ...(orientDone ? [] : ['Orientation']),
     'Red Flags',
     'Observable Signs',
     'Maddocks Questions',
@@ -685,7 +745,11 @@ function rowToComparisonTest(r: Record<string, unknown>, index: number): Compari
   const p = r.payload as SubmitPayload | null
   if (p && p.cognitive) {
     const imm = p.cognitive.immediateMemory
-    t.orientation = p.cognitive.orientation?.score
+    // Leave orientation undefined (renders '—' and is excluded from the trend
+    // maths) when it was not administered — never plot a fabricated 0.
+    t.orientation = p.cognitive.orientation && orientationAdministered(p.cognitive.orientation)
+      ? (p.cognitive.orientation.score as number)
+      : undefined
     t.immediateMemory = imm?.total ?? imm?.score
     t.delayedRecall = p.cognitive.delayedRecall?.score
     t.concentration = p.cognitive.concentration?.total
@@ -770,13 +834,22 @@ export async function POST(request: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
 
     const immScore = body.cognitive.immediateMemory.total ?? body.cognitive.immediateMemory.score ?? 0
-    const totalCognitive = body.cognitive.orientation.score + immScore +
+    // Orientation contributes to the total only when it was administered; its 5
+    // points come off the maximum otherwise, so the stored/emailed total is
+    // never diluted by a section that was never done.
+    const orientWasDone = orientationAdministered(body.cognitive.orientation)
+    const totalCognitive = (orientWasDone ? (body.cognitive.orientation.score as number) : 0) + immScore +
       body.cognitive.concentration.total + body.cognitive.delayedRecall.score
     const immData = body.cognitive.immediateMemory
     const hasTrialData = immData.trial1 !== undefined && immData.trial1 !== null
-    const totalCognitiveMax = hasTrialData ? 50 : 30
+    const totalCognitiveMax = (hasTrialData ? 50 : 30) - (orientWasDone ? 0 : 5)
     const symptomCount = body.symptoms.ratings.filter((r: number) => r > 0).length
     const symptomTotal = body.symptoms.ratings.reduce((a: number, b: number) => a + b, 0)
+    // Real elapsed delayed-recall interval (absent on pre-tracking submissions).
+    const delaySeconds = body.cognitive.delayedRecall.delaySeconds ?? null
+    const requiredDelaySeconds = body.cognitive.delayedRecall.requiredDelaySeconds ?? 300
+    const delayIntervalMet = body.cognitive.delayedRecall.delayIntervalMet
+      ?? (delaySeconds != null && delaySeconds >= requiredDelaySeconds)
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -832,6 +905,8 @@ export async function POST(request: Request) {
               </table>
 
               <p style="font-size: 13px; color: #475569;"><strong>Athlete:</strong> ${athleteName} · <strong>Sport:</strong> ${escapeHtml(body.athlete.sport || '—')} · <strong>Team:</strong> ${escapeHtml(body.athlete.team || '—')}</p>
+              ${!orientWasDone ? `<p style="font-size: 13px; color: #b45309;"><strong>Note:</strong> Orientation was not administered — it is excluded from the total above (max ${totalCognitiveMax}, not ${hasTrialData ? 50 : 30}).</p>` : ''}
+              ${delaySeconds != null && !delayIntervalMet ? `<p style="font-size: 13px; color: #b45309;"><strong>Note:</strong> Delayed recall was started after ${fmtInterval(delaySeconds)}, short of the ${fmtInterval(requiredDelaySeconds)} protocol interval.</p>` : ''}
 
               <p style="font-size: 13px; color: #475569; margin: 20px 0 8px;">You've captured one dimension of baseline data. The SCAT6 protocol covers symptom evaluation, cognitive screening, neurological exam, balance testing, and more. Are you confident interpreting all 7 domains?</p>
 

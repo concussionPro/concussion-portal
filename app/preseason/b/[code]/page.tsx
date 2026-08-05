@@ -16,6 +16,39 @@ const MINOR_CONSENT_AGE = 16
 // the person agreed to if the consent copy changes later.
 const CONSENT_VERSION = 'v1'
 
+// ── Draft persistence ────────────────────────────────────────────────────────
+// A baseline takes 10+ minutes. Without this, a refresh, a phone locking, or an
+// iOS tab eviction destroyed every answer. The draft is saved locally only
+// (never sent anywhere), namespaced by clinic code, expires after 24h, and is
+// NEVER restored silently — a shared team iPad must not leak the previous
+// athlete's answers into the next athlete's form, so the resume prompt names
+// the athlete whose draft it is and offers "start fresh".
+const DRAFT_VERSION = 1
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000
+const draftKey = (clinicCode: string) => `preseason-draft:${clinicCode}`
+
+// Required delay (seconds) between immediate memory and delayed recall (SCAT6).
+const DELAYED_RECALL_DELAY_SECONDS = 300
+
+type MemoryPhase = 'intro' | 'showing' | 'recalling' | 'done'
+type DigitPhase = 'intro' | 'showing' | 'input' | 'done'
+type MonthsPhase = 'intro' | 'active' | 'done'
+type CognitiveSubStep = 'orientation' | 'memory' | 'digits' | 'months'
+
+interface ConsentRecord {
+  agreed: boolean
+  atISO: string
+  version: string
+  guardian?: { name: string; agreed: boolean; atISO?: string }
+}
+
+interface DigitTrialLog { shown: string; expected: string; typed: string; correct: boolean }
+
+function mmss(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds))
+  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+}
+
 const SYMPTOMS = [
   'Headache', 'Pressure in head', 'Neck pain', 'Nausea or vomiting', 'Dizziness',
   'Blurred vision', 'Balance problems', 'Sensitivity to light', 'Sensitivity to noise',
@@ -54,6 +87,74 @@ const INITIAL_OCULOMOTOR_RESULTS: OculomotorResults = {
   verticalSaccades: { symptoms: [], severity: 0 },
   horizontalPursuit: { symptoms: [], severity: 0 },
   verticalPursuit: { symptoms: [], severity: 0 },
+}
+
+// Everything the athlete has entered, in a plain-JSON shape we can persist.
+interface DraftState {
+  step: number
+  listIndex: number
+  testNumber: number
+  historyLookedUp: boolean
+  consentGiven: boolean
+  consentAgreed: boolean
+  guardianName: string
+  guardianAgreed: boolean
+  consentRecord: ConsentRecord | null
+  name: string
+  dob: string
+  idNumber: string
+  sex: string
+  dominantHand: string
+  sport: string
+  team: string
+  position: string
+  yearsOfEducation: string
+  primaryLanguage: string
+  previousConcussions: string
+  mostRecentConcussionDate: string
+  longestRecovery: string
+  previousConcussionSymptoms: string
+  diagnosedMigraines: boolean
+  medicalHistory: Record<string, boolean>
+  currentMedications: string
+  symptomRatings: number[]
+  feelNormalPercent: string
+  notNormalReason: string
+  physicalWorsens: boolean
+  mentalWorsens: boolean
+  orientMonth: string
+  orientDate: string
+  orientDay: string
+  orientYear: string
+  orientTime: string
+  orientationTimestampISO: string | null
+  orientationSkipped: boolean
+  memoryPhase: MemoryPhase
+  currentTrial: number
+  trialSelections: Record<string, boolean>[]
+  memoryTimestamp: number
+  digitPhase: DigitPhase
+  currentDigitIndex: number
+  digitResults: boolean[]
+  digitAnswerLog: DigitTrialLog[]
+  monthsPhase: MonthsPhase
+  monthsTapped: string[]
+  monthsTimeElapsed: number
+  monthsCorrect: boolean | null
+  cognitiveSubStep: CognitiveSubStep
+  oculomotorSubStep: number
+  oculomotorResults: OculomotorResults
+  delayedRecallReady: boolean
+  delayedRecallSelections: Record<string, boolean>
+  delayElapsedSeconds: number | null
+  delayOverridden: boolean
+}
+
+interface StoredDraft {
+  version: number
+  savedAt: number
+  athleteName: string
+  state: DraftState
 }
 
 const MEDICAL_CONDITIONS = [
@@ -275,12 +376,10 @@ export default function AthleteBaselineForm() {
   const [guardianAgreed, setGuardianAgreed] = useState(false)
   // The recorded consent object, built when the gate is passed and sent + stored
   // with the submission.
-  const [consentRecord, setConsentRecord] = useState<{
-    agreed: boolean
-    atISO: string
-    version: string
-    guardian?: { name: string; agreed: boolean }
-  } | null>(null)
+  const [consentRecord, setConsentRecord] = useState<ConsentRecord | null>(null)
+  // Guardian consent added AFTER the initial gate (DOB corrected to under-16).
+  const [lateGuardianName, setLateGuardianName] = useState('')
+  const [lateGuardianAgreed, setLateGuardianAgreed] = useState(false)
 
   // Form step
   const [step, setStep] = useState(1)
@@ -319,13 +418,16 @@ export default function AthleteBaselineForm() {
   const [orientYear, setOrientYear] = useState('')
   const [orientTime, setOrientTime] = useState('')
   const [orientationTimestamp, setOrientationTimestamp] = useState<Date | null>(null) // capture time when answers given
+  // Orientation was explicitly marked "not administered". Reported as such —
+  // never as 0/5, which would be a fabricated clinical value.
+  const [orientationSkipped, setOrientationSkipped] = useState(false)
 
   // Immediate Memory — rotate lists A→B→C across tests (repeats every 3)
   const wordListKey: WordListKey = (['A', 'B', 'C'] as const)[listIndex]
   const recallPool = useMemo(() => buildRecallPool(wordListKey), [wordListKey])
   // Separately shuffled pool for delayed recall to prevent position-based pattern recognition
   const delayedRecallPool = useMemo(() => shuffle([...recallPool]), [recallPool])
-  const [memoryPhase, setMemoryPhase] = useState<'intro' | 'showing' | 'recalling' | 'done'>('intro')
+  const [memoryPhase, setMemoryPhase] = useState<MemoryPhase>('intro')
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [currentTrial, setCurrentTrial] = useState(0)
   const [trialSelections, setTrialSelections] = useState<Record<string, boolean>[]>([{}, {}, {}])
@@ -334,22 +436,22 @@ export default function AthleteBaselineForm() {
   // Digits Backward
   // Digits also rotate in sync with word lists
   const digitListKey: DigitListKey = (['A', 'B', 'C'] as const)[listIndex]
-  const [digitPhase, setDigitPhase] = useState<'intro' | 'showing' | 'input' | 'done'>('intro')
+  const [digitPhase, setDigitPhase] = useState<DigitPhase>('intro')
   const [currentDigitIndex, setCurrentDigitIndex] = useState(0)
   const [digitInput, setDigitInput] = useState('')
   const [digitResults, setDigitResults] = useState<boolean[]>([])
-  const [digitAnswerLog, setDigitAnswerLog] = useState<{ shown: string; expected: string; typed: string; correct: boolean }[]>([])
+  const [digitAnswerLog, setDigitAnswerLog] = useState<DigitTrialLog[]>([])
 
   // Months in Reverse — shuffled so athlete can't read them in order
   const [shuffledMonths] = useState(() => shuffle([...MONTHS]))
-  const [monthsPhase, setMonthsPhase] = useState<'intro' | 'active' | 'done'>('intro')
+  const [monthsPhase, setMonthsPhase] = useState<MonthsPhase>('intro')
   const [monthsTapped, setMonthsTapped] = useState<string[]>([])
   const [monthsStartTime, setMonthsStartTime] = useState(0)
   const [monthsTimeElapsed, setMonthsTimeElapsed] = useState(0)
   const [monthsCorrect, setMonthsCorrect] = useState<boolean | null>(null)
 
   // Cognitive sub-step tracking
-  const [cognitiveSubStep, setCognitiveSubStep] = useState<'orientation' | 'memory' | 'digits' | 'months'>('memory')
+  const [cognitiveSubStep, setCognitiveSubStep] = useState<CognitiveSubStep>('memory')
 
   // Step 4: Oculomotor Screening
   const [oculomotorSubStep, setOculomotorSubStep] = useState(0) // 0=instructions, 1=exercise1, 2=report1, 3=exercise2, ...
@@ -361,7 +463,18 @@ export default function AthleteBaselineForm() {
   // Step 5: Delayed Recall
   const [delayedRecallReady, setDelayedRecallReady] = useState(false)
   const [delayedRecallSelections, setDelayedRecallSelections] = useState<Record<string, boolean>>({})
-  const [delayTimeRemaining, setDelayTimeRemaining] = useState(300) // 5 minutes in seconds
+  const [delayTimeRemaining, setDelayTimeRemaining] = useState(DELAYED_RECALL_DELAY_SECONDS)
+  // The REAL interval (seconds) between the end of immediate memory and the
+  // moment the delayed-recall word list was opened. Reported verbatim.
+  const [delayElapsedSeconds, setDelayElapsedSeconds] = useState<number | null>(null)
+  // Recall was started before the 5-minute interval elapsed, by explicit
+  // clinician/athlete override. Recorded, never silent.
+  const [delayOverridden, setDelayOverridden] = useState(false)
+  const [showDelayOverrideConfirm, setShowDelayOverrideConfirm] = useState(false)
+
+  // Draft persistence — a found draft is NEVER applied automatically.
+  const [pendingDraft, setPendingDraft] = useState<StoredDraft | null>(null)
+  const [draftChecked, setDraftChecked] = useState(false)
 
   // Submission
   const submittingRef = useRef(false)
@@ -405,31 +518,47 @@ export default function AthleteBaselineForm() {
       })
   }, [code])
 
-  // Delayed recall timer
+  // Elapsed seconds since immediate memory finished. 0 if memory never ran
+  // (which the step-3 gate prevents).
+  const elapsedSinceMemory = useCallback(
+    () => (memoryTimestamp ? Math.max(0, Math.floor((Date.now() - memoryTimestamp) / 1000)) : 0),
+    [memoryTimestamp]
+  )
+
+  // Open the delayed-recall word list, recording the TRUE interval that elapsed
+  // and whether the 5-minute protocol interval was actually met.
+  const openDelayedRecall = useCallback((viaOverride: boolean) => {
+    const elapsed = elapsedSinceMemory()
+    setDelayElapsedSeconds(elapsed)
+    setDelayOverridden(viaOverride && elapsed < DELAYED_RECALL_DELAY_SECONDS)
+    setShowDelayOverrideConfirm(false)
+    setDelayedRecallReady(true)
+  }, [elapsedSinceMemory])
+
+  // Delayed recall timer — the recall list stays locked until the interval has
+  // actually elapsed (or an explicit, recorded override is used).
   useEffect(() => {
     if (step !== 5 || delayedRecallReady) return
 
-    const elapsed = memoryTimestamp ? Math.floor((Date.now() - memoryTimestamp) / 1000) : 0
-    const remaining = Math.max(0, 300 - elapsed)
+    const remaining = Math.max(0, DELAYED_RECALL_DELAY_SECONDS - elapsedSinceMemory())
     setDelayTimeRemaining(remaining)
 
     if (remaining <= 0) {
-      setDelayedRecallReady(true)
+      openDelayedRecall(false)
       return
     }
 
     const interval = setInterval(() => {
-      const now = Math.floor((Date.now() - memoryTimestamp) / 1000)
-      const rem = Math.max(0, 300 - now)
+      const rem = Math.max(0, DELAYED_RECALL_DELAY_SECONDS - elapsedSinceMemory())
       setDelayTimeRemaining(rem)
       if (rem <= 0) {
-        setDelayedRecallReady(true)
         clearInterval(interval)
+        openDelayedRecall(false)
       }
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [step, memoryTimestamp, delayedRecallReady])
+  }, [step, delayedRecallReady, elapsedSinceMemory, openDelayedRecall])
 
   // Word flash animation
   const startWordFlash = useCallback(() => {
@@ -500,7 +629,16 @@ export default function AthleteBaselineForm() {
   const symptomCount = symptomRatings.filter(r => r > 0).length
   const symptomTotal = symptomRatings.reduce((a, b) => a + b, 0)
 
-  const orientationScore = (() => {
+  // Orientation is "answered" only once every item has a response. A partially
+  // answered or untouched orientation must never be scored — an empty form
+  // evaluates to 0/5, which reads as a real (and alarming) clinical result.
+  const orientationAnswered = !!(orientMonth && orientDate && orientDay && orientYear && orientTime)
+  // The section is done when it was answered and confirmed, or explicitly
+  // marked not-administered.
+  const orientationAdministered = orientationAnswered && orientationTimestamp !== null
+  const orientationComplete = orientationAdministered || orientationSkipped
+
+  const orientationScore: number | null = !orientationAdministered ? null : (() => {
     // Use captured timestamp (when orientation was completed) not current time
     const now = orientationTimestamp || new Date()
     let score = 0
@@ -564,6 +702,142 @@ export default function AthleteBaselineForm() {
   }, [dob])
   const isMinor = athleteAge !== null && athleteAge < MINOR_CONSENT_AGE
 
+  // The DOB can be corrected AFTER consent was recorded (the consent gate and
+  // step 1 bind the same `dob`). When that correction makes the athlete a
+  // minor, guardian consent is now missing — surface the guardian consent block
+  // inline instead of dead-ending at submit.
+  const needsGuardianConsent = consentGiven && isMinor && consentRecord?.guardian?.agreed !== true
+
+  // ── Draft persistence ──────────────────────────────────────────────────────
+  // DEMO00 is deliberately excluded: the demo must behave exactly as it always
+  // has (no resume prompts for a clinician re-running the walkthrough).
+  const isDemoCode = code === 'DEMO00'
+
+  const draftSnapshot: DraftState = {
+    step, listIndex, testNumber,
+    historyLookedUp: historyLookedUpRef.current,
+    consentGiven, consentAgreed, guardianName, guardianAgreed, consentRecord,
+    name, dob, idNumber, sex, dominantHand, sport, team, position,
+    yearsOfEducation, primaryLanguage, previousConcussions,
+    mostRecentConcussionDate, longestRecovery, previousConcussionSymptoms,
+    diagnosedMigraines, medicalHistory, currentMedications,
+    symptomRatings, feelNormalPercent, notNormalReason, physicalWorsens, mentalWorsens,
+    orientMonth, orientDate, orientDay, orientYear, orientTime,
+    orientationTimestampISO: orientationTimestamp ? orientationTimestamp.toISOString() : null,
+    orientationSkipped,
+    memoryPhase, currentTrial, trialSelections, memoryTimestamp,
+    digitPhase, currentDigitIndex, digitResults, digitAnswerLog,
+    monthsPhase, monthsTapped, monthsTimeElapsed, monthsCorrect,
+    cognitiveSubStep,
+    oculomotorSubStep, oculomotorResults,
+    delayedRecallReady, delayedRecallSelections, delayElapsedSeconds, delayOverridden,
+  }
+  const draftSnapshotRef = useRef(draftSnapshot)
+  draftSnapshotRef.current = draftSnapshot
+  // Serialised form drives the debounce dependency, so a re-render that changed
+  // nothing does not restart the save timer.
+  const draftJson = JSON.stringify(draftSnapshot)
+  // Only persist once there is something worth restoring.
+  const draftHasContent = consentGiven || name.trim().length > 0 || dob.length > 0
+
+  const clearDraft = useCallback(() => {
+    if (!code) return
+    try { window.localStorage.removeItem(draftKey(code)) } catch { /* storage unavailable */ }
+  }, [code])
+
+  // Look for a draft ONCE on mount. Never applied automatically.
+  useEffect(() => {
+    if (!code || isDemoCode) { setDraftChecked(true); return }
+    try {
+      const raw = window.localStorage.getItem(draftKey(code))
+      if (raw) {
+        const parsed = JSON.parse(raw) as StoredDraft
+        const stale = !parsed?.savedAt || Date.now() - parsed.savedAt > DRAFT_TTL_MS
+        if (parsed?.version !== DRAFT_VERSION || !parsed?.state || stale) {
+          window.localStorage.removeItem(draftKey(code))
+        } else {
+          setPendingDraft(parsed)
+        }
+      }
+    } catch {
+      try { window.localStorage.removeItem(draftKey(code)) } catch { /* storage unavailable */ }
+    }
+    setDraftChecked(true)
+  }, [code, isDemoCode])
+
+  // Debounced auto-save (~500ms). Paused while a resume prompt is unanswered so
+  // the stored draft is not overwritten by the blank form behind the prompt.
+  useEffect(() => {
+    if (!code || isDemoCode) return
+    if (!draftChecked || pendingDraft || submitted) return
+    if (!draftHasContent) return
+    const t = setTimeout(() => {
+      const payload: StoredDraft = {
+        version: DRAFT_VERSION,
+        savedAt: Date.now(),
+        athleteName: draftSnapshotRef.current.name.trim(),
+        state: draftSnapshotRef.current,
+      }
+      try { window.localStorage.setItem(draftKey(code), JSON.stringify(payload)) } catch { /* quota / private mode */ }
+    }, 500)
+    return () => clearTimeout(t)
+  }, [code, isDemoCode, draftChecked, pendingDraft, submitted, draftHasContent, draftJson])
+
+  // Belt-and-braces: warn before an in-progress baseline is navigated away from.
+  useEffect(() => {
+    if (!draftHasContent || submitted || isDemoCode) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [draftHasContent, submitted, isDemoCode])
+
+  const applyDraft = (d: StoredDraft) => {
+    const s = d.state
+    setStep(s.step); setListIndex(s.listIndex); setTestNumber(s.testNumber)
+    historyLookedUpRef.current = s.historyLookedUp
+    setConsentGiven(s.consentGiven); setConsentAgreed(s.consentAgreed)
+    setGuardianName(s.guardianName); setGuardianAgreed(s.guardianAgreed)
+    setConsentRecord(s.consentRecord)
+    setName(s.name); setDob(s.dob); setIdNumber(s.idNumber); setSex(s.sex)
+    setDominantHand(s.dominantHand); setSport(s.sport); setTeam(s.team); setPosition(s.position)
+    setYearsOfEducation(s.yearsOfEducation); setPrimaryLanguage(s.primaryLanguage)
+    setPreviousConcussions(s.previousConcussions)
+    setMostRecentConcussionDate(s.mostRecentConcussionDate)
+    setLongestRecovery(s.longestRecovery)
+    setPreviousConcussionSymptoms(s.previousConcussionSymptoms)
+    setDiagnosedMigraines(s.diagnosedMigraines); setMedicalHistory(s.medicalHistory)
+    setCurrentMedications(s.currentMedications)
+    setSymptomRatings(s.symptomRatings); setFeelNormalPercent(s.feelNormalPercent)
+    setNotNormalReason(s.notNormalReason); setPhysicalWorsens(s.physicalWorsens)
+    setMentalWorsens(s.mentalWorsens)
+    setOrientMonth(s.orientMonth); setOrientDate(s.orientDate); setOrientDay(s.orientDay)
+    setOrientYear(s.orientYear); setOrientTime(s.orientTime)
+    setOrientationTimestamp(s.orientationTimestampISO ? new Date(s.orientationTimestampISO) : null)
+    setOrientationSkipped(s.orientationSkipped)
+    // Timed / mid-animation sub-tests cannot be resumed part-way — their timers
+    // are gone. Rewind them to their intro so they are re-administered properly
+    // rather than resuming into a broken (or silently scored) state.
+    const memoryDone = s.memoryPhase === 'done'
+    setMemoryPhase(memoryDone ? 'done' : 'intro')
+    setCurrentTrial(memoryDone ? s.currentTrial : 0)
+    setTrialSelections(memoryDone ? s.trialSelections : [{}, {}, {}])
+    setMemoryTimestamp(memoryDone ? s.memoryTimestamp : 0)
+    setDigitPhase(s.digitPhase === 'done' ? 'done' : 'intro')
+    setCurrentDigitIndex(s.currentDigitIndex)
+    setDigitResults(s.digitResults); setDigitAnswerLog(s.digitAnswerLog)
+    const monthsDone = s.monthsPhase === 'done'
+    setMonthsPhase(monthsDone ? 'done' : 'intro')
+    setMonthsTapped(monthsDone ? s.monthsTapped : [])
+    setMonthsTimeElapsed(monthsDone ? s.monthsTimeElapsed : 0)
+    setMonthsCorrect(monthsDone ? s.monthsCorrect : null)
+    setCognitiveSubStep(s.cognitiveSubStep)
+    setOculomotorSubStep(s.oculomotorSubStep); setOculomotorResults(s.oculomotorResults)
+    setDelayedRecallReady(s.delayedRecallReady)
+    setDelayedRecallSelections(s.delayedRecallSelections)
+    setDelayElapsedSeconds(s.delayElapsedSeconds); setDelayOverridden(s.delayOverridden)
+    setPendingDraft(null)
+  }
+
   // Submit handler
   const handleSubmit = async () => {
     if (submittingRef.current) return
@@ -576,7 +850,11 @@ export default function AthleteBaselineForm() {
       return
     }
     if (isMinor && !consentRecord.guardian?.agreed) {
-      setSubmitError('This athlete is under 16. A parent/guardian must provide consent before submitting.')
+      // The gate itself is correct and stays. What changed is that there is now
+      // a route through it: the guardian consent block is rendered inline at the
+      // top of the form whenever this condition holds.
+      setSubmitError('This athlete is under 16. Complete the parent/guardian consent at the top of this page, then submit.')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
@@ -613,7 +891,11 @@ export default function AthleteBaselineForm() {
           cognitive: {
             orientation: {
               month: orientMonth, date: orientDate, dayOfWeek: orientDay,
-              year: orientYear, time: orientTime, score: orientationScore,
+              year: orientYear, time: orientTime,
+              // null (not 0) when the section was not administered — the report
+              // prints "Not administered" rather than a fabricated 0/5.
+              score: orientationScore,
+              administered: orientationAdministered,
             },
             immediateMemory: {
               listUsed: wordListKey,
@@ -635,6 +917,13 @@ export default function AthleteBaselineForm() {
               wordsSelected: Object.entries(delayedRecallSelections)
                 .filter(([, s]) => s).map(([w]) => w),
               targetWords: [...WORD_LISTS[wordListKey]],
+              // TRUE interval between the end of immediate memory and the moment
+              // the recall list was opened, plus whether the 5-minute protocol
+              // interval was met or explicitly overridden.
+              delaySeconds: delayElapsedSeconds,
+              requiredDelaySeconds: DELAYED_RECALL_DELAY_SECONDS,
+              delayIntervalMet: delayElapsedSeconds !== null && delayElapsedSeconds >= DELAYED_RECALL_DELAY_SECONDS,
+              earlyStartOverride: delayOverridden,
             },
           },
           oculomotor: oculomotorResults,
@@ -644,6 +933,9 @@ export default function AthleteBaselineForm() {
       if (response.ok) {
         const okData = await response.json().catch(() => ({}))
         if (okData?.emailFailed) setEmailFailed(true)
+        // The baseline is stored server-side — the local draft must go, so the
+        // next athlete on a shared device starts clean.
+        clearDraft()
         setSubmitted(true)
         // Non-clinical "submitted" signal only — no health scores in analytics.
         trackEvent(ANALYTICS_EVENTS.PRESEASON_BASELINE_SUBMIT, {
@@ -769,6 +1061,51 @@ export default function AthleteBaselineForm() {
               Go to Concussion Education Australia
             </button>
           )}
+        </div>
+      </div>
+    )
+  }
+
+  // Resume prompt — an unfinished baseline was found on THIS device.
+  // Deliberately explicit and athlete-named: on a shared team iPad the next
+  // athlete must be able to see whose answers these are and decline them.
+  if (pendingDraft && !submitted) {
+    const draftName = pendingDraft.athleteName?.trim()
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="mesh-gradient" aria-hidden="true" />
+        <div className="glass rounded-2xl p-6 max-w-md w-full relative z-10">
+          <div className="icon-container w-12 h-12 mb-4 bg-amber-100">
+            <Clock className="w-6 h-6 text-amber-600" />
+          </div>
+          <h1 className="text-xl font-bold mb-2">Resume your baseline?</h1>
+          <p className="text-sm text-muted-foreground mb-2">
+            An unfinished baseline was saved on this device{' '}
+            {pendingDraft.savedAt ? `at ${new Date(pendingDraft.savedAt).toLocaleString('en-AU')}` : ''}.
+          </p>
+          <p className="text-sm mb-4">
+            {draftName
+              ? <>It belongs to <strong>{draftName}</strong>.</>
+              : <>No name had been entered yet.</>}
+            {' '}If that is not you, start a new baseline — the saved answers will be deleted.
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => applyDraft(pendingDraft)}
+              className="w-full btn-primary py-3 rounded-xl text-base font-semibold"
+            >
+              {draftName ? `Resume ${draftName}'s baseline` : 'Resume saved baseline'}
+            </button>
+            <button
+              onClick={() => { clearDraft(); setPendingDraft(null) }}
+              className="w-full btn-secondary py-3 rounded-xl text-base font-semibold"
+            >
+              Start a new baseline
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground text-center mt-3">
+            Drafts are stored only on this device and are deleted after 24 hours.
+          </p>
         </div>
       </div>
     )
@@ -947,6 +1284,68 @@ export default function AthleteBaselineForm() {
             for <strong className="text-foreground">{clinicName}</strong>
           </p>
         </div>
+
+        {/* Parent/guardian consent required AFTER the initial gate.
+            The consent gate and step 1 bind the same DOB, so an athlete who
+            consented with an adult DOB and then corrected it to an under-16 one
+            used to hit a hard stop at submit with no way back. The gate still
+            holds — this block is the route through it. */}
+        {needsGuardianConsent && (
+          <div className="glass rounded-2xl p-4 mb-6 border border-amber-300 bg-amber-50/70">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <p className="text-sm font-semibold text-amber-800">Parent / guardian consent required</p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              The date of birth entered makes this athlete {athleteAge} years old. Because they are
+              under {MINOR_CONSENT_AGE}, a parent or guardian must consent before this baseline can be
+              submitted. Nothing entered so far is lost.
+            </p>
+            <div className="mb-3">
+              <label className="block text-xs font-semibold mb-1">Parent / Guardian Full Name *</label>
+              <input
+                type="text"
+                value={lateGuardianName}
+                onChange={e => setLateGuardianName(e.target.value)}
+                className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
+                placeholder="Parent or guardian name"
+              />
+            </div>
+            <label className="flex items-start gap-2 cursor-pointer mb-3">
+              <input
+                type="checkbox"
+                checked={lateGuardianAgreed}
+                onChange={e => setLateGuardianAgreed(e.target.checked)}
+                className="w-4 h-4 mt-0.5 rounded border-slate-300 text-accent focus:ring-accent flex-shrink-0"
+              />
+              <span className="text-sm">
+                I am the parent/guardian of this athlete and I consent to the collection and handling
+                of their personal and health information as described in the{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent font-semibold underline">
+                  Privacy Policy
+                </a>.
+              </span>
+            </label>
+            <button
+              onClick={() => {
+                setConsentRecord(prev => prev ? {
+                  ...prev,
+                  guardian: { name: lateGuardianName.trim(), agreed: true, atISO: new Date().toISOString() },
+                } : prev)
+                setGuardianName(lateGuardianName.trim())
+                setGuardianAgreed(true)
+                setSubmitError('')
+              }}
+              disabled={!lateGuardianAgreed || lateGuardianName.trim().length === 0}
+              className="w-full btn-primary py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+            >
+              Record Guardian Consent
+            </button>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              If the date of birth is wrong, correct it in <strong>Step 1 — Athlete Information</strong>.
+            </p>
+          </div>
+        )}
 
         {/* Progress bar */}
         <div className="flex items-center gap-2 mb-6">
@@ -1143,38 +1542,64 @@ export default function AthleteBaselineForm() {
               Rate each symptom from 0 (none) to 6 (severe) based on how you feel right now.
             </p>
 
-            {/* Header row */}
-            <div className="flex items-center gap-1 mb-1 pl-[40%]">
-              {[0, 1, 2, 3, 4, 5, 6].map(v => (
-                <span key={v} className="flex-1 text-center text-[10px] font-bold text-muted-foreground">{v}</span>
-              ))}
-            </div>
-            <div className="space-y-0.5">
-              {SYMPTOMS.map((symptom, i) => (
-                <div key={symptom} className="flex items-center gap-1">
-                  <span className="text-xs w-[40%] flex-shrink-0 truncate" title={symptom}>{symptom}</span>
-                  <div className="flex gap-0.5 flex-1">
-                    {[0, 1, 2, 3, 4, 5, 6].map(val => (
-                      <button
-                        key={val}
-                        onClick={() => {
-                          const updated = [...symptomRatings]
-                          updated[i] = val
-                          setSymptomRatings(updated)
-                        }}
-                        className={`flex-1 h-7 rounded text-[10px] font-bold transition-all ${
-                          symptomRatings[i] === val
-                            ? val === 0 ? 'bg-green-100 text-green-700 ring-1 ring-green-400'
-                              : 'bg-accent text-white'
-                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
+            {/* Rating grid.
+                Mobile (<640px): the label sits on its own line and WRAPS in full
+                (it used to be w-[40%] truncate — 118px at 375px, which rendered
+                "Sensitivity to light" and "Sensitivity to noise" identically on
+                adjacent rows). The 7 buttons then break out of the card padding
+                (-mx-6) so each target is ~46 x 44px — at or above the 44px
+                touch-target minimum, up from ~23 x 28px.
+                Desktop (>=640px): unchanged two-column row layout.
+                Both breakpoints use the SAME `grid grid-cols-7` for the header
+                digits and the buttons, so the 0..6 headers cannot drift out of
+                column (the old header used gap-1 against gap-0.5 button rows,
+                which put the "6" ~10px off). */}
+            <div className="-mx-6 px-1 sm:mx-0 sm:px-0">
+              {/* Header row */}
+              <div className="sm:flex sm:items-center sm:gap-2 mb-1">
+                <span className="hidden sm:block sm:w-[40%] sm:flex-shrink-0" aria-hidden="true" />
+                <div className="grid grid-cols-7 gap-0.5 sm:flex-1">
+                  {[0, 1, 2, 3, 4, 5, 6].map(v => (
+                    <span key={v} className="text-center text-[10px] font-bold text-muted-foreground">{v}</span>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <div className="space-y-2 sm:space-y-0.5">
+                {SYMPTOMS.map((symptom, i) => (
+                  <div
+                    key={symptom}
+                    className="pb-2 border-b border-slate-100 last:border-b-0 last:pb-0 sm:flex sm:items-center sm:gap-2 sm:pb-0 sm:border-b-0"
+                  >
+                    <span className="block text-xs leading-snug mb-1 sm:mb-0 sm:w-[40%] sm:flex-shrink-0">
+                      {symptom}
+                    </span>
+                    <div className="grid grid-cols-7 gap-0.5 sm:flex-1">
+                      {[0, 1, 2, 3, 4, 5, 6].map(val => (
+                        <button
+                          key={val}
+                          type="button"
+                          aria-label={`${symptom}: ${val}`}
+                          aria-pressed={symptomRatings[i] === val}
+                          onClick={() => {
+                            const updated = [...symptomRatings]
+                            updated[i] = val
+                            setSymptomRatings(updated)
+                          }}
+                          className={`h-11 sm:h-7 rounded text-sm sm:text-[10px] font-bold transition-all ${
+                            symptomRatings[i] === val
+                              ? val === 0 ? 'bg-green-100 text-green-700 ring-1 ring-green-400'
+                                : 'bg-accent text-white'
+                              : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Totals */}
@@ -1238,18 +1663,39 @@ export default function AthleteBaselineForm() {
           <div className="glass rounded-2xl p-6 animate-fade-in">
             {/* Sub-step navigation */}
             <div className="flex gap-1 mb-4">
-              {(['memory', 'orientation', 'digits', 'months'] as const).map((sub, i) => (
-                <button
-                  key={sub}
-                  onClick={() => setCognitiveSubStep(sub)}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                    cognitiveSubStep === sub ? 'bg-accent text-white' : 'bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  {['Memory', 'Orientation', 'Digits', 'Months'][i]}
-                </button>
-              ))}
+              {(['memory', 'orientation', 'digits', 'months'] as const).map((sub, i) => {
+                const done = sub === 'memory' ? memoryPhase === 'done'
+                  : sub === 'orientation' ? orientationComplete
+                    : sub === 'digits' ? digitPhase === 'done'
+                      : monthsPhase === 'done'
+                return (
+                  <button
+                    key={sub}
+                    onClick={() => setCognitiveSubStep(sub)}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center justify-center gap-1 ${
+                      cognitiveSubStep === sub ? 'bg-accent text-white' : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {done && <Check className="w-3 h-3 flex-shrink-0" />}
+                    {['Memory', 'Orientation', 'Digits', 'Months'][i]}
+                  </button>
+                )
+              })}
             </div>
+
+            {/* All four sub-sections must be completed before the step can be
+                left — orientation used to be missing from that gate. */}
+            {!(memoryPhase === 'done' && orientationComplete && digitPhase === 'done' && monthsPhase === 'done') && (
+              <p className="text-[11px] text-muted-foreground mb-3">
+                Complete all four sections above before continuing. Still to do:{' '}
+                {[
+                  memoryPhase !== 'done' ? 'Memory' : null,
+                  !orientationComplete ? 'Orientation' : null,
+                  digitPhase !== 'done' ? 'Digits' : null,
+                  monthsPhase !== 'done' ? 'Months' : null,
+                ].filter(Boolean).join(', ')}.
+              </p>
+            )}
 
             {/* Orientation */}
             {cognitiveSubStep === 'orientation' && (
@@ -1324,12 +1770,50 @@ export default function AthleteBaselineForm() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex justify-end">
-                  <button onClick={() => { if (!orientationTimestamp) setOrientationTimestamp(new Date()); setCognitiveSubStep('digits') }}
-                    className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1">
-                    Next: Digits Backward <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+                {/* Orientation used to be skippable: the step gate ignored it
+                    and the sub-step tabs are always clickable, so an untouched
+                    orientation was silently scored 0/5 and printed as a real
+                    result. It is now part of the step gate, and a section that
+                    genuinely cannot be answered is recorded as NOT ADMINISTERED
+                    rather than scored zero. */}
+                {orientationSkipped ? (
+                  <div className="mt-4 glass rounded-xl p-3 border border-amber-200 bg-amber-50/60">
+                    <p className="text-xs text-amber-800 font-semibold mb-1">Marked as not administered</p>
+                    <p className="text-[11px] text-muted-foreground mb-2">
+                      The report will state that orientation was not administered. No orientation score
+                      will be reported.
+                    </p>
+                    <button
+                      onClick={() => setOrientationSkipped(false)}
+                      className="btn-secondary px-4 py-2 rounded-lg text-xs font-semibold"
+                    >
+                      Undo — answer orientation
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    {!orientationAnswered && (
+                      <p className="text-[11px] text-muted-foreground mb-2">
+                        Answer all 5 items to continue. Leaving them blank is not scored as zero.
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between gap-3">
+                      <button
+                        onClick={() => setOrientationSkipped(true)}
+                        className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground text-left"
+                      >
+                        Can&apos;t complete this section — mark as not administered
+                      </button>
+                      <button
+                        onClick={() => { if (!orientationTimestamp) setOrientationTimestamp(new Date()); setCognitiveSubStep('digits') }}
+                        disabled={!orientationAnswered}
+                        className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50 flex-shrink-0"
+                      >
+                        Next: Digits Backward <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1789,31 +2273,68 @@ export default function AthleteBaselineForm() {
                   Waiting for 5-minute delay to elapse
                 </p>
                 <p className="text-3xl font-bold text-accent font-mono">
-                  {Math.floor(delayTimeRemaining / 60)}:{(delayTimeRemaining % 60).toString().padStart(2, '0')}
+                  {mmss(delayTimeRemaining)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-4">
-                  You can go back to review previous sections while waiting, or proceed when ready.
+                  The word list unlocks automatically when the interval has elapsed. You can review
+                  previous sections while you wait.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
-                  <button
-                    onClick={() => setDelayedRecallReady(true)}
-                    className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold"
-                  >
-                    Complete Delayed Recall Now
-                  </button>
-                  <button
-                    onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    className="btn-secondary px-6 py-2.5 rounded-lg text-sm font-semibold"
-                  >
-                    Review Previous Sections
-                  </button>
-                </div>
+
+                {/* The recall list is genuinely locked until the interval has
+                    elapsed. An early start is still possible — clinical reality —
+                    but it is explicit and the TRUE elapsed interval is recorded
+                    and printed on the report. */}
+                {showDelayOverrideConfirm ? (
+                  <div className="glass rounded-xl p-3 mt-4 border border-amber-200 bg-amber-50/60 text-left">
+                    <p className="text-xs font-semibold text-amber-800 mb-1">Start recall early?</p>
+                    <p className="text-[11px] text-muted-foreground mb-3">
+                      Only <strong>{mmss(DELAYED_RECALL_DELAY_SECONDS - delayTimeRemaining)}</strong> of the
+                      required {mmss(DELAYED_RECALL_DELAY_SECONDS)} interval has passed. The report will
+                      state the actual interval and flag that the protocol delay was not met.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => openDelayedRecall(true)}
+                        className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold"
+                      >
+                        Yes — start now and record the real interval
+                      </button>
+                      <button
+                        onClick={() => setShowDelayOverrideConfirm(false)}
+                        className="btn-secondary px-5 py-2.5 rounded-lg text-sm font-semibold"
+                      >
+                        Keep waiting
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+                    <button
+                      onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                      className="btn-secondary px-6 py-2.5 rounded-lg text-sm font-semibold"
+                    >
+                      Review Previous Sections
+                    </button>
+                    <button
+                      onClick={() => setShowDelayOverrideConfirm(true)}
+                      className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                    >
+                      Start recall early (recorded on the report)
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-muted-foreground mb-2">
                   Select the words you recall from the memory test earlier.
                 </p>
+                {delayElapsedSeconds !== null && (
+                  <p className={`text-xs mb-4 ${delayOverridden ? 'text-amber-700 font-semibold' : 'text-muted-foreground'}`}>
+                    Interval since memory test: {mmss(delayElapsedSeconds)}
+                    {delayOverridden ? ` — started early (protocol ${mmss(DELAYED_RECALL_DELAY_SECONDS)} not met; recorded on the report)` : ''}
+                  </p>
+                )}
                 <div className="grid grid-cols-3 gap-2">
                   {delayedRecallPool.map(({ word }) => (
                     <button
@@ -1870,14 +2391,30 @@ export default function AthleteBaselineForm() {
             <div className="glass rounded-xl p-4 mb-3">
               <p className="text-sm font-semibold mb-2">Sections completed:</p>
               <div className="space-y-1.5">
-                {['Symptom Evaluation', 'Orientation', 'Immediate Memory', 'Concentration', 'Delayed Recall', 'Oculomotor Screening'].map(section => (
-                  <div key={section} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                    <span>{section}</span>
+                {[
+                  { label: 'Symptom Evaluation', done: true },
+                  { label: 'Orientation', done: orientationAdministered },
+                  { label: 'Immediate Memory', done: true },
+                  { label: 'Concentration', done: true },
+                  { label: 'Delayed Recall', done: true },
+                  { label: 'Oculomotor Screening', done: true },
+                ].map(section => (
+                  <div key={section.label} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {section.done
+                      ? <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                      : <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />}
+                    <span>{section.label}{section.done ? '' : ' — not administered'}</span>
                   </div>
                 ))}
               </div>
             </div>
+
+            {delayElapsedSeconds !== null && (
+              <p className={`text-xs mb-3 text-center ${delayOverridden ? 'text-amber-700 font-semibold' : 'text-muted-foreground'}`}>
+                Delayed recall interval: {mmss(delayElapsedSeconds)}
+                {delayOverridden ? ' (started early — recorded on the report)' : ''}
+              </p>
+            )}
 
             <p className="text-xs text-muted-foreground text-center">
               Your detailed scores will be included in the clinician&apos;s report only.
@@ -1978,7 +2515,7 @@ export default function AthleteBaselineForm() {
                 setStep(prev => prev + 1)
                 window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
-              disabled={(step === 5 && !delayedRecallReady) || (step === 3 && (memoryPhase !== 'done' || digitPhase !== 'done' || monthsPhase !== 'done')) || (step === 4 && oculomotorSubStep < 9) || lookingUpHistory}
+              disabled={(step === 5 && !delayedRecallReady) || (step === 3 && (memoryPhase !== 'done' || !orientationComplete || digitPhase !== 'done' || monthsPhase !== 'done')) || (step === 4 && oculomotorSubStep < 9) || lookingUpHistory}
               className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
             >
               {lookingUpHistory ? (
