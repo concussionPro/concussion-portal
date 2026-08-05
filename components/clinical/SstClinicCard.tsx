@@ -69,16 +69,45 @@ export function SstClinicCard() {
   const [patientName, setPatientName] = useState('')
   const [inviteState, setInviteState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [inviteError, setInviteError] = useState('')
+  const [billingBusy, setBillingBusy] = useState(false)
+  // ?subscribed=1 = back from Stripe checkout; the webhook may lag the
+  // redirect by a few seconds — show an activating state instead of trial
+  // CTAs, and refetch shortly (2026-08-05 sweep #11).
+  const [justSubscribed, setJustSubscribed] = useState(false)
+
+  const openBillingPortal = async () => {
+    if (billingBusy) return
+    setBillingBusy(true)
+    try {
+      const res = await fetch('/api/sst/billing-portal', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data?.url) window.location.href = data.url
+      else setError(data?.error || 'Could not open billing portal.')
+    } catch {
+      setError('Could not open billing portal.')
+    } finally {
+      setBillingBusy(false)
+    }
+  }
 
   useEffect(() => {
-    void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        setClinic(d?.clinic ?? null)
-        setUsage(d?.usage ?? null)
-      })
-      .catch(() => {})
-      .finally(() => setLoaded(true))
+    const load = () =>
+      fetch('/api/clinical-testing/clinic', { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          setClinic(d?.clinic ?? null)
+          setUsage(d?.usage ?? null)
+        })
+        .catch(() => {})
+        .finally(() => setLoaded(true))
+    void load()
+    if (new URLSearchParams(window.location.search).get('subscribed') === '1') {
+      setJustSubscribed(true)
+      // webhook race: refetch twice while Stripe's event lands
+      const t1 = setTimeout(load, 4000)
+      const t2 = setTimeout(load, 12000)
+      return () => { clearTimeout(t1); clearTimeout(t2) }
+    }
   }, [])
 
   const create = useCallback(async () => {
@@ -206,8 +235,23 @@ export function SstClinicCard() {
             </div>
           )}
           {usage?.plan === 'active' && (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-              Subscribed · unlimited patients
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                Subscribed · unlimited patients
+              </span>
+              <button
+                type="button"
+                onClick={openBillingPortal}
+                disabled={billingBusy}
+                className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {billingBusy ? 'Opening…' : 'Manage billing'}
+              </button>
+            </div>
+          )}
+          {justSubscribed && usage?.plan === 'trial' && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
+              Payment received — activating your plan… this updates within a minute.
             </p>
           )}
           <SstTeamSection demo={isDemoClinic} />

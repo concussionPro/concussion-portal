@@ -14,6 +14,11 @@ export async function POST(req: NextRequest) {
   }
   const clinic = await getSstClinicByEmail(session.email.toLowerCase())
   if (!clinic) return NextResponse.json({ error: 'No clinic found.' }, { status: 400 })
+  // Owner-only — seated members must not see the owner's payment details or
+  // cancel the clinic's subscription (2026-08-05 sweep #5).
+  if (clinic.email.toLowerCase() !== session.email.toLowerCase()) {
+    return NextResponse.json({ error: 'Only the clinic owner can manage billing.' }, { status: 403 })
+  }
   const customerId = await getSstClinicStripeCustomer(clinic.code)
   if (!customerId) return NextResponse.json({ error: 'No active subscription to manage.' }, { status: 400 })
   try {

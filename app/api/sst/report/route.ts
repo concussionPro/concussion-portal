@@ -3,7 +3,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { isRegisteredClinic, verifyViewKey, getClinicUsage, getClinic } from '@/lib/sst-trainer/clinic-registry'
 import { loadReportInput, renderSkin } from '@/lib/sst-trainer/reports/load'
 import { renderReportContentToHtml } from '@/lib/sst-trainer/reports/render'
-import { getReportSkins, reportSkinLabel, type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
+import { type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
 
 /**
  * GET /api/sst/report?code=X&k=<viewKey>&patient=<label>&skin=acc884
@@ -37,11 +37,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: `Unknown report skin. One of: ${ALL_SKINS.join(', ')}` }, { status: 400 })
   }
 
-  // Jurisdiction is implied by the skin; validate the skin is allowed there.
-  const jurisdiction: Jurisdiction = skin === 'acc884' || skin === 'acc885' ? 'NZ' : 'AU'
-  if (!getReportSkins(jurisdiction).includes(skin)) {
-    return NextResponse.json({ error: `${reportSkinLabel(skin)} is not available in ${jurisdiction}.` }, { status: 400 })
-  }
+  // Jurisdiction is implied by the skin (acc* → NZ forms, else AU). There is
+  // deliberately NO clinic-level jurisdiction gate — an AU hub can render the
+  // NZ form and vice versa; the clinician chooses the right paper.
+  const jurisdiction: Jurisdiction = skin === 'acc884' || skin === 'acc885' ? 'NZ' : 'AU' 
 
   const rl = await rateLimit({ key: `sst-report:${code}`, limit: 30, windowSec: 60 })
   if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { constructWebhookEvent } from '@/lib/stripe'
+import { constructWebhookEvent, sstPlanPriceId } from '@/lib/stripe'
 import { setSstClinicPlan } from '@/lib/sst-trainer/clinic-registry'
 import { provisionPlatformForBuyer } from '@/lib/sst-trainer/bundle'
 
@@ -242,7 +242,13 @@ export async function POST(request: NextRequest) {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // BNPL (Afterpay/Klarna) fires checkout.session.completed with payment_status='unpaid'.
   // Do NOT provision the account until payment is confirmed — async_payment_succeeded will re-call this.
-  if (session.payment_status !== 'paid') {
+  // EXCEPTION: a subscription checkout completed with a 100%-off promo code
+  // arrives as 'no_payment_required' — that IS a live subscription (bills from
+  // the next cycle); skipping it left the clinic capped while paying
+  // (2026-08-05 sweep #4). The BNPL guard is a one-time-payment concern.
+  const zeroDueSubscription =
+    session.payment_status === 'no_payment_required' && session.mode === 'subscription'
+  if (session.payment_status !== 'paid' && !zeroDueSubscription) {
     console.log(`Deferred payment — skipping provisioning for ${session.id} (status: ${session.payment_status})`)
     return
   }
@@ -1538,11 +1544,14 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 }
 
 /**
- * SST subscription status change → clinic plan. 'active'/'trialing' keep the
- * clinic on the paid plan (no cap); anything else (cancelled, unpaid,
- * past_due, deleted) reverts to 'trial'. The trial gate only restricts
- * ADMITTING new patients — existing patients are never blocked, so a lapse
- * never severs care mid-episode.
+ * SST subscription status change → clinic plan. 'active'/'trialing'/'past_due'
+ * keep the clinic on the paid plan — past_due is Stripe's dunning window
+ * (smart retries usually recover the charge); reverting instantly blocked
+ * admissions and stamped a paying subscriber's documents FREE-TRIAL
+ * (2026-08-05 sweep #6). Reversion happens on unpaid/canceled/paused/
+ * incomplete_expired/deletion. The trial gate only restricts ADMITTING new
+ * patients — existing patients are never blocked, so a lapse never severs
+ * care mid-episode.
  */
 async function handleSstSubscriptionChange(sub: Stripe.Subscription) {
   if (sub.metadata?.product !== 'sst-trainer') return
@@ -1551,11 +1560,18 @@ async function handleSstSubscriptionChange(sub: Stripe.Subscription) {
     console.error('SST subscription change without clinicCode:', sub.id)
     return
   }
-  const active = sub.status === 'active' || sub.status === 'trialing'
+  const active = sub.status === 'active' || sub.status === 'trialing' || sub.status === 'past_due'
+  // Tier from the LIVE price id first — a plan switch made in the billing
+  // portal/dashboard doesn't touch subscription metadata, which left seat
+  // allowances stuck on the checkout-time tier (2026-08-05 sweep #7).
+  const livePriceId = sub.items?.data?.[0]?.price?.id
+  const tierFromPrice = (['single', 'clinic', 'enterprise'] as const).find(
+    (t) => livePriceId && sstPlanPriceId(t) === livePriceId,
+  )
   await setSstClinicPlan(clinicCode, active ? 'active' : 'trial', {
     customerId: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id,
     subscriptionId: sub.id,
-    tier: sub.metadata?.plan,
+    tier: tierFromPrice ?? sub.metadata?.plan,
   })
-  console.log(`SST clinic ${clinicCode} → ${active ? 'active' : 'trial'} (sub ${sub.status})`)
+  console.log(`SST clinic ${clinicCode} → ${active ? 'active' : 'trial'} (sub ${sub.status}, tier ${tierFromPrice ?? sub.metadata?.plan ?? '?'})`)
 }

@@ -78,6 +78,12 @@ function FileModal({ auth, clinicCode, viewKey, patientName, pms, demo = false, 
   const [picked, setPicked] = useState<{ id: string; name: string } | null>(null)
   const [skin, setSkin] = useState('gp-report')
   const [claim, setClaim] = useState('')
+  // Filed notes must carry the acting clinician. Opened from the keyed hub
+  // link there is no portal session for the server to resolve, so ask once
+  // and remember (2026-08-05 sweep #12).
+  const [clinician, setClinician] = useState(() => {
+    try { return window.localStorage.getItem('sst:filing-clinician') || '' } catch { return '' }
+  })
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
@@ -121,6 +127,7 @@ function FileModal({ auth, clinicCode, viewKey, patientName, pms, demo = false, 
         body: JSON.stringify({
           code: clinicCode, k: viewKey, patient: patientName,
           skin, pmsPatientId: picked.id, claim: claim.trim() || undefined,
+          clinician: clinician.trim() || undefined,
         }),
       })
       const d = await r.json()
@@ -159,6 +166,16 @@ function FileModal({ auth, clinicCode, viewKey, patientName, pms, demo = false, 
           <input value={claim} onChange={(e) => setClaim(e.target.value)} placeholder="ACC45 claim number (optional)"
             className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px]" />
         )}
+
+        <input
+          value={clinician}
+          onChange={(e) => {
+            setClinician(e.target.value)
+            try { window.localStorage.setItem('sst:filing-clinician', e.target.value) } catch { /* private mode */ }
+          }}
+          placeholder="Filing as (your name — appears on the note)"
+          className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px]"
+        />
 
         <p className="m-0 mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">Patient in {pms}</p>
         <div className="flex gap-1.5 mb-2">

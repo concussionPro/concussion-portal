@@ -13,7 +13,7 @@ interface Member { id: string; name: string; email: string | null }
 
 export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   const [members, setMembers] = useState<Member[]>([])
-  const [seats, setSeats] = useState<{ used: number; allowance: number; tier: string } | null>(null)
+  const [seats, setSeats] = useState<{ used: number; allowance: number; tier: string; isOwner: boolean } | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -22,7 +22,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   const load = useCallback(() => {
     if (demo) {
       setMembers([{ id: 'demo-1', name: 'Alex Reviewer', email: null }])
-      setSeats({ used: 2, allowance: 5, tier: 'clinic' })
+      setSeats({ used: 2, allowance: 5, tier: 'clinic', isOwner: true })
       return
     }
     void fetch('/api/clinical-testing/team')
@@ -30,7 +30,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       .then((d) => {
         if (!d) return
         setMembers(d.members ?? [])
-        setSeats({ used: d.seatsUsed ?? 1, allowance: d.seatAllowance ?? 1, tier: d.tier ?? 'trial' })
+        setSeats({ used: d.seatsUsed ?? 1, allowance: d.seatAllowance ?? 1, tier: d.tier ?? 'trial', isOwner: d.isOwner !== false })
       })
       .catch(() => {})
   }, [demo])
@@ -82,19 +82,23 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       </div>
       <ul className="space-y-1.5">
         <li className="flex items-center justify-between text-[12.5px] text-slate-700">
-          <span className="font-medium">You (clinic owner)</span>
+          <span className="font-medium">{seats.isOwner ? 'You (clinic owner)' : 'Clinic owner'}</span>
           <span className="text-[11px] text-muted-foreground">seat 1</span>
         </li>
         {members.map((m) => (
           <li key={m.id} className="flex items-center justify-between text-[12.5px] text-slate-700">
             <span className="font-medium truncate">{m.name}{m.email ? <span className="text-muted-foreground font-normal"> · {m.email}</span> : null}</span>
-            <button type="button" onClick={() => remove(m.id)} aria-label={`Remove ${m.name}`} className="text-slate-400 hover:text-red-500">
-              <X className="w-3.5 h-3.5" />
-            </button>
+            {seats.isOwner && (
+              <button type="button" onClick={() => remove(m.id)} aria-label={`Remove ${m.name}`} className="text-slate-400 hover:text-red-500">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </li>
         ))}
       </ul>
-      {seats.used < seats.allowance ? (
+      {!seats.isOwner ? (
+        <p className="mt-3 text-[12px] text-muted-foreground">Seats are managed by the clinic owner.</p>
+      ) : seats.used < seats.allowance ? (
         <div className="mt-3 flex flex-col sm:flex-row gap-2">
           <input
             type="text" value={name} onChange={(e) => setName(e.target.value)}

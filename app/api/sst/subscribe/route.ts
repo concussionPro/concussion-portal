@@ -30,6 +30,23 @@ export async function POST(req: NextRequest) {
   if (!clinic) {
     return NextResponse.json({ error: 'Create your clinic code first.' }, { status: 400 })
   }
+  // Billing is OWNER-only — the member fallback resolves seated practitioners
+  // to the clinic, but they must not bind subscriptions (2026-08-05 sweep #5).
+  if (clinic.email.toLowerCase() !== session.email.toLowerCase()) {
+    return NextResponse.json({ error: 'Only the clinic owner can manage billing.' }, { status: 403 })
+  }
+  // Already subscribed → a second checkout would mint a second Stripe
+  // customer + subscription and orphan the first (2026-08-05 sweep #1).
+  // Plan changes go through the billing portal instead.
+  if (clinic.plan === 'active') {
+    return NextResponse.json(
+      {
+        error: 'already-subscribed',
+        message: 'Your clinic already has an active plan. Change or cancel it from Manage billing in your workspace.',
+      },
+      { status: 409 },
+    )
+  }
   const origin = req.nextUrl.origin
   try {
     const checkout = await createSstSubscriptionCheckoutSession({

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { resolveActingClinician } from '@/lib/sst-trainer/clinic-registry'
-import { verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
+import { verifyViewKey, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
 import { resolveTenantAdapter, gensolveWritesConfirmed, markPmsOk } from '@/lib/sst-trainer/pms/tenant'
 import { deliverReport } from '@/lib/sst-trainer/pms/deliver'
 import { loadReportInput, renderSkin } from '@/lib/sst-trainer/reports/load'
 
-import { getReportSkins, type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
+import { type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
+
+const ALL_SKINS: ReportSkinKind[] = ['gp-report', 'rtp-clearance', 'rtw-summary', 'medicolegal', 'acc884', 'acc885']
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
 
@@ -46,10 +48,10 @@ export async function POST(request: NextRequest) {
   }
   if (!patient || !pmsPatientId) return NextResponse.json({ error: 'patient and pmsPatientId required' }, { status: 400 })
 
-  // Same jurisdiction rule as the report viewer: the skin implies it, and an
-  // invalid skin/jurisdiction pair is refused.
+  // Jurisdiction is implied by the skin (same rule as the report viewer);
+  // unknown skins are rejected below by renderSkin's input contract.
   const jurisdiction: Jurisdiction = skin === 'acc884' || skin === 'acc885' ? 'NZ' : 'AU'
-  if (!getReportSkins(jurisdiction).includes(skin)) {
+  if (!ALL_SKINS.includes(skin)) {
     return NextResponse.json({ error: 'Unknown report type' }, { status: 400 })
   }
 
@@ -85,6 +87,16 @@ export async function POST(request: NextRequest) {
     })
     if (!input) return NextResponse.json({ error: 'No episode data found for that patient label' }, { status: 404 })
     const content = renderSkin(skin, input)
+    // Trial clinics may file, but the filed note carries the same trial
+    // notice the on-screen document does — filing was bypassing the entire
+    // premium/watermark layer (2026-08-05 sweep #3).
+    if (code !== 'DEMO00' && (await getClinicUsage(code)).plan !== 'active') {
+      content.sections.push({
+        heading: 'Notice',
+        kind: 'narrative',
+        body: ['FREE-TRIAL DOCUMENT — generated on the SST free trial. Subscribe from the clinic workspace to file reports without this notice.'],
+      })
+    }
     const result = await deliverReport({
       adapter: resolved.adapter,
       patientId: pmsPatientId,

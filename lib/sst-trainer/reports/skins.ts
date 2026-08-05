@@ -178,7 +178,7 @@ function trajectorySection(input: ReportInput): ReportSection {
  * only — no efficacy claim. (Not tied to a specific unverified clause number;
  * the requirement is the ACC884 outcome-review deliverable.)
  */
-function adherenceReviewSection(input: ReportInput): ReportSection {
+function adherenceReviewSection(input: ReportInput, opts?: { accFraming?: boolean }): ReportSection {
   const rx = input.prescription
   const { verified, total } = verifiedShare(input.sessions)
   // In-band adherence proxy: sessions whose average HR sat inside the prescribed
@@ -211,7 +211,7 @@ function adherenceReviewSection(input: ReportInput): ReportSection {
     heading: 'Outcome measures reviewed during delivery',
     kind: 'audit',
     body: [
-      'Sub-symptom-threshold sessions were delivered between clinic visits against a heart-rate band measured by graded testing; adherence was monitored from connected-sensor sessions (unverified manual/camera entries are excluded from the verified count). The measured threshold was formally re-reviewed at each graded re-test listed above — evidence that outcome measures were reviewed across, not merely at the end of, service delivery, supporting the ACC884 Client Summary Report.',
+      `Sub-symptom-threshold sessions were delivered between clinic visits against a heart-rate band measured by graded testing; adherence was monitored from connected-sensor sessions (unverified manual/camera entries are excluded from the verified count). The measured threshold was formally re-reviewed at each graded re-test listed above — evidence that outcome measures were reviewed across, not merely at the end of, service delivery${opts?.accFraming ? ', supporting the ACC884 Client Summary Report' : ''}.`,
     ],
     fields,
   }
@@ -295,7 +295,7 @@ export function acc884(input: ReportInput): ReportContent {
       },
       prescriptionSection(input),
       trajectorySection(input),
-      adherenceReviewSection(input),
+      adherenceReviewSection(input, { accFraming: true }),
       { heading: 'Goals', kind: 'goals', fields: goalFields },
       {
         heading: 'Risk assessment',
