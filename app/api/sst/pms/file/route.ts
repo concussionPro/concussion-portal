@@ -76,16 +76,19 @@ export async function POST(request: NextRequest) {
       patientRef: typeof body.ref === 'string' ? body.ref : undefined,
       patient: body.claim?.trim() ? { claimRef: body.claim.trim() } : undefined,
       clinician: await (async () => {
-        if (body.clinician?.trim()) return { name: body.clinician.trim() }
-        // Attribution fallback (2026-08-04 seats build): resolve WHO is acting
-        // from the portal session — owner or seated member — so filed notes
-        // carry a real name even when the UI didn't pass one.
+        // SESSION FIRST (2026-08-05 journey sim): the client value comes from
+        // a device-global localStorage key, so on a shared clinic tablet
+        // whoever typed their name last was being stamped on every other
+        // clinician's filed note. An authenticated identity always wins; the
+        // typed name is only a fallback for the keyed-hub-link case where
+        // there is no session to resolve.
         const tok = request.cookies.get('session')?.value
         const sess = tok ? verifySessionToken(tok) : null
         if (sess?.email) {
           const name = await resolveActingClinician(sess.email, code)
           if (name) return { name }
         }
+        if (body.clinician?.trim()) return { name: body.clinician.trim() }
         return undefined
       })(),
     })

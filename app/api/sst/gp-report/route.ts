@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
   try {
     // PDF is the deliverable (owner 2026-07-06); ?format=html for screen.
     if (request.nextUrl.searchParams.get('format') === 'html') {
-      const html = await buildGpReportHtml(code, patientLabel)
+      const html = await buildGpReportHtml(code, patientLabel, request.nextUrl.searchParams.get('ref')?.trim() || '')
       if (!html) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
       return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     }

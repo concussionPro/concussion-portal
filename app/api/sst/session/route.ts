@@ -74,10 +74,24 @@ export async function POST(request: NextRequest) {
     // Validate the clinic code against the SAME registry the preseason baseline
     // tool uses (Vercel KV `clinic:{code}`) — one clinic code for both tools.
     // DEMO00 is the shared demo code; anything else must be a registered clinic.
-    const clinic =
+    let clinic: { clinicName?: string } | null =
       clinicCode === 'DEMO00'
         ? { clinicName: 'Demo Clinic' }
-        : await kv.get<{ clinicName?: string }>(`clinic:${clinicCode}`)
+        : await kv.get<{ clinicName?: string }>(`clinic:${clinicCode}`).catch(() => null)
+    if (!clinic && clinicCode !== 'DEMO00') {
+      // KV blip must not 404 a VALID clinic: the client treats 4xx as
+      // permanent and drops the event, so a transient cache failure was
+      // destroying clinical sessions outright (2026-08-05 journey sim).
+      // The PG mirror is the durable record — same guard getClinicUsage uses.
+      try {
+        const { rows } = await sql<{ clinic_name: string }>`
+          SELECT clinic_name FROM sst_clinics WHERE code = ${clinicCode} LIMIT 1
+        `
+        if (rows[0]) clinic = { clinicName: rows[0].clinic_name }
+      } catch (err) {
+        console.error('[sst-session] PG clinic fallback failed:', err)
+      }
+    }
     if (!clinic) {
       return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
     }

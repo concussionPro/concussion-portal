@@ -85,8 +85,11 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
   // Filed notes must carry the acting clinician. Opened from the keyed hub
   // link there is no portal session for the server to resolve, so ask once
   // and remember (2026-08-05 sweep #12).
+  // Namespaced per clinic (2026-08-05): a device-global key meant a shared
+  // clinic tablet pre-filled the previous clinician's name for everyone.
+  const clinicianKey = `sst:filing-clinician:${clinicCode}`
   const [clinician, setClinician] = useState(() => {
-    try { return window.localStorage.getItem('sst:filing-clinician') || '' } catch { return '' }
+    try { return window.localStorage.getItem(clinicianKey) || '' } catch { return '' }
   })
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
@@ -176,7 +179,7 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
           value={clinician}
           onChange={(e) => {
             setClinician(e.target.value)
-            try { window.localStorage.setItem('sst:filing-clinician', e.target.value) } catch { /* private mode */ }
+            try { window.localStorage.setItem(clinicianKey, e.target.value) } catch { /* private mode */ }
           }}
           placeholder="Filing as (your name — appears on the note)"
           className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px]"

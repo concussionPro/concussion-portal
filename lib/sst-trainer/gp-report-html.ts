@@ -76,12 +76,26 @@ function trajectorySvg(points: Array<{ date: string; hrt: number | null; verifie
  *  has no episode data. Extracted from the route so server code (e.g. the
  *  admin sample-mailer) can build reports without an HTTP round-trip through
  *  the public domain (Cloudflare 502s self-fetch loops). */
-export async function buildGpReportHtml(code: string, patientLabel: string): Promise<string | null> {
+export async function buildGpReportHtml(
+  code: string,
+  patientLabel: string,
+  patientRef = '',
+): Promise<string | null> {
+  // Identity: ref FIRST when the caller has one. Label-only matching merged
+  // two same-named patients into ONE signable clinical document
+  // (2026-08-05 journey sim) — same clause as reports/load.ts.
+  const ref = patientRef.trim()
   const { rows } = await sql<Row>`
     SELECT patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
     FROM sst_clinic_sessions
     WHERE upper(clinic_code) = ${code}
-      AND trim(coalesce(patient_label, '')) = ${patientLabel}
+      AND (
+        (${ref} <> '' AND payload->>'patientRef' = ${ref})
+        OR (
+          lower(trim(coalesce(patient_label, ''))) = ${patientLabel.trim().toLowerCase()}
+          AND (${ref} = '' OR NULLIF(trim(coalesce(payload->>'patientRef', '')), '') IS NULL)
+        )
+      )
     ORDER BY created_at ASC
   `
   if (rows.length === 0) return null

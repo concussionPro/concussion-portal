@@ -125,8 +125,15 @@ export async function POST(request: NextRequest) {
     let loginUrl: string | null = null
     if (process.env.KV_REST_API_URL) {
       try {
+        // OWNER-only lookup: getSstClinicByEmail falls back to the members
+        // table, so a practitioner already SEATED at another clinic was
+        // silently handed that clinic's code under their own clinic's name —
+        // every patient they onboarded flowed into someone else's hub
+        // (2026-08-05 journey sim). A seat-holder starting their own trial
+        // must get their own clinic.
+        const owned = await getSstClinicByEmail(cleanEmail)
         clinic =
-          (await getSstClinicByEmail(cleanEmail)) ??
+          (owned && owned.email.toLowerCase() === cleanEmail ? owned : null) ??
           // A preseason-baseline clinic signing up for the trial keeps its
           // existing code — minting a second one splits their patients
           // across codes (2026-08-05 sweep #5; same guard as the portal path).
