@@ -66,7 +66,7 @@ function VerifyContent() {
           localStorage.removeItem('login_redirect')
 
           const isValidRedirect = (path: string) => {
-            return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !path.includes('\n')
+            return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !/[\x00-\x1f]/.test(path)
           }
 
           // Hard navigation, not router.push — App Router's RSC navigation

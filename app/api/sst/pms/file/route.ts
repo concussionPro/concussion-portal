@@ -43,6 +43,9 @@ export async function POST(request: NextRequest) {
   const patient = (body.patient || '').trim()
   const skin = (body.skin || '') as ReportSkinKind
   const pmsPatientId = (body.pmsPatientId || '').trim()
+  if (code === 'DEMO00') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   if (!code || !body.k || !(await verifyViewKey(code, body.k).catch(() => false))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

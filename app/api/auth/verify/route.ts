@@ -25,7 +25,11 @@ function hashToken(token: string): string {
 
 /** Only allow same-origin relative redirect paths (no open redirect). */
 function isValidRedirect(path: string): boolean {
-  return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !path.includes('\n')
+  // Control chars (tab/CR/etc.) are STRIPPED by the WHATWG URL parser, so
+  // '/\t/evil.com' resolves to https://evil.com — reject anything < 0x20
+  // outright (2026-08-05 round-G #1: open redirect).
+  // eslint-disable-next-line no-control-regex
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !/[\x00-\x1f]/.test(path)
 }
 
 /**
@@ -359,7 +363,7 @@ export async function POST(request: NextRequest) {
     // Mark token as used (replay protection)
     await sql`INSERT INTO used_magic_tokens (token_hash) VALUES (${tokenHash}) ON CONFLICT DO NOTHING`
     // Prune tokens older than 24h (non-blocking best-effort)
-    sql`DELETE FROM used_magic_tokens WHERE used_at < now() - interval '24 hours'`.catch(() => {})
+    sql`DELETE FROM used_magic_tokens WHERE used_at < now() - interval '8 days'`.catch(() => {})
 
     // Build the response: form posts navigate, fetch callers get JSON
     let response: NextResponse

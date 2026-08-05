@@ -43,7 +43,12 @@ function shardFromKey(apiKey: string): string {
   const dash = apiKey.lastIndexOf('-')
   // VALIDATED live 2026-07-20 (au5 trial tenant): shard follows the last '-'.
   // `au1` remains Cliniko's documented default for older suffix-less keys.
-  return dash >= 0 && dash < apiKey.length - 1 ? apiKey.slice(dash + 1) : 'au1'
+  // Charset-validated (round-F #2): the shard is interpolated into the
+  // request HOST — an unvalidated suffix ("...-@evil.example.com/") was
+  // attacker-chosen SSRF. Real shards are short alphanumerics (au1..au5,
+  // uk1, ca1...).
+  const shard = dash >= 0 && dash < apiKey.length - 1 ? apiKey.slice(dash + 1) : ''
+  return /^[a-z0-9]{2,8}$/.test(shard) ? shard : 'au1'
 }
 
 export class ClinikoAdapter implements PmsAdapter {

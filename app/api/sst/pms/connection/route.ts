@@ -24,6 +24,11 @@ import { getClientIp } from '@/lib/get-client-ip'
 
 async function authed(req: NextRequest, code: string, k: string | null): Promise<boolean> {
   if (!code || !k) return false
+  // DEMO00 passes verifyViewKey keylessly BY DESIGN for read surfaces — but
+  // the PMS credential store must never be writable/readable through the
+  // shared public demo code (2026-08-05 round-F #1). The demo card fakes
+  // its connected state client-side and never calls these routes.
+  if (code.trim().toUpperCase() === 'DEMO00') return false
   try {
     return await verifyViewKey(code, k)
   } catch {

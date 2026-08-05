@@ -213,6 +213,11 @@ export async function GET(request: NextRequest) {
         accessLevel: user.accessLevel,
         // See above — CRM ownership is course_purchases-based, not access_level.
         ownsCrm: await userOwnsCrm(user.email),
+        // Book ownership is a DB flag on a preview-level account — omitting it
+        // here (the path nearly every request takes) locked paying book
+        // buyers out of /complete-reference and the $50 bundle discount
+        // (2026-08-05 round-G #3).
+        bookOwner: await isBookOwner(user.email),
         workshopLocation: user.workshopLocation || null,
         createdAt: user.createdAt,
         nurtureUnsubscribed: user.nurtureUnsubscribed || false,

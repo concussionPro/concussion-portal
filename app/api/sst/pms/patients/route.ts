@@ -19,6 +19,11 @@ export async function GET(request: NextRequest) {
   const code = (p.get('code') || '').trim().toUpperCase()
   const k = p.get('k')
   const q = (p.get('q') || '').trim()
+  if (code.trim().toUpperCase() === 'DEMO00') {
+    // Demo card fakes PMS state client-side — the credential surface is
+    // never reachable through the keyless public demo code (round-F #1).
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   if (!code || !k || !(await verifyViewKey(code, k).catch(() => false))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

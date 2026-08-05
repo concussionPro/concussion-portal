@@ -20,7 +20,7 @@ function LoginForm() {
 
   // Validate redirect to prevent open redirect attacks
   const isValidRedirect = (path: string) =>
-    path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !path.includes('\n')
+    path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !/[\x00-\x1f]/.test(path)
 
   // Redirect authenticated users — no need to log in again
   useEffect(() => {
