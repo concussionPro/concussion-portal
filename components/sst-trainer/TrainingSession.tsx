@@ -108,6 +108,14 @@ interface SessionSummary {
  */
 interface SessionHeartbeat {
   startedAt: number
+  /**
+   * Stable id for THIS session attempt. Rides on the interruption record AND on
+   * the saved SessionLog, so the clinician read side can collapse an
+   * "interrupted" row into the completed one when the patient came back.
+   */
+  sessionUid: string
+  /** an abandoned-session record has ALREADY been reported for this attempt */
+  abandonReported: boolean
   /** prescription fingerprint — a re-test between interruption and resume discards */
   rxHrt: number
   phase: 'active' | 'stopped' | 'summary'
@@ -131,12 +139,29 @@ export interface AbandonInfo {
   readingCount: number
   preSymptom: number
   currentSymptom: number
+  /** stable id for this attempt — pairs the record with a later saved log */
+  sessionUid?: string
+  /** true = the page-hide handler already synced an abandoned record; don't send a second */
+  alreadyRecorded?: boolean
+  /** true = the tab/app went away mid-session (not an explicit Cancel tap) */
+  interrupted?: boolean
+}
+
+/** Crypto-quality id where available, timestamp+random elsewhere. */
+function makeSessionUid(): string {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  } catch {
+    /* fall through */
+  }
+  return `${Date.now().toString(16)}-${Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0')}-${Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0')}`
 }
 
 export default function TrainingSession({
   rx,
   onComplete,
   onCancel,
+  onInterrupted,
   liveHr = null,
   hrSourceLabel,
   hrStatus = 'manual',
@@ -147,6 +172,12 @@ export default function TrainingSession({
   onComplete: (log: SessionLog) => void
   /** leave WITHOUT a session log — the page syncs this as an abandoned session */
   onCancel: (info: AbandonInfo) => void
+  /**
+   * The tab/app went away mid-session (pagehide / visibilitychange:hidden).
+   * Syncs the SAME abandoned-session record the Cancel path sends, so a killed
+   * session is never a silent discard. Fired at most once per attempt.
+   */
+  onInterrupted?: (info: AbandonInfo) => void
   /** last-known resting/baseline symptom score — seeds the pre-session check-in */
   initialPreSymptom?: number
   /** live bpm from a paired Bluetooth stream (null = manual entry) */
@@ -183,6 +214,10 @@ export default function TrainingSession({
   // toward completedMinutes.
   const totalMs = rx.sessionMinutes * 60_000
   const sessionStartRef = useRef(0)
+  /** stable id for this attempt — minted at Start, restored on resume */
+  const sessionUidRef = useRef('')
+  /** an abandoned record has already been synced for this attempt */
+  const abandonReportedRef = useRef(false)
   const activeMsRef = useRef(0)
   const [clock, setClock] = useState<{ start: number; now: number } | null>(null)
   useEffect(() => {
@@ -358,6 +393,8 @@ export default function TrainingSession({
       phase === 'active' || phase === 'stopped' || phase === 'summary'
         ? {
             startedAt: sessionStartRef.current || Date.now(),
+            sessionUid: sessionUidRef.current,
+            abandonReported: abandonReportedRef.current,
             rxHrt: rx.hrt,
             phase,
             activeMs: elapsedMs,
@@ -381,6 +418,61 @@ export default function TrainingSession({
     return () => clearInterval(iv)
   }, [phase])
 
+  // ── the tab going away is not a silent discard ──────────────────────────────
+  // Cancel is the only EXPLICIT exit, so a phone call that discarded the Safari
+  // tab lost the whole session: the patient's minutes AND the clinician's
+  // signal. On pagehide / visibilitychange:hidden mid-session we (a) flush the
+  // heartbeat immediately so coming back still resumes, and (b) enqueue the
+  // SAME abandoned-session record the Cancel path sends.
+  //
+  // NEVER TWICE: the report is guarded by a ref AND by `abandonReported` in the
+  // heartbeat, so a reload-then-resume can't fire a second one. The record
+  // carries this attempt's sessionUid, and the saved log carries the same uid —
+  // so a patient who comes back and finishes shows the clinician one COMPLETED
+  // session, not a completed one shadowed by a phantom abandonment.
+  const interruptRef = useRef({ phase, elapsedMs, readings: 0, preSymptom, currentSymptom })
+  interruptRef.current = {
+    phase,
+    elapsedMs,
+    readings: readingsRef.current.length,
+    preSymptom,
+    currentSymptom,
+  }
+  const onInterruptedRef = useRef(onInterrupted)
+  onInterruptedRef.current = onInterrupted
+  useEffect(() => {
+    // 'summary' is excluded on purpose: the session is finished, the snapshot is
+    // in the heartbeat, and it resumes straight back to the Save tap.
+    if (phase !== 'active' && phase !== 'stopped') return
+    const report = () => {
+      const d = interruptRef.current
+      if (d.phase !== 'active' && d.phase !== 'stopped') return
+      // persist FIRST — even if the sync fails, returning must still resume
+      if (hbRef.current) {
+        saveHeartbeat(SESSION_HEARTBEAT_KEY, { ...hbRef.current, abandonReported: true })
+      }
+      if (abandonReportedRef.current) return
+      abandonReportedRef.current = true
+      onInterruptedRef.current?.({
+        elapsedSec: Math.round(d.elapsedMs / 1000),
+        readingCount: d.readings,
+        preSymptom: d.preSymptom,
+        currentSymptom: d.currentSymptom,
+        sessionUid: sessionUidRef.current,
+        interrupted: true,
+      })
+    }
+    const onVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') report()
+    }
+    window.addEventListener('pagehide', report)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', report)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [phase])
+
   /** Restore an interrupted session — only what was really recorded/entered. */
   const applyResume = () => {
     if (!resume) return
@@ -396,6 +488,11 @@ export default function TrainingSession({
     setManualLogs(resume.manualLogs)
     setOverride({ used: resume.overrideUsed, atScore: resume.overrideAtScore })
     sessionStartRef.current = resume.startedAt
+    // Same attempt, same id — so a saved log supersedes the interruption record
+    // rather than sitting beside it. A heartbeat that already reported an
+    // abandonment must not report a second one after the resume.
+    sessionUidRef.current = resume.sessionUid || makeSessionUid()
+    abandonReportedRef.current = resume.abandonReported === true
     // Resume the clock from the ACTIVE time actually accrued — the wall-clock
     // gap across the interruption must never count as completed minutes.
     activeMsRef.current = Math.max(0, Math.min(resume.activeMs, totalMs))
@@ -476,6 +573,9 @@ export default function TrainingSession({
   const buildLog = (): SessionLog => {
     const s = summary
     return {
+      // Pairs this saved session with any interruption record synced from the
+      // pagehide handler — the clinician read side keeps only this one.
+      sessionUid: sessionUidRef.current || undefined,
       date: new Date().toLocaleDateString('en-AU', { month: 'short', day: 'numeric' }),
       avgHeartRate: s?.avg ?? 0,
       peakHeartRate: s?.peak ?? 0,
@@ -581,6 +681,8 @@ export default function TrainingSession({
             setCurrentSymptom(preSymptom)
             setPeakSymptom(preSymptom)
             sessionStartRef.current = Date.now()
+            sessionUidRef.current = makeSessionUid()
+            abandonReportedRef.current = false
             setPhase('active')
           }}
           className="rounded-[18px] py-[17px] text-base"
@@ -917,6 +1019,10 @@ export default function TrainingSession({
                   readingCount: readingsRef.current.length,
                   preSymptom,
                   currentSymptom,
+                  sessionUid: sessionUidRef.current,
+                  // an interruption record already reached the clinician for
+                  // this attempt — the Cancel tap must not add a second
+                  alreadyRecorded: abandonReportedRef.current,
                 })
               }}
               className="flex-1 rounded-2xl bg-(--sst-danger) p-2.5 text-[12.5px] font-bold text-(--sst-on-accent) transition active:scale-[0.98]"

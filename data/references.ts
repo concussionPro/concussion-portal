@@ -1,5 +1,7 @@
 /**
- * The flagship Reference Repository dataset (140+ citations).
+ * The flagship Reference Repository dataset. Its SIZE is published as
+ * REFERENCE_COUNT in data/reference-count.ts (client-safe); never quote a
+ * different number in copy.
  *
  * SECURITY: paid course content — course enrollees / bundle buyers only.
  * Serve it via the authed GET /api/references (or a server component); never

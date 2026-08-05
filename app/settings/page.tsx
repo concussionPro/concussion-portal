@@ -8,6 +8,7 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { useRouter } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
 import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 interface SessionUser {
   email: string
@@ -96,7 +97,10 @@ export default function SettingsPage() {
     if (isFullCourse) return 'Full Course'
     if (ownsCrm && user?.accessLevel === 'preview') return 'Concussion Rehab Mastery'
     if (isPaidUser) return 'Online Course'
-    if (user?.accessLevel === 'preview') return 'Free Preview'
+    // Explicitly !ownsCrm: a CRM buyer's access_level IS 'preview' (entitlement
+    // lives in course_purchases), so a bare preview check here labels a paying
+    // customer "Free Preview".
+    if (!ownsCrm && user?.accessLevel === 'preview') return 'Free Preview'
     return 'Student Account'
   }
 
@@ -109,6 +113,16 @@ export default function SettingsPage() {
   const isCrmOnly = ownsCrm && user?.accessLevel === 'preview'
   const completedModules = isCrmOnly ? completedCrmModules : getTotalCompletedModules()
   const allModulesComplete = completedModules === 8
+  // Quiz pass mark is per-stream and enforced server-side in
+  // app/api/certificate/route.ts (passMarkPercentFor: CRM 80, CCM 75) and in
+  // ProgressContext's quizPassThreshold. Telling a CRM buyer "75%+" is simply
+  // the wrong number for the gate they actually have to clear.
+  const passMarkPercent = isCrmOnly ? 80 : 75
+  const certCourseLabel = isCrmOnly
+    ? `Concussion Rehab Mastery — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ${
+        CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA CPD points' : 'CPD hours'
+      }`
+    : `Online Course — ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD hours`
 
   // SCAT mastery (preview users): check if all 3 free modules are complete
   const scatModuleIds = [101, 102, 103]
@@ -543,7 +557,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Reference Repository</div>
-                        <div className="text-xs text-slate-600 mt-1">140+ academic references</div>
+                        <div className="text-xs text-slate-600 mt-1">{REFERENCE_COUNT} academic references</div>
                       </div>
                       {isPaidUser ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -618,7 +632,7 @@ export default function SettingsPage() {
                             </span>
                           </div>
                           <p className="text-xs text-emerald-700 mb-1">
-                            Online Course — {CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD hours
+                            {certCourseLabel}
                             {isFullCourse && (
                               <span className="block text-emerald-500 mt-0.5">
                                 Workshop CPD ({CONFIG.COURSE.TOTAL_CPD_POINTS - CONFIG.COURSE.ONLINE_CPD_POINTS} points) awarded at your workshop
@@ -626,7 +640,7 @@ export default function SettingsPage() {
                             )}
                           </p>
                           <p className="text-xs text-emerald-600">
-                            All {completedModules} modules completed with 75%+ quiz scores
+                            All {completedModules} modules completed with {passMarkPercent}%+ quiz scores
                           </p>
                         </div>
 
@@ -680,7 +694,7 @@ export default function SettingsPage() {
                           {completedModules}/8 modules completed
                         </p>
                         <p className="text-xs text-slate-500 mb-3">
-                          Complete all 8 modules with 75%+ quiz scores to earn your certificate.
+                          Complete all 8 modules with {passMarkPercent}%+ quiz scores to earn your certificate.
                         </p>
                         <div className="w-full bg-slate-200 rounded-full h-2">
                           <div

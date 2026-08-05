@@ -7,6 +7,7 @@ import { ToolkitSidebar } from './_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
+import { DISCHARGE_TEMPLATE_COUNT, OUTREACH_TEMPLATE_COUNT } from '@/data/hub-program-content'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -86,8 +87,8 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
                 kind="Clinical"
                 kindTone="accent"
                 title="Clinical Toolkit"
-                detail="Six AHPRA-aligned discharge & handover templates: GP, school RTP, parent plan, sports club, WorkCover, NDIS. 3 visible in preview."
-                meta="6 templates · 3 in preview"
+                detail={`${DISCHARGE_TEMPLATE_COUNT} AHPRA-aligned discharge & handover templates: GP, school RTP, parent plan, sports club, WorkCover, NDIS, ACC884 and medicolegal record. 3 visible in preview.`}
+                meta={`${DISCHARGE_TEMPLATE_COUNT} templates · 3 in preview`}
                 icon={FileText}
               />
               <ToolkitCard
@@ -96,8 +97,8 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
                 kind="Outreach"
                 kindTone="slate"
                 title="Outreach Kit"
-                detail={`Six referral-building templates: schools, clubs, GPs, surf life saving, endurance sport, plus ${clinic.shortName}'s capability one-pager. 3 visible in preview.`}
-                meta="6 templates · 3 in preview"
+                detail={`${OUTREACH_TEMPLATE_COUNT} referral-building templates: schools, clubs, GPs, surf life saving, endurance sport, plus ${clinic.shortName}'s capability one-pager. 3 visible in preview.`}
+                meta={`${OUTREACH_TEMPLATE_COUNT} templates · 3 in preview`}
                 icon={Mail}
               />
               <ToolkitCard

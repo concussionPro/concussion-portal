@@ -8,6 +8,7 @@ import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
 import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 export default function SydneyPage() {
   const location = CONFIG.LOCATIONS.SYDNEY as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
@@ -92,7 +93,7 @@ export default function SydneyPage() {
                 'Clinical decision-making in acute concussion',
                 `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules`,
                 'Fillable SCAT6 / SCOAT6 / Child SCAT6 PDFs',
-                '140+ evidence-based references & Clinical Reference PDF',
+                `${REFERENCE_COUNT} evidence-based references & Clinical Reference PDF`,
                 'Catered lunch included — plus morning and afternoon tea',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">

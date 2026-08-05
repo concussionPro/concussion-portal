@@ -51,7 +51,7 @@ export function ClinicalToolkitDoc({
   const effectiveSectionLimit = isPreviewMode ? (previewSectionLimit ?? 0) : previewSectionLimit
   return (
     <FillableDoc storageKey={storageKey} defaultValues={defaultValues} previewMode={isPreviewMode} requireSignoff={requireSignoff && !isPreviewMode}>
-      <Cover isPreviewMode={isPreviewMode} />
+      <Cover isPreviewMode={isPreviewMode} templateCount={templates.length} />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
         isVisible(t.slug)
@@ -105,7 +105,7 @@ function LockedTemplateCard({ template, unlockHref }: { template: DischargeTempl
 // COVER
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Cover({ isPreviewMode }: { isPreviewMode?: boolean }) {
+function Cover({ isPreviewMode, templateCount }: { isPreviewMode?: boolean; templateCount: number }) {
   return (
     <section className="bg-white rounded-2xl border border-accent/10 p-6 sm:p-10 mb-6 shadow-sm print:shadow-none print:border-0 print:rounded-none print:break-after-page">
       <div className="flex items-center gap-3 mb-6">
@@ -129,7 +129,7 @@ function Cover({ isPreviewMode }: { isPreviewMode?: boolean }) {
         Clinical Toolkit
       </h1>
       <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-        Six concussion discharge and handover templates — structured against the 2023 Amsterdam Consensus Statement, AHPRA-aligned, and built for clinician sign-off. Each is fillable, then printed or saved to PDF on your clinic letterhead.
+        {templateCount} concussion discharge and handover templates — structured against the 2023 Amsterdam Consensus Statement, AHPRA-aligned, and built for clinician sign-off. Each is fillable, then printed or saved to PDF on your clinic letterhead.
       </p>
 
       {!isPreviewMode && (

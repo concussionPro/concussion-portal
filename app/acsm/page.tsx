@@ -2,6 +2,7 @@ import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { CONFIG } from '@/lib/config'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * /acsm — the ACSM listing landing page (asset A10).
@@ -109,8 +110,8 @@ export default function AcsmLandingPage() {
           <h2 className="text-xl font-bold tracking-tight">What the course is</h2>
           <p className="mt-2 text-[14px] text-slate-600">
             Eight online modules · {TOTAL_MINS / 60} instructional hours · 87
-            assessment questions distributed across the modules · 80% pass mark ·
-            136 peer-reviewed references.
+            assessment questions distributed across the modules · 80% pass mark ·{' '}
+            {REFERENCE_COUNT} peer-reviewed references.
           </p>
           <ol className="mt-5 divide-y divide-slate-100 rounded-xl border border-slate-200">
             {MODULES.map((m) => (

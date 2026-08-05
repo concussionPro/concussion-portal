@@ -6,7 +6,9 @@
  *   - nurture_unsubscribed != true
  *   - created within last 180 days (filter long-dormant)
  *   - opened OR clicked any CEA-project email in last 60 days
- *   - NOT already enrolled at Melbourne workshop (full-course + workshop_location='melbourne')
+ *   - NOT already enrolled at the Melbourne practical day — EITHER stream:
+ *     CCM (full-course + workshop_location='melbourne') OR CRM
+ *     (course_purchases 'crm-practical' + workshop_location='melbourne')
  *
  * GET ?dryRun=1 (default)             → preview audience, no sends
  * POST ?confirm=mel-eb-last-call-2026-05-30 → actually fires
@@ -72,6 +74,18 @@ async function findTargets(): Promise<Target[]> {
         WHERE LOWER(u2.email) = LOWER(u.email)
           AND u2.access_level = 'full-course'
           AND u2.workshop_location = 'melbourne'
+      )
+      -- ...and the CRM (EP stream) half of the SAME shared practical day. A
+      -- CRM Complete/upgrade buyer's access_level stays 'preview' (isolated
+      -- streams, lib/crm-course.ts), so the test above matched none of them —
+      -- this blast could dun a customer to buy the Melbourne seat they had
+      -- already paid for.
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        JOIN users u3 ON LOWER(u3.email) = LOWER(cp.user_email)
+        WHERE LOWER(cp.user_email) = LOWER(u.email)
+          AND cp.course_slug = 'crm-practical'
+          AND u3.workshop_location = 'melbourne'
       )
     ORDER BY (COALESCE(e.clicks_60d, 0) * 3 + COALESCE(e.opens_60d, 0)) DESC
   `

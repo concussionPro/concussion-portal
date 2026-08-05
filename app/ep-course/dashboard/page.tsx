@@ -13,8 +13,8 @@
  */
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useState, useEffect } from 'react'
 import {
   Brain,
   CheckCircle2,
@@ -32,6 +32,7 @@ import {
   BadgeCheck,
   ShieldCheck,
   Stethoscope,
+  Mail,
 } from 'lucide-react'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { getEpModulesMeta, epProgressId } from '@/data/ep-module-meta'
@@ -39,10 +40,10 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { cn } from '@/lib/utils'
 import { CONFIG } from '@/lib/config'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 // Upgrade offer for unauthenticated visitors — mirrors the module page screen.
-function UpgradeOfferScreen({ router }: { router: AppRouterInstance }) {
+function UpgradeOfferScreen() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <main className="flex-1 p-4 sm:p-6 md:p-8">
@@ -51,29 +52,35 @@ function UpgradeOfferScreen({ router }: { router: AppRouterInstance }) {
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-lg">
               <Lock className="w-9 h-9 text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-4">Professional CPD Course</h1>
+            {/* STREAM-CORRECT: this is the EP course's own door. It used to pitch
+                the CCM flagship (SHOP_URL, "AHPRA CPD hours", free SCAT6) to
+                someone who had come looking for — or had just bought — CRM. */}
+            <h1 className="text-3xl font-bold text-white mb-4">Concussion Rehab Mastery</h1>
             <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-              This course is part of our{' '}
-              <strong className="text-white">complete 8-module professional program</strong>. Get
-              instant access to all modules, downloadable resources, and earn{' '}
-              <strong className="text-white">up to 8 AHPRA CPD hours</strong>.
+              The complete{' '}
+              <strong className="text-white">8-module rehab course for exercise physiologists</strong>.
+              Enrol for instant access to every module and{' '}
+              <strong className="text-white">
+                {CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online
+              </strong>{' '}
+              ({CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD hours with the practical day).
             </p>
             <a
-              href={CONFIG.SHOP_URL}
+              href="/concussion-rehab-mastery"
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 mb-4"
             >
-              View Course Details &amp; Enrol
+              Enrol Now — from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}
               <ArrowRight className="w-5 h-5" />
             </a>
-            <div className="mt-6 pt-6 border-t border-white/20">
-              <p className="text-slate-300 text-sm mb-4">Looking for free training?</p>
-              <button
-                onClick={() => router.push('/scat-mastery')}
+            <p className="text-slate-300 text-sm mt-2">
+              Already enrolled?{' '}
+              <Link
+                href={`/login?redirect=${encodeURIComponent('/ep-course/dashboard')}`}
                 className="text-amber-400 hover:text-amber-300 underline font-semibold"
               >
-                Try Our Free SCAT6 Course →
-              </button>
-            </div>
+                Log in
+              </Link>
+            </p>
           </div>
         </div>
       </main>
@@ -129,10 +136,22 @@ export default function EpCourseDashboard() {
   }
 
   if (!isAuthenticated) {
-    return <UpgradeOfferScreen router={router} />
+    return <UpgradeOfferScreen />
   }
 
-  return <DashboardContent />
+  // Suspense boundary: DashboardContent reads ?purchase=success via
+  // useSearchParams, which Next requires to sit under one.
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen bg-slate-50 items-center justify-center">
+          <Loader2 className="w-8 h-8 text-accent animate-spin" />
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
+  )
 }
 
 // Circular progress ring — the centrepiece of the progress panel.
@@ -187,6 +206,29 @@ function DashboardContent() {
   const { isModuleComplete, getModuleProgress } = useProgress()
   const modules = getEpModulesMeta()
   const [showCert, setShowCert] = useState(false)
+  const [certEmail, setCertEmail] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  // Post-checkout confirmation. Stripe's CRM success_url now lands on the
+  // stream-neutral, Stripe-validated /checkout/success, but the welcome email
+  // and any older/bookmarked success link still arrive here with
+  // ?purchase=success — the page used to ignore it entirely.
+  const searchParams = useSearchParams()
+  const justPurchased = searchParams.get('purchase') === 'success'
+
+  const emailCertificate = async () => {
+    setCertEmail('sending')
+    try {
+      const res = await fetch('/api/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'crm' }),
+        credentials: 'include',
+      })
+      const data = await res.json().catch(() => ({}))
+      setCertEmail(data?.success ? 'sent' : 'error')
+    } catch {
+      setCertEmail('error')
+    }
+  }
   // The bundled platform (SST Trainer + Baseline) — provisioning grants the
   // SST entitlement, so CRM buyers resolve door 'sst'. Surfaced FIRST in the
   // resources grid: the tool is the differentiator the course sells.
@@ -222,6 +264,22 @@ function DashboardContent() {
       <EpCourseNavigation />
       <main className="flex-1 w-full overflow-y-auto">
         <div className="max-w-4xl mx-auto py-8 md:py-12 px-4 sm:px-6 md:px-8 lg:px-12">
+          {justPurchased && (
+            <div className="mb-6 rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-5 flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <div className="text-base font-bold text-slate-900">Enrolment confirmed</div>
+                <p className="text-sm text-slate-600 mt-0.5 leading-relaxed">
+                  Concussion Rehab Mastery is yours — {totalModules} modules, {totalCPD}{' '}
+                  {CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA CPD points' : 'CPD hours'} on completion.
+                  Your tax invoice and a sign-in link are on their way by email.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Editorial hero */}
           <div className="mb-8">
             <div className="flex flex-col gap-1 mb-4">
@@ -307,26 +365,62 @@ function DashboardContent() {
             </button>
           )}
 
+          {/* Stable anchor for /ep-course/dashboard#certificate — the module
+              player's completion CTA and the sidebar Certificate row both land
+              here, so it must exist whether or not the course is finished. */}
+          <div id="certificate" className="scroll-mt-24" />
+
           {allComplete && (
-            <div className="mb-9 rounded-2xl bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 p-6 flex flex-col sm:flex-row sm:items-center gap-5">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-teal-500 flex items-center justify-center shadow-sm">
-                <Sparkles className="w-6 h-6 text-white" strokeWidth={2} />
-              </div>
-              <div className="flex-1">
-                <div className="text-base sm:text-lg font-bold text-slate-900">Course complete</div>
-                <div className="text-sm text-slate-600 mt-0.5">
-                  You&apos;ve finished all {totalModules} modules and earned {totalCPD} CPD hours.
+            <div className="mb-9 rounded-2xl bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-teal-500 flex items-center justify-center shadow-sm">
+                  <Sparkles className="w-6 h-6 text-white" strokeWidth={2} />
+                </div>
+                <div className="flex-1">
+                  <div className="text-base sm:text-lg font-bold text-slate-900">Course complete</div>
+                  <div className="text-sm text-slate-600 mt-0.5">
+                    You&apos;ve finished all {totalModules} modules and earned {totalCPD} CPD hours.
+                  </div>
+                </div>
+                {/* Real ESSA CPD certificate — generated + verified server-side
+                    (/api/certificate?type=crm recomputes every quiz from saved
+                    answers before issuing). */}
+                <div className="flex flex-wrap gap-2 flex-shrink-0">
+                  <a
+                    href="/api/certificate?type=crm"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm"
+                  >
+                    Download CPD certificate
+                  </a>
+                  {/* The POST branch of /api/certificate carries the CRM-specific
+                      email body (practical-day next step, never the CCM pitch).
+                      Without a button it was unreachable code — the only CRM cert
+                      entry point was this plain GET link (2026-08-05 parity). */}
+                  <button
+                    type="button"
+                    onClick={emailCertificate}
+                    disabled={certEmail === 'sending'}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 border-teal-600 text-teal-700 font-semibold text-sm transition-colors hover:bg-teal-50 disabled:opacity-60"
+                  >
+                    {certEmail === 'sending' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Mail className="w-4 h-4" />
+                    )}
+                    Email it to me
+                  </button>
                 </div>
               </div>
-              {/* Real ESSA CPD certificate — generated + verified server-side
-                  (/api/certificate?type=crm recomputes every quiz from saved
-                  answers before issuing). */}
-              <a
-                href="/api/certificate?type=crm"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm flex-shrink-0"
-              >
-                Download CPD certificate
-              </a>
+              {certEmail === 'sent' && (
+                <p className="text-xs text-teal-700 font-medium mt-3" role="status" aria-live="polite">
+                  Certificate emailed — check your inbox.
+                </p>
+              )}
+              {certEmail === 'error' && (
+                <p className="text-xs text-red-600 font-medium mt-3" role="status" aria-live="polite">
+                  Email failed — use the download button instead.
+                </p>
+              )}
             </div>
           )}
 
@@ -585,16 +679,41 @@ function CourseAuthorPanel() {
                 <dd className="text-sm text-slate-700 font-medium mt-0.5">
                   Concussion Rehab Mastery
                 </dd>
-                <dd className="text-xs text-slate-500">8 modules · 8 CPD hours · 80% quiz pass mark · 136 references</dd>
+                <dd className="text-xs text-slate-500">8 modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours · 80% quiz pass mark · {REFERENCE_COUNT} references</dd>
               </div>
               <div className="sm:col-span-2">
-                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Endorsement status</dt>
+                <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                  {CONFIG.FEATURES.ESSA_ACCREDITED ? 'Accreditation status' : 'Endorsement status'}
+                </dt>
+                {/* Flag-driven, never hand-written. This block told paying CRM
+                    buyers their accreditation was "pending" for 12 days AFTER
+                    ESSA granted it (2026-07-24). Terms live in
+                    CONFIG.ESSA_ACCREDITATION — one edit on approval/lapse. */}
                 <dd className="text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  ESSA endorsement of Concussion Rehab Mastery is{' '}
-                  <strong className="text-slate-700">pending</strong> — under review by two ESSA-appointed
-                  reviewers; no ESSA endorsement is currently held or claimed. Osteopathy Australia&apos;s
-                  CPD endorsement applies to the companion Concussion Clinical Mastery program, not to this
-                  course.
+                  {CONFIG.FEATURES.ESSA_ACCREDITED ? (
+                    <>
+                      Concussion Rehab Mastery is{' '}
+                      <strong className="text-slate-700">accredited by Exercise &amp; Sports Science
+                      Australia (ESSA)</strong> — accreditation no.{' '}
+                      {CONFIG.ESSA_ACCREDITATION.NUMBER} (Online), valid to{' '}
+                      {new Date(CONFIG.ESSA_ACCREDITATION.VALID_UNTIL).toLocaleDateString('en-AU', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                      . {CONFIG.ESSA_ACCREDITATION.statement(CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS)}{' '}
+                      Osteopathy Australia&apos;s CPD endorsement applies to the companion Concussion
+                      Clinical Mastery program, not to this course.
+                    </>
+                  ) : (
+                    <>
+                      ESSA endorsement of Concussion Rehab Mastery is{' '}
+                      <strong className="text-slate-700">pending</strong> — under review by two
+                      ESSA-appointed reviewers; no ESSA endorsement is currently held or claimed.
+                      Osteopathy Australia&apos;s CPD endorsement applies to the companion Concussion
+                      Clinical Mastery program, not to this course.
+                    </>
+                  )}
                 </dd>
               </div>
               <div className="sm:col-span-2">
@@ -697,8 +816,9 @@ function QualityPolicyPanel() {
 // #5b9aa6 border/accents, CEA header, Zac Lewis signature block). It is
 // populated ONLY with known-true facts. The OA endorsement line that the live
 // PDF template carries is deliberately omitted here — OA endorses the companion
-// CCM program, not this course. A placeholder marks where an accreditation /
-// registration number would sit once an accreditor assigns one.
+// CCM program, not this course. The accreditation block mirrors the real PDF:
+// the ESSA number + mandated statement when ESSA_ACCREDITED, a placeholder
+// otherwise.
 function SampleCertificateModal({ onClose }: { onClose: () => void }) {
   const teal = '#5b9aa6'
   return (
@@ -776,9 +896,19 @@ function SampleCertificateModal({ onClose }: { onClose: () => void }) {
               {/* Details grid */}
               <div className="mt-7 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl mx-auto">
                 <div>
-                  <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">CPD hours awarded</div>
-                  <div className="text-xl sm:text-2xl font-bold mt-1" style={{ color: teal }}>8</div>
-                  <div className="text-[9px] sm:text-[10px] text-slate-400">AHPRA-Aligned</div>
+                  <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">
+                    {CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA CPD points awarded' : 'CPD hours awarded'}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-bold mt-1" style={{ color: teal }}>
+                    {CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS}
+                  </div>
+                  {/* "AHPRA-Aligned" is the wrong body for an EP audience — ESSA
+                      accredits exercise physiologists. The real PDF
+                      (lib/certificate.ts, courseType 'crm-online') already
+                      prints the ESSA line; the specimen now matches it. */}
+                  <div className="text-[9px] sm:text-[10px] text-slate-400">
+                    {CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA CPD Points' : 'Accreditation pending'}
+                  </div>
                 </div>
                 <div>
                   <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">Date of completion</div>
@@ -791,13 +921,31 @@ function SampleCertificateModal({ onClose }: { onClose: () => void }) {
               </div>
 
               {/* Accreditation / registration number region */}
-              <div className="mt-6 mx-auto max-w-md rounded-md border border-dashed border-slate-300 bg-slate-50/70 px-4 py-2.5">
+              <div
+                className={cn(
+                  'mt-6 mx-auto max-w-md rounded-md px-4 py-2.5',
+                  CONFIG.FEATURES.ESSA_ACCREDITED
+                    ? 'border border-slate-200 bg-white'
+                    : 'border border-dashed border-slate-300 bg-slate-50/70',
+                )}
+              >
                 <div className="text-[9px] sm:text-[10px] tracking-wide text-slate-400 uppercase">
                   Accreditation / registration number
                 </div>
-                <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-                  [ Assigned by the accrediting body on approval — e.g. ACSM / CASES / HPCSA / CEP-UK ]
-                </div>
+                {CONFIG.FEATURES.ESSA_ACCREDITED ? (
+                  <div className="text-[11px] sm:text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    ESSA Accreditation No.{' '}
+                    <strong className="text-slate-700">{CONFIG.ESSA_ACCREDITATION.NUMBER}</strong> (Online)
+                    <br />
+                    <span className="text-slate-500">
+                      {CONFIG.ESSA_ACCREDITATION.statement(CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                    [ Assigned by the accrediting body on approval ]
+                  </div>
+                )}
               </div>
 
               {/* Signature block */}

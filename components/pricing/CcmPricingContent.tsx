@@ -379,8 +379,8 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               prop before the OA block. */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
             <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">14<span className="text-base font-semibold">hrs</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD (8 online + 6)</p>
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">{CONFIG.COURSE.TOTAL_CPD_POINTS}<span className="text-base font-semibold">hrs</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS})</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
               <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>

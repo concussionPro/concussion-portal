@@ -1,5 +1,7 @@
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
+import { CRM_PRACTICAL_SLUG } from '@/lib/crm-course'
+import { ensureCoursePurchasesTable } from '@/lib/course-purchases'
 import crypto from 'crypto'
 
 export interface User {
@@ -138,6 +140,13 @@ async function ensureColumns() {
     // unlocks the tools while course content stays purchase-gated (their
     // access_level stays 'preview'). Independent of course access.
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS sst_entitled_at TIMESTAMPTZ`
+    // WHEN the buyer nominated their city (2026-08-05). created_at is the
+    // ACCOUNT date, which is wrong for every upgrader: someone who signs up
+    // free on day 0 and buys the Complete course on day 56 was, by created_at,
+    // past every workshop-email window on the day they paid, and invisible to a
+    // round threshold that scopes on created_at >= ROUND_START. This column is
+    // stamped whenever workshop_location is actually set/changed.
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS workshop_location_set_at TIMESTAMPTZ`
   } catch {
     // Column already exists or permissions differ — safe to continue
   }
@@ -221,7 +230,7 @@ export async function createUser(data: {
   // Atomic upsert: INSERT or update on conflict
   // ON CONFLICT uses the unique index on LOWER(email)
   const { rows } = await sql`
-    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, signup_source, converted_from, source_prospect_slug)
+    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, workshop_location_set_at, signup_source, converted_from, source_prospect_slug)
     VALUES (
       ${id},
       ${data.email},
@@ -232,6 +241,7 @@ export async function createUser(data: {
       ${data.stripeCustomerId || null},
       ${data.stripeSubscriptionId || null},
       ${data.workshopLocation || null},
+      ${data.workshopLocation ? new Date().toISOString() : null},
       ${data.signupSource || null},
       ${null},
       ${data.sourceProspectSlug || null}
@@ -246,6 +256,15 @@ export async function createUser(data: {
       stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, users.stripe_customer_id),
       stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, users.stripe_subscription_id),
       workshop_location = COALESCE(EXCLUDED.workshop_location, users.workshop_location),
+      -- Stamp the nomination time whenever a city is ACTUALLY set or changed.
+      -- This is the date the workshop lanes and the round threshold read for
+      -- an upgrader whose account long predates the purchase.
+      workshop_location_set_at = CASE
+        WHEN EXCLUDED.workshop_location IS NOT NULL
+          AND EXCLUDED.workshop_location IS DISTINCT FROM users.workshop_location
+        THEN EXCLUDED.workshop_location_set_at
+        ELSE COALESCE(users.workshop_location_set_at, EXCLUDED.workshop_location_set_at)
+      END,
       signup_source = COALESCE(EXCLUDED.signup_source, users.signup_source),
       converted_from = CASE
         WHEN users.signup_source IS NOT NULL AND EXCLUDED.signup_source IS NOT NULL AND users.signup_source != EXCLUDED.signup_source
@@ -287,74 +306,238 @@ async function ensureEmailIndex() {
 // revenue and don't move thresholds.
 const COMP_SOURCE = 'alumni-grant'
 
-export async function getEnrollmentCount(location: string): Promise<number> {
-  const roundStart = CONFIG.WORKSHOP.ROUND_START[location]
-  if (roundStart) {
-    const { rows } = await sql`
-      SELECT COUNT(*)::int AS count FROM users
-      WHERE access_level = 'full-course'
-        AND workshop_location = ${location}
-        AND created_at >= ${roundStart}
-        AND is_test IS NOT TRUE
-        AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
-    `
-    return rows[0]?.count || 0
-  }
-  const { rows } = await sql`
-    SELECT COUNT(*)::int AS count FROM users
-    WHERE access_level = 'full-course' AND workshop_location = ${location}
-      AND is_test IS NOT TRUE
-      AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
-  `
-  return rows[0]?.count || 0
+/**
+ * course_purchases slugs the CCM Complete/workshop sale writes: 'ccm-complete'
+ * on the first purchase (including an online-only → Complete UPGRADE) and
+ * 'ccm-complete-repeat-<session>' when an existing full-course buyer nominates
+ * a new round. The LIKE prefix covers both. 'ccm-online' is deliberately
+ * excluded — it buys no practical-day seat.
+ */
+const CCM_COMPLETE_SLUG_PREFIX = 'ccm-complete%'
+
+/**
+ * One person holding a seat at the practical day, and which stream sold it.
+ *
+ * `registeredAt` is the PURCHASE time, never the account-creation time. In
+ * priority order:
+ *   1. course_purchases 'crm-practical'   — the CRM seat sale;
+ *   2. course_purchases 'ccm-complete%'   — the CCM Complete sale, INCLUDING an
+ *      online-only → Complete upgrade and a repeat-round nomination;
+ *   3. users.workshop_location_set_at     — the nomination itself, for seats
+ *      set outside a Stripe purchase (admin grant, /api/workshop/nominate);
+ *   4. users.created_at                   — legacy rows that predate all three.
+ *
+ * created_at alone was WRONG for every upgrader (2026-08-05): a free lead from
+ * day 0 who buys the Complete course on day 56 has an account date months
+ * before the round they just paid to attend, so a round scoped on created_at
+ * dropped them from the count, the registrant table and /admin/ready-to-train
+ * — while course_purchases held the correct date all along.
+ */
+export interface PracticalDayAttendee {
+  id: string
+  name: string
+  email: string
+  registeredAt: string
+  stream: 'ccm' | 'crm'
 }
 
-// Get full-course enrollments grouped by location (for admin dashboard).
-// Applies the SAME round scoping as getEnrollmentCount — previously this
-// listed all-time registrants while the count was round-scoped, so the
-// admin board's number and its registrant table disagreed.
-export async function getEnrollmentsByLocation(location: string): Promise<Array<{ name: string; email: string; createdAt: string }>> {
+/**
+ * THE roster for the SHARED CCM/CRM practical day (single source of truth).
+ *
+ * The in-person day is explicitly shared between the two streams
+ * (lib/crm-course.ts), and CRM checkout REQUIRES a city — so a CRM
+ * Complete/upgrade buyer has PAID for a seat. But their CCM `access_level`
+ * stays 'preview' by design (the streams are isolated), so every historical
+ * `access_level = 'full-course'` seat query counted zero of them: invisible on
+ * the seat board, absent from the confirmation threshold, missing from the
+ * roster Zac reads names off on the day, and simultaneously dunned to buy the
+ * seat they already own.
+ *
+ * Union of:
+ *   (a) users with access_level 'full-course' nominated to this city, and
+ *   (b) owners of course_purchases slug 'crm-practical' nominated to this city.
+ *
+ * Same PAID-registrant filter as before for both: internal/test accounts
+ * (is_test) and comped access (signup_source 'alumni-grant') never move a
+ * threshold or occupy a paid seat. Same round scoping too — a past-round
+ * attendee must not consume the active round's capacity.
+ */
+export async function practicalDayAttendees(location: string): Promise<PracticalDayAttendee[]> {
+  await ensureCoursePurchasesTable()
   const roundStart = CONFIG.WORKSHOP.ROUND_START[location]
   const { rows } = roundStart
-    ? await sql`
-        SELECT name, email, created_at FROM users
-        WHERE access_level = 'full-course'
-          AND workshop_location = ${location}
-          AND created_at >= ${roundStart}
-          AND is_test IS NOT TRUE
-          AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
-        ORDER BY created_at DESC
+    ? await sql<PracticalDayAttendeeRow>`
+        SELECT DISTINCT ON (u.id)
+          u.id, u.name, u.email,
+          COALESCE(
+            cp.purchased_at,
+            (SELECT MAX(c2.purchased_at) FROM course_purchases c2
+              WHERE LOWER(c2.user_email) = LOWER(u.email)
+                AND c2.course_slug LIKE ${CCM_COMPLETE_SLUG_PREFIX}),
+            u.workshop_location_set_at,
+            u.created_at
+          ) AS registered_at,
+          CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
+        FROM users u
+        LEFT JOIN course_purchases cp
+          ON LOWER(cp.user_email) = LOWER(u.email)
+         AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
+        WHERE u.workshop_location = ${location}
+          AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
+          AND COALESCE(
+            cp.purchased_at,
+            (SELECT MAX(c2.purchased_at) FROM course_purchases c2
+              WHERE LOWER(c2.user_email) = LOWER(u.email)
+                AND c2.course_slug LIKE ${CCM_COMPLETE_SLUG_PREFIX}),
+            u.workshop_location_set_at,
+            u.created_at
+          ) >= ${roundStart}
+          AND u.is_test IS NOT TRUE
+          AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}
+        ORDER BY u.id, registered_at DESC
       `
-    : await sql`
-        SELECT name, email, created_at FROM users
-        WHERE access_level = 'full-course' AND workshop_location = ${location}
-          AND is_test IS NOT TRUE
-          AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
-        ORDER BY created_at DESC
+    : await sql<PracticalDayAttendeeRow>`
+        SELECT DISTINCT ON (u.id)
+          u.id, u.name, u.email,
+          COALESCE(
+            cp.purchased_at,
+            (SELECT MAX(c2.purchased_at) FROM course_purchases c2
+              WHERE LOWER(c2.user_email) = LOWER(u.email)
+                AND c2.course_slug LIKE ${CCM_COMPLETE_SLUG_PREFIX}),
+            u.workshop_location_set_at,
+            u.created_at
+          ) AS registered_at,
+          CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
+        FROM users u
+        LEFT JOIN course_purchases cp
+          ON LOWER(cp.user_email) = LOWER(u.email)
+         AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
+        WHERE u.workshop_location = ${location}
+          AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
+          AND u.is_test IS NOT TRUE
+          AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}
+        ORDER BY u.id, registered_at DESC
       `
-  return rows.map(r => ({
+  return rows.map(toAttendee).sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
+}
+
+interface PracticalDayAttendeeRow {
+  id: string
+  name: string
+  email: string
+  registered_at: Date | string
+  stream: 'ccm' | 'crm'
+}
+
+function toAttendee(r: PracticalDayAttendeeRow): PracticalDayAttendee {
+  return {
+    id: r.id,
     name: r.name,
     email: r.email,
-    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+    registeredAt: r.registered_at instanceof Date ? r.registered_at.toISOString() : r.registered_at,
+    stream: r.stream,
+  }
+}
+
+// Count paid seats at a location's practical day — feeds
+// CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD. Both streams count: the day is
+// shared, so a CRM seat fills the room exactly like a CCM one.
+export async function getEnrollmentCount(location: string): Promise<number> {
+  return (await practicalDayAttendees(location)).length
+}
+
+// The registrant roster for a location (admin dashboard). Same helper as the
+// count, so the board's number and its table can never disagree again.
+export async function getEnrollmentsByLocation(
+  location: string,
+): Promise<Array<{ name: string; email: string; createdAt: string; stream: 'ccm' | 'crm' }>> {
+  const attendees = await practicalDayAttendees(location)
+  return attendees.map((a) => ({
+    name: a.name,
+    email: a.email,
+    createdAt: a.registeredAt,
+    stream: a.stream,
   }))
 }
 
-// PAID full-course users with NO workshop location — legacy/manual sales
-// without a city. Excludes internal (is_test) and comped accounts: the board
-// labels these "Paid Registrants", so only genuinely paid rows may appear.
-export async function getEnrollmentsWithoutLocation(): Promise<Array<{ name: string; email: string; createdAt: string }>> {
-  const { rows } = await sql`
-    SELECT name, email, created_at FROM users
-    WHERE access_level = 'full-course' AND workshop_location IS NULL
-      AND is_test IS NOT TRUE
-      AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
-    ORDER BY created_at DESC
+// PAID practical-day seats with NO workshop location — legacy/manual sales
+// without a city (and any CRM seat whose nomination never landed on the users
+// row). Excludes internal (is_test) and comped accounts: the board labels
+// these "Paid Registrants", so only genuinely paid rows may appear.
+export async function getEnrollmentsWithoutLocation(): Promise<
+  Array<{ name: string; email: string; createdAt: string; stream: 'ccm' | 'crm' }>
+> {
+  await ensureCoursePurchasesTable()
+  const { rows } = await sql<PracticalDayAttendeeRow>`
+    SELECT DISTINCT ON (u.id)
+      u.id, u.name, u.email,
+      COALESCE(
+        cp.purchased_at,
+        (SELECT MAX(c2.purchased_at) FROM course_purchases c2
+          WHERE LOWER(c2.user_email) = LOWER(u.email)
+            AND c2.course_slug LIKE ${CCM_COMPLETE_SLUG_PREFIX}),
+        u.workshop_location_set_at,
+        u.created_at
+      ) AS registered_at,
+      CASE WHEN u.access_level = 'full-course' THEN 'ccm' ELSE 'crm' END AS stream
+    FROM users u
+    LEFT JOIN course_purchases cp
+      ON LOWER(cp.user_email) = LOWER(u.email)
+     AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
+    WHERE u.workshop_location IS NULL
+      AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
+      AND u.is_test IS NOT TRUE
+      AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}
+    ORDER BY u.id, registered_at DESC
   `
-  return rows.map(r => ({
-    name: r.name,
-    email: r.email,
-    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
-  }))
+  return rows
+    .map(toAttendee)
+    .sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
+    .map((a) => ({ name: a.name, email: a.email, createdAt: a.registeredAt, stream: a.stream }))
+}
+
+/**
+ * email (lowercased) → ISO timestamp the user ENROLLED for a practical day.
+ *
+ * Same priority chain as practicalDayAttendees.registeredAt, loaded in one
+ * query so a per-run cron can key its workshop lanes on the PURCHASE date
+ * instead of users.created_at. Without it, the day-1 reservation email and the
+ * momentum sequence both measured "days since signup" from the account date —
+ * so a free lead who upgraded on day 56 was past every window on the day they
+ * paid $693, and received none of the workshop emails they had just bought
+ * their way into.
+ *
+ * Returns an empty map on failure: callers fall back to created_at, which is
+ * exactly the pre-fix behaviour (never a wrong send, just the old one).
+ */
+export async function loadWorkshopEnrolmentDates(): Promise<Map<string, string>> {
+  try {
+    await ensureColumns()
+    await ensureCoursePurchasesTable()
+    const { rows } = await sql<{ email: string; enrolled_at: Date | string }>`
+      SELECT LOWER(u.email) AS email,
+             COALESCE(
+               (SELECT MAX(c.purchased_at) FROM course_purchases c
+                 WHERE LOWER(c.user_email) = LOWER(u.email)
+                   AND (c.course_slug = ${CRM_PRACTICAL_SLUG} OR c.course_slug LIKE ${CCM_COMPLETE_SLUG_PREFIX})),
+               u.workshop_location_set_at
+             ) AS enrolled_at
+      FROM users u
+      WHERE u.workshop_location IS NOT NULL
+    `
+    const map = new Map<string, string>()
+    for (const r of rows) {
+      if (!r.enrolled_at) continue
+      map.set(
+        r.email,
+        r.enrolled_at instanceof Date ? r.enrolled_at.toISOString() : String(r.enrolled_at),
+      )
+    }
+    return map
+  } catch (err) {
+    console.error('[users] loadWorkshopEnrolmentDates failed — falling back to created_at:', err)
+    return new Map()
+  }
 }
 
 // Update user's last login

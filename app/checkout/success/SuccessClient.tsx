@@ -6,12 +6,23 @@ import Link from 'next/link'
 import { CheckCircle2, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } from 'lucide-react'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackPurchaseConversion, trackEvent } from '@/lib/analytics'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 
 interface SessionData {
   customerName: string
   customerEmail?: string
   courseType: string
+  /**
+   * Purchase stream. 'crm' = Concussion Rehab Mastery (EP). CRM sessions carry
+   * no `courseType`, so before this existed they defaulted to 'online-only' and
+   * an exercise physiologist who had just paid for CRM was shown the CCM
+   * confirmation — Start Module 1 into the flagship course, SCAT6/VOMS/BESS
+   * outcomes, and a CCM workshop upsell (2026-08-05 CRM/CCM parity).
+   */
+  stream?: 'ccm' | 'crm'
+  /** CRM tier ('online' | 'complete' | 'upgrade'); empty for CCM. */
+  tier?: string
   location: string
   amountPaid: number
   currency?: string
@@ -136,11 +147,37 @@ function CheckoutSuccessContent() {
     )
   }
 
-  const isFullCourseType = sessionData?.courseType === 'full-course' || sessionData?.courseType === 'workshop-upgrade'
-
-  const courseName = isFullCourseType
-    ? `Complete Course${sessionData?.location ? ` — ${formatLocation(sessionData.location)}` : ''}`
-    : 'Online Course'
+  // CRM (Concussion Rehab Mastery, EP stream). Everything CCM-specific below —
+  // /modules/1, the SCAT6/VOMS/BESS outcomes, the CCM workshop upgrade, the free
+  // SCAT6 referral — is wrong for an exercise physiologist and is branched off
+  // this flag rather than duplicated into a second success page.
+  const isCrm = sessionData?.stream === 'crm'
+  const crmTier = sessionData?.tier || 'online'
+  const isFullCourseType = isCrm
+    ? crmTier === 'complete' || crmTier === 'upgrade'
+    : sessionData?.courseType === 'full-course' || sessionData?.courseType === 'workshop-upgrade'
+  // "Upgrade" purchases already own the online course — send them to the hub,
+  // not into module 1.
+  const isUpgradeType = isCrm ? crmTier === 'upgrade' : sessionData?.courseType === 'workshop-upgrade'
+  const startHref = isCrm ? '/ep-course/dashboard' : isUpgradeType ? '/dashboard' : '/modules/1'
+  const startLabel = isCrm
+    ? isUpgradeType
+      ? 'Go to your course'
+      : 'Start Module 1'
+    : isUpgradeType
+      ? 'Go to Dashboard'
+      : 'Start Module 1'
+  const cpdHours = isCrm
+    ? isFullCourseType
+      ? CONFIG.COURSE.CRM_TOTAL_CPD_POINTS
+      : CONFIG.COURSE.ONLINE_CPD_POINTS
+    : isFullCourseType
+      ? CONFIG.COURSE.TOTAL_CPD_POINTS
+      : CONFIG.COURSE.ONLINE_CPD_POINTS
+  // The ESSA accreditation number covers the 8 ONLINE points (PDNF26077,
+  // lib/certificate.ts). The 16-hour figure includes the practical day, so it
+  // stays framed as CPD hours — never restate 16 as accredited online points.
+  const cpdLabel = isCrm && !isFullCourseType && CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA CPD points' : 'CPD hours'
 
   return (
     <div className="min-h-screen bg-background">
@@ -163,16 +200,20 @@ function CheckoutSuccessContent() {
             Enrolment confirmed{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}.
           </h1>
           <p className="text-lg text-muted-foreground mb-6">
-            {isFullCourseType
-              ? 'Your concussion management training starts now.'
-              : 'You now have lifetime access to all 8 modules.'}
+            {isCrm
+              ? isFullCourseType
+                ? 'Concussion Rehab Mastery — your online modules are open now, and your practical day seat is reserved.'
+                : 'You now have lifetime access to all 8 Concussion Rehab Mastery modules.'
+              : isFullCourseType
+                ? 'Your concussion management training starts now.'
+                : 'You now have lifetime access to all 8 modules.'}
           </p>
           {loggedIn ? (
             <Link
-              href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
+              href={startHref}
               className="btn-primary px-8 py-4 rounded-xl font-bold inline-flex items-center gap-2"
             >
-              {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
+              {startLabel}
               <ArrowRight className="w-5 h-5" />
             </Link>
           ) : (
@@ -231,7 +272,7 @@ function CheckoutSuccessContent() {
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <span className="text-sm font-medium flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-                {isFullCourseType ? CONFIG.COURSE.TOTAL_CPD_POINTS : CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours
+                {cpdHours} {cpdLabel}
               </span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
@@ -240,7 +281,7 @@ function CheckoutSuccessContent() {
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-              <span className="text-sm font-medium">140+ references</span>
+              <span className="text-sm font-medium">{REFERENCE_COUNT} references</span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
@@ -266,15 +307,26 @@ function CheckoutSuccessContent() {
         <div className="glass rounded-2xl p-6 md:p-8 mb-8 border border-accent/10">
           <h2 className="font-bold text-lg mb-3">By completing this course, you&apos;ll be able to</h2>
           <ul className="space-y-2.5">
-            {[
-              'Administer and interpret SCAT6, VOMS, and BESS assessments accurately',
-              'Identify concussion phenotypes and prescribe targeted rehabilitation',
-              'Make confident, evidence-based return-to-play decisions',
-              ...(isFullCourseType
-                ? ['Apply hands-on assessment skills practised under expert supervision']
-                : []),
-              'Use the clinical toolkit in your practice from day one',
-            ].map((outcome, i) => (
+            {(isCrm
+              ? [
+                  'Run a graded exercise test (BCTT/BCBT) and determine a measured heart-rate threshold',
+                  'Prescribe and progress sub-symptom-threshold aerobic rehabilitation',
+                  'Recognise red flags and work confidently inside the AEP scope boundary',
+                  ...(isFullCourseType
+                    ? ['Apply the testing protocol hands-on, supervised, at the practical day']
+                    : []),
+                  'Use the SST Trainer and clinical toolkit with patients from day one',
+                ]
+              : [
+                  'Administer and interpret SCAT6, VOMS, and BESS assessments accurately',
+                  'Identify concussion phenotypes and prescribe targeted rehabilitation',
+                  'Make confident, evidence-based return-to-play decisions',
+                  ...(isFullCourseType
+                    ? ['Apply hands-on assessment skills practised under expert supervision']
+                    : []),
+                  'Use the clinical toolkit in your practice from day one',
+                ]
+            ).map((outcome, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground">{outcome}</span>
@@ -294,7 +346,9 @@ function CheckoutSuccessContent() {
             <div>
               <h3 className="font-semibold mb-1">Start Module 1</h3>
               <p className="text-sm text-muted-foreground">
-                Begin with &ldquo;What is a Concussion?&rdquo; — covers concussion pathophysiology and the neurometabolic cascade. About 75 minutes.
+                {isCrm
+                  ? 'Begin with “Concussion for the Exercise Physiologist” — the neurometabolic cascade and why exercise is now first-line. About 60 minutes.'
+                  : 'Begin with “What is a Concussion?” — covers concussion pathophysiology and the neurometabolic cascade. About 75 minutes.'}
               </p>
             </div>
           </div>
@@ -304,9 +358,13 @@ function CheckoutSuccessContent() {
               <span className="text-accent font-bold">2</span>
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Download the clinical toolkit</h3>
+              <h3 className="font-semibold mb-1">
+                {isCrm ? 'Open the SST Trainer and clinical toolkit' : 'Download the clinical toolkit'}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Referral templates, return-to-play protocols, and clearance letters — ready to use in practice.
+                {isCrm
+                  ? 'Your enrolment includes the clinical platform — graded exercise testing, threshold prescription and monitored home sessions — plus the report templates.'
+                  : 'Referral templates, return-to-play protocols, and clearance letters — ready to use in practice.'}
               </p>
             </div>
           </div>
@@ -328,10 +386,10 @@ function CheckoutSuccessContent() {
         <div className="flex flex-col sm:flex-row gap-3">
           {loggedIn ? (
             <Link
-              href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
+              href={startHref}
               className="flex-1 btn-primary px-8 py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2"
             >
-              {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
+              {startLabel}
               <ArrowRight className="w-5 h-5" />
             </Link>
           ) : (
@@ -343,8 +401,49 @@ function CheckoutSuccessContent() {
           )}
         </div>
 
-        {/* Workshop upsell for online-only buyers */}
-        {sessionData?.courseType === 'online-only' && (() => {
+        {/* Practical-day upsell for CRM online buyers — the CRM practical day,
+            never the CCM workshop. Price is not restated here; the CRM landing
+            derives it from the same helper the Stripe charge uses. */}
+        {isCrm && !isFullCourseType && (
+          <div className="mt-8 glass rounded-2xl p-6 border-2 border-orange-200/60">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <Award className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground">Add the supervised practical day</h3>
+                <p className="text-sm text-muted-foreground">
+                  Takes Concussion Rehab Mastery to {CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} total CPD hours
+                </p>
+              </div>
+            </div>
+            <ul className="space-y-1.5 mb-4 ml-[52px]">
+              {[
+                'Run the graded exercise test hands-on, supervised',
+                'Threshold determination and progression decisions on real cases',
+                `8 additional CPD hours (${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} total)`,
+                'Small group — runs city by city as each fills',
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="ml-[52px]">
+              <Link
+                href="/concussion-rehab-mastery"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+              >
+                Add the practical day
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Workshop upsell for online-only CCM buyers */}
+        {!isCrm && sessionData?.courseType === 'online-only' && (() => {
           // Standing early-bird: the server charges upgradePriceFor(), so the
           // display must come from the same helper (was PRICE_REGULAR-based,
           // overstating the upgrade by $210 at the hottest moment).
@@ -387,17 +486,29 @@ function CheckoutSuccessContent() {
           )
         })()}
 
-        {/* Referral ask */}
+        {/* Referral ask — the free SCAT6 course is a CCM-stream lead magnet;
+            an EP who just bought CRM is pointed at CRM instead. */}
         <div className="mt-8 glass rounded-xl p-5 text-center">
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            <strong className="text-foreground">Know a colleague who&apos;d benefit?</strong> Share the free SCAT6 Mastery course with them — completely free.
+            <strong className="text-foreground">Know a colleague who&apos;d benefit?</strong>{' '}
+            {isCrm
+              ? 'Share Concussion Rehab Mastery with another exercise physiologist.'
+              : 'Share the free SCAT6 Mastery course with them — completely free.'}
           </p>
           <button
             onClick={() => {
-              const url = 'https://portal.concussion-education-australia.com/scat-mastery'
-              const text = 'Free SCAT6 Mastery course — worth a look:'
+              const url = isCrm
+                ? 'https://portal.concussion-education-australia.com/concussion-rehab-mastery'
+                : 'https://portal.concussion-education-australia.com/scat-mastery'
+              const text = isCrm
+                ? 'Concussion Rehab Mastery — ESSA-accredited concussion rehab for EPs:'
+                : 'Free SCAT6 Mastery course — worth a look:'
               if (navigator.share) {
-                navigator.share({ title: 'Free SCAT6 Training', text, url })
+                navigator.share({
+                  title: isCrm ? 'Concussion Rehab Mastery' : 'Free SCAT6 Training',
+                  text,
+                  url,
+                })
               } else {
                 navigator.clipboard.writeText(`${text} ${url}`)
                 setCopied(true)

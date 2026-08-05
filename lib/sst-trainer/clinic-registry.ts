@@ -30,6 +30,7 @@
 import crypto from 'crypto'
 import { kv } from '@vercel/kv'
 import { sql } from '@/lib/db'
+import { SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 
 export const DEMO_CLINIC_CODE = 'DEMO00'
 
@@ -46,8 +47,9 @@ export interface ClinicRecord {
 }
 
 /** Trial allowance: a clinic may run this many DISTINCT patients free before
- *  it must subscribe. Usage-based, not time-based (owner 2026-07-06). */
-export const TRIAL_PATIENT_CAP = 3
+ *  it must subscribe. Usage-based, not time-based (owner 2026-07-06).
+ *  Defined in lib/config so client components can render it too. */
+export const TRIAL_PATIENT_CAP = SST_TRIAL_PATIENT_CAP
 
 /** PAID tiers are priced on ACTIVE CASELOAD, not seats (owner 2026-08-05:
  *  "make it fool proof — change pricing tiers i dont care"). Clinicians are

@@ -7,6 +7,7 @@ import { ReferenceRepository } from '@/components/dashboard/ReferenceRepository'
 import { useState, useEffect } from 'react'
 import { Loader2, Lock, BookOpen, ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 export default function ReferencesPage() {
   const router = useRouter()
@@ -78,7 +79,7 @@ export default function ReferencesPage() {
                         Reference Repository
                       </h1>
                       <p className="text-sm text-slate-600 mt-1">
-                        140+ peer-reviewed references supporting the course content
+                        {REFERENCE_COUNT} peer-reviewed references supporting the course content
                       </p>
                     </div>
                   </div>

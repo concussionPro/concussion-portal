@@ -14,7 +14,7 @@
  *
  * Heuristic stays the same:
  *   signup_source = 'squarespace'
- *   AND access_level = 'preview'
+ *   AND access_level = 'preview' (and owns NO CRM course — see below)
  *   AND last_login_at IS NULL
  *   AND created >= 14 days ago
  */
@@ -28,6 +28,16 @@ async function findGhosts(currentlyUnsubbed: boolean) {
     FROM users
     WHERE signup_source = 'squarespace'
       AND access_level = 'preview'
+      -- CRM (EP stream) buyers keep access_level 'preview' — their entitlement
+      -- lives in course_purchases (lib/crm-course.ts). A Squarespace-origin
+      -- lead who later BOUGHT CRM and hasn't logged in yet was silently
+      -- flagged nurture_unsubscribed by the 'unsub' action, cutting a paying
+      -- customer out of their own onboarding.
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(email)
+          AND cp.course_slug IN ('crm','crm-practical')
+      )
       AND last_login_at IS NULL
       AND created_at < NOW() - INTERVAL '14 days'
       AND COALESCE(nurture_unsubscribed, false) = ${currentlyUnsubbed}

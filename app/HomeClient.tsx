@@ -11,6 +11,7 @@ import { OtherCityInterest } from '@/components/OtherCityInterest'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { trackShopClick } from '@/lib/analytics'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 // TRUTH GATE: ESSA endorsement is PENDING. Until the certificate lands, the CRM
 // stream must not show the ESSA logo or an "Endorsed by" claim on the home page
@@ -309,7 +310,7 @@ export default function HomeClient() {
                     sub: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop`,
                   },
                   { value: `${CONFIG.COURSE.TOTAL_MODULES}`, label: 'Online Modules', sub: 'Interactive quizzes' },
-                  { value: '140+', label: 'References', sub: 'Evidence-based' },
+                  { value: String(REFERENCE_COUNT), label: 'References', sub: 'Evidence-based' },
                 ].map((stat) => (
                   <div key={stat.label} className="text-center md:px-3">
                     <div className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--accent)] mb-1 tabular-nums">
@@ -462,7 +463,7 @@ export default function HomeClient() {
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-[var(--foreground)]">Full-Day Practical</h3>
-                    <p className="text-xs text-[var(--accent)] font-medium">6 CPD Hours</p>
+                    <p className="text-xs text-[var(--accent)] font-medium">{CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD Hours</p>
                   </div>
                 </div>
                 <ul className="space-y-2.5">

@@ -64,7 +64,13 @@ export async function POST(request: NextRequest) {
   }
 
   const base = CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  const successUrl = `${base}/ep-course/dashboard?purchase=success&session_id={CHECKOUT_SESSION_ID}`
+  // The SHARED, Stripe-validated confirmation page — the same one CCM uses.
+  // It works with NO session cookie (it validates session_id server-side) and
+  // its client mints the login session. Landing a cold buyer on
+  // /ep-course/dashboard instead meant the session gate fired before the
+  // webhook had run, and they were shown the unauthenticated upgrade screen —
+  // i.e. pitched a course to someone who had just paid for it (2026-08-05).
+  const successUrl = `${base}/checkout/success?session_id={CHECKOUT_SESSION_ID}`
   const cancelUrl = `${base}/concussion-rehab-mastery?purchase=cancelled`
 
   try {

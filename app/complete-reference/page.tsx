@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { BookMarked, Download, ExternalLink, AlertCircle, Check } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 export default function CompleteReferencePage() {
   const router = useRouter()
   const [accessLevel, setAccessLevel] = useState<string | null>(null)
@@ -122,7 +123,7 @@ export default function CompleteReferencePage() {
                   The Complete Clinical Reference is available to enrolled students.
                 </p>
                 <ul className="mx-auto mb-5 max-w-sm list-none space-y-1 text-left">
-                  {['256 referenced pages — the full clinical text', 'Assessment: SCAT6, VOMS, BESS, cervical, oculomotor', 'Phenotype-directed management & PPCS pathways', 'Return-to-play / learn / work frameworks', '140+ citations, linked to the reference repository'].map((t) => (
+                  {['256 referenced pages — the full clinical text', 'Assessment: SCAT6, VOMS, BESS, cervical, oculomotor', 'Phenotype-directed management & PPCS pathways', 'Return-to-play / learn / work frameworks', `${REFERENCE_COUNT} citations, linked to the reference repository`].map((t) => (
                     <li key={t} className="flex items-start gap-2 text-xs text-slate-500">
                       <span className="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-[var(--accent)]/50" />{t}
                     </li>

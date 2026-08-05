@@ -173,6 +173,22 @@ describe('module structure is sound', () => {
     }
   })
 
+  // The Reference Repository size is quoted on public marketing surfaces, so it
+  // has to be a fact, not a vibe. It was live as "140+", "136 peer-reviewed" AND
+  // a fabricated "120" simultaneously. REFERENCE_COUNT is a client-safe literal
+  // (data/references.ts is paid content and must never enter a client bundle) —
+  // this test is what keeps that literal honest.
+  it('REFERENCE_COUNT matches the real reference dataset', async () => {
+    const { references } = await import('../data/references')
+    const { REFERENCE_COUNT } = await import('../data/reference-count')
+    expect(
+      REFERENCE_COUNT,
+      'data/reference-count.ts is out of sync with data/references.ts — update the literal',
+    ).toBe(references.length)
+    const ids = references.map((r) => r.id)
+    expect(new Set(ids).size, 'duplicate reference ids inflate the public count').toBe(ids.length)
+  })
+
   it('the public trial never exposes quiz answers or more than its unlocked sections', async () => {
     const { getPreviewContent, MODULE_1_PREVIEW_COUNT } = await import('../lib/preview-content')
     for (const course of ['ccm', 'crm'] as const) {

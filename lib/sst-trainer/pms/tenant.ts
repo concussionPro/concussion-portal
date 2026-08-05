@@ -53,12 +53,48 @@ async function ensureTable(): Promise<void> {
       last_ok_at TIMESTAMPTZ
     )
   `
+  // A connection that has STOPPED working must be able to say so. Without
+  // this, `connected: true` was returned forever — after a revoked key, after
+  // a SESSION_SECRET rotation, after a tenant was deleted — and the clinic
+  // card showed a green "cliniko connected" chip right up until the moment a
+  // clinician tried to file a report and it failed.
+  await sql`ALTER TABLE sst_clinic_pms ADD COLUMN IF NOT EXISTS last_error_at TIMESTAMPTZ`
+  await sql`ALTER TABLE sst_clinic_pms ADD COLUMN IF NOT EXISTS last_error TEXT`
 }
+
+/**
+ * How much confidence we have that this connection still works.
+ *  - `ok`      — a successful authenticated call within FRESH_MS.
+ *  - `unknown` — connected, but nothing has exercised it lately (or ever).
+ *                Callers may probe; the UI says "not verified recently".
+ *  - `error`   — the last thing we heard from the PMS was a failure, or the
+ *                stored credential can no longer be decrypted.
+ */
+export type PmsHealth = 'ok' | 'unknown' | 'error'
+
+/** A success this recent is taken at face value — no probe needed. */
+export const PMS_FRESH_MS = 24 * 60 * 60 * 1000
 
 export interface PmsConnection {
   kind: PmsKind
   connectedAt: string
   lastOkAt: string | null
+  lastErrorAt: string | null
+  lastError: string | null
+  health: PmsHealth
+}
+
+/** Derive health from the stored timestamps (no network). */
+export function pmsHealthOf(row: {
+  lastOkAt: string | null
+  lastErrorAt: string | null
+}, nowMs = Date.now()): PmsHealth {
+  const ok = row.lastOkAt ? Date.parse(row.lastOkAt) : NaN
+  const err = row.lastErrorAt ? Date.parse(row.lastErrorAt) : NaN
+  // A failure NEWER than the last success is the live state of the world.
+  if (Number.isFinite(err) && (!Number.isFinite(ok) || err >= ok)) return 'error'
+  if (Number.isFinite(ok) && nowMs - ok <= PMS_FRESH_MS) return 'ok'
+  return 'unknown'
 }
 
 export function isPmsKind(v: unknown): v is PmsKind {
@@ -73,13 +109,19 @@ export function gensolveWritesConfirmed(): boolean {
 export async function getPmsConnection(clinicCode: string): Promise<PmsConnection | null> {
   await ensureTable()
   const { rows } = await sql`
-    SELECT kind, connected_at, last_ok_at FROM sst_clinic_pms WHERE clinic_code = ${clinicCode.toUpperCase()}
+    SELECT kind, connected_at, last_ok_at, last_error_at, last_error
+    FROM sst_clinic_pms WHERE clinic_code = ${clinicCode.toUpperCase()}
   `
   if (!rows.length || !isPmsKind(rows[0].kind)) return null
+  const lastOkAt = rows[0].last_ok_at ? new Date(rows[0].last_ok_at).toISOString() : null
+  const lastErrorAt = rows[0].last_error_at ? new Date(rows[0].last_error_at).toISOString() : null
   return {
     kind: rows[0].kind as PmsKind,
     connectedAt: String(rows[0].connected_at),
-    lastOkAt: rows[0].last_ok_at ? String(rows[0].last_ok_at) : null,
+    lastOkAt,
+    lastErrorAt,
+    lastError: rows[0].last_error ? String(rows[0].last_error) : null,
+    health: pmsHealthOf({ lastOkAt, lastErrorAt }),
   }
 }
 
@@ -95,8 +137,49 @@ export async function setPmsConnection(args: {
     VALUES (${args.clinicCode.toUpperCase()}, ${args.kind}, ${encryptCred(args.apiKey)}, ${JSON.stringify(args.creds ?? {})}::jsonb)
     ON CONFLICT (clinic_code) DO UPDATE
       SET kind = EXCLUDED.kind, api_key_enc = EXCLUDED.api_key_enc,
-          creds = EXCLUDED.creds, connected_at = NOW(), last_ok_at = NULL
+          creds = EXCLUDED.creds, connected_at = NOW(), last_ok_at = NULL,
+          -- a fresh key starts with a clean slate; the connect route's probe
+          -- decides immediately whether it works
+          last_error_at = NULL, last_error = NULL
   `
+}
+
+/**
+ * Turn an adapter's raw failure string ("cliniko: HTTP 401") into something a
+ * clinician can ACT on. The raw string was being rendered in amber — the same
+ * colour as an informational note — which read as a hint rather than "the
+ * report did not file".
+ */
+export function describePmsFailure(
+  kind: string,
+  raw: string | null | undefined,
+): { reason: 'auth' | 'not-found' | 'unavailable' | 'unknown'; message: string } {
+  const s = (raw || '').toLowerCase()
+  const pms = kind || 'your practice software'
+  if (/http 401|http 403|unauthor|forbidden|invalid api key|not configured/.test(s)) {
+    return {
+      reason: 'auth',
+      message:
+        `${pms} rejected the connection — the stored API key is no longer valid (revoked, expired, or the tenant changed). ` +
+        `Nothing was written. Reconnect ${pms} from your clinic workspace, then file again.`,
+    }
+  }
+  if (/http 404|not found/.test(s)) {
+    return {
+      reason: 'not-found',
+      message: `${pms} could not find that patient record — it may have been merged or archived. Search again and pick the current record.`,
+    }
+  }
+  if (/http 5\d\d|timeout|network|fetch failed|econn/.test(s)) {
+    return {
+      reason: 'unavailable',
+      message: `${pms} did not respond. Nothing was written — try again in a few minutes.`,
+    }
+  }
+  return {
+    reason: 'unknown',
+    message: `${pms} refused the note, so nothing was filed. Try again; if it keeps failing, reconnect ${pms} from your clinic workspace.`,
+  }
 }
 
 /**
@@ -143,7 +226,31 @@ export async function restorePmsConnection(clinicCode: string, snap: PmsConnecti
 
 export async function markPmsOk(clinicCode: string): Promise<void> {
   await ensureTable()
-  await sql`UPDATE sst_clinic_pms SET last_ok_at = NOW() WHERE clinic_code = ${clinicCode.toUpperCase()}`
+  // A success CLEARS the error state — the connection is demonstrably alive.
+  await sql`
+    UPDATE sst_clinic_pms
+    SET last_ok_at = NOW(), last_error_at = NULL, last_error = NULL
+    WHERE clinic_code = ${clinicCode.toUpperCase()}
+  `
+}
+
+/**
+ * Record that the PMS refused us. Called from the probe and from a failed
+ * report filing so the clinic card can stop claiming a green connection the
+ * moment it stops being true. Never throws — health bookkeeping must not take
+ * down the operation that discovered the failure.
+ */
+export async function markPmsFailed(clinicCode: string, error: string): Promise<void> {
+  try {
+    await ensureTable()
+    await sql`
+      UPDATE sst_clinic_pms
+      SET last_error_at = NOW(), last_error = ${error.slice(0, 300)}
+      WHERE clinic_code = ${clinicCode.toUpperCase()}
+    `
+  } catch (err) {
+    console.error('[pms] markPmsFailed bookkeeping failed:', err)
+  }
 }
 
 export async function removePmsConnection(clinicCode: string): Promise<void> {

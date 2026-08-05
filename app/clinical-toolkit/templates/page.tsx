@@ -7,9 +7,10 @@ import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
 import { DownloadButton } from '@/components/toolkit/DownloadButton'
 import { resolveToolkitPageAccess } from '@/lib/toolkit-access'
 import { CONFIG } from '@/lib/config'
+import { DISCHARGE_TEMPLATE_COUNT } from '@/data/hub-program-content'
 
 /**
- * SERVER component — entitlement resolves before render so the six paid
+ * SERVER component — entitlement resolves before render so the paid
  * discharge templates only ever travel in the RSC payload of an entitled
  * request (the previous 'use client' page compiled the full template set
  * into a public static chunk and gated by render only). ClinicalToolkitDoc
@@ -47,7 +48,7 @@ export default async function ClinicalTemplatesPage() {
                   Interactive Fillable Templates
                 </h1>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-lg mx-auto">
-                  Six AHPRA-aligned discharge templates — GP handover, school RTP authorisation, parent symptom plan, sports club RTP certificate, WorkCover report, and NDIS allied-health report. Fillable on screen, sign-off block built in, exports to a clean PDF on your clinic letterhead.
+                  {DISCHARGE_TEMPLATE_COUNT} AHPRA-aligned discharge templates — GP handover, school RTP authorisation, parent symptom plan, sports club RTP certificate, WorkCover report, NDIS allied-health report, ACC884 client summary and medicolegal record. Fillable on screen, sign-off block built in, exports to a clean PDF on your clinic letterhead.
                 </p>
                 <a
                   href={CONFIG.SHOP_URL}

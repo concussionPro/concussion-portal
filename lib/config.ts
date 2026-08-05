@@ -321,14 +321,43 @@ export function upgradePriceFor(locationSlug?: string | null): number {
 }
 
 /**
- * SST Trainer clinic pricing (A$/month) — single source for every surface
- * (founding page, pricing page, gp-report paywall, clinic welcome email).
- * Founding clinics lock their tier rate for life; solo tier from A$49.
+ * SST Trainer / Clinical Testing plans — the LIVE model (owner 2026-08-05).
+ *
+ * Priced on ACTIVE CASELOAD, not seats: clinicians are UNLIMITED on every paid
+ * tier, and the metered unit is distinct active patients in a rolling 30 days.
+ * Caps here mirror TIER_ACTIVE_PATIENT_CAP in lib/sst-trainer/clinic-registry
+ * (null = unlimited); amounts mirror the Stripe recurring prices behind
+ * STRIPE_SST_{SINGLE,CLINIC,ENTERPRISE}_PRICE_ID — Stripe stays the billing
+ * source of truth, this is the single source for DISPLAY.
+ *
+ * The retired FOUNDING model ("founding terms locked for good") lived here as
+ * SST_PRICING and had no consumers. Founding pricing is not sold — do not
+ * reintroduce it on any surface.
  */
-export const SST_PRICING = {
-  FOUNDING_FROM: 49, // solo-tier founding lock (for life)
-  STANDARD_SOLO: 99, // standard solo-tier rate after the founding period
-} as const
+/** Free-trial allowance: distinct patients a clinic may run before it must
+ *  subscribe. Usage-based, not time-based (owner 2026-07-06). Lives here (not
+ *  in clinic-registry, which pulls in the DB/KV clients) so client components
+ *  can render the number without dragging server code into the bundle;
+ *  clinic-registry re-exports it as TRIAL_PATIENT_CAP. */
+export const SST_TRIAL_PATIENT_CAP = 3
+
+export const SST_TIERS = [
+  { plan: 'single', name: 'Starter', monthlyAud: 49, activePatientCap: 5, popular: false },
+  { plan: 'clinic', name: 'Clinic', monthlyAud: 99, activePatientCap: 10, popular: true },
+  { plan: 'enterprise', name: 'Unlimited', monthlyAud: 149, activePatientCap: null, popular: false },
+] as const
+
+export type SstTier = (typeof SST_TIERS)[number]
+
+/** Entry price for the Clinical Testing suite (A$/month). */
+export const SST_TIER_FROM_AUD = Math.min(...SST_TIERS.map((t) => t.monthlyAud))
+
+/** Human label for a tier's caseload allowance. */
+export function sstTierAllowance(tier: SstTier): string {
+  return tier.activePatientCap === null
+    ? 'Unlimited active patients'
+    : `Up to ${tier.activePatientCap} active patients`
+}
 
 /** Calculate Afterpay/Klarna instalment amount (price / 4, rounded up to cents) */
 export function afterpayInstalment(price: number): string {

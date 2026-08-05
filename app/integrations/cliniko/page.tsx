@@ -80,7 +80,9 @@ export default function ClinikoIntegrationPage() {
             summary, treatment notes — straight into the patient&rsquo;s Cliniko record.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/clinical-suite/start" className="btn-primary inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm">
+            {/* ?src=cliniko is the listing-URL convention — without it this
+                page's signups land unattributed in the /api/sst/start funnel. */}
+            <Link href="/clinical-suite/start?src=cliniko" className="btn-primary inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm">
               Start free &mdash; 3 patients, no card
               <ArrowRight className="w-4 h-4" />
             </Link>

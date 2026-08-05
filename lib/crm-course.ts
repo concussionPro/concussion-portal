@@ -9,7 +9,7 @@
  * gated behind CONFIG.FEATURES.ESSA_ACCREDITED until real ESSA approval.
  */
 import { CONFIG, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
-import { userOwnsCourse } from '@/lib/course-purchases'
+import { ensureCoursePurchasesTable, userOwnsCourse } from '@/lib/course-purchases'
 import { sql } from '@/lib/db'
 
 /** Owns the online CRM course → unlocks /ep-course content. */
@@ -22,6 +22,61 @@ export type CrmTier = 'online' | 'complete' | 'upgrade'
 /** True when this buyer owns the online CRM course (the /ep-course content gate). */
 export function userOwnsCrm(email: string): Promise<boolean> {
   return userOwnsCourse(email, CRM_COURSE_SLUG)
+}
+
+/** True when this buyer holds a seat at the SHARED CCM/CRM practical day. */
+export function userOwnsCrmPractical(email: string): Promise<boolean> {
+  return userOwnsCourse(email, CRM_PRACTICAL_SLUG)
+}
+
+/**
+ * What a CRM buyer owns, and WHEN they bought it.
+ *
+ * The timestamp is not decoration. Every CCM lifecycle lane keys its day
+ * counter off `users.created_at` because a CCM purchase creates (or upgrades)
+ * the row — the signup IS the purchase. A CRM buyer is usually an existing
+ * free-course lead whose row is months old, so the same arithmetic puts them
+ * at "day 214" of a 30-day onboarding and they receive nothing. CRM lanes key
+ * off `course_purchases.purchased_at` instead.
+ */
+export interface CrmOwnershipRecord {
+  /** ISO purchase time of the online CRM course ('crm'), if owned. */
+  crmAt?: string
+  /** ISO purchase time of the shared practical-day seat ('crm-practical'), if owned. */
+  practicalAt?: string
+}
+
+function isoOf(v: Date | string): string {
+  return v instanceof Date ? v.toISOString() : String(v)
+}
+
+/**
+ * Every CRM entitlement in one query, keyed by lowercased email.
+ *
+ * FAILS CLOSED by contract: returns null on a DB error, and callers must treat
+ * null as "can't prove who's paying — don't run the lane" rather than emailing
+ * a paying customer a free-course pitch (or silently dropping them from the
+ * workshop lanes they've paid for).
+ */
+export async function crmOwnership(): Promise<Map<string, CrmOwnershipRecord> | null> {
+  try {
+    await ensureCoursePurchasesTable()
+    const { rows } = await sql<{ user_email: string; course_slug: string; purchased_at: Date | string }>`
+      SELECT LOWER(user_email) AS user_email, course_slug, purchased_at
+      FROM course_purchases
+      WHERE course_slug IN (${CRM_COURSE_SLUG}, ${CRM_PRACTICAL_SLUG})
+    `
+    const map = new Map<string, CrmOwnershipRecord>()
+    for (const r of rows) {
+      const rec = map.get(r.user_email) ?? {}
+      if (r.course_slug === CRM_COURSE_SLUG) rec.crmAt = isoOf(r.purchased_at)
+      else rec.practicalAt = isoOf(r.purchased_at)
+      map.set(r.user_email, rec)
+    }
+    return map
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -38,16 +93,25 @@ export function userOwnsCrm(email: string): Promise<boolean> {
  * emailing a paying customer a free-course pitch.
  */
 export async function crmOwnerEmails(): Promise<Set<string> | null> {
-  try {
-    const { rows } = await sql<{ user_email: string }>`
-      SELECT LOWER(user_email) AS user_email
-      FROM course_purchases
-      WHERE course_slug = ${CRM_COURSE_SLUG}
-    `
-    return new Set(rows.map((r) => r.user_email))
-  } catch {
-    return null
-  }
+  const owners = await crmOwnership()
+  if (!owners) return null
+  return new Set([...owners].filter(([, rec]) => rec.crmAt).map(([email]) => email))
+}
+
+/**
+ * Emails of everyone holding a seat at the SHARED practical day via the CRM
+ * side ('crm-practical'), lowercased. Same fail-closed contract as
+ * crmOwnerEmails.
+ *
+ * The workshop keys on `access_level = 'full-course'` everywhere, which a CRM
+ * Complete/upgrade buyer never has — so without this set they are invisible to
+ * the seat count, the roster, the alumni cohort and every workshop email lane,
+ * while still being dunned to buy the seat they already paid for.
+ */
+export async function crmPracticalOwnerEmails(): Promise<Set<string> | null> {
+  const owners = await crmOwnership()
+  if (!owners) return null
+  return new Set([...owners].filter(([, rec]) => rec.practicalAt).map(([email]) => email))
 }
 
 /**

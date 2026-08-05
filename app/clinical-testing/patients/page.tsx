@@ -19,6 +19,7 @@ import {
 import { CONFIG } from '@/lib/config'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
+import { PmsFileButton } from '@/components/clinical/PmsFileButton'
 
 /**
  * /clinical-testing/patients — the clinician's client list, in the portal.
@@ -178,6 +179,18 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
               <FileText className="h-3.5 w-3.5" />
               Documents — WorkCover / NDIS / school…
             </Link>
+            {/* File straight into the clinic's OWN PMS from the authenticated
+                workspace. This control used to exist ONLY on /clinical-hub, so
+                filing a report meant leaving the signed-in workspace for the
+                URL-keyed hub link. Same component, same clinic code + viewKey
+                the roster above was fetched with; renders nothing when the
+                clinic has no PMS connected. */}
+            <PmsFileButton
+              clinicCode={clinic.code}
+              viewKey={clinic.viewKey}
+              patientName={labelFor(patient)}
+              patientRef={refFor(patient)}
+            />
           </div>
 
           {recent.length > 0 && (

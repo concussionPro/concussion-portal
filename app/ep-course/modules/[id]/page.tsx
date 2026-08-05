@@ -29,13 +29,19 @@ const EP_COURSE: CourseModuleDescriptor = {
   progressIdFor: epProgressId,
   checkpointKeyFor: (id) => `ep-module-${id}-checkpoint`,
   loginPathFor: (id) => `/ep-course/modules/${id}`,
-  backHref: '/ep-course/modules/1',
+  // The COURSE dashboard, not Module 1. Every "back"/"view all modules" exit in
+  // the shared player lands here, and it is the only surface carrying the CRM
+  // certificate link (2026-08-05 parity: finishing module 8 used to dump the
+  // buyer back into Module 1 with no route to their certificate).
+  backHref: '/ep-course/dashboard',
   moduleBasePath: '/ep-course/modules',
   passMarkPercent: 80,
   showResources: false,
   supportsDemoViewer: true,
   hasScatModules: false,
-  showCertificateCta: false,
+  // Finishing module 8 surfaces the claim-your-certificate CTA — the CRM cert
+  // is a real, server-verified ESSA CPD certificate (/api/certificate?type=crm).
+  showCertificateCta: true,
   headerModuleNumber: 'url',
   scatQuizFailUpsellSuffix: '8 modules, 8 CPD hours',
 }

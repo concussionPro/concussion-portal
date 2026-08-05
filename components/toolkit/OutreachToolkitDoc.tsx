@@ -28,7 +28,7 @@ export function OutreachToolkitDoc({
   const effectiveSectionLimit = isPreviewMode ? (previewSectionLimit ?? 0) : previewSectionLimit
   return (
     <FillableDoc storageKey="outreach-kit" defaultValues={defaultValues} previewMode={isPreviewMode}>
-      <Cover isPreviewMode={isPreviewMode} />
+      <Cover isPreviewMode={isPreviewMode} templateCount={templates.length} />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
         isVisible(t.slug)
@@ -77,7 +77,7 @@ function LockedOutreachCard({ template, unlockHref }: { template: OutreachTempla
   )
 }
 
-function Cover({ isPreviewMode }: { isPreviewMode?: boolean }) {
+function Cover({ isPreviewMode, templateCount }: { isPreviewMode?: boolean; templateCount: number }) {
   return (
     <section className="bg-white rounded-2xl border border-accent/10 p-6 sm:p-10 mb-6 shadow-sm print:shadow-none print:border-0 print:rounded-none print:break-after-page">
       <div className="flex items-center gap-3 mb-6">
@@ -101,7 +101,7 @@ function Cover({ isPreviewMode }: { isPreviewMode?: boolean }) {
         Outreach Kit
       </h1>
       <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-        Six referral-building templates for the post-training outreach push. Edit fields per recipient, run as a sequenced campaign across schools, clubs and GP practices in your catchment.
+        {templateCount} referral-building templates for the post-training outreach push. Edit fields per recipient, run as a sequenced campaign across schools, clubs and GP practices in your catchment.
       </p>
 
       {!isPreviewMode && (

@@ -517,13 +517,27 @@ function normaliseMetrics(data: unknown): MetricRow[] {
   return []
 }
 
+/**
+ * Paid in EITHER stream.
+ *
+ * CCM entitlement lives in `users.access_level`; CRM (the exercise-physiology
+ * stream) lives in `course_purchases` and arrives here as `ownsCrm` (see
+ * /api/admin/emails). The streams are deliberately isolated, so a CRM buyer's
+ * accessLevel reads 'preview' — testing accessLevel alone reported PAYING EP
+ * customers as free users in every count on this page, and understated the
+ * free-to-paid conversion rate that drives its insights.
+ */
+function isPaidUser(u: { accessLevel: string; ownsCrm?: boolean }): boolean {
+  return u.accessLevel === 'online-only' || u.accessLevel === 'full-course' || !!u.ownsCrm
+}
+
 function generateDailyReport(
   stats: AnalyticsStats | null,
   retargetingData: RetargetingData | null,
   funnelData: FunnelData | null,
   preseasonData: { totalClinics: number; totalBaselines: number } | null,
   channelsData: ChannelsData | null,
-  usersData: Array<{ accessLevel: string; createdAt: string; signupSource?: string | null; isTest?: boolean }>,
+  usersData: Array<{ accessLevel: string; ownsCrm?: boolean; createdAt: string; signupSource?: string | null; isTest?: boolean }>,
   period: string,
 ): string {
   const parts: string[] = []
@@ -607,8 +621,8 @@ function generateDailyReport(
   const periodStart = new Date(now.getTime() - periodDays * 86400000)
   const newSignups = realUsers.filter(u => new Date(u.createdAt) >= periodStart)
   const newToday = realUsers.filter(u => new Date(u.createdAt).toDateString() === now.toDateString()).length
-  const freeUsers = realUsers.filter(u => u.accessLevel === 'preview').length
-  const paidUsers = realUsers.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length
+  const freeUsers = realUsers.filter(u => !isPaidUser(u)).length
+  const paidUsers = realUsers.filter(isPaidUser).length
   const totalUsers = realUsers.length
   if (totalUsers > 0) {
     const userParts = [`${totalUsers} total user${totalUsers !== 1 ? 's' : ''} (${freeUsers} free, ${paidUsers} paid)`]
@@ -660,7 +674,7 @@ function generateDailyReport(
 }
 
 function buildUserInsights(
-  users: Array<{ accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedScatModules?: number }>,
+  users: Array<{ accessLevel: string; ownsCrm?: boolean; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedScatModules?: number }>,
 ): Insight[] {
   const insights: Insight[] = []
   if (users.length === 0) return insights
@@ -711,11 +725,11 @@ function buildUserInsights(
   // SCAT-PDF-only downloaders auto-imported as preview accounts. Without
   // this filter, the engagement stats are dominated by 60+ Squarespace
   // ghosts who only wanted the form, not a course.
-  const allFreeUsers = users.filter(u => u.accessLevel === 'preview')
+  const allFreeUsers = users.filter(u => !isPaidUser(u))
   const freeUsers = allFreeUsers.filter(u =>
     u.signupSource !== 'squarespace' || !!u.lastLogin
   )
-  const paidUsers = users.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course')
+  const paidUsers = users.filter(isPaidUser)
   if (users.length > 5) {
     const convRate = users.length > 0 ? paidUsers.length / users.length : 0
     if (convRate < 0.05) {
@@ -1309,7 +1323,7 @@ export default function AnalyticsDashboard() {
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
-  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; ownsCrm?: boolean; ownsCrmPractical?: boolean; completedCrmModules?: number; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
   const [usersError, setUsersError] = useState<string | null>(null)
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
@@ -2848,14 +2862,14 @@ export default function AnalyticsDashboard() {
                       <Eye size={14} className="text-emerald-600" />
                       <span className="text-xs font-bold text-[var(--foreground)]">Free</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => u.accessLevel === 'preview').length}</p>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => !isPaidUser(u)).length}</p>
                   </div>
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <TrendingUp size={14} className="text-purple-600" />
                       <span className="text-xs font-bold text-[var(--foreground)]">Paid</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length}</p>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(isPaidUser).length}</p>
                   </div>
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -2879,15 +2893,15 @@ export default function AnalyticsDashboard() {
                             : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                         }`}
                       >
-                        {label} ({key === 'all' ? usersData.length : key === 'preview' ? usersData.filter(u => u.accessLevel === 'preview').length : usersData.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length})
+                        {label} ({key === 'all' ? usersData.length : key === 'preview' ? usersData.filter(u => !isPaidUser(u)).length : usersData.filter(isPaidUser).length})
                       </button>
                     ))}
                   </div>
                   <button
                     onClick={() => {
                       const filtered = usersData.filter(u => {
-                        if (usersFilter === 'preview') return u.accessLevel === 'preview'
-                        if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
+                        if (usersFilter === 'preview') return !isPaidUser(u)
+                        if (usersFilter === 'paid') return isPaidUser(u)
                         return true
                       })
                       const csv = ['Email,Name,Access Level,Modules Completed,SCAT Modules,CPD Hours,Created,Last Login', ...filtered.map(u =>
@@ -2922,14 +2936,21 @@ export default function AnalyticsDashboard() {
                     </thead>
                     <tbody>
                       {usersData.filter(u => {
-                        if (usersFilter === 'preview') return u.accessLevel === 'preview'
-                        if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
+                        if (usersFilter === 'preview') return !isPaidUser(u)
+                        if (usersFilter === 'paid') return isPaidUser(u)
                         return true
                       }).map((u) => {
                         const completed = u.completedModules || 0
                         const scatCompleted = u.completedScatModules || 0
-                        const isFree = u.accessLevel === 'preview'
-                        const progressCount = isFree ? scatCompleted : completed
+                        const crmCompleted = u.completedCrmModules || 0
+                        // Three tiers, not two. A CRM buyer's accessLevel is
+                        // 'preview', so the free/paid split showed them the
+                        // free SCAT denominator (x/3) instead of their own
+                        // course's 8 EP modules (progress ids 201-208).
+                        const isCcmPaid = u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
+                        const isCrmOnly = !isCcmPaid && !!u.ownsCrm
+                        const isFree = !isCcmPaid && !isCrmOnly
+                        const progressCount = isCcmPaid ? completed : isCrmOnly ? crmCompleted : scatCompleted
                         const progressTotal = isFree ? 3 : 8
                         const pctDone = Math.round((progressCount / progressTotal) * 100)
                         return (
@@ -2938,9 +2959,9 @@ export default function AnalyticsDashboard() {
                           <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{u.name}</td>
                           <td className="py-2.5 px-2 text-center">
                             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                              u.accessLevel === 'preview' ? 'bg-emerald-100 text-emerald-700' : 'bg-purple-100 text-purple-700'
+                              isFree ? 'bg-emerald-100 text-emerald-700' : isCrmOnly ? 'bg-teal-100 text-teal-700' : 'bg-purple-100 text-purple-700'
                             }`}>
-                              {u.accessLevel === 'preview' ? 'Free' : u.accessLevel === 'full-course' ? 'Full' : 'Online'}
+                              {isFree ? 'Free' : isCrmOnly ? (u.ownsCrmPractical ? 'CRM Full' : 'CRM') : u.accessLevel === 'full-course' ? 'Full' : 'Online'}
                             </span>
                             {u.isTest && (
                               <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-600">TEST</span>

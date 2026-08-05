@@ -56,10 +56,13 @@ const PILLARS: {
   },
 ]
 
+// Targeting rule: universities and hospitals are NEVER a target segment —
+// they were listed here and are not sold to. Segments below are the real
+// organisation-level buyers.
 const AUDIENCE = [
   { icon: Trophy, label: 'Sports organisations', sub: 'Pro clubs, national programs, performance teams' },
   { icon: Building2, label: 'Health systems & clinic networks', sub: 'A consistent concussion pathway across every site' },
-  { icon: GraduationCap, label: 'Universities', sub: 'Athletics, sports medicine and student-athlete programs' },
+  { icon: ShieldCheck, label: 'Scheme funders & insurers', sub: 'Accredited providers delivering a documented, auditable pathway' },
 ]
 
 export default function PartnersPage() {
@@ -151,19 +154,20 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      {/* Founding partner band */}
+      {/* Organisation onboarding band. The retired "founding partner /
+          founding programs" model does not sell — don't reintroduce it. */}
       <section className="max-w-4xl mx-auto px-6 py-16 md:py-20">
         <div className="rounded-2xl border border-[var(--accent)]/25 bg-gradient-to-br from-[var(--accent)]/5 to-white p-8">
           <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-[var(--accent)] mb-2">
-            Founding programs
+            How we onboard an organisation
           </p>
           <h2 className="text-2xl font-bold text-foreground tracking-tight mb-3">
-            We&apos;re onboarding a small number of founding partners now.
+            We build the portal with you, around how your program actually works.
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-6 max-w-2xl">
-            We set the portal up with you and shape it around how your program actually works. In return
-            you help define the standard — and your organisation runs concussion on a system built for it,
-            not a generic course.
+            Onboarding is hands-on and done directly with the founder: we configure the portal to your
+            sites, pathways and reporting, then train and credential your team on it. Your organisation
+            runs concussion on a system built for it, not a generic course.
           </p>
           <ul className="space-y-2 mb-7">
             {[

@@ -153,7 +153,7 @@ export function EpProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               <div>
                 <p className="text-[15px] font-bold text-foreground mb-1.5">One practical day, shared with the whole clinic</p>
                 <p className="text-[13px] text-foreground/70 leading-relaxed max-w-3xl">
-                  Both streams sit over one hands-on Concussion Clinical Mastery practical day — your EPs train alongside the physios and allied-health team on the same cases. Each stream is 8 hours online CPD; the shared day adds 6, for 16 CPD hours total.
+                  Both streams sit over one hands-on Concussion Clinical Mastery practical day — your EPs train alongside the physios and allied-health team on the same cases. Each stream is {CONFIG.COURSE.ONLINE_CPD_POINTS} hours online CPD; the shared day adds {CONFIG.COURSE.IN_PERSON_CPD_POINTS}, for {CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD hours total.
                 </p>
               </div>
             </div>

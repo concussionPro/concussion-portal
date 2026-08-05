@@ -19,6 +19,7 @@ import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 interface Ref {
   authors: string
@@ -29,15 +30,11 @@ interface Ref {
   url?: string
 }
 
-const CATEGORY_TOTALS: Record<string, number> = {
-  'Consensus statements': 12,
-  'Pathophysiology': 26,
-  'Assessment tools': 22,
-  'PPCS + phenotypes': 19,
-  'Exercise + return-to-play': 16,
-  'Cervical + vestibular rehab': 11,
-  'Paediatric concussion': 14,
-}
+// The per-category totals that used to live here were fabricated: seven
+// invented buckets summing to 120, which then rendered as "10 of 120
+// references shown" and "Full library · 120 references" while the real
+// dataset holds REFERENCE_COUNT. Category-level totals are not published
+// any more — only the shown count and the real library size.
 
 const PROSPECT_REFS: Record<string, Ref[]> = {
   'Consensus statements': [
@@ -173,10 +170,9 @@ export default async function ProspectReferences({
   }).catch((err) => console.error('[Portal view tracking failed]', err))
 
   const totalShown = Object.values(PROSPECT_REFS).reduce((acc, arr) => acc + arr.length, 0)
-  // Library size computed from the per-category totals — the copy must
-  // always match the real number (the old hard-coded "140+" overstated
-  // the 120 the categories actually sum to).
-  const totalLibrary = Object.values(CATEGORY_TOTALS).reduce((acc, n) => acc + n, 0)
+  // Real library size — the single published number (data/reference-count.ts),
+  // guarded against drift by tests/course-content-integrity.test.ts.
+  const totalLibrary = REFERENCE_COUNT
   const slug = clinic.slug
   const ak = clinic.accessKey
   const kq = ak ? `?k=${ak}` : ''
@@ -219,7 +215,7 @@ export default async function ProspectReferences({
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <h3 className="text-lg font-bold text-foreground">{category}</h3>
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                    {refs.length} of {CATEGORY_TOTALS[category] ?? refs.length}
+                    {refs.length} shown
                   </span>
                 </div>
                 <div className="space-y-2.5">

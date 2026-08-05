@@ -625,15 +625,21 @@ export const WORKSHOP_RESERVATION_EMAIL = {
 }
 
 /**
- * Workshop Momentum Emails — Days 7, 14, 21, 28, 58 after full-course purchase
- * Sent while city is still collecting. Stops after Day 58.
+ * Workshop Momentum Emails — Days 7, 14, 21, 28, 58 after a practical-day
+ * purchase. Sent while the city is still collecting. Stops after Day 58.
+ *
+ * The practical day is SHARED between CCM and CRM, so these go to seat-holders
+ * of both streams. Everything here is stream-neutral except the "share the
+ * course" CTA — hence `shareLink`: pass the CRM landing page for a CRM buyer,
+ * or a colleague-referral CTA sends an EP's colleagues to the wrong course.
+ * Defaults to the CCM pricing page.
  */
 export const WORKSHOP_MOMENTUM_EMAILS = [
   {
     day: 7,
     subject: (city: string, count: number, remaining: number) =>
       `${city}: ${count} registered — ${remaining} more to confirm your date`,
-    template: (name: string, city: string, count: number, threshold: number, _loginLink?: string) => {
+    template: (name: string, city: string, count: number, threshold: number, _loginLink?: string, shareLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
@@ -642,7 +648,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
           <strong>${city}:</strong> ${count} of ${threshold} spots filled — ${remaining > 0 ? `${remaining} more to confirm a date` : 'threshold reached!'}<br>
         </div>
         <p>Know a colleague who manages concussions? Share the course with them — the more clinicians who register, the sooner your date is confirmed.</p>
-        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d7', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
+        <center><a href="${utm(shareLink || 'https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d7', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
         <p>In the meantime, keep working through your modules — they're the foundation for the hands-on day.</p>
         <div class="sig">Zac</div>
       `)
@@ -670,12 +676,12 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 21,
     subject: (city: string, _count?: number, _remaining?: number) =>
       `Your ${city} concussion workshop — building the next date`,
-    template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string) => {
+    template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string, shareLink?: string) => {
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
         <p>Just a note that you're on the list for the next ${city} hands-on concussion workshop — we run these as demand opens up in each city and you'll get plenty of notice once the date's confirmed.</p>
         <p>If you know anyone who'd benefit from hands-on concussion training, send them our way:</p>
-        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d21', 'share')}" class="cta-secondary">Share the Course</a></center>
+        <center><a href="${utm(shareLink || 'https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d21', 'share')}" class="cta-secondary">Share the Course</a></center>
         <div class="sig">Zac</div>
       `)
     },
@@ -684,12 +690,12 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 28,
     subject: (city: string, _count?: number, _remaining?: number) =>
       `${city} concussion workshop — still on your radar?`,
-    template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string) => {
+    template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string, shareLink?: string) => {
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
         <p>Month check-in — you're still on the list for the next ${city} hands-on concussion workshop. We confirm dates as demand opens up in each city, and you'll get plenty of notice when yours lands.</p>
         <p>Know a colleague who manages concussions? Send them our way:</p>
-        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d28', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
+        <center><a href="${utm(shareLink || 'https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d28', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
         <div class="sig">Zac</div>
       `)
     },
@@ -698,13 +704,13 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     day: 58,
     subject: (city: string, count: number, remaining: number) =>
       `Final check-in — ${city} needs ${remaining} more to lock in a date`,
-    template: (name: string, city: string, count: number, threshold: number, _loginLink?: string) => {
+    template: (name: string, city: string, count: number, threshold: number, _loginLink?: string, shareLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
         <p>This is my last update on workshop numbers. ${city} has <strong>${count} of ${threshold}</strong> registrants${remaining > 0 ? ` — ${remaining} more needed to confirm a date` : ''}.</p>
         <p>If you have colleagues who'd benefit from this training, now's the time to let them know. The A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird rate still applies for ${city} — it holds until 14 days before your city's workshop date.</p>
-        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d58', 'share')}" class="cta-secondary">Share the Course</a></center>
+        <center><a href="${utm(shareLink || 'https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d58', 'share')}" class="cta-secondary">Share the Course</a></center>
         <p class="ps">P.S. No more momentum emails from me after this one. You'll hear from us when your city's date is confirmed.</p>
         <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
       `)
@@ -1476,6 +1482,183 @@ export const ALMOST_DONE_EMAIL = {
     </div>
     <center><a href="${utm(loginLink, 'almost_done', 'finish_last_module')}" class="cta-btn">Finish Your Last Module</a></center>
     <p>You're so close. Don't leave your certificate on the table.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
+// ─── CRM (Concussion Rehab Mastery) post-purchase lifecycle ──────────────────
+//
+// The EP stream's OWN onboarding. It exists because CRM ownership lives in
+// course_purchases while POST_PURCHASE_SEQUENCE / PAID_NO_PROGRESS_NUDGE /
+// ALMOST_DONE_EMAIL are gated on users.access_level — which a CRM buyer never
+// has. Until this existed, a CRM buyer's entire post-purchase lifecycle was the
+// single inline welcome from the Stripe webhook, and nothing else, ever.
+//
+// The CCM templates are NOT reusable here: they name the flagship's modules
+// ("Module 1: Concussion neuroscience", "Module 7: Rehabilitation by
+// Phenotype") and its course. Sending them to an EP would name the wrong
+// course. These name the EP modules (data/ep-module-meta.ts, display ids 1-8).
+//
+// CPD figures derive from CONFIG — 8 online, 16 with the shared practical day.
+// `accessLevels: ['crm']` is a PSEUDO-LEVEL: it never appears in
+// users.access_level, it just keeps the shape identical to
+// POST_PURCHASE_SEQUENCE so the cron can filter both the same way.
+
+export const CRM_POST_PURCHASE_SEQUENCE = [
+  {
+    day: 1,
+    subject: 'Your course is ready — start with Module 1',
+    accessLevels: ['crm'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Welcome aboard, ${escapeHtml(name.split(' ')[0])}!</h2>
+      <p>Your <strong>Concussion Rehab Mastery</strong> course is ready. Clinicians who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
+      <p>Module 1 — <em>Concussion for the Exercise Physiologist</em> — takes about 60 minutes and covers the neurometabolic cascade and why exercise moved to first-line. It's the framework every later module builds on.</p>
+      <center><a href="${utm(loginLink, 'crm_post_purchase_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
+      <div class="callout">
+        <strong>Quick tip:</strong> the modules build in order — 1 to 3 set up the assessment, and Module 3's threshold test becomes the prescription in Module 4.
+      </div>
+      <p>Any questions as you work through it, just hit reply — I read every message.</p>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    `),
+  },
+  {
+    day: 3,
+    subject: 'How are you going with the course?',
+    accessLevels: ['crm'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>Just checking in — have you had a chance to get started?</p>
+      <p>The first three modules build the EP's clinical foundation:</p>
+      <ol>
+        <li><strong>Module 1:</strong> Concussion for the Exercise Physiologist — the neurometabolic cascade and why exercise is now first-line</li>
+        <li><strong>Module 2:</strong> Recognition, red flags and the scope-of-practice boundary</li>
+        <li><strong>Module 3:</strong> Assessment that is the treatment — the Buffalo Concussion Treadmill/Bike Test</li>
+      </ol>
+      <p>Each takes about 60 minutes. By the end of Module 3 you can run the threshold test that becomes the exercise prescription.</p>
+      <center><a href="${utm(loginLink, 'crm_post_purchase_day3', 'continue_course')}" class="cta-btn">Open Module 1</a></center>
+      <p class="ps">P.S. Lifetime access, no deadline — but momentum matters. Clinicians who finish inside two weeks report the biggest confidence gains.</p>
+      <div class="sig">Zac</div>
+    `),
+  },
+  {
+    day: 7,
+    subject: `You're halfway to ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours`,
+    accessLevels: ['crm'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>One week in — however far you've got, you're making progress.</p>
+      <p>The modules coming up are where EPs tell me the practical value lands:</p>
+      <ul>
+        <li><strong>Module 4 — Sub-Symptom-Threshold Aerobic Rehabilitation:</strong> the FITT prescription and how to progress the physiological ceiling</li>
+        <li><strong>Module 5 — Phenotype-Specific Exercise Rehabilitation:</strong> matching the intervention to the presentation</li>
+        <li><strong>Module 6 — Graded Return to Activity, Sport &amp; Performance:</strong> the six-stage strategy and Australian stand-down rules</li>
+      </ul>
+      <p>Finish all 8 modules and your <strong>${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hour certificate</strong> is generated automatically, ready to download.</p>
+      <center><a href="${utm(loginLink, 'crm_post_purchase_day7', 'keep_going')}" class="cta-btn">Open Module 4: Aerobic Rehabilitation</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+  {
+    day: 14,
+    subject: 'The module EPs say changes their practice',
+    accessLevels: ['crm'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>Two weeks in — wherever you're up to, I wanted to flag <strong>Module 5: Phenotype-Specific Exercise Rehabilitation</strong>.</p>
+      <p>This is the one EPs consistently say changed how they work. Instead of one generic graded-return protocol, you get the exercise-based intervention matched to the presentation in front of you:</p>
+      <ul>
+        <li><strong>Autonomic / exercise intolerance:</strong> threshold-guided aerobic progression</li>
+        <li><strong>Vestibulo-ocular:</strong> habituation and gaze-stability loading within scope</li>
+        <li><strong>Cervicogenic:</strong> what belongs to you, and what gets referred</li>
+        <li><strong>Anxiety / mood-driven presentations:</strong> pacing without reinforcing avoidance</li>
+      </ul>
+      <p>It's the bridge between understanding concussion and actually prescribing for it.</p>
+      <center><a href="${utm(loginLink, 'crm_post_purchase_day14', 'continue_course')}" class="cta-btn">Open Module 5: Phenotype Rehab</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+  {
+    day: 21,
+    subject: 'Your CPD certificate is waiting',
+    accessLevels: ['crm'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>Quick reminder: complete all 8 modules and your <strong>${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hour certificate</strong> is generated automatically and ready to download from your dashboard.</p>
+      <p>Each module runs 45-60 minutes. Most people finish over a few sittings — and you have lifetime access, so there's no deadline.</p>
+      <p>If you're close, finishing this week means it's fresh when the next concussion referral walks in.</p>
+      <center><a href="${utm(loginLink, 'crm_post_purchase_day21', 'finish_course')}" class="cta-btn">Finish Your Course</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+  {
+    day: 30,
+    subject: 'Know an EP who takes concussion referrals?',
+    accessLevels: ['crm'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>You've been with the course a month now. If it's been useful, I have a small ask:</p>
+      <p><strong>Do you know a colleague who sees concussion referrals?</strong></p>
+      <p>Most exercise physiologists were never trained in this — and a recommendation from a trusted colleague goes further than any ad I could run.</p>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/concussion-rehab-mastery', 'crm_post_purchase_day30', 'share')}" class="cta-secondary">Share the Course</a></center>
+      <p>And if you have feedback on the course itself, I'd genuinely love to hear it — just reply.</p>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+      <p class="ps">P.S. This is the last onboarding email. You'll only hear from us for clinical updates or practical-day logistics from here.</p>
+    `),
+  },
+]
+
+/**
+ * CRM buyer hasn't opened a module yet — the EP-stream twin of
+ * PAID_NO_PROGRESS_NUDGE. Swaps in for the Day 3 / Day 7 CRM emails when the
+ * buyer has 0 of the 8 EP modules (progress ids 201-208) complete, so we never
+ * tell someone "you're halfway" when they haven't started.
+ */
+export const CRM_NO_PROGRESS_NUDGE = {
+  subject: 'Quick one — have you opened Module 1 yet?',
+  template: (name: string, loginLink: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>You picked up Concussion Rehab Mastery a few days ago and your account shows Module 1 is still unopened. No judgment — clinic gets busy. One reason to prioritise it:</p>
+    <p><strong>Module 1 is the hard prerequisite for the other seven.</strong> It's the neurometabolic and autonomic framework that makes the threshold test in Module 3 and the exercise prescription in Module 4 make sense as one system, rather than a set of rules to memorise.</p>
+    <p>It's about 60 minutes, and it splits neatly across two sittings.</p>
+    <center><a href="${utm(loginLink, 'crm_no_progress_d3', 'start_module_1')}" class="cta-btn">Open Module 1</a></center>
+    <p>If something's in the way — login link not working, or you're not sure where to start — just reply. I'll sort it.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+    <p class="ps">P.S. Lifetime access means no expiry, but momentum compounds — finish Module 1 in week 1 and you're 3&times; more likely to finish the course.</p>
+  `),
+}
+
+/**
+ * CRM buyer is 7 of 8 EP modules done — the EP-stream twin of
+ * ALMOST_DONE_EMAIL.
+ */
+export const CRM_ALMOST_DONE_EMAIL = {
+  subject: "You're one module away from your certificate",
+  template: (name: string, loginLink: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>You've completed <strong>7 of 8 modules</strong> in Concussion Rehab Mastery — one away from your ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hour certificate.</p>
+    <p>You've already done the hard work. The last module takes about 60 minutes, and your certificate generates automatically the moment you finish.</p>
+    <div class="callout">
+      <strong>What you've covered so far:</strong><br><br>
+      &#8226; The neurometabolic cascade and why exercise is first-line<br>
+      &#8226; Red flags and the EP scope boundary<br>
+      &#8226; The Buffalo threshold test — assessment that becomes the prescription<br>
+      &#8226; Sub-symptom-threshold aerobic rehabilitation and phenotype-specific loading<br><br>
+      <strong>One module left</strong> — finish it and your ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours are locked in.
+    </div>
+    <center><a href="${utm(loginLink, 'crm_almost_done', 'finish_last_module')}" class="cta-btn">Finish Your Last Module</a></center>
+    <p>You're close. Don't leave the certificate on the table.</p>
     <div class="sig">
       Zac Lewis<br>
       Concussion Education Australia

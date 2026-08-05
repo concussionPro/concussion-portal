@@ -224,6 +224,13 @@ export function computePrescription(
 }
 
 export interface SessionLog {
+  /**
+   * Stable id for the session ATTEMPT (client-minted). Also stamped on the
+   * abandoned-session record the app syncs when the tab is killed mid-session,
+   * so the clinician read side can collapse "interrupted then finished" into
+   * the completed session instead of showing a phantom abandonment.
+   */
+  sessionUid?: string
   date: string
   avgHeartRate: number
   peakHeartRate: number
@@ -306,6 +313,13 @@ export interface RetestGate {
  * apart — EXCEPT after a regress (the band just moved down; a fresh threshold is
  * clinically useful) or on clinician instruction. A red-flag lock blocks
  * everything until the patient confirms clinical clearance.
+ *
+ * `clinicianDirected` is the ONLY thing that lifts the one-per-day rule, and it
+ * is not a patient-facing convenience: the caller may set it only from an
+ * explicit, recorded clinician-directed action (in the app today, after a
+ * red-flag clearance — the whole point of the review is that the clinician may
+ * want a fresh threshold that day). It NEVER applies to the patient-initiated
+ * path, and it can never re-open a live red-flag lock (checked first, above).
  */
 export function canRetest(
   nowMs: number,
@@ -319,8 +333,11 @@ export function canRetest(
     }
   }
   if (lastTestAt == null) return { allowed: true, reason: null }
-  // Max one test per calendar day — no exceptions.
-  if (new Date(nowMs).toDateString() === new Date(lastTestAt).toDateString()) {
+  // Max one test per calendar day for the patient-initiated path.
+  if (
+    new Date(nowMs).toDateString() === new Date(lastTestAt).toDateString() &&
+    !opts.clinicianDirected
+  ) {
     return {
       allowed: false,
       reason: 'You have already tested today. One test a day is the limit — try again tomorrow.',

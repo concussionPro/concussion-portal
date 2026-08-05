@@ -426,21 +426,76 @@ export default function PlatformAppPage({
   }, [hydrated, decision, decisionFresh])
 
   // ── re-test gate ─────────────────────────────────────────────────────────────
-  const tryRetest = () => {
+  // The one-test-per-calendar-day rule is the DEFAULT and is not weakened: the
+  // patient-initiated path (Home / Progress / result "Re-test") always calls
+  // this with directed=false.
+  //
+  // CLINICIAN-DIRECTED OVERRIDE: after a red-flag clearance the treating
+  // clinician may want a fresh threshold the same day — reviewing the patient is
+  // exactly what the hold was waiting for. That path is explicit (a two-tap
+  // confirmation the patient must make), eligibility-gated (only while the
+  // clearance is more recent than the last test), and RECORDED — it is stamped
+  // onto the test that follows so the clinician's report says the test was
+  // clinician-directed. It never bypasses a LIVE red-flag lock; canRetest
+  // checks that first.
+  const [clinicianDirected, setClinicianDirected] = useState(false)
+  const [confirmDirected, setConfirmDirected] = useState(false)
+  const directedEligible =
+    !redFlagLocked && redFlagClearedAt != null && (lastTestAt == null || redFlagClearedAt > lastTestAt)
+
+  const tryRetest = (directed = false) => {
+    const useDirected = directed && directedEligible
     const gate = canRetest(Date.now(), lastTestAt, {
       afterRegress: lastRegressAt != null && (lastTestAt == null || lastRegressAt > lastTestAt),
+      clinicianDirected: useDirected,
       redFlagLocked,
     })
     if (!gate.allowed) {
+      setClinicianDirected(false)
       setRetestNotice(gate.reason)
       // without a prescription 'home' renders nothing — stay on the result
       // screen and surface the notice there
       setStep(redFlagLocked ? 'locked' : prescription ? 'home' : 'result')
       return
     }
+    setClinicianDirected(useDirected)
     setRetestNotice(null)
+    setConfirmDirected(false)
     setStep('readiness')
   }
+
+  /**
+   * The explicit clinician-directed action. Rendered ONLY beside a re-test
+   * refusal, and only when a clearance since the last test makes it legitimate.
+   */
+  const directedRetestPrompt = retestNotice && directedEligible && (
+    <div className="rounded-[16px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-3.5 py-3">
+      {!confirmDirected ? (
+        <button
+          type="button"
+          onClick={() => setConfirmDirected(true)}
+          className="text-[12.5px] font-semibold text-(--sst-accent-ink) underline decoration-(--sst-underline) underline-offset-2"
+        >
+          My clinician has asked me to re-test today
+        </button>
+      ) : (
+        <>
+          <p className="m-0 text-[12.5px] leading-snug text-(--sst-ink-2)">
+            Confirm: since your warning sign, a clinician has reviewed you and asked for a fresh
+            threshold test today. This is recorded on the test your clinician sees.
+          </p>
+          <div className="mt-2.5 flex gap-2">
+            <SecondaryButton onClick={() => setConfirmDirected(false)} className="flex-1 p-2.5 text-[12.5px]">
+              Not today
+            </SecondaryButton>
+            <PrimaryButton onClick={() => tryRetest(true)} className="flex-1 p-2.5 text-[12.5px]">
+              Yes — re-test now
+            </PrimaryButton>
+          </div>
+        </>
+      )}
+    </div>
+  )
 
   // ── start over ───────────────────────────────────────────────────────────────
   const startOver = () => {
@@ -578,15 +633,19 @@ export default function PlatformAppPage({
               {retestNotice}
             </p>
           )}
+          {directedRetestPrompt}
           <Readiness
             initialRestingScore={restingSymptomScore}
             onBack={() => setStep(prescription ? 'home' : 'symptoms')}
             onContinue={(res: ReadinessResult) => {
               setRestingSymptomScore(res.restingSymptomScore)
               // The repeat path (welcome→symptoms→readiness) bypassed the
-              // re-test spacing gate tryRetest enforces — same rules here.
+              // re-test spacing gate tryRetest enforces — same rules here,
+              // including the clinician-directed override the patient has
+              // already explicitly confirmed to get this far.
               const gate = canRetest(Date.now(), lastTestAt, {
                 afterRegress: lastRegressAt != null && (lastTestAt == null || lastRegressAt > lastTestAt),
+                clinicianDirected: clinicianDirected && directedEligible,
                 redFlagLocked,
               })
               if (!gate.allowed) {
@@ -613,8 +672,13 @@ export default function PlatformAppPage({
           hrStatus={sessionFeed.status}
           onComplete={(result: ThresholdResult, input: TestInput) => {
             const now = Date.now()
+            // Whether THIS test ran on the clinician-directed override. Read
+            // before the state is cleared below, and recorded both locally and
+            // in the synced payload — the override is never silent.
+            const wasDirected = clinicianDirected
             setThresholdResult(result)
             setLastTestAt(now)
+            setClinicianDirected(false)
             setThresholdHistory((prev) => [
               ...prev,
               {
@@ -624,6 +688,7 @@ export default function PlatformAppPage({
                 thresholdStage: result.thresholdStage,
                 modality: input.modality ?? null,
                 restingSymptomScore: input.restingSymptomScore,
+                ...(wasDirected ? { clinicianDirected: true } : {}),
               },
             ])
             // Every completed test syncs — physiologic, no-intolerance AND red-flag.
@@ -660,6 +725,10 @@ export default function PlatformAppPage({
                 // the hub/GP report can surface the low-threshold caution + note.
                 prolongedRecoveryRisk: suggested?.prolongedRecoveryRisk ?? false,
                 clinicianNote: suggested?.clinicianNote ?? null,
+                // Same-day re-test under the clinician-directed override —
+                // stamped so the clinician's report says the spacing rule was
+                // lifted on their instruction, not bypassed by the patient.
+                clinicianDirected: wasDirected,
               },
             })
             if (result.interpretation === 'red-flag') {
@@ -685,6 +754,9 @@ export default function PlatformAppPage({
             setStep('result')
           }}
           onAbort={(info) => {
+            // an abandoned test consumes the clinician's direction — a second
+            // same-day attempt needs a fresh explicit confirmation
+            setClinicianDirected(false)
             if (info.started) {
               // an aborted test is a clinical event too — never a silent discard
               syncEvent({
@@ -713,13 +785,14 @@ export default function PlatformAppPage({
               {retestNotice}
             </p>
           )}
+          {directedRetestPrompt}
           <ResultPrescription
           result={thresholdResult}
           condition={condition}
           hasPrescription={prescription !== null}
           // the band was adopted + persisted at test completion — pure navigation
           onContinue={() => setStep('home')}
-          onRetest={tryRetest}
+          onRetest={() => tryRetest()}
           onExit={() => setStep(redFlagLocked ? 'locked' : prescription ? 'home' : 'welcome')}
           onKeepBand={() => setStep('home')}
           previousHrt={previousMeasured?.hrt ?? null}
@@ -732,6 +805,7 @@ export default function PlatformAppPage({
         <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
           {hasCompletedSession && <SstInstallPrompt />}
           {regressNotice}
+          {directedRetestPrompt}
           <HomeHub
             rx={prescription}
             condition={condition}
@@ -749,7 +823,7 @@ export default function PlatformAppPage({
               setStep('training')
             }}
             onProgress={() => setStep('progress')}
-            onRetest={tryRetest}
+            onRetest={() => tryRetest()}
             retestBlockedReason={retestNotice}
             onStartOver={() => setConfirmStartOver(true)}
           />
@@ -780,7 +854,28 @@ export default function PlatformAppPage({
             setStep('progress')
           }}
           onCancel={(info) => {
-            // a cancelled session is an abandoned-session record, not a silent discard
+            // a cancelled session is an abandoned-session record, not a silent
+            // discard — unless the page-hide handler already synced one for
+            // this attempt (info.alreadyRecorded), in which case this tap is
+            // just the patient closing the screen they came back to.
+            if (!info.alreadyRecorded) {
+              syncEvent({
+                sessionType: 'training',
+                eventType: 'session-abandoned',
+                hrtBpm: prescription.hrt,
+                bandLow: prescription.lowerBpm,
+                bandHigh: prescription.upperBpm,
+                payload: { ...info },
+              })
+            }
+            setStep('home')
+          }}
+          onInterrupted={(info) => {
+            // The tab/app was killed mid-session (phone call, swipe-away, OS
+            // reclaim). Same record shape as Cancel — a session that vanishes
+            // must still reach the clinician. If the patient comes back and
+            // saves, the completed log carries the same sessionUid and the
+            // clinic read side keeps only that one.
             syncEvent({
               sessionType: 'training',
               eventType: 'session-abandoned',
@@ -789,7 +884,6 @@ export default function PlatformAppPage({
               bandHigh: prescription.upperBpm,
               payload: { ...info },
             })
-            setStep('home')
           }}
         />
       )}
@@ -807,7 +901,7 @@ export default function PlatformAppPage({
           notice={regressNotice}
           onHome={() => setStep('home')}
           onNewSession={() => setStep('training')}
-          onRetest={tryRetest}
+          onRetest={() => tryRetest()}
           canApply={decisionFresh && verifiedSessions > progressionCheckpoint}
           onApplyCeiling={(newCeilingBpm) => {
             applyCeiling(newCeilingBpm)

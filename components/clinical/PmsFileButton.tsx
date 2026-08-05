@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Send, Loader2, CheckCircle2, X, Search } from 'lucide-react'
+import { Send, Loader2, CheckCircle2, X, Search, AlertTriangle } from 'lucide-react'
 
 /**
  * "File to PMS" — the hub-side end of the plugin. The clinician picks the
@@ -27,6 +27,11 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
   demo?: boolean
 }) {
   const [pms, setPms] = useState<string | null>(demo ? 'gensolve' : null)
+  // A connection the API could not verify (revoked key, rotated server secret).
+  // The control stays visible — the clinician still needs to know filing exists
+  // — but it says so up front instead of failing after they pick a patient.
+  const [needsAttention, setNeedsAttention] = useState(false)
+  const [healthMessage, setHealthMessage] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
 
   const auth = `code=${encodeURIComponent(clinicCode)}&k=${encodeURIComponent(viewKey)}`
@@ -35,7 +40,12 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
     let alive = true
     void fetch(`/api/sst/pms/connection?${auth}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (alive && d?.connected) setPms(d.kind) })
+      .then((d) => {
+        if (!alive || !d?.connected) return
+        setPms(d.kind)
+        setNeedsAttention(d.needsAttention === true)
+        setHealthMessage(typeof d.message === 'string' ? d.message : null)
+      })
       .catch(() => {})
     return () => { alive = false }
   }, [auth, demo])
@@ -46,9 +56,14 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition"
+        className={
+          needsAttention
+            ? 'inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition'
+            : 'inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition'
+        }
       >
-        <Send className="w-3.5 h-3.5" /> File to {pms}
+        {needsAttention ? <AlertTriangle className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+        {needsAttention ? `${pms} needs attention` : `File to ${pms}`}
       </button>
       {open && (
         <FileModal
@@ -59,6 +74,7 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
           patientRef={patientRef}
           pms={pms}
           demo={demo}
+          healthMessage={needsAttention ? healthMessage : null}
           onClose={() => setOpen(false)}
         />
       )}
@@ -66,7 +82,7 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
   )
 }
 
-function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, pms, demo = false, onClose }: {
+function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, pms, demo = false, healthMessage = null, onClose }: {
   auth: string
   clinicCode: string
   viewKey: string
@@ -74,6 +90,8 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
   patientRef?: string | null
   pms: string
   demo?: boolean
+  /** set when the connection GET could not verify the connection */
+  healthMessage?: string | null
   onClose: () => void
 }) {
   const [q, setQ] = useState(patientName)
@@ -139,11 +157,15 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
         }),
       })
       const d = await r.json()
+      // The server now returns an ACTIONABLE message ("the stored API key is no
+      // longer valid … reconnect, then file again") instead of the adapter's
+      // raw "cliniko: HTTP 401" — and it is rendered as an error, not as an
+      // amber note the same colour as the informational text beneath it.
       setResult(r.ok && d.ok
         ? { ok: true, msg: `Filed to ${picked.name}'s record in ${pms}.` }
-        : { ok: false, msg: d.error || 'Filing failed' })
+        : { ok: false, msg: d.error || `${pms} refused the note — nothing was filed. Try again in a moment.` })
     } catch {
-      setResult({ ok: false, msg: 'Filing failed' })
+      setResult({ ok: false, msg: `Could not reach ${pms} — nothing was filed. Check your connection and try again.` })
     } finally {
       setBusy(false)
     }
@@ -159,6 +181,16 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
           </h3>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
         </div>
+
+        {/* Connection is known-broken BEFORE anything is attempted — say so
+            here rather than letting the clinician pick a patient, hit File, and
+            discover it then. */}
+        {healthMessage && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+            <AlertTriangle className="mt-0.5 w-3.5 h-3.5 flex-shrink-0 text-red-600" />
+            <p className="m-0 text-[12px] leading-snug text-red-700">{healthMessage}</p>
+          </div>
+        )}
 
         <p className="m-0 mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">Report</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
@@ -207,9 +239,19 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
         </div>
 
         {result && (
-          <p className={`m-0 mb-3 text-[12.5px] font-medium ${result.ok ? 'text-emerald-700' : 'text-amber-700'}`}>
-            {result.ok && <CheckCircle2 className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />}{result.msg}
-          </p>
+          result.ok ? (
+            <p className="m-0 mb-3 text-[12.5px] font-medium text-emerald-700">
+              <CheckCircle2 className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />{result.msg}
+            </p>
+          ) : (
+            <div className="m-0 mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+              <AlertTriangle className="mt-0.5 w-3.5 h-3.5 flex-shrink-0 text-red-600" />
+              <div>
+                <p className="m-0 text-[12px] font-bold text-red-800">Not filed</p>
+                <p className="m-0 mt-0.5 text-[12px] leading-snug text-red-700">{result.msg}</p>
+              </div>
+            </div>
+          )
         )}
 
         <button type="button" onClick={file} disabled={!picked || busy || result?.ok}

@@ -6,10 +6,14 @@
  * loopback panel) so it's visual, not a text wall. Still UPSELLS the course.
  *
  * SST is pending App Store approval — the ask is a 15-min dashboard walkthrough
- * + founding place, not a live download. Separate route + tracking lane from the
- * course engine (SST outreach has not begun).
+ * and the free-patient trial, not a live download. Separate route + tracking
+ * lane from the course engine (SST outreach has not begun).
+ *
+ * FOUNDING PRICING IS RETIRED. The live offer is the caseload tiers in
+ * CONFIG's SST_TIERS (A$49/99/149, unlimited clinicians on every paid tier).
+ * Never reintroduce "founding terms locked for good" here.
  */
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 import { ArrowRight, GraduationCap, ClipboardCheck } from 'lucide-react'
 import type { ProspectClinic } from '@/lib/prospect/types'
 import { ProspectTracker } from './ProspectTracker'
@@ -100,12 +104,12 @@ export function SstProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           <div data-track-section="offer-hook" className="mb-10 rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.06] via-white to-white p-5 sm:p-6 shadow-sm">
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 sm:gap-6 sm:items-center">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1.5">Founding clinics · forming now</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1.5">Clinical Testing · priced on caseload</p>
                 <p className="text-lg sm:text-xl font-bold text-foreground leading-snug mb-1.5">
                   See the between-visit view for one of your patients — and the report it writes at episode end.
                 </p>
                 <p className="text-[13px] sm:text-sm text-foreground/70 font-semibold">
-                  Your first 3 patients free · clinic code the same week · founding terms locked for good.
+                  Your first {SST_TRIAL_PATIENT_CAP} patients free · clinic code the same week · then from A${SST_TIER_FROM_AUD}/month, priced on active caseload with unlimited clinicians.
                 </p>
               </div>
               <div className="flex flex-col gap-2.5 shrink-0">
@@ -240,7 +244,7 @@ export function SstProspectLanding({ clinic }: { clinic: ProspectClinic }) {
       <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 border-t border-black/10 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.18)]">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
           <div className="min-w-0 hidden sm:block">
-            <p className="text-[11.5px] font-bold text-foreground leading-tight truncate">Your first 3 patients free · founding terms locked for good</p>
+            <p className="text-[11.5px] font-bold text-foreground leading-tight truncate">Your first {SST_TRIAL_PATIENT_CAP} patients free · then from A${SST_TIER_FROM_AUD}/month, unlimited clinicians</p>
             <p className="text-[11px] text-foreground/60 truncate">{clinic.shortName}</p>
           </div>
           <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">

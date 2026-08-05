@@ -53,6 +53,16 @@ const loadUsersMock = vi.hoisted(() => vi.fn(async (): Promise<unknown[]> => [])
 vi.mock('@/lib/users', () => ({
   loadUsers: loadUsersMock,
   getEnrollmentCount: async () => 3,
+  // Workshop lanes clock off the PURCHASE date; an empty map is the documented
+  // fallback to created_at. (Missing from the mock, so every run threw before
+  // it sent anything.)
+  loadWorkshopEnrolmentDates: async () => new Map<string, string>(),
+}))
+
+// CRM (EP stream) ownership. The cron FAILS CLOSED if this returns null, so the
+// mock must hand back a real (empty) map — no user in these fixtures owns CRM.
+vi.mock('@/lib/crm-course', () => ({
+  crmOwnership: async () => new Map<string, { crmAt?: string; practicalAt?: string }>(),
 }))
 
 vi.mock('@/app/api/unsubscribe/route', () => ({

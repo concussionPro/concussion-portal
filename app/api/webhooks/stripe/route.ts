@@ -14,6 +14,7 @@ import { CONFIG } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
 import { recordCoursePurchase } from '@/lib/course-purchases'
+import { revokeCourseCertificates } from '@/lib/course-certificates'
 import { enrolUser as enrolAiCourseUser, unenrolUser as unenrolAiCourseUser } from '@/lib/ai-course/access'
 import { findCourse } from '@/lib/ai-course/provider-catalogue'
 import { CRM_COURSE_SLUG, CRM_PRACTICAL_SLUG, crmInvoiceDescription, type CrmTier } from '@/lib/crm-course'
@@ -84,6 +85,62 @@ function nearestWorkshopSlug(addr?: { city?: string | null; state?: string | nul
     WA: 'wa',
   }
   return byState[st] ?? null
+}
+
+function workshopCityLabel(slug: string): string {
+  return slug === 'byron-bay' ? 'Byron Bay' : slug.charAt(0).toUpperCase() + slug.slice(1)
+}
+
+/**
+ * "This city can run" alert to the owner, fired at fulfilment when a new paid
+ * seat takes the city to CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD.
+ *
+ * Shared by BOTH streams (2026-08-05 parity fix). The practical day is shared
+ * between CCM and CRM and getEnrollmentCount now counts both, so a CRM
+ * Complete/upgrade sale can be the one that tips a city over — the CRM branch
+ * previously had no threshold check at all, which meant the sale that unlocked
+ * a date passed in silence.
+ *
+ * Best-effort: never fail a fulfilment (and trigger endless Stripe retries)
+ * over an internal notification.
+ */
+async function alertIfThresholdReached(workshopCity: string): Promise<void> {
+  try {
+    const { getEnrollmentCount } = await import('@/lib/users')
+    const count = await getEnrollmentCount(workshopCity)
+    if (count < CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD) return
+    const cityLabel = workshopCityLabel(workshopCity)
+    await sendEmail({
+      to: CONFIG.CONTACT_EMAIL,
+      subject: `${cityLabel} has reached ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants — time to confirm the date`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+          <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
+            Workshop threshold reached: ${cityLabel}
+          </h2>
+          <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+            <strong>${cityLabel}</strong> now has <strong>${count} paid registrants</strong> for the shared practical day (CCM + CRM combined).
+          </p>
+          <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+            Next steps:
+          </p>
+          <ol style="font-size: 15px; color: #475569; line-height: 1.8;">
+            <li>Choose a date (at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks from now)</li>
+            <li>Book the venue</li>
+            <li>Update <code>lib/config.ts</code> — set status to <code>'confirmed'</code>, add <code>date</code> and <code>dateObj</code></li>
+            <li>Deploy</li>
+          </ol>
+          <p style="font-size: 14px; color: #64748b; margin-top: 20px;">
+            The pre-workshop email sequence will kick in automatically once the date is set.
+          </p>
+        </div>
+      `,
+      tags: [{ name: 'type', value: 'workshop-threshold-alert' }],
+    })
+    console.log(`[Threshold] ${cityLabel} hit ${count} registrants — admin alert sent`)
+  } catch (err) {
+    console.error('Threshold check failed:', err)
+  }
 }
 
 async function logAnalyticsEvent(
@@ -456,44 +513,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   // Step 2: Check workshop threshold — send admin alert when threshold hit
   if (accessLevel === 'full-course' && workshopCity) {
-    try {
-      const { getEnrollmentCount } = await import('@/lib/users')
-      const count = await getEnrollmentCount(workshopCity)
-      if (count >= CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD) {
-        const cityLabel = workshopCity === 'byron-bay' ? 'Byron Bay' : workshopCity.charAt(0).toUpperCase() + workshopCity.slice(1)
-        const adminEmail = CONFIG.CONTACT_EMAIL
-        await sendEmail({
-          to: adminEmail,
-          subject: `${cityLabel} has reached ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants — time to confirm the date`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
-              <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
-                Workshop threshold reached: ${cityLabel}
-              </h2>
-              <p style="font-size: 15px; color: #475569; line-height: 1.6;">
-                <strong>${cityLabel}</strong> now has <strong>${count} paid registrants</strong> for the Complete Course workshop.
-              </p>
-              <p style="font-size: 15px; color: #475569; line-height: 1.6;">
-                Next steps:
-              </p>
-              <ol style="font-size: 15px; color: #475569; line-height: 1.8;">
-                <li>Choose a date (at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks from now)</li>
-                <li>Book the venue</li>
-                <li>Update <code>lib/config.ts</code> — set status to <code>'confirmed'</code>, add <code>date</code> and <code>dateObj</code></li>
-                <li>Deploy</li>
-              </ol>
-              <p style="font-size: 14px; color: #64748b; margin-top: 20px;">
-                The pre-workshop email sequence will kick in automatically once the date is set.
-              </p>
-            </div>
-          `,
-          tags: [{ name: 'type', value: 'workshop-threshold-alert' }],
-        })
-        console.log(`[Threshold] ${cityLabel} hit ${count} registrants — admin alert sent`)
-      }
-    } catch (err) {
-      console.error('Threshold check failed:', err)
-    }
+    await alertIfThresholdReached(workshopCity)
   }
 
   // Step 3: Log purchase to analytics + fire Google Ads conversion server-side
@@ -767,7 +787,10 @@ async function handleShortCoursePurchase(
   // hardcoding 'preview' would downgrade an online-only/full-course user's
   // session when they click the link (same pattern as handleBookPurchase).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
+  // 7-day TTL (NURTURE_TTL_MS), never the 24h transactional default: an
+  // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
+  // and this is a PAYING buyer's only way in.
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', NURTURE_TTL_MS)
   const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=short_course_purchase&redirect=${encodeURIComponent(course.route)}`
 
   try {
@@ -874,6 +897,13 @@ async function handleCrmPurchase(
     console.error('[crm] abandoned-checkout recover failed:', err)
   }
 
+  // Workshop threshold — a CRM practical seat fills the SAME shared room, so
+  // this sale can be the one that lets a city run. Same alert as the CCM
+  // branch (parity fix 2026-08-05: the CRM branch had none).
+  if ((tier === 'complete' || tier === 'upgrade') && location) {
+    await alertIfThresholdReached(location)
+  }
+
   // Bundle: every CRM enrolment includes the working clinical platform (SST
   // Trainer + Baseline). Provision it. UNGATED: a CRM purchase can only ever
   // exist once a CRM checkout route is deliberately switched on, and CRM buyers
@@ -978,10 +1008,37 @@ async function handleCrmPurchase(
   }
 
   // Welcome + magic link into the EP course.
+  //
+  // Deliberately NOT sendPostPurchaseLoginEmail(): that template is CCM copy
+  // ("your Concussion Management course", "Module 1 — Concussion neuroscience")
+  // and a CRM buyer must never be sent the wrong course's name. The seat block
+  // below gives the CRM Complete/upgrade buyer the SAME "your seat is secured"
+  // confirmation the CCM template gives a full-course buyer — parity of
+  // substance, not of template (2026-08-05).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
+  // 7-day TTL (NURTURE_TTL_MS), never the 24h transactional default: an
+  // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
+  // and this is a PAYING buyer's only way in.
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', NURTURE_TTL_MS)
   const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=crm_purchase&redirect=${encodeURIComponent('/ep-course/dashboard')}`
   const tierLabel = tier === 'online' ? 'Online course' : tier === 'complete' ? 'Complete (online + practical day)' : 'Practical Day upgrade'
+
+  // "Your seat is secured" — practical-day tiers only.
+  let seatBlock = ''
+  if ((tier === 'complete' || tier === 'upgrade') && location) {
+    const cityLabel = workshopCityLabel(location)
+    const locCfg = Object.values(CONFIG.LOCATIONS).find((l) => l.slug === location)
+    const confirmedDate = locCfg?.status === 'confirmed' ? locCfg.date : null
+    seatBlock = `
+          <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
+            <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Your seat is secured</p>
+            ${confirmedDate
+              ? `<p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">${escapeHtml(cityLabel)} — ${escapeHtml(confirmedDate)}</p>
+            <p style="margin: 2px 0 0; font-size: 13px; color: #475569;">8am–4pm · buffet lunch included, please let us know of any dietary needs.</p>`
+              : `<p style="margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #0f172a;">${escapeHtml(cityLabel)} practical day — date to be confirmed</p>
+            <p style="margin: 0; font-size: 13px; color: #475569;">Your spot at the ${escapeHtml(cityLabel)} practical day is locked in. We confirm the date once registrations hit the minimum to run, and you'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice before the day.</p>`}
+          </div>`
+  }
   try {
     await sendEmail({
       to: customerEmail,
@@ -994,6 +1051,7 @@ async function handleCrmPurchase(
           <p style="text-align: center; margin: 24px 0;">
             <a href="${loginUrl}" style="display: inline-block; padding: 14px 28px; background: #0d9488; color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Open the course →</a>
           </p>
+          ${seatBlock}
           <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
             <strong>What you paid:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br>
             <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>${crmInvoice ? '<br><strong>Tax invoice:</strong> attached to this email' : ''}
@@ -1178,7 +1236,10 @@ async function handleBookPurchase(
   await markBookPurchased(customerEmail)
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
+  // 7-day TTL (NURTURE_TTL_MS), never the 24h transactional default: an
+  // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
+  // and this is a PAYING buyer's only way in.
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', NURTURE_TTL_MS)
   const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=reference_purchase`
   const downloadUrl = `${baseUrl}/api/reference/download`
 
@@ -1538,6 +1599,32 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
  * PI metadata only carries courseType for CCM purchases) and revokes exactly
  * that entitlement. `cause` is only for log lines.
  */
+/**
+ * course_certificates slugs per product. A certificate is a CPD document the
+ * holder can lodge with ESSA/OA, so revoking the entitlement without revoking
+ * the certificate left a charged-back buyer with permanently verifiable proof
+ * of a course they no longer own (2026-08-05). Mapping is deliberately narrow:
+ * only the certificates the REFUNDED product paid for.
+ *
+ * 'scat-mastery' and 'recognition-referral' are never listed — those courses
+ * are free, so there is no purchase to reverse.
+ */
+const CCM_ONLINE_CERT_SLUG = 'online-course'
+const CRM_CERT_SLUG = 'crm'
+
+/** Mark the named certificates revoked; log loudly, never fail the webhook. */
+async function revokeCertificates(
+  email: string,
+  slugs: string[],
+  cause: 'refund' | 'dispute',
+  product: string,
+): Promise<void> {
+  const revoked = await revokeCourseCertificates(email, slugs, `${cause} (${product})`)
+  if (revoked.length) {
+    console.log(`Revoked ${revoked.length} ${product} certificate(s) for ${redact(email)} after ${cause}`)
+  }
+}
+
 async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string, cause: 'refund' | 'dispute') {
   let courseType: string | undefined
   let productType: string | undefined
@@ -1574,7 +1661,7 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
         return
       }
       const chargeCustomerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null
-      const { rows: downgraded } = await sql<{ email: string }>`
+      const { rows: downgraded } = await sql<{ email: string; access_level: string }>`
         UPDATE users SET access_level = CASE
             -- Downgrade FLOOR (2026-08-05 sweep #7): a member whose own CCM
             -- purchase was online-only loses only the hub's full-course
@@ -1605,9 +1692,17 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
             SELECT 1 FROM course_purchases cp
             WHERE LOWER(cp.user_email) = LOWER(users.email) AND cp.course_slug <> 'ccm-online'
           )
-        RETURNING email
+        RETURNING email, access_level
       `
       console.log(`[hub-pack] Revoked hub ${hub.code} after ${cause} for ${redact(email)} — downgraded ${downgraded.length} member account(s)`)
+      // A seat that dropped all the way to 'preview' owns no course any more,
+      // so its 8-CPD certificate must stop verifying. A member floored at
+      // 'online-only' bought that course themselves and KEEPS the certificate.
+      for (const m of downgraded) {
+        if (m.access_level === 'preview') {
+          await revokeCertificates(m.email, [CCM_ONLINE_CERT_SLUG], cause, 'hub-pack seat')
+        }
+      }
     } catch (err) {
       console.error(`[hub-pack] Failed to revoke hub after ${cause} for ${redact(email)}:`, err)
       try {
@@ -1630,8 +1725,13 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
     try {
       if (productType === 'crm-upgrade') {
         await sql`DELETE FROM course_purchases WHERE user_email = ${email.toLowerCase()} AND course_slug = ${CRM_PRACTICAL_SLUG}`
+        // The practical day is an add-on; the ONLINE CRM course (and its
+        // certificate) is untouched by an upgrade refund.
       } else {
         await sql`DELETE FROM course_purchases WHERE user_email = ${email.toLowerCase()} AND course_slug IN (${CRM_COURSE_SLUG}, ${CRM_PRACTICAL_SLUG})`
+        // The online CRM course is gone — its 16-CPD certificate must stop
+        // verifying, or a refunded buyer can still lodge it with ESSA.
+        await revokeCertificates(email, [CRM_CERT_SLUG], cause, 'CRM')
       }
       console.log(`Revoked CRM entitlement (${productType}${refundedTier ? `/${refundedTier}` : ''}) for ${redact(email)} after full ${cause}`)
     } catch (err) {
@@ -1729,6 +1829,11 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
       if (refundedCourseSlug === 'ai-in-clinical-practice') {
         await unenrolAiCourseUser(email)
       }
+      // Short-course certificates are stored under the same slug as the
+      // purchase (e.g. 'vagus-nerve'), so the refunded slug IS the cert slug.
+      if (refundedCourseSlug) {
+        await revokeCertificates(email, [refundedCourseSlug], cause, 'short course')
+      }
       console.log(`Revoked short-course access (${refundedCourseSlug || 'unknown slug'}) for ${redact(email)} after full ${cause} ($${chargeAmount})`)
     } catch (err) {
       console.error(`Failed to revoke short-course access for ${redact(email)} after ${cause}:`, err)
@@ -1781,6 +1886,12 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
       UPDATE users SET access_level = ${downgradeLevel} WHERE LOWER(email) = ${email.toLowerCase()}
     `
     console.log(`Downgraded ${redact(email)} to ${downgradeLevel} access after ${cause} ($${chargeAmount})`)
+    // The 8-CPD online-course certificate goes with the course. A
+    // workshop-upgrade refund leaves them at 'online-only' — they still own the
+    // online course they earned it from, so it stays valid.
+    if (downgradeLevel === 'preview') {
+      await revokeCertificates(email, [CCM_ONLINE_CERT_SLUG], cause, 'CCM')
+    }
   } catch (err) {
     console.error(`Failed to downgrade ${redact(email)} after ${cause}:`, err)
     try {

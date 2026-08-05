@@ -3,6 +3,7 @@ import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { userOwnsCrm, userOwnsCrmPractical } from '@/lib/crm-course'
 import { CONFIG } from '@/lib/config'
 
 const VALID_CITIES = ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'] as const
@@ -52,10 +53,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired session.' }, { status: 401 })
     }
 
-    // Must be online-only (full-course users already have workshop access)
-    if (session.accessLevel !== 'online-only') {
+    // Must own an ONLINE course without a practical-day seat — the pool is
+    // "ready to upgrade", so a seat-holder doesn't belong in it.
+    //
+    // Both streams qualify: CCM online-only, and CRM ('crm' in
+    // course_purchases). A CRM buyer's access_level stays 'preview' because the
+    // streams are isolated (lib/crm-course.ts), so the access_level test alone
+    // locked a PAYING EP customer out of the city pool entirely.
+    let eligible = session.accessLevel === 'online-only'
+    if (!eligible && session.accessLevel === 'preview') {
+      const [ownsCrmOnline, ownsSeat] = await Promise.all([
+        userOwnsCrm(session.email),
+        userOwnsCrmPractical(session.email),
+      ])
+      eligible = ownsCrmOnline && !ownsSeat
+    }
+    if (!eligible) {
       return NextResponse.json(
-        { error: 'This feature is for online-only users who have completed all modules.' },
+        { error: 'This feature is for online-course students who have completed all modules.' },
         { status: 403 }
       )
     }

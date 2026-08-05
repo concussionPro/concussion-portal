@@ -10,6 +10,7 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import { trackEvent } from '@/lib/analytics'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * CCM (Concussion Clinical Mastery) — INTERNATIONAL landing.
@@ -537,7 +538,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           <FileText className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" strokeWidth={2} />
           <p className="text-[13.5px] text-muted-foreground leading-relaxed">
             <strong className="text-foreground">Evidence-based, and the rehab method is published.</strong>{' '}
-            The course is referenced to a 140+ source peer-reviewed evidence base, and the
+            The course is referenced to a {REFERENCE_COUNT}-source peer-reviewed evidence base, and the
             sub-symptom-threshold rehabilitation method behind the SST Trainer is a citable open-access
             protocol — <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise
             Rehabilitation after Concussion (mTBI)</em>, Lewis Z. (2026), Zenodo, CC-BY-4.0,{' '}

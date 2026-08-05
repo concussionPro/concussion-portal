@@ -10,6 +10,10 @@
  *    (project = 'cea' only)
  *  - does NOT own the AI course (course_purchases)
  *
+ * NOTE (bug fixed 2026-08-05): the ownership exclusion joined
+ * `LOWER(cp.email)`, but the column is `user_email` (lib/course-purchases.ts) —
+ * so it 42703'd / never applied and existing owners stayed in the audience.
+ *
  * GET ?dryRun=1  → preview audience, no sends (default)
  * POST           → preview audience, no sends (default — same as GET)
  * POST ?confirm=ai-course-launch-2026-06-17  → actually fires
@@ -69,7 +73,7 @@ async function findTargets(): Promise<Target[]> {
       AND (COALESCE(e.opens_60d, 0) > 0 OR COALESCE(e.clicks_60d, 0) > 0)
       AND NOT EXISTS (
         SELECT 1 FROM course_purchases cp
-        WHERE LOWER(cp.email) = LOWER(u.email)
+        WHERE LOWER(cp.user_email) = LOWER(u.email)
           AND cp.course_slug = 'ai-in-clinical-practice'
       )
     ORDER BY (COALESCE(e.clicks_60d, 0) * 3 + COALESCE(e.opens_60d, 0)) DESC

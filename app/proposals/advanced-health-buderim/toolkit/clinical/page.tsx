@@ -2,14 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
-import { DISCHARGE_TEMPLATES, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
+import { DISCHARGE_TEMPLATES, DISCHARGE_TEMPLATE_COUNT, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
 import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
 
 const ACCESS_KEY = 'ah2026'
 
 export const metadata: Metadata = {
   title: 'Clinical Toolkit — Advanced Health Hub Preview',
-  description: 'Six concussion discharge and handover templates — AHPRA-aligned, fillable.',
+  description: `${DISCHARGE_TEMPLATE_COUNT} concussion discharge and handover templates — AHPRA-aligned, fillable.`,
   robots: 'noindex, nofollow',
 }
 

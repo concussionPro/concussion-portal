@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
 import { CONFIG } from '@/lib/config'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * /cimspa — landing page for UK fitness / active-health professionals via
@@ -111,7 +112,7 @@ export default function CimspaLandingPage() {
             <strong className="text-slate-900">Concussion Rehab Mastery</strong> is
             our structured rehab-exercise course for exercise physiologists and
             rehab clinicians — eight online modules, 8 hours of learning, 80% pass
-            mark, 136 references, and the live clinical platform (SST Trainer +
+            mark, {REFERENCE_COUNT} references, and the live clinical platform (SST Trainer +
             Baseline tools).
           </p>
           <div className="mt-4 flex items-baseline gap-2">
@@ -143,7 +144,7 @@ export default function CimspaLandingPage() {
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
             <strong>Endorsement status:</strong> Concussion Education Australia is
             pursuing CIMSPA endorsement of the free awareness course. The awareness
-            course carries a Certificate of Completion and awards no CPD points.
+            course carries a Certificate of Completion and awards no CPD points.{' '}
             {CONFIG.FEATURES.ESSA_ACCREDITED
               ? 'Concussion Rehab Mastery is accredited by Exercise & Sports Science Australia (ESSA), following independent review by two ESSA-appointed reviewers.'
               : 'Concussion Rehab Mastery has been independently reviewed by two reviewers appointed by Exercise & Sports Science Australia (ESSA); that endorsement is pending.'}{' '}

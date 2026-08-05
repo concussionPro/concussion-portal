@@ -8,6 +8,7 @@ import {
   Lock,
 } from 'lucide-react'
 import { ToolkitSidebar } from './_sidebar'
+import { DISCHARGE_TEMPLATE_COUNT, OUTREACH_TEMPLATE_COUNT } from '@/data/hub-program-content'
 
 const ACCESS_KEY = 'ah2026'
 
@@ -63,8 +64,8 @@ export default async function ToolkitLauncher({
               kind="Clinical"
               kindTone="accent"
               title="Clinical Toolkit"
-              detail="Six discharge & handover templates — GP, school, parent, sports club, WorkCover, NDIS. AHPRA-aligned, clinician sign-off built in."
-              meta="6 templates"
+              detail={`${DISCHARGE_TEMPLATE_COUNT} discharge & handover templates — GP, school, parent, sports club, WorkCover, NDIS, ACC884 and medicolegal record. AHPRA-aligned, clinician sign-off built in.`}
+              meta={`${DISCHARGE_TEMPLATE_COUNT} templates`}
               icon={FileText}
             />
             <ToolkitCard
@@ -72,8 +73,8 @@ export default async function ToolkitLauncher({
               kind="Outreach"
               kindTone="slate"
               title="Outreach Kit"
-              detail="Six referral-building templates for schools, clubs, GPs, surf life saving and endurance sport, plus a capability one-pager."
-              meta="6 templates"
+              detail={`${OUTREACH_TEMPLATE_COUNT} referral-building templates for schools, clubs, GPs, surf life saving and endurance sport, plus a capability one-pager.`}
+              meta={`${OUTREACH_TEMPLATE_COUNT} templates`}
               icon={Mail}
             />
             <ToolkitCard

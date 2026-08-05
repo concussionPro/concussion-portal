@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { findUserById } from '@/lib/users'
+import { userOwnsCrm, userOwnsCrmPractical } from '@/lib/crm-course'
 import { VALID_LOCATIONS } from '@/lib/stripe'
 import { sql } from '@/lib/db'
 
@@ -9,13 +10,19 @@ import { sql } from '@/lib/db'
  *
  * Body: { location: <VALID_LOCATIONS slug> }
  *
- * - full-course users: sets users.workshop_location — the PAID nomination
- *   that counts toward CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD.
- * - online-only users (2026-07-02): records a NO-CHARGE city nomination in
- *   workshop_interest (source 'dashboard_nomination') — a demand signal that
- *   gets them first notice when the city's date launches. Costs nothing; the
- *   paid upgrade (early-bird difference at /upgrade) stays a separate,
- *   optional step.
+ * PAID nomination — sets users.workshop_location, which counts toward
+ * CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD. Held by anyone with a seat at the
+ * SHARED practical day:
+ *   - full-course users (CCM), and
+ *   - owners of the CRM 'crm-practical' entitlement (Complete / upgrade). Their
+ *     access_level stays 'preview' because the streams are isolated, so the old
+ *     access_level test 403'd a buyer who had already PAID for the seat.
+ *
+ * NO-CHARGE nomination — records an interest row (source
+ * 'dashboard_nomination'), a demand signal that gets them first notice when the
+ * city's date launches. Held by online-course owners of either stream
+ * (CCM online-only, CRM 'crm' without the practical day). Costs nothing; the
+ * paid upgrade stays a separate, optional step.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +41,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    if (user.accessLevel !== 'full-course' && user.accessLevel !== 'online-only') {
+    // CRM entitlements live in course_purchases, never in access_level.
+    const [ownsPractical, ownsCrmOnline] = await Promise.all([
+      userOwnsCrmPractical(user.email),
+      userOwnsCrm(user.email),
+    ])
+    const holdsPaidSeat = user.accessLevel === 'full-course' || ownsPractical
+    const ownsOnlineCourse = user.accessLevel === 'online-only' || ownsCrmOnline
+
+    if (!holdsPaidSeat && !ownsOnlineCourse) {
       return NextResponse.json({ error: 'Workshop nomination is available to enrolled users only' }, { status: 403 })
     }
 
@@ -48,7 +63,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (user.accessLevel === 'online-only') {
+    if (!holdsPaidSeat) {
       // No-charge nomination: interest row only — never touches
       // workshop_location (that column is the PAID seat count).
       const cleanEmail = user.email.toLowerCase()

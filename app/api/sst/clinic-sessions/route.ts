@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClinic, isRegisteredClinic, verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
+import { listClinicAcks } from '@/lib/sst-trainer/clinic-acks'
 
 /**
  * GET /api/sst/clinic-sessions?code=CEA-1234&k=<viewKey>
@@ -97,6 +98,40 @@ function isThresholdEventRow(r: Row): boolean {
   return e === 'test-aborted' || e === 'red-flag-cleared'
 }
 
+/** Client-minted id for one session ATTEMPT (present from the 2026-08 app on). */
+function sessionUidOf(r: Row): string | null {
+  const v = r.payload?.sessionUid
+  return typeof v === 'string' && v.trim() ? v.trim() : null
+}
+
+/**
+ * Collapse "interrupted, then came back and finished" into the COMPLETED row.
+ *
+ * The patient app now reports an abandoned session when the tab/app is killed
+ * mid-session (a phone call used to lose the session silently). If the patient
+ * returns and saves, both records carry the same attempt `sessionUid` — the
+ * abandonment is superseded and must not sit beside the completed session in
+ * the clinician's list or inflate the session count. Rows without a
+ * sessionUid (every pre-2026-08 record, and every explicit Cancel from an
+ * older build) are untouched.
+ */
+function dropSupersededAbandonments(trainings: Row[]): Row[] {
+  const finishedUids = new Set<string>()
+  for (const t of trainings) {
+    const e = typeof t.payload?.eventType === 'string' ? t.payload.eventType.toLowerCase() : ''
+    if (e === 'session-abandoned' || e === 'abandoned') continue
+    const uid = sessionUidOf(t)
+    if (uid) finishedUids.add(uid)
+  }
+  if (!finishedUids.size) return trainings
+  return trainings.filter((t) => {
+    const e = typeof t.payload?.eventType === 'string' ? t.payload.eventType.toLowerCase() : ''
+    if (e !== 'session-abandoned' && e !== 'abandoned') return true
+    const uid = sessionUidOf(t)
+    return !(uid && finishedUids.has(uid))
+  })
+}
+
 export async function GET(request: NextRequest) {
   const code = (request.nextUrl.searchParams.get('code') || '').trim().toUpperCase()
   if (!code || code.length < 3) {
@@ -143,6 +178,11 @@ export async function GET(request: NextRequest) {
       if (label !== 'Unidentified') p.label = label
       if (r.session_type === 'threshold') p.thresholds.push(r)
       else p.trainings.push(r)
+    }
+    // An interruption record superseded by the completed save must not surface
+    // as a second session (see dropSupersededAbandonments).
+    for (const p of byPatient.values()) {
+      p.trainings = dropSupersededAbandonments(p.trainings)
     }
 
     // Two DISTINCT patients can legitimately share a display name. Now that they
@@ -233,7 +273,12 @@ export async function GET(request: NextRequest) {
     })
 
     const clinicName = (await getClinic(code))?.clinicName ?? null
-    return NextResponse.json({ clinicCode: code, clinicName, patientCount: patients.length, patients })
+    // Review acknowledgements ride WITH the roster: the hub's escalation
+    // banners are clinic-wide state, not per-browser state, so every seat must
+    // resolve them in the same request that builds the caseload. DEMO00 keeps
+    // an empty set (it never writes).
+    const acks = code === 'DEMO00' ? [] : await listClinicAcks(code)
+    return NextResponse.json({ clinicCode: code, clinicName, patientCount: patients.length, patients, acks })
   } catch (err) {
     console.error('SST clinic-sessions read error:', err)
     return NextResponse.json({ error: 'Could not load sessions' }, { status: 500 })

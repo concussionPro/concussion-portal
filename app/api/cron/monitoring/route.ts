@@ -190,6 +190,13 @@ export async function GET(request: NextRequest) {
       FROM users u
       JOIN user_progress up ON up.user_id = u.id
       WHERE u.access_level = 'preview'
+        -- CRM (EP stream) buyers carry access_level 'preview' (isolated
+        -- streams, lib/crm-course.ts) — counting them inflates the "free
+        -- lead completions" figure with paying customers.
+        AND NOT EXISTS (
+          SELECT 1 FROM course_purchases cp
+          WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = 'crm'
+        )
         AND u.created_at > NOW() - INTERVAL '90 days'
         AND up.progress->>'101' IS NOT NULL
         AND up.progress->>'102' IS NOT NULL

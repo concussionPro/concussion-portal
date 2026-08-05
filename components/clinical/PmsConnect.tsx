@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Plug, CheckCircle2, Loader2, Unplug } from 'lucide-react'
+import { Plug, CheckCircle2, Loader2, Unplug, AlertTriangle } from 'lucide-react'
 
 /**
  * Per-clinic PMS connection card — "your team stays in Gensolve/Cliniko; SST
@@ -10,8 +10,17 @@ import { Plug, CheckCircle2, Loader2, Unplug } from 'lucide-react'
  * and searches now, with report WRITES unlocking on first-partner validation
  * (the API explains this when asked to file).
  */
+type PmsStatus = {
+  connected: boolean
+  kind: string | null
+  /** 'ok' = proved recently · 'unknown' = not verified lately · 'error' = the PMS refused us */
+  health?: 'ok' | 'unknown' | 'error' | null
+  needsAttention?: boolean
+  message?: string | null
+}
+
 export function PmsConnect({ code, viewKey, demo = false }: { code: string; viewKey: string; demo?: boolean }) {
-  const [status, setStatus] = useState<{ connected: boolean; kind: string | null } | null>(null)
+  const [status, setStatus] = useState<PmsStatus | null>(null)
   const [kind, setKind] = useState<'cliniko' | 'gensolve'>('cliniko')
   const [apiKey, setApiKey] = useState('')
   const [busy, setBusy] = useState(false)
@@ -21,12 +30,18 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
 
   const load = useCallback(() => {
     if (demo) {
-      setStatus({ connected: true, kind: 'gensolve' })
+      setStatus({ connected: true, kind: 'gensolve', health: 'ok' })
       return
     }
     void fetch(`/api/sst/pms/connection?${auth}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setStatus({ connected: !!d.connected, kind: d.kind }))
+      .then((d) => d && setStatus({
+        connected: !!d.connected,
+        kind: d.kind,
+        health: d.health ?? null,
+        needsAttention: d.needsAttention === true,
+        message: typeof d.message === 'string' ? d.message : null,
+      }))
       .catch(() => {})
   }, [auth, demo])
   useEffect(load, [load])
@@ -77,13 +92,22 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
         there. No re-keying, no second system.
       </p>
 
-      {status?.connected ? (
+      {status?.connected && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" /> {status.kind} connected
-            {demo && <span className="rounded bg-amber-50 border border-amber-200 px-1 text-[9px] font-bold text-amber-700">DEMO</span>}
-          </span>
-          {status.kind === 'gensolve' && (
+          {/* A stored connection is not a WORKING connection: the API probes a
+              stale one and reports health, so a revoked key or a rotated server
+              secret shows here instead of only failing at filing time. */}
+          {status.needsAttention ? (
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
+              <AlertTriangle className="w-3.5 h-3.5" /> {status.kind} connection needs attention
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" /> {status.kind} connected
+              {demo && <span className="rounded bg-amber-50 border border-amber-200 px-1 text-[9px] font-bold text-amber-700">DEMO</span>}
+            </span>
+          )}
+          {status.kind === 'gensolve' && !status.needsAttention && (
             <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
               search live · report filing unlocks with tenant validation
             </span>
@@ -97,8 +121,20 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
             <Unplug className="w-3.5 h-3.5" /> Disconnect
           </button>
         </div>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2">
+      )}
+
+      {/* Broken connection: say what it means and put the fix right here. */}
+      {status?.connected && status.needsAttention && (
+        <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+          <p className="m-0 text-[12px] font-bold text-red-800">Reports will not file until this is reconnected.</p>
+          <p className="m-0 mt-1 text-[11.5px] leading-snug text-red-700">
+            {status.message ?? `${status.kind} rejected the stored API key. Paste a current key below to reconnect.`}
+          </p>
+        </div>
+      )}
+
+      {(!status?.connected || status.needsAttention) && !demo && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as 'cliniko' | 'gensolve')}
@@ -121,7 +157,7 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
             className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 py-2 text-[13px] font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition"
           >
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plug className="w-3.5 h-3.5" />}
-            Connect
+            {status?.needsAttention ? 'Reconnect' : 'Connect'}
           </button>
         </div>
       )}

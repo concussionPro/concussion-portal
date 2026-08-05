@@ -15,8 +15,9 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
-import { getEnrollmentCount } from '@/lib/users'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
+import { crmOwnership } from '@/lib/crm-course'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { isWorkshopAlumnus } from '@/lib/workshop-alumni'
@@ -98,14 +99,46 @@ export async function GET(request: Request) {
     // Ensure audit table exists (prevents silent failures if table was dropped/never created)
     await sql`CREATE TABLE IF NOT EXISTS email_audit_log (audit_key TEXT PRIMARY KEY, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`
 
+    // CRM (EP stream) ownership — lives in course_purchases, NEVER in
+    // users.access_level (the streams are deliberately isolated, see
+    // lib/crm-course.ts). Without this map every lane in this cron reads a
+    // PAYING EP customer as a free-course lead, and every workshop lane is
+    // blind to a CRM buyer who has paid for a seat at the SHARED practical day.
+    //
+    // FAIL CLOSED, exactly like the suppression set below: if we can't prove
+    // who is paying, we do not run the cron rather than email a paying
+    // customer a free-course pitch (or silently drop them from the lanes they
+    // bought).
+    const crmOwners = await crmOwnership()
+    if (!crmOwners) {
+      console.error('[Nurture] crmOwnership() failed — ABORTING run (fail closed)')
+      return NextResponse.json(
+        { error: 'CRM ownership load failed — run aborted (fail closed)' },
+        { status: 503 }
+      )
+    }
+    /** CRM entitlements for this user, or undefined. Keyed on lowercased email. */
+    const crmFor = (email: string) => crmOwners.get(email.toLowerCase())
+    /** Owns the online CRM course — i.e. a PAYING customer, not a free lead. */
+    const ownsCrmCourse = (email: string) => !!crmFor(email)?.crmAt
+    /** Holds a seat at the SHARED practical day, whichever stream sold it. */
+    const holdsWorkshopSeat = (u: { accessLevel: string; email: string }) =>
+      u.accessLevel === 'full-course' || !!crmFor(u.email)?.practicalAt
+
     // Completed-workshop ALUMNI are excluded from ALL nurture/lifecycle outreach
     // (Zac 2026-06-15): they've finished the workshop — no onboarding, momentum,
     // or prep emails. They sit in the alumni cohort, no action, until a Level 2
     // exists to offer them. Auto-applies to every workshop once its date passes.
+    // CRM attendees sat in the SAME room — ownsCrmPractical puts them in the
+    // same cohort instead of leaving them in new-buyer nurture forever.
     const allUsers = await loadUsers()
     const alumniFilteredUsers = allUsers.filter(
       (u) =>
-        !isWorkshopAlumnus({ accessLevel: u.accessLevel, workshopLocation: u.workshopLocation }) &&
+        !isWorkshopAlumnus({
+          accessLevel: u.accessLevel,
+          workshopLocation: u.workshopLocation,
+          ownsCrmPractical: !!crmFor(u.email)?.practicalAt,
+        }) &&
         // Past attendees granted portal access (signup_source 'alumni-grant', and
         // any future 'alumni-*') are NOT new buyers — they did the course months
         // ago. Exclude from ALL nurture sequences so we never send a months-ago
@@ -204,6 +237,24 @@ export async function GET(request: Request) {
     const users = alumniFilteredUsers.filter(
       (u) => !suppressedEmails.has(u.email.toLowerCase())
     )
+
+    // WORKSHOP LANES RUN ON THE PURCHASE DATE, NOT THE ACCOUNT DATE.
+    // The day-1 reservation email and the momentum sequence are triggered by
+    // BUYING a seat, so their clock must start at the purchase / nomination —
+    // course_purchases.purchased_at, else users.workshop_location_set_at.
+    // Keying them on users.created_at meant an upgrader was measured from the
+    // day they joined the free list: buy on day 56, and every workshop window
+    // had already closed on the day the $693 cleared. Best-effort — an empty
+    // map falls straight back to created_at (the pre-fix behaviour).
+    const enrolmentDates = await loadWorkshopEnrolmentDates()
+    /** Days since this user bought their seat (falls back to account age). */
+    function daysSinceEnrolment(user: { email: string; createdAt: string }): number {
+      const enrolled = enrolmentDates.get(user.email.toLowerCase())
+      const from = enrolled ? new Date(enrolled) : new Date(user.createdAt)
+      const t = from.getTime()
+      const basis = Number.isFinite(t) ? t : new Date(user.createdAt).getTime()
+      return Math.floor((now.getTime() - basis) / (1000 * 60 * 60 * 24))
+    }
 
     // Section-1 audience allowlist (2026-08-05): the SCAT drip (and its Day-0
     // catch-up) assumes the user came for the free SCAT6 course/forms. Only
@@ -396,22 +447,49 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── 2. Post-Purchase Onboarding Sequence (paid users) ──
+    // ── 2. Post-Purchase Onboarding Sequence (paid users, BOTH streams) ──
+    //
+    // "Paid" is not "access_level !== preview". A CRM (EP stream) buyer keeps
+    // access_level 'preview' by design, so that single test dropped every CRM
+    // customer before the reservation email AND before the onboarding
+    // sequence — their entire post-purchase lifecycle was the one inline
+    // welcome the Stripe webhook sends, forever (fix 2026-08-05).
     for (const user of users) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
-      if (user.accessLevel === 'preview') continue
       if (user.nurtureUnsubscribed) continue
 
-      const signupDate = new Date(user.createdAt)
-      const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
+      const crm = crmFor(user.email)
+      const ccmPaid = user.accessLevel !== 'preview'
+      if (!ccmPaid && !crm) continue
+
+      // ONE onboarding track per person. A dual-stream owner (bought CCM, then
+      // CRM) follows the CCM track — they already had the CRM welcome at
+      // purchase, and two concurrent onboarding sequences would stack sends.
+      const stream: 'ccm' | 'crm' = ccmPaid ? 'ccm' : 'crm'
+
+      // Day counter. CCM keys off the account date because a CCM purchase
+      // creates or upgrades the row. CRM keys off its OWN purchase timestamp:
+      // a CRM buyer is usually an existing free lead whose account is months
+      // old, which would put them past every window on the day they paid.
+      const crmPurchasedAt = crm?.crmAt ?? crm?.practicalAt
+      const anchor = stream === 'ccm' ? new Date(user.createdAt) : new Date(crmPurchasedAt!)
+      const anchorMs = Number.isFinite(anchor.getTime()) ? anchor.getTime() : new Date(user.createdAt).getTime()
+      const daysSinceSignup = Math.floor((now.getTime() - anchorMs) / (1000 * 60 * 60 * 24))
 
       const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
-      // Day 1 for full-course users: send workshop reservation email instead of generic onboarding
+      // Day 1 for SEAT HOLDERS (CCM full-course OR CRM 'crm-practical' — the
+      // practical day is shared, and both have paid for the same room): send
+      // the workshop reservation email instead of generic onboarding. Measured
+      // from the SEAT PURCHASE (daysSinceEnrolment) — an upgrader's account
+      // date is not when they bought the workshop. The reservation copy is
+      // stream-neutral (city, count, threshold, login link), and the magic link
+      // lands a CRM owner on /ep-course by itself.
       // Workshop logistics emails are NOT affected by progressEmailsOptedOut
-      if (daysSinceSignup >= 1 && daysSinceSignup <= 1 + CATCHUP_WINDOW_DAYS && user.accessLevel === 'full-course' && user.workshopLocation) {
+      const daysSinceSeat = daysSinceEnrolment(user)
+      if (daysSinceSeat >= 1 && daysSinceSeat <= 1 + CATCHUP_WINDOW_DAYS && holdsWorkshopSeat(user) && user.workshopLocation) {
         const locationConfig = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === user.workshopLocation)
         if (locationConfig && locationConfig.status === 'collecting') {
           const workshopResAuditKey = `workshop_reservation_${user.id}`
@@ -449,29 +527,39 @@ export async function GET(request: Request) {
       // Progress email opt-out only blocks onboarding nudges, not workshop logistics above
       if (user.progressEmailsOptedOut) continue
 
-      // Generic post-purchase onboarding (online-only users, or confirmed city full-course)
-      const email = findCatchUp(
-        POST_PURCHASE_SEQUENCE.filter(e => e.accessLevels.includes(user.accessLevel as 'online-only' | 'full-course')),
-        daysSinceSignup
-      )
+      // Generic post-purchase onboarding. Each stream runs its OWN sequence:
+      // the CCM templates name the flagship's modules ("Module 1: Concussion
+      // neuroscience", "Module 7: Rehabilitation by Phenotype"), so sending
+      // them to an EP would name the wrong course. CRM_POST_PURCHASE_SEQUENCE
+      // carries the EP module names and is filtered by the same `accessLevels`
+      // shape via a 'crm' pseudo-level.
+      const seq: ReadonlyArray<{ day: number; subject: string; template: (n: string, l: string) => string }> =
+        stream === 'crm'
+          ? CRM_POST_PURCHASE_SEQUENCE
+          : POST_PURCHASE_SEQUENCE.filter(e => e.accessLevels.includes(user.accessLevel as 'online-only' | 'full-course'))
+      const email = findCatchUp(seq, daysSinceSignup)
       if (!email) continue
 
       // Activation override: Day 3 + Day 7 emails assume the user has started
       // the course ("Continue your course", "You're halfway"). For paid users
-      // who have NOT opened Module 1 yet, swap in PAID_NO_PROGRESS_NUDGE so
+      // who have NOT opened Module 1 yet, swap in the no-progress nudge so
       // we don't tell someone "keep going" when they haven't started. Every
       // paid user in the system is currently at 0/8 progress — this is the
-      // single biggest engagement leak.
+      // single biggest engagement leak. Module ids are namespaced per stream:
+      // CCM 1-8, CRM 201-208 (data/ep-module-meta.ts).
       let useEmail: { day: number; subject: string; template: (n: string, l: string) => string } = email
       if (email.day === 3 || email.day === 7) {
         try {
           const { rows: pr } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
+          const firstModuleId = stream === 'crm' ? 201 : 1
           let mainModulesDone = 0
           if (pr.length > 0 && pr[0].progress) {
-            for (let i = 1; i <= 8; i++) if (pr[0].progress[String(i)]?.completed) mainModulesDone++
+            for (let i = firstModuleId; i < firstModuleId + 8; i++) {
+              if (pr[0].progress[String(i)]?.completed) mainModulesDone++
+            }
           }
           if (mainModulesDone === 0) {
-            useEmail = PAID_NO_PROGRESS_NUDGE as typeof useEmail
+            useEmail = (stream === 'crm' ? CRM_NO_PROGRESS_NUDGE : PAID_NO_PROGRESS_NUDGE) as typeof useEmail
           }
         } catch (err) {
           console.error(`[Onboarding] Progress check failed for ${redact(user.email)}, defaulting to standard email:`, err)
@@ -481,9 +569,11 @@ export async function GET(request: Request) {
       // Dedup via email_audit_log. Use a different audit key for the
       // activation variant so users who later progress can still get
       // the regular email if appropriate (avoids accidental dedup
-      // collisions across variants).
+      // collisions across variants). CRM keys are namespaced 'crm_onboard_'
+      // so the two streams can never dedupe each other out.
       const variantSuffix = useEmail === email ? '' : '_activation'
-      const onboardAuditKey = `onboard_day${email.day}${variantSuffix}_${user.id}`
+      const keyPrefix = stream === 'crm' ? 'crm_onboard' : 'onboard'
+      const onboardAuditKey = `${keyPrefix}_day${email.day}${variantSuffix}_${user.id}`
       const { rowCount: onboardInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${onboardAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
       if (onboardInserted === 0) continue // Already sent
 
@@ -496,7 +586,7 @@ export async function GET(request: Request) {
         subject: useEmail.subject,
         html,
         tags: [
-          { name: 'sequence', value: 'post-purchase' },
+          { name: 'sequence', value: stream === 'crm' ? 'crm-post-purchase' : 'post-purchase' },
           { name: 'day', value: String(email.day) },
           ...(useEmail !== email ? [{ name: 'variant', value: 'activation' }] : []),
         ],
@@ -508,13 +598,18 @@ export async function GET(request: Request) {
       if (sent) {
         emailsSent++
         incrementWeeklySent(user.email)
-        console.log(`[Onboarding] Day ${email.day}${useEmail !== email ? ' (activation)' : ''} → ${redact(user.email)}`)
+        console.log(`[Onboarding${stream === 'crm' ? ' CRM' : ''}] Day ${email.day}${useEmail !== email ? ' (activation)' : ''} → ${redact(user.email)}`)
       }
     }
 
-    // ── 3. Pre-Workshop Prep Emails (full-course with confirmed dates) ──
+    // ── 3. Pre-Workshop Prep Emails (seat holders, confirmed dates) ──
+    // Both streams: the practical day is SHARED, so a CRM 'crm-practical'
+    // buyer is standing in the same room and needs the same venue/what-to-bring
+    // logistics. The prep + logistics copy is stream-neutral (8 online modules,
+    // SCAT6/SCOAT6 on the day, CPD figures from CONFIG which are identical for
+    // CCM and CRM) — it names neither course.
     for (const user of users) {
-      if (user.accessLevel !== 'full-course') continue
+      if (!holdsWorkshopSeat(user)) continue
       // TRANSACTIONAL, not marketing: these are operational logistics for a
       // workshop the user has already paid to attend (venue, what to bring,
       // "see you tomorrow"). A marketing unsubscribe (nurture_unsubscribed)
@@ -610,10 +705,13 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── 4. Workshop Momentum Emails (full-course users in collecting cities) ──
+    // ── 4. Workshop Momentum Emails (seat holders in collecting cities) ──
+    // Both streams — a CRM seat is a seat in the same shared room, and the
+    // seat-count copy is the same number for everyone (getEnrollmentCount now
+    // counts both). Only the "share the course" CTA differs, hence shareLink.
     for (const user of users) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
-      if (user.accessLevel !== 'full-course') continue
+      if (!holdsWorkshopSeat(user)) continue
       if (user.nurtureUnsubscribed) continue
       if (!user.workshopLocation) continue
 
@@ -623,10 +721,11 @@ export async function GET(request: Request) {
       // Only send for collecting cities
       if (!locationConfig || locationConfig.status !== 'collecting') continue
 
-      const signupDate = new Date(user.createdAt)
-      const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
-
-      const momentumEmail = findCatchUp(WORKSHOP_MOMENTUM_EMAILS, daysSinceSignup)
+      // Momentum runs from the SEAT PURCHASE, not the account date — this is a
+      // "your city is filling up" sequence for someone who has already paid, so
+      // day 0 is the day they paid. An upgrader keyed on created_at was past
+      // every step in the sequence before it ever looked at them.
+      const momentumEmail = findCatchUp(WORKSHOP_MOMENTUM_EMAILS, daysSinceEnrolment(user))
       if (!momentumEmail) continue
 
       // Dedup via email_audit_log (INSERT-first, using audit_key pattern).
@@ -643,8 +742,14 @@ export async function GET(request: Request) {
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
       const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
+      // Referral CTA must point at the course this attendee actually bought —
+      // sending an EP's colleagues to the CCM pricing page names the wrong
+      // course. CCM buyers keep the default (/pricing).
+      const shareLink = user.accessLevel === 'full-course'
+        ? undefined
+        : `${baseUrl}/concussion-rehab-mastery`
       const subject = momentumEmail.subject(locationConfig.city, count, remaining)
-      const html = momentumEmail.template(user.name, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD, loginLink)
+      const html = momentumEmail.template(user.name, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD, loginLink, shareLink)
         .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
       const sent = await sendOrRollbackAudit({
@@ -762,12 +867,23 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── 7. "Almost Done" Email (users who completed 7 of 8 modules) ──
+    // ── 7. "Almost Done" Email (7 of 8 modules complete) ──
+    // Runs per STREAM: CCM counts modules 1-8, CRM counts 201-208 (the EP
+    // namespace, data/ep-module-meta.ts) and gets the CRM-worded email. A CRM
+    // buyer's access_level is 'preview', so the old paid-level test made this
+    // lane — like the rest of their lifecycle — unreachable for them.
     for (const user of users) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
-      if (user.accessLevel !== 'online-only' && user.accessLevel !== 'full-course') continue
       if (user.nurtureUnsubscribed) continue
       if (user.progressEmailsOptedOut) continue
+
+      const ccmPaid = user.accessLevel === 'online-only' || user.accessLevel === 'full-course'
+      const crmPaid = ownsCrmCourse(user.email)
+      if (!ccmPaid && !crmPaid) continue
+      // One send per person: a dual-stream owner follows the CCM count, which
+      // is the course their access_level entitles them to.
+      const almostDoneStream: 'ccm' | 'crm' = ccmPaid ? 'ccm' : 'crm'
+      const firstModuleId = almostDoneStream === 'crm' ? 201 : 1
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
@@ -775,16 +891,19 @@ export async function GET(request: Request) {
         const progress = progressRows[0].progress
         if (!progress) continue
 
-        // Count completed modules (1-8)
+        // Count completed modules in this stream's namespace (8 either way)
         let completedCount = 0
-        for (let i = 1; i <= 8; i++) {
+        for (let i = firstModuleId; i < firstModuleId + 8; i++) {
           if (progress[String(i)]?.completed) {
             completedCount++
           }
         }
 
         if (completedCount === 7) {
-          const auditKey = `almost_done_${user.id}`
+          const tpl = almostDoneStream === 'crm' ? CRM_ALMOST_DONE_EMAIL : ALMOST_DONE_EMAIL
+          // Namespaced audit key — the two streams must never dedupe each
+          // other out for a buyer who owns both.
+          const auditKey = almostDoneStream === 'crm' ? `crm_almost_done_${user.id}` : `almost_done_${user.id}`
           const { rowCount: almostDoneInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
           if (almostDoneInserted === 0) continue // Already sent
 
@@ -792,15 +911,15 @@ export async function GET(request: Request) {
           const unsubToken = generateUnsubscribeToken(user.email)
           const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
-          const almostDoneHtml = ALMOST_DONE_EMAIL.template(user.name || 'there', almostDoneLoginLink)
+          const almostDoneHtml = tpl.template(user.name || 'there', almostDoneLoginLink)
             .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
           const sent = await sendOrRollbackAudit({
             to: user.email,
             scheduledAt: scheduler.next(user.email),
-            subject: ALMOST_DONE_EMAIL.subject,
+            subject: tpl.subject,
             html: almostDoneHtml,
             tags: [
-              { name: 'sequence', value: 'almost-done' },
+              { name: 'sequence', value: almostDoneStream === 'crm' ? 'crm-almost-done' : 'almost-done' },
               { name: 'trigger', value: 'progress-7of8' },
             ],
             headers: {
@@ -811,7 +930,7 @@ export async function GET(request: Request) {
           if (sent) {
             emailsSent++
             incrementWeeklySent(user.email)
-            console.log(`[Almost Done] Sent to ${redact(user.email)}`)
+            console.log(`[Almost Done${almostDoneStream === 'crm' ? ' CRM' : ''}] Sent to ${redact(user.email)}`)
           }
         }
       } catch (err) {
@@ -827,6 +946,10 @@ export async function GET(request: Request) {
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
       if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
+      // A CRM (EP stream) buyer's access_level stays 'preview' because the two
+      // streams are isolated (lib/crm-course.ts). This is a FREE-LEAD lane —
+      // never pitch the ladder to someone who has already paid for a course.
+      if (ownsCrmCourse(user.email)) continue
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
@@ -886,6 +1009,10 @@ export async function GET(request: Request) {
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
       if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
+      // A CRM (EP stream) buyer's access_level stays 'preview' because the two
+      // streams are isolated (lib/crm-course.ts). This is a FREE-LEAD lane —
+      // never pitch the ladder to someone who has already paid for a course.
+      if (ownsCrmCourse(user.email)) continue
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
@@ -946,6 +1073,10 @@ export async function GET(request: Request) {
       if (user.accessLevel !== 'preview') continue // upgraded → stop
       if (user.nurtureUnsubscribed) continue
       if (registerQuiet.has(user.email.toLowerCase())) continue  // register-quiet: marketing lane
+      // Bought into a course already, just not via access_level — the CRM (EP
+      // stream) entitlement lives in course_purchases. This lane sells the
+      // course ladder, so an owner must never be in it.
+      if (ownsCrmCourse(user.email)) continue
       if (!user.referenceBookPurchasedAt) continue
 
       const purchaseDate = new Date(user.referenceBookPurchasedAt)

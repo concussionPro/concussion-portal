@@ -2,14 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
-import { OUTREACH_TEMPLATES } from '@/data/hub-program-content'
+import { OUTREACH_TEMPLATES, OUTREACH_TEMPLATE_COUNT } from '@/data/hub-program-content'
 import { OutreachToolkitDoc } from '@/components/toolkit/OutreachToolkitDoc'
 
 const ACCESS_KEY = 'ah2026'
 
 export const metadata: Metadata = {
   title: 'Outreach Kit — Advanced Health Hub Preview',
-  description: 'Six referral-building outreach templates for schools, clubs, GPs.',
+  description: `${OUTREACH_TEMPLATE_COUNT} referral-building outreach templates for schools, clubs, GPs.`,
   robots: 'noindex, nofollow',
 }
 

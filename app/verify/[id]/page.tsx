@@ -70,8 +70,10 @@ export default async function VerifyPage({ params }: PageParams) {
             ? 'border-emerald-300 bg-emerald-50'
             : 'border-red-300 bg-red-50'
         }`}>
+          {/* A refunded / charged-back certificate must NEVER read "Valid" —
+              it is a CPD document someone may be lodging with ESSA or OA. */}
           <p className="text-xs font-bold uppercase tracking-wide mb-2">
-            {cert.isValid ? '✓ Valid' : '✗ Expired'}
+            {cert.isValid ? '✓ Valid' : cert.invalidReason === 'revoked' ? '✗ Revoked' : '✗ Expired'}
           </p>
           <h1 className="text-2xl font-bold text-foreground mb-1">{holder}</h1>
           <p className="text-sm text-muted-foreground">@{emailDomain}</p>
@@ -99,7 +101,11 @@ export default async function VerifyPage({ params }: PageParams) {
 
             <dt className="text-muted-foreground">Status</dt>
             <dd className={cert.isValid ? 'text-emerald-700 font-semibold' : 'text-red-700 font-semibold'}>
-              {cert.isValid ? 'Current' : 'Expired — re-certification required'}
+              {cert.isValid
+                ? 'Current'
+                : cert.invalidReason === 'revoked'
+                  ? 'Revoked — the enrolment behind this certificate was refunded or charged back. This certificate is not valid and should not be accepted as CPD evidence.'
+                  : 'Expired — re-certification required'}
             </dd>
           </dl>
         </div>

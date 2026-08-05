@@ -7,20 +7,23 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_TIERS, sstTierAllowance } from '@/lib/config'
 import { ArrowLeft, ArrowRight, Loader2, Lock } from 'lucide-react'
 
 /**
  * /clinical-testing/subscribe — convert off the free trial. Presents the
  * three Clinical Testing tiers and starts a Stripe subscription Checkout via
  * /api/sst/subscribe. Amounts shown mirror the Stripe prices (kept in sync
- * manually — the source of truth for billing is the Stripe price).
+ * manually — the source of truth for billing is the Stripe price); the display
+ * model itself comes from CONFIG's SST_TIERS so every surface agrees.
  */
-const TIERS = [
-  { plan: 'single', name: 'Starter', who: 'Up to 5 active patients', price: 'A$49', popular: false },
-  { plan: 'clinic', name: 'Clinic', who: 'Up to 10 active patients', price: 'A$99', popular: true },
-  { plan: 'enterprise', name: 'Unlimited', who: 'Unlimited patients', price: 'A$149', popular: false },
-] as const
+const TIERS = SST_TIERS.map((t) => ({
+  plan: t.plan,
+  name: t.name,
+  who: sstTierAllowance(t),
+  price: `A$${t.monthlyAud}`,
+  popular: t.popular,
+}))
 
 export default function SubscribePage() {
   return (

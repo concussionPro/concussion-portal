@@ -122,10 +122,17 @@ async function interestCandidates(city: string | null): Promise<Candidate[]> {
         SELECT 1 FROM users u
         WHERE LOWER(u.email) = l.email AND COALESCE(u.nurture_unsubscribed, false) = true
       ) AS unsubscribed,
-      EXISTS (
+      -- Owns a seat at the SHARED practical day, EITHER stream. A CRM
+      -- Complete/upgrade buyer keeps access_level 'preview' (isolated streams,
+      -- lib/crm-course.ts), so the access_level test alone pitched the
+      -- nomination ladder to someone who had already bought the seat.
+      (EXISTS (
         SELECT 1 FROM users u
         WHERE LOWER(u.email) = l.email AND u.access_level = 'full-course'
-      ) AS already_owns,
+      ) OR EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = l.email AND cp.course_slug = 'crm-practical'
+      )) AS already_owns,
       EXISTS (
         SELECT 1 FROM email_audit_log a
         WHERE a.audit_key IN (
@@ -180,10 +187,14 @@ async function upgradeCandidates(): Promise<Candidate[]> {
         SELECT 1 FROM email_suppression s WHERE LOWER(s.email) = LOWER(u.email)
       ) AS suppressed,
       COALESCE(u.nurture_unsubscribed, false) AS unsubscribed,
-      EXISTS (
+      -- Seat-holder in EITHER stream — see interestCandidates above.
+      (EXISTS (
         SELECT 1 FROM users u2
         WHERE LOWER(u2.email) = LOWER(u.email) AND u2.access_level = 'full-course'
-      ) AS already_owns,
+      ) OR EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = 'crm-practical'
+      )) AS already_owns,
       EXISTS (
         SELECT 1 FROM email_audit_log a
         WHERE a.audit_key IN (

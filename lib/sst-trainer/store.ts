@@ -50,6 +50,12 @@ export interface PersistedTest {
   thresholdStage: number | null
   modality: TestModality | null
   restingSymptomScore: number
+  /**
+   * true when this test ran on the clinician-directed override (the only thing
+   * that lifts the one-test-per-calendar-day rule). Recorded locally AND in the
+   * synced payload so the clinician's report says so.
+   */
+  clinicianDirected?: boolean
 }
 
 /** A clinic-sync body that failed to send — retried on next launch / online. */

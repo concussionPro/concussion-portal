@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { resolveActingClinician } from '@/lib/sst-trainer/clinic-registry'
 import { verifyViewKey, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
-import { resolveTenantAdapter, gensolveWritesConfirmed, markPmsOk } from '@/lib/sst-trainer/pms/tenant'
+import {
+  resolveTenantAdapter,
+  gensolveWritesConfirmed,
+  markPmsOk,
+  markPmsFailed,
+  describePmsFailure,
+} from '@/lib/sst-trainer/pms/tenant'
 import { deliverReport } from '@/lib/sst-trainer/pms/deliver'
 import { loadReportInput, renderSkin } from '@/lib/sst-trainer/reports/load'
 
@@ -110,12 +116,19 @@ export async function POST(request: NextRequest) {
       content,
       occurredAt: new Date().toISOString(),
     })
-    if (result.ok) await markPmsOk(code)
+    if (result.ok) {
+      await markPmsOk(code)
+      return NextResponse.json({ ok: true, noteId: result.note.id ?? null })
+    }
+    // A refused write is a REAL failure, not a note in passing. Record it so
+    // the clinic card stops showing a green connection, and hand the client an
+    // instruction rather than the adapter's raw "cliniko: HTTP 401".
+    const failure = describePmsFailure(resolved.kind, result.note.error)
+    console.error(`[pms-file] ${code}/${skin} refused by ${resolved.kind}: ${result.note.error ?? 'unknown'}`)
+    if (failure.reason === 'auth') await markPmsFailed(code, result.note.error || 'auth failure on filing')
     return NextResponse.json(
-      result.ok
-        ? { ok: true, noteId: result.note.id ?? null }
-        : { ok: false, error: result.note.error || 'The PMS refused the note' },
-      { status: result.ok ? 200 : 502 },
+      { ok: false, error: failure.message, reason: failure.reason, filed: false },
+      { status: 502 },
     )
   } catch (err) {
     console.error(`[pms-file] failed for ${code}/${skin}:`, err)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { getEnrollmentsByLocation, getEnrollmentCount, getEnrollmentsWithoutLocation } from '@/lib/users'
 import { CONFIG } from '@/lib/config'
+import { CRM_PRACTICAL_SLUG } from '@/lib/crm-course'
 import { isAdminRequest } from '@/lib/require-admin'
 
 const CITY_LABELS: Record<string, string> = {
@@ -26,10 +27,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 1. Paid enrollments (from users table — confirmed workshop attendees)
+    // 1. Paid enrollments — confirmed practical-day attendees, BOTH streams
+    // (CCM full-course + CRM 'crm-practical'). See practicalDayAttendees().
     const paidEnrollments: Array<{
       city: string; label: string; count: number; threshold: number;
-      registrants: Array<{ name: string; email: string; createdAt: string }>
+      registrants: Array<{ name: string; email: string; createdAt: string; stream: 'ccm' | 'crm' }>
     }> = []
     let paidTotal = 0
 
@@ -63,9 +65,14 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Ready to upgrade (online-only users who completed modules).
-    // Excludes anyone who has since bought the full course — they're counted
-    // in section 1 (paidEnrollments); leaving them here double-counted the
-    // same person against "Paid".
+    // Excludes anyone who has since bought a practical-day seat — they're
+    // counted in section 1 (paidEnrollments); leaving them here double-counted
+    // the same person against "Paid".
+    //
+    // BOTH streams count as bought: CCM full-course AND the CRM 'crm-practical'
+    // entitlement (a CRM Complete/upgrade buyer keeps access_level 'preview',
+    // so the access_level test alone listed PAYING seat-holders as
+    // unconverted leads to chase).
     const { rows: rttRows } = await sql`
       SELECT w.city, w.email, w.name, w.registered_at, w.completed_at
       FROM workshop_ready_to_train w
@@ -73,6 +80,11 @@ export async function GET(request: NextRequest) {
         SELECT 1 FROM users u
         WHERE LOWER(u.email) = LOWER(w.email)
           AND u.access_level = 'full-course'
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(w.email)
+          AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
       )
       ORDER BY w.city, w.registered_at DESC
     `
@@ -114,9 +126,10 @@ export async function GET(request: NextRequest) {
     // display time so the audit record stays in workshop_interest, but the
     // analytics view doesn't double-count.
     //
-    // Filter is "any full-course purchase" not "same city", because someone
+    // Filter is "any practical-day purchase" not "same city", because someone
     // who registered WA interest and then bought Melbourne workshop has
-    // converted — they're not waiting on WA anymore.
+    // converted — they're not waiting on WA anymore. Both streams count: the
+    // CRM 'crm-practical' entitlement buys a seat at the SAME shared day.
     const { rows: interestRows } = await sql`
       SELECT wi.city, wi.email, wi.name, wi.source, wi.created_at
       FROM workshop_interest wi
@@ -124,6 +137,11 @@ export async function GET(request: NextRequest) {
         SELECT 1 FROM users u
         WHERE LOWER(u.email) = LOWER(wi.email)
           AND u.access_level = 'full-course'
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE LOWER(cp.user_email) = LOWER(wi.email)
+          AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
       )
       ORDER BY wi.city, wi.created_at DESC
     `

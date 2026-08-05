@@ -15,7 +15,9 @@
  *   - HOT LEADS (>= 60)    — ready for personal follow-up
  *   - WARMING UP (30-59)    — let nurture sequence continue
  *   - DORMANT (< 30)        — summary count only
- *   - WORKSHOP PIPELINE     — full-course users per city vs threshold
+ *   - WORKSHOP PIPELINE     — paid practical-day seats per city vs threshold
+ *                             (CCM full-course + CRM 'crm-practical' — the day
+ *                              is shared, so both streams fill the same room)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -23,6 +25,7 @@ import crypto from 'crypto'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
+import { CRM_PRACTICAL_SLUG } from '@/lib/crm-course'
 
 export const maxDuration = 60
 
@@ -302,13 +305,22 @@ export async function GET(request: NextRequest) {
   // ── Step 6: Workshop pipeline ────
   let workshopPipeline: { location: string; paid: number; interested: number }[] = []
   try {
+    // PAID practical-day seats per city — BOTH streams. The day is shared
+    // between CCM and CRM, and a CRM Complete/upgrade buyer keeps access_level
+    // 'preview' (isolated streams, lib/crm-course.ts), so the access_level
+    // test alone reported a paid CRM seat as zero demand for that city.
     const { rows: paidRows } = await sql`
-      SELECT workshop_location AS location, COUNT(*)::int AS count
-      FROM users
-      WHERE access_level = 'full-course'
-        AND workshop_location IS NOT NULL
-        AND workshop_location != ''
-      GROUP BY workshop_location
+      SELECT location, COUNT(*)::int AS count FROM (
+        SELECT DISTINCT u.id, u.workshop_location AS location
+        FROM users u
+        LEFT JOIN course_purchases cp
+          ON LOWER(cp.user_email) = LOWER(u.email)
+         AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
+        WHERE u.workshop_location IS NOT NULL
+          AND u.workshop_location != ''
+          AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
+      ) seats
+      GROUP BY location
     `
     const { rows: interestRows } = await sql`
       SELECT city AS location, COUNT(*)::int AS count

@@ -58,6 +58,12 @@ export type SidebarKey =
   | 'outreach'
   | 'admin'
 
+/**
+ * NOTE (2026-08-05): this module currently has NO importers — every Buderim
+ * page renders its own `_sidebar`. Its links had rotted to three 404s
+ * (/templates, /outreach, /admin-course) precisely because nothing exercised
+ * them. Repointed at the real routes; delete the file if it stays unused.
+ */
 export function ProspectSidebar({ active }: { active: SidebarKey }) {
   return (
     <div className="hidden md:flex fixed left-0 top-0 h-screen w-64 sidebar-premium p-6 flex-col z-40">
@@ -86,10 +92,14 @@ export function ProspectSidebar({ active }: { active: SidebarKey }) {
         <Item k="learning" active={active} label="Learning Suite" icon={BookOpen} href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} />
         <Item k="scat-forms" active={active} label="SCAT Forms" icon={Activity} />
         <Item k="baseline" active={active} label="Baseline Testing" icon={TrendingUp} />
-        <Item k="references" active={active} label="Reference Library" icon={Library} />
-        <Item k="clinical-toolkit" active={active} label="Clinical Toolkit" icon={FileText} href={`/proposals/advanced-health-buderim/templates?k=${ACCESS_KEY}`} />
-        <Item k="outreach" active={active} label="Outreach Kit" icon={Mail} href={`/proposals/advanced-health-buderim/outreach?k=${ACCESS_KEY}`} />
-        <Item k="admin" active={active} label="Admin Workflow" icon={BookMarked} href={`/proposals/advanced-health-buderim/admin-course?k=${ACCESS_KEY}`} />
+        {/* Routes below MUST match the real page files under
+            app/proposals/advanced-health-buderim/. These pointed at
+            /templates, /outreach and /admin-course, none of which exist —
+            three 404s. The toolkit lives under /toolkit/*. */}
+        <Item k="references" active={active} label="Reference Library" icon={Library} href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} />
+        <Item k="clinical-toolkit" active={active} label="Clinical Toolkit" icon={FileText} href={`/proposals/advanced-health-buderim/toolkit/clinical?k=${ACCESS_KEY}`} />
+        <Item k="outreach" active={active} label="Outreach Kit" icon={Mail} href={`/proposals/advanced-health-buderim/toolkit/outreach?k=${ACCESS_KEY}`} />
+        <Item k="admin" active={active} label="Admin Workflow" icon={BookMarked} href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`} />
       </nav>
 
       <div className="pt-5 border-t border-white/30">

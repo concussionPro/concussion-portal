@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadUsers } from '@/lib/users'
+import { crmOwnerEmails, crmPracticalOwnerEmails } from '@/lib/crm-course'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
 
@@ -15,6 +16,17 @@ export async function GET(request: NextRequest) {
   try {
     const users = await loadUsers()
 
+    // CRM (EP stream) ownership — lives in course_purchases, NOT access_level
+    // (the streams are isolated, lib/crm-course.ts). Every admin surface fed by
+    // this route counted a paying EP customer as a "Free User" because their
+    // access_level is 'preview'. On a DB error these come back null; the flags
+    // then read false, which is the pre-fix display — never a wrong send, this
+    // route only reports.
+    const [crmOwners, crmPracticalOwners] = await Promise.all([
+      crmOwnerEmails(),
+      crmPracticalOwnerEmails(),
+    ])
+
     // Load all progress from Postgres in one query
     const { rows: progressRows } = await sql`SELECT user_id, progress FROM user_progress`
     const progressMap = new Map<string, Record<string, { completed?: boolean; completedAt?: string; quizScore?: number; quizCompleted?: boolean }> | null>()
@@ -29,8 +41,14 @@ export async function GET(request: NextRequest) {
       const moduleDetails: Record<number, { completed: boolean; quizScore: number | null }> = {}
 
       let completedScatModules = 0
+      let completedCrmModules = 0
 
       if (progress) {
+        // CRM/EP modules are namespaced 201-208 (data/ep-module-meta.ts) so the
+        // two courses can share one progress store without colliding.
+        for (let m = 201; m <= 208; m++) {
+          if (progress[String(m)]?.completed) completedCrmModules++
+        }
         // Count completed paid modules (1-8)
         for (let m = 1; m <= 8; m++) {
           const mod = progress[String(m)]
@@ -54,11 +72,19 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      const emailKey = user.email.toLowerCase()
+      const ownsCrm = crmOwners?.has(emailKey) ?? false
+      const ownsCrmPractical = crmPracticalOwners?.has(emailKey) ?? false
+
       return {
         id: user.id,
         email: user.email,
         name: user.name,
         accessLevel: user.accessLevel,
+        // Stream-aware truth for the admin boards: `preview` + ownsCrm is a
+        // PAYING customer, and ownsCrmPractical is a paid practical-day seat.
+        ownsCrm,
+        ownsCrmPractical,
         createdAt: user.createdAt,
         lastLogin: user.lastLoginAt || null,
         workshopLocation: user.workshopLocation || null,
@@ -68,6 +94,7 @@ export async function GET(request: NextRequest) {
         isTest: user.isTest || false,
         completedModules,
         completedScatModules,
+        completedCrmModules,
         totalCPDPoints,
         moduleDetails,
       }

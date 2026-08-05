@@ -8,6 +8,7 @@ import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
 import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 export default function MelbournePage() {
   const location = CONFIG.LOCATIONS.MELBOURNE
@@ -132,7 +133,7 @@ export default function MelbournePage() {
                 { icon: CheckCircle2, text: 'Return-to-play, return-to-school and return-to-work frameworks' },
                 { icon: Infinity, text: `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules — updated as guidelines evolve` },
                 { icon: FileText, text: 'Fillable SCAT6 / SCOAT6 / Child SCAT6 PDFs (yours to keep)' },
-                { icon: BookOpen, text: '140+ evidence-based references &amp; clinical decision aids' },
+                { icon: BookOpen, text: `${REFERENCE_COUNT} evidence-based references & clinical decision aids` },
                 { icon: BookOpen, text: 'Complete Clinical Reference PDF (save offline)' },
                 { icon: Utensils, text: 'Catered lunch included — plus morning and afternoon tea' },
                 { icon: Clock, text: '8am–4pm, Saturday — finish the course in a single day' },

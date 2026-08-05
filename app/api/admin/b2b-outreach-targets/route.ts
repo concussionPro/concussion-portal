@@ -345,6 +345,13 @@ export async function GET(req: NextRequest) {
       converted AS (
         SELECT LOWER(email) AS email FROM users
         WHERE access_level IN ('online-only','full-course')
+        UNION
+        -- CRM (EP stream) buyers keep access_level 'preview' — their
+        -- entitlement lives in course_purchases (lib/crm-course.ts). Without
+        -- this they were eligible COLD B2B OUTREACH TARGETS: a paying customer
+        -- pitched the course they already own.
+        SELECT LOWER(user_email) AS email FROM course_purchases
+        WHERE course_slug IN ('crm','crm-practical')
       ),
       unsubbed AS (
         SELECT LOWER(email) AS email FROM users WHERE nurture_unsubscribed = true
@@ -604,9 +611,17 @@ export async function GET(req: NextRequest) {
         GROUP BY 1, 2
       ),
       buyer_geo AS (
-        SELECT COALESCE(workshop_location, '(any)') AS city, COUNT(*)::int AS buyers_in_region
-        FROM users
-        WHERE access_level IN ('online-only','full-course')
+        -- Buyers per city — BOTH streams (a CRM buyer's access_level stays
+        -- 'preview', so counting on access_level alone under-reported real
+        -- demand in every city an EP bought from).
+        SELECT COALESCE(u.workshop_location, '(any)') AS city, COUNT(*)::int AS buyers_in_region
+        FROM users u
+        WHERE u.access_level IN ('online-only','full-course')
+           OR EXISTS (
+             SELECT 1 FROM course_purchases cp
+             WHERE LOWER(cp.user_email) = LOWER(u.email)
+               AND cp.course_slug IN ('crm','crm-practical')
+           )
         GROUP BY 1
       ),
       combined AS (

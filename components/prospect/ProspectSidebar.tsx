@@ -179,10 +179,17 @@ function SidebarBody({
       </nav>
 
       <div className="pt-5 border-t border-white/30">
+        {/* Body-per-stream: ESSA ACCREDITED the CRM (No. PDNF26077); Osteopathy
+            Australia ENDORSES the CCM. Never cross the two — "ESSA endorsed" and
+            "OA endorsed" on the exercise-physiology stream were both wrong. */}
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{accreditation === 'essa'
-          ? (CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA Endorsed' : 'ESSA Endorsement Pending')
+          ? (CONFIG.FEATURES.ESSA_ACCREDITED
+              ? `ESSA Accredited · No. ${CONFIG.ESSA_ACCREDITATION.NUMBER}`
+              : 'ESSA Accreditation Pending')
           : 'AHPRA Aligned'}</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 8 CPD hrs online (16 with the practical day)</p>
+        <p className="text-[10px] text-muted-foreground">{accreditation === 'essa'
+          ? `${CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} ESSA CPD points online (${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} with the practical day)`
+          : `Endorsed by Osteopathy Australia · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online (${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day)`}</p>
       </div>
     </>
   )

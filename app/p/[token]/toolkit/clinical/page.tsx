@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Activity, Gauge, Lock } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
-import { DISCHARGE_TEMPLATES, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
+import { DISCHARGE_TEMPLATES, DISCHARGE_TEMPLATE_COUNT, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
 import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
 import { headers } from 'next/headers'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const clinic = await getClinicBySlug(token)
   return {
     title: clinic ? `Clinical Toolkit — ${clinic.shortName}` : 'Clinical Toolkit',
-    description: 'Six concussion discharge and handover templates — AHPRA-aligned, fillable, pre-branded for the prospect clinic.',
+    description: `${DISCHARGE_TEMPLATE_COUNT} concussion discharge and handover templates — AHPRA-aligned, fillable, pre-branded for the prospect clinic.`,
     robots: 'noindex, nofollow',
   }
 }

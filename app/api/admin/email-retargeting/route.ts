@@ -39,6 +39,8 @@ interface EngagementRow {
   email: string
   name: string | null
   access_level: string | null
+  /** CRM (EP stream) ownership — lives in course_purchases, not access_level. */
+  owns_crm: boolean
   created_at: string | null
   last_login_at: string | null
   signup_source: string | null
@@ -99,6 +101,11 @@ export async function GET(request: NextRequest) {
         ev.recipient AS email,
         u.name,
         u.access_level,
+        EXISTS (
+          SELECT 1 FROM course_purchases cp
+          WHERE LOWER(cp.user_email) = ev.recipient
+            AND cp.course_slug IN ('crm','crm-practical')
+        ) AS owns_crm,
         u.created_at,
         u.last_login_at,
         u.signup_source,
@@ -121,7 +128,12 @@ export async function GET(request: NextRequest) {
     // Non-converted = anyone who hasn't bought. Recipients with NO users row
     // (access_level NULL) are leads, not converts — they belong in the
     // retargeting buckets, not in the void.
-    const isConverted = (r: EngagementRow) => CONVERTED_LEVELS.has(r.access_level ?? '')
+    //
+    // CRM (EP stream) ownership counts as converted even though access_level
+    // stays 'preview' (isolated streams, lib/crm-course.ts) — otherwise a
+    // paying EP customer landed in hotClickers/warmOpeners and got retargeted
+    // with a pitch for a course they already own.
+    const isConverted = (r: EngagementRow) => CONVERTED_LEVELS.has(r.access_level ?? '') || r.owns_crm
     const hotClickers = rows.filter((r) => r.clicks > 0 && !isConverted(r))
     const warmOpeners = rows.filter((r) => r.opens > 0 && r.clicks === 0 && !isConverted(r))
     const convertedClickers = rows.filter((r) => r.clicks > 0 && isConverted(r))
@@ -131,6 +143,7 @@ export async function GET(request: NextRequest) {
       email: r.email,
       name: r.name,
       accessLevel: r.access_level || 'unknown',
+      ownsCrm: r.owns_crm,
       signupSource: r.signup_source,
       sends: r.sends,
       opens: r.opens,

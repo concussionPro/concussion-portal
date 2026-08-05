@@ -240,6 +240,10 @@ export async function loadReportInput(
     thresholdStage: num(t.payload?.thresholdStage),
     modality: (t.payload?.modality as TestModality) ?? null,
     restingSymptomScore: num(t.payload?.restingSymptomScore) ?? 0,
+    // Same-day re-test run on the clinician-directed override. Carried through
+    // so the serial-testing table can say the spacing rule was lifted on
+    // clinical instruction rather than leaving an unexplained same-day pair.
+    clinicianDirected: t.payload?.clinicianDirected === true,
   }))
 
   const sessions: PersistedSession[] = trainings.map((t) => ({

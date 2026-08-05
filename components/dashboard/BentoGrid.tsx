@@ -28,6 +28,8 @@ import { useCourseTier } from './useCourseTier'
 import Link from 'next/link'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { COURSES, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
+import { REFERENCE_COUNT } from '@/data/reference-count'
+import { epModulesMeta, epProgressId } from '@/data/ep-module-meta'
 
 /* Short-course cross-sell — sourced from the catalogue (single source of truth
    for price + CPD hours) so dashboard copy can never drift from checkout.
@@ -220,11 +222,23 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   const crmInProgress = Object.values(progress).filter(
     (p) => p.moduleId >= 201 && p.moduleId <= 208 && !!p.startedAt && !p.completed,
   ).length
+  // CPD is NOT the module count. CRM module points are 1 / 0.5 / 1.5 / 1.5 / 1 /
+  // 1 / 1 / 0.5 — using crmCompleted as the hours figure made /dashboard
+  // disagree with /ep-course/dashboard (which sums points correctly) for every
+  // partially-complete CRM buyer. Sum the same source of truth.
+  const completedCrmIds = new Set(
+    Object.values(progress)
+      .filter((p) => p.moduleId >= 201 && p.moduleId <= 208 && p.completed)
+      .map((p) => p.moduleId),
+  )
+  const crmCPD = epModulesMeta
+    .filter((m) => completedCrmIds.has(epProgressId(m.id)))
+    .reduce((sum, m) => sum + m.points, 0)
   const streamCompleted = bentoOwnsCrm && !isCcmPaidTier ? crmCompleted : completedModules
 
   const displayModules = isPreview ? scatCompleted : streamCompleted
   const displayMaxModules = isPreview ? 3 : 8
-  const displayCPD = isPreview ? scatCPD : bentoOwnsCrm && !isCcmPaidTier ? crmCompleted : cpdPoints
+  const displayCPD = isPreview ? scatCPD : bentoOwnsCrm && !isCcmPaidTier ? crmCPD : cpdPoints
   // Free SCAT6 Mastery course = 1 CPD hour (awarded when all 3 modules complete).
   const displayMaxCPD = isPreview ? 1 : 8
   // The CPD hour is awarded all-at-once on completion, so for preview users the
@@ -548,7 +562,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
                 </span>
               )}
             </div>
-            <p className="text-sm text-foreground font-semibold mb-1">140+ Peer-Reviewed Sources</p>
+            <p className="text-sm text-foreground font-semibold mb-1">{REFERENCE_COUNT} Peer-Reviewed Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable library of concussion research — journal articles, meta-analyses, and clinical guidelines.
             </p>

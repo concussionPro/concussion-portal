@@ -1,7 +1,8 @@
 /**
  * Cross-course search — modules, sections and clinical references.
  *
- * The portal held 16 paid modules, a free 3-module course and 140+ references,
+ * The portal held 16 paid modules, a free 3-module course and the full
+ * reference repository,
  * with no way to find anything across them. That is the feature the "come back
  * to this between patients" retention story depends on, and it was missing:
  * the reference repository had a local filter, and nothing else did.

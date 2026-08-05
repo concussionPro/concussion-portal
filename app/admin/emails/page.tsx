@@ -8,11 +8,23 @@ interface EmailEntry {
   email: string
   name: string
   accessLevel: string
+  /**
+   * CRM (EP stream) ownership. It lives in course_purchases, NOT access_level
+   * — the streams are isolated (lib/crm-course.ts) — so a CRM buyer's
+   * accessLevel reads 'preview'. Counting "Free Users" on accessLevel alone
+   * reported PAYING EP customers as free leads on this board.
+   */
+  ownsCrm?: boolean
   createdAt: string
   lastLogin: string | null
   nurtureUnsubscribed: boolean
   signupSource: string | null
   convertedFrom: string | null
+}
+
+/** Paid in EITHER stream: CCM via access_level, CRM via course_purchases. */
+function isPaid(e: EmailEntry): boolean {
+  return e.accessLevel === 'online-only' || e.accessLevel === 'full-course' || !!e.ownsCrm
 }
 
 export default function AdminEmailsPage() {
@@ -64,18 +76,19 @@ export default function AdminEmailsPage() {
 
   const filteredEmails = emails.filter(email => {
     if (filter === 'all') return true
-    if (filter === 'preview') return email.accessLevel === 'preview'
-    if (filter === 'paid') return email.accessLevel === 'online-only' || email.accessLevel === 'full-course'
+    if (filter === 'preview') return !isPaid(email)
+    if (filter === 'paid') return isPaid(email)
     return true
   })
 
   const exportCSV = () => {
     const csv = [
-      ['Email', 'Name', 'Access Level', 'Source', 'Created At', 'Last Login'],
+      ['Email', 'Name', 'Access Level', 'Owns CRM', 'Source', 'Created At', 'Last Login'],
       ...filteredEmails.map(e => [
         e.email,
         e.name,
         e.accessLevel,
+        e.ownsCrm ? 'yes' : 'no',
         e.signupSource || 'unknown',
         new Date(e.createdAt).toLocaleDateString(),
         e.lastLogin ? new Date(e.lastLogin).toLocaleDateString() : 'Never',
@@ -126,7 +139,7 @@ export default function AdminEmailsPage() {
               <h3 className="text-sm font-semibold text-slate-600">Free Users</h3>
             </div>
             <p className="text-3xl font-bold text-slate-900">
-              {emails.filter(e => e.accessLevel === 'preview').length}
+              {emails.filter(e => !isPaid(e)).length}
             </p>
           </div>
 
@@ -136,7 +149,7 @@ export default function AdminEmailsPage() {
               <h3 className="text-sm font-semibold text-slate-600">Paid Users</h3>
             </div>
             <p className="text-3xl font-bold text-slate-900">
-              {emails.filter(e => e.accessLevel === 'online-only' || e.accessLevel === 'full-course').length}
+              {emails.filter(isPaid).length}
             </p>
           </div>
 
@@ -172,7 +185,7 @@ export default function AdminEmailsPage() {
                 filter === 'preview' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              Free ({emails.filter(e => e.accessLevel === 'preview').length})
+              Free ({emails.filter(e => !isPaid(e)).length})
             </button>
             <button
               onClick={() => setFilter('paid')}
@@ -180,7 +193,7 @@ export default function AdminEmailsPage() {
                 filter === 'paid' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              Paid ({emails.filter(e => e.accessLevel === 'online-only' || e.accessLevel === 'full-course').length})
+              Paid ({emails.filter(isPaid).length})
             </button>
           </div>
 
@@ -237,12 +250,14 @@ export default function AdminEmailsPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          email.accessLevel === 'preview'
+                          !isPaid(email)
                             ? 'bg-green-100 text-green-700'
                             : 'bg-purple-100 text-purple-700'
                         }`}
                       >
-                        {email.accessLevel === 'preview' ? 'Free' : 'Paid'}
+                        {/* CRM buyers carry accessLevel 'preview' — label the
+                            stream they actually paid for, not the raw column. */}
+                        {!isPaid(email) ? 'Free' : email.ownsCrm && email.accessLevel === 'preview' ? 'Paid (CRM)' : 'Paid'}
                       </span>
                     </td>
                     <td className="px-6 py-4">

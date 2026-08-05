@@ -18,8 +18,99 @@ import { CONFIG } from '../lib/config'
  *
  * Rule: any file mentioning a body's accreditation status must reference the
  * governing flag, so approval day is one edit in lib/config.ts.
+ *
+ * The original rule here was "the file mentions ESSA_ACCREDITED somewhere",
+ * which FALSE-GREENED the exact failure above: /ep-course/dashboard's hero was
+ * flag-driven, so the file satisfied the rule while a hardcoded "endorsement is
+ * pending" block six lines below kept telling paying CRM buyers their
+ * accreditation had not been granted. The claim itself must sit inside a
+ * conditional on the flag (or a local alias of it) — see isInsideFlagGate.
  */
 const REPO = join(__dirname, '..')
+
+/** Blank out comments, preserving byte offsets so match indices stay valid. */
+function stripComments(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/^\s*\/\/.*$/gm, (m) => ' '.repeat(m.length))
+}
+
+/**
+ * Blank out IDENTIFIERS containing "ESSA" (ESSA_ACCREDITED, ESSA_APPROVED,
+ * essaApproved…) so `endorsePending: !ESSA_APPROVED` isn't read as prose.
+ * Same-length replacement keeps offsets aligned.
+ */
+function maskEssaIdentifiers(code: string): string {
+  return code.replace(/\b[A-Za-z_$][\w$]*ESSA[\w$]*\b|\bESSA_[A-Z0-9_]+\b/gi, (m) =>
+    /^essa$/i.test(m) ? m : 'x'.repeat(m.length),
+  )
+}
+
+/** ESSA_ACCREDITED plus any local alias assigned from it in this file. */
+function gateTokens(code: string): string[] {
+  const tokens = new Set([
+    'ESSA_ACCREDITED',
+    // Prop/param aliases that carry the flag in from a parent.
+    'essaApproved',
+    'essaAccredited',
+    'accredited',
+    'isAccredited',
+  ])
+  for (const re of [
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)[^=\n]*=\s*[^=\n]*\bESSA_ACCREDITED\b/g,
+    /\b([A-Za-z_$][\w$]*)\s*[:=]\s*(?:props\.)?[^=\n]*\bESSA_ACCREDITED\b/g,
+  ]) {
+    let m: RegExpExecArray | null
+    while ((m = re.exec(code))) tokens.add(m[1])
+  }
+  return [...tokens]
+}
+
+/**
+ * Character ranges covered by a conditional whose TEST is a gate token —
+ * `FLAG ? … : …`, `FLAG && …`, `!FLAG && …`. The range runs from the test to
+ * the close of the enclosing bracket group, i.e. both branches.
+ */
+function flagGateSpans(code: string): Array<[number, number]> {
+  const alternation = gateTokens(code)
+    .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|')
+  const gate = new RegExp(`(?:!\\s*)?\\b(?:${alternation})\\b\\s*(?:\\?|&&)`, 'g')
+  const spans: Array<[number, number]> = []
+  let m: RegExpExecArray | null
+  while ((m = gate.exec(code))) {
+    let depth = 0
+    let end = code.length
+    for (let k = m.index; k < code.length; k++) {
+      const c = code[k]
+      if (c === '(' || c === '{' || c === '[') depth++
+      else if (c === ')' || c === '}' || c === ']') {
+        depth--
+        if (depth < 0) {
+          end = k
+          break
+        }
+      }
+    }
+    spans.push([m.index, end])
+  }
+  return spans
+}
+
+/** ESSA "pending" claims in this source that are NOT inside a flag conditional. */
+export function ungatedEssaPendingClaims(src: string): string[] {
+  const code = stripComments(src)
+  const spans = flagGateSpans(code)
+  const prose = maskEssaIdentifiers(code)
+  const claim = /ESSA[^.\n]{0,80}pending|pending[^.\n]{0,40}ESSA/gi
+  const found: string[] = []
+  let m: RegExpExecArray | null
+  while ((m = claim.exec(prose))) {
+    const i = m.index
+    if (!spans.some(([s, e]) => i >= s && i <= e)) found.push(m[0].slice(0, 70))
+  }
+  return found
+}
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -34,21 +125,45 @@ function walk(dir: string, out: string[] = []): string[] {
 const sourceFiles = [join(REPO, 'app'), join(REPO, 'components')].flatMap((d) => walk(d))
 
 describe('no surface hardcodes an accreditation status', () => {
-  it('every ESSA "pending" claim sits behind ESSA_ACCREDITED', () => {
+  it('every ESSA "pending" claim sits INSIDE a conditional on ESSA_ACCREDITED', () => {
     const offenders: string[] = []
     for (const f of sourceFiles) {
-      const src = readFileSync(f, 'utf8')
-      // Strip block comments — a comment explaining the gate is fine.
-      const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
-      const claimsPending = /ESSA[^.\n]{0,80}pending|pending[^.\n]{0,40}ESSA/i.test(code)
-      if (claimsPending && !code.includes('ESSA_ACCREDITED')) {
-        offenders.push(f.replace(REPO + '/', ''))
+      const ungated = ungatedEssaPendingClaims(readFileSync(f, 'utf8'))
+      if (ungated.length > 0) {
+        offenders.push(`${f.replace(REPO + '/', '')} → ${ungated.join(' | ')}`)
       }
     }
     expect(
       offenders,
-      `these state an ESSA status without consulting the flag:\n${offenders.join('\n')}`,
+      `these render an ESSA status unconditionally — mentioning the flag elsewhere in the file is not a gate:\n${offenders.join('\n')}`,
     ).toEqual([])
+  })
+
+  it('the detector catches a hardcoded claim in a file that DOES mention the flag', () => {
+    // The exact 2026-08-05 shape: flag-driven hero, hand-written pending block
+    // below it. The old "file mentions ESSA_ACCREDITED" rule passed this.
+    const regression = `
+      export function Dashboard() {
+        return (
+          <div>
+            <span>{CONFIG.FEATURES.ESSA_ACCREDITED ? 'Accredited by ESSA' : 'ESSA endorsement pending'}</span>
+            <dd>ESSA endorsement of Concussion Rehab Mastery is pending — under review by two reviewers.</dd>
+          </div>
+        )
+      }`
+    expect(ungatedEssaPendingClaims(regression)).toHaveLength(1)
+    // …and does NOT trip on the same block once it is gated.
+    const fixed = `
+      export function Dashboard() {
+        return (
+          <div>
+            <dd>{CONFIG.FEATURES.ESSA_ACCREDITED
+              ? 'Accredited by ESSA — PDNF26077.'
+              : 'ESSA endorsement is pending — under review by two reviewers.'}</dd>
+          </div>
+        )
+      }`
+    expect(ungatedEssaPendingClaims(fixed)).toEqual([])
   })
 
   it('every ACSM CEC claim sits behind ACSM_ACCREDITED', () => {

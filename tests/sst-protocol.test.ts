@@ -170,11 +170,23 @@ describe('re-test spacing', () => {
     expect(canRetest(now, null).allowed).toBe(true)
   })
 
-  it('blocks a second test on the same calendar day — no exceptions', () => {
+  // The patient-initiated path is still one test per calendar day, and a
+  // regress does NOT buy a second one. `clinicianDirected` is the single
+  // documented exemption (canRetest in lib/sst-trainer/protocol.ts) and may
+  // only be set from an explicit recorded clinician action — today, a
+  // post-red-flag clearance where a fresh threshold is the point of the review.
+  it('blocks a second patient-initiated test on the same calendar day', () => {
     const thisMorning = new Date(2026, 6, 15, 7, 0, 0).getTime()
     expect(canRetest(now, thisMorning).allowed).toBe(false)
     expect(canRetest(now, thisMorning, { afterRegress: true }).allowed).toBe(false)
-    expect(canRetest(now, thisMorning, { clinicianDirected: true }).allowed).toBe(false)
+  })
+
+  it('only a clinician-directed test may re-test same-day — and never through a red-flag lock', () => {
+    const thisMorning = new Date(2026, 6, 15, 7, 0, 0).getTime()
+    expect(canRetest(now, thisMorning, { clinicianDirected: true }).allowed).toBe(true)
+    expect(
+      canRetest(now, thisMorning, { clinicianDirected: true, redFlagLocked: true }).allowed,
+    ).toBe(false)
   })
 
   it(`blocks within ${RETEST_MIN_HOURS}h of the last test`, () => {

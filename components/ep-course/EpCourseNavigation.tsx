@@ -45,6 +45,8 @@ export function EpCourseNavigation({
   )
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
+  const allModulesComplete =
+    modules.length > 0 && modules.every((m) => isModuleComplete(epProgressId(m.id)))
 
   useEffect(() => {
     async function checkAccess() {
@@ -119,7 +121,7 @@ export function EpCourseNavigation({
           </span>
         </div>
         <button
-          onClick={() => router.push('/ep-course/modules/1')}
+          onClick={() => router.push('/ep-course/dashboard')}
           className="flex items-start gap-3 text-left hover:opacity-70 transition-all w-full group"
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -129,7 +131,7 @@ export function EpCourseNavigation({
             <h1 className="text-lg font-bold text-slate-800 tracking-tight group-hover:text-teal-600 transition-colors leading-tight">
               Concussion Rehab for EPs
             </h1>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Click brain icon to return home</p>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Back to your course dashboard</p>
           </div>
         </button>
       </div>
@@ -323,10 +325,24 @@ export function EpCourseNavigation({
             <FileText className="h-4 w-4 text-slate-400" />
             Admin Documents
           </Link>
-          <div className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-400">
-            <Award className="h-4 w-4 text-slate-300" />
-            Certificate <span className="ml-auto text-[10px]">on completion</span>
-          </div>
+          {/* Certificate — a REAL link, always. It was a non-clickable grey div,
+              so a CRM buyer who finished all 8 modules had no route anywhere in
+              the course to the certificate they'd paid for (2026-08-05 parity).
+              The dashboard anchor holds both the specimen and the live
+              /api/certificate?type=crm download. */}
+          <Link
+            href="/ep-course/dashboard#certificate"
+            className={cn(
+              'flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors',
+              allModulesComplete
+                ? 'font-semibold text-teal-700 hover:bg-teal-50'
+                : 'text-slate-600 hover:bg-slate-50',
+            )}
+          >
+            <Award className={cn('h-4 w-4', allModulesComplete ? 'text-teal-600' : 'text-slate-400')} />
+            Certificate
+            <span className="ml-auto text-[10px]">{allModulesComplete ? 'ready' : 'on completion'}</span>
+          </Link>
         </div>
       </div>
 

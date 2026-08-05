@@ -7,6 +7,8 @@ import {
   setPmsConnection,
   removePmsConnection,
   markPmsOk,
+  markPmsFailed,
+  describePmsFailure,
   resolveTenantAdapter,
   isPmsKind,
 } from '@/lib/sst-trainer/pms/tenant'
@@ -18,7 +20,10 @@ import { getClientIp } from '@/lib/get-client-ip'
  * same credential pair the clinical hub and clinic card already hold, so the
  * plugin works wherever the clinic surfaces do — no separate login).
  *
- * GET    ?code&k          → { connected, kind?, lastOkAt? }
+ * GET    ?code&k          → { connected, kind?, lastOkAt?, health, needsAttention, message? }
+ *        health: 'ok' (proved recently) | 'unknown' (probe rate-limited) |
+ *        'error' (the PMS refused us, or the credential can't be decrypted).
+ *        A stale connection is PROBED here so a dead one can't show green.
  * POST   {code,k,kind,apiKey,creds?} → connects; PROVES the key with the
  *        adapter's probe() (cheapest authenticated read) before keeping it —
  *        a failed probe restores the previous connection untouched.
@@ -45,10 +50,48 @@ export async function GET(request: NextRequest) {
   const k = p.get('k')
   if (!(await authed(request, code, k))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const conn = await getPmsConnection(code)
+  if (!conn) return NextResponse.json({ connected: false, kind: null, lastOkAt: null, health: null })
+
+  // A stored row is NOT proof the connection still works. When nothing has
+  // successfully used it inside PMS_FRESH_MS we spend one cheap authenticated
+  // read to find out, and record the answer — so a revoked key or a rotated
+  // SESSION_SECRET surfaces as "needs attention" on the clinic card instead of
+  // a green chip that only fails when a clinician tries to file a report.
+  let health = conn.health
+  let detail = conn.lastError
+  if (health === 'unknown') {
+    const rl = await rateLimit({ key: `pms-probe:${code}`, limit: 6, windowSec: 300 })
+    if (rl.ok) {
+      const resolved = await resolveTenantAdapter(code)
+      if (!resolved) {
+        // Credential can't be decrypted — SESSION_SECRET rotated, or the blob
+        // is corrupt. The clinic must reconnect; nothing else will fix it.
+        detail = 'stored credentials could not be read (server secret rotated)'
+        await markPmsFailed(code, detail)
+        health = 'error'
+      } else {
+        const probe = await resolved.adapter.probe()
+        if (probe.ok) {
+          await markPmsOk(code)
+          health = 'ok'
+          detail = null
+        } else {
+          detail = `${resolved.kind}: ${probe.status ? `HTTP ${probe.status}` : 'no response'}`
+          await markPmsFailed(code, detail)
+          health = 'error'
+        }
+      }
+    }
+  }
+
+  const failure = health === 'error' ? describePmsFailure(conn.kind, detail) : null
   return NextResponse.json({
-    connected: !!conn,
-    kind: conn?.kind ?? null,
-    lastOkAt: conn?.lastOkAt ?? null,
+    connected: true,
+    kind: conn.kind,
+    lastOkAt: conn.lastOkAt,
+    health,
+    needsAttention: health === 'error',
+    message: failure?.message ?? null,
   })
 }
 

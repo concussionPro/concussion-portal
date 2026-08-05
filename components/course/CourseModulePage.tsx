@@ -120,8 +120,57 @@ export interface CourseModuleDescriptor {
   scatQuizFailUpsellSuffix: string
 }
 
-// Upgrade offer screen for unauthenticated users
-function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number; router: AppRouterInstance; loginPath: string }) {
+/**
+ * Upgrade offer screen for UNAUTHENTICATED visitors.
+ *
+ * STREAM-CORRECT, exactly like the authenticated needsUpgrade branch below:
+ * the EP course must sell CRM (ESSA-accredited, EP-scoped, /concussion-rehab-
+ * mastery), never the CCM pitch. This branch used to hardcode CCM — "AHPRA CPD
+ * hours", CONFIG.SHOP_URL and a free-SCAT6 CTA — so an exercise physiologist
+ * who followed a link into an EP module (or landed here with no session cookie
+ * right after buying CRM) was sold the wrong course for their profession.
+ */
+function UpgradeOfferScreen({
+  moduleId,
+  router,
+  loginPath,
+  isEp,
+}: {
+  moduleId: number
+  router: AppRouterInstance
+  loginPath: string
+  isEp: boolean
+}) {
+  const offer = isEp
+    ? {
+        heading: 'Concussion Rehab Mastery',
+        blurb: (
+          <>
+            Module {moduleId} is part of <strong className="text-white">Concussion Rehab Mastery</strong> — the complete 8-module rehab course for exercise physiologists. Enrol for instant access to all modules and <strong className="text-white">{CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online</strong> ({CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD hours with the practical day).
+          </>
+        ),
+        statHours: `Up to ${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS}`,
+        statBreakdown: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + practical day`,
+        badge: CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA Accredited' : 'Designed to ESSA Standards',
+        href: '/concussion-rehab-mastery',
+        cta: `Enrol Now — from $${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}`,
+        freeCta: null,
+      }
+    : {
+        heading: 'Professional CPD Course',
+        blurb: (
+          <>
+            Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours</strong>.
+          </>
+        ),
+        statHours: `Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS}`,
+        statBreakdown: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop`,
+        badge: 'AHPRA Aligned',
+        href: CONFIG.SHOP_URL,
+        cta: 'View Course Details & Enrol',
+        freeCta: { label: 'Try Our Free SCAT6 Course →', href: '/scat-mastery' },
+      }
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <main className="flex-1 p-4 sm:p-6 md:p-8">
@@ -134,10 +183,10 @@ function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number;
             </div>
 
             <h1 className="text-3xl font-bold text-white mb-4">
-              Professional CPD Course
+              {offer.heading}
             </h1>
             <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours</strong>.
+              {offer.blurb}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -146,20 +195,20 @@ function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number;
                 <div className="text-sm text-slate-300">Complete Modules</div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                <div className="text-3xl font-bold text-amber-400 mb-1">Up to {CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
-                <div className="text-sm text-slate-300">{CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop</div>
+                <div className="text-3xl font-bold text-amber-400 mb-1">{offer.statHours}</div>
+                <div className="text-sm text-slate-300">{offer.statBreakdown}</div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />
-                <div className="text-sm text-slate-300">AHPRA Aligned</div>
+                <div className="text-sm text-slate-300">{offer.badge}</div>
               </div>
             </div>
 
             <a
-              href={CONFIG.SHOP_URL}
+              href={offer.href}
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 mb-4"
             >
-              View Course Details & Enrol
+              {offer.cta}
               <ArrowRight className="w-5 h-5" />
             </a>
 
@@ -173,17 +222,19 @@ function UpgradeOfferScreen({ moduleId, router, loginPath }: { moduleId: number;
               </Link>
             </p>
 
-            <div className="mt-6 pt-6 border-t border-white/20">
-              <p className="text-slate-300 text-sm mb-4">
-                Looking for free training?
-              </p>
-              <button
-                onClick={() => router.push('/scat-mastery')}
-                className="text-amber-400 hover:text-amber-300 underline font-semibold"
-              >
-                Try Our Free SCAT6 Course →
-              </button>
-            </div>
+            {offer.freeCta && (
+              <div className="mt-6 pt-6 border-t border-white/20">
+                <p className="text-slate-300 text-sm mb-4">
+                  Looking for free training?
+                </p>
+                <button
+                  onClick={() => router.push(offer.freeCta!.href)}
+                  className="text-amber-400 hover:text-amber-300 underline font-semibold"
+                >
+                  {offer.freeCta.label}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -276,7 +327,14 @@ export function CourseModulePage({
 
   // If not authenticated and trying to access paid module (1-8), show upgrade offer
   if (!isAuthenticated && moduleId >= 1 && moduleId <= 8) {
-    return <UpgradeOfferScreen moduleId={moduleId} router={router} loginPath={loginPathFor(moduleId)} />
+    return (
+      <UpgradeOfferScreen
+        moduleId={moduleId}
+        router={router}
+        loginPath={loginPathFor(moduleId)}
+        isEp={descriptor.course === 'ep'}
+      />
+    )
   }
 
   // If not authenticated and trying to access SCAT module (101-104), redirect to signup.
@@ -856,6 +914,17 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
 
   const quizResult = getQuizResult()
 
+  // THE ANSWER KEY IS THE REWARD FOR PASSING, NOT THE CONSOLATION FOR FAILING.
+  // Until 2026-08-05 a failed attempt highlighted the correct option AND printed
+  // every explanation, then offered an immediate retake — so the 75%/80% pass
+  // mark behind an AHPRA CPD certificate could be cleared on the second try by
+  // anyone, with no record that it took two. Retakes stay unlimited (they are
+  // legitimate learning design) and are now COUNTED; what changes is that a
+  // failed attempt shows only WHICH questions were wrong. The correct option and
+  // the explanation unlock once the module is passed.
+  const revealAnswerKey = quizResult?.passed === true
+  const quizAttemptCount = moduleProgress.quizAttempts || 0
+
   // "Module N" header label (EP data ids are namespaced 201-208 → use URL id)
   const headerModuleNo = headerModuleNumber === 'data' ? module.id : moduleId
 
@@ -988,15 +1057,21 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                   }
                   // Course finished (paid 8/8): the certificate is the payoff —
                   // surface it HERE, not buried in Settings (2026-07-05 audit).
-                  // Flagship only (showCertificateCta).
+                  // Stream-correct destination: the CRM certificate lives on the
+                  // EP course dashboard (/api/certificate?type=crm), NOT in
+                  // /settings — sending an EP buyer to the CCM settings card was
+                  // a dead end (2026-08-05 parity).
                   if (!hasNext && !isSCATModule && showCertificateCta) {
+                    const isEpCourse = course === 'ep'
                     return (
                       <>
                         <button
-                          onClick={() => router.push('/settings#certificate')}
+                          onClick={() => router.push(isEpCourse ? '/ep-course/dashboard#certificate' : '/settings#certificate')}
                           className="px-8 py-3.5 bg-[var(--accent)] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
                         >
-                          Claim your 8-CPD certificate
+                          {isEpCourse
+                            ? `Claim your ${CONFIG.COURSE.ONLINE_CPD_POINTS}-point ESSA CPD certificate`
+                            : `Claim your ${CONFIG.COURSE.ONLINE_CPD_POINTS}-CPD certificate`}
                           <ArrowRight className="w-4 h-4" />
                         </button>
                         <button
@@ -1047,7 +1122,14 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
   // LOCKED with an upgrade carrot; paid users see the same portal nav unlocked.
   // Paid modules 1-8 keep the course-player nav for paid students. (Owner: the
   // free course must live in the portal with the paid items locked + a carrot.)
-  const usePortalSidebar = isSCATModule || accessLevel === 'preview'
+  // CRM (EP) buyers carry access_level 'preview' — entitlement lives in
+  // course_purchases — so a bare `accessLevel === 'preview'` here would swap a
+  // PAYING CRM student's course nav for the free-tier portal sidebar. The EP
+  // content API only ever serves 'full-course' or 403s, so this is defensive,
+  // but the bare check is the exact defect shape that locked CRM buyers out
+  // elsewhere; never write one in a shared surface.
+  const isCrmCourse = course === 'ep'
+  const usePortalSidebar = isSCATModule || (accessLevel === 'preview' && !isCrmCourse)
   return (
     <div className="flex min-h-screen bg-slate-50">
       {usePortalSidebar ? (
@@ -1296,7 +1378,8 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                                     'flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all border-2',
                                     !showResult && 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
                                     isSelected && !showResult && 'border-teal-500 bg-teal-50/50',
-                                    showResult && isCorrect && 'border-teal-500 bg-teal-50',
+                                    // correct option revealed only once passed
+                                    showResult && isCorrect && revealAnswerKey && 'border-teal-500 bg-teal-50',
                                     showResult && isSelected && !isCorrect && 'border-red-400 bg-red-50'
                                   )}
                                 >
@@ -1315,18 +1398,31 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                                     className="mt-0.5 w-4 h-4 text-teal-600 flex-shrink-0"
                                   />
                                   <span className="text-[15px] text-slate-700 leading-relaxed">{option}</span>
-                                  {showResult && isCorrect && (
+                                  {showResult && isCorrect && revealAnswerKey && (
                                     <CheckCircle2 className="w-5 h-5 text-teal-600 ml-auto flex-shrink-0" strokeWidth={2.5} />
+                                  )}
+                                  {showResult && !revealAnswerKey && isSelected && !isCorrect && (
+                                    <span className="ml-auto flex-shrink-0 text-[11px] font-bold uppercase tracking-wide text-red-600">
+                                      Not correct
+                                    </span>
                                   )}
                                 </label>
                               )
                             })}
                           </div>
-                          {partIsSubmitted && (
+                          {partIsSubmitted && revealAnswerKey && (
                             <div className="ml-0 sm:ml-12 mt-4 p-5 rounded-xl bg-blue-50 border border-blue-200">
                               <p className="text-sm font-semibold text-slate-900 mb-2">Explanation</p>
                               <p className="text-[15px] text-slate-700 leading-relaxed">
                                 {question.explanation}
+                              </p>
+                            </div>
+                          )}
+                          {partIsSubmitted && !revealAnswerKey && quizAnswers[question.id] !== question.correctAnswer && (
+                            <div className="ml-0 sm:ml-12 mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                              <p className="m-0 text-[14px] leading-relaxed text-amber-900">
+                                Not correct. Go back over {partLabel.toLowerCase()} and try this one
+                                again — the answer and the reasoning unlock once you pass.
                               </p>
                             </div>
                           )}
@@ -1378,6 +1474,11 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                                   You scored {quizResult?.score} out of {module.quiz.length} ({quizResult?.percentage.toFixed(0)}%)
                                   {!quizResult?.passed && '. Please review the content and try again.'}
                                 </p>
+                                {quizAttemptCount > 1 && (
+                                  <p className="text-[13px] text-slate-500 mb-4">
+                                    Attempt {quizAttemptCount} — every attempt is recorded on your progress record.
+                                  </p>
+                                )}
                                 {!quizResult?.passed && (
                                   <button
                                     onClick={() => {
@@ -1558,7 +1659,8 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                             'flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all border-2',
                             !showResult && 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
                             isSelected && !showResult && 'border-teal-500 bg-teal-50/50',
-                            showResult && isCorrect && 'border-teal-500 bg-teal-50',
+                            // correct option revealed only once passed
+                            showResult && isCorrect && revealAnswerKey && 'border-teal-500 bg-teal-50',
                             showResult && isSelected && !isCorrect && 'border-red-400 bg-red-50'
                           )}
                         >
@@ -1577,18 +1679,34 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                             className="mt-0.5 w-4 h-4 text-teal-600 flex-shrink-0"
                           />
                           <span className="text-[15px] text-slate-700 leading-relaxed">{option}</span>
-                          {showResult && isCorrect && (
+                          {showResult && isCorrect && revealAnswerKey && (
                             <CheckCircle2 className="w-5 h-5 text-teal-600 ml-auto flex-shrink-0" strokeWidth={2.5} />
+                          )}
+                          {showResult && !revealAnswerKey && isSelected && !isCorrect && (
+                            <span className="ml-auto flex-shrink-0 text-[11px] font-bold uppercase tracking-wide text-red-600">
+                              Not correct
+                            </span>
                           )}
                         </label>
                       )
                     })}
                   </div>
-                  {stdQuizSubmitted && (
+                  {stdQuizSubmitted && revealAnswerKey && (
                     <div className="ml-0 sm:ml-12 mt-4 p-5 rounded-xl bg-blue-50 border border-blue-200">
                       <p className="text-sm font-semibold text-slate-900 mb-2">Explanation</p>
                       <p className="text-[15px] text-slate-700 leading-relaxed">
                         {question.explanation}
+                      </p>
+                    </div>
+                  )}
+                  {/* Failed attempt: say WHICH questions were wrong, and nothing
+                      more. Showing the key here handed the learner a pass on the
+                      next click. */}
+                  {stdQuizSubmitted && !revealAnswerKey && quizAnswers[question.id] !== question.correctAnswer && (
+                    <div className="ml-0 sm:ml-12 mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                      <p className="m-0 text-[14px] leading-relaxed text-amber-900">
+                        Not correct. Review the section this came from and try again — the answer and
+                        the reasoning unlock once you pass.
                       </p>
                     </div>
                   )}
@@ -1642,6 +1760,14 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                       You scored {quizResult?.score} out of {module.quiz.length} ({quizResult?.percentage.toFixed(0)}%)
                       {!quizResult?.passed && '. Please review the content and try again.'}
                     </p>
+                    {/* Attempts are RECORDED (ProgressContext.quizAttempts). Retakes
+                        stay unlimited; they are simply no longer invisible, so a pass
+                        behind a CPD certificate can be read in context. */}
+                    {quizAttemptCount > 1 && (
+                      <p className="text-[13px] text-slate-500 mb-4">
+                        Attempt {quizAttemptCount} — every attempt is recorded on your progress record.
+                      </p>
+                    )}
                     {quizResult?.passed && isSCATModule && (
                       <div className="mb-4 p-4 rounded-xl bg-white border border-teal-200">
                         <p className="text-sm text-slate-700 leading-relaxed">

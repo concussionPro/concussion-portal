@@ -500,7 +500,7 @@ async function sendCertificateEmail(opts: {
                     ${opts.cpdPoints} CPD ${opts.cpdPoints === 1 ? 'Point' : 'Points'}
                   </div>
                   <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
-                    AHPRA-Aligned · Certificate ID: ${sharedEscapeHtml(opts.certificateId)}
+                    ${opts.courseType === 'crm' ? 'ESSA CPD Points' : 'AHPRA-Aligned'} · Certificate ID: ${sharedEscapeHtml(opts.certificateId)}
                   </div>
                   `}
                 </div>
@@ -510,7 +510,9 @@ async function sendCertificateEmail(opts: {
                 ${opts.cpdPoints > 0 ? `
                 <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 4px; margin: 20px 0;">
                   <p style="margin: 0; font-size: 14px; color: #1e40af;">
-                    <strong>For AHPRA Audit:</strong> Retain this certificate in your CPD portfolio for at least 5 years. Log this activity as "Educational Activity — Reviewing & Reflecting" with ${opts.cpdPoints} CPD hours.
+                    ${opts.courseType === 'crm'
+                      ? `<strong>For your ESSA CPD log:</strong> Retain this certificate with your CPD records. Log this activity under Further Education with ${opts.cpdPoints} ESSA CPD ${opts.cpdPoints === 1 ? 'point' : 'points'}.`
+                      : `<strong>For AHPRA Audit:</strong> Retain this certificate in your CPD portfolio for at least 5 years. Log this activity as "Educational Activity — Reviewing &amp; Reflecting" with ${opts.cpdPoints} CPD hours.`}
                   </p>
                 </div>
                 ` : ''}
@@ -602,7 +604,15 @@ async function sendCertificateEmail(opts: {
                 </p>
 
                 <p style="color: #64748b;">
-                  Nice work on the SCAT mastery.<br><br>
+                  ${
+                    opts.courseType === 'crm'
+                      ? 'Nice work getting through the rehab course.'
+                      : opts.courseType === 'scat-mastery'
+                        ? 'Nice work on the SCAT mastery.'
+                        : opts.courseType === 'recognition-referral'
+                          ? 'Nice work finishing the awareness course.'
+                          : 'Nice work finishing the course.'
+                  }<br><br>
                   Zac<br>
                   <em style="font-size: 14px;">AHPRA-registered Osteopath · Founder, Concussion Education Australia</em>
                 </p>

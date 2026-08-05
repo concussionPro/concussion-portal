@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { SstWatchAnimation } from '@/components/platform/SstWatchAnimation'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 import { Clock, Link2, FileText } from 'lucide-react'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * /sst — the Clinical Testing landing with a top toggle between TWO FULL
@@ -288,7 +289,7 @@ function SharedPricing() {
                 open-access protocol — <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic
                 Exercise Rehabilitation after Concussion (mTBI)</em>, Lewis Z. (2026), Zenodo, CC-BY-4.0,{' '}
                 <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: ACCENT }}>doi.org/10.5281/zenodo.21482634</a>
-                {' '}— backed by the course&rsquo;s 140+ reference evidence base.
+                {' '}— backed by the course&rsquo;s {REFERENCE_COUNT}-reference evidence base.
               </p>
               <div className="mt-4 flex flex-wrap gap-[11px]">
                 <Cta href="/pricing">Enrol to unlock the tools</Cta>

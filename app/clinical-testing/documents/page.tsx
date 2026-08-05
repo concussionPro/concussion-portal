@@ -16,7 +16,7 @@ import { DocumentsClient, type DocumentsContent } from './DocumentsClient'
  * plan.
  *
  * ISOLATION (owner: "no other content unlocked"): this surface renders ONLY the
- * six discharge templates + a link to the SST report — nothing from the course
+ * the discharge templates + a link to the SST report — nothing from the course
  * modules / reference / wider toolkit — so an SST-entitled clinic gets exactly
  * these documents and no course access.
  *

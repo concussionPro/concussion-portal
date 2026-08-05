@@ -2,6 +2,7 @@ import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { CONFIG } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * /cases — landing page for UK sport & exercise scientists via CASES
@@ -88,8 +89,8 @@ export default function CasesLandingPage() {
         <section className="mt-14">
           <h2 className="text-xl font-bold tracking-tight">What the course is</h2>
           <p className="mt-2 text-[14px] text-slate-600">
-            Eight online modules · {TOTAL_MINS / 60} hours of CPD · 80% pass mark ·
-            136 peer-reviewed references · self-paced · lifetime access.
+            Eight online modules · {TOTAL_MINS / 60} hours of CPD · 80% pass mark ·{' '}
+            {REFERENCE_COUNT} peer-reviewed references · self-paced · lifetime access.
           </p>
           <ol className="mt-5 divide-y divide-slate-100 rounded-xl border border-slate-200">
             {MODULES.map((m) => (

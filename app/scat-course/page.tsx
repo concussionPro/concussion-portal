@@ -10,6 +10,7 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 export default function SCATCoursePage() {
   const router = useRouter()
@@ -432,7 +433,7 @@ export default function SCATCoursePage() {
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle className="w-4 h-4 text-purple-600" />
-                  Clinical Toolkit &amp; 140+ references
+                  Clinical Toolkit &amp; {REFERENCE_COUNT} references
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle className="w-4 h-4 text-purple-600" />

@@ -15,6 +15,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { getModulesMeta } from '@/data/module-meta'
+import { CONFIG } from '@/lib/config'
 
 const ACCESS_KEY = 'ah2026'
 
@@ -72,7 +73,7 @@ export default async function ProspectLearningSuite({
             Learning Suite
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            8 modules · 16 CPD hrs · AHPRA-aligned · Osteopathy Australia endorsed. Module 1 is open as a trial — Modules 2-8 unlock with the Hub Program.
+            {CONFIG.COURSE.TOTAL_MODULES} modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} online CPD hrs ({CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day) · AHPRA-aligned · Osteopathy Australia endorsed. Module 1 is open as a trial — Modules 2-{CONFIG.COURSE.TOTAL_MODULES} unlock with the Hub Program.
           </p>
 
           {/* M1 — TRIAL OPEN */}

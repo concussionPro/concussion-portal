@@ -18,7 +18,14 @@ export interface CoursePurchase {
   purchased_at: string
 }
 
+// Per-process memo: the table is created once per cold start, not once per
+// call. practicalDayAttendees() (lib/users.ts) runs this on hot paths — the
+// workshop seat board loops it per city and the nurture cron per user — so a
+// CREATE TABLE round-trip on every call is pure waste.
+let tableEnsured = false
+
 async function ensureTable(): Promise<void> {
+  if (tableEnsured) return
   await sql`
     CREATE TABLE IF NOT EXISTS course_purchases (
       id SERIAL PRIMARY KEY,
@@ -30,6 +37,16 @@ async function ensureTable(): Promise<void> {
       UNIQUE (user_email, course_slug)
     )
   `
+  tableEnsured = true
+}
+
+/**
+ * Public form of ensureTable — for callers that read `course_purchases` with
+ * their OWN raw SQL (the practical-day roster, the CRM ownership maps) and
+ * would otherwise 42P01 on a database where nothing has written a purchase yet.
+ */
+export function ensureCoursePurchasesTable(): Promise<void> {
+  return ensureTable()
 }
 
 export async function recordCoursePurchase(args: {

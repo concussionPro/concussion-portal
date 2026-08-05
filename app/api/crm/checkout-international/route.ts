@@ -77,7 +77,10 @@ export async function POST(request: NextRequest) {
   }
 
   const base = CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  const successUrl = `${base}/ep-course/dashboard?purchase=success&session_id={CHECKOUT_SESSION_ID}`
+  // Shared, Stripe-validated confirmation page — works without a session cookie
+  // (same fix as the domestic CRM route: a cold buyer had no session at the
+  // moment of redirect and got the unauthenticated upgrade screen).
+  const successUrl = `${base}/checkout/success?session_id={CHECKOUT_SESSION_ID}`
   const cancelUrl = `${base}/pricing-international?purchase=cancelled`
 
   try {

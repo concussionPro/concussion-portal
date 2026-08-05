@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Mail,
 } from 'lucide-react'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 const ACCESS_KEY = 'ah2026'
 
@@ -32,19 +33,11 @@ interface Ref {
   url?: string
 }
 
-// Curated subset for the prospect preview. Per-category totals across the
-// full library (they sum to 120 — the customer-facing claim must always
-// match this sum, never a rounded-up "140+"). Used to render honest
-// "{shown} of {total}" labels instead of "of many".
-const CATEGORY_TOTALS: Record<string, number> = {
-  'Consensus statements': 12,
-  'Pathophysiology': 26,
-  'Assessment tools': 22,
-  'PPCS + phenotypes': 19,
-  'Exercise + return-to-play': 16,
-  'Cervical + vestibular rehab': 11,
-  'Paediatric concussion': 14,
-}
+// The per-category totals that used to live here were fabricated: seven
+// invented buckets summing to 120, which then rendered as "10 of 120
+// references shown" and "Full library · 120 references" while the real
+// dataset holds REFERENCE_COUNT. Category-level totals are not published
+// any more — only the shown count and the real library size.
 
 // Curated preview: 10 landmark references — enough to demonstrate the
 // library's depth + clinical anchoring without giving away the full
@@ -180,7 +173,7 @@ export default async function ProspectReferences({
             Peer-reviewed concussion evidence
           </h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
-            {totalShown} of {Object.values(CATEGORY_TOTALS).reduce((acc, n) => acc + n, 0)} references shown as a sample across {Object.keys(PROSPECT_REFS).length} categories. The full library is searchable and unlocked for every clinician with the Hub Program.
+            {totalShown} of {REFERENCE_COUNT} references shown as a sample across {Object.keys(PROSPECT_REFS).length} categories. The full library is searchable and unlocked for every clinician with the Hub Program.
           </p>
 
           <div className="space-y-8">
@@ -189,7 +182,7 @@ export default async function ProspectReferences({
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <h3 className="text-lg font-bold text-foreground">{category}</h3>
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                    {refs.length} of {CATEGORY_TOTALS[category] ?? refs.length}
+                    {refs.length} shown
                   </span>
                 </div>
                 <div className="space-y-2.5">
@@ -203,7 +196,7 @@ export default async function ProspectReferences({
 
           <div className="mt-10 glass-premium rounded-2xl p-5 text-center">
             <p className="text-sm font-bold text-foreground mb-1">
-              Full library · {Object.values(CATEGORY_TOTALS).reduce((acc, n) => acc + n, 0)} references
+              Full library · {REFERENCE_COUNT} references
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable by category, citation, author, year. Linked to clinical modules. Updated as consensus evolves. Available to every clinician at {CLINIC.shortName} with the Hub Program.

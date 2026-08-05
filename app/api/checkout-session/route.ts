@@ -120,6 +120,13 @@ export async function GET(request: NextRequest) {
         customerName,
         customerEmail: maskedEmail,
         courseType,
+        // Purchase STREAM. CRM (EP) sessions carry metadata.stream='crm' and a
+        // `tier`, and no `courseType` at all — so without these the shared
+        // success page defaulted them to 'online-only' and rendered the CCM
+        // confirmation (Start Module 1, SCAT6/VOMS/BESS outcomes, CCM workshop
+        // upgrade) to an exercise physiologist (2026-08-05 parity).
+        stream: session.metadata?.stream === 'crm' ? 'crm' : 'ccm',
+        tier: session.metadata?.tier || '',
         location: session.metadata?.location || '',
         amountPaid: (session.amount_total || 0) / 100,
         currency: (session.currency || 'aud').toUpperCase(),

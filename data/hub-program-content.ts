@@ -92,7 +92,9 @@ export interface AdminCourseModule {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6 DISCHARGE TEMPLATES
+// DISCHARGE TEMPLATES — the count is DISCHARGE_TEMPLATE_COUNT below. Never
+// write the number into copy: this header said "6" while eight shipped, and
+// every public surface repeated the stale six.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
@@ -1438,3 +1440,10 @@ export const ADMIN_COURSE_MODULES: AdminCourseModule[] = [
     ],
   },
 ]
+
+/** Number of discharge/handover templates shipped. Derive ALL display copy
+ *  from this — the toolkit pages hardcoded "Six" while eight are listed. */
+export const DISCHARGE_TEMPLATE_COUNT = DISCHARGE_TEMPLATES.length
+
+/** Number of referral-building outreach templates shipped. */
+export const OUTREACH_TEMPLATE_COUNT = OUTREACH_TEMPLATES.length

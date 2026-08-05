@@ -150,7 +150,10 @@ function trajectorySection(input: ReportInput): ReportSection {
     .filter((t) => typeof t.hrt === 'number')
     .map((t) => ({
       label: fmtDate(t.at),
-      value: `HRt ${t.hrt} bpm${t.modality ? ` (${t.modality})` : ''}, resting symptom ${t.restingSymptomScore}/10, interpretation: ${t.interpretation}`,
+      // A clinician-directed test is the ONLY way a same-day re-test can exist.
+      // Saying so on the row keeps a same-day pair explainable instead of
+      // looking like the spacing rule failed.
+      value: `HRt ${t.hrt} bpm${t.modality ? ` (${t.modality})` : ''}, resting symptom ${t.restingSymptomScore}/10, interpretation: ${t.interpretation}${t.clinicianDirected ? ' (clinician-directed re-test)' : ''}`,
     }))
   const first = input.thresholdHistory.find((t) => typeof t.hrt === 'number')?.hrt ?? null
   const last = [...input.thresholdHistory].reverse().find((t) => typeof t.hrt === 'number')?.hrt ?? null
@@ -417,7 +420,7 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
 
   const testRows: ReportField[] = input.thresholdHistory.map((t) => ({
     label: fmtDate(t.at),
-    value: `graded test — ${typeof t.hrt === 'number' ? `HRt ${t.hrt} bpm` : 'no threshold found'}, interpretation: ${t.interpretation}`,
+    value: `graded test — ${typeof t.hrt === 'number' ? `HRt ${t.hrt} bpm` : 'no threshold found'}, interpretation: ${t.interpretation}${t.clinicianDirected ? ' (clinician-directed re-test)' : ''}`,
   }))
 
   return {

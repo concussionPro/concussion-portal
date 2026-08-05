@@ -6,6 +6,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import { Check, Clock, AlertCircle, FileSearch } from 'lucide-react'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 export const metadata: Metadata = {
   title: 'Build status — What\'s shipped, what\'s next',
@@ -32,7 +33,7 @@ const STATUS: StatusItem[] = [
   { name: 'Literature search (PubMed + Semantic Scholar)', detail: 'Free-tier integration · Vancouver-style citation export · 1-hour cache · 30 req/h rate limit', status: 'shipped', evidence: '/courses/ai-in-clinical-practice/hub/literature' },
   { name: 'NDA-gated demo access', detail: 'Click-through clickwrap agreement under Electronic Transactions Act 1999 · 7-day cookie · per-partner short URLs · acceptance log with IP + timestamp', status: 'shipped', evidence: '/d/<slug>' },
   { name: 'Partner-attributed behavioural analytics', detail: 'Per-org event capture · demo_landed / demo_pageview / demo_nda_accepted · admin dashboard at /admin/demo-activity', status: 'shipped', evidence: '/admin/demo-activity' },
-  { name: 'Reference repository (CCM dashboard)', detail: '140+ peer-reviewed references with verified DOIs · 2024-2025 AU-specific guidelines (AIS, AFL, ASC, AHPRA AI, TGA) · misattributions and broken DOIs audited and fixed', status: 'shipped', evidence: '/dashboard' },
+  { name: 'Reference repository (CCM dashboard)', detail: `${REFERENCE_COUNT} peer-reviewed references with verified DOIs · 2024-2025 AU-specific guidelines (AIS, AFL, ASC, AHPRA AI, TGA) · misattributions and broken DOIs audited and fixed`, status: 'shipped', evidence: '/dashboard' },
 
   // In progress
   { name: 'Osteopathy Australia endorsement for AI course', detail: 'CEA is already OA-endorsed via CCM. AI-course-specific endorsement application initiated. Timeline: 6-12 weeks per OA review cycle.', status: 'in-progress' },

@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
-import { OUTREACH_TEMPLATES } from '@/data/hub-program-content'
+import { OUTREACH_TEMPLATES, OUTREACH_TEMPLATE_COUNT } from '@/data/hub-program-content'
 import { OutreachToolkitDoc } from '@/components/toolkit/OutreachToolkitDoc'
 import { headers } from 'next/headers'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const clinic = await getClinicBySlug(token)
   return {
     title: clinic ? `Outreach Kit — ${clinic.shortName}` : 'Outreach Kit',
-    description: 'Six referral-building outreach templates — pre-branded for the prospect clinic.',
+    description: `${OUTREACH_TEMPLATE_COUNT} referral-building outreach templates — pre-branded for the prospect clinic.`,
     robots: 'noindex, nofollow',
   }
 }

@@ -8,9 +8,17 @@ import { useState } from 'react'
 // There is no fixed EP cohort date, so this captures interest (not a checkout).
 // It posts to the shared /api/register-interest endpoint. That route only
 // accepts a fixed set of `city` codes and ignores unknown fields, so we:
-//   • map the registrant's state/region onto the nearest valid city code, and
+//   • have the registrant PICK the workshop city they could travel to (the
+//     state field only pre-selects a suggestion — it never silently decides),
+//     and
 //   • fold profession + ESSA number + true region into the `name` string so
 //     the founder's notification email carries the full EP context.
+//
+// The state field used to map straight onto a city code: QLD→byron-bay,
+// NT→adelaide, TAS→melbourne. A Brisbane EP then received a confirmation
+// headed "You're on the list — Byron Bay Workshop" for a city they never
+// chose. The city is now an explicit, visible choice, so the confirmation
+// subject is always something the registrant actually selected.
 // ─────────────────────────────────────────────────────────────────────────────
 
 type Profession = 'aep' | 'aes' | 'other'
@@ -21,16 +29,39 @@ const PROFESSION_LABELS: Record<Profession, string> = {
   other: 'Other',
 }
 
-// AU state/territory → nearest valid workshop `city` code accepted by the API.
-const REGIONS: { value: string; label: string; city: string }[] = [
-  { value: 'nsw', label: 'New South Wales', city: 'sydney' },
-  { value: 'vic', label: 'Victoria', city: 'melbourne' },
-  { value: 'qld', label: 'Queensland', city: 'byron-bay' },
-  { value: 'sa', label: 'South Australia', city: 'adelaide' },
-  { value: 'wa', label: 'Western Australia', city: 'wa' },
-  { value: 'act', label: 'ACT', city: 'sydney' },
-  { value: 'tas', label: 'Tasmania', city: 'melbourne' },
-  { value: 'nt', label: 'Northern Territory', city: 'adelaide' },
+// Short form folded into the founder's notification. This was derived with
+// `.replace('Accredited Exercise ', 'A')`, which turns "Accredited Exercise
+// Physiologist" into "APhysiologist" — the comment claimed "AEP". Spell the
+// abbreviations out; there are three of them.
+const PROFESSION_ABBR: Record<Profession, string> = {
+  aep: 'AEP',
+  aes: 'AES',
+  other: 'Other allied health',
+}
+
+// The workshop cities /api/register-interest accepts, labelled as the API
+// labels them (its CITY_LABELS drives the confirmation subject line).
+const WORKSHOP_CITIES: { value: string; label: string }[] = [
+  { value: 'sydney', label: 'Sydney' },
+  { value: 'melbourne', label: 'Melbourne' },
+  { value: 'byron-bay', label: 'Byron Bay' },
+  { value: 'adelaide', label: 'Adelaide' },
+  { value: 'wa', label: 'Western Australia' },
+]
+
+// AU state/territory → the city PRE-SELECTED for that region. Only a default:
+// the registrant sees the city field and can change it. `suggested: false`
+// marks regions with no workshop city of their own, so the copy can say the
+// suggestion is the nearest one rather than implying a local date.
+const REGIONS: { value: string; label: string; city: string; suggested: boolean }[] = [
+  { value: 'nsw', label: 'New South Wales', city: 'sydney', suggested: true },
+  { value: 'vic', label: 'Victoria', city: 'melbourne', suggested: true },
+  { value: 'qld', label: 'Queensland', city: 'byron-bay', suggested: false },
+  { value: 'sa', label: 'South Australia', city: 'adelaide', suggested: true },
+  { value: 'wa', label: 'Western Australia', city: 'wa', suggested: true },
+  { value: 'act', label: 'ACT', city: 'sydney', suggested: false },
+  { value: 'tas', label: 'Tasmania', city: 'melbourne', suggested: false },
+  { value: 'nt', label: 'Northern Territory', city: 'adelaide', suggested: false },
 ]
 
 export default function CrmWorkshopInterest() {
@@ -38,6 +69,9 @@ export default function CrmWorkshopInterest() {
   const [email, setEmail] = useState('')
   const [profession, setProfession] = useState<Profession>('aep')
   const [region, setRegion] = useState('nsw')
+  // Pre-selected from the region, but the registrant owns the final choice —
+  // the confirmation email is titled with whatever sits here.
+  const [city, setCity] = useState('sydney')
   const [essa, setEssa] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
@@ -54,7 +88,7 @@ export default function CrmWorkshopInterest() {
       // caps name at 100 chars, so keep the composed string within budget.
       const composedName = [
         name.trim(),
-        PROFESSION_LABELS[profession].replace('Accredited Exercise ', 'A'), // AEP / AES
+        PROFESSION_ABBR[profession],
         cleanEssa ? `ESSA ${cleanEssa}` : null,
         regionMeta.label,
         'EP/CRM workshop',
@@ -69,7 +103,7 @@ export default function CrmWorkshopInterest() {
         body: JSON.stringify({
           email: email.trim(),
           name: composedName,
-          city: regionMeta.city,
+          city,
         }),
       })
       const data = await res.json()
@@ -81,6 +115,7 @@ export default function CrmWorkshopInterest() {
         setEmail('')
         setProfession('aep')
         setRegion('nsw')
+        setCity('sydney')
         setEssa('')
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
@@ -107,6 +142,8 @@ export default function CrmWorkshopInterest() {
       </div>
     )
   }
+
+  const selectedRegion = REGIONS.find((r) => r.value === region)
 
   const inputClass =
     'w-full rounded-xl border border-[var(--border-strong)] bg-[var(--card-solid)] px-4 py-3 text-sm text-[var(--foreground)] shadow-[var(--shadow-sm)] transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--accent-muted)]'
@@ -166,7 +203,12 @@ export default function CrmWorkshopInterest() {
           <select
             id="crm-region"
             value={region}
-            onChange={(e) => setRegion(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value
+              setRegion(next)
+              const meta = REGIONS.find((r) => r.value === next)
+              if (meta) setCity(meta.city)
+            }}
             className={inputClass}
           >
             {REGIONS.map((r) => (
@@ -175,6 +217,28 @@ export default function CrmWorkshopInterest() {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label htmlFor="crm-city" className={labelClass}>
+            Workshop city you could travel to
+          </label>
+          <select
+            id="crm-city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className={inputClass}
+          >
+            {WORKSHOP_CITIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs leading-relaxed text-[var(--muted-foreground)]">
+            {selectedRegion?.suggested
+              ? 'Pre-selected from your state — change it if another city suits.'
+              : `We run workshops in ${WORKSHOP_CITIES.map((c) => c.label).slice(0, -1).join(', ')} and ${WORKSHOP_CITIES[WORKSHOP_CITIES.length - 1].label}. We've suggested the nearest — change it if another suits.`}
+          </p>
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="crm-essa" className={labelClass}>

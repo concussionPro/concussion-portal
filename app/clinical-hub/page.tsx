@@ -618,10 +618,13 @@ function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
    - REVIEW  (amber): flare session · symptom-stopped · overrode stop ·
      next-day flare · aborted threshold test
    - URGENT  (red):  red-flag threshold event
-   Acknowledgement is client-side per-browser for now (localStorage keyed by
-   clinic + patientKey + event date). LIMITATION: an ack does not sync across
-   devices/browsers or to other clinicians — a per-clinic server-side ack
-   store should replace this once clinician accounts exist.
+   Acknowledgement is CLINIC-WIDE and SERVER-SIDE (sst_clinic_acks, via
+   /api/sst/clinic-acks; returned with the roster by /api/sst/clinic-sessions).
+   It was per-browser localStorage until 2026-08-05, which meant one clinician
+   acknowledging on her laptop left the other 14 seats staring at the URGENT
+   banner, and there was no record of who reviewed what. localStorage is now
+   only an OPTIMISTIC CACHE so the banner clears instantly on the acting
+   clinician's screen; the server row is the record.
 ─────────────────────────────────────────────────────────────────── */
 type Attention = { level: 'urgent' | 'review'; reason: string; dateKey: string }
 
@@ -663,9 +666,18 @@ function deriveAttention(pt: Patient): Attention | null {
   return cands[0]
 }
 
-function ackKeyOf(clinic: string, pt: Patient, att: Attention) {
-  return `sst-hub-ack:${clinic || 'DEMO'}:${pt.patientKey ?? pt.id}:${att.dateKey}`
+/** The identity the SERVER stores an ack against (same key the roster groups on). */
+function ackPatientKeyOf(pt: Patient): string {
+  return pt.patientKey ?? pt.id
 }
+
+/** localStorage cache key — clinic + patient identity + the escalating event's date. */
+function ackKeyOf(clinic: string, pt: Patient, att: Attention) {
+  return `sst-hub-ack:${clinic || 'DEMO'}:${ackPatientKeyOf(pt)}:${att.dateKey}`
+}
+
+/** What the hub knows about an acknowledgement — `by` is null for cache-only hits. */
+type AckRecord = { by: string | null; at: string | null }
 
 function MiniChip({ tone, children }: { tone: 'slate' | 'amber' | 'emerald'; children: React.ReactNode }) {
   const cls = tone === 'amber'
@@ -688,7 +700,13 @@ export default function ClinicalHubPage() {
   const [clinicName, setClinicName] = useState<string | null>(null)
   const [mode, setMode] = useState<'demo' | 'real'>('demo')
   const [realState, setRealState] = useState<RealState>('idle')
-  const [acks, setAcks] = useState<Record<string, boolean>>({})
+  // Acknowledgements keyed by the localStorage cache key. The SERVER copy
+  // (loaded with the roster) is the record; localStorage only pre-fills so the
+  // acting clinician's own screen doesn't flash the banner back on reload.
+  const [acks, setAcks] = useState<Record<string, AckRecord>>({})
+  // Raw server acks, keyed `${patientKey} ${dateKey}` — merged into `acks`
+  // once the roster is mapped (a patient's escalating event decides the key).
+  const [serverAcks, setServerAcks] = useState<Record<string, AckRecord>>({})
 
   // Real data: ?clinic=<code>&k=<viewkey> loads that clinic's actual SST
   // sessions from /api/sst/clinic-sessions. DEMO00 is the public demo (no key
@@ -720,8 +738,25 @@ export default function ClinicalHubPage() {
           setRealState(r.status === 401 || r.status === 403 ? 'unauthorized' : r.status === 404 ? 'unknown-code' : 'error')
           return
         }
-        const data = (await r.json()) as { patients?: ApiPatient[]; clinicName?: string }
+        const data = (await r.json()) as {
+          patients?: ApiPatient[]
+          clinicName?: string
+          acks?: Array<{ patientKey?: string; dateKey?: string; acknowledgedBy?: string | null; acknowledgedAt?: string }>
+        }
         if (typeof data?.clinicName === 'string' && data.clinicName.trim()) setClinicName(data.clinicName.trim())
+        // Clinic-wide acknowledgements ride with the roster — every seat sees
+        // the same banner state, and who cleared it.
+        if (Array.isArray(data?.acks)) {
+          const next: Record<string, AckRecord> = {}
+          for (const a of data.acks) {
+            if (!a?.patientKey || !a?.dateKey) continue
+            next[`${a.patientKey} ${a.dateKey}`] = {
+              by: typeof a.acknowledgedBy === 'string' && a.acknowledgedBy.trim() ? a.acknowledgedBy.trim() : null,
+              at: typeof a.acknowledgedAt === 'string' ? a.acknowledgedAt : null,
+            }
+          }
+          setServerAcks(next)
+        }
         const mapped = groupApiPatients(data?.patients ?? []).map((pp) => mapRealPatient(pp, code))
         // DEMO00 ALWAYS keeps the curated fixture roster. It used to adopt live
         // DEMO00 rows whenever any existed — which meant every e2e/manual test
@@ -740,27 +775,70 @@ export default function ClinicalHubPage() {
       })
   }, [])
 
-  // Load acknowledged-review flags (client-side per-browser — see Attention note).
+  // Resolve each patient's escalating event against the SERVER acks, with the
+  // localStorage cache as a fallback so the acting clinician's own screen never
+  // flashes a banner they already cleared while the roster reloads.
   useEffect(() => {
-    try {
-      const next: Record<string, boolean> = {}
-      for (const pt of roster) {
-        const att = deriveAttention(pt)
-        if (!att) continue
-        const key = ackKeyOf(clinicCode, pt, att)
-        if (window.localStorage.getItem(key)) next[key] = true
+    const next: Record<string, AckRecord> = {}
+    for (const pt of roster) {
+      const att = deriveAttention(pt)
+      if (!att) continue
+      const key = ackKeyOf(clinicCode, pt, att)
+      const server = serverAcks[`${ackPatientKeyOf(pt)} ${att.dateKey}`]
+      if (server) {
+        next[key] = server
+        continue
       }
-      setAcks(next)
-    } catch {
-      /* storage unavailable (private mode) — acks just don't persist */
+      try {
+        if (window.localStorage.getItem(key)) next[key] = { by: null, at: null }
+      } catch {
+        /* storage unavailable (private mode) — the server copy still governs */
+      }
     }
-  }, [roster, clinicCode])
+    setAcks(next)
+  }, [roster, clinicCode, serverAcks])
 
-  function markReviewed(key: string) {
+  /**
+   * Mark reviewed: optimistic locally, then RECORDED clinic-wide so the other
+   * seats stop seeing the banner and the clinic has a "who reviewed this" row.
+   * A failed write rolls the optimistic state back — a banner that silently
+   * disappeared without being recorded is worse than one that stays up.
+   */
+  function markReviewed(key: string, pt: Patient, att: Attention) {
     try {
       window.localStorage.setItem(key, String(Date.now()))
     } catch { /* non-persistent fallback below still updates state */ }
-    setAcks((prev) => ({ ...prev, [key]: true }))
+    setAcks((prev) => ({ ...prev, [key]: { by: null, at: new Date().toISOString() } }))
+    if (isDemo || !clinicCode || !viewKey) return // demo/keyless: optimistic only, never writes
+    void fetch('/api/sst/clinic-acks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: clinicCode,
+        k: viewKey,
+        patientKey: ackPatientKeyOf(pt),
+        dateKey: att.dateKey,
+      }),
+      credentials: 'include', // lets the server stamp the signed-in clinician
+    })
+      .then(async (r) => {
+        const d = r.ok ? await r.json().catch(() => null) : null
+        if (d?.ack) {
+          const rec: AckRecord = { by: d.ack.acknowledgedBy ?? null, at: d.ack.acknowledgedAt ?? null }
+          setServerAcks((prev) => ({ ...prev, [`${ackPatientKeyOf(pt)} ${att.dateKey}`]: rec }))
+          setAcks((prev) => ({ ...prev, [key]: rec }))
+          return
+        }
+        if (!r.ok) throw new Error(String(r.status))
+      })
+      .catch(() => {
+        try { window.localStorage.removeItem(key) } catch { /* nothing to undo */ }
+        setAcks((prev) => {
+          const copy = { ...prev }
+          delete copy[key]
+          return copy
+        })
+      })
   }
 
   const isDemo = mode === 'demo'
@@ -777,7 +855,8 @@ export default function ClinicalHubPage() {
   const p = roster.find((x) => x.id === selectedId) ?? roster[0]
   const selAtt = p ? deriveAttention(p) : null
   const selAckKey = p && selAtt ? ackKeyOf(clinicCode, p, selAtt) : null
-  const selAcked = selAckKey ? !!acks[selAckKey] : false
+  const selAck = selAckKey ? acks[selAckKey] : undefined
+  const selAcked = !!selAck
 
   function addPatient(form: { name: string; age: string; sport: string; injuryDate: string }) {
     const seq = roster.length + 1
@@ -1021,7 +1100,7 @@ export default function ClinicalHubPage() {
                 <div className="mt-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 p-3">
                   <AlertOctagon className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-red-800 leading-relaxed flex-1 font-medium">{selAtt.reason}</p>
-                  <button onClick={() => markReviewed(selAckKey)}
+                  <button onClick={() => markReviewed(selAckKey, p, selAtt)}
                     className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-red-300 text-red-700 hover:bg-red-100 transition flex-shrink-0">
                     Mark reviewed
                   </button>
@@ -1032,7 +1111,7 @@ export default function ClinicalHubPage() {
                 <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
                   <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-amber-800 leading-relaxed flex-1">{selAtt.reason}</p>
-                  <button onClick={() => markReviewed(selAckKey)}
+                  <button onClick={() => markReviewed(selAckKey, p, selAtt)}
                     className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-100 transition flex-shrink-0">
                     Mark reviewed
                   </button>
@@ -1040,7 +1119,9 @@ export default function ClinicalHubPage() {
               )}
               {selAtt && selAcked && (
                 <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <Check className="w-3.5 h-3.5 text-[var(--accent)]" /> Reviewed on this device — {selAtt.reason}
+                  <Check className="w-3.5 h-3.5 text-[var(--accent)]" /> Reviewed
+                  {selAck?.by ? ` by ${selAck.by}` : ''}
+                  {selAck?.at ? ` · ${fmtShort(selAck.at) ?? ''}` : ''} — {selAtt.reason}
                 </p>
               )}
 
