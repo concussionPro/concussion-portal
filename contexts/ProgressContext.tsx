@@ -10,6 +10,16 @@ export interface ModuleProgress {
   quizCompleted: boolean
   quizAnswers: Record<string, number> | null // Individual quiz answers: { questionId: selectedOptionIndex }
   quizSubmittedAt: Date | null
+  /**
+   * How many times this module's quiz has been SUBMITTED. Retakes are unlimited
+   * by design (a knowledge check is a learning device, not an exam invigilation
+   * problem) — but they were previously invisible: updateQuizScore overwrote in
+   * place, so a 75%/80% pass behind an AHPRA CPD certificate was unfalsifiable.
+   * Attempts are now counted and timestamped, so a pass can be read in context.
+   */
+  quizAttempts: number
+  /** ISO timestamp + score of every submission, oldest first (capped). */
+  quizAttemptHistory: Array<{ at: string; score: number; total: number }> | null
   startedAt: Date | null
   completedAt: Date | null
   activeStudyMinutes: number // NEW: actual tracked study time
@@ -65,6 +75,8 @@ function createDefaultModuleProgress(moduleId: number): ModuleProgress {
     quizCompleted: false,
     quizAnswers: null,
     quizSubmittedAt: null,
+    quizAttempts: 0,
+    quizAttemptHistory: null,
     startedAt: null,
     completedAt: null,
     activeStudyMinutes: 0,
@@ -108,6 +120,10 @@ function parseStoredProgress(data: Record<string, ModuleProgress>): Record<numbe
     if (entry.lastActiveAt === undefined) entry.lastActiveAt = null
     if (entry.quizAnswers === undefined) entry.quizAnswers = null
     if (entry.quizSubmittedAt === undefined) entry.quizSubmittedAt = null
+    // Pre-2026-08 records have no attempt counter. A completed quiz must count
+    // as at least ONE attempt — never zero, which would read as "never sat".
+    if (typeof entry.quizAttempts !== 'number') entry.quizAttempts = entry.quizCompleted ? 1 : 0
+    if (entry.quizAttemptHistory === undefined) entry.quizAttemptHistory = null
     parsed[Number(key)] = entry
   })
   return parsed
@@ -117,6 +133,24 @@ function parseStoredProgress(data: Record<string, ModuleProgress>): Record<numbe
 // state on every axis. Used when the server load resolves so it can never
 // clobber progress made while the fetch was in flight (e.g. the Module-1
 // startedAt activation event fired in the first seconds on the page).
+/** Keep the newest MAX_ATTEMPT_HISTORY submissions; retakes are unlimited but
+ *  the stored blob is not, and the progress row is sent on every save. */
+const MAX_ATTEMPT_HISTORY = 25
+
+/** Union two attempt logs by timestamp, oldest first, capped. */
+function mergeAttemptHistory(
+  a: ModuleProgress['quizAttemptHistory'],
+  b: ModuleProgress['quizAttemptHistory'],
+): ModuleProgress['quizAttemptHistory'] {
+  if (!a && !b) return null
+  const seen = new Map<string, { at: string; score: number; total: number }>()
+  for (const e of [...(a ?? []), ...(b ?? [])]) {
+    if (e && typeof e.at === 'string') seen.set(e.at, e)
+  }
+  const all = [...seen.values()].sort((x, y) => x.at.localeCompare(y.at))
+  return all.slice(-MAX_ATTEMPT_HISTORY)
+}
+
 function mergeModuleProgress(a: ModuleProgress, b: ModuleProgress): ModuleProgress {
   const earliest = (x: Date | null, y: Date | null) =>
     x && y ? (x.getTime() <= y.getTime() ? x : y) : x || y
@@ -145,6 +179,10 @@ function mergeModuleProgress(a: ModuleProgress, b: ModuleProgress): ModuleProgre
         ? b.quizAnswers
         : a.quizAnswers,
     quizSubmittedAt: latest(a.quizSubmittedAt, b.quizSubmittedAt),
+    // Attempts only ever go UP: a device that saw fewer submissions must never
+    // erase attempts recorded elsewhere. History merges by timestamp.
+    quizAttempts: Math.max(a.quizAttempts || 0, b.quizAttempts || 0),
+    quizAttemptHistory: mergeAttemptHistory(a.quizAttemptHistory, b.quizAttemptHistory),
     startedAt: earliest(a.startedAt, b.startedAt),
     completedAt: earliest(a.completedAt, b.completedAt),
     activeStudyMinutes: Math.max(a.activeStudyMinutes || 0, b.activeStudyMinutes || 0),
@@ -381,9 +419,22 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     // so including it can never re-trigger this effect.
   }, [progress, isInitialized, attemptSave])
 
+  /**
+   * Record a quiz SUBMISSION. The latest score/answers still overwrite (the
+   * certificate route re-verifies the stored answers server-side, so the live
+   * set must be the latest), but the attempt is now COUNTED and timestamped —
+   * previously a retake overwrote the record in place, leaving no evidence that
+   * a passing score took five goes. Retakes stay unlimited; they are simply no
+   * longer invisible.
+   */
   const updateQuizScore = (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => {
     setProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
+      const at = new Date()
+      const history = [
+        ...(currentModule.quizAttemptHistory ?? []),
+        { at: at.toISOString(), score, total: totalQuestions },
+      ].slice(-MAX_ATTEMPT_HISTORY)
       return {
         ...prev,
         [moduleId]: {
@@ -392,7 +443,9 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           quizTotalQuestions: totalQuestions,
           quizCompleted: true,
           quizAnswers: answers || null,
-          quizSubmittedAt: new Date(),
+          quizSubmittedAt: at,
+          quizAttempts: (currentModule.quizAttempts || 0) + 1,
+          quizAttemptHistory: history,
         },
       }
     })
