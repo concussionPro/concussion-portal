@@ -13,6 +13,10 @@ export type ProspectStatus =
    *  'categorizing' row. The website categorizer transitions it to
    *  'researching' (in-scope, sized) or 'archived' (out-of-scope). */
   | 'categorizing'
+  /** Held by the categorizer: no clinical signal on the site, or the fetch
+   *  failed — needs a human eyeball before any promotion (2026-08-05
+   *  hardening: never promoted with a fabricated team). Inert to all crons. */
+  | 'needs-review'
   | 'researching'
   | 'approved'
   | 'sent'

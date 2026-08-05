@@ -173,16 +173,16 @@ struct SSTSync {
         let queue = SSTStore.loadPending()
         guard !queue.isEmpty else { return }
 
-        var stillFailed: [PendingSync] = []
         for (i, entry) in queue.enumerated() {
             // Pace under the server's 30/min rate limit — flushing a large
             // queue back-to-back 429'd its tail (mirrors the 2100ms spacing in
             // clinic-sync.ts flushPendingSyncs).
             if i > 0 { try? await Task.sleep(nanoseconds: 2_100_000_000) }
             let ok = await postData(urlString: entry.url, data: entry.body)
-            if !ok { stillFailed.append(entry) }
+            // Remove ONLY the landed entry — events enqueued while this paced
+            // flush runs must survive (mirrors web removePendingSync).
+            if ok { SSTStore.removePending(entry) }
         }
-        SSTStore.setPending(stillFailed)
     }
 
     // MARK: - Transport

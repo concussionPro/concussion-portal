@@ -63,6 +63,13 @@ async function ensureHubTables(): Promise<void> {
   `
   // Lazy migration — refund/dispute revocation (2026-08-05).
   await sql`ALTER TABLE course_hubs ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ`
+  // Seat-cap race guard (2026-08-05 round-J P0: the INSERT references
+  // seat_no — this column/index MUST exist or every redemption 42703s).
+  // Concurrent last-seat claimants collide on the partial unique index;
+  // legacy NULL rows never collide (NULLs are distinct).
+  await sql`ALTER TABLE course_hub_members ADD COLUMN IF NOT EXISTS seat_no INT`
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS uniq_hub_member_seat
+    ON course_hub_members (hub_code, role, seat_no) WHERE seat_no IS NOT NULL`
   tablesReady = true
 }
 

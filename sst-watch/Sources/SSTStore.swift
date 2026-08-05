@@ -15,7 +15,7 @@ import Foundation
 /// networking is intermittent, so a network-failed clinical event is persisted
 /// and retried on the next launch / connectivity, never lost. The body is the
 /// already-serialised JSON (heterogeneous payload), stored verbatim.
-struct PendingSync: Codable {
+struct PendingSync: Codable, Equatable {
     var url: String
     var body: Data
     var queuedAt: Date
@@ -269,6 +269,17 @@ enum SSTStore {
 
     /// Replace the retry queue (after a flush). Best-effort — a failed encode
     /// simply doesn't write.
+    /// Remove ONE landed entry by identity, preserving anything enqueued
+    /// while a paced flush was running (a wholesale replace from the flush's
+    /// snapshot destroyed mid-flush enqueues — same fix as the web's
+    /// removePendingSync, 2026-08-05).
+    static func removePending(_ entry: PendingSync) {
+        var queue = readPending()
+        guard let i = queue.firstIndex(of: entry) else { return }
+        queue.remove(at: i)
+        setPending(queue)
+    }
+
     static func setPending(_ pending: [PendingSync]) {
         guard let data = try? JSONEncoder().encode(pending) else { return }
         UserDefaults.standard.set(data, forKey: pendingKey)

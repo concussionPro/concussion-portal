@@ -104,7 +104,12 @@ export async function POST(
   // exempt: a portal forwarded round a 3-4 person clinic can legitimately
   // exceed 30 section/exit events in an hour, and a 429'd cta_click
   // silently lost the one signal the engine exists for (round-H #3).
-  const isMoneySignal = body.interactionType === 'cta_click' || body.interactionType === 'pricing_view'
+  // Money signals: cta_click, and pricing SECTION views — the tracker never
+  // emits a 'pricing_view' type; the pricing signal is section_view with
+  // section === 'pricing' (2026-08-05 round-J #2).
+  const isMoneySignal =
+    interactionType === 'cta_click' ||
+    (interactionType === 'section_view' && String(body.section || '') === 'pricing')
   if (!isMoneySignal) {
     const rl = await rateLimit({ key: `prospect-track:${clinic.id}`, limit: 30, windowSec: 3600 })
     if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
