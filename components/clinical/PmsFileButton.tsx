@@ -17,10 +17,12 @@ const SKINS: Array<[string, string]> = [
   ['acc884', 'ACC884 (NZ)'],
 ]
 
-export function PmsFileButton({ clinicCode, viewKey, patientName, demo = false }: {
+export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = null, demo = false }: {
   clinicCode: string
   viewKey: string
   patientName: string
+  /** install-UUID identity — disambiguates same-named patients (round-3 #3) */
+  patientRef?: string | null
   /** DEMO00 showcase: full Gensolve filing flow, clearly labelled, writes nothing. */
   demo?: boolean
 }) {
@@ -54,6 +56,7 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, demo = false }
           clinicCode={clinicCode}
           viewKey={viewKey}
           patientName={patientName}
+          patientRef={patientRef}
           pms={pms}
           demo={demo}
           onClose={() => setOpen(false)}
@@ -63,11 +66,12 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, demo = false }
   )
 }
 
-function FileModal({ auth, clinicCode, viewKey, patientName, pms, demo = false, onClose }: {
+function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, pms, demo = false, onClose }: {
   auth: string
   clinicCode: string
   viewKey: string
   patientName: string
+  patientRef?: string | null
   pms: string
   demo?: boolean
   onClose: () => void
@@ -126,6 +130,7 @@ function FileModal({ auth, clinicCode, viewKey, patientName, pms, demo = false, 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code: clinicCode, k: viewKey, patient: patientName,
+          ref: patientRef || undefined,
           skin, pmsPatientId: picked.id, claim: claim.trim() || undefined,
           clinician: clinician.trim() || undefined,
         }),

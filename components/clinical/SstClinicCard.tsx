@@ -222,7 +222,7 @@ export function SstClinicCard() {
           <p className="mt-1 font-mono text-[34px] font-extrabold tracking-[0.3em] text-accent leading-none">
             {clinic.code}
           </p>
-          {usage?.plan === 'trial' && usage.cap != null && (
+          {usage?.plan === 'trial' && usage.cap != null && !justSubscribed && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
                 Free trial · {usage.patientCount} of {usage.cap} patients used
@@ -237,8 +237,15 @@ export function SstClinicCard() {
           {usage?.plan === 'active' && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                Subscribed · unlimited patients
+                {usage.cap == null
+                  ? 'Subscribed · unlimited patients'
+                  : `Subscribed · ${usage.patientCount} of ${usage.cap} active patients (30 days)`}
               </span>
+              {usage.cap != null && !usage.canAddPatient && (
+                <button type="button" onClick={openBillingPortal} className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-white hover:bg-accent/90">
+                  Plan full — upgrade →
+                </button>
+              )}
               <button
                 type="button"
                 onClick={openBillingPortal}

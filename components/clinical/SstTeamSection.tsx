@@ -11,9 +11,11 @@ import { UserPlus, X } from 'lucide-react'
  */
 interface Member { id: string; name: string; email: string | null }
 
+const TIER_NAMES: Record<string, string> = { single: 'Starter', clinic: 'Clinic', enterprise: 'Unlimited' }
+
 export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   const [members, setMembers] = useState<Member[]>([])
-  const [seats, setSeats] = useState<{ used: number; allowance: number; tier: string; isOwner: boolean } | null>(null)
+  const [seats, setSeats] = useState<{ used: number; allowance: number | null; tier: string; isOwner: boolean } | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -22,7 +24,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   const load = useCallback(() => {
     if (demo) {
       setMembers([{ id: 'demo-1', name: 'Alex Reviewer', email: null }])
-      setSeats({ used: 2, allowance: 5, tier: 'clinic', isOwner: true })
+      setSeats({ used: 2, allowance: null, tier: 'clinic', isOwner: true })
       return
     }
     void fetch('/api/clinical-testing/team')
@@ -30,7 +32,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       .then((d) => {
         if (!d) return
         setMembers(d.members ?? [])
-        setSeats({ used: d.seatsUsed ?? 1, allowance: d.seatAllowance ?? 1, tier: d.tier ?? 'trial', isOwner: d.isOwner !== false })
+        setSeats({ used: d.seatsUsed ?? 1, allowance: d.seatAllowance === null ? null : (d.seatAllowance ?? 1), tier: d.tier ?? 'trial', isOwner: d.isOwner !== false })
       })
       .catch(() => {})
   }, [demo])
@@ -76,8 +78,10 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       <div className="flex items-center justify-between gap-3 mb-2.5">
         <p className="text-[12px] font-bold text-foreground">Practitioners</p>
         <span className="text-[11px] font-semibold text-muted-foreground">
-          {seats.used} of {seats.allowance} seat{seats.allowance === 1 ? '' : 's'}
-          {seats.tier !== 'trial' && ` · ${seats.tier} plan`}
+          {seats.allowance === null
+            ? `${seats.used} practitioner${seats.used === 1 ? '' : 's'} · unlimited`
+            : `${seats.used} of ${seats.allowance} seat${seats.allowance === 1 ? '' : 's'}`}
+          {seats.tier !== 'trial' && ` · ${TIER_NAMES[seats.tier] ?? seats.tier} plan`}
         </span>
       </div>
       <ul className="space-y-1.5">
@@ -97,8 +101,8 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
         ))}
       </ul>
       {!seats.isOwner ? (
-        <p className="mt-3 text-[12px] text-muted-foreground">Seats are managed by the clinic owner.</p>
-      ) : seats.used < seats.allowance ? (
+        <p className="mt-3 text-[12px] text-muted-foreground">Practitioners are managed by the clinic owner.</p>
+      ) : seats.allowance === null || seats.used < seats.allowance ? (
         <div className="mt-3 flex flex-col sm:flex-row gap-2">
           <input
             type="text" value={name} onChange={(e) => setName(e.target.value)}
@@ -120,8 +124,8 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
         </div>
       ) : (
         <p className="mt-3 text-[12px] text-muted-foreground">
-          All seats on your plan are in use —{' '}
-          <a href="/clinical-testing/subscribe" className="font-semibold text-accent hover:underline">upgrade to add more practitioners</a>.
+          The free trial covers one practitioner —{' '}
+          <a href="/clinical-testing/subscribe" className="font-semibold text-accent hover:underline">subscribe for unlimited practitioners</a>.
         </p>
       )}
       {error && <p className="mt-2 text-[12px] text-red-600">{error}</p>}

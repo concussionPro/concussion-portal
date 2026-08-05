@@ -66,7 +66,7 @@ function capEmail(c: ClinicRow): { subject: string; text: string } {
 
 You've got ${c.patients} patients running through SST at ${c.clinic_name} — keen to hear how the first episodes have gone, and whether the reports are landing the way your team needs.
 
-Your trial includes 3 patients. When you're ready to open it up, clinic plans start at A$49/month flat (cancel anytime) — you can upgrade from your workspace, or just reply and I'll set it up with you.
+Your trial includes 3 patients. When you're ready to open it up, plans start at A$49/month (cancel anytime) and every plan includes unlimited clinicians with their own logins — you can upgrade from your workspace, or just reply and I'll set it up with you.
 
 If a walkthrough for the rest of the team would help, happy to do that too.
 
@@ -118,10 +118,17 @@ export async function GET(request: Request) {
 
     const { rows } = await sql`
       SELECT c.code, c.clinic_name, c.contact_name, c.email, c.plan, c.created_at,
-        (SELECT COUNT(DISTINCT COALESCE(
-             NULLIF(trim(coalesce(s.payload->>'patientRef','')), ''),
-             NULLIF(lower(trim(coalesce(s.patient_label,''))), '')))
-           FROM sst_clinic_sessions s WHERE s.clinic_code = c.code) AS patients,
+        (WITH s AS (
+           SELECT NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref,
+                  NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl
+           FROM sst_clinic_sessions WHERE clinic_code = c.code
+         )
+         SELECT (
+           (SELECT COUNT(DISTINCT ref) FROM s WHERE ref IS NOT NULL) +
+           (SELECT COUNT(DISTINCT lbl) FROM s
+             WHERE ref IS NULL AND lbl IS NOT NULL
+               AND lbl NOT IN (SELECT lbl FROM s WHERE ref IS NOT NULL AND lbl IS NOT NULL))
+         )) AS patients,
         (SELECT COUNT(*) FROM sst_clinic_sessions s WHERE s.clinic_code = c.code) AS sessions
       FROM sst_clinics c
       WHERE c.email IS NOT NULL AND c.email <> ''
@@ -183,47 +190,9 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── Tier-fit watchdog (2026-08-04: tiers were honor-system — a
-    // 15-clinician clinic could pay $49 forever). SOFT enforcement: active
-    // patients in the last 30 days proxy the caseload a tier honestly covers
-    // (single ≈ one practitioner ≈ ≤15 active; clinic ≤60; enterprise ∞).
-    // NEVER blocks writes (clinical-safety rule) — reports to Zac monthly;
-    // he decides who gets the tier conversation.
-    try {
-      const TIER_ACTIVE_ALLOWANCE: Record<string, number> = { single: 15, clinic: 60 }
-      const { rows: activeClinics } = await sql`
-        SELECT c.code, c.clinic_name, c.email, c.tier,
-          (SELECT COUNT(DISTINCT COALESCE(
-             NULLIF(trim(coalesce(s.payload->>'patientRef','')), ''),
-             NULLIF(trim(coalesce(s.patient_label,'')), '')))
-           FROM sst_clinic_sessions s
-           WHERE s.clinic_code = c.code AND s.created_at > NOW() - INTERVAL '30 days') AS active_patients
-        FROM sst_clinics c WHERE c.plan = 'active'
-      `
-      const over = (activeClinics as { code: string; clinic_name: string; tier: string | null; active_patients: number }[])
-        .filter((c) => {
-          const allowance = TIER_ACTIVE_ALLOWANCE[c.tier || 'single']
-          return allowance !== undefined && Number(c.active_patients) > allowance
-        })
-      if (over.length > 0) {
-        const monthKey = new Date().toISOString().slice(0, 7)
-        const { rowCount: fresh } = await sql`
-          INSERT INTO email_audit_log (audit_key, sent_at)
-          VALUES (${'sst_tierfit_' + monthKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
-        if (fresh) {
-          const lines = over.map((c) =>
-            `- ${c.clinic_name} (${c.code}): tier=${c.tier || 'single'}, ${c.active_patients} active patients / 30d`).join('\n')
-          await sendEmail({
-            to: 'zac@concussion-education-australia.com',
-            subject: `SST tier fit — ${over.length} clinic(s) above their plan's caseload`,
-            html: toHtml(`Caseload anomaly signal (seats are the enforcement; this is the smell test — nothing was blocked):\n\n${lines}\n\nAllowances: single ≤15 active/30d · clinic ≤60 · enterprise unlimited.`, '#'),
-            tags: [{ name: 'type', value: 'sst-tierfit' }],
-          })
-        }
-      }
-    } catch (err) {
-      console.error('[sst-checkins] tier-fit watchdog failed (non-fatal):', err)
-    }
+    // (The tier-fit watchdog was retired 2026-08-05: paid tiers are now
+    // HARD-metered on active caseload at the admission gate — enforcement
+    // replaced the anomaly email.)
 
     return NextResponse.json({ sent, skipped })
   } catch (err) {

@@ -45,6 +45,8 @@ const asInterp = (s: unknown): ThresholdResult['interpretation'] =>
   (typeof s === 'string' && VALID_INTERP.has(s) ? s : 'invalid') as ThresholdResult['interpretation']
 
 export interface LoadReportOptions {
+  /** install-UUID identity — prefer over the display label when present */
+  patientRef?: string
   /** Real identity to stamp on the report (else the de-identified label is used). */
   patient?: Partial<ReportPatient>
   clinician?: { name: string; credential?: string }
@@ -170,11 +172,23 @@ export async function loadReportInput(
   if (code.trim().toUpperCase() === DEMO_CLINIC_CODE) {
     return demoReportInput(patientLabel, jurisdiction, opts)
   }
+  // Identity: patientRef FIRST when the caller has one — label-only matching
+  // merged two same-named humans into one signable document and 404'd the
+  // "(2)"-suffixed one (2026-08-05 round-3 #3). A ref'd query still picks up
+  // the same human's label-only rows (older clients) via the case-folded
+  // label; label-only callers keep working unchanged.
+  const ref = (opts.patientRef ?? '').trim()
   const { rows } = await sql<Row>`
     SELECT patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
     FROM sst_clinic_sessions
     WHERE upper(clinic_code) = ${code.toUpperCase()}
-      AND trim(coalesce(patient_label, '')) = ${patientLabel}
+      AND (
+        (${ref} <> '' AND payload->>'patientRef' = ${ref})
+        OR (
+          lower(trim(coalesce(patient_label, ''))) = ${patientLabel.trim().toLowerCase()}
+          AND (${ref} = '' OR NULLIF(trim(coalesce(payload->>'patientRef', '')), '') IS NULL)
+        )
+      )
     ORDER BY created_at ASC
   `
   if (rows.length === 0) return null

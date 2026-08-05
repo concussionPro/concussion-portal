@@ -52,7 +52,7 @@ export default function SstEntry() {
             role="status"
             style={{ background: '#7c2d12', color: '#fff7ed', padding: '10px 16px', fontSize: 13.5, lineHeight: 1.45, textAlign: 'center' }}
           >
-            Your clinic&rsquo;s free trial is at capacity, so your sessions aren&rsquo;t reaching your
+            Your clinic&rsquo;s SST plan is at capacity, so your sessions aren&rsquo;t reaching your
             clinician yet — they&rsquo;re saved on this device and will send automatically once your
             clinic opens a spot. Mention it at your next appointment.
           </div>

@@ -578,6 +578,12 @@ export default function GuidedTest({
               onChange={(e) => {
                 setHeartRate(e.target.value)
                 setConfirmJump(null)
+                // A jump-confirm intercept left autoLoggedRef latched true, so
+                // after "Fix it" the corrected value could never auto-log and a
+                // manual test wedged. A typed correction re-arms the auto-logger.
+                // (Re-arming at the intercept itself would loop: "Fix it" with
+                // the value unchanged would instantly re-fire the confirm.)
+                autoLoggedRef.current = false
               }}
               placeholder="—"
               className={`w-[88px] border-none bg-transparent p-0 text-[46px] leading-[0.92] text-(--sst-accent) outline-none placeholder:text-(--sst-placeholder) ${numFont}`}

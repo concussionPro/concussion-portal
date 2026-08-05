@@ -31,7 +31,10 @@ import { grantSstEntitlement } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 
-const SEAT_ALLOWANCE: Record<string, number> = { single: 1, clinic: 5, enterprise: 15 }
+// 2026-08-05 pricing redesign: paid tiers meter ACTIVE CASELOAD (registry
+// TIER_ACTIVE_PATIENT_CAP), and clinicians are UNLIMITED — named seats are
+// the attribution carrot, not the paywall. Trial stays 1 seat (solo eval).
+const TRIAL_SEATS = 1
 
 async function ensureTable() {
   await sql`
@@ -72,12 +75,11 @@ export async function GET(req: NextRequest) {
   `
   const usage = await getClinicUsage(clinic.code)
   const tier = clinic.tier || (usage.plan === 'active' ? 'single' : 'trial')
-  const allowance = usage.plan === 'active' ? (SEAT_ALLOWANCE[tier] ?? 1) : 1
   return NextResponse.json({
     members: rows,
     // owner occupies seat 1
     seatsUsed: rows.length + 1,
-    seatAllowance: allowance,
+    seatAllowance: usage.plan === 'active' ? null : TRIAL_SEATS,
     tier: usage.plan === 'active' ? tier : 'trial',
     isOwner: auth.isOwner,
   })
@@ -107,16 +109,11 @@ export async function POST(req: NextRequest) {
   const seatsUsed = (existing[0]?.n ?? 0) + 1 // + owner
 
   const usage = await getClinicUsage(clinic.code)
-  const tier = clinic.tier || 'single'
-  const allowance = usage.plan === 'active' ? (SEAT_ALLOWANCE[tier] ?? 1) : 1
-  if (seatsUsed >= allowance) {
+  if (usage.plan !== 'active' && seatsUsed >= TRIAL_SEATS) {
     return NextResponse.json(
       {
         error: 'seat-limit',
-        message:
-          usage.plan === 'active'
-            ? `Your ${tier} plan covers ${allowance} practitioner${allowance === 1 ? '' : 's'}. Upgrade at /clinical-testing/subscribe to add more.`
-            : 'The free trial covers one practitioner. Subscribe at /clinical-testing/subscribe to add your team.',
+        message: 'The free trial covers one practitioner. Subscribe at /clinical-testing/subscribe — every paid plan includes unlimited practitioners.',
       },
       { status: 402 },
     )

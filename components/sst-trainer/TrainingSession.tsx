@@ -92,6 +92,16 @@ type Phase = 'pre' | 'active' | 'stopped' | 'summary'
 /** Pre-session symptoms at/above this get the soft rest-day warning (proceed allowed). */
 const HIGH_PRE_SYMPTOM = 7
 
+/** Finish-time snapshot (readings + zone-seconds live in refs while sampling). */
+interface SessionSummary {
+  symptomLimited: boolean
+  avg: number | null
+  peak: number | null
+  hrVerified: boolean
+  verifiedReadingPct: number
+  zones: { below: number; in: number; above: number }
+}
+
 /**
  * Everything an interrupted session needs to resume honestly: only data the
  * patient actually entered / the sampler actually recorded — never synthesised.
@@ -100,7 +110,9 @@ interface SessionHeartbeat {
   startedAt: number
   /** prescription fingerprint — a re-test between interruption and resume discards */
   rxHrt: number
-  phase: 'active' | 'stopped'
+  phase: 'active' | 'stopped' | 'summary'
+  /** accumulated ACTIVE ms — resume restarts the clock here, never from wall clock */
+  activeMs: number
   preSymptom: number
   currentSymptom: number
   peakSymptom: number
@@ -109,6 +121,8 @@ interface SessionHeartbeat {
   overrideAtScore: number
   readings: Array<{ bpm: number; verified: boolean }>
   zoneSeconds: { below: number; in: number; above: number }
+  /** finish-time snapshot — present only in the 'summary' phase */
+  summary: SessionSummary | null
 }
 
 /** Everything the page needs to sync an abandoned (cancelled) session. */
@@ -162,24 +176,35 @@ export default function TrainingSession({
   const [zoneToast, setZoneToast] = useState<'ease-off' | 'back-in' | null>(null)
 
   // ── session clock: Date.now()-based countdown, immune to timer throttling ──
-  // Start + now live in ONE state cell, only ever written from the interval
-  // callback (render stays pure). Until the first ~300ms tick the display
-  // simply shows the full prescribed time.
+  // Segment start + now live in ONE state cell, only ever written from the
+  // interval callback (render stays pure). Only ACTIVE time accrues: the clock
+  // runs in segments, and leaving 'active' (stop screen, summary) folds the
+  // segment into activeMsRef — recovery time and interruption gaps never count
+  // toward completedMinutes.
   const totalMs = rx.sessionMinutes * 60_000
+  const sessionStartRef = useRef(0)
+  const activeMsRef = useRef(0)
   const [clock, setClock] = useState<{ start: number; now: number } | null>(null)
   useEffect(() => {
-    if (phase === 'pre') return // the clock must not start until 'active' begins
-    if (phase === 'summary') return // freeze the clock on the summary screen
+    if (phase !== 'active') return
     const iv = setInterval(() => {
       setClock((c) => {
         const now = Date.now()
         return c ? { start: c.start, now } : { start: now, now }
       })
     }, 300)
-    return () => clearInterval(iv)
+    return () => {
+      clearInterval(iv)
+      // leaving 'active': fold the finished segment into the accumulated total
+      setClock((c) => {
+        if (c) activeMsRef.current += c.now - c.start
+        return null
+      })
+    }
   }, [phase])
-  const elapsedMs = clock ? Math.min(clock.now - clock.start, totalMs) : 0
-  const remainingMs = clock ? Math.max(0, totalMs - (clock.now - clock.start)) : totalMs
+  const activeMs = activeMsRef.current + (clock ? clock.now - clock.start : 0)
+  const elapsedMs = Math.min(activeMs, totalMs)
+  const remainingMs = Math.max(0, totalMs - activeMs)
 
   // ── wake lock: keep the screen alive mid-session; graceful no-op elsewhere ──
   // Only from 'active' onwards — the pre-session check-in doesn't hold the screen.
@@ -197,7 +222,17 @@ export default function TrainingSession({
       clearHeartbeat(SESSION_HEARTBEAT_KEY)
       return
     }
-    setResume(hb.data)
+    setResume({
+      ...hb.data,
+      // Legacy heartbeats (pre-activeMs) ran the clock on wall time —
+      // approximate active time as run time up to the LAST SAVE, never the
+      // wall-clock gap across the interruption.
+      activeMs:
+        typeof hb.data.activeMs === 'number'
+          ? hb.data.activeMs
+          : Math.max(0, hb.savedAt - hb.data.startedAt),
+      summary: hb.data.summary ?? null,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -284,7 +319,9 @@ export default function TrainingSession({
     latestRef.current = { hrValue, hrValid, liveHr, hrStatus, zone }
   })
   useEffect(() => {
-    if (phase === 'pre' || phase === 'summary') return
+    // 'active' only — readings sampled on the stop screen would pollute
+    // completedMinutes/avg/peak/time-in-band with recovery data
+    if (phase !== 'active') return
     const iv = setInterval(() => {
       const d = latestRef.current
       if (!d.hrValid || d.hrValue === null) return
@@ -307,16 +344,23 @@ export default function TrainingSession({
   // the override re-stops with no second chance.
   const [override, setOverride] = useState<{ used: boolean; atScore: number }>({ used: false, atScore: 0 })
 
+  // The summary is a SNAPSHOT taken at finish time — it also rides in the
+  // heartbeat so a close on the summary screen can resume there (see below).
+  const [summary, setSummary] = useState<SessionSummary | null>(null)
+
   // Heartbeat writer: snapshot the latest values each render (refs stay live),
-  // persist every ~5s while the session is running. Cleared on finish/abort.
+  // persist every ~5s until the session is SAVED. The summary phase heartbeats
+  // too — a session closed on the summary screen must not be lost; only the
+  // "Save session" tap (or an explicit abort) clears it.
   const hbRef = useRef<SessionHeartbeat | null>(null)
   useEffect(() => {
     hbRef.current =
-      clock && (phase === 'active' || phase === 'stopped')
+      phase === 'active' || phase === 'stopped' || phase === 'summary'
         ? {
-            startedAt: clock.start,
+            startedAt: sessionStartRef.current || Date.now(),
             rxHrt: rx.hrt,
             phase,
+            activeMs: elapsedMs,
             preSymptom,
             currentSymptom,
             peakSymptom,
@@ -325,11 +369,12 @@ export default function TrainingSession({
             overrideAtScore: override.atScore,
             readings: readingsRef.current,
             zoneSeconds: { ...zoneSecondsRef.current },
+            summary,
           }
         : null
   })
   useEffect(() => {
-    if (phase !== 'active' && phase !== 'stopped') return
+    if (phase !== 'active' && phase !== 'stopped' && phase !== 'summary') return
     const iv = setInterval(() => {
       if (hbRef.current) saveHeartbeat(SESSION_HEARTBEAT_KEY, hbRef.current)
     }, 5000)
@@ -350,10 +395,19 @@ export default function TrainingSession({
     setPeakSymptom(resume.peakSymptom)
     setManualLogs(resume.manualLogs)
     setOverride({ used: resume.overrideUsed, atScore: resume.overrideAtScore })
-    // Real wall-clock start — elapsed time keeps counting honestly across the
-    // interruption; if the prescribed time ran out meanwhile, it auto-finishes.
-    setClock({ start: resume.startedAt, now: Date.now() })
+    sessionStartRef.current = resume.startedAt
+    // Resume the clock from the ACTIVE time actually accrued — the wall-clock
+    // gap across the interruption must never count as completed minutes.
+    activeMsRef.current = Math.max(0, Math.min(resume.activeMs, totalMs))
+    setClock(null)
     setResume(null)
+    if (resume.phase === 'summary' && resume.summary) {
+      // Interrupted ON the summary screen — land straight back there so the
+      // patient just picks Better/Same/Worse and saves.
+      setSummary(resume.summary)
+      setPhase('summary')
+      return
+    }
     // Re-enter 'active'; if the stop rule was tripped pre-interruption the
     // symptom-rise effect immediately re-stops it.
     setPhase('active')
@@ -375,6 +429,9 @@ export default function TrainingSession({
 
   const logReading = () => {
     if (!hrValid || hrValue === null) return
+    // an explicit Log tap re-confirms the reading even when the typed value is
+    // unchanged — restart the 90s staleness window
+    lastEntryAtRef.current = Date.now()
     readingsRef.current.push({
       bpm: hrValue,
       verified: isVerifiedReading(hrValue, liveHr ?? null, hrStatus === 'streaming'),
@@ -383,29 +440,31 @@ export default function TrainingSession({
   }
 
   // ── finishing ───────────────────────────────────────────────────────────────
-  // The summary is a SNAPSHOT taken at finish time (readings + zone-seconds live
-  // in refs while sampling; render never touches them directly).
-  const [summary, setSummary] = useState<{
-    symptomLimited: boolean
-    avg: number | null
-    peak: number | null
-    hrVerified: boolean
-    verifiedReadingPct: number
-    zones: { below: number; in: number; above: number }
-  } | null>(null)
+  // The heartbeat is NOT cleared here: the session isn't persisted/synced until
+  // the "Save session" tap, so a close on the summary screen must still resume.
   const finishSession = (symptomLimited: boolean) => {
-    clearHeartbeat(SESSION_HEARTBEAT_KEY) // the session is over — nothing to resume
     const all = readingsRef.current
     const { hrVerified, verifiedReadingPct } = sessionVerification(all, hrConnect)
-    setSummary({
+    const snap: SessionSummary = {
       symptomLimited,
       avg: all.length ? Math.round(all.reduce((a, b) => a + b.bpm, 0) / all.length) : null,
       peak: all.length ? Math.max(...all.map((r) => r.bpm)) : null,
       hrVerified,
       verifiedReadingPct,
       zones: { ...zoneSecondsRef.current },
-    })
+    }
+    setSummary(snap)
     setPhase('summary')
+    // stamp the summary phase into the heartbeat immediately — a close in the
+    // first seconds of the summary screen must resume there, not mid-session
+    if (hbRef.current) {
+      saveHeartbeat(SESSION_HEARTBEAT_KEY, {
+        ...hbRef.current,
+        phase: 'summary',
+        activeMs: elapsedMs,
+        summary: snap,
+      })
+    }
   }
 
   // auto-finish when the prescribed time runs out
@@ -521,6 +580,7 @@ export default function TrainingSession({
             // the session's symptom trackers start AT the confirmed baseline
             setCurrentSymptom(preSymptom)
             setPeakSymptom(preSymptom)
+            sessionStartRef.current = Date.now()
             setPhase('active')
           }}
           className="rounded-[18px] py-[17px] text-base"
@@ -690,7 +750,10 @@ export default function TrainingSession({
 
         <PrimaryButton
           disabled={endFeel === null}
-          onClick={() => onComplete(buildLog())}
+          onClick={() => {
+            clearHeartbeat(SESSION_HEARTBEAT_KEY) // saved — nothing left to resume
+            onComplete(buildLog())
+          }}
           className="rounded-[18px] py-[17px] text-base"
         >
           {endFeel === null ? 'Tap one above to save' : 'Save session'}

@@ -49,10 +49,25 @@ export interface ClinicRecord {
  *  it must subscribe. Usage-based, not time-based (owner 2026-07-06). */
 export const TRIAL_PATIENT_CAP = 3
 
+/** PAID tiers are priced on ACTIVE CASELOAD, not seats (owner 2026-08-05:
+ *  "make it fool proof — change pricing tiers i dont care"). Clinicians are
+ *  unlimited on every paid tier; the metered unit is distinct active patients
+ *  in a rolling 30 days — the one metric a clinic cannot fake without
+ *  destroying the product's value to itself. Enforcement = the same
+ *  server-side admission gate as the trial. null = unlimited. */
+export const TIER_ACTIVE_PATIENT_CAP: Record<string, number | null> = {
+  single: 5,
+  clinic: 10,
+  enterprise: null,
+}
+
 export interface ClinicUsage {
   plan: 'trial' | 'active'
+  /** trial → lifetime distinct patients; active → distinct active in 30d */
   patientCount: number
-  cap: number | null // null = unlimited (active plan)
+  cap: number | null // null = unlimited
+  /** 'lifetime' (trial) or '30d' (paid caseload window) — for display copy */
+  window: 'lifetime' | '30d'
   /** A NEW patient may be admitted. Existing patients are never blocked. */
   canAddPatient: boolean
 }
@@ -66,33 +81,40 @@ export interface ClinicUsage {
 export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
   const code = normaliseClinicCode(rawCode)
   if (!code || code === DEMO_CLINIC_CODE) {
-    return { plan: 'active', patientCount: 0, cap: null, canAddPatient: true }
+    return { plan: 'active', patientCount: 0, cap: null, window: '30d', canAddPatient: true }
   }
   const clinic = await getClinic(code)
   let plan: 'trial' | 'active' = clinic?.plan === 'active' ? 'active' : 'trial'
-  if (!clinic) {
+  let tier: string | null = (clinic as { tier?: string } | null)?.tier ?? null
+  if (!clinic || (plan === 'active' && !tier)) {
     // KV blip must not demote a PAYING clinic to trial at the admission gate
     // (2026-08-05 sweep #11) — the PG row is the durable billing source.
     try {
-      const { rows } = await sql<{ plan: string }>`
-        SELECT plan FROM sst_clinics WHERE code = ${code} LIMIT 1
+      const { rows } = await sql<{ plan: string; tier: string | null }>`
+        SELECT plan, tier FROM sst_clinics WHERE code = ${code} LIMIT 1
       `
       if (rows[0]?.plan === 'active') plan = 'active'
+      tier = tier ?? rows[0]?.tier ?? null
     } catch { /* table absent → stay trial */ }
   }
+  // Paid plans meter ACTIVE caseload in a rolling 30 days; the trial meters
+  // lifetime distinct patients. A tier of null on an active plan (alumni
+  // comps, legacy grants, enterprise) is unlimited.
+  const allowance = plan === 'active' ? (tier ? (TIER_ACTIVE_PATIENT_CAP[tier] ?? null) : null) : TRIAL_PATIENT_CAP
+  const windowed = plan === 'active'
   let patientCount = 0
   try {
     // One human = one identity. A patient can appear as ref'd rows (watch
-    // app) AND label-only rows (older/web client) — plain
-    // COALESCE-distinct double-counted them toward the cap (2026-08-05
-    // sweep #4). Count refs, plus labels (case-folded) that never co-occur
-    // with any ref'd row.
+    // app) AND label-only rows (older/web client) — plain COALESCE-distinct
+    // double-counted them toward the cap (2026-08-05 sweep #4). Count refs,
+    // plus labels (case-folded) that never co-occur with any ref'd row.
     const { rows } = await sql<{ n: number }>`
       WITH s AS (
         SELECT NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref,
                NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl
         FROM sst_clinic_sessions
         WHERE upper(clinic_code) = ${code}
+          AND (${!windowed} OR created_at > NOW() - INTERVAL '30 days')
       )
       SELECT (
         (SELECT COUNT(DISTINCT ref) FROM s WHERE ref IS NOT NULL) +
@@ -105,14 +127,12 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
   } catch {
     /* no sessions table yet → 0 */
   }
-  if (plan === 'active') {
-    return { plan, patientCount, cap: null, canAddPatient: true }
-  }
   return {
     plan,
     patientCount,
-    cap: TRIAL_PATIENT_CAP,
-    canAddPatient: patientCount < TRIAL_PATIENT_CAP,
+    cap: allowance,
+    window: windowed ? '30d' : 'lifetime',
+    canAddPatient: allowance == null || patientCount < allowance,
   }
 }
 
@@ -296,6 +316,7 @@ export async function ensureSstClinicsTable(): Promise<void> {
   // watchdog) — self-heal on environments created before they existed.
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS tier TEXT`
+  await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS profile JSONB`
 }
 
 /**
@@ -557,5 +578,49 @@ export async function resolveActingClinician(email: string, code: string): Promi
     return member[0]?.name ?? null
   } catch {
     return null
+  }
+}
+
+
+/** Server-side clinic profile — the ONE master input (letterhead, provider
+ *  block, sign-off) every seat's documents share. localStorage was per-device
+ *  (2026-08-05: 15 clinicians = 15 inconsistent letterheads). */
+export interface ClinicDocProfile {
+  clinic_name?: string
+  clinician_name?: string
+  ahpra_number?: string
+  provider_number?: string
+  clinic_address?: string
+  clinic_phone?: string
+}
+
+export async function getClinicProfile(rawCode: unknown): Promise<ClinicDocProfile | null> {
+  const code = normaliseClinicCode(rawCode)
+  if (!code) return null
+  try {
+    const { rows } = await sql<{ profile: ClinicDocProfile | null }>`
+      SELECT profile FROM sst_clinics WHERE code = ${code} LIMIT 1
+    `
+    return rows[0]?.profile ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function setClinicProfile(rawCode: unknown, profile: ClinicDocProfile): Promise<boolean> {
+  const code = normaliseClinicCode(rawCode)
+  if (!code || code === DEMO_CLINIC_CODE) return false
+  const clean: ClinicDocProfile = {}
+  for (const k of ['clinic_name', 'clinician_name', 'ahpra_number', 'provider_number', 'clinic_address', 'clinic_phone'] as const) {
+    const v = profile[k]
+    if (typeof v === 'string' && v.trim()) clean[k] = v.trim().slice(0, 200)
+  }
+  try {
+    await ensureSstClinicsTable()
+    await sql`UPDATE sst_clinics SET profile = ${JSON.stringify(clean)}::jsonb WHERE code = ${code}`
+    return true
+  } catch (err) {
+    console.error('[clinic-registry] setClinicProfile failed:', err)
+    return false
   }
 }

@@ -559,6 +559,11 @@ function mapApiSession(s: ApiSession): Session {
   }
 }
 
+/** The install-UUID identity for a mapped patient, or null for label-only rows. */
+function refOf(p: Patient): string | null {
+  return p.patientKey && !p.patientKey.startsWith('label:') ? p.patientKey : null
+}
+
 function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
   const patientKey = extractRef(p) ?? `label:${normLabel(p.name) || 'unidentified'}`
   const hrtPoints: TrajectoryPoint[] = (p.hrtTrajectory ?? []).map((t) => ({
@@ -993,7 +998,7 @@ export default function ClinicalHubPage() {
                       ] as const).map(([skin, label]) => (
                         <a
                           key={skin}
-                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(p.name)}&skin=${skin}`}
+                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(p.name)}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
@@ -1001,7 +1006,7 @@ export default function ClinicalHubPage() {
                           <FileText className="w-3.5 h-3.5" /> {label} <ArrowUpRight className="w-3.5 h-3.5" />
                         </a>
                       ))}
-                      <PmsFileButton clinicCode={isDemo ? 'DEMO00' : clinicCode} viewKey={viewKey ?? ''} patientName={p.name} demo={isDemo} />
+                      <PmsFileButton clinicCode={isDemo ? 'DEMO00' : clinicCode} viewKey={viewKey ?? ''} patientName={p.name} patientRef={refOf(p)} demo={isDemo} />
                     </>
                   )}
                 </div>

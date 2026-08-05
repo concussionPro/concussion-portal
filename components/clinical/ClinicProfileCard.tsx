@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Building2, ChevronDown, Check } from 'lucide-react'
 
 /**
@@ -77,6 +77,19 @@ export function ClinicProfileCard({
     const saved = loadClinicProfile(clinicCode)
     setProfile(saved)
     onChange?.(saved)
+    // Server profile is the MASTER copy (one input, every seat/device);
+    // localStorage stays as the offline-first cache (2026-08-05).
+    void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.profile && typeof d.profile === 'object') {
+          const merged = { ...saved, ...d.profile } as typeof saved
+          setProfile(merged)
+          onChange?.(merged)
+          try { localStorage.setItem(keyFor(clinicCode), JSON.stringify(merged)) } catch { /* private mode */ }
+        }
+      })
+      .catch(() => {})
     // Open by default until the essentials are filled.
     setOpen(!saved.clinic_name || !saved.ahpra_number)
     setHydrated(true)
@@ -85,6 +98,7 @@ export function ClinicProfileCard({
 
   const filledCount = useMemo(() => Object.values(profile).filter((v) => v.trim()).length, [profile])
 
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const update = (key: keyof ClinicProfile, value: string) => {
     const next = { ...profile, [key]: value }
     setProfile(next)
@@ -94,6 +108,16 @@ export function ClinicProfileCard({
     } catch {
       /* ignore quota */
     }
+    // Debounced push to the server master copy.
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      void fetch('/api/clinical-testing/clinic', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: next }),
+      }).catch(() => {})
+    }, 800)
   }
 
   if (!hydrated) return null

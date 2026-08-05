@@ -95,7 +95,9 @@ export async function POST(request: NextRequest) {
         const usage = await getClinicUsage(clinicCode)
         if (!usage.canAddPatient) {
           return NextResponse.json(
-            { error: 'trial-full', message: 'This clinic’s free trial is full — ask your clinician to add you.' },
+            usage.plan === 'trial'
+              ? { error: 'trial-full', message: 'This clinic’s free trial is full — ask your clinician to add you.' }
+              : { error: 'plan-full', message: 'This clinic’s plan is at its active-patient limit — ask your clinician to add you.' },
             { status: 402 },
           )
         }

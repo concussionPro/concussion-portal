@@ -89,21 +89,21 @@ const STEPS = [
 function Shell() {
   const { user, isLoading } = useSession()
   const access = useClinicalAccess()
-  const isPreview = !user || user.accessLevel === 'preview'
   const [clinic, setClinic] = useState<Clinic | null>(null)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    // Demo viewers ARE preview-level, but the clinic API serves them the
-    // synthetic DEMO00 clinic — without this the card sat on "Loading your
-    // clinic…" forever (2026-07-27).
-    if (isPreview && access !== 'demo') return
+    // Gate on the resolved access DOOR — 'sst' trial clinics are
+    // accessLevel 'preview' but must load their clinic; demo viewers get
+    // the synthetic DEMO00 (2026-08-05 round-3 #2).
+    const canFetch = access === 'owner' || access === 'course' || access === 'sst' || access === 'demo'
+    if (!canFetch) return
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setClinic(d?.clinic ?? null))
       .catch(() => {})
       .finally(() => setLoaded(true))
-  }, [isPreview, access])
+  }, [access])
 
   if (isLoading || access === 'loading') {
     return (

@@ -380,16 +380,18 @@ export default function PlatformAppPage({
     const measured = thresholdHistory.filter((t) => t.hrt != null)
     return measured.length >= 2 ? measured[measured.length - 2] : null
   }, [thresholdHistory])
-  // Verified sessions genuinely banked between the two test dates (at the
-  // result step `sessions` still holds the previous band's sessions — they
-  // archive on Continue). Only hrVerified === true counts; 0 hides the subline.
+  // Verified sessions genuinely banked between the two test dates. A new band
+  // now archives the old band's sessions AT completion (so the result screen
+  // can never lose it), so count across archived + current — the date window
+  // scopes it to the gap between the two tests either way. Only
+  // hrVerified === true counts; 0 hides the subline.
   const verifiedSinceLastTest = useMemo(() => {
     if (!previousMeasured) return 0
     const upper = lastTestAt ?? Date.now()
-    return sessions.filter(
+    return [...archivedSessions, ...sessions].filter(
       (s) => s.hrVerified === true && s.at > previousMeasured.at && s.at <= upper,
     ).length
-  }, [sessions, previousMeasured, lastTestAt])
+  }, [sessions, archivedSessions, previousMeasured, lastTestAt])
 
   const applyCeiling = (newCeilingBpm: number) => {
     setPrescription((prev) => {
@@ -431,7 +433,9 @@ export default function PlatformAppPage({
     })
     if (!gate.allowed) {
       setRetestNotice(gate.reason)
-      setStep(redFlagLocked ? 'locked' : 'home')
+      // without a prescription 'home' renders nothing — stay on the result
+      // screen and surface the notice there
+      setStep(redFlagLocked ? 'locked' : prescription ? 'home' : 'result')
       return
     }
     setRetestNotice(null)
@@ -568,14 +572,35 @@ export default function PlatformAppPage({
       )}
 
       {step === 'readiness' && (
-        <Readiness
-          initialRestingScore={restingSymptomScore}
-          onBack={() => setStep(prescription ? 'home' : 'symptoms')}
-          onContinue={(res: ReadinessResult) => {
-            setRestingSymptomScore(res.restingSymptomScore)
-            setStep('test')
-          }}
-        />
+        <div className="flex flex-col gap-3">
+          {retestNotice && (
+            <p className="m-0 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 text-[11.5px] leading-snug text-(--sst-muted)">
+              {retestNotice}
+            </p>
+          )}
+          <Readiness
+            initialRestingScore={restingSymptomScore}
+            onBack={() => setStep(prescription ? 'home' : 'symptoms')}
+            onContinue={(res: ReadinessResult) => {
+              setRestingSymptomScore(res.restingSymptomScore)
+              // The repeat path (welcome→symptoms→readiness) bypassed the
+              // re-test spacing gate tryRetest enforces — same rules here.
+              const gate = canRetest(Date.now(), lastTestAt, {
+                afterRegress: lastRegressAt != null && (lastTestAt == null || lastRegressAt > lastTestAt),
+                redFlagLocked,
+              })
+              if (!gate.allowed) {
+                setRetestNotice(gate.reason)
+                if (redFlagLocked) setStep('locked')
+                else if (prescription) setStep('home')
+                // else stay here — the notice above explains why the test won't start
+                return
+              }
+              setRetestNotice(null)
+              setStep('test')
+            }}
+          />
+        </div>
       )}
 
       {step === 'test' && (
@@ -641,6 +666,22 @@ export default function PlatformAppPage({
               setRedFlagLocked(true)
               setLastRedFlagAt(now)
             }
+            // A physiologic band persists IMMEDIATELY — a result screen closed
+            // before "Continue" must not lose the measured band (the Continue
+            // tap below is pure navigation). Adopting a new band from a re-test
+            // resets progression evidence: old sessions archive
+            // (display/history only); the clean-run count starts fresh.
+            if (result.interpretation === 'physiologic' && suggested) {
+              if (prescription) {
+                setArchivedSessions((prev) => [...prev, ...sessions])
+                setSessions([])
+                setVerifiedSessions(0)
+                setProgressionCheckpoint(0)
+                setDecisionCheckpoint(0)
+                setRegressUndo(null)
+              }
+              setPrescription({ ...suggested, createdAt: now })
+            }
             setStep('result')
           }}
           onAbort={(info) => {
@@ -662,31 +703,25 @@ export default function PlatformAppPage({
       )}
 
       {step === 'result' && thresholdResult && (
-        <ResultPrescription
+        <div className="flex flex-col gap-3">
+          {retestNotice && (
+            <p className="m-0 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 text-[11.5px] leading-snug text-(--sst-muted)">
+              {retestNotice}
+            </p>
+          )}
+          <ResultPrescription
           result={thresholdResult}
           condition={condition}
           hasPrescription={prescription !== null}
-          onContinue={(rx) => {
-            // Adopting a NEW band from a re-test resets progression evidence:
-            // old sessions archive (display/history only); the clean-run count
-            // starts fresh inside the new band.
-            if (prescription) {
-              setArchivedSessions((prev) => [...prev, ...sessions])
-              setSessions([])
-              setVerifiedSessions(0)
-              setProgressionCheckpoint(0)
-              setDecisionCheckpoint(0)
-              setRegressUndo(null)
-            }
-            setPrescription({ ...rx, createdAt: Date.now() })
-            setStep('home')
-          }}
+          // the band was adopted + persisted at test completion — pure navigation
+          onContinue={() => setStep('home')}
           onRetest={tryRetest}
           onExit={() => setStep(redFlagLocked ? 'locked' : prescription ? 'home' : 'welcome')}
           onKeepBand={() => setStep('home')}
           previousHrt={previousMeasured?.hrt ?? null}
           verifiedSessionsSince={verifiedSinceLastTest}
-        />
+          />
+        </div>
       )}
 
       {step === 'home' && prescription && welcome && (

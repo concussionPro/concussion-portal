@@ -8,7 +8,10 @@ import {
   getSstClinicByEmail,
   adoptExistingClinicForEmail,
   getClinicUsage,
+  getClinicProfile,
+  setClinicProfile,
   type SstClinic,
+  type ClinicDocProfile,
 } from '@/lib/sst-trainer/clinic-registry'
 import { buildWelcomeEmail } from '@/lib/sst-trainer/clinic-welcome-email'
 
@@ -70,7 +73,26 @@ export async function GET(req: NextRequest) {
     (await getSstClinicByEmail(session.email)) ?? (await adoptExistingClinicForEmail(session.email))
   if (!clinic) return NextResponse.json({ clinic: null })
   const usage = await getClinicUsage(clinic.code)
-  return NextResponse.json({ clinic: serialise(clinic), usage })
+  const profile = await getClinicProfile(clinic.code)
+  return NextResponse.json({ clinic: serialise(clinic), usage, profile })
+}
+
+/** PUT — save the clinic's document profile (letterhead / provider block /
+ *  sign-off). SERVER-side so all seats and all devices share ONE master
+ *  input (2026-08-05: localStorage was per-device — 15 clinicians meant 15
+ *  inconsistent letterheads). Any seated member may update it. */
+export async function PUT(req: NextRequest) {
+  const session = await clinicalSession(req)
+  if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const clinic = await getSstClinicByEmail(session.email)
+  if (!clinic) return NextResponse.json({ error: 'No clinic found.' }, { status: 400 })
+  const body = (await req.json().catch(() => ({}))) as { profile?: ClinicDocProfile }
+  if (!body.profile || typeof body.profile !== 'object') {
+    return NextResponse.json({ error: 'profile required' }, { status: 400 })
+  }
+  const ok = await setClinicProfile(clinic.code, body.profile)
+  if (!ok) return NextResponse.json({ error: 'Could not save profile.' }, { status: 500 })
+  return NextResponse.json({ ok: true, profile: await getClinicProfile(clinic.code) })
 }
 
 export async function POST(req: NextRequest) {

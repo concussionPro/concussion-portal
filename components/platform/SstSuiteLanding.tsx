@@ -24,12 +24,12 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id']
 
 const TIERS = [
-  { name: 'Single', who: 'One clinician', price: 'A$49', full: 'A$98', popular: false,
-    features: ['Both tools — SST Trainer + baseline', 'Included with CCM / CRM enrolment', 'Measured trajectory, flare flags & auto GP report', 'A$49/mo standalone · 50% off'] },
-  { name: 'Small clinic', who: 'Up to 5 clinicians', price: 'A$99', full: 'A$198', popular: true,
-    features: ['Everything in Single, for your whole team', 'Up to 5 clinicians on one licence', 'Priority onboarding + direct line to our team', 'A$99/mo standalone · 50% off'] },
-  { name: 'Enterprise', who: 'Up to 15 clinicians', price: 'A$149', full: 'A$298', popular: false,
-    features: ['Everything in Small clinic, up to 15 clinicians', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us', 'A$149/mo standalone · 50% off'] },
+  { name: 'Starter', who: 'Up to 5 active patients', price: 'A$49', full: 'A$98', popular: false,
+    features: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians, each with their own login', 'Measured trajectory, flare flags & auto GP report', 'A$49/mo standalone · 50% off'] },
+  { name: 'Clinic', who: 'Up to 10 active patients', price: 'A$99', full: 'A$198', popular: true,
+    features: ['Everything in Starter, for a bigger caseload', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team', 'A$99/mo standalone · 50% off'] },
+  { name: 'Unlimited', who: 'Unlimited patients', price: 'A$149', full: 'A$298', popular: false,
+    features: ['Everything in Clinic, unlimited active patients', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us', 'A$149/mo standalone · 50% off'] },
 ]
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {

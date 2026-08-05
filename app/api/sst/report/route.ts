@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
-import { isRegisteredClinic, verifyViewKey, getClinicUsage, getClinic } from '@/lib/sst-trainer/clinic-registry'
+import { isRegisteredClinic, verifyViewKey, getClinicUsage, getClinic, getClinicProfile } from '@/lib/sst-trainer/clinic-registry'
 import { loadReportInput, renderSkin } from '@/lib/sst-trainer/reports/load'
 import { renderReportContentToHtml } from '@/lib/sst-trainer/reports/render'
 import { type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const input = await loadReportInput(code, patientLabel, jurisdiction, {
+      patientRef: str('ref'),
       patient: {
         firstName: str('first'),
         lastName: str('last'),
@@ -75,7 +76,8 @@ export async function GET(request: NextRequest) {
     })
     if (!input) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
     const content = renderSkin(skin, input)
-    const clinicName = (await getClinic(code))?.clinicName ?? undefined
+    const profile = code === 'DEMO00' ? null : await getClinicProfile(code)
+    const clinicName = profile?.clinic_name || (await getClinic(code))?.clinicName || undefined
     // ACC forms are transcribed onto ACC's own fillable form — say so, don't
     // stamp a scary DRAFT (the CONTENT is verified against the ACC884 spec).
     const transcribeNote =
@@ -90,6 +92,15 @@ export async function GET(request: NextRequest) {
     const isDemo = code === 'DEMO00'
     const html = renderReportContentToHtml(content, {
       clinicName,
+      letterhead: profile
+        ? {
+            practitioner: profile.clinician_name,
+            ahpra: profile.ahpra_number,
+            provider: profile.provider_number,
+            address: profile.clinic_address,
+            phone: profile.clinic_phone,
+          }
+        : undefined,
       footerNote: transcribeNote,
       ...(isDemo
         ? {

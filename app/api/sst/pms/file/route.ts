@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   let body: {
     code?: string; k?: string; patient?: string; skin?: string
-    pmsPatientId?: string; claim?: string; clinician?: string
+    pmsPatientId?: string; claim?: string; clinician?: string; ref?: string
   }
   try {
     body = await request.json()
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const input = await loadReportInput(code, patient, jurisdiction, {
+      patientRef: typeof body.ref === 'string' ? body.ref : undefined,
       patient: body.claim?.trim() ? { claimRef: body.claim.trim() } : undefined,
       clinician: await (async () => {
         if (body.clinician?.trim()) return { name: body.clinician.trim() }

@@ -14,9 +14,9 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
  * manually — the source of truth for billing is the Stripe price).
  */
 const TIERS = [
-  { plan: 'single', name: 'Single', who: 'One clinician', price: 'A$49', popular: false },
-  { plan: 'clinic', name: 'Small clinic', who: 'Up to 5 clinicians', price: 'A$99', popular: true },
-  { plan: 'enterprise', name: 'Enterprise', who: 'Up to 15 clinicians', price: 'A$149', popular: false },
+  { plan: 'single', name: 'Starter', who: 'Up to 5 active patients', price: 'A$49', popular: false },
+  { plan: 'clinic', name: 'Clinic', who: 'Up to 10 active patients', price: 'A$99', popular: true },
+  { plan: 'enterprise', name: 'Unlimited', who: 'Unlimited patients', price: 'A$149', popular: false },
 ] as const
 
 export default function SubscribePage() {
@@ -44,7 +44,7 @@ function Shell() {
         body: JSON.stringify({ plan }),
       })
       const data = await res.json()
-      if (!res.ok || !data.url) throw new Error(data?.error || 'Could not start checkout.')
+      if (!res.ok || !data.url) throw new Error(data?.message || data?.error || 'Could not start checkout.')
       window.location.href = data.url
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not start checkout.')
@@ -62,8 +62,9 @@ function Shell() {
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Subscribe to keep going</h1>
           <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
-            You&rsquo;ve used your 3 free trial patients. Pick a plan to add unlimited patients — both
-            tools, every clinician on your team. Your existing patients keep working either way.
+            You&rsquo;ve used your 3 free trial patients. Plans are priced on active caseload
+            (patients with a session in the last 30 days) — every plan includes unlimited
+            clinicians, each with their own login. Your existing patients keep working either way.
           </p>
 
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -197,13 +197,17 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
 function Shell() {
   const { user, isLoading } = useSession()
   const access = useClinicalAccess()
-  const isPreview = !user || user.accessLevel === 'preview'
+  // Gate on the resolved access DOOR, not accessLevel — SST-entitled trial
+  // clinics are accessLevel 'preview' but door 'sst' and must load their
+  // patients (2026-08-05 round-3 #1: this page hung on "Loading…" for every
+  // self-serve signup).
+  const entitled = access === 'owner' || access === 'course' || access === 'sst'
   const [clinic, setClinic] = useState<Clinic | null>(null)
   const [patients, setPatients] = useState<PatientRow[] | null>(null)
   const [state, setState] = useState<'loading' | 'no-clinic' | 'ready' | 'error'>('loading')
 
   useEffect(() => {
-    if (isPreview) return
+    if (!entitled) return
     void (async () => {
       try {
         const cRes = await fetch('/api/clinical-testing/clinic', { credentials: 'include' })
@@ -225,7 +229,7 @@ function Shell() {
         setState('error')
       }
     })()
-  }, [isPreview])
+  }, [entitled])
 
   if (isLoading || access === 'loading') {
     return (
