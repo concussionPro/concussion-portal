@@ -123,6 +123,7 @@ export async function POST(req: NextRequest) {
     // per address per day via email_audit_log (this endpoint echoes visitor-
     // typed text to any address, so repeats would be an outbound-spam lever).
     // Zac's notification above is NOT capped — every submission still lands.
+    await sql`CREATE TABLE IF NOT EXISTS email_audit_log (audit_key TEXT PRIMARY KEY, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`
     const confirmKey = `talk_confirm_${email}_${new Date().toISOString().slice(0, 10)}`
     const { rowCount: confirmFresh } = await sql`
       INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${confirmKey}, NOW())

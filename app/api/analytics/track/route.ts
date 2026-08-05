@@ -74,6 +74,17 @@ interface TrackPayload {
   userEmail?: string | null;
 }
 
+function stripSensitiveParams(search: string): string {
+  try {
+    const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
+    for (const key of ['k', 'token', 'key']) params.delete(key)
+    const out = params.toString()
+    return out ? `?${out}` : ''
+  } catch {
+    return ''
+  }
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!isAllowedOrigin(request)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -137,7 +148,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const userAgent = String(payload.userAgent ?? '').slice(0, 512);
   const referrer = payload.referrer ? String(payload.referrer).slice(0, 512) : null;
   const pagePath = String(payload.path).slice(0, 512);
-  const search = payload.search ? String(payload.search).slice(0, 512) : null;
+  // Credential params must never persist (2026-08-05 round-H #1): clinic
+  // viewKeys (?k=) and magic tokens (?token=) arrive in page URLs — strip
+  // server-side so BOTH client senders (AnalyticsProvider + lib/analytics
+  // trackEvent) are covered.
+  const search = payload.search ? stripSensitiveParams(String(payload.search)).slice(0, 512) : null;
   const eventDataRaw = JSON.stringify(payload.eventData ?? {});
   const eventData = eventDataRaw.length > 4096 ? '{}' : eventDataRaw;
   // Normalise + clamp the optional user_email so a malformed client payload

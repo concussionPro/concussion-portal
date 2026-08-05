@@ -100,8 +100,18 @@ export async function POST(
   }
 
   // Per-clinic cap — a forged/looping client can't flood the views table.
-  const rl = await rateLimit({ key: `prospect-track:${clinic.id}`, limit: 30, windowSec: 3600 })
-  if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  // The MONEY signals (cta/pricing → engaged flip + hot-lead alert) are
+  // exempt: a portal forwarded round a 3-4 person clinic can legitimately
+  // exceed 30 section/exit events in an hour, and a 429'd cta_click
+  // silently lost the one signal the engine exists for (round-H #3).
+  const isMoneySignal = body.interactionType === 'cta_click' || body.interactionType === 'pricing_view'
+  if (!isMoneySignal) {
+    const rl = await rateLimit({ key: `prospect-track:${clinic.id}`, limit: 30, windowSec: 3600 })
+    if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  } else {
+    const rl = await rateLimit({ key: `prospect-track-cta:${clinic.id}`, limit: 20, windowSec: 3600 })
+    if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
 
   try {
     await ensureColumns()

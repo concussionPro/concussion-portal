@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
   if (redirect && !/^\/[A-Za-z0-9\-_/?&=.%]*$/.test(redirect)) {
     return NextResponse.json({ error: 'invalid redirect path' }, { status: 400 })
   }
-  const ttlDays = typeof body.ttlDays === 'number' && body.ttlDays > 0 ? Math.min(body.ttlDays, 3650) : 365
+  // Max 365: the magic-token replay table is pruned at 366 days — a longer
+  // TTL would out-live its replay protection (2026-08-05 round-H #2).
+  const ttlDays = typeof body.ttlDays === 'number' && body.ttlDays > 0 ? Math.min(body.ttlDays, 365) : 365
 
   const user = await findUserByEmail(email)
   if (!user) {
