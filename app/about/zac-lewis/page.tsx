@@ -31,7 +31,7 @@ export default function ZacLewisAboutPage() {
             '@type': 'Person',
             name: 'Zac Lewis',
             jobTitle: 'Founder & Lead Educator, Concussion Education Australia',
-            description: "AHPRA-registered Osteopath, concussion specialist, and founder of Concussion Education Australia. Lead clinical educator across the Concussion Clinical Mastery and AI in Clinical Practice training streams.",
+            description: "AHPRA-registered Osteopath practising in concussion management, and founder of Concussion Education Australia. Lead clinical educator across the Concussion Clinical Mastery and AI in Clinical Practice training streams.",
             url: URL,
             image: 'https://portal.concussion-education-australia.com/og-image.png',
             hasCredential: [
@@ -118,10 +118,10 @@ export default function ZacLewisAboutPage() {
               <h2 className="text-xl font-bold text-slate-900 mb-4">About</h2>
               <div className="space-y-3 text-slate-700 leading-relaxed text-sm">
                 <p>
-                  Zac Lewis is an AHPRA-registered Osteopath and concussion specialist based in Australia. He founded Concussion Education Australia (CEA) to close the gap between what consensus statements recommend for concussion management and what clinicians actually do in clinic.
+                  Zac Lewis is an AHPRA-registered Osteopath based in Australia whose practice focuses on concussion assessment and rehabilitation. He founded Concussion Education Australia (CEA) to close the gap between what consensus statements recommend for concussion management and what clinicians actually do in clinic.
                 </p>
                 <p>
-                  His clinical experience spans sport and primary-care settings. He has worked alongside high-performance teams, university clinics, and private practice — most clinicians who finish his courses say the &ldquo;clinic-real&rdquo; framing is what made the content stick.
+                  His clinical experience spans sport and primary-care settings. He has worked alongside high-performance teams, university clinics, and private practice — clinicians who finish his courses often say the &ldquo;clinic-real&rdquo; framing is what made the content stick.
                 </p>
                 <p>
                   Beyond concussion, Zac has published and trained extensively on the safe integration of AI tools (Heidi, Lyrebird, ChatGPT, Claude) into Australian clinical practice — covering AHPRA AI guidelines, Australian Privacy Principles (APP 8 offshore disclosure), NDIS audit-safe documentation, and indemnity-insurer positions.

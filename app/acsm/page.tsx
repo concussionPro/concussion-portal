@@ -17,7 +17,10 @@ import { InternationalCourseSchema } from '@/components/international/Internatio
  */
 
 const PRICE_USD = CONFIG.COURSE.PRICE_INTERNATIONAL
-const RENEWAL_USD = CONFIG.COURSE.RENEWAL_INTERNATIONAL
+// The bundled platform renews at the real SST single-tier price — the
+// old US$99/yr copy was never wired to any Stripe price and understated
+// the actual charge ~4x (2026-08-05 live crawl).
+const PLATFORM_MONTHLY = 49
 
 /** Real, verifiable module structure — 480 min = 8.0 instructional hours. */
 const MODULES: { n: string; title: string; mins: number }[] = [
@@ -148,10 +151,10 @@ export default function AcsmLandingPage() {
           </ul>
 
           <p className="mt-5 rounded-xl bg-teal-50 border border-teal-100 p-4 text-[13.5px] leading-relaxed text-teal-900">
-            <strong>Renewal ${RENEWAL_USD}/yr</strong> isn&rsquo;t a software charge —
-            it includes your <strong>annual concussion-update module</strong>, so it
-            meets that year&rsquo;s recurring CPD requirement and keeps the platform
-            live.
+            <strong>Year one is included.</strong> After 12 months the clinical
+            platform continues at <strong>A${PLATFORM_MONTHLY}/month</strong> (cancel
+            any time), and your <strong>annual concussion-update module</strong> comes
+            with it, so it meets that year&rsquo;s recurring CPD requirement.
           </p>
 
           <p className="mt-4 text-[13px] leading-relaxed text-slate-600 border-t border-slate-200 pt-4">

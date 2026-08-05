@@ -525,7 +525,35 @@ function PageThree() {
 // Document
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function SydneyPhysiosPrintProposal() {
+// Same access key as the non-print proposal. This page shipped UNGATED
+// (2026-08-05 live crawl): anyone hitting the URL got the full private
+// proposal — named client, headcount and negotiated per-clinician pricing.
+// robots.txt is not access control.
+const ACCESS_KEY = 'syd2026'
+
+export default async function SydneyPhysiosPrintProposal({
+  searchParams,
+}: {
+  searchParams: Promise<{ k?: string }>
+}) {
+  const { k } = await searchParams
+  if (k !== ACCESS_KEY) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ maxWidth: 420, textAlign: 'center' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: INK, margin: '0 0 8px' }}>This proposal is private</h1>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: INK_SOFT, margin: 0 }}>
+            Open it from the link you were sent. If you need a fresh link, reply to the
+            email it came from.
+          </p>
+        </div>
+      </div>
+    )
+  }
+  return renderSydneyPhysiosPrintProposal()
+}
+
+function renderSydneyPhysiosPrintProposal() {
   return (
     <>
       <style>{`
