@@ -195,19 +195,33 @@ export async function redeemHubSeat(
   `
   if (existing.length > 0) return 'already'
 
-  // Guarded atomic insert: only if this role's used-count is still under its cap.
-  const { rows: inserted } = await sql<{ email: string }>`
-    INSERT INTO course_hub_members (hub_code, email, name, role)
-    SELECT ${norm}, ${em}, ${name}, ${role}
-    FROM course_hubs h
-    WHERE h.code = ${norm}
-      AND h.revoked_at IS NULL
-      AND (
-        SELECT COUNT(*) FROM course_hub_members m
-        WHERE m.hub_code = ${norm} AND m.role = ${role}
-      ) < (CASE WHEN ${role} = 'admin' THEN h.admin_seats ELSE h.clinician_seats END)
-    ON CONFLICT (hub_code, email) DO NOTHING
-    RETURNING email
-  `
-  return inserted.length > 0 ? 'ok' : 'full'
+  // Guarded atomic insert with a RACE-PROOF cap (2026-08-05 round-I #7):
+  // plain count-vs-cap let two concurrent redemptions of the LAST seat both
+  // pass under READ COMMITTED. Each insert claims seat_no = count+1; the
+  // partial unique index (hub_code, role, seat_no) makes simultaneous
+  // claimants collide — the loser retries and then sees the true count.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const { rows: inserted } = await sql<{ email: string }>`
+        INSERT INTO course_hub_members (hub_code, email, name, role, seat_no)
+        SELECT ${norm}, ${em}, ${name}, ${role},
+          (SELECT COUNT(*) + 1 FROM course_hub_members m
+            WHERE m.hub_code = ${norm} AND m.role = ${role})
+        FROM course_hubs h
+        WHERE h.code = ${norm}
+          AND h.revoked_at IS NULL
+          AND (
+            SELECT COUNT(*) FROM course_hub_members m
+            WHERE m.hub_code = ${norm} AND m.role = ${role}
+          ) < (CASE WHEN ${role} = 'admin' THEN h.admin_seats ELSE h.clinician_seats END)
+        ON CONFLICT (hub_code, email) DO NOTHING
+        RETURNING email
+      `
+      return inserted.length > 0 ? 'ok' : 'full'
+    } catch (err) {
+      if ((err as { code?: string })?.code === '23505') continue // seat_no race — re-count
+      throw err
+    }
+  }
+  return 'full'
 }

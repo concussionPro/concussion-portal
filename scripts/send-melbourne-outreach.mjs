@@ -1,3 +1,9 @@
+// HISTORICAL SEND — BRICKED 2026-08-05. This script mass-sends immediately
+// with June-2026 workshop dates/pricing (now false) and NEVER checked
+// email_suppression. Do not resurrect without: --live gating, suppression
+// fail-closed, per-recipient audit log, and CONFIG-derived copy.
+throw new Error('send-melbourne-outreach is a historical one-shot (June 2026) — bricked. See header.')
+
 /**
  * One-off outreach: Melbourne June 13 workshop email to all preview users.
  * Run: node scripts/send-melbourne-outreach.mjs

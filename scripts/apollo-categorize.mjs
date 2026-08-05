@@ -88,6 +88,10 @@ function classify(text) {
   if (competitorConcussion) return { scope: 'out' }
   // Archive only when clearly out-of-scope AND no general allied-health signal.
   if (outScope && !inScope) return { scope: 'out' }
+  // HARDENING (2026-08-05, CLAUDE.md demand): NO in-scope signal at all →
+  // never promote with an invented team (the June pollution: law firms and
+  // wineries entered the queue as "3 physiotherapists"). Held for review.
+  if (!inScope) return { scope: 'review' }
   // Practitioner size = max of (title mentions across all pages) and any
   // explicit headcount phrase. Explicit phrases are the most reliable.
   const titleMatches = (text.match(TITLES) || []).length
@@ -128,14 +132,22 @@ async function categorizeOne(row) {
   }
 
   if (!anyOk || text.length < 200) {
-    // Fetch failed / JS-only site — default to hub-tier in-scope (real clinic
-    // from Zac's campaign; don't lose it). Hunter + preflight still gate later.
-    const team = emptyTeam(); team.physiotherapists = 3
-    await promote(row.id, team, 'hub', `fetch-failed/thin — defaulted hub`)
-    return 'defaulted'
+    // Fetch failed / JS-only site — HOLD for manual review instead of
+    // fabricating a team (2026-08-05 hardening: the fabricated
+    // physiotherapists:3 default was the June pollution vector).
+    await sql`UPDATE prospect_clinics SET status='needs-review', updated_at=NOW(),
+      notes = COALESCE(notes,'') || ${`\n[categorize] fetch-failed/thin — HELD for manual review ${new Date().toISOString().slice(0, 10)}`}
+      WHERE id=${row.id}`
+    return 'held'
   }
 
   const c = classify(text)
+  if (c.scope === 'review') {
+    await sql`UPDATE prospect_clinics SET status='needs-review', updated_at=NOW(),
+      notes = COALESCE(notes,'') || ${`\n[categorize] no clinical signal on site — HELD for manual review ${new Date().toISOString().slice(0, 10)}`}
+      WHERE id=${row.id}`
+    return 'held'
+  }
   if (c.scope === 'out') {
     await sql`UPDATE prospect_clinics SET status='archived', updated_at=NOW(),
       notes = COALESCE(notes,'') || ${`\n[categorize] OUT-OF-SCOPE by website — archived ${new Date().toISOString().slice(0, 10)}`}

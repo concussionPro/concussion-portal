@@ -262,7 +262,11 @@ final class SSTFlow: ObservableObject {
 
     var canRetest: Bool {
         guard !state.redFlagLocked else { return false }
-        guard let h = hoursSinceLastTest else { return true }
+        guard let last = state.lastTestAt, let h = hoursSinceLastTest else { return true }
+        // Max one graded test per calendar day — NO exceptions. Checked before
+        // the afterRegress bypass, mirroring canRetest in protocol.ts (the
+        // web's calendar-day block precedes its bypass returns).
+        if Calendar.current.isDate(last, inSameDayAs: Date()) { return false }
         if h >= Double(SSTProtocol.retestMinHours) { return true }
         // afterRegress bypasses the 48h spacing (clinician-directed bypass is a
         // web-only path — no clinician-instruction control exists on the watch).
@@ -414,6 +418,12 @@ final class SSTFlow: ObservableObject {
             payload["bandLow"] = p.bandLow
             payload["bandHigh"] = p.bandHigh
             payload["hrtBpm"] = p.hrt
+            // Actual active minutes — the key the clinician surfaces read
+            // (web SessionLog carries completedMinutes; reports/load.ts and the
+            // hub read payload.completedMinutes, so a pct-only watch session
+            // displayed as 0 minutes). Derived from minutesPct of the
+            // prescribed minutes; minutesPct is kept for compatibility.
+            payload["completedMinutes"] = Int((Double(log.minutesPct) * Double(p.minutes) / 100.0).rounded())
             payload["prolongedRecoveryRisk"] = p.hasProlongedRecoveryRisk
             if let note = p.clinicianNote { payload["clinicianNote"] = note }
         }

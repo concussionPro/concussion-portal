@@ -62,7 +62,12 @@ struct SSTState: Codable {
     /// red flag. Optional so states persisted before this field decode fine.
     var redFlagClearedAt: Date?
 
-    // Failed-sync retry queue.
+    // Failed-sync retry queue — LEGACY location. The live queue now persists
+    // under its own key (SSTStore.pendingKey): SSTFlow holds an in-memory
+    // SSTState copy and persists it wholesale, so a queue inside SSTState could
+    // be clobbered (events lost) or resurrected (duplicates) by a stale copy.
+    // This property remains ONLY so old persisted blobs decode (and migrate)
+    // cleanly — never read or write it elsewhere.
     var pendingSessions: [PendingSync]
 
     /// A brand-new state with a freshly minted install UUID.
@@ -197,10 +202,15 @@ struct SSTState: Codable {
 /// Namespace for the UserDefaults-backed persistence of `SSTState`.
 enum SSTStore {
     static let key = "sst.state.v1"
+    /// The failed-sync retry queue's OWN key. Decoupled from SSTState so a
+    /// wholesale state save (every SSTState mutator) can never clobber or
+    /// resurrect queue entries with a stale in-memory copy.
+    static let pendingKey = "sst.pendingQueue.v1"
 
     /// Load the persisted state, or mint + persist a fresh one. Never throws;
     /// a decode failure is treated as a first launch (fresh UUID).
     static func load() -> SSTState {
+        migrateLegacyPending()
         guard
             let data = UserDefaults.standard.data(forKey: key),
             let state = try? JSONDecoder().decode(SSTState.self, from: data)
@@ -218,18 +228,50 @@ enum SSTStore {
         UserDefaults.standard.set(data, forKey: key)
     }
 
-    /// Append a failed session POST to the retry queue.
-    static func enqueue(_ pending: PendingSync) {
-        var state = load()
-        state.pendingSessions.append(pending)
+    // MARK: - Pending-sync retry queue (own key — never through SSTState)
+
+    /// One-time migration: the queue originally lived inside SSTState. Any
+    /// entries found in a legacy persisted blob are appended to the dedicated
+    /// key and cleared from the blob (append FIRST so a crash mid-migration
+    /// duplicates a clinical event rather than losing it).
+    private static func migrateLegacyPending() {
+        guard
+            let data = UserDefaults.standard.data(forKey: key),
+            var state = try? JSONDecoder().decode(SSTState.self, from: data),
+            !state.pendingSessions.isEmpty
+        else { return }
+        setPending(readPending() + state.pendingSessions)
+        state.pendingSessions = []
         save(state)
     }
 
-    /// Replace the retry queue (after a flush).
+    /// Decode the dedicated queue key. Empty on missing / decode failure.
+    private static func readPending() -> [PendingSync] {
+        guard
+            let data = UserDefaults.standard.data(forKey: pendingKey),
+            let queue = try? JSONDecoder().decode([PendingSync].self, from: data)
+        else { return [] }
+        return queue
+    }
+
+    /// The persisted retry queue (migrating any legacy in-state entries first).
+    static func loadPending() -> [PendingSync] {
+        migrateLegacyPending()
+        return readPending()
+    }
+
+    /// Append a failed session POST to the retry queue.
+    static func enqueue(_ pending: PendingSync) {
+        var queue = loadPending()
+        queue.append(pending)
+        setPending(queue)
+    }
+
+    /// Replace the retry queue (after a flush). Best-effort — a failed encode
+    /// simply doesn't write.
     static func setPending(_ pending: [PendingSync]) {
-        var state = load()
-        state.pendingSessions = pending
-        save(state)
+        guard let data = try? JSONEncoder().encode(pending) else { return }
+        UserDefaults.standard.set(data, forKey: pendingKey)
     }
 
     /// The stable install UUID used as `patientRef` on every sync.

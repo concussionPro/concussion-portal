@@ -83,8 +83,8 @@ struct SSTSync {
     // MARK: - Durable session sync
 
     /// POST /api/sst/session. Fire-and-forget; returns whether the POST was
-    /// accepted. On network/5xx failure the body is queued in SSTStore and
-    /// retried by `flushPending()`.
+    /// accepted. On network/5xx/402/429 failure the body is queued in SSTStore
+    /// and retried by `flushPending()`.
     ///
     /// Body shape mirrors buildBody() in clinic-sync.ts:
     ///   {
@@ -170,11 +170,15 @@ struct SSTSync {
         guard await FlushLock.shared.begin() else { return }
         defer { Task { await FlushLock.shared.end() } }
 
-        let queue = SSTStore.load().pendingSessions
+        let queue = SSTStore.loadPending()
         guard !queue.isEmpty else { return }
 
         var stillFailed: [PendingSync] = []
-        for entry in queue {
+        for (i, entry) in queue.enumerated() {
+            // Pace under the server's 30/min rate limit — flushing a large
+            // queue back-to-back 429'd its tail (mirrors the 2100ms spacing in
+            // clinic-sync.ts flushPendingSyncs).
+            if i > 0 { try? await Task.sleep(nanoseconds: 2_100_000_000) }
             let ok = await postData(urlString: entry.url, data: entry.body)
             if !ok { stillFailed.append(entry) }
         }
@@ -185,7 +189,10 @@ struct SSTSync {
 
     /// POST raw JSON. Returns true when the server handled it: 2xx (accepted)
     /// OR 4xx (rejected — bad code etc.; retrying can't help, so don't queue).
-    /// 5xx / network → false (retry later). Mirrors post() in clinic-sync.ts.
+    /// EXCEPTIONS, mirroring post() in clinic-sync.ts: 402 trial/plan-full is
+    /// TEMPORARY (the clinic can upgrade, at which point the same write becomes
+    /// valid) and 429 is rate-limited, not rejected — both return false so the
+    /// clinical event stays queued. 5xx / network → false (retry later).
     private static func postData(urlString: String, data: Data) async -> Bool {
         guard let url = URL(string: urlString) else { return false }
         var req = URLRequest(url: url)
@@ -196,6 +203,7 @@ struct SSTSync {
             let (_, resp) = try await URLSession.shared.data(for: req)
             guard let http = resp as? HTTPURLResponse else { return false }
             let s = http.statusCode
+            if s == 402 || s == 429 { return false }
             return (200..<300).contains(s) || (400..<500).contains(s)
         } catch {
             return false
