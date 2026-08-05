@@ -15,6 +15,8 @@
  *      clearance banner and the GP report's "tolerance recovered" line.
  */
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import {
   detectThreshold,
   computePrescription,
@@ -22,6 +24,7 @@ import {
   sessionVerification,
   isVerifiedReading,
   EXHAUSTION_RPE,
+  BORG_MAX,
   PROTOCOL_STAGE_CAP,
   PROVOCATION_RISE,
   SESSION_STOP_RISE,
@@ -279,5 +282,50 @@ describe('a session with no live HR signal can never earn an advance', () => {
 
   it('an advance still requires three clean verified full sessions', () => {
     expect(progressionDecision(rx, [clean(), clean(), clean()]).decision).toBe('advance')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. WEB ↔ WATCH CONSTANT PARITY — enforced, not just commented.
+//    protocol.ts and sst-watch/Sources/SSTProtocol.swift are two independent
+//    literals (there is no codegen and no shared artefact between a TS bundle
+//    and a Swift target), so the only thing that can stop them drifting is a
+//    test that reads the Swift source. Same for the watch's Borg PICKER seed:
+//    it was shipped pre-seeded at 17, which made the default answer the one
+//    that unlocks a clearance-grade result.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('the watch mirrors the web protocol constants', () => {
+  const read = (rel: string) =>
+    readFileSync(join(process.cwd(), 'sst-watch', 'Sources', rel), 'utf8')
+
+  it('SSTProtocol.swift declares the SAME stage cap and exhaustion RPE as protocol.ts', () => {
+    const swift = read('SSTProtocol.swift')
+    const cap = swift.match(/static let protocolStageCap\s*=\s*(\d+)/)
+    const rpe = swift.match(/static let exhaustionRPE\s*=\s*(\d+)/)
+    const rise = swift.match(/static let provocationRise\s*=\s*(\d+)/)
+    const borg = swift.match(/static let borgMax\s*=\s*(\d+)/)
+    expect(cap).not.toBeNull()
+    expect(rpe).not.toBeNull()
+    expect(rise).not.toBeNull()
+    expect(borg).not.toBeNull()
+    expect(Number(cap![1])).toBe(PROTOCOL_STAGE_CAP)
+    expect(Number(rpe![1])).toBe(EXHAUSTION_RPE)
+    expect(Number(rise![1])).toBe(PROVOCATION_RISE)
+    expect(Number(borg![1])).toBe(BORG_MAX)
+  })
+
+  it('the watch Borg picker is NOT pre-seeded at the exhaustion endpoint', () => {
+    const swift = read('GradedTest.swift')
+    const seed = swift.match(/@State private var exhaustionRPE\s*=\s*(\d+)/)
+    expect(seed).not.toBeNull()
+    // A default answer must never BE the answer that unlocks clearance.
+    expect(Number(seed![1])).toBeLessThan(EXHAUSTION_RPE)
+  })
+
+  it('the watch ends its ramp on the shared constant, never a local literal', () => {
+    const swift = read('GradedTest.swift')
+    expect(swift).toMatch(/let maxStages = SSTProtocol\.protocolStageCap/)
+    expect(swift).toMatch(/stages\.count >= maxStages/)
   })
 })

@@ -190,8 +190,17 @@ export async function POST(request: NextRequest) {
       storedBandLow = null
       storedBandHigh = null
     }
-    if (sessionType === 'threshold' && !isEventRow && Array.isArray((payload as { stages?: unknown }).stages)) {
-      const rawStages = (payload as { stages: unknown[] }).stages
+    // FAIL CLOSED (2026-08-05 adversarial review): this ran only when the body
+    // HAPPENED to carry a stages array, so omitting `stages` (or sending
+    // `stages: null` / a string / an object) skipped reconciliation entirely and
+    // the client's own `interpretation: 'no-intolerance'` + `hrtBpm` were stored
+    // verbatim — a one-request forged clearance with no stage table at all.
+    // A threshold row with no readable stage table is now derived from an EMPTY
+    // stage set, which detectThreshold answers 'invalid'.
+    if (sessionType === 'threshold' && !isEventRow) {
+      const rawStages: unknown[] = Array.isArray((payload as { stages?: unknown }).stages)
+        ? (payload as { stages: unknown[] }).stages
+        : []
       const stages: TestStage[] = rawStages
         .filter((s): s is Record<string, unknown> => !!s && typeof s === 'object')
         .map((s) => ({
@@ -208,7 +217,18 @@ export async function POST(request: NextRequest) {
           rpe: Number.isFinite(Number(s.rpe)) ? Number(s.rpe) : undefined,
           hrVerified: s.hrVerified === true,
         }))
-        .filter((s) => Number.isFinite(s.minute) && Number.isFinite(s.heartRate) && Number.isFinite(s.symptomScore))
+        // Plausibility, server-side: the web GuidedTest already refuses a
+        // reading outside 30-240 bpm and the watch clamps 30-250, but nothing
+        // enforced it here — a posted stage table of HR 0 rows derived an HRt
+        // of 0 and, through computePrescription, a 0-0 bpm training band.
+        .filter(
+          (s) =>
+            Number.isFinite(s.minute) &&
+            Number.isFinite(s.symptomScore) &&
+            Number.isFinite(s.heartRate) &&
+            s.heartRate >= 30 &&
+            s.heartRate <= 250,
+        )
 
       // Read the canonical key, falling back to the watch's legacy `restingSymptom`
       // key so older watch builds still reconcile against the right baseline.

@@ -13,11 +13,12 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const owns = { crm: false, sst: false, ai: false }
+const owns = { crm: false, sst: false, ai: false, book: false }
 
 vi.mock('@/lib/crm-course', () => ({ userOwnsCrm: vi.fn(async () => owns.crm) }))
 vi.mock('@/lib/users', () => ({
   hasSstEntitlement: vi.fn(async () => owns.sst),
+  isBookOwner: vi.fn(async () => owns.book),
   updateLastLogin: vi.fn(async () => {}),
   findUserById: vi.fn(async () => null),
   findUserByEmail: vi.fn(async () => null),
@@ -35,6 +36,7 @@ beforeEach(() => {
   owns.crm = false
   owns.sst = false
   owns.ai = false
+  owns.book = false
 })
 
 const EMAIL = 'user@clinic.com'
@@ -70,11 +72,32 @@ describe('resolveLandingTarget — redirect allowlist', () => {
     )
   })
 
-  it('does NOT honour a PAID document for a preview user', async () => {
+  it('does NOT honour a PAID document for a preview user who owns nothing', async () => {
     expect(await resolveLandingTarget('preview', EMAIL, '/docs/ClinicalToolkit_Complete.zip')).toBe(
       '/modules/101',
     )
     expect(await resolveLandingTarget('preview', EMAIL, '/CourseContent_2026.pdf')).toBe('/modules/101')
+  })
+
+  /**
+   * The Reference+Toolkit (A$97) bundle is a PAYING tier carried as a DB flag
+   * on a PREVIEW account, and the middleware's paid-doc gate serves it. Without
+   * this door the middleware's own /login?redirect=<file> round trip dropped
+   * that buyer on the free SCAT course instead of the file they asked for —
+   * the "post-login return re-serves the file" contract, broken for the one
+   * tier it most needed to hold (2026-08-05 adversarial round).
+   */
+  it('DOES honour a paid document for a bundle owner (still preview level)', async () => {
+    owns.book = true
+    expect(await resolveLandingTarget('preview', EMAIL, '/docs/ClinicalToolkit_Complete.zip')).toBe(
+      '/docs/ClinicalToolkit_Complete.zip',
+    )
+    expect(await resolveLandingTarget('preview', EMAIL, '/docs/CCM_Complete_Reference_2026.pdf')).toBe(
+      '/docs/CCM_Complete_Reference_2026.pdf',
+    )
+    // Ownership of the bundle is NOT a key to anything else.
+    expect(await resolveLandingTarget('preview', EMAIL, '/dashboard')).toBe('/modules/101')
+    expect(await resolveLandingTarget('preview', EMAIL, '/ep-course')).toBe('/modules/101')
   })
 
   it('does not walk a preview user into paid course content', async () => {

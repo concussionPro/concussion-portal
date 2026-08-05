@@ -34,6 +34,7 @@ vi.mock('@vercel/postgres', () => ({ sql: vi.fn(async () => ({ rows: [] })) }))
 
 import { middleware } from '@/middleware'
 import { createJWTSession } from '@/lib/jwt-session'
+import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 const NAV = { 'sec-fetch-mode': 'navigate', accept: 'text/html,application/xhtml+xml' }
 const FETCH = { 'sec-fetch-mode': 'cors', accept: 'application/json' }
@@ -146,5 +147,66 @@ describe('blanket-blocked assets', () => {
   it('a paid doc is never served to an anonymous programmatic caller', async () => {
     const res = await middleware(req('/docs/RehabFlow.png', FETCH))
     expect(res.status).toBe(401)
+  })
+})
+
+/**
+ * REGRESSION (found 2026-08-05 adversarial round, introduced by the denial-shape
+ * change itself): the /login bounce is only safe for a browser with NO identity.
+ *
+ * /login redirects on whatever /api/auth/session resolves, and that route falls
+ * back to the demo cookies when the session cookie is absent or stale. A partner
+ * reviewer (demo_key) or clinic prospect (clinic_demo) who taps a toolkit
+ * download therefore went asset → /login → asset → … until the browser gave up
+ * with ERR_TOO_MANY_REDIRECTS — and no login could ever satisfy the gate,
+ * because a demo identity is not an entitlement. Before the change these
+ * callers got a JSON 401; the loop is strictly new.
+ */
+describe('demo identities must never be bounced to /login', () => {
+  const demoKeyCookie = () => `demo_key=${DEMO_KEY}`
+  const clinicDemoCookie = () => `clinic_demo=${CLINIC_DEMO_KEY}`
+
+  for (const doc of [
+    '/docs/ClinicalToolkit_Complete.zip',
+    '/docs/SCAT6_Fillable.pdf',
+    '/CourseContent_2026.pdf',
+  ]) {
+    it(`${doc} answers a demo_key browser with a page, not a redirect`, async () => {
+      const res = await middleware(req(doc, NAV, demoKeyCookie()))
+      expect(res.headers.get('location')).toBeNull()
+      expect(res.headers.get('content-type')).toContain('text/html')
+    })
+
+    it(`${doc} answers a clinic_demo browser with a page, not a redirect`, async () => {
+      const res = await middleware(req(doc, NAV, clinicDemoCookie()))
+      expect(res.headers.get('location')).toBeNull()
+      expect(res.headers.get('content-type')).toContain('text/html')
+    })
+  }
+
+  it('a STALE session alongside a demo cookie also gets the page', async () => {
+    const res = await middleware(
+      req('/docs/ClinicalToolkit_Complete.zip', NAV, `session=not.avalidtoken; ${demoKeyCookie()}`),
+    )
+    expect(res.headers.get('location')).toBeNull()
+  })
+
+  it('a demo cookie does NOT unlock the asset — the gate is unchanged', async () => {
+    const res = await middleware(req('/docs/ClinicalToolkit_Complete.zip', FETCH, demoKeyCookie()))
+    expect(res.status).toBe(401)
+    expect((await res.json()).error).toContain('Authentication required')
+  })
+
+  it('a real paid session still wins over the demo cookie', async () => {
+    const res = await middleware(
+      req('/docs/ClinicalToolkit_Complete.zip', NAV, `${paidCookie()}; ${demoKeyCookie()}`),
+    )
+    expect(res.status).toBe(200)
+  })
+
+  it('a genuinely anonymous browser is still redirected (the fix is not a blanket opt-out)', async () => {
+    const res = await middleware(req('/docs/ClinicalToolkit_Complete.zip', NAV))
+    expect(res.status).toBe(307)
+    expect(new URL(res.headers.get('location')!).pathname).toBe('/login')
   })
 })

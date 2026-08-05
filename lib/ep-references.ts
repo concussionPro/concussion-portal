@@ -21,7 +21,12 @@
 import { getEpModules, epDisplayId } from '@/data/ep-modules'
 
 export interface EpReference {
-  /** Stable key derived from the citation text. */
+  /**
+   * Stable key derived from the citation text. UNIQUE across the repository —
+   * it is the React list key in EpReferenceSearch, and truncating it collided
+   * on 5 of 63 rows (two Patricios 2023 spellings, two Giza 2014, two Haider
+   * 2018, two ESSA scope entries all share their first 80 characters).
+   */
   id: string
   /** The citation EXACTLY as authored in the module. Always displayed. */
   citation: string
@@ -92,7 +97,7 @@ export function getEpReferences(): EpReference[] {
         continue
       }
       byKey.set(key, {
-        id: key.slice(0, 80).replace(/ /g, '-'),
+        id: key.replace(/ /g, '-'),
         citation,
         ...parseApa(citation),
         url: extractUrl(citation),

@@ -17,7 +17,10 @@ export const metadata: Metadata = {
   // No "| CEA" suffix — the root layout's title template appends the brand.
   title: 'AI in Clinical Practice — CPD Course for Australian Clinicians',
   description:
-    `AHPRA-aligned AI compliance course for Australian clinicians — scribes, Privacy Act, documentation, indemnity positions. ${AI_COURSE?.cpdHours ?? 2} CPD hours, A$${AI_COURSE_PRICE ?? ''}, certificate on completion.`,
+    // Price clause is OMITTED when the catalogue has no price, never emitted as
+    // a bare "A$" — an empty currency symbol in the search snippet is worse
+    // than no price at all.
+    `AHPRA-aligned AI compliance course for Australian clinicians — scribes, Privacy Act, documentation, indemnity positions. ${AI_COURSE?.cpdHours ?? 2} CPD hours,${AI_COURSE_PRICE !== null ? ` A$${AI_COURSE_PRICE},` : ''} certificate on completion.`,
   alternates: { canonical: '/courses/ai-in-clinical-practice' },
 }
 
@@ -55,13 +58,19 @@ export default async function CoursePage() {
               Principles. Designed against AHPRA, TGA digital-scribes guidance, and
               indemnity-insurer positions (Avant, MIPS, Guild, MIGA).
             </p>
-            <BuyCourseCard
-              courseSlug="ai-in-clinical-practice"
-              courseTitle="AI in Clinical Practice"
-              priceAUD={price ?? 0}
-              cpdHours={entry?.cpdHours ?? 2}
-              prefillEmail={access.email ?? ''}
-            />
+            {/* No catalogue price => no buy card. `?? 0` rendered "A$0" in the
+                card's headline price — advertising a paid course as free — and
+                /api/courses/checkout would 400 that purchase anyway
+                ("Course is not configured for direct purchase"). */}
+            {price !== null && (
+              <BuyCourseCard
+                courseSlug="ai-in-clinical-practice"
+                courseTitle="AI in Clinical Practice"
+                priceAUD={price}
+                cpdHours={entry?.cpdHours ?? 2}
+                prefillEmail={access.email ?? ''}
+              />
+            )}
           </section>
 
           <div className="flex items-baseline justify-between mb-3">

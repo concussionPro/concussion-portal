@@ -304,3 +304,64 @@ describe('every product a checkout can create has webhook fulfilment', () => {
     expect(src.includes('VALID_COURSE_TYPES.includes(courseType)')).toBe(true)
   })
 })
+
+/**
+ * REGRESSION (2026-08-05 adversarial round). The promo-field fix closed the
+ * leak on createCourseCheckoutSession ONLY. Three other checkout builders set
+ * `allow_promotion_codes` on their own, and Stripe's manual field admits every
+ * active code in the account — it cannot be scoped to a product when the line
+ * item is ad-hoc `price_data`. SCAT6 is a standing $50 code that never expires
+ * and is mailed to every free-course completer, so each of these was a live
+ * $50 discount on a product it was never valid for.
+ */
+describe('no OTHER checkout builder opens the manual promo field', () => {
+  it('the A$97 reference bundle does not (was A$97 → A$47 with SCAT6)', async () => {
+    const { createBookCheckoutSession } = await import('@/lib/book')
+    await createBookCheckoutSession({ ...urls })
+    expect(last().allow_promotion_codes).toBeUndefined()
+  })
+
+  it('the SST subscription does not (was a free month on a $49/mo plan)', async () => {
+    const { createSstSubscriptionCheckoutSession } = await import('@/lib/stripe')
+    await createSstSubscriptionCheckoutSession({ plan: 'single', clinicCode: 'ABC123', ...urls })
+    expect(last().mode).toBe('subscription')
+    expect(last().allow_promotion_codes).toBeUndefined()
+  })
+
+  it('a short course does not — not even when an INVALID promo is passed', async () => {
+    const { POST } = await import('@/app/api/courses/checkout/route')
+    const { NextRequest } = await import('next/server')
+    const call = (body: Record<string, unknown>) =>
+      POST(
+        new NextRequest('https://portal.test/api/courses/checkout', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+      )
+
+    const { COURSES, getEffectiveStatus, getEffectivePrice } = await import(
+      '@/lib/ai-course/provider-catalogue'
+    )
+    const sellable = COURSES.find(
+      (c) =>
+        c.purchasableViaCheckout &&
+        getEffectiveStatus(c) === 'live' &&
+        getEffectivePrice(c).price !== null,
+    )
+    if (!sellable) throw new Error('no sellable short course in the catalogue — test is vacuous')
+
+    // The old fallback: an unrecognised code opened the field, and the buyer
+    // then typed SCAT6 into it.
+    knownPromotionCodes = []
+    await call({ courseSlug: sellable.id, email: 'buyer@clinic.com', promoCode: 'NOTAREALCODE' })
+    expect(last().allow_promotion_codes).toBeUndefined()
+    expect(last().discounts).toBeUndefined()
+
+    // A REAL targeted code still auto-applies — the deliberate path is intact.
+    knownPromotionCodes = ['LAUNCH20']
+    await call({ courseSlug: sellable.id, email: 'buyer@clinic.com', promoCode: 'LAUNCH20' })
+    expect(last().discounts).toEqual([{ promotion_code: 'promo_LAUNCH20' }])
+    expect(last().allow_promotion_codes).toBeUndefined()
+  })
+})

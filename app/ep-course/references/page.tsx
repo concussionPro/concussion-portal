@@ -45,8 +45,8 @@ export default async function EpReferencesPage() {
           </p>
           {citationTotal > references.length && (
             <p className="mt-1 text-xs text-slate-400">
-              {references.length} distinct papers: a paper cited by more than one module is listed once and tagged
-              with every module that cites it.
+              {references.length} distinct citations: a citation used by more than one module is listed once and
+              tagged with every module that cites it.
             </p>
           )}
 

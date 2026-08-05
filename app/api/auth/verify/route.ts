@@ -6,9 +6,9 @@ import { createJWTSession, verifySessionToken, type SessionData } from '@/lib/jw
 import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
 import { sql } from '@/lib/db'
 import { userOwnsCrm } from '@/lib/crm-course'
-import { hasSstEntitlement } from '@/lib/users'
+import { hasSstEntitlement, isBookOwner } from '@/lib/users'
 import { isSafeRelativePath } from '@/lib/safe-redirect'
-import { isAuthDoc } from '@/lib/gated-docs'
+import { isAuthDoc, isPaidDoc } from '@/lib/gated-docs'
 import { isUserEnrolled } from '@/lib/ai-course/access'
 
 /** Ensure the used_magic_tokens table exists (runs once per cold start) */
@@ -111,6 +111,15 @@ export async function resolveLandingTarget(
     // they tapped mid-assessment. The middleware still enforces the gate — this
     // only decides where an authenticated user lands.
     isAuthDoc(redirect) ||
+    // A PAID doc, but ONLY for a Reference+Toolkit (A$97) bundle owner. That
+    // entitlement is a DB flag on a PREVIEW account, and the middleware's
+    // paid-doc gate honours it — so the "post-login return re-serves the file"
+    // contract was broken for the one paying tier that is not 'online-only' /
+    // 'full-course': they were bounced to /login and then landed on
+    // /modules/101. A preview user WITHOUT the bundle still lands on their own
+    // free course, never on a file they cannot open. Entitlement lookup runs
+    // only when the target needs it, same as ENROLLED_PREFIXES below.
+    (isPaidDoc(redirect) && (await isBookOwner(email).catch(() => false))) ||
     (ownsCrm && redirect.startsWith('/ep-course')) ||
     (isSstClinic && redirect.startsWith('/clinical-testing')) ||
     // Entitlement lookup runs ONLY when the target needs it — normal logins

@@ -22,6 +22,8 @@ enum SSTProtocol {
     // The manual phrases it as RPE > 17; the applied rule on every surface is
     // ≥ 17 (EXHAUSTION_RPE in protocol.ts) — one point conservative.
     static let exhaustionRPE = 17
+    /// Top of the Borg 6–20 scale (BORG_MAX in protocol.ts) — above it is not a rating.
+    static let borgMax = 20
     // Length of the graded ramp in 60-second stages (PROTOCOL_STAGE_CAP in
     // protocol.ts). Reaching it without provocation = the whole protocol
     // completed symptom-free, the second way a test can honestly report no
@@ -91,8 +93,14 @@ enum SSTProtocol {
         // that simply stopped early evidences neither and fails closed to
         // `.invalid`, exactly as detectThreshold does server-side (a mismatch
         // here would show the patient a clearance the clinician never receives).
-        let reachedExhaustion = stages.compactMap(\.rpe).contains { $0 >= exhaustionRPE }
-        let completedProtocol = stages.count >= protocolStageCap
+        // TERMINAL Borg only, and only inside the 6–20 scale (mirrors
+        // detectThreshold in protocol.ts): the exhaustion sheet writes the
+        // rating onto stages.last, so a rating anywhere else is not an
+        // exhaustion endpoint. Stages are counted DISTINCT by minute so a
+        // replayed/duplicated row set is never a completed ramp.
+        let terminalRPE = stages.last?.rpe ?? -1
+        let reachedExhaustion = terminalRPE >= exhaustionRPE && terminalRPE <= borgMax
+        let completedProtocol = Set(stages.map { $0.minute }).count >= protocolStageCap
         guard reachedExhaustion || completedProtocol else {
             return ThresholdResult(interpretation: .invalid, hrt: nil, bandLow: nil, bandHigh: nil)
         }

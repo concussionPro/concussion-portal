@@ -74,6 +74,20 @@ async function ensureHubTables(): Promise<void> {
   await sql`ALTER TABLE course_hub_members ADD COLUMN IF NOT EXISTS seat_no INT`
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS uniq_hub_member_seat
     ON course_hub_members (hub_code, role, seat_no) WHERE seat_no IS NOT NULL`
+  // ONE hub per Stripe session, enforced by the DATABASE. createCourseHub's
+  // SELECT-then-INSERT is a time-of-check/time-of-use window: two concurrent
+  // deliveries of the same checkout.session.completed (Stripe retries, and
+  // Vercel can run them in parallel instances) both find no prior row and both
+  // insert — the exact double-key defect the guard was added to stop. The index
+  // makes the second INSERT lose, and createCourseHub returns the winner's code.
+  // Best-effort: a legacy environment that ALREADY has duplicate rows must not
+  // have every hub read throw on the failed index build.
+  try {
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS uniq_course_hub_session
+      ON course_hubs (stripe_session_id) WHERE stripe_session_id IS NOT NULL`
+  } catch (err) {
+    console.error('[course-hub] stripe_session_id unique index not created (pre-existing duplicates?):', err)
+  }
   tablesReady = true
 }
 
@@ -123,13 +137,27 @@ export async function createCourseHub(opts: {
     if (prior[0]) return prior[0].code
   }
   const code = genHubCode()
-  await sql`
+  const { rows: inserted } = await sql<{ code: string }>`
     INSERT INTO course_hubs (code, owner_email, clinic_name, clinician_seats, admin_seats, stripe_session_id)
     VALUES (${code}, ${opts.ownerEmail.toLowerCase()}, ${opts.clinicName ?? null},
             ${clampClinicianSeats(opts.clinicianSeats)}, ${opts.adminSeats ?? HUB_ADMIN_SEATS},
             ${opts.stripeSessionId ?? null})
+    ON CONFLICT DO NOTHING
+    RETURNING code
   `
-  return code
+  if (inserted[0]) return inserted[0].code
+  // Lost the race against a concurrent delivery of the SAME checkout session
+  // (uniq_course_hub_session). Return the code that won — never a second key.
+  if (opts.stripeSessionId) {
+    const { rows: winner } = await sql<{ code: string }>`
+      SELECT code FROM course_hubs WHERE stripe_session_id = ${opts.stripeSessionId} LIMIT 1
+    `
+    if (winner[0]) return winner[0].code
+  }
+  // No session id (admin-minted hub) — a code collision is the only other way
+  // to land here. Let the caller/webhook retry rather than return a code that
+  // belongs to somebody else.
+  throw new Error('createCourseHub: insert conflicted and no hub could be resolved')
 }
 
 type HubRow = {

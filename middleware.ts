@@ -71,7 +71,26 @@ const DENIAL_HTML_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache
  * `loginRedirect` is only ever set when the request has NO valid session —
  * bouncing an authenticated-but-unentitled visitor to /login would loop
  * (/login redirects a signed-in user straight back to ?redirect).
+ *
+ * "No valid session" is NOT the same as "no identity". /login redirects on
+ * whatever /api/auth/session resolves, and that route falls back to the demo
+ * cookies (and, off production, to a synthetic dev preview user) when the
+ * session cookie is missing or stale. Such a browser bounces asset → /login →
+ * asset → … until the browser gives up with ERR_TOO_MANY_REDIRECTS, and no
+ * amount of logging in helps because a demo identity can never satisfy these
+ * gates. Those callers get the readable page instead.
  */
+function hasNonSessionIdentity(request: NextRequest): boolean {
+  return (
+    request.cookies.get('demo_key')?.value === DEMO_KEY ||
+    request.cookies.get('clinic_demo')?.value === CLINIC_DEMO_KEY ||
+    // Dev server only (not `test`, which must exercise the production path):
+    // /api/auth/session hands localhost a synthetic preview user with no
+    // cookie at all, so every gated asset would bounce forever.
+    process.env.NODE_ENV === 'development'
+  )
+}
+
 function denyDoc(
   request: NextRequest,
   opts: {
@@ -85,7 +104,7 @@ function denyDoc(
   },
 ): NextResponse {
   if (isBrowserNavigation(request)) {
-    if (opts.loginRedirect) {
+    if (opts.loginRedirect && !hasNonSessionIdentity(request)) {
       const loginUrl = request.nextUrl.clone()
       loginUrl.pathname = '/login'
       loginUrl.search = ''

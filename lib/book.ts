@@ -70,7 +70,14 @@ export async function createBookCheckoutSession({
       },
     },
     billing_address_collection: 'auto',
-    allow_promotion_codes: true,
+    // NO manual promo field. Stripe's field is open to EVERY active code in the
+    // account and cannot be scoped to a product, because this line item is an
+    // ad-hoc `price_data` product with no dashboard Price behind it. SCAT6 is a
+    // standing $50 code that never expires (lib/email-sequences.ts mails it),
+    // so an open field here is a permanent A$97 → A$47 discount on the bundle.
+    // Same reasoning, same conclusion as createCourseCheckoutSession: offer the
+    // field only where a code is genuinely redeemable — which for this product
+    // is nowhere. A targeted discount is applied through `discounts`.
     custom_text: {
       submit: {
         message:

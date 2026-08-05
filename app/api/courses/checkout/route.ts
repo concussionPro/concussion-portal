@@ -74,12 +74,15 @@ export async function POST(request: NextRequest) {
   const successUrl = `${successBase}${course.route}?purchase=success&session_id={CHECKOUT_SESSION_ID}`
   const cancelUrl = `${successBase}/courses?purchase=cancelled&course=${courseSlug}`
 
-  // Auto-apply promo code if present. The open manual-entry field is only
-  // offered when a promo was intentionally passed but couldn't be auto-applied
-  // — mirrors the CCM guard in lib/stripe.ts: an always-open field let buyers
-  // type SCAT6 (the CCM-online-only completion coupon) onto short courses.
+  // Auto-apply a promo code if one was intentionally passed. NO manual-entry
+  // field, ever: Stripe's field admits every active code in the account and
+  // cannot be scoped to a product (this line item is ad-hoc `price_data`), so
+  // opening it hands the buyer SCAT6 — the standing, never-expiring $50
+  // CCM-online-only completion coupon — against an A$82 short course. The old
+  // "only when the passed code wasn't found" fallback still opened it: pass
+  // ?promo=anything-invalid and the field appears. Same rule as lib/stripe.ts,
+  // where the eligible surface is online-only and nothing here qualifies.
   let discounts: { promotion_code: string }[] | undefined
-  let allowPromotionCodes: boolean | undefined
   if (promoCode) {
     try {
       const promoCodes = await stripe.promotionCodes.list({
@@ -89,11 +92,9 @@ export async function POST(request: NextRequest) {
       })
       if (promoCodes.data.length > 0) {
         discounts = [{ promotion_code: promoCodes.data[0].id }]
-      } else {
-        allowPromotionCodes = true
       }
     } catch {
-      allowPromotionCodes = true
+      /* Stripe lookup failed — sell at list price rather than open the field. */
     }
   }
 
@@ -124,7 +125,6 @@ export async function POST(request: NextRequest) {
       priceAUD: String(effectivePrice),
     },
     ...(discounts ? { discounts } : {}),
-    ...(allowPromotionCodes !== undefined ? { allow_promotion_codes: allowPromotionCodes } : {}),
   })
 
   return NextResponse.json({ url: session.url })

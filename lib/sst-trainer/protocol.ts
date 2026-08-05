@@ -116,6 +116,8 @@ export const SESSION_STOP_RISE = 2
  * manual's wording — the conservative direction for a TERMINATION rule.
  */
 export const EXHAUSTION_RPE = 17
+/** Top of the Borg 6-20 scale — anything above it is not a rating. */
+export const BORG_MAX = 20
 /** Resting symptoms at or above this on the readiness screen → today is not a test day. */
 export const MAX_RESTING_TO_TEST = 8
 /** A stage-to-stage HR jump above this (bpm) needs an explicit confirm — never mint HRt from a typo. */
@@ -150,6 +152,16 @@ export function detectThreshold(input: TestInput): ThresholdResult {
   if (!input.stages.length) {
     return { hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'invalid', message: 'Not enough test data was recorded.' }
   }
+  // Defence in depth: the clients stamp `termination: 'aborted'` on a walk-out
+  // (app/platform/app/page.tsx onAbort). It is outside TestTermination, so it
+  // only ever arrives via the wire — and an abandoned test can never be read,
+  // regardless of how many stages it happens to carry.
+  if ((input.termination as string) === 'aborted') {
+    return {
+      hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'invalid',
+      message: 'This test was ended before it finished, so there is no result to read from it.',
+    }
+  }
 
   const provoked = input.stages.find(
     (s) => s.symptomScore - input.restingSymptomScore >= PROVOCATION_RISE,
@@ -179,11 +191,23 @@ export function detectThreshold(input: TestInput): ThresholdResult {
   // rpe: nil on every stage and only attaches the terminal Borg on its
   // exhaustion-stop path, so its stage-cap finish arrived RPE-less and was
   // waved through as clearance-grade.)
-  const rpes = input.stages
-    .map((s) => s.rpe)
-    .filter((r): r is number => typeof r === 'number' && Number.isFinite(r))
-  const reachedExhaustion = rpes.some((r) => r >= EXHAUSTION_RPE)
-  const completedProtocol = input.stages.length >= PROTOCOL_STAGE_CAP
+  // The exhaustion arm reads the TERMINAL stage only, and only inside the Borg
+  // scale (6-20). Both shipping surfaces write it that way — the watch sets
+  // stages[last].rpe on its exhaustion-stop sheet, the web carries the current
+  // RPE onto the stage it finishes with — so a mid-test 17 followed by easier
+  // stages is not an exhaustion endpoint, and an out-of-scale number (rpe: 999)
+  // is not a Borg rating at all.
+  const terminalRpe = input.stages[input.stages.length - 1]?.rpe
+  const reachedExhaustion =
+    typeof terminalRpe === 'number' &&
+    Number.isFinite(terminalRpe) &&
+    terminalRpe >= EXHAUSTION_RPE &&
+    terminalRpe <= BORG_MAX
+  // Count DISTINCT stages, not array length: a replayed/duplicated row set
+  // (twenty copies of minute 1) is not a completed 20-minute ramp, and the
+  // completed-protocol arm is the one endpoint that needs no Borg rating.
+  const completedProtocol =
+    new Set(input.stages.map((s) => s.minute).filter((m) => Number.isFinite(m))).size >= PROTOCOL_STAGE_CAP
   if (!reachedExhaustion && !completedProtocol) {
     return {
       hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'invalid',

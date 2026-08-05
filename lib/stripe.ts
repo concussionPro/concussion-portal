@@ -738,7 +738,12 @@ export async function createSstSubscriptionCheckoutSession({
     customer_email: customerEmail || undefined,
     success_url: successUrl,
     cancel_url: cancelUrl,
-    allow_promotion_codes: true,
+    // NO manual promo field — same reasoning as createCourseCheckoutSession.
+    // The field admits every active code in the account, and SCAT6 is a
+    // standing $50 code with no expiry. On a $49/mo subscription that is a free
+    // month (or more, depending on the coupon's duration) for anyone who has
+    // ever received the free-course completion email. A deliberate subscription
+    // discount belongs on a coupon attached in the Stripe dashboard.
     billing_address_collection: 'auto',
     // clinicCode is the join key the webhook uses to flip the clinic to
     // 'active' and lift the 3-patient trial cap.
