@@ -151,12 +151,18 @@ export default function MelbournePage() {
                   <Calendar className="w-6 h-6 text-accent" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">Workshop date</h3>
+                  {/* A DELIVERED round must not read as a bookable date
+                      (2026-08-05 live crawl: the card showed "Workshop date
+                      Saturday 13 June 2026" beside an enrol CTA weeks after
+                      it ran). Date-bearing copy derives from CONFIG.LOCATIONS. */}
+                  <h3 className="text-lg font-bold">{isClosed ? 'Last round' : 'Workshop date'}</h3>
                   <p className="text-sm text-muted-foreground">{location.date}</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Full-day intensive, 8:00am–4:00pm. Catered lunch included, plus morning and afternoon tea. Small group format — capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for maximum hands-on practice time.
+                {isClosed
+                  ? `The last Melbourne round ran as a full-day intensive, 8:00am–4:00pm, capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians. Nominate below and you'll be first told when the next date is set.`
+                  : `Full-day intensive, 8:00am–4:00pm. Catered lunch included, plus morning and afternoon tea. Small group format — capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for maximum hands-on practice time.`}
               </p>
             </div>
 
@@ -171,7 +177,9 @@ export default function MelbournePage() {
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Rydges Hotel, 186 Exhibition St, Melbourne CBD. Walking distance from Parliament Station and Flinders Street. Full venue details and parking/transit info emailed 2 weeks before the workshop.
+                {isClosed
+                  ? 'The last round ran at Rydges Hotel, 186 Exhibition St, Melbourne CBD. The next round\u2019s venue is confirmed with the date — full details and parking/transit info go out 2 weeks beforehand.'
+                  : 'Rydges Hotel, 186 Exhibition St, Melbourne CBD. Walking distance from Parliament Station and Flinders Street. Full venue details and parking/transit info emailed 2 weeks before the workshop.'}
               </p>
             </div>
           </div>

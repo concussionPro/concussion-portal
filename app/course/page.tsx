@@ -26,7 +26,10 @@ const courseSchema = createCourseSchema({
   name: 'Concussion Clinical Mastery — Complete Course',
   description:
     'Hybrid concussion assessment and management training for Australian healthcare professionals — 8 online modules (8 CPD hours) plus a full-day in-person practical workshop (16 CPD hours combined) covering SCAT6, SCOAT6, VOMS, BESS and return-to-play protocols. Endorsed by Osteopathy Australia; hours count toward AHPRA registration CPD requirements.',
-  cpdHours: 14,
+  // Derived — a hardcoded 14 shipped a WRONG credential claim in the
+  // schema.org markup (and contradicted this object's own description)
+  // after the 07-30 re-rate to 16 (2026-08-05 live crawl).
+  cpdHours: CONFIG.COURSE.TOTAL_CPD_POINTS,
   priceAUD: CONFIG.COURSE.PRICE_EARLY_BIRD,
   instances: [
     {
