@@ -365,7 +365,7 @@ function CheckoutSuccessContent() {
                 {[
                   'Full-day practical workshop (SCAT6, VOMS, BESS)',
                   'Supervised assessment practice with expert feedback',
-                  `6 additional CPD hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} total)`,
+                  `8 additional CPD hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} total)`,
                   'Small group — max 12 participants',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">

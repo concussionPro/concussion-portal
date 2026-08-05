@@ -384,7 +384,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
         await recordCoursePurchase({
           email: customerEmail,
-          courseSlug: 'ccm-complete-repeat',
+          courseSlug: `ccm-complete-repeat-${session.id.slice(-8)}`,
           stripeSessionId: session.id,
           amountAud: (session.amount_total || 0) / 100,
         })
@@ -1559,11 +1559,26 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
             JOIN course_hubs h2 ON h2.code = m2.hub_code
             WHERE m2.email = LOWER(users.email) AND m2.hub_code <> ${hub.code} AND h2.revoked_at IS NULL
           )
+          -- Guest one-time CCM buyers have NULL stripe_customer_id, so a
+          -- member who bought the course independently would be swept by the
+          -- provenance guard alone (2026-08-05 round-D F3): any independent
+          -- purchase record keeps their access.
+          AND NOT EXISTS (
+            SELECT 1 FROM course_purchases cp WHERE LOWER(cp.user_email) = LOWER(users.email)
+          )
         RETURNING email
       `
       console.log(`[hub-pack] Revoked hub ${hub.code} after ${cause} for ${redact(email)} — downgraded ${downgraded.length} member account(s)`)
     } catch (err) {
       console.error(`[hub-pack] Failed to revoke hub after ${cause} for ${redact(email)}:`, err)
+      try {
+        await sendEmail({
+          to: CONFIG.CONTACT_EMAIL,
+          subject: `ACTION: hub revocation FAILED after ${cause}`,
+          html: `<p style="margin:0;">Revoking the hub for ${escapeHtml(email)} (charge ${charge.id}) failed — revoke manually. Error logged server-side.</p>`,
+          tags: [{ name: 'type', value: 'revocation-failed' }],
+        })
+      } catch { /* best-effort */ }
     }
     return
   }
@@ -1589,18 +1604,31 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
     if (productType === 'crm-course') {
       try {
         const clinic = await getSstClinicByEmail(email)
-        if (clinic) {
+        // OWNER-only: getSstClinicByEmail's member fallback resolves a seated
+        // practitioner to their EMPLOYER's clinic — a personal CRM refund must
+        // never cancel someone else's subscription (2026-08-05 round-D F1).
+        if (clinic && clinic.email.toLowerCase() === email.toLowerCase()) {
           const subId = await getSstClinicStripeSubscription(clinic.code)
           if (subId) {
             try {
               const { getStripe } = await import('@/lib/stripe')
-              await getStripe().subscriptions.cancel(subId)
-              console.log(`[crm] Cancelled bundled SST subscription ${subId} for clinic ${clinic.code} after ${cause}`)
+              // Cancel ONLY the CRM-attached bundle sub — a self-serve tier
+              // subscription the clinic pays for independently stays live.
+              const sub = await getStripe().subscriptions.retrieve(subId)
+              if (sub.metadata?.source === 'crm-international-bundle') {
+                await getStripe().subscriptions.cancel(subId)
+                await setSstClinicPlan(clinic.code, 'trial')
+                console.log(`[crm] Cancelled bundled SST subscription ${subId} for clinic ${clinic.code} after ${cause}`)
+              } else {
+                console.log(`[crm] Clinic ${clinic.code} subscription ${subId} is not the CRM bundle — left untouched after ${cause}`)
+              }
             } catch (subErr) {
               console.error(`[crm] Failed to cancel SST subscription ${subId} after ${cause}:`, subErr)
             }
+          } else {
+            // No subscription: the bundle's comp access rides on plan alone.
+            await setSstClinicPlan(clinic.code, 'trial')
           }
-          await setSstClinicPlan(clinic.code, 'trial')
         }
       } catch (err) {
         console.error(`[crm] Failed to unwind bundled platform for ${redact(email)} after ${cause}:`, err)
@@ -1651,6 +1679,29 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
     return
   }
 
+  // UNATTRIBUTABLE charges must not fall through to a CCM downgrade
+  // (2026-08-05 round-D F2): a subscription-INVOICE charge (e.g. an SST
+  // renewal) carries no checkout metadata — an alumni owner disputing $49
+  // was getting their full-course access cut. Subscription lifecycle is
+  // handled by the subscription webhooks; anything else unattributed goes
+  // to the owner for a manual decision.
+  if (!courseType) {
+    const invoiceRef = (charge as { invoice?: string | null }).invoice
+    if (invoiceRef) {
+      console.log(`Charge ${charge.id} is a subscription invoice (${invoiceRef}) — no course revocation (${cause})`)
+      return
+    }
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION: unattributed ${cause} — revoke manually if needed`,
+        html: `<p style="margin:0 0 1em 0;">A ${cause} on charge ${charge.id} ($${(charge.amount || 0) / 100} ${charge.currency}) for ${escapeHtml(email)} could not be attributed to a product (no checkout metadata). No access was changed — review and revoke manually if warranted.</p>`,
+        tags: [{ name: 'type', value: 'revocation-unattributed' }],
+      })
+    } catch { /* alert best-effort */ }
+    return
+  }
+
   // CCM course refund — determine downgrade level: workshop-upgrade refunds
   // downgrade to online-only (user still has their original online course
   // purchase), all others to preview. Price heuristic as fallback when
@@ -1670,6 +1721,14 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
     console.log(`Downgraded ${redact(email)} to ${downgradeLevel} access after ${cause} ($${chargeAmount})`)
   } catch (err) {
     console.error(`Failed to downgrade ${redact(email)} after ${cause}:`, err)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION: access downgrade FAILED after ${cause}`,
+        html: `<p style="margin:0;">Downgrading ${escapeHtml(email)} to ${downgradeLevel} after ${cause} (charge ${charge.id}) failed — apply manually.</p>`,
+        tags: [{ name: 'type', value: 'revocation-failed' }],
+      })
+    } catch { /* best-effort */ }
   }
 }
 
@@ -1731,7 +1790,7 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
       to: CONFIG.CONTACT_EMAIL,
       subject: `ACTION REQUIRED: payment dispute — ${currency} $${amount.toFixed(2)} (${dispute.reason})`,
       html: `
-        <p><strong>A customer has disputed a charge.</strong> Entitlements have been revoked (same as a full refund); respond in the Stripe dashboard before the deadline.</p>
+        <p><strong>A customer has disputed a charge.</strong> Entitlement revocation was attempted (check for ACTION follow-up emails if any step failed) (same as a full refund); respond in the Stripe dashboard before the deadline.</p>
         <ul>
           <li><strong>Customer:</strong> ${escapeHtml(email || 'unknown')}${charge.billing_details?.name ? ` (${escapeHtml(charge.billing_details.name)})` : ''}</li>
           <li><strong>Amount:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}</li>
