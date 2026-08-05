@@ -261,6 +261,20 @@ export function setPendingSyncs(remaining: QueuedSync[]): void {
   saveStateNow(state)
 }
 
+/** Remove ONE processed entry by identity, preserving anything enqueued
+ *  since the caller's snapshot (2026-08-05 round-4 #2: a whole-array replace
+ *  from a stale snapshot destroyed events enqueued mid-flush). */
+export function removePendingSync(entry: QueuedSync): void {
+  const state = loadState()
+  if (!state) return
+  const i = state.pendingSyncs.findIndex(
+    (q) => q.queuedAt === entry.queuedAt && q.url === entry.url,
+  )
+  if (i === -1) return
+  state.pendingSyncs = [...state.pendingSyncs.slice(0, i), ...state.pendingSyncs.slice(i + 1)]
+  saveStateNow(state)
+}
+
 export function getPendingSyncs(): QueuedSync[] {
   return loadState()?.pendingSyncs ?? []
 }

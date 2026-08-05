@@ -39,12 +39,14 @@ async function notifyPlanFull(clinicCode: string, usage: { patientCount: number;
     return // fail closed
   }
   const first = (rec?.contactName || '').trim().split(/\s+/)[0] || ''
-  await sendEmail({
+  const sent = await sendEmail({
     to: email,
     subject: 'A new patient couldn’t start — your SST plan is at its limit',
     html: `<p style="margin:0 0 1em 0;">Hi${first ? ' ' + escapeHtml(first) : ''},</p><p style="margin:0 0 1em 0;">A new patient just tried to start a session at ${escapeHtml(rec?.clinicName || 'your clinic')} but your plan is at its active-patient limit (${usage.patientCount}${usage.cap != null ? ` of ${usage.cap}` : ''} active in the last 30 days). Existing patients are unaffected — only new admissions are paused.</p><p style="margin:0 0 1em 0;"><a href="https://portal.concussion-education-australia.com/clinical-testing">Upgrade from your workspace</a> (Manage billing → change plan) and the patient can start straight away.</p><p style="margin:0;">Zac Lewis<br/>Concussion Education Australia</p>`,
     tags: [{ name: 'type', value: 'sst-plan-full' }],
   })
+  // Send failed → release the month key so the next refusal retries.
+  if (!sent) await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}`.catch(() => {})
 }
 
 export async function POST(request: NextRequest) {

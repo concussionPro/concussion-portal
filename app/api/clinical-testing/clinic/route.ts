@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
   ) {
     return NextResponse.json({
       clinic: { code: 'DEMO00', clinicName: 'Demo Clinic', viewKey: '' },
-      usage: { plan: 'active', patientCount: 4, cap: null, canAddPatient: true },
+      usage: { plan: 'active', patientCount: 4, cap: null, window: '30d', canAddPatient: true },
     })
   }
   const session = await clinicalSession(req)

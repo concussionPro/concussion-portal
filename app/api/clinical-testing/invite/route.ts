@@ -53,12 +53,20 @@ export async function POST(req: NextRequest) {
   // Enforcement is on admission only — patient data sync is never blocked.
   const usage = await getClinicUsage(clinic.code)
   if (!usage.canAddPatient) {
+    // Plan-aware refusal (round-4 #1: a PAYING clinic at its caseload cap was
+    // told "your free trial is full — subscribe", then 409'd at checkout).
     return NextResponse.json(
-      {
-        error: `Your free trial covers ${usage.cap} patients and you've used all of them. Subscribe to add more — your existing patients keep working.`,
-        code: 'trial-cap-reached',
-        usage,
-      },
+      usage.plan === 'active'
+        ? {
+            error: `Your plan covers ${usage.cap} active patients (30 days) and you're at the limit. Manage billing → change plan to invite more — your existing patients keep working.`,
+            code: 'plan-cap-reached',
+            usage,
+          }
+        : {
+            error: `Your free trial covers ${usage.cap} patients and you've used all of them. Subscribe to add more — your existing patients keep working.`,
+            code: 'trial-cap-reached',
+            usage,
+          },
       { status: 402 },
     )
   }

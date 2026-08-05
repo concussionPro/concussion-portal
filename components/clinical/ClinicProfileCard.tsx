@@ -78,15 +78,19 @@ export function ClinicProfileCard({
     setProfile(saved)
     onChange?.(saved)
     // Server profile is the MASTER copy (one input, every seat/device);
-    // localStorage stays as the offline-first cache (2026-08-05).
+    // localStorage is only the offline cache. Server state REPLACES local
+    // (never merges — merging resurrected deliberately-cleared fields from
+    // stale caches on other devices), and never clobbers keystrokes made
+    // while the fetch was in flight (round-4 #3).
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
+        if (dirtyRef.current) return
         if (d?.profile && typeof d.profile === 'object') {
-          const merged = { ...saved, ...d.profile } as typeof saved
-          setProfile(merged)
-          onChange?.(merged)
-          try { localStorage.setItem(keyFor(clinicCode), JSON.stringify(merged)) } catch { /* private mode */ }
+          const server = { ...EMPTY, ...d.profile } as typeof saved
+          setProfile(server)
+          onChange?.(server)
+          try { localStorage.setItem(keyFor(clinicCode), JSON.stringify(server)) } catch { /* private mode */ }
         }
       })
       .catch(() => {})
@@ -99,7 +103,9 @@ export function ClinicProfileCard({
   const filledCount = useMemo(() => Object.values(profile).filter((v) => v.trim()).length, [profile])
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dirtyRef = useRef(false)
   const update = (key: keyof ClinicProfile, value: string) => {
+    dirtyRef.current = true
     const next = { ...profile, [key]: value }
     setProfile(next)
     onChange?.(next)

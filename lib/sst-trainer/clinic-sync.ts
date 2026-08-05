@@ -21,7 +21,7 @@
  *   server code is untouched).
  */
 
-import { enqueuePendingSync, getPendingSyncs, setPendingSyncs, type QueuedSync } from './store'
+import { enqueuePendingSync, getPendingSyncs, removePendingSync } from './store'
 
 export type SyncEventType =
   | 'threshold-physiologic'
@@ -164,16 +164,14 @@ export async function flushPendingSyncs(): Promise<void> {
   try {
     const queue = getPendingSyncs()
     if (!queue.length) return
-    const stillFailed: QueuedSync[] = []
     for (let i = 0; i < queue.length; i++) {
       // Pace under the server's 30/min rate limit — flushing a large queue
       // back-to-back 429'd its tail.
       if (i > 0) await new Promise((r) => setTimeout(r, 2100))
       const ok = await post(queue[i].url, queue[i].body)
-      if (!ok) stillFailed.push(queue[i])
-      // persist progress each step — a tab closed mid-flush must not re-send
-      // events that already landed
-      setPendingSyncs([...stillFailed, ...queue.slice(i + 1)])
+      // Remove ONLY the landed entry, by identity — events enqueued while
+      // the flush is running must survive (round-4 #2).
+      if (ok) removePendingSync(queue[i])
     }
   } catch {
     /* best-effort */
