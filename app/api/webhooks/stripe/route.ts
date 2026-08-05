@@ -1665,12 +1665,19 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
               console.error(`[crm] Failed to cancel SST subscription ${subId} after ${cause}:`, subErr)
             }
           } else if (clinic.tier === 'single') {
-            // No subscription + tier 'single': the CRM bundle's comp access
-            // rides on plan alone — bundle.ts ALWAYS stamps tier 'single'
-            // when it activates a clinic, so this provenance is safe to
-            // unwind (2026-08-05 sweep #17).
-            await setSstClinicPlan(clinic.code, 'trial')
-            console.log(`[crm] Re-capped bundle-comp clinic ${clinic.code} after ${cause}`)
+            // No KV subscription + tier 'single'. Self-serve $49 clinics are
+            // ALSO tier 'single' — a KV blip could make one look like a
+            // bundle comp (round-L #6). PG mirrors the subscription id; if
+            // it knows one, this is a paying clinic mid-KV-loss: leave it.
+            const { rows: pgSub } = await sql`
+              SELECT stripe_subscription_id FROM sst_clinics WHERE code = ${clinic.code} LIMIT 1
+            `
+            if (pgSub[0]?.stripe_subscription_id) {
+              console.log(`[crm] Clinic ${clinic.code} has a PG-recorded subscription (KV blip?) — left untouched after ${cause}`)
+            } else {
+              await setSstClinicPlan(clinic.code, 'trial')
+              console.log(`[crm] Re-capped bundle-comp clinic ${clinic.code} after ${cause}`)
+            }
           } else {
             // No subscription and tier is null (or a non-bundle tier): comp /
             // alumni / manual grants look exactly like this — a personal CRM

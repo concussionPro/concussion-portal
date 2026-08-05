@@ -83,8 +83,14 @@ export async function loadGpReportData(code: string, patientLabel: string, patie
     ORDER BY created_at ASC
   `
   if (rows.length === 0) return null
-  const thresholds = rows.filter((r) => r.session_type === 'threshold')
-  const trainings = rows.filter((r) => r.session_type !== 'threshold')
+  const evOf = (r: { payload?: Record<string, unknown> | null }) =>
+    typeof r.payload?.eventType === 'string' ? String(r.payload.eventType).toLowerCase() : ''
+  const isEventRow = (r: { payload?: Record<string, unknown> | null }) =>
+    evOf(r) === 'test-aborted' || evOf(r) === 'red-flag-cleared'
+  // Event rows (aborted / clearance) are audit entries, not tests; abandoned
+  // sessions are not delivered sessions (round-L #4 — parity with reports/load.ts).
+  const thresholds = rows.filter((r) => r.session_type === 'threshold' && !isEventRow(r))
+  const trainings = rows.filter((r) => r.session_type !== 'threshold' && evOf(r) !== 'session-abandoned')
   const latest = thresholds[thresholds.length - 1]
   const interp = (latest?.payload?.interpretation as string | undefined) ?? null
   const weekSet = new Set(

@@ -109,18 +109,22 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
     // reinstall) is one human, not two of a 5-cap. Label when present, ref
     // only for unlabeled installs. This also covers the earlier mixed
     // ref/label double-count (sweep #4): shared label collapses both rows.
+    // Ref→label resolution (round-L #5): an install that was unlabeled at
+    // first sync and named later must not count twice — a ref that EVER
+    // carried a label resolves to that label for all its rows.
     const { rows } = await sql<{ n: number }>`
-      SELECT COUNT(DISTINCT COALESCE(
-        NULLIF(lower(trim(coalesce(patient_label, ''))), ''),
-        NULLIF(trim(coalesce(payload->>'patientRef', '')), '')
-      ))::int AS n
-      FROM sst_clinic_sessions
-      WHERE upper(clinic_code) = ${code}
-        AND (${!windowed} OR created_at > NOW() - INTERVAL '30 days')
-        AND COALESCE(
-          NULLIF(lower(trim(coalesce(patient_label, ''))), ''),
-          NULLIF(trim(coalesce(payload->>'patientRef', '')), '')
-        ) IS NOT NULL
+      WITH s AS (
+        SELECT NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl,
+               NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref
+        FROM sst_clinic_sessions
+        WHERE upper(clinic_code) = ${code}
+          AND (${!windowed} OR created_at > NOW() - INTERVAL '30 days')
+      ), ref_label AS (
+        SELECT ref, MAX(lbl) AS lbl FROM s WHERE ref IS NOT NULL AND lbl IS NOT NULL GROUP BY ref
+      )
+      SELECT COUNT(DISTINCT COALESCE(s.lbl, rl.lbl, s.ref))::int AS n
+      FROM s LEFT JOIN ref_label rl ON rl.ref = s.ref
+      WHERE COALESCE(s.lbl, rl.lbl, s.ref) IS NOT NULL
     `
     patientCount = rows[0]?.n ?? 0
   } catch {

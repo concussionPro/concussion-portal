@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     // exact-string matches and the data chain DEFAULTS to the paid
     // online-course certificate — any unknown type string skipped every
     // entitlement check and minted the 8-CPD document.
-    if (!['scat-mastery', 'online-course', 'crm', 'full-course'].includes(courseType)) {
+    if (!['scat-mastery', 'online-course', 'crm', 'full-course', 'recognition-referral'].includes(courseType)) {
       return NextResponse.json({ error: 'Unknown certificate type' }, { status: 400 })
     }
 
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     const courseType = body.type || 'scat-mastery'
     // Same whitelist as GET (final sweep #2) — unknown types defaulted into
     // the paid certificate chain past every entitlement check.
-    if (!['scat-mastery', 'online-course', 'crm', 'full-course'].includes(courseType)) {
+    if (!['scat-mastery', 'online-course', 'crm', 'full-course', 'recognition-referral'].includes(courseType)) {
       return NextResponse.json({ error: 'Unknown certificate type' }, { status: 400 })
     }
 

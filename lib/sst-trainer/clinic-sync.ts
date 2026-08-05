@@ -106,7 +106,7 @@ function buildBody(input: ClinicSyncInput, code: string): Record<string, unknown
       syncId:
         typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+          : `${Date.now().toString(16)}-${Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0')}-${Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0')}`,
     },
   }
 }

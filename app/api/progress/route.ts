@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
       const hasCrmIds = entries.some(([k]) => isCrmGatedId(Number(k)))
       let paidOk =
         sessionData.accessLevel === 'online-only' || sessionData.accessLevel === 'full-course'
-      if (hasPaidIds && paidOk) {
+      if (hasPaidIds) {
+        // DB is the truth in BOTH directions (round-L #3): a stale preview
+        // JWT after a re-purchase must not strip legitimately-owned history.
         const dbLevel = await getCurrentAccessLevel(sessionData.userId)
         if (dbLevel) paidOk = dbLevel === 'online-only' || dbLevel === 'full-course'
       }
@@ -229,6 +231,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, message: 'No entitled progress to save' })
       }
     }
+
+    // RETENTION (round-L #3): the POST is a full overwrite and the GET
+    // strips unentitled entries — without this merge, a downgraded account's
+    // first save durably erased the retained paid history. Stored entries
+    // for ids the CLIENT can no longer see are carried over server-side.
+    try {
+      const { rows: existingRows } = await sql<{ progress: Record<string, unknown> | null }>`
+        SELECT progress FROM user_progress WHERE user_id = ${sessionData.userId} LIMIT 1
+      `
+      const stored = existingRows[0]?.progress
+      if (stored && typeof stored === 'object') {
+        for (const [k, v] of Object.entries(stored)) {
+          const id = Number(k)
+          const gated = isPaidGatedId(id) || isCrmGatedId(id)
+          if (gated && !(k in toPersist) && v) (toPersist as Record<string, unknown>)[k] = v
+        }
+      }
+    } catch { /* retention is best-effort — never block the save */ }
 
     // Prevent abuse: size cap even after schema validation
     const progressJson = JSON.stringify(toPersist)

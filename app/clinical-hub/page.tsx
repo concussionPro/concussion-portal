@@ -632,7 +632,11 @@ function deriveAttention(pt: Patient): Attention | null {
   let redI = -1
   let clearedI = -1
   traj.forEach((t, i) => {
-    const e = normEvent(t.interpretation) ?? normEvent(t.eventType)
+    // eventType FIRST: event rows carry interpretation='invalid' (server
+    // forces it so they can't read as tests), and normEvent('invalid') is
+    // truthy — the ?? chain never reached eventType, so the URGENT banner
+    // could never auto-clear (round-L #2).
+    const e = normEvent(t.eventType) ?? normEvent(t.interpretation)
     if (e === 'red-flag') redI = i
     if (e === 'red-flag-cleared') clearedI = i
   })
