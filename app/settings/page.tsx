@@ -16,6 +16,10 @@ interface SessionUser {
   createdAt?: string
   nurtureUnsubscribed?: boolean
   progressEmailsOptedOut?: boolean
+  /** CRM (EP stream) ownership — lives in course_purchases, NOT access_level.
+   *  This local type shadowed the shared SessionUser (contexts/SessionContext)
+   *  and dropped the field, so a paying CRM buyer read as a free user here. */
+  ownsCrm?: boolean
 }
 
 export default function SettingsPage() {
@@ -70,8 +74,13 @@ export default function SettingsPage() {
     loadUser()
   }, [])
 
+  // CRM (EP stream) buyers carry access_level 'preview' — their entitlement
+  // lives in course_purchases and arrives as `ownsCrm`. Without this the
+  // account page told a paying CRM customer they were on a "Free Preview",
+  // showed PREVIEW badges and upsold them the free SCAT course (2026-08-05).
+  const ownsCrm = user?.ownsCrm === true
   const isPaidUser =
-    user?.accessLevel === 'online-only' || user?.accessLevel === 'full-course'
+    user?.accessLevel === 'online-only' || user?.accessLevel === 'full-course' || ownsCrm
   const isFullCourse = user?.accessLevel === 'full-course'
 
   const handleLogout = async () => {
@@ -85,19 +94,27 @@ export default function SettingsPage() {
 
   const getAccessLabel = () => {
     if (isFullCourse) return 'Full Course'
+    if (ownsCrm && user?.accessLevel === 'preview') return 'Concussion Rehab Mastery'
     if (isPaidUser) return 'Online Course'
     if (user?.accessLevel === 'preview') return 'Free Preview'
     return 'Student Account'
   }
 
-  const completedModules = getTotalCompletedModules()
+  // CCM completion counts modules 1-8; the CRM stream is 201-208 and is NOT
+  // counted by getTotalCompletedModules (that counter backs the CCM course
+  // widgets). Without a stream-aware count a paying CRM buyer could never see
+  // their certificate button here (2026-08-05 CRM/CCM parity).
+  const CRM_MODULE_IDS = [201, 202, 203, 204, 205, 206, 207, 208]
+  const completedCrmModules = CRM_MODULE_IDS.filter((id) => isModuleComplete(id)).length
+  const isCrmOnly = ownsCrm && user?.accessLevel === 'preview'
+  const completedModules = isCrmOnly ? completedCrmModules : getTotalCompletedModules()
   const allModulesComplete = completedModules === 8
 
   // SCAT mastery (preview users): check if all 3 free modules are complete
   const scatModuleIds = [101, 102, 103]
   const completedScatModules = scatModuleIds.filter(id => isModuleComplete(id)).length
   const allScatComplete = completedScatModules === 3
-  const isPreviewUser = user?.accessLevel === 'preview'
+  const isPreviewUser = user?.accessLevel === 'preview' && !ownsCrm
 
   // Free awareness short course (module 104) — standalone completion certificate
   const isFreeCourseComplete = isModuleComplete(104)
@@ -105,7 +122,9 @@ export default function SettingsPage() {
   const getCertType = () => {
     // All paid users get the online-course certificate (8 CPD).
     // The in-person workshop certificate is issued manually by the instructor.
-    if (isPaidUser) return 'online-course'
+    // A CRM-only buyer earns the CRM certificate, not the CCM one.
+    if (user?.accessLevel === 'online-only' || user?.accessLevel === 'full-course') return 'online-course'
+    if (ownsCrm) return 'crm'
     return null
   }
 
