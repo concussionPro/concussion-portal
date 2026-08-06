@@ -48,6 +48,8 @@ type CityRow = {
   city: string
   paid: number
   interested: number
+  /** This city has already run a round; its paid rows are past attendees. */
+  ranAlready: boolean
   total: number
 }
 
@@ -84,9 +86,23 @@ async function loadCities(): Promise<CityRow[]> {
 
   return collecting
     .map((loc) => {
-      const paid = paidBy.get(loc.slug) ?? 0
+      // A COMPLETED city's paid nominations are people who already ATTENDED
+      // that round — counting them toward the next one renders "13 of 8 places
+      // confirmed · a date is being set" for a workshop that ran in June.
+      // (Shipped that for a few minutes on 2026-08-06; caught live.)
+      // Their genuine next-round demand is the interest list, which is exactly
+      // what those 13 Melbourne rows are.
+      const ranAlready = loc.status === 'completed'
+      const paid = ranAlready ? 0 : paidBy.get(loc.slug) ?? 0
       const interested = interestBy.get(loc.slug) ?? 0
-      return { slug: loc.slug, city: loc.city, paid, interested, total: paid + interested }
+      return {
+        slug: loc.slug,
+        city: loc.city,
+        paid,
+        interested,
+        ranAlready,
+        total: paid + interested,
+      }
     })
     .sort((a, b) => b.total - a.total)
 }
@@ -113,18 +129,21 @@ export default async function ReadyToTrainPage() {
         <div className="space-y-3 mb-10">
           {cities.map((c) => {
             const showCount = c.total >= SHOW_COUNT_FROM
+            const showProgress = showCount && !c.ranAlready
             const pct = Math.min(100, Math.round((c.paid / threshold) * 100))
             return (
               <div key={c.slug} className="rounded-xl border border-border p-5">
                 <div className="flex items-baseline justify-between gap-4 mb-2">
                   <h2 className="text-lg font-bold text-foreground">{c.city}</h2>
                   <span className="text-xs text-muted-foreground">
-                    {showCount
-                      ? `${c.paid} of ${threshold} places confirmed`
-                      : 'Collecting names'}
+                    {c.ranAlready
+                      ? 'Ran once — collecting for the next round'
+                      : showCount
+                        ? `${c.paid} of ${threshold} places confirmed`
+                        : 'Collecting names'}
                   </span>
                 </div>
-                {showCount && (
+                {showProgress && (
                   <>
                     <div className="h-1.5 rounded-full bg-border overflow-hidden mb-2">
                       <div className="h-full bg-accent" style={{ width: `${pct}%` }} />
@@ -141,6 +160,12 @@ export default async function ReadyToTrainPage() {
                         : `${threshold - c.paid} more confirmed ${threshold - c.paid === 1 ? 'place' : 'places'} and it runs.`}
                     </p>
                   </>
+                )}
+                {c.ranAlready && c.interested > 0 && (
+                  <p className="text-[13px] text-muted-foreground">
+                    {c.interested} {c.interested === 1 ? 'clinician has' : 'clinicians have'} asked to be
+                    told when {c.city} runs again.
+                  </p>
                 )}
               </div>
             )
