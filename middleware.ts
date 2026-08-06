@@ -571,8 +571,11 @@ export const config = {
     // 401. The gate was keyed on the exact `/docs/` prefix, so a sibling
     // directory walked straight past it (2026-08-06 master clean, register B).
     // The directory is deleted; this makes the CLASS unreachable rather than
-    // just that instance.
-    '/docs:suffix(-|_)?:rest*',
+    // just that instance. Uses the SAME regex form as the CourseContent entry
+    // above — a two-parameter path-to-regexp pattern ('/docs:suffix(-|_)?:rest*')
+    // is rejected at BUILD time with 'Must have text between two parameters',
+    // which failed the deploy and left the bypass open for 11 minutes.
+    '/(docs.*)',
     '/resources/:path*',
     '/api/:path*',
     '/admin/:path*',

@@ -51,8 +51,16 @@ const EP_COURSE: CourseModuleDescriptor = {
 
 export default function EpModuleClient({
   initialModuleData,
+  initialAuth,
 }: {
   initialModuleData?: InitialModuleData
+  initialAuth?: { authenticated: boolean; email: string; isDemo: boolean }
 }) {
-  return <CourseModulePage descriptor={EP_COURSE} initialModuleData={initialModuleData} />
+  return (
+    <CourseModulePage
+      descriptor={EP_COURSE}
+      initialModuleData={initialModuleData}
+      initialAuth={initialAuth}
+    />
+  )
 }

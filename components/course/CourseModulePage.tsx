@@ -253,6 +253,7 @@ function UpgradeOfferScreen({
 export function CourseModulePage({
   descriptor,
   initialModuleData,
+  initialAuth,
 }: {
   descriptor: CourseModuleDescriptor
   /**
@@ -262,19 +263,38 @@ export function CourseModulePage({
    * Omit it and the hook falls back to fetching, unchanged.
    */
   initialModuleData?: InitialModuleData
+  /**
+   * Identity the SERVER already resolved from the session cookie on this same
+   * request. Supplying it is what makes `initialModuleData` actually visible:
+   * without it this component opened on `checkingAuth = true` and returned a
+   * bare spinner — no nav, no heading, no text — until a CLIENT round trip to
+   * /api/auth/session came back. The server had already streamed 118 KB of
+   * gated module HTML and the client threw all of it away behind the spinner,
+   * so /modules/* served 81 characters of body text on first paint (measured
+   * 2026-08-06 across every state; /modules/101 + /modules/1 + /modules/2 are
+   * ~150 sessions/90d). The whole point of the server page's comment — "so the
+   * content is present on the first paint" — was defeated one component down.
+   *
+   * NO GATE MOVES: content still comes only from `initialModuleData`, which the
+   * server built with the same resolveModuleForAccess() call the API uses. This
+   * prop decides which of the already-authorised views paints first, never what
+   * the viewer is entitled to. The effect below still runs and still owns the
+   * preview→modules-2-8 bounce.
+   */
+  initialAuth?: { authenticated: boolean; email: string; isDemo: boolean }
 }) {
   const { backHref, loginPathFor, supportsDemoViewer } = descriptor
   const params = useParams()
   const router = useRouter()
   const moduleId = parseInt(params.id as string)
   const isValidModuleId = !isNaN(moduleId)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [checkingAuth, setCheckingAuth] = useState(true)
-  const [userEmail, setUserEmail] = useState<string>('')
+  const [isAuthenticated, setIsAuthenticated] = useState(!!initialAuth?.authenticated)
+  const [checkingAuth, setCheckingAuth] = useState(!initialAuth)
+  const [userEmail, setUserEmail] = useState<string>(initialAuth?.email ?? '')
   // Demo / ESSA-review viewers share an ephemeral synthetic session — their quiz
   // answers must never persist or restore, so the review always sees blank quizzes.
   // (Only honoured for courses with supportsDemoViewer; stays false otherwise.)
-  const [isDemoViewer, setIsDemoViewer] = useState(false)
+  const [isDemoViewer, setIsDemoViewer] = useState(supportsDemoViewer ? !!initialAuth?.isDemo : false)
 
   // Check authentication first
   useEffect(() => {
@@ -348,7 +368,11 @@ export function CourseModulePage({
   // If not authenticated and trying to access SCAT module (101-104), redirect to signup.
   // DEV-ONLY: skip the gate on localhost so the free course renders for review.
   if (!isAuthenticated && moduleId >= 101 && moduleId <= 104 && process.env.NODE_ENV === 'production') {
-    router.push('/scat-mastery')
+    // Guarded: with `initialAuth` supplied this branch is now reachable during
+    // the SERVER render pass (it used to sit behind `checkingAuth`, which was
+    // always true on the server). Navigating from a server render is not a
+    // thing — the browser re-runs this on hydration and redirects there.
+    if (typeof window !== 'undefined') router.push('/scat-mastery')
     return (
       <div className="flex min-h-screen bg-slate-50 items-center justify-center">
         <Loader2 className="w-8 h-8 text-accent animate-spin" />

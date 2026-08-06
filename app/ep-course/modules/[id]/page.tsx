@@ -28,9 +28,17 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
   const moduleId = parseInt(id, 10)
 
   let initialModuleData: InitialModuleData | undefined
+  let initialAuth: { authenticated: boolean; email: string; isDemo: boolean } | undefined
   if (Number.isFinite(moduleId)) {
     const access = await checkCrmServerAccess()
     const epModule = getEpModuleById(moduleId)
+    // Same request, same gate — hand the player the identity it would otherwise
+    // block the entire first paint on (see CourseModulePage.initialAuth).
+    initialAuth = {
+      authenticated: access.ok || !!access.email,
+      email: access.email ?? '',
+      isDemo: access.reason === 'demo-key',
+    }
 
     if (access.ok && epModule) {
       initialModuleData = {
@@ -54,5 +62,5 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
     // fetches and renders its existing 404 state.
   }
 
-  return <EpModuleClient initialModuleData={initialModuleData} />
+  return <EpModuleClient initialModuleData={initialModuleData} initialAuth={initialAuth} />
 }

@@ -150,11 +150,21 @@ function VerifyContent() {
   )
 }
 
+// The Suspense fallback IS the first paint of this route — useSearchParams
+// forces the content below out of the server render entirely, so a magic-link
+// click (65 sessions/90d) landed on a bare spinner with 0 words of text until
+// hydration finished. Say what is happening.
 export default function VerifyMagicLink() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
-        <Loader2 className="w-16 h-16 text-[#5b9aa6] animate-spin" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <Loader2 className="w-16 h-16 text-[#5b9aa6] mx-auto mb-4 animate-spin" />
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Verifying...</h1>
+            <p className="text-slate-600">Verifying your login link...</p>
+          </div>
+        </div>
       </div>
     }>
       <VerifyContent />

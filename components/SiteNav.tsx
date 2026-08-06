@@ -100,6 +100,33 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
 
   const isLoggedIn = auth && auth.accessLevel !== ''
 
+  /**
+   * The persistent top-right CTA sold the reader the product they had ALREADY
+   * BOUGHT. A full-course CCM buyer browsing /, /scat-forms, /preview or
+   * /scat-mastery saw "Dashboard · Logout · Enrol →", and Enrol went to
+   * /pricing — the $497/$1,190 cards for the course they own. Same on the CRM
+   * landing for a CRM owner. (Matrix sweep 2026-08-06, every logged-in state on
+   * the two highest-traffic routes on the site.)
+   *
+   * Resolution, per stream, using only offerings that actually exist:
+   *   - owns the stream this button points at   → no purchase CTA at all
+   *     (they already have "Dashboard" / "My Course" one item to the left)
+   *   - CCM online-only                         → the REAL remaining offer:
+   *     the in-person day at /upgrade (upgradePriceFor), which is the page
+   *     that already exists for exactly this audience
+   *   - everyone else                           → unchanged "Enrol"
+   */
+  const ownsThisStream = onCrmSurface
+    ? auth?.ownsCrm === true
+    : auth?.accessLevel === 'full-course' || auth?.accessLevel === 'online-only'
+  const ccmOnlineOnly = !onCrmSurface && auth?.accessLevel === 'online-only'
+  const showEnrolCta = !ownsThisStream || ccmOnlineOnly
+  const enrolLabel = ccmOnlineOnly ? 'Add the in-person day' : 'Enrol'
+  const enrolTarget = ccmOnlineOnly ? '/upgrade' : enrolHref
+  // On /pricing the CTA scrolls to the cards instead of navigating — that only
+  // makes sense while it IS a purchase CTA for this reader.
+  const enrolScrolls = onPricing && !ccmOnlineOnly
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     // The server clears every identity-bearing COOKIE, but the browser also
@@ -182,24 +209,24 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
                 Logout
               </button>
             )}
-            {onPricing ? (
+            {showEnrolCta && (enrolScrolls ? (
               <button
                 type="button"
                 onClick={() => document.getElementById('pricing-cards')?.scrollIntoView({ behavior: 'smooth' })}
                 className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
               >
-                Enrol
+                {enrolLabel}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
               <Link
-                href={enrolHref}
+                href={enrolTarget}
                 className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
               >
-                Enrol
+                {enrolLabel}
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-            )}
+            ))}
           </div>
 
           {/* Mobile burger */}
@@ -257,7 +284,10 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
                 Logout
               </button>
             )}
-            {onPricing ? (
+            {/* Same state rule as the desktop CTA above — 60%+ of this
+                audience is on mobile, so the "sold what they already own"
+                defect lived here first. */}
+            {showEnrolCta && (enrolScrolls ? (
               <button
                 type="button"
                 onClick={() => {
@@ -266,17 +296,17 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
                 }}
                 className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
               >
-                Enrol Now
+                {ccmOnlineOnly ? enrolLabel : 'Enrol Now'}
               </button>
             ) : (
               <Link
-                href={enrolHref}
+                href={enrolTarget}
                 onClick={() => setMobileMenuOpen(false)}
                 className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
               >
-                Enrol Now
+                {ccmOnlineOnly ? enrolLabel : 'Enrol Now'}
               </Link>
-            )}
+            ))}
           </div>
         </div>
       )}

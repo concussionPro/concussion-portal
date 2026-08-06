@@ -88,5 +88,14 @@ export default async function ModulePage({
     // renders its existing error/auth states.
   }
 
-  return <FlagshipModuleClient initialModuleData={initialModuleData} />
+  // Identity the client player would otherwise re-fetch before painting
+  // ANYTHING. Without this the server's whole reason for existing here (see the
+  // header comment) was cancelled by a client-side auth spinner.
+  const initialAuth = {
+    authenticated: !!session || clinicDemo,
+    email: session?.email ?? '',
+    isDemo: clinicDemo || (session ? isDemoUserId(session.userId) : false),
+  }
+
+  return <FlagshipModuleClient initialModuleData={initialModuleData} initialAuth={initialAuth} />
 }

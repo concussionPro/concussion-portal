@@ -8,6 +8,7 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { useRouter } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
 import { clearIdentity } from '@/lib/analytics'
+import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 
@@ -109,7 +110,17 @@ export default function SettingsPage() {
     // the previous clinician's email. login_redirect bounces the next sign-in.
     // See components/SiteNav.tsx for the full rationale — all three sign-out
     // paths must behave identically.
+    //
+    // They did NOT. The other two sign-outs also call clearLocalLearnerState()
+    // (the `concussion-pro-progress` blob plus every `module-N-checkpoint` /
+    // `ep-module-N-checkpoint` key); this one was left behind when that fix
+    // landed, and it is the sign-out on the ACCOUNT page — the one a clinician
+    // handing the machine over is most likely to use. The blob is not
+    // user-scoped and the next sign-in MERGES it, so the previous learner's
+    // quiz answers become the next learner's proof of completion. Caught by
+    // the route × state matrix, 2026-08-06.
     clearIdentity()
+    clearLocalLearnerState()
     try { localStorage.removeItem('login_redirect') } catch { /* private mode */ }
     router.push('/')
   }

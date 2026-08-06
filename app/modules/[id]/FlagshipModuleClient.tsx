@@ -34,8 +34,16 @@ const FLAGSHIP_COURSE: CourseModuleDescriptor = {
 
 export default function FlagshipModuleClient({
   initialModuleData,
+  initialAuth,
 }: {
   initialModuleData?: InitialModuleData
+  initialAuth?: { authenticated: boolean; email: string; isDemo: boolean }
 }) {
-  return <CourseModulePage descriptor={FLAGSHIP_COURSE} initialModuleData={initialModuleData} />
+  return (
+    <CourseModulePage
+      descriptor={FLAGSHIP_COURSE}
+      initialModuleData={initialModuleData}
+      initialAuth={initialAuth}
+    />
+  )
 }
