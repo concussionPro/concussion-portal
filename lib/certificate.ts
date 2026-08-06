@@ -412,7 +412,13 @@ export function getCrmCertificateData(participantName: string, participantEmail:
     participantEmail,
     courseTitle: 'Concussion Rehab Mastery',
     courseDescription: '8-module online course for exercise physiologists and clinical exercise practitioners: concussion pathophysiology and the neurometabolic cascade, recognition and red flags within EP scope, graded exercise testing and heart-rate-threshold determination, sub-symptom-threshold aerobic prescription, phenotype-specific exercise rehabilitation, graded return to activity and sport, persistent symptoms, and documentation and referral.',
-    cpdPoints: 8,
+    // The ONLINE points only. ESSA accredited the online offering at
+    // ONLINE_POINTS under PDNF26077; the practical day's points are certified
+    // separately by a second in-person certificate issued to attendees, so this
+    // certificate must never print the 16-point total (owner 2026-08-06).
+    // Derived, not hardcoded — a literal is how "14 CPD" survived the 2026-07-30
+    // re-rate on three other surfaces.
+    cpdPoints: CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS,
     completionDate,
     learningOutcomes: [
       'Explain the neurometabolic cascade and why sub-symptom-threshold aerobic exercise is first-line treatment',
