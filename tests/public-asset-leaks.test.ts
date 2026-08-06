@@ -150,11 +150,42 @@ describe('no gated asset is duplicated into a public path', () => {
   })
 })
 
-describe('the paid toolkit zip still contains what the gate protects', () => {
-  it('ClinicalToolkit_Complete.zip is present and gated', () => {
-    // If the zip were ever moved out of /docs, the matcher would stop covering
-    // it and every document inside would become public in one commit.
-    expect(existsSync(join(PUBLIC, 'docs/ClinicalToolkit_Complete.zip'))).toBe(true)
-    expect(PAID_DOCS.has('/docs/ClinicalToolkit_Complete.zip')).toBe(true)
+describe('paid documents are not served by the CDN at all', () => {
+  // THE STRUCTURAL FIX (2026-08-06). Deleting a leaking directory fixes the
+  // instance and leaves the class open: anything under public/ is world-
+  // readable, and a paywall keyed on the URL protects the path, not the bytes.
+  // Twice in one day a copy of the paid toolkit sat in public/ and served 200.
+  //
+  // The paid files now live in private-docs/, which the CDN cannot reach. The
+  // ONLY route to those bytes is app/docs/[...slug]/route.ts, and that handler
+  // only runs for requests middleware has already admitted.
+  const PRIVATE = join(ROOT, 'private-docs')
+
+  it('every PAID_DOC exists in private-docs and NOT in public', () => {
+    const misplaced: string[] = []
+    for (const p of PAID_DOCS) {
+      const name = p.replace(/^\/docs\//, '')
+      if (existsSync(join(PUBLIC, 'docs', name))) misplaced.push(`public/docs/${name} is CDN-served`)
+      if (!existsSync(join(PRIVATE, name))) misplaced.push(`private-docs/${name} is missing — the download would 404`)
+    }
+    expect(misplaced).toEqual([])
+  })
+
+  it('the serving route exists and refuses anything not on the paid list', () => {
+    const route = readFileSync(join(ROOT, 'app/docs/[...slug]/route.ts'), 'utf8')
+    expect(route).toMatch(/isPaidDoc\(/)          // never a general file server
+    expect(route).toMatch(/normalize\(/)          // path traversal collapsed
+    expect(route).toMatch(/force-dynamic/)        // never edge-cached
+    expect(route).toMatch(/private, no-store/)
+  })
+
+  it('the build ships the files with that route', () => {
+    // outputFileTracingIncludes is the only reason the serverless function can
+    // read private-docs at runtime — it is read, never imported, so Next's
+    // tracer cannot infer it. Without this the gate would pass and every paid
+    // download would 404 for PAYING customers.
+    const cfg = readFileSync(join(ROOT, 'next.config.ts'), 'utf8')
+    expect(cfg).toMatch(/outputFileTracingIncludes/)
+    expect(cfg).toMatch(/private-docs/)
   })
 })

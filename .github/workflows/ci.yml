@@ -198,3 +198,46 @@ jobs:
           done
           echo "::error::production never reached $EXPECTED or a descendant — it is serving ${got:-<unknown>}, which does NOT contain this commit. The deploy failed or never ran, so production is PINNED to an older build including any security fix in this commit. Check the Vercel deployment log."
           exit 1
+
+      # THE PAYWALL, TESTED AS A STRANGER SEES IT.
+      #
+      # Two separate leaks of the entire paid Clinical Toolkit shipped on
+      # 2026-08-06 — a backup directory, then print-resolution renders — and
+      # both were found by hand, five sweeps apart. Unit tests could not see
+      # either: they check the SOURCE, and the leak was a FILE sitting in a
+      # CDN-served directory. The only honest test is an unauthenticated fetch
+      # of the real thing.
+      #
+      # Runs after the deploy check, so it tests the build this commit produced.
+      - name: Paid documents must refuse an anonymous request
+        env:
+          BASE: https://portal.concussion-education-australia.com
+        run: |
+          fail=0
+          # Every path named in PAID_DOCS, read from the source so a new paid
+          # document is covered the moment it is added to the list.
+          paths="$(node -e '
+            const s = require("fs").readFileSync("lib/gated-docs.ts","utf8")
+            const m = /PAID_DOCS[^=]*=\s*new Set\(\[([\s\S]*?)\]\)/.exec(s)
+            const out = [...m[1].matchAll(/'"'"'(\/docs\/[^'"'"']+)'"'"'/g)].map(x => x[1])
+            if (out.length < 5) { console.error("only " + out.length + " paid docs parsed"); process.exit(1) }
+            console.log(out.join("\n"))
+          ')"
+          echo "$paths" | while read -r p; do [ -n "$p" ] && echo "  covering $p"; done
+          while read -r p; do
+            [ -z "$p" ] && continue
+            enc="$(node -e 'console.log(encodeURI(process.argv[1]))' "$p")"
+            for variant in "$enc" "/${enc#/}" "$(echo "$enc" | sed 's#/docs/#/docs//#')" "$(echo "$enc" | sed 's#/docs/#/DOCS/#')" "$enc?x=1"; do
+              code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$BASE$variant")"
+              if [ "$code" = "200" ]; then
+                echo "::error::PAYWALL BYPASS — $variant returned 200 to an anonymous request"
+                fail=1
+              fi
+            done
+          done <<< "$paths"
+          # The backup/preview directories that leaked before must stay gone.
+          for gone in /docs_backup_2026-01/RehabFlow.png /toolkit-previews/07_rehab_flow.png; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$BASE$gone")"
+            [ "$code" = "200" ] && { echo "::error::a previously-removed leak is serving again: $gone"; fail=1; }
+          done
+          [ "$fail" = "0" ] && echo "all paid documents refuse anonymous requests" || exit 1

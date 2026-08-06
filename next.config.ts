@@ -9,6 +9,17 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  // The paid documents live OUTSIDE public/ (see app/docs/[...slug]/route.ts):
+  // anything under public/ is served by the CDN, so a paywall keyed on the URL
+  // protects the path and not the bytes. Two separate leaks in one day proved
+  // the difference. Because private-docs/ is read at runtime rather than
+  // imported, Next's tracer cannot see it and would ship a function that 404s
+  // every paid download — so it is included explicitly, and ONLY for the one
+  // route that serves it.
+  outputFileTracingIncludes: {
+    '/docs/[...slug]': ['./private-docs/**'],
+  },
+
   experimental: {
     turbopackFileSystemCacheForDev: false,
   },
