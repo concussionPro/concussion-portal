@@ -192,4 +192,21 @@ describe('the deploy monitor does not cry wolf', () => {
     // exact-match behaviour.
     expect(ci).toMatch(/fetch-depth:\s*0/)
   })
+
+  it('fetches before testing ancestry, because the live commit may be newer than the clone', () => {
+    // fetch-depth: 0 gets history UP TO github.sha. A commit pushed AFTER the
+    // job started is not in the clone at all, so merge-base errors and the
+    // superseded case is never detected — the job then polls for a SHA that
+    // can never appear and fails on timeout.
+    //
+    // That is the SECOND false-alarm bug in this job: five commits went out in
+    // quick succession and every superseded run emailed a failure for a
+    // perfectly healthy production. The fix is one fetch, and this test exists
+    // so it cannot be dropped as redundant.
+    const job = ci.slice(ci.indexOf('Wait until production is serving'))
+    const fetchAt = job.indexOf('git fetch --quiet origin main')
+    const ancestryAt = job.indexOf('git merge-base --is-ancestor')
+    expect(fetchAt, 'the fetch that makes newer commits resolvable is missing').toBeGreaterThan(-1)
+    expect(fetchAt, 'the fetch must come BEFORE the ancestry test, or it changes nothing').toBeLessThan(ancestryAt)
+  })
 })

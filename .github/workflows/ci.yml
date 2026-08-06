@@ -178,7 +178,7 @@ jobs:
           #   mine is ancestor of live -> superseded by a newer push, fine
           #   live is ancestor of mine -> PRODUCTION IS BEHIND -> fail
           echo "expecting $EXPECTED or a descendant"
-          for i in $(seq 1 108); do
+          for i in $(seq 1 60); do
             body="$(curl -fsS --max-time 15 "$URL" || true)"
             got="$(printf '%s' "$body" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).build?.sha??"")}catch{console.log("")}})')"
             if [ -n "$got" ]; then
@@ -186,10 +186,23 @@ jobs:
                 echo "live after $((i*10))s: $got"
                 exit 0
               fi
-              # Is my commit an ancestor of what is live? Then a newer push
-              # superseded this one and production is ahead, not behind.
+              # THE COMMIT BEING SERVED MAY NOT BE IN THIS CLONE.
+              #
+              # checkout@v4 fetches history up to github.sha. A commit pushed
+              # AFTER this job started does not exist locally, so merge-base
+              # errors, the superseded case is never detected, and the job
+              # polls for a SHA that can never appear until it times out.
+              #
+              # That is exactly what happened: five commits went out in quick
+              # succession, and every run for a superseded commit failed after
+              # the full timeout and emailed a failure for a perfectly healthy
+              # production. Second false-alarm bug in this same job — the first
+              # was demanding an exact match at all.
+              #
+              # Fetching main first makes the newer commit resolvable.
+              git fetch --quiet origin main 2>/dev/null || true
               if git merge-base --is-ancestor "$EXPECTED" "$got" 2>/dev/null; then
-                echo "superseded: production serves $got, which contains $EXPECTED"
+                echo "superseded: production serves ${got:0:8}, which already contains ${EXPECTED:0:8}"
                 exit 0
               fi
             fi
