@@ -574,33 +574,21 @@ async function sendCertificateEmail(opts: {
                   </div>
                 </div>
                 ` : `
-                <!-- Preview / SCAT-only / free-course graduate — pitch the full course -->
+                <!-- Preview / SCAT-only / free-course graduate.
+                     ONE quiet line, not a campaign. This email is TRANSACTIONAL —
+                     it is exempt from the suppression list precisely because it
+                     delivers a document the recipient earned, and it therefore
+                     carries no unsubscribe. It used to run three marketing
+                     blocks here: a promo card with its own button and price, and
+                     a poll dangling 40% off. Marketing with no opt-out is the
+                     thing the exemption exists to prevent, so the fix is to
+                     remove the campaign rather than add a header. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                  <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
-                    What's next on your CPD plan
-                  </p>
-                  <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
-                    You've earned ${opts.cpdPoints} CPD ${opts.cpdPoints === 1 ? 'hour' : 'hours'}. Most AHPRA boards need 20–50 hours per registration cycle. Here's the next step.
-                  </p>
-
-                  <!-- Flagship -->
-                  <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
-                    <div style="font-size: 11px; font-weight: 700; color: #a16207; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
-                      Flagship · 16 CPD hours · workshop included
-                    </div>
-                    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 17px;">Concussion Clinical Mastery</h3>
-                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569; line-height: 1.5;">
-                      The full clinical course — 8 online modules + a full-day in-person workshop in your nominated city. Osteopathy Australia–endorsed. Goes deep on assessment, persistent symptoms, return-to-play, rehabilitation by phenotype.
-                    </p>
-                    <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=ccm-flagship" style="display: inline-block; padding: 9px 18px; background: #a16207; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
-                      View pricing →
-                    </a>
-                    <span style="margin-left: 6px; font-size: 11px; color: #64748b;">A$${workshopPriceFor().toLocaleString('en-AU')}</span>
-                  </div>
-
-                  <!-- Poll — capture intent for upcoming short courses -->
-                  <p style="margin: 16px 0 0 0; font-size: 13px; color: #475569;">
-                    Short specialty courses are on the way — <a href="https://portal.concussion-education-australia.com/courses/poll?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=poll" style="color: #0d9488; font-weight: 600;">vote on what gets built first</a>. Voters get 40% off the winner at launch.
+                  <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.6;">
+                    That&rsquo;s ${opts.cpdPoints} CPD ${opts.cpdPoints === 1 ? 'hour' : 'hours'} logged. If you want the
+                    full clinical course behind it &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} hours online, with the
+                    option to add the hands-on day &mdash; it&rsquo;s at
+                    <a href="https://portal.concussion-education-australia.com/courses?utm_source=email&utm_medium=email&utm_campaign=certificate&utm_content=next-step" style="color: #0d9488; font-weight: 600;">concussion-education-australia.com/courses</a>.
                   </p>
                 </div>
                 `}

@@ -52,7 +52,7 @@ function displayClinicName(name: string): string {
  * SCAT6/SCOAT6, VOMS, oculomotor,
  * BESS, cervical, RTP protocols; on-site full-day team training; Hub Pack
  * (team online + clinic-branded clinical doc pack); online course A$497;
- * 2024 AIS/SMA guidelines made the 21-day RTP stand-down mandatory in
+ * 2024 AIS/SMA guidelines set a recommended 21-day RTP stand-down in
  * community sport with physios/GPs named as clearance providers; Zac is
  * based in Byron Bay and travels to clinics.
  */
@@ -141,7 +141,14 @@ const SOLO_PLURAL: Record<Discipline, string> = {
 
 // Verified regulatory hook — the single relevance sentence shared by all tiers.
 const REGULATORY_LINE =
-  'Community sport now carries a mandatory 21-day stand-down under the AIS/SMA concussion guidelines, and physios and GPs are named clearance providers.'
+  // ACCURACY (2026-08-06). This said "a MANDATORY 21-day stand-down". The
+  // AIS/SMA position statement is GUIDANCE — it recommends a minimum period
+  // before return to contact and names clearance providers; it is not law,
+  // and what is actually binding varies by sport and by state. The owner's
+  // own 2026-08-04 regulatory verification records AIS as guidance-only.
+  // Overstating it to 875 clinics is both wrong and the kind of claim that
+  // invites a correction from the first sports physician who reads it.
+  'The AIS/SMA concussion guidelines set a recommended minimum 21-day return-to-contact period for community sport, with physios and GPs named among the clearance providers.'
 
 /** Month 0–11 in Australia/Melbourne, NOT UTC. The season claim must reflect the
  *  AU sporting calendar at the clinic's local time — evaluating `getMonth()` on

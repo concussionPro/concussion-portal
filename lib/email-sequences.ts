@@ -1138,6 +1138,92 @@ export const PDF_LEAD_TOOLS = {
 }
 
 /**
+ * PDF_LEAD_SEQUENCE — the drip for someone who came for the SCAT6 PDF.
+ *
+ * WHY A SECOND SEQUENCE (2026-08-06, from first-party data).
+ * 183 of 285 users — 64% — arrive via the Squarespace SCAT6 form, get the file
+ * on the same page, and an account is created behind them. Over 90 days, 70 of
+ * 109 of them never opened a module and 81 of 101 never returned. An earlier
+ * read found 0 conversions from 46 free-course completers. Meanwhile the people
+ * who signed up FOR the course opened a module 28 times out of 29.
+ *
+ * So the content is not the problem and the audience is not junk — the OFFER is
+ * wrong. SCAT_MASTERY_SEQUENCE pitches a course at every step (days 0/3/7/10/
+ * 14/28) to a segment whose job-to-be-done is "assess a concussion today".
+ *
+ * This sequence sells nothing until the last email. It answers the job, points
+ * at tools we already give away, and lets the course arrive once — late, and
+ * only as depth for someone who has been using the tools. The ladder is
+ * tool -> tool -> club -> (soft) course, which is also the path into the
+ * clinical suite, the product with recurring revenue.
+ *
+ * Every number here derives from CONFIG. No clinical claim is made that the
+ * instruments or our own tools do not already make.
+ */
+export const PDF_LEAD_SEQUENCE = [
+  {
+    day: 3,
+    subject: 'SCAT6 or SCOAT6 — which one you actually need',
+    template: (name: string) => emailShell(`
+      <h2>Hi ${greetingName(name)},</h2>
+      <p>You grabbed the SCAT6 a few days ago. The question that trips most clinicians up isn&rsquo;t how to score it &mdash; it&rsquo;s which tool belongs at which moment.</p>
+      <div class="callout">
+        <strong>SCAT6</strong> is the acute tool. It is validated for use within roughly the first 72 hours, on the sideline or the same day.<br><br>
+        <strong>SCOAT6</strong> is the office tool &mdash; the structured review from a few days out, with the cervical, vestibular and oculomotor screens the acute form doesn&rsquo;t carry.<br><br>
+        <strong>Child SCAT6</strong> is a different instrument again, for ages 8&ndash;12 &mdash; 21 symptom items, its own word lists, its own maximums. Not the adult form with simpler words.
+      </div>
+      <p>All three are on the portal as web versions: they score each section as you go, and export a PDF for the record.</p>
+      <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/scat-forms`, 'pdf_lead_d3', 'which_tool')}" class="cta-btn">Open the web forms</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+  {
+    day: 14,
+    subject: 'The red flags worth having on the wall',
+    template: (name: string) => emailShell(`
+      <h2>Hi ${greetingName(name)},</h2>
+      <p>The part of the SCAT6 that matters most is the part you hope never to use &mdash; the red flags on page one. They are the difference between a form and a decision.</p>
+      <p>Worth knowing cold, because when you need them you will not be reading a PDF:</p>
+      <div class="callout">
+        Neck pain or tenderness &middot; double vision &middot; weakness or tingling in the limbs &middot; severe or increasing headache &middot; seizure or convulsion &middot; loss of consciousness &middot; deteriorating conscious state &middot; vomiting &middot; increasing restlessness, agitation or combativeness &middot; GCS below 15
+      </div>
+      <p>Any one of them and the athlete goes to emergency care, not through an assessment.</p>
+      <p>The web SCAT6 puts these first and will not let the assessment start until they have been checked &mdash; which is the point of doing it on a screen rather than on paper in a pocket.</p>
+      <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/scat-forms/scat6`, 'pdf_lead_d14', 'red_flags')}" class="cta-btn">Open the SCAT6</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+  {
+    day: 28,
+    subject: 'The test that makes every future SCAT6 more useful',
+    template: (name: string) => emailShell(`
+      <h2>Hi ${greetingName(name)},</h2>
+      <p>A SCAT6 taken after a head knock tells you how that athlete is doing today. What it can&rsquo;t tell you is how far that is from their own normal &mdash; and &ldquo;normal&rdquo; varies enormously between people.</p>
+      <p>That&rsquo;s what a pre-season baseline solves. If you cover a club, a school or a squad, you can send one link and have every athlete complete their own baseline in about five minutes. The reports come back to you, and the day someone gets hit you have their own numbers to compare against instead of a population average.</p>
+      <div class="callout">
+        One link for the whole squad &middot; ~5 minutes per athlete &middot; self-completed &middot; reports to your inbox &middot; no cost
+      </div>
+      <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/preseason`, 'pdf_lead_d28', 'baseline')}" class="cta-btn">See how clubs run baselines</a></center>
+      <p>Pre-season is when this is easy to do and mid-season is when you wish you had.</p>
+      <div class="sig">Zac</div>
+    `),
+  },
+  {
+    day: 45,
+    subject: 'The one time I&rsquo;ll mention the course',
+    template: (name: string) => emailShell(`
+      <h2>Hi ${greetingName(name)},</h2>
+      <p>You came for a form, and you&rsquo;ve had forms &mdash; no course pitch in any of that, deliberately.</p>
+      <p>This is the one email where I mention it, and then I&rsquo;ll leave it alone.</p>
+      <p>If concussion is something you see often enough that you want it properly handled rather than looked up each time, the training behind these tools is <strong>Concussion Clinical Mastery</strong>: ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, self-paced, endorsed by Osteopathy Australia, from A$${CONFIG.COURSE.PRICE_ONLINE}. There&rsquo;s a separate ESSA-accredited stream for exercise physiologists.</p>
+      <p>If it isn&rsquo;t, that&rsquo;s genuinely fine. The forms and the baseline tool stay free and you can keep using them without ever hearing from me about the course again.</p>
+      <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/courses`, 'pdf_lead_d45', 'course_once')}" class="cta-btn">See what&rsquo;s in it</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+]
+
+/**
  * SCAT_DAY10_ENGAGEMENT — sent at Day 10 instead of promo code
  * for preview users with fewer than 3 SCAT modules completed.
  * Encourages them to keep going rather than selling too early.

@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { PDF_LEAD_TOOLS, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
 import { holdsPracticalDaySeat } from '@/lib/practical-day-seat'
@@ -350,8 +350,51 @@ export async function GET(request: Request) {
         continue // They'll get their scheduled day email on the next cron run
       }
 
-      const email = findCatchUp(SCAT_MASTERY_SEQUENCE, daysSinceSignup)
+      // WHICH SEQUENCE. Someone who came for the SCAT6 PDF is not a course lead
+      // who stalled — they never wanted a course. 183 of 285 users arrive that
+      // way; 70 of 109 never opened a module, and the segment has converted
+      // 0/46. SCAT_MASTERY_SEQUENCE pitches the course at every step, which is
+      // why. PDF leads get PDF_LEAD_SEQUENCE instead: tools, then the club
+      // baseline, and exactly one course mention on day 45.
+      //
+      // 'free-course' and 'preseason' signups asked for the course/tool
+      // directly and DO engage (28 of 29 open a module), so they keep the
+      // original drip.
+      const camePdfHunting = user.signupSource === 'squarespace' || user.signupSource === 'scat-export'
+      const sequence = camePdfHunting ? PDF_LEAD_SEQUENCE : SCAT_MASTERY_SEQUENCE
+      const email = findCatchUp(sequence, daysSinceSignup)
       if (!email) continue
+
+      // The PDF-lead track is self-contained: its templates take (name) only,
+      // and the day-7 progress routing below is about course modules, which
+      // this audience has deliberately not been asked to open.
+      if (camePdfHunting) {
+        const auditKey = `pdflead_day${email.day}_${user.id}`
+        const { rowCount: fresh } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (fresh === 0) continue
+        const html = (email.template as (n: string) => string)(user.name)
+          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+        const sent = await sendOrRollbackAudit({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: email.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'pdf-lead' },
+            { name: 'day', value: String(email.day) },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }, auditKey, `PDF-lead day ${email.day}`)
+        if (sent) {
+          emailsSent++
+          incrementWeeklySent(user.email)
+          console.log(`[Nurture] PDF-lead day ${email.day} → ${redact(user.email)}`)
+        }
+        continue
+      }
 
       // Load user progress for routing decisions (Day 7+)
       let scatCompletedCount = 0
