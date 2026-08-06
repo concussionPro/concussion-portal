@@ -26,7 +26,7 @@ Separate template track from the clinic cold engine. Leads with the **free athle
 Notes: one link (their page). No price in T1 (athlete pricing lives behind a flagged result, not the institution pitch). The institution's only "ask" is free — that's the no-brainer.
 
 ## T2 (if no reply, ~1 wk) — the duty-of-care angle
-Short: 21-day mandatory stand-down + named clearance providers (2024 AIS/SMA) → most institutions don't have a fast concussion pathway → "this gives [Institution] one, free." Re-link the page.
+Short: 21-day recommended stand-down + named clearance providers (2024 AIS/SMA guidance, adopted by the codes) → most institutions don't have a fast concussion pathway → "this gives [Institution] one, free." Re-link the page.
 
 ## T3 — breakup
 "Last note — the free athlete baseline + SCAT tools are there whenever you want them: [page]. Happy to set it up in 10 minutes." STOP line.

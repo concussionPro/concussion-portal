@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { getCrmCertificateData } from '@/lib/certificate'
+import { getCrmCertificateData, generateCertificatePDF } from '@/lib/certificate'
 import { verifyModuleQuiz } from '@/lib/quiz-verify'
 import { epModules } from '@/data/ep-modules'
 
@@ -135,10 +135,35 @@ describe('ESSA accreditation terms (letter of 27 Jul 2026)', () => {
     )
   })
 
-  it('the CRM certificate prints the accreditation number and mandated statement', () => {
-    const src = read('lib/certificate.ts')
-    expect(src).toContain('Accreditation No. PDNF26077 (Online)')
-    expect(src).toContain('meets the criteria for 8 Continuing Professional Development (CPD) Points')
+  it('the CRM certificate prints the accreditation number and mandated statement', async () => {
+    // Asserted against the GENERATED PDF, not the source. This assertion used
+    // to read `src.toContain('Accreditation No. PDNF26077 (Online)')` and went
+    // red on 2026-08-06 the moment the number was correctly derived from
+    // CONFIG.ESSA_ACCREDITATION.NUMBER — a source-text test failing a fix that
+    // makes the code better is the exact brittleness this sweep exists to end.
+    // jsPDF writes uncompressed text operators, so the content stream carries
+    // the drawn strings verbatim.
+    const { CONFIG } = await import('@/lib/config')
+    const { pdfBuffer } = generateCertificatePDF(
+      getCrmCertificateData('Test EP', 'ep@example.com', new Date('2026-07-27')),
+    )
+    // jsPDF escapes ( ) \ inside the text operators; undo that so the drawn
+    // strings can be compared to the strings the code composed.
+    const printed = pdfBuffer
+      .toString('latin1')
+      .replace(/\\([()\\])/g, '$1')
+    expect(printed).toContain(`Accreditation No. ${CONFIG.ESSA_ACCREDITATION.NUMBER} (Online)`)
+    expect(printed).toContain(
+      CONFIG.ESSA_ACCREDITATION.statement(CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS),
+    )
+    // The ONLINE certificate must never carry the 16-point total: the practical
+    // day issues its own 8-point certificate, and an attendee holding both must
+    // not be able to claim 24.
+    expect(printed).not.toContain(
+      CONFIG.ESSA_ACCREDITATION.statement(
+        CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS + CONFIG.ESSA_ACCREDITATION.PRACTICAL_POINTS,
+      ),
+    )
   })
 
   it('accreditation is not yet expired (re-accredit before 24 Jul 2027)', async () => {

@@ -56,7 +56,13 @@ const datesTable = DATES.map(d => `
   </tr>`).join('')
 
 const shared = {
-  credStrip: `<p style="margin:18px 0 0;font-size:12.5px;color:#64748b;text-align:center;">Endorsed by Osteopathy Australia &middot; ESSA-accredited rehab stream &mdash; the one concussion program accredited across both professions.</p>`,
+  // ACCURACY (2026-08-06, Register C). This read "…the one concussion program
+  // accredited across both professions." Two defects in one clause: it is an
+  // unsubstantiated superlative (banned by docs/brand-voice.md and the AHPRA
+  // advertising guidelines), and it collapses two DIFFERENT products into one —
+  // Osteopathy Australia endorses Concussion Clinical Mastery only, ESSA
+  // accredits Concussion Rehab Mastery only, and no single course holds both.
+  credStrip: `<p style="margin:18px 0 0;font-size:12.5px;color:#64748b;text-align:center;">Concussion Clinical Mastery &mdash; endorsed by Osteopathy Australia &middot; Concussion Rehab Mastery &mdash; accredited by ESSA.</p>`,
   dayBlock: `
     <p style="margin:20px 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0f172a;">The practical day</p>
     <p style="margin:0;font-size:14.5px;color:#334155;line-height:1.6;">Supervised hands-on assessment on real cases &mdash; SCAT6, VOMS, BESS, cervical and oculomotor &mdash; plus return-to-play decision pathways, finishing with OSCE-assessed competency. You leave signed off, not just informed. <strong>Each day is capped at 12</strong> &mdash; that&rsquo;s the supervised format, not a marketing number.</p>`,
@@ -99,7 +105,7 @@ const variants = [
     html: shell(`
       <h2 style="margin:0 0 12px;font-size:21px;color:#0f172a;">The practical day now has dates. Your online work already counts.</h2>
       <p style="font-size:15px;color:#334155;line-height:1.65;">Hi {{firstName}},</p>
-      <p style="font-size:15px;color:#334155;line-height:1.65;">You own the online course (8 CPD hours). Adding the practical day takes you to the full 14 CPD hours and the hands-on, OSCE-assessed certification &mdash; the upgrade is <strong>$693</strong> at early-bird (the difference to the Complete price, nothing lost on what you&rsquo;ve paid).</p>
+      <p style="font-size:15px;color:#334155;line-height:1.65;">You own the online course (8 CPD hours). Adding the practical day takes you to the full 16 CPD hours and the hands-on, OSCE-assessed certification &mdash; the upgrade is <strong>$693</strong> at early-bird (the difference to the Complete price, nothing lost on what you&rsquo;ve paid).</p>
       ${dateTableHtml}
       ${voteRow(PREVIEW_TO)}
       ${shared.dayBlock}
@@ -119,7 +125,7 @@ const variants = [
       <p style="font-size:15px;color:#334155;line-height:1.65;">You asked to be told when a practical day was scheduled. Two are now locked, with Sydney announced at the OA Conference:</p>
       ${dateTableHtml}
       ${voteRow(PREVIEW_TO)}
-      <p style="font-size:14.5px;color:#334155;line-height:1.6;"><strong>$1,190 early-bird</strong> until the date shown for each city, then $1,400 in the final fortnight. The Complete course is the full 8-module online program (start today) plus your practical day &mdash; 14 CPD hours all up. <strong>These are the last practical days of 2026</strong> &mdash; the next round is next year.</p>
+      <p style="font-size:14.5px;color:#334155;line-height:1.6;"><strong>$1,190 early-bird</strong> until the date shown for each city, then $1,400 in the final fortnight. The Complete course is the full 8-module online program (start today) plus your practical day &mdash; 16 CPD hours all up. <strong>These are the last practical days of 2026</strong> &mdash; the next round is next year.</p>
       <p style="font-size:14.5px;color:#334155;line-height:1.6;">One more thing worth saying plainly: every region ends up with a clinic GPs send concussion to. The clinician who can show a measured heart-rate-threshold recovery &mdash; not an estimate &mdash; and a documented return-to-play record tends to become that clinic. That capability is what the course and the included SST Trainer are for.</p>
       ${shared.dayBlock}
       ${shared.platformBlock}

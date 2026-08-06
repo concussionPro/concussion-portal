@@ -152,6 +152,12 @@ export default function ConcussionUpdatePage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  // "You already have an account" is a SUCCESS, not a failure — it must not
+  // render in the red error box. /scat-mastery and /scat6-download already
+  // separate the two; this page is the same signup component forked and was
+  // left behind (2026-08-06 route register), so the person most likely to
+  // already be a customer saw "Something went wrong" styling on a good outcome.
+  const [notice, setNotice] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [successData, setSuccessData] = useState<{ message?: string } | null>(null)
   // Read ?prospect={slug} from URL on landing — captures B2B cold-outreach
@@ -181,6 +187,7 @@ export default function ConcussionUpdatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNotice('')
 
     if (!name.trim()) {
       setError('Please enter your first name.')
@@ -207,8 +214,10 @@ export default function ConcussionUpdatePage() {
       // lib/account-escalation.ts). Navigating on would land them on gated
       // content with no session, so say what actually happened.
       if (data.requiresEmailLogin) {
-        setError(
-          "You already have an account \u2014 we've emailed you a login link. Open it and you'll be signed straight in.",
+        setNotice(
+          "You already have an account \u2014 we've emailed a login link to " +
+            email.trim().toLowerCase() +
+            ". Open it and you'll be signed straight into the module.",
         )
         return
       }
@@ -382,6 +391,15 @@ export default function ConcussionUpdatePage() {
                     <div className="flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
                       <p className="text-sm text-red-800">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {notice && (
+                  <div className="bg-teal-50 border border-teal-200 rounded-xl p-3.5 mb-5">
+                    <div className="flex items-start gap-2">
+                      <Mail className="w-4 h-4 text-teal-700 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-teal-900 leading-snug">{notice}</p>
                     </div>
                   </div>
                 )}

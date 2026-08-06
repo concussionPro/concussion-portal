@@ -8,14 +8,26 @@ import Image from 'next/image'
  * 2026-07-06: "use real screenshot … make the screenshots yourself"). Each
  * frame is an actual watchOS simulator capture driven through the flow via a
  * DEBUG screen-override built into the app — band → safety → graded test
- * (live HR) → training → recovery trajectory. Not mockups.
+ * (live HR) → pre-session symptom check → recovery trajectory. Not mockups.
+ *
+ * watch5 is the CURRENT capture set. watch/, watch2/, watch3/ and watch4/ are
+ * superseded and referenced by nothing (watch2 is a byte-for-byte copy of
+ * watch3; watch5 is watch4 with only 3-test re-captured).
+ *
+ * LABEL ACCURACY (asset-currency sweep 2026-08-06): 4-training.png was labelled
+ * "Train live", but the capture — in every one of the five sets — is the
+ * "Before you start / Set a baseline / How bad are your symptoms right now?"
+ * screen, i.e. the pre-session symptom check, not a live training screen. The
+ * label doubles as the alt text and the caption under the watch, so it asserted
+ * something the picture does not show. The live-HR claim is carried by frame 3
+ * (Minute 1 of 12 · 83 bpm), which genuinely shows it.
  */
 
 const FRAMES = [
   { src: '/instruments/watch5/1-band.png', label: 'Your band' },
   { src: '/instruments/watch5/2-safety.png', label: 'Safety check' },
   { src: '/instruments/watch5/3-test.png', label: 'Graded test' },
-  { src: '/instruments/watch5/4-training.png', label: 'Train live' },
+  { src: '/instruments/watch5/4-training.png', label: 'Symptom check' },
   { src: '/instruments/watch5/5-progress.png', label: 'Recovery' },
 ]
 const N = FRAMES.length

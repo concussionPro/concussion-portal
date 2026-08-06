@@ -2,7 +2,7 @@ import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
-import { REFERENCE_COUNT } from '@/data/reference-count'
+import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * NOT INDEXABLE.
@@ -100,7 +100,7 @@ export default function HpcsaLandingPage() {
           <h2 className="text-xl font-bold tracking-tight">What the course is</h2>
           <p className="mt-2 text-[14px] text-slate-600">
             Eight online modules · {TOTAL_MINS / 60} hours of learning · 80% pass
-            mark · {REFERENCE_COUNT} peer-reviewed references · self-paced · lifetime access.
+            mark · {CRM_REFERENCE_COUNT} peer-reviewed references · self-paced · lifetime access.
           </p>
           <ol className="mt-5 divide-y divide-slate-100 rounded-xl border border-slate-200">
             {MODULES.map((m) => (

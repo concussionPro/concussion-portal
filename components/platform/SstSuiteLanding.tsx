@@ -109,7 +109,7 @@ function SstTab() {
     — start" and "Start with your clinic code", which an evaluator does not
     have. The clinician's actual try-it path is "Start free trial →" next to
     this. Label it for what it shows. */}
-<Cta variant="ghost" href="/sst-trainer">See the patient app</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+<Cta variant="ghost" href="/sst-trainer?landing=1">See the patient app</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable · integrates with Cliniko" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>

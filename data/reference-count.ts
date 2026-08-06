@@ -15,5 +15,40 @@
  * ever drifts from references.length.
  *
  * Adding or removing a reference? Update this number and the test will confirm.
+ *
+ * SCOPE — READ BEFORE USING (2026-08-06, Register C). REFERENCE_COUNT is the
+ * CCM Reference Repository ONLY. Concussion Rehab Mastery is a different course
+ * with a different, smaller evidence base, and ten CRM surfaces were rendering
+ * this number as if it were theirs: /acsm, /cep-uk, /csep, /sesnz, /hpcsa,
+ * /cases, /cimspa, /platform/evidence, /ep-course/dashboard and the CRM
+ * international page — every one of them an accreditation- or
+ * regulator-facing landing page. Use CRM_REFERENCE_COUNT there.
+ *
+ * The consolidation note above is where it went wrong: "136 peer-reviewed" was
+ * listed as one of three sloppy variants of the CCM number and "fixed" to 144,
+ * but on those five pages 136 had been the CRM's own figure. The rewrite
+ * replaced a roughly-right number with a confidently wrong one, and a comment
+ * was added to the CRM international page telling future editors never to write
+ * 136 — which entrenched it.
  */
 export const REFERENCE_COUNT = 144
+
+/**
+ * CRM (Concussion Rehab Mastery) evidence base — DISTINCT works.
+ *
+ * The EP modules author citations as plain strings on `clinicalReferences`;
+ * the same paper legitimately underpins several modules. Deduplicated (the
+ * repository a CRM buyer actually browses at /ep-course/references) that is
+ * CRM_REFERENCE_COUNT works. Counting every per-module occurrence gives
+ * CRM_CITATION_TOTAL.
+ *
+ * Quote CRM_REFERENCE_COUNT for "N peer-reviewed references" — a reference is
+ * a work, not an occurrence of one. Only use CRM_CITATION_TOTAL where the copy
+ * says "citations across the modules" and means it.
+ *
+ * Literals for the same client-safety reason as REFERENCE_COUNT (data/ep-modules
+ * is paid content and must not reach a public chunk). Both are locked against
+ * lib/ep-references.ts by tests/factual-claims-lock.test.ts.
+ */
+export const CRM_REFERENCE_COUNT = 63
+export const CRM_CITATION_TOTAL = 136

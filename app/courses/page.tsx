@@ -6,6 +6,7 @@ import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
 import { BookOpenCheck, Stethoscope, ArrowRight, Check } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { checkServerAccess } from '@/components/ai-course/CourseGate'
 
 export const metadata: Metadata = {
   // NO trailing brand: app/layout.tsx applies `template: '%s | Concussion
@@ -45,6 +46,16 @@ export default async function CoursesIndexPage({
     (c) => getEffectiveStatus(c) === 'coming-soon' && c.earlyBirdDiscountPct,
   )
   const earlyAccessCounts = await getAllEarlyAccessCounts().catch(() => ({}))
+
+  // /courses is PUBLIC; "How we vet providers" and "About the founder" are
+  // marketplace pre-launch pages that call requireAiCourseAccess() and are
+  // noindex. A public visitor clicking either was redirected to
+  // /login?redirect=/courses/ai-in-clinical-practice — a sign-in wall for a
+  // DIFFERENT course, from a page that never said either link was gated.
+  // checkServerAccess() is the same test without the redirect, so the gate is
+  // unchanged and only the misleading CTAs stop rendering for people who
+  // cannot open them.
+  const marketplaceAccess = await checkServerAccess().catch(() => ({ ok: false, reason: 'error' }))
 
   return (
     <>
@@ -103,20 +114,24 @@ export default async function CoursesIndexPage({
           <ComingSoonSection courses={earlyAccessCourses} initialCounts={earlyAccessCounts} />
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/courses/how-we-vet"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-xs hover:bg-slate-50 transition-colors"
-            >
-              <BookOpenCheck className="w-3.5 h-3.5" />
-              How we vet providers
-            </Link>
-            <Link
-              href="/courses/about-the-founder"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-xs hover:bg-slate-50 transition-colors"
-            >
-              <Stethoscope className="w-3.5 h-3.5" />
-              About the founder
-            </Link>
+            {marketplaceAccess.ok && (
+              <>
+                <Link
+                  href="/courses/how-we-vet"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-xs hover:bg-slate-50 transition-colors"
+                >
+                  <BookOpenCheck className="w-3.5 h-3.5" />
+                  How we vet providers
+                </Link>
+                <Link
+                  href="/courses/about-the-founder"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-xs hover:bg-slate-50 transition-colors"
+                >
+                  <Stethoscope className="w-3.5 h-3.5" />
+                  About the founder
+                </Link>
+              </>
+            )}
             <a
               href="mailto:zac@concussion-education-australia.com?subject=CPD%20provider%20application"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-xs hover:bg-slate-50 transition-colors"

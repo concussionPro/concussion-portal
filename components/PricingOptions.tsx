@@ -817,9 +817,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <div className="rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden mb-4">
               <div className="flex items-stretch">
                 <div className="relative w-[90px] flex-shrink-0 bg-slate-900">
+                  {/* Date-bearing alt text derives from CONFIG.LOCATIONS — the
+                      literal "13 June 2026" here would keep asserting the
+                      completed round's date to screen readers the moment the
+                      next Melbourne round confirms with a new one. */}
                   <Image
                     src="/melbourne-workshop.jpg"
-                    alt="Melbourne workshop · 13 June 2026"
+                    alt={`Melbourne workshop · ${CONFIG.LOCATIONS.MELBOURNE.date}`}
                     fill
                     sizes="90px"
                     className="object-cover"

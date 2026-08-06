@@ -28,6 +28,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
+import { generateAccessKey } from '@/lib/prospect/access-key'
 
 export const maxDuration = 90
 
@@ -250,7 +251,15 @@ export async function POST(req: NextRequest) {
 
     // Create the new prospect row with a slug variant
     const newSlug = `${src.short_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)}-${newFirstName.toLowerCase().replace(/[^a-z]/g, '').slice(0, 12)}-${Date.now().toString(36)}`
-    const newAccessKey = `${newSlug}-${Math.random().toString(36).slice(2, 10)}`
+    // The access key is the ONLY thing standing between a slug and a clinic's
+    // personalised pitch portal, and slugs derive from public clinic names —
+    // so all 875 are enumerable. This minted it from Math.random(), whose
+    // xorshift128+ state is recoverable from a few consecutive outputs, while
+    // lib/prospect/access-key.ts has minted them from crypto.randomBytes since
+    // the derived-key leak was closed. Same class as the RTP share codes
+    // (86b0bbde) and the unsigned unsubscribe tokens, missed here because this
+    // route rolled its own instead of calling the helper.
+    const newAccessKey = generateAccessKey()
 
     try {
       const { rows: insertRows } = await sql<{ id: number }>`

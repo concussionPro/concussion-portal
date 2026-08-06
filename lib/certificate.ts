@@ -123,16 +123,32 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   if (isOaEndorsed) {
     doc.text('Endorsed by Osteopathy Australia', centerX, y, { align: 'center' })
   }
-  // CRM is ESSA-accredited (letter 27 Jul 2026): PDNF26077 (Online), 8 CPD
-  // points, valid to 24 Jul 2027. The line prints ONLY on the CRM certificate —
-  // same false-claim rule as OA above. The mandated ESSA statement (with the
-  // accreditation number) prints as a second line, per the letter's terms.
-  const isEssaAccredited = data.courseType === 'crm-online'
+  // CRM is ESSA-accredited (letter 27 Jul 2026). The line prints ONLY on the
+  // CRM certificate — same false-claim rule as OA above. The mandated ESSA
+  // statement (with the accreditation number) prints as a second line, per the
+  // letter's terms.
+  //
+  // DERIVED, NOT LITERAL (2026-08-06, Register C). The number, the points and
+  // the mandated sentence were all hardcoded here. Two ways that bites:
+  // a re-rate of the online points leaves this PDF quoting the old figure to
+  // the very body that set it, and — worse — the line was not gated on
+  // FEATURES.ESSA_ACCREDITED, so once the accreditation lapses (config
+  // auto-flips that flag past VALID_UNTIL = 2027-07-24) every certificate
+  // generated afterwards would keep asserting an accreditation CEA no longer
+  // holds. A lapsed claim is the same defect as a never-held one.
+  const isEssaAccredited =
+    data.courseType === 'crm-online' && CONFIG.FEATURES.ESSA_ACCREDITED
   if (isEssaAccredited) {
-    doc.text('Accredited by Exercise & Sports Science Australia (ESSA) — Accreditation No. PDNF26077 (Online)', centerX, y, { align: 'center' })
+    doc.text(
+      `Accredited by Exercise & Sports Science Australia (ESSA) — Accreditation No. ${CONFIG.ESSA_ACCREDITATION.NUMBER} (Online)`,
+      centerX, y, { align: 'center' },
+    )
     y += 4
     doc.setFontSize(7)
-    doc.text('The ESSA Professional Development Committee certifies that this Professional Development offering meets the criteria for 8 Continuing Professional Development (CPD) Points.', centerX, y, { align: 'center' })
+    doc.text(
+      CONFIG.ESSA_ACCREDITATION.statement(CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS),
+      centerX, y, { align: 'center' },
+    )
     doc.setFontSize(8)
   }
 

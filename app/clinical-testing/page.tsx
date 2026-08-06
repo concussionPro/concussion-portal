@@ -157,7 +157,12 @@ function Shell() {
                   <SstWatchVisual />
                   <p className="mt-3 mb-0 text-[13px] font-bold text-white">SST Trainer</p>
                   <p className="mt-0.5 mb-0 text-xs text-slate-300/90">Measured threshold → 80–90% band → verified sessions → recovery trajectory.</p>
-                  <a href="/sst-trainer" target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-block text-xs font-bold text-teal-300 hover:text-teal-200">
+                  {/* ?landing=1 — this is a DEMO link on the clinician's own
+                      workspace. Plain /sst-trainer resumes the app whenever
+                      persisted state exists, so a clinician who had ever opened
+                      the trainer on this browser got their own live session
+                      back instead of the demo the label promises. */}
+                  <a href="/sst-trainer?landing=1" target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-block text-xs font-bold text-teal-300 hover:text-teal-200">
                     Try the patient demo →
                   </a>
                 </div>

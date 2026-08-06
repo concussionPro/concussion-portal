@@ -172,7 +172,7 @@ function buildPersonalScript(r: Omit<Row, 'angle' | 'hasBookedCall' | 'hasTalkRe
 
   // Body opener — reference their strongest signal
   if (r.checkoutStarts > 0) {
-    lines.push(`Saw you started enrolling${clinic ? ` for ${clinic}` : ''} but didn't finish — anything I can clear up before you do? Happy to walk through pricing, AHPRA CPD hours, or how the cohort scheduling works for a team of ${team ?? 'your size'}.`)
+    lines.push(`Saw you started enrolling${clinic ? ` for ${clinic}` : ''} but didn't finish — anything I can clear up before you do? Happy to walk through pricing, the AHPRA-aligned CPD hours, or how the cohort scheduling works for a team of ${team ?? 'your size'}.`)
   } else if (r.wiSubmits >= 2 || (r.wiCities && r.wiCities.split(',').length >= 2)) {
     const cities = r.wiCities?.split(',').map((c) => c.trim()).filter(Boolean).join(' and ') || 'multiple workshop cities'
     lines.push(`Saw you registered interest for both ${cities} workshops — sounds like the dates are the main question.`)

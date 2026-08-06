@@ -6,17 +6,27 @@ import Image from 'next/image'
 /**
  * Rendered laptop swiping through REAL baseline-flow screens (owner: "it
  * should be animated on a desktop the same way sst is animated on a watch").
- * Each frame is an actual capture of the /preseason athlete flow — athlete
- * info → symptom scale → cognitive test → delayed recall → report. Not a
- * mockup. Same swipe mechanism as the watch (explicit pixel widths).
+ * Each frame is an actual capture of the /preseason athlete flow. Not a mockup.
+ * Same swipe mechanism as the watch (explicit pixel widths).
+ *
+ * CAPTURE GAP (found 2026-08-06, asset-currency sweep): frames 4.png and 5.png
+ * are NOT the delayed-recall and report screens — in BOTH capture sets
+ * (baseline-flow @13:44 and baseline-flow2 @15:10) files 3, 4 and 5 are the
+ * SAME "Immediate Memory / Start Memory Test" screen, differing only by the
+ * button's hover/press state. The capture run clicked "Start Memory Test" but
+ * the flow never advanced, so steps 4-6 of /preseason were never captured.
+ * The old labels therefore claimed "Delayed recall" and "Report" over a screen
+ * that shows neither — including in the alt text — and the animation visibly
+ * froze on one screen for three of its five beats.
+ * Until /preseason steps 4-6 are re-captured, this shows only the three screens
+ * that genuinely exist. Restoring the 5-beat version is just a matter of
+ * dropping real 4.png/5.png captures in and re-adding the two entries.
  */
 
 const FRAMES = [
   { src: '/instruments/baseline-flow2/1.png', label: 'Athlete details' },
   { src: '/instruments/baseline-flow2/2.png', label: 'Symptom scale' },
   { src: '/instruments/baseline-flow2/3.png', label: 'Cognitive test' },
-  { src: '/instruments/baseline-flow2/4.png', label: 'Delayed recall' },
-  { src: '/instruments/baseline-flow2/5.png', label: 'Report' },
 ]
 const N = FRAMES.length
 const HOLD_MS = 2600

@@ -23,7 +23,7 @@ interface StatusItem {
 const STATUS: StatusItem[] = [
   // Shipped
   { name: 'AHPRA-aligned AI compliance course', detail: '9 modules · ~120 min reading · KEYPOINT/REDFLAG/DEFINITION/TRYTHIS interactive cards · 8 infographics · mid-section quizzes', status: 'shipped', evidence: '/courses/ai-in-clinical-practice' },
-  { name: 'Certification infrastructure', detail: '10-question quiz · pass mark 8/10 · verifiable certificate URL · A4 PDF download · 12-month validity', status: 'shipped', evidence: '/courses/ai-in-clinical-practice/quiz' },
+  { name: 'Certification infrastructure', detail: '10-question quiz · pass mark 8/10 · verifiable certificate URL · A4 PDF download · no expiry (completion evidence)', status: 'shipped', evidence: '/courses/ai-in-clinical-practice/quiz' },
   { name: 'Multi-provider marketplace shell', detail: 'Provider catalogue · per-course CPD recognition tags · placeholder slots for marketplace expansion', status: 'shipped', evidence: '/courses' },
   { name: 'Provider curation policy', detail: 'Six-criterion review process · five-step pilot/verification workflow · transparent rejection criteria', status: 'shipped', evidence: '/courses/how-we-vet' },
   { name: 'CPD record dashboard', detail: 'Per-clinician completion log · CPD hours tally · audit-export-ready format · verification URLs per certificate', status: 'shipped', evidence: '/courses/cpd-record' },

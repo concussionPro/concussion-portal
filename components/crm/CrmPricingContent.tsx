@@ -303,7 +303,11 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                     A graded test measures each patient&rsquo;s symptom threshold; they train just
                     under it — live heart rate, verified progression, every session on your dashboard.
                   </p>
-                  <Link href="/sst-trainer" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                  {/* ?landing=1 — MARKETING link (same rule as the homepage card
+                      it mirrors). Plain /sst-trainer resumes the app for anyone
+                      with persisted state, so an EP evaluating the product was
+                      dropped into the tool instead of the page explaining it. */}
+                  <Link href="/sst-trainer?landing=1" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
                     See the patient app <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

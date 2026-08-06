@@ -201,7 +201,7 @@ export function WelcomeModal() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Pass the Module 1 Quiz</p>
-                  <p className="text-xs text-slate-500">{isPreviewUser ? 'Complete your first module — takes about 25 minutes' : 'Earn your first AHPRA CPD hour — takes about 75 minutes'}</p>
+                  <p className="text-xs text-slate-500">{isPreviewUser ? 'Complete your first module — takes about 25 minutes' : 'Earn your first AHPRA-aligned CPD hour — takes about 75 minutes'}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>

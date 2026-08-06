@@ -119,7 +119,7 @@ Rules: CEU discrepancy >1.0 between certificate and promotional materials = non-
 3. **Copyright** — all content authored by CEA or licensed/cited under fair use with full attribution; 136-reference bibliography maintained per course.
 4. **Nondiscrimination** — programs open to all ATs regardless of race, colour, religion, sex, sexual orientation, gender identity, national origin, age or disability.
 5. **Record keeping** — completion records, assessments and certificates retained ≥5 years in the CEA portal database (Postgres, backed up); retrievable on BOC request.
-6. **Fee/cancellation/refund** — free programs: no fee. Paid programs: 30-day refund on request, stated on each listing.
+6. **Fee/cancellation/refund** — free programs: no fee. Paid programs: 7-day refund on request where fewer than 25% of modules have been accessed, stated on each listing and in the published terms (portal.concussion-education-australia.com/terms).
 7. **Faculty payment** — sole faculty is the company director; no honoraria paid; any future guest faculty paid a disclosed flat fee.
 
 ### 5.7 Marketing rules (from the BOC order form — strict)

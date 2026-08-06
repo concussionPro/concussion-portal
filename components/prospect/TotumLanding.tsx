@@ -147,18 +147,21 @@ function TotumSidebar() {
 function SidebarBody({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <>
+      {/* This is a PUBLIC cold-outreach page (no access key, no account). Both
+          of these used to point at /dashboard, which the middleware login-walls
+          — so the prospect was bounced to /login?redirect=%2Fdashboard, and
+          "Back to portal dashboard" named a place they had never been and could
+          not reach. The brand mark now returns to the top of the page they are
+          actually reading, and the false "back" link is gone. */}
       <div className="mb-8">
-        <Link href="/dashboard" onClick={onLinkClick} className="flex items-center gap-3 mb-1 group" aria-label="Back to portal dashboard">
+        <a href={`#${NAV[0].id}`} onClick={onLinkClick} className="flex items-center gap-3 mb-1 group" aria-label="Back to top">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md shadow-accent/15 transition-transform group-hover:scale-105">
             <Brain className="w-5 h-5 text-white" strokeWidth={2} />
           </div>
           <h1 className="text-base font-bold text-foreground tracking-tight leading-tight">
             Concussion Education<br /><span className="text-accent">Australia</span>
           </h1>
-        </Link>
-        <Link href="/dashboard" onClick={onLinkClick} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-accent transition-colors">
-          <span aria-hidden>←</span> Back to portal dashboard
-        </Link>
+        </a>
       </div>
 
       <div className="glass-premium rounded-xl p-3 mb-6">

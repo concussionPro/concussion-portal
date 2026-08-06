@@ -234,7 +234,7 @@ const EMAIL_WRAP_TOP = `<div style="font-family: -apple-system, BlinkMacSystemFo
 function emailFooter(unsubscribeUrl: string): string {
   return `
   <p style="margin: 28px 0 0; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 14px; line-height: 1.6;">
-    Concussion Education Australia &middot; Endorsed by Osteopathy Australia<br>
+    Concussion Education Australia &middot; Concussion Clinical Mastery is endorsed by Osteopathy Australia<br>
     <a href="${unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe</a>
   </p>
 </div>`
@@ -279,7 +279,7 @@ function buildInterestEmail(opts: InterestEmailOpts): { subject: string; html: s
 
   <p style="margin: 24px 0 0;">Zac Lewis<br>
   Osteopath &middot; Concussion Education Australia<br>
-  Endorsed by Osteopathy Australia &middot; AHPRA-aligned CPD</p>
+  Concussion Clinical Mastery &mdash; endorsed by Osteopathy Australia &middot; AHPRA-aligned CPD</p>
 ${emailFooter(opts.unsubscribeUrl)}`
   return { subject, html }
 }

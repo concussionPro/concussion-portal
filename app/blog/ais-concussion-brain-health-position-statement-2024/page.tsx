@@ -92,10 +92,13 @@ export default function AISPositionStatementPage() {
             </div>
             <div className="space-y-4 text-slate-700 leading-relaxed">
               <p>
-                The headline change: athletes under 19 and <strong>all community-level athletes</strong> (regardless of age) must observe a minimum 21-day stand-down from the date of concussion before returning to competitive contact or collision sport. This aligns Australia with the UK and New Zealand guidelines.
+                The headline change: the Position Statement recommends that athletes under 19 and <strong>all community-level athletes</strong> (regardless of age) observe a minimum 21-day stand-down from the date of concussion before returning to competitive contact or collision sport. This aligns Australia with the UK and New Zealand guidelines.
               </p>
               <p>
-                Within this window, athletes must be <strong>symptom-free at rest for 14 consecutive days</strong> before progressing to contact training, and must obtain written medical clearance before returning to competition.
+                The Position Statement is <strong>guidance, not law</strong>. It becomes binding on a given athlete only where their sport&apos;s national or state body has adopted it into its own return-to-play policy &mdash; which more than 30 National Sporting Organisations have now done. Check the governing body&apos;s protocol for the athlete in front of you rather than assuming a universal rule.
+              </p>
+              <p>
+                Within that window the guidance sets two further conditions before competition: <strong>symptom-free at rest for 14 consecutive days</strong> before progressing to contact training, and written medical clearance before returning to competition.
               </p>
               <p>
                 Elite athletes with access to &ldquo;Advanced Care Settings&rdquo; &mdash; defined as constant medical monitoring by club-employed professionals &mdash; may follow a shorter minimum 12-day protocol with an 11-step graded return process.

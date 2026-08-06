@@ -279,7 +279,7 @@ def generate_module_1_teaser():
           'Upgrade Now - Access All 8 Modules',
           '</a>',
           '</div>',
-          '<p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.9;">Instant access • 30-day money-back guarantee • CPD certified</p>',
+          '<p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.9;">Instant access • 7-day money-back guarantee • CPD certified</p>',
           '</div>',
         ],
       },

@@ -106,7 +106,7 @@ Every piece below is live and admin-gated:
 - **Multi-provider marketplace shell** — courses grouped by provider, placeholder slots for marketplace expansion. `/courses`
 - **Marketplace curation policy** — six-criterion provider review process. `/courses/how-we-vet`
 - **AI in Clinical Practice course** — AHPRA-aligned, 2 hours, 9 modules with infographics + interactive quizzes + 79 inline marker cards (proof of content quality)
-- **Verifiable certification** — public verify URL, 12-month renewal, PDF download
+- **Verifiable certification** — public verify URL, no expiry, PDF download
 - **Monthly content-refresh pipeline** — automated source monitoring across AHPRA, OAIC, TGA, indemnity insurers, tool vendors
 
 **Demo URL** (admin-gated): `portal.concussion-education-australia.com/courses`

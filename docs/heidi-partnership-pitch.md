@@ -97,7 +97,7 @@ Ranked by best fit per pitch framing. Where a name isn't publicly verifiable, us
 ### Option A — Endorse + Distribute (lowest commitment)
 **Likely close: highest. Estimated 6–10 weeks.**
 
-- **What Zac brings:** A finished, AHPRA-aligned course at portal.concussion-education-australia.com/courses/ai-in-clinical-practice with verifiable certificates, 12-month renewal, and a monthly content-refresh pipeline (already operating, evidence in the live admin).
+- **What Zac brings:** A finished, AHPRA-aligned course at portal.concussion-education-australia.com/courses/ai-in-clinical-practice with verifiable, non-expiring certificates and a monthly content-refresh pipeline (already operating, evidence in the live admin).
 - **What Heidi gets:** A "Recommended Training" link from their docs/onboarding, the ability to point enterprise procurement at an external compliance asset without standing up internal cost, and a public-facing answer to "what about AHPRA?" — without owning the content risk.
 - **Deal structure:** Affiliate / co-marketing. Optional discount code for Heidi users. CEA retains content authority, IP, and accreditation. Heidi gets a co-branded landing page.
 - **Timeline to close:** First call → MOU in 6–10 weeks. Low legal surface.
@@ -132,12 +132,12 @@ Ranked by best fit per pitch framing. Where a name isn't publicly verifiable, us
 2. **Certification infrastructure:**
    - Verifiable public certificate URL (one per cert)
    - PDF download with auto-attached tax-invoice pipeline (already shipping for CEA paid products)
-   - 12-month renewal cycle with auto-reminder
+   - Verifiable, non-expiring completion certificates (re-sitting is optional, not a renewal)
 3. **Monthly content-refresh pipeline** — demonstrates enterprise-grade content maintenance, not a one-shot course. Show the changelog and the pipeline cadence. This is the single strongest signal that the course will not go stale and become a liability.
 4. **Content modules:**
    - Module 1 — Compliance (AHPRA, APP, TGA, consent, record-keeping, MDO guidance)
    - Module 2+ — clinical use, error handling, specialty-specific patterns
-5. **Existing CEA proof-of-shipping:** Osteopathy Australia-endorsed flagship product (Concussion Clinical Mastery, 14 CPD hours) demonstrates we can clear a college accreditation process, which is the bar Heidi will need.
+5. **Existing CEA proof-of-shipping:** Osteopathy Australia-endorsed flagship product (Concussion Clinical Mastery, 16 CPD hours) demonstrates we can clear a college accreditation process, which is the bar Heidi will need.
 
 **Demo flow recommendation (30-minute call):**
 - 0–3 min: Open with AHPRA's "must understand any AI tools" line [6] and Heidi's own Scribe Usage Policy excerpt [4]. State the gap.
@@ -162,7 +162,7 @@ Ranked by best fit per pitch framing. Where a name isn't publicly verifiable, us
 >
 > Heidi's Scribe Usage Policy correctly places jurisdictional compliance — consent, record-keeping, scope of practice — on the practitioner. AHPRA's position is that practitioners "must understand any AI tools which they use, to use the tools safely." There is currently no AHPRA-aligned, CPD-accredited training that closes that loop, from any AI scribe vendor in market.
 >
-> I'm an Australian-registered osteopath and the founder of Concussion Education Australia (Osteopathy Australia-endorsed CPD). Over the last six months I've built and shipped a complete AI-in-clinical-practice course with verifiable certification, a 12-month renewal cycle, and a monthly content-refresh pipeline. It's live and admin-demoable today.
+> I'm an Australian-registered osteopath and the founder of Concussion Education Australia — our flagship Concussion Clinical Mastery is Osteopathy Australia-endorsed. Over the last six months I've built and shipped a complete AI-in-clinical-practice course with verifiable certification and a monthly content-refresh pipeline. It's live and admin-demoable today.
 >
 > Three ways this could work for Heidi: (1) you endorse and distribute it, (2) we white-label it as Heidi Academy, (3) we explore something deeper.
 >

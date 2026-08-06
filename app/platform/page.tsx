@@ -34,16 +34,20 @@ const NAV_CARDS = [
     accent: false,
   },
   {
-    href: '/platform/evidence',
+    // /platform/evidence 307s to /clinical-suite/evidence (next.config.ts) —
+    // link the canonical target directly instead of paying a redirect hop
+    // (2026-08-06 route register).
+    href: '/clinical-suite/evidence',
     title: 'The evidence →',
     body: 'The Buffalo protocol, and the trials behind it.',
     accent: false,
   },
   {
-    // /platform/pricing redirects to the course pricing — say so BEFORE the
-    // click (Zac 2026-07-27: "its not implicit that its bundled"). The platform
-    // isn't sold separately; it comes with enrolment.
-    href: '/platform/pricing',
+    // The platform isn't sold separately; it comes with enrolment — say so
+    // BEFORE the click (Zac 2026-07-27: "its not implicit that its bundled").
+    // /platform/pricing 307s to /clinical-suite/pricing, which is itself a
+    // redirect-only stub to /pricing — a two-hop chain. Link /pricing direct.
+    href: '/pricing',
     title: 'Pricing →',
     body: 'Included with course enrolment — every CCM & CRM enrolment ships the full platform. Free for patients.',
     accent: true,
@@ -405,7 +409,7 @@ export default function PlatformHome() {
             app combines a measured heart-rate threshold, verification-gated training, and a serial
             measured-HRt trajectory your clinician reviews.{' '}
             <Link
-              href="/platform/evidence"
+              href="/clinical-suite/evidence"
               className="font-semibold text-[#3c7a1f] underline underline-offset-2"
             >
               See the sources →

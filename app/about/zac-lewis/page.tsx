@@ -33,7 +33,15 @@ export default function ZacLewisAboutPage() {
             jobTitle: 'Founder & Lead Educator, Concussion Education Australia',
             description: "AHPRA-registered Osteopath practising in concussion management, and founder of Concussion Education Australia. Lead clinical educator across the Concussion Clinical Mastery and AI in Clinical Practice training streams.",
             url: URL,
-            image: 'https://portal.concussion-education-australia.com/og-image.png',
+            // og-image.PNG does not exist and 404s (verified live 2026-08-06).
+            // Point at the HEADSHOT, not og-image.jpg: this is a Person node,
+            // so the image must depict the person (Google renders it as the
+            // entity's face), and og-image.jpg is the branded course card that
+            // still has "8 CPD · 14 with the workshop" burned into it — 14 is
+            // stale (CONFIG.COURSE.TOTAL_CPD_POINTS is 16 since the 2026-07-30
+            // OA re-rate), so using it here would publish a stale CPD claim
+            // into structured data.
+            image: 'https://portal.concussion-education-australia.com/zac-lewis-headshot.jpg',
             hasCredential: [
               {
                 '@type': 'EducationalOccupationalCredential',

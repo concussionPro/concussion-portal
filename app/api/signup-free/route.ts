@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
                 </div>
               </div>
               <div class="footer">
-                Concussion Education Australia &middot; Endorsed by Osteopathy Australia<br>
+                Concussion Education Australia &middot; Concussion Clinical Mastery is endorsed by Osteopathy Australia<br>
                 <a href="${unsubscribeUrl}" style="color: #94a3b8; font-size: 11px;">Unsubscribe</a>
               </div>
             </div>

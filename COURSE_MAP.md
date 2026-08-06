@@ -13,7 +13,7 @@ A$97     Vagus Nerve                         ━━━ BUILT but HIDDEN — no f
 A$197    AI in Clinical Practice             ━━━ LAUNCHING 17 JUNE 2026
 A$497    CCM Online                          ━━━ LIVE
 A$1,190  CCM Complete (online + workshop)    ━━━ LIVE
-USD$197  CCM International                   ━━━ LIVE
+USD$347  CCM International                   ━━━ LIVE
 ```
 
 Three planned courses (PPCS / Cervicogenic / Vestibular MSK) are NOT shown above because none have been built. They appear in §3 under "Planning / Validation."
@@ -76,7 +76,7 @@ Three planned courses (PPCS / Cervicogenic / Vestibular MSK) are NOT shown above
 | Field | Value |
 |---|---|
 | **Status** | LIVE |
-| **Price** | USD $197 |
+| **Price** | USD $347 |
 | **Built** | Yes (same content as CCM Online — jurisdiction-neutral framing on landing) |
 | **CPD hours** | 8 (claimed as "8 structured contact hours" — recipients self-claim with their board) |
 | **Persona** | International clinician — NZ / UK / US / Canada |
@@ -214,7 +214,7 @@ CROSS-JURISDICTION TOPIC FUNNEL (for international traffic)
         ↓
    /pricing-international
         ↓
-   CCM International (USD$197)
+   CCM International (USD$347)
 ```
 
 **The AI buyer is not the concussion buyer.** Don't force cross-sells between funnels.

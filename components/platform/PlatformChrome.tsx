@@ -33,10 +33,15 @@ export function PlatformLogo({ stroke = PLATFORM.navy, size = 30 }: { stroke?: s
 // 'Home' and 'The suite' both pointed at /clinical-suite — two nav items to the
 // same page, and (because the list is keyed by href) a duplicate React key. The
 // wordmark on the left is already the home link, so the suite entry stands alone.
+// 'Pricing' pointed at /clinical-suite/pricing, which is a redirect-only stub
+// to /pricing (founding-clinic funnel retired) — so the nav item on EVERY
+// suite page cost a full prerendered document plus a client-side hop before
+// landing anywhere (2026-08-06 route register: redirect chain). Point at the
+// real destination; the stub stays for inbound legacy links.
 const NAV_LINKS = [
   { href: '/clinical-suite', label: 'The suite' },
   { href: '/clinical-suite/evidence', label: 'Evidence' },
-  { href: '/clinical-suite/pricing', label: 'Pricing' },
+  { href: '/pricing', label: 'Pricing' },
 ]
 
 // Normalise a path to its route segment so the active check works whichever

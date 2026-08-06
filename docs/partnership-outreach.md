@@ -3,8 +3,8 @@
 Single source of truth for every distribution lever. **Drafts are for Zac to review and send himself** — nothing auto-sends. Update the status column as things move.
 
 **Shared proof points (don't fabricate beyond these):**
-- Concussion Clinical Mastery — 14 CPD hours (8 online + 6 practical), **Osteopathy Australia endorsed**.
-- Hook: community sport now carries a **mandatory 21-day stand-down** under the AIS/SMA concussion guidelines; physios and GPs are named clearance providers — most clinics aren't set up for it.
+- Concussion Clinical Mastery — 16 CPD hours (8 online + 8 practical), **Osteopathy Australia endorsed**.
+- Hook: the AIS/SMA concussion guidelines set a recommended minimum 21-day return-to-contact period for community sport, adopted by 30+ national sporting organisations (guidance, not law); physios and GPs are named clearance providers — most clinics aren't set up for it.
 - Zac Lewis — practising osteopath, built the program.
 
 ## Channel map — status & priority (2026-06-17)
@@ -12,7 +12,7 @@ Single source of truth for every distribution lever. **Drafts are for Zac to rev
 | Lever | Audience (size) | Status | Priority | Note |
 |---|---|---|---|---|
 | **Affiliate educators** (Clinical Edge, Physio Network, Off-Script) | physios/allied health (engaged) | not started | **HIGH** | Engaged audience, rev-share, bypasses APA's "no". Best lever. |
-| **Sporting codes / community sport** | AFL/NRL/Football/Rugby + state assns | not started | **HIGH** | Captive demand — 21-day stand-down *mandates* trained people. License to trainers/officials. |
+| **Sporting codes / community sport** | AFL/NRL/Football/Rugby + state assns | not started | **HIGH** | Captive demand — 21-day stand-down guidance drives demand for trained people. License to trainers/officials. |
 | **ESSA** (exercise physiologists) | ~10,000 | **PITCHED 2026-06-17** | MED | EP-scoped stream built. Passive ≈ OA trickle; value only if they *promote* (Partner PD). |
 | **Guild Insurance** | allied-health insureds | in progress (via OA warm intro) | MED | Waiting to hear back. Member-discount distribution. |
 | **Chiropractors (ACA)** | ~6,000 | not started | MED | Near-peer to osteos — flagship course fits with little adaptation. Draft below. |
@@ -33,19 +33,19 @@ Targets: **David Pope (Clinical Edge)**, **Karen Finnin (Online Physio / Off-Scr
 >
 > Hi David,
 >
-> I'm an osteopath — I've built Concussion Clinical Mastery, a 14-CPD-hour concussion program, Osteopathy Australia endorsed, built around the new mandatory 21-day community-sport stand-down (physios and GPs are named clearance providers, and most clinicians aren't set up for it yet).
+> I'm an osteopath — I've built Concussion Clinical Mastery, a 16-CPD-hour concussion program, Osteopathy Australia endorsed, built around the AIS/SMA 21-day community-sport return-to-contact guidance now adopted by the codes (physios and GPs are named clearance providers, and most clinicians aren't set up for it yet).
 >
 > Your audience is exactly who needs it. I'd love to set you up as an affiliate — 30% on every enrolment from your list, your own tracked link, and full access to vet it first. Worth a quick chat?
 >
 > Zac
 
 ## 2. Sporting codes / community sport — captive demand
-Targets: AFL, NRL, Football Australia, Rugby AU, Netball, + state sporting associations. The 21-day stand-down *mandates* trained people — they have a compliance need. License the course (or a tailored version) for trainers/officials/club staff. This is the same B2B2C model as the schools/academies lane, with regulatory pressure behind it.
+Targets: AFL, NRL, Football Australia, Rugby AU, Netball, + state sporting associations. The 21-day stand-down guidance, once a code adopts it, needs trained people — they have a governance need. License the course (or a tailored version) for trainers/officials/club staff. This is the same B2B2C model as the schools/academies lane, with regulatory pressure behind it.
 > Subject: Getting your trainers concussion-ready for the 21-day stand-down
 >
 > Hi [team],
 >
-> The AIS/SMA community-sport guidelines now mandate a 21-day stand-down, which puts the onus on clubs and trainers to recognise and manage concussion correctly. I run Concussion Education Australia (Osteopathy Australia–endorsed CPD) and I'd like to explore making a concussion module available to your trainers, officials or club staff — so your network is compliant and confident. Could we find time to talk?
+> The AIS/SMA community-sport guidelines recommend a minimum 21-day stand-down — now adopted by most codes — which puts the onus on clubs and trainers to recognise and manage concussion correctly. I run Concussion Education Australia (Osteopathy Australia–endorsed CPD) and I'd like to explore making a concussion module available to your trainers, officials or club staff — so your network is compliant and confident. Could we find time to talk?
 >
 > Zac Lewis, Osteopath
 
@@ -59,9 +59,9 @@ EP-scoped online stream built (8 CPD hours, /demo/essa). Sent to info@essa.org.a
 >
 > Hi [ACA Education team],
 >
-> I'm Zac Lewis, an osteopath — I've built Concussion Clinical Mastery, a 14-CPD-hour concussion course, Osteopathy Australia endorsed.
+> I'm Zac Lewis, an osteopath — I've built Concussion Clinical Mastery, a 16-CPD-hour concussion course, Osteopathy Australia endorsed.
 >
-> Your members see exactly who it's built for: sports and musculoskeletal presentations where concussion and cervical injury overlap. The new mandatory 21-day community-sport stand-down has made concussion recognition and management a live part of practice. The course maps closely to chiropractic scope — assessment, the cervicogenic contribution, and graded return-to-activity.
+> Your members see exactly who it's built for: sports and musculoskeletal presentations where concussion and cervical injury overlap. The AIS/SMA 21-day community-sport stand-down guidance, adopted across the codes, has made concussion recognition and management a live part of practice. The course maps closely to chiropractic scope — assessment, the cervicogenic contribution, and graded return-to-activity.
 >
 > I'd love to explore ACA endorsement or a member benefit so it's accessible to your members. Worth 15 minutes?
 >
@@ -74,9 +74,9 @@ EP-scoped online stream built (8 CPD hours, /demo/essa). Sent to info@essa.org.a
 >
 > Hi [OT Australia team],
 >
-> I'm Zac Lewis, osteopath — I run Concussion Education Australia (Concussion Clinical Mastery, 14 CPD hours, Osteopathy Australia endorsed).
+> I'm Zac Lewis, osteopath — I run Concussion Education Australia; our flagship course, Concussion Clinical Mastery, is 16 CPD hours and Osteopathy Australia endorsed.
 >
-> Concussion management is increasingly multidisciplinary, and OTs own a part no one else does — return-to-work and return-to-school, cognitive-fatigue and activity pacing, and environmental adaptation through recovery. With the mandatory 21-day community-sport stand-down, demand for structured return-to-participation support is rising.
+> Concussion management is increasingly multidisciplinary, and OTs own a part no one else does — return-to-work and return-to-school, cognitive-fatigue and activity pacing, and environmental adaptation through recovery. With the AIS/SMA 21-day community-sport stand-down guidance now adopted across the codes, demand for structured return-to-participation support is rising.
 >
 > I'd like to explore an OT-scoped concussion CPD stream — built to OT practice, function and participation rather than diagnosis — accredited or offered as a member benefit. Could we find a short call?
 >
@@ -92,7 +92,7 @@ You've gone via the OA warm intro (→ Christie Boucher, RiskHQ). Only nudge if 
 
 ## Recommended order
 1. **Affiliates** (Clinical Edge / Off-Script) — engaged audience, no downside, fastest.
-2. **Sporting codes** — captive, mandated demand.
+2. **Sporting codes** — captive demand created by the codes adopting the AIS/SMA stand-down guidance.
 3. **ESSA** — already live, just steer Steve to promotion.
 4. **Chiro (ACA) + OT** — cheap accreditation listings; OT needs a stream if they bite.
 5. Guild — follow up if quiet. Avant/ACRRM — only if the above stall.

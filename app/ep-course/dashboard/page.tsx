@@ -42,7 +42,7 @@ import { CONFIG } from '@/lib/config'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 import { CrmPracticalUpsell } from '@/components/ep-course/CrmPracticalUpsell'
 import { CourseSearch } from '@/components/course/CourseSearch'
-import { REFERENCE_COUNT } from '@/data/reference-count'
+import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 import type { SessionUser } from '@/contexts/SessionContext'
 
 // Upgrade offer for unauthenticated visitors — mirrors the module page screen.
@@ -761,7 +761,7 @@ function CourseAuthorPanel() {
                 <dd className="text-sm text-slate-700 font-medium mt-0.5">
                   Concussion Rehab Mastery
                 </dd>
-                <dd className="text-xs text-slate-500">8 modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours · 80% quiz pass mark · {REFERENCE_COUNT} references</dd>
+                <dd className="text-xs text-slate-500">8 modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours · 80% quiz pass mark · {CRM_REFERENCE_COUNT} references</dd>
               </div>
               <div className="sm:col-span-2">
                 <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">

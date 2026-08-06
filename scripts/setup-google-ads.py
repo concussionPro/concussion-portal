@@ -1,5 +1,32 @@
 #!/usr/bin/env python3
 """
+BRICKED 2026-08-06 (Register C) — DO NOT RUN, DO NOT COPY COPY OUT OF IT.
+
+Google Ads is a RETIRED channel (see lib/google-ads.ts and
+tests/google-ads-retired.test.ts). The runtime tag was gated, but this file —
+the ad COPY itself — was never swept, and it is the single densest
+concentration of false claims left in the repo. Every one of these would be
+published to a Google Ads account the moment the script ran:
+
+  - "14 AHPRA CPD hours / points" (~20 instances). Two defects per instance:
+    the figure is two re-rates stale (CONFIG.COURSE.TOTAL_CPD_POINTS is 16),
+    and AHPRA does not accredit CPD or award hours at all — "AHPRA-aligned"
+    is the only sanctioned framing, with hours self-claimed by the registrant.
+  - "8 online + 6 practical" — the practical day is
+    CONFIG.COURSE.IN_PERSON_CPD_POINTS (8) since the OA re-rate of 2026-07-30.
+  - "2 AHPRA CPD points" / "12 more AHPRA CPD points" for the free SCAT course
+    — the free course carries CONFIG.COURSE.SCAT_MASTERY_CPD_POINTS (1).
+  - "Used by 500+ Australian clinicians" — no substantiation exists in this
+    repo; CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS counts form downloads, which
+    is not clinicians and not "used by".
+  - "Free forever" — the free-course promise is not offered in that form
+    (see docs/brand-voice.md on "free" in acquisition copy).
+  - Hardcoded workshop cities and a "Jun-Aug 2026" window; Melbourne has run
+    and no other city holds a date (CONFIG.LOCATIONS).
+
+If paid search is ever resumed, write new copy that derives its numbers from
+CONFIG and clears docs/brand-voice.md — do not revive the strings below.
+
 ConcussionPro Google Ads — Complete API Setup
 6 Campaigns · 10 Ad Groups · 20+ Ads · Extensions · Shared Negatives
 
@@ -26,6 +53,12 @@ Requires google-ads.yaml in project root or env vars:
   GOOGLE_ADS_CUSTOMER_ID
   GOOGLE_ADS_LOGIN_CUSTOMER_ID  (MCC account, if applicable)
 """
+
+raise SystemExit(
+    "setup-google-ads.py is BRICKED — Google Ads is a retired channel and this "
+    "file's ad copy carries stale CPD figures, AHPRA-accredits framing and "
+    "unsubstantiated social proof. See the module docstring above."
+)
 
 import os
 import sys

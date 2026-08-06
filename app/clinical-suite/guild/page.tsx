@@ -196,10 +196,11 @@ export default function GuildPartnerPage() {
           </div>
           <div className="rounded-[18px] border border-slate-200 bg-white p-6">
             <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
-              The mandate driving volume
+              The guidance driving volume
             </span>
             <p className="m-0 mt-2 text-[14.5px] font-semibold leading-[1.45] text-slate-800">
-              The 21-day community-sport stand-down names clinician clearance as the gate
+              The AIS/SMA 21-day community-sport stand-down, as the codes have adopted it,
+              names clinician clearance as the gate
             </p>
             <p className="m-0 mt-2 text-[13px] leading-[1.45] text-slate-500">
               More clearance decisions, by more of your insureds, every season.

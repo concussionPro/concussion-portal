@@ -38,6 +38,7 @@ export function SiteFooter() {
               <li><Link href="/scat-forms" className="hover:text-white transition-colors">SCAT6 / SCOAT6 Forms</Link></li>
               <li><Link href="/assessment" className="hover:text-white transition-colors">Free Knowledge Test</Link></li>
               <li><Link href="/scat-mastery" className="hover:text-white transition-colors">Free SCAT6 Mastery Course</Link></li>
+              <li><Link href="/ready-to-train" className="hover:text-white transition-colors">Practical Day — City Status</Link></li>
               <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
             </ul>
           </div>

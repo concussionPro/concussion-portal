@@ -1,0 +1,88 @@
+# The gate that stops a broken commit reaching production.
+#
+# On 2026-08-06 commit 925d8b5f shipped a component that read a type its own
+# context file did not yet declare — the context was still uncommitted WIP, so
+# LOCAL tsc was green and Vercel's clean build failed. Production served the
+# PREVIOUS build for forty minutes with none of that day's fixes live, and
+# nothing told anybody. Two rules follow from that:
+#
+#   1. Typecheck from a COLD cache. `tsconfig.tsbuildinfo` makes incremental
+#      tsc skip unchanged regions and report green on a tree Vercel rejects
+#      (bitten again 2026-07-01). `.next/dev` is removed for the same reason.
+#   2. Typecheck what git HAS, not what the working tree holds. Actions checks
+#      out the commit, so an uncommitted file cannot prop the build up.
+#
+# Deliberately minimal: no secrets, no database, no Stripe, no Resend, no
+# deploy. Every test in tests/ is a pure unit or repo-scanning test and needs
+# none of those. Adding a step that needs a secret makes this gate un-runnable
+# locally and skippable on a fork — don't.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: typecheck + tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # A clean typecheck. Zero output is the pass condition — tsc --noEmit
+      # prints nothing at all when it is happy, so anything on stdout is a
+      # finding even if the exit code were somehow 0.
+      - name: Typecheck (cold cache)
+        run: |
+          rm -rf .next/dev
+          rm -f tsconfig.tsbuildinfo
+          out="$(npx tsc --noEmit 2>&1)"
+          if [ -n "$out" ]; then
+            echo "$out"
+            echo "::error::tsc --noEmit produced output; the build Vercel runs will fail"
+            exit 1
+          fi
+          echo "tsc --noEmit: 0 lines"
+
+      # Fully green, and no skips. A skipped test is an unlocked defect class
+      # that still reads as a pass on the summary line.
+      - name: Tests
+        run: npx vitest run --reporter=default --reporter=json --outputFile=.vitest-result.json
+
+      - name: No skipped tests
+        if: always()
+        run: |
+          node -e '
+            const fs = require("fs")
+            if (!fs.existsSync(".vitest-result.json")) {
+              console.error("::error::no vitest result file — the run did not complete")
+              process.exit(1)
+            }
+            const r = JSON.parse(fs.readFileSync(".vitest-result.json", "utf8"))
+            const skipped = (r.numPendingTests ?? 0) + (r.numTodoTests ?? 0)
+            console.log(`${r.numPassedTests} passed, ${r.numFailedTests} failed, ${skipped} skipped, across ${(r.testResults ?? []).length} files`)
+            if (r.numFailedTests > 0 || !r.success) {
+              console.error("::error::test failures")
+              process.exit(1)
+            }
+            if (skipped > 0) {
+              const names = (r.testResults ?? [])
+                .flatMap(f => (f.assertionResults ?? []).filter(a => a.status !== "passed").map(a => `${f.name}: ${a.fullName} [${a.status}]`))
+              console.error("::error::skipped tests are unlocked defect classes wearing a green tick\n" + names.join("\n"))
+              process.exit(1)
+            }
+          '

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/PlatformChrome'
-import { REFERENCE_COUNT } from '@/data/reference-count'
+import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /platform/evidence — credibility page for the SST Trainer platform site.
@@ -286,7 +286,7 @@ export default function EvidencePage() {
             </p>
             <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-600">
               The citable, peer-reviewable standard of the method this platform delivers — the clinical spine
-              of the Concussion Rehab Mastery course, referenced to a {REFERENCE_COUNT}-item evidence
+              of the Concussion Rehab Mastery course, referenced to a {CRM_REFERENCE_COUNT}-item evidence
               base.
             </p>
             <a

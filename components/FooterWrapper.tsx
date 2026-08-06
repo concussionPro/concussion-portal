@@ -47,6 +47,7 @@ const PUBLIC_ROUTES = [
   '/faq',
   '/courses',
   '/course',
+  '/ready-to-train',
   '/checkout',
   '/privacy',
   // Legal / company — reachable from the footer, so they must carry it back.

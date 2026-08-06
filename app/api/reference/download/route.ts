@@ -32,15 +32,21 @@ export async function HEAD(request: NextRequest) {
   return new NextResponse(null, { status: hasAccess ? 200 : 403 })
 }
 
+// `/reference/download` is NOT a route (verified live 2026-08-06: 404), so the
+// post-login target below used to drop a successfully signed-in buyer on a 404.
+// /complete-reference is the real reader page and carries its own middleware
+// gate. Likewise /reference is a redirect-only stub to /pricing (the A$97
+// bundle was retired) and `?purchase=required` is read by nothing — the
+// unentitled branch goes straight to /pricing rather than paying a second hop.
 export async function GET(request: NextRequest) {
   const sessionToken = request.cookies.get('session')?.value
   if (!sessionToken) {
-    return NextResponse.redirect(new URL('/login?redirect=/reference/download', request.url))
+    return NextResponse.redirect(new URL('/login?redirect=/complete-reference', request.url))
   }
 
   const session = verifySessionToken(sessionToken)
   if (!session) {
-    return NextResponse.redirect(new URL('/login?redirect=/reference/download', request.url))
+    return NextResponse.redirect(new URL('/login?redirect=/complete-reference', request.url))
   }
 
   // Book comes bundled with paid course access.
@@ -50,7 +56,7 @@ export async function GET(request: NextRequest) {
     (await isBookOwner(session.email))
 
   if (!hasAccess) {
-    return NextResponse.redirect(new URL('/reference?purchase=required', request.url))
+    return NextResponse.redirect(new URL('/pricing', request.url))
   }
 
   try {

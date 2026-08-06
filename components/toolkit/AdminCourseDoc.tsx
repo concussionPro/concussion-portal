@@ -1,7 +1,7 @@
 'use client'
 
 import { FillableDoc, Fld } from './FillableDoc'
-import type { AdminCourseModule } from '@/data/hub-program-content'
+import { ADMIN_COURSE_QUESTION_COUNT, type AdminCourseModule } from '@/data/hub-program-content'
 import { CheckCircle2, Clock, Lock } from 'lucide-react'
 
 export function AdminCourseDoc({
@@ -57,7 +57,7 @@ function Cover({ totalMinutes, moduleCount }: { totalMinutes: number; moduleCoun
         Front-Desk Micro-Course
       </h1>
       <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl mb-4">
-        A short, non-clinical training for reception and administration staff at concussion-trained clinics. Covers recognition, phone triage, red flags, intake, AI-safe documentation, the template library, and concussion-priority booking — with a 10-question knowledge check and a digital certificate at the end.
+        A short, non-clinical training for reception and administration staff at concussion-trained clinics. Covers recognition, phone triage, red flags, intake, AI-safe documentation, the template library, and concussion-priority booking — with a self-marked knowledge check on each assessed module and a digital certificate at the end.
       </p>
 
       <div className="grid grid-cols-3 gap-3 mt-4">
@@ -258,7 +258,7 @@ function Certificate({ moduleCount, totalMinutes }: { moduleCount: number; total
         Front-Desk Concussion Workflow
       </h2>
       <p className="text-sm text-muted-foreground mb-6">
-        {moduleCount} modules · ~{Math.round(totalMinutes / 60 * 10) / 10} hours · knowledge check pass mark 8/10
+        {moduleCount} modules · ~{Math.round(totalMinutes / 60 * 10) / 10} hours · {ADMIN_COURSE_QUESTION_COUNT} self-marked knowledge-check questions
       </p>
 
       <div className="rounded-xl bg-gradient-to-br from-accent/8 via-white to-white border border-accent/25 ring-1 ring-accent/15 p-6 sm:p-8 my-4">
@@ -272,7 +272,7 @@ function Certificate({ moduleCount, totalMinutes }: { moduleCount: number; total
         </p>
 
         <p className="text-[13px] text-foreground leading-relaxed mb-4">
-          has successfully completed the <strong>Front-Desk Concussion Workflow</strong> micro-course — covering concussion recognition at reception, phone triage, red-flag protocols, intake form additions, AI-safe documentation, the template library, concussion-priority booking, and the 10-question knowledge check.
+          has successfully completed the <strong>Front-Desk Concussion Workflow</strong> micro-course — covering concussion recognition at reception, phone triage, red-flag protocols, intake form additions, AI-safe documentation, the template library, concussion-priority booking, and the self-marked knowledge check on each assessed module.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">

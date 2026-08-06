@@ -1,8 +1,21 @@
 /**
- * POST /api/admin/send-outreach
+ * POST /api/admin/send-outreach — BRICKED 2026-08-06 (Register C).
  *
- * One-off admin endpoint: sends Melbourne June 13 workshop outreach
- * to all preview users, excluding specified contacts.
+ * One-off admin endpoint: mass-sent "Melbourne Saturday June 13th" workshop
+ * outreach to every preview user.
+ *
+ * WHY IT IS BRICKED. Its sibling one-shot, scripts/send-melbourne-outreach.mjs,
+ * was bricked on 2026-08-05 for shipping a dead June-2026 date — but the HTTP
+ * twin that sends the SAME copy survived the sweep. Melbourne is
+ * status 'completed' (ran 13 Jun 2026); this route would still email the whole
+ * preview list "Would June 13 work for you? Reply yes and I'll hold your spot."
+ * The body also claimed "6 CPD hours on top of the full online course
+ * (16 CPD hours total)" — the practical day is
+ * CONFIG.COURSE.IN_PERSON_CPD_POINTS (8) since the 2026-07-30 OA re-rate, so
+ * the two numbers in one sentence did not even agree with each other.
+ *
+ * A future workshop-announce lane must derive its date/city/status from
+ * CONFIG.LOCATIONS and its CPD figures from CONFIG.COURSE, never from literals.
  *
  * Auth: x-admin-key header
  * Use ?dry=1 to preview recipients without sending.
@@ -16,6 +29,10 @@ import { isAdminRequest } from '@/lib/require-admin'
 import { CONFIG } from '@/lib/config'
 
 export const maxDuration = 120
+
+/** Typed `boolean` (not the literal `true`) so the fenced body below stays
+ *  type-checked rather than being narrowed away as unreachable. */
+const BRICKED: boolean = true
 
 const EXCLUDE_EMAILS = new Set([
   'loladhunt@gmail.com',
@@ -79,7 +96,7 @@ function buildEmail(firstName: string): string {
       <ul>
         <li>SCAT6, VOMS &amp; BESS administration with expert coaching</li>
         <li>Practice on real subjects with immediate feedback</li>
-        <li>6 CPD hours on top of the full online course <strong>(16 CPD hours total)</strong></li>
+        <li>${CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD hours on top of the full online course <strong>(${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours total)</strong></li>
         <li>Small group &mdash; capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} per session</li>
       </ul>
 
@@ -108,6 +125,22 @@ function buildEmail(firstName: string): string {
 export async function POST(request: NextRequest) {
   if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // BRICKED — see the file header. The payload names a workshop date that has
+  // already run and a practical-day CPD figure that is two re-rates stale.
+  // Deleting the route would lose the recipient-scoping SQL (suppression +
+  // CRM-buyer exclusion) that a future lane should reuse, so it is fenced
+  // instead. Remove this guard only alongside CONFIG-derived copy.
+  if (BRICKED) {
+    return NextResponse.json(
+      {
+        error: 'Gone — historical one-shot (Melbourne, 13 Jun 2026).',
+        detail:
+          'Copy names a completed workshop date and a stale practical-day CPD figure. Rebuild deriving from CONFIG.LOCATIONS + CONFIG.COURSE before re-enabling.',
+      },
+      { status: 410 },
+    )
   }
 
   const url = new URL(request.url)

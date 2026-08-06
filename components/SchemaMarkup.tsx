@@ -168,12 +168,24 @@ export function buildEventSchema(
   // Confirmed workshops have a real venue (currently only Melbourne — Rydges).
   const venue = location === 'MELBOURNE' ? CONFIG.VENUE_BENEFITS.MELBOURNE : null
 
+  // The event image must not assert the wrong city. /melbourne-workshop.jpg is
+  // a poster with "MELBOURNE — JUNE 13, 2026" BURNED INTO THE ARTWORK, and this
+  // builder runs for every location key (/courses/sydney renders
+  // <EventSchema location="SYDNEY" />), so a Sydney EducationEvent was handing
+  // Google a Melbourne-dated poster as its rich-result image. Melbourne keeps
+  // its own poster; every other city gets the city-neutral workshop photo
+  // already used on /in-person.
+  const eventImage =
+    location === 'MELBOURNE'
+      ? `${CONFIG.SEO.SITE_URL}/melbourne-workshop.jpg`
+      : `${CONFIG.SEO.SITE_URL}/workshop-training.jpg`
+
   return {
     '@context': 'https://schema.org',
     '@type': 'EducationEvent',
     name: `Concussion Management Training - ${locationData.city}`,
     description: 'Full-day practical training in SCAT6, VOMS, and BESS protocols for concussion assessment and management.',
-    image: `${CONFIG.SEO.SITE_URL}/melbourne-workshop.jpg`,
+    image: eventImage,
     startDate: toAESTOffsetISO(locationData.dateObj),
     endDate: toAESTOffsetISO(new Date(locationData.dateObj.getTime() + 8 * 60 * 60 * 1000)),
     eventStatus: 'https://schema.org/EventScheduled',

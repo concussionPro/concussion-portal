@@ -304,7 +304,7 @@ The method the course teaches is itself published as a citable, open-access stan
 
 **Item design.** Items are multiple-choice with a single best answer. They are written against the module's stated learning objectives, and a substantial proportion are clinical-application items — the learner is given a patient scenario, a test result, a symptom response or a documentation extract and must select the correct clinical action. Every item, correct or incorrect, returns explanatory feedback that states why the selected option is right or wrong and refers the learner back to the underlying physiology or protocol. Recall-only items are used sparingly and only where a specific protocol parameter or red-flag threshold must be known verbatim.
 
-**Pass mark.** **80%.** The threshold is applied at the module level, and module progression is gated: a learner must reach 80% on a module's assessment before the next module unlocks. A learner may re-attempt a module assessment; re-attempts require re-engagement with the module content.
+**Pass mark.** **80%.** The threshold is applied at the module level. Enrolled learners may work through the modules in any order — access is governed by enrolment, not by a preceding score — and a learner may re-attempt a module assessment without limit. The 80% threshold is enforced at **certification**: it is checked against every module before a certificate is issued, so no certificate exists for a learner who has not met it on all eight.
 
 **Completion requirement.** A certificate of completion is issued only when all eight modules have been completed and the 80% threshold has been met throughout. There is no partial-completion certificate.
 

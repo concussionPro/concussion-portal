@@ -46,7 +46,7 @@ CEA content is for:
 
 - **Online tier:** A$497 AUD — 8 modules, 23 video lessons, 90 quiz questions, 140+ peer-reviewed references, digital certificate, 8 CPD hours. A$447 with the SCAT6 discount code earned by completing the free SCAT6/SCOAT6 Mastery course.
 - **Complete tier:** A$1,400 AUD regular / A$1,190 early-bird for enrolments made before their city's workshop date launches — Online tier + full-day hands-on workshop. Up to 16 CPD hours total (8 online + 8 in-person). AHPRA-aligned, endorsed by Osteopathy Australia. Buyable anytime for any city — workshop dates launch per city once enough clinicians nominate.
-- **International tier:** USD $197 — Online tier, jurisdiction-neutral clinical content (Berlin/Amsterdam consensus protocols).
+- **International tier:** USD $347 — Online tier, jurisdiction-neutral clinical content (Berlin/Amsterdam consensus protocols).
 - **Workshop locations:** Melbourne (workshop delivered Sat 13 June 2026, Rydges Exhibition St — next round collecting nominations). Sydney + Byron Bay collecting nominations, dates to be confirmed.
 - **URLs:** https://portal.concussion-education-australia.com/pricing | https://portal.concussion-education-australia.com/pricing-international
 
@@ -61,7 +61,7 @@ CEA content is for:
 ### 3. The Vagus Nerve in Clinical Practice
 
 - **Price:** A$97 AUD (early-bird A$82)
-- **Duration:** 1.25 CPD hours
+- **Duration:** 1 CPD hour
 - **For:** Clinicians interested in vagal-tone clinical applications
 - **URL:** https://portal.concussion-education-australia.com/courses/vagus-nerve
 
@@ -214,8 +214,8 @@ See the full comparison: https://portal.concussion-education-australia.com/blog/
 17. NSW Mandatory Concussion Training for Combat Sports: https://portal.concussion-education-australia.com/blog/nsw-mandatory-concussion-training-combat-sports
 18. 7 Concussion Myths Clinicians Should Stop Believing in 2026: https://portal.concussion-education-australia.com/blog/concussion-myths-clinicians-should-stop-believing
 19. BESS Balance Testing for Concussion — Clinician's Complete Guide: https://portal.concussion-education-australia.com/blog/bess-balance-testing-concussion-guide
-20. Beyond SCAT6 — How Vestibular/Ocular Screening Improves Concussion Care: https://portal.concussion-education-australia.com/blog/beyond-scat6-vestibular-ocular-screening
-21. Safe Return-to-Play Decisions After Concussion — 5 Quick Wins: https://portal.concussion-education-australia.com/blog/safe-return-to-play-decisions-concussion
+20. Beyond SCAT6 — How Vestibular/Ocular Screening Improves Concussion Care: https://portal.concussion-education-australia.com/blog/vestibular-ocular-screening-voms-concussion
+21. Safe Return-to-Play Decisions After Concussion — 5 Quick Wins: https://portal.concussion-education-australia.com/blog/return-to-play-decisions-concussion-clinicians
 
 ---
 

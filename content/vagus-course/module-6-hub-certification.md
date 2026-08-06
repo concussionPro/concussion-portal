@@ -47,7 +47,7 @@ The certification quiz tests the load-bearing content from Modules 1, 2, and 4 �
 - 10 multiple-choice questions
 - Pass mark: 8/10
 - Unlimited retries
-- Issues a verifiable certificate valid for 12 months
+- Issues a verifiable certificate — completion evidence, no expiry
 - Counts as 1 CPD hour (Educational Activities — your AHPRA Board CPD Home rules apply)
 
 [KEYPOINT: The certificate is not a diagnostic qualification. It documents that you've completed the course and understood the regulatory + evidence framing. Clinical decisions still rest with you and your treating relationships.]
@@ -57,7 +57,7 @@ The certification quiz tests the load-bearing content from Modules 1, 2, and 4 �
 Once you pass the quiz, your certificate page gives you everything an audit needs:
 
 - A verifiable certificate with a unique public verification URL (anyone — employer, insurer, auditor — can confirm it without an account)
-- The certificate ID, issue date, and validity window
+- The certificate ID and issue date (there is no expiry — completion evidence does not lapse)
 - A suggested AHPRA log entry you can copy into your CPD record — activity name, provider, hours, date, plus a prompt for the brief reflection most Boards require
 
 Keep the verification URL with your CPD records; check it still resolves before any audit or insurer request.

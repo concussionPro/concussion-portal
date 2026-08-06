@@ -1408,17 +1408,16 @@ export const ADMIN_COURSE_MODULES: AdminCourseModule[] = [
     durationMinutes: 4,
     learningOutcomes: [
       'Demonstrate working knowledge of concussion recognition at reception.',
-      'Pass the 10-question knowledge check.',
+      'Work through the knowledge check — one self-marked question per assessed module.',
       'Receive a digital certificate for the HR file.',
     ],
     sections: [
       {
         heading: 'About the knowledge check',
         body: [
-          'The full knowledge check has 10 questions covering: recognition, phone triage, red flags, intake fields, AI safety, and template use.',
-          'Pass mark: 8/10.',
-          'Two attempts allowed. If you don\'t pass on the second attempt, the course is reset and the modules can be revisited.',
-          'On passing, a digital completion certificate is issued. The certificate names the staff member, the clinic, and the completion date. It goes in the HR file as evidence of role-relevant training.',
+          'The knowledge check draws one question from each assessed module, covering recognition, phone triage, red flags, intake fields and template use.',
+          'It is a self-check, not an invigilated exam: each question is printed with its correct answer and a short rationale so staff can mark their own understanding and re-read the module that covers any gap.',
+          'On completing the modules, a digital completion certificate is issued. The certificate names the staff member, the clinic, and the completion date. It goes in the HR file as evidence of role-relevant training.',
         ],
       },
       {
@@ -1444,6 +1443,22 @@ export const ADMIN_COURSE_MODULES: AdminCourseModule[] = [
 /** Number of discharge/handover templates shipped. Derive ALL display copy
  *  from this — the toolkit pages hardcoded "Six" while eight are listed. */
 export const DISCHARGE_TEMPLATE_COUNT = DISCHARGE_TEMPLATES.length
+
+/**
+ * Questions in the front-desk micro-course knowledge check — DERIVED.
+ *
+ * `knowledgeCheck` is ONE question per module and is optional, so the real
+ * bank is however many modules define it. The course doc, its printed
+ * certificate and module 8's own prose all asserted a "10-question knowledge
+ * check" with a "pass mark 8/10" and "two attempts, then the course resets" —
+ * none of which exists: there is no 10-question bank, no attempt counter and no
+ * reset path anywhere in the codebase. That copy went out on a document clinics
+ * file as HR evidence of staff training, so it has to describe what the course
+ * actually does. Derive every display of this number.
+ */
+export const ADMIN_COURSE_QUESTION_COUNT = ADMIN_COURSE_MODULES.filter(
+  (m) => m.knowledgeCheck,
+).length
 
 /** Number of referral-building outreach templates shipped. */
 export const OUTREACH_TEMPLATE_COUNT = OUTREACH_TEMPLATES.length

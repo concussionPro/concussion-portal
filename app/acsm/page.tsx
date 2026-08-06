@@ -2,7 +2,7 @@ import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
-import { REFERENCE_COUNT } from '@/data/reference-count'
+import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * /acsm — the ACSM listing landing page (asset A10).
@@ -111,7 +111,7 @@ export default function AcsmLandingPage() {
           <p className="mt-2 text-[14px] text-slate-600">
             Eight online modules · {TOTAL_MINS / 60} instructional hours · 87
             assessment questions distributed across the modules · 80% pass mark ·{' '}
-            {REFERENCE_COUNT} peer-reviewed references.
+            {CRM_REFERENCE_COUNT} peer-reviewed references.
           </p>
           <ol className="mt-5 divide-y divide-slate-100 rounded-xl border border-slate-200">
             {MODULES.map((m) => (
@@ -259,7 +259,13 @@ export default function AcsmLandingPage() {
 
         <p className="mt-10 text-[12px] text-slate-400">
           Australian and New Zealand pricing differs —{' '}
-          <Link href="/pricing" className="underline hover:text-slate-600">
+          {/* /courses, NOT /pricing. Middleware geo-redirects /pricing to
+              /pricing-international for every KNOWN non-AU/NZ visitor — i.e.
+              this page's entire audience — so "see AUD pricing" landed them
+              back on the USD page and the link could never do what it said.
+              /courses renders the same AUD CCM body and is not in the
+              middleware matcher, so the AUD prices actually show. */}
+          <Link href="/courses" className="underline hover:text-slate-600">
             see AUD pricing
           </Link>
           .

@@ -53,7 +53,7 @@ const SENDS = {
     subject: 'Concussion care your contract managers can evidence',
     text: `Nick — concussion rehab changed in 2022 (prescribed sub-symptom exercise, first-line), and scheme-funded work increasingly asks for evidence of current training and standardised outcomes reporting.
 
-We certify clinical teams in the updated protocol (Osteopathy Australia-endorsed, ESSA-accredited) with a platform that produces the documentation — GP letters and return-to-activity reports generated from measured session data.
+We certify clinical teams in the updated protocol — Concussion Clinical Mastery, Osteopathy Australia-endorsed, plus a separate ESSA-accredited rehab stream for exercise physiologists — with a platform that produces the documentation — GP letters and return-to-activity reports generated from measured session data.
 
 Worth 20 minutes, or is this one for your clinical advisory board?
 
@@ -66,7 +66,7 @@ zac@concussion-education-australia.com · +61 449 186 579`,
     subject: 'The concussion protocol your sports clinicians were trained before',
     text: `Andrew — the athletes you work with are exactly where the 2022 concussion consensus bites: first-line treatment is now measured-threshold aerobic prescription, and most clinicians trained earlier never learned the testing layer.
 
-We certify teams in the updated protocol (Osteopathy Australia-endorsed, ESSA-accredited) and license the delivery tool — measured thresholds, monitored home sessions, auto-drafted GP clearance letters.
+We certify teams in the updated protocol — Concussion Clinical Mastery, Osteopathy Australia-endorsed, plus a separate ESSA-accredited rehab stream for exercise physiologists — and license the delivery tool — measured thresholds, monitored home sessions, auto-drafted GP clearance letters.
 
 Worth 20 minutes across your clinics?
 

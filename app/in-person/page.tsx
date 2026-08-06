@@ -265,6 +265,15 @@ export default function InPersonTrainingPage() {
             <p className="text-sm text-muted-foreground mt-4">
               Venue details will be emailed to enrolled participants 2 weeks prior to workshop date.
             </p>
+            {/* /ready-to-train shipped 2026-08-06 with ZERO inbound links from
+                anywhere on the site (route register): the page built to show a
+                visitor how close their city is was itself unreachable. This is
+                the highest-intent surface for it. */}
+            <p className="text-sm mt-2">
+              <Link href="/ready-to-train" className="text-accent font-semibold hover:underline">
+                See where each city is up to →
+              </Link>
+            </p>
 
             {/* City interest email capture */}
             <div className="mt-6 pt-6 border-t border-border/30">

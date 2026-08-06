@@ -39,8 +39,8 @@ On passing the final quiz, you'll be issued a **Certificate of Completion — AI
 
 A few things to know:
 
-- **Validity: 12 months.** AI regulation in Australia is moving — what is compliant today may be re-scoped by AHPRA or the OAIC inside a year. A short validity window keeps the credential meaningful.
-- **Renewal.** Re-sit the short assessment each year to refresh the certificate. (An optional Hub subscription, if you choose to use one, can track your ongoing exposure to the monthly regulatory updates — but it is **not required** to earn, hold, or renew the certificate.)
+- **No expiry.** The certificate is completion evidence: it records that you passed this assessment on a given date, and that fact does not lapse. It is withdrawn only if revoked. Your CPD record keeps it for as long as your Board requires.
+- **Re-sitting is optional, not a renewal.** AI regulation in Australia is moving — what is compliant today may be re-scoped by AHPRA or the OAIC inside a year — so re-taking the course later is worth doing for your own currency, and it issues a new dated certificate. It is not a condition of holding the original. (An optional Hub subscription, if you choose to use one, can track your ongoing exposure to the monthly regulatory updates — but it is **not required** to earn or hold the certificate.)
 - **Each certificate carries a unique verifiable URL.** Employers, insurers, and professional indemnity providers can click that URL and confirm the certificate is current — useful when an insurer asks "can you demonstrate AI competency training?"
 
 The certificate is not an AHPRA- or ESSA-issued credential — it is a continuing-education record. Log it that way in your CPD record: AHPRA-registered practitioners record it under their Board's CPD; ESSA-accredited professionals (AEP/AES/ASpS) record it as a CPD activity in their ESSA log.

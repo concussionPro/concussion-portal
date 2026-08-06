@@ -76,12 +76,12 @@ them broken):
   "alternateName": "CEA",
   "url": "https://concussion-education-australia.com",
   "logo": "https://images.squarespace-cdn.com/content/v1/681be32e8c04e969c69c5971/244907ce-acbe-4894-b5a3-f93bbc4f460d/concussion-education-australia-logo.png",
-  "description": "Australia's concussion CPD provider for GPs, physiotherapists, osteopaths and allied health clinicians. AHPRA-aligned, Osteopathy Australia endorsed, MedCPD Career Health accredited.",
+  "description": "Australia's concussion CPD provider for GPs, physiotherapists, osteopaths and allied health clinicians. AHPRA-aligned, Osteopathy Australia endorsed.",
   "founder": {
     "@type": "Person",
     "name": "Zac Lewis",
     "jobTitle": "Founder & Lead Educator, Concussion Education Australia",
-    "hasCredential": "Registered Osteopath (AHPRA), B.Clin.Sci., M.Ost.Med, PhD Candidate (Neuroscience)",
+    "hasCredential": "Registered Osteopath (AHPRA), B.Clin.Sci., M.Ost.Med",
     "knowsAbout": [
       "Sport-Related Concussion",
       "SCAT-6 Assessment",
@@ -112,7 +112,7 @@ them broken):
   "@context": "https://schema.org",
   "@type": "Course",
   "name": "Concussion Clinical Mastery",
-  "description": "Australia's evidence-based concussion CPD course for GPs, physiotherapists, osteopaths and allied health clinicians. SCAT-6, SCOAT-6, vestibular-ocular screening, return-to-play. 14 CPD hours, AHPRA aligned, Osteopathy Australia endorsed, MedCPD Career Health accredited.",
+  "description": "Australia's evidence-based concussion CPD course for GPs, physiotherapists, osteopaths and allied health clinicians. SCAT-6, SCOAT-6, vestibular-ocular screening, return-to-play. 16 CPD hours, AHPRA aligned, Osteopathy Australia endorsed.",
   "inLanguage": "en-AU",
   "provider": {
     "@type": "EducationalOrganization",
@@ -162,7 +162,7 @@ them broken):
   ],
   "educationalCredentialAwarded": {
     "@type": "EducationalOccupationalCredential",
-    "name": "14 CPD Hours - AHPRA Aligned",
+    "name": "16 CPD Hours - AHPRA Aligned",
     "credentialCategory": "Continuing Professional Development",
     "recognizedBy": {
       "@type": "Organization",
@@ -226,7 +226,7 @@ Concussion Training Australia | AOA Endorsed CPD Course for Clinicians
 
 **With:**
 ```
-Concussion Education Australia | OA-Endorsed CPD Course (14 CPD Hours)
+Concussion Education Australia | OA-Endorsed CPD Course (16 CPD Hours)
 ```
 
 (Drops the misleading "AOA" — that was the pre-2019 name. Uses the actual
@@ -236,12 +236,12 @@ brand. 67 chars.)
 
 **Replace:**
 ```
-Concussion training for clinicians. 14 CPD hours. Online + in-person. Led by GP & neuroscience PhD. Practical skills. Register now.
+[the meta description live on the Squarespace site at the time of the 2026-05-08 audit. Two false claims in one line: a CPD figure two re-rates stale, and an instructor credential CEA has never held — the founder is an AHPRA-registered osteopath, not a GP and not a PhD. Reproduced only as the string to search for; do not paste it anywhere.]
 ```
 
 **With:**
 ```
-AHPRA-aligned concussion CPD for Australian clinicians. 14 hours, hybrid (online + in-person practical). Endorsed by Osteopathy Australia. Register now.
+AHPRA-aligned concussion CPD for Australian clinicians. 16 hours, hybrid (online + in-person practical). Endorsed by Osteopathy Australia. Register now.
 ```
 
 (155 chars. Drops vague "GP & neuroscience PhD" framing — instructor names
@@ -290,7 +290,7 @@ Page Settings → Advanced → Page Header Code Injection:
     "@type": "Person",
     "name": "Zac Lewis",
     "jobTitle": "Founder & Lead Educator, Concussion Education Australia",
-    "hasCredential": "Registered Osteopath (AHPRA), B.Clin.Sci., M.Ost.Med, PhD Candidate (Neuroscience)"
+    "hasCredential": "Registered Osteopath (AHPRA), B.Clin.Sci., M.Ost.Med"
   },
   "publisher": {
     "@type": "Organization",

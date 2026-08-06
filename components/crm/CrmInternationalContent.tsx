@@ -11,7 +11,7 @@ import { SiteNav } from '@/components/SiteNav'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { CONFIG, SST_TIERS } from '@/lib/config'
-import { REFERENCE_COUNT } from '@/data/reference-count'
+import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * CRM (Concussion Rehab Mastery) — INTERNATIONAL landing.
@@ -180,11 +180,15 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
-              {/* REFERENCE_COUNT, never a literal — "136" was one of the three
-                  stale variants data/reference-count.ts exists to kill, and it
-                  understated the real evidence base by 8 sources on a live
-                  international selling surface. */}
-              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">{REFERENCE_COUNT}</p>
+              {/* CRM_REFERENCE_COUNT, never a literal and never the CCM number.
+                  This tile shipped REFERENCE_COUNT (144) — the size of the CCM
+                  Reference Repository — on a page selling Concussion Rehab
+                  Mastery, whose own evidence base is CRM_REFERENCE_COUNT
+                  distinct works. The comment that used to sit here told editors
+                  "136" was a stale variant to kill; on this page 136 was the
+                  CRM's own citation total, so that instruction entrenched a
+                  ~2.3x overstatement on an international selling surface. */}
+              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">{CRM_REFERENCE_COUNT}</p>
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">References</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">

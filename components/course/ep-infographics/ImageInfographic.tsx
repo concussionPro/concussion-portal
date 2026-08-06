@@ -9,6 +9,27 @@ import { InfographicFrame } from './InfographicFrame'
  * as `<id>.png` (with `<id>.svg` as an accepted fallback format). The config map
  * below supplies the framing chrome (eyebrow / title / caption) for every id —
  * adding a new infographic is just an entry here plus the image file.
+ *
+ * CAPTIONS MUST DESCRIBE THE IMAGE. `title` is also the <img> alt and the
+ * dialog aria-label, and `caption` is visible page copy under the figure, so a
+ * caption naming items the artwork does not contain is both an accessibility
+ * defect and a truthfulness one. Every caption here was re-checked against the
+ * rendered PNG on 2026-08-06; ten were rewritten because they named the wrong
+ * items or the wrong count (e.g. sstae-mechanism promised "five impairments …
+ * CO₂ reactivity" over a four-card image with no CO₂ card; stalled-rehab said
+ * "four-step" over five steps; concussion-symptom-clusters described the
+ * SCAT-style physical/cognitive/emotional/sleep domains over an image of the
+ * six clinical phenotypes). If you re-generate an image, re-read its caption.
+ *
+ * OPEN, OWNER'S CALL — phenotype count: data/ep-modules/module-5.ts teaches
+ * SEVEN phenotypes ("One Injury, Seven Expressions": vestibular, oculomotor,
+ * cervicogenic, autonomic/physiologic, cognitive/fatigue, affective,
+ * headache/migraine), but phenotype-map.png is the UPMC/Collins-Kontos SIX
+ * clinical-profile table (its own source line cites that model) and omits the
+ * autonomic/physiologic row. The image is internally correct and correctly
+ * sourced, so the caption above now matches it — but the module it renders in
+ * asks for seven. Resolve by either re-drawing the diagram with the seventh
+ * row or reframing module 5; do not silently change one side.
  */
 export const INFOGRAPHIC_CONFIG: Record<
   string,
@@ -19,13 +40,13 @@ export const INFOGRAPHIC_CONFIG: Record<
     eyebrow: 'Module 1 · Neuroanatomy',
     title: 'Brain regions relevant to concussion',
     caption:
-      'The cortical, limbic and brainstem structures most disrupted by concussive forces, and the symptoms each region drives.',
+      'The frontal, parietal, temporal and occipital lobes plus the cerebellum and brainstem, and the symptoms each region drives.',
   },
   'neurometabolic-cascade': {
     eyebrow: 'Module 1 · Pathophysiology',
     title: 'The neurometabolic cascade',
     caption:
-      'From mechanoporation and ionic flux through pump overdrive, hyperglycolysis and the energy crisis to metabolic recovery.',
+      'Four stages — ionic imbalance, calcium influx and mitochondrial dysfunction, sodium dysregulation and oedema, and transient cerebral hypoperfusion — converging on the energy crisis.',
   },
   'cbf-autoregulation': {
     eyebrow: 'Pathophysiology',
@@ -41,21 +62,21 @@ export const INFOGRAPHIC_CONFIG: Record<
   },
   'concussion-symptom-clusters': {
     eyebrow: 'Recognition',
-    title: 'Concussion symptom clusters',
+    title: 'The six symptom clusters',
     caption:
-      'The physical, cognitive, emotional and sleep symptom groups and the neurophysiology behind each one.',
+      'Vestibular, oculomotor, cognitive/fatigue, migraine, anxiety/mood and cervical — the six overlapping clusters, and why naming the dominant one drives targeted rehab.',
   },
   'phenotype-map': {
     eyebrow: 'Phenotypes',
     title: 'The six concussion phenotypes',
     caption:
-      'Vestibular, oculomotor, cervicogenic, physiological, cognitive and mood presentations mapped to their targeted treatment.',
+      'Vestibular, oculomotor, cognitive/fatigue, migraine, anxiety/mood and cervical, each mapped to its hallmark assessment finding and targeted intervention.',
   },
   'bctt-protocol': {
     eyebrow: 'Assessment',
     title: 'Buffalo Concussion Treadmill Test',
     caption:
-      'The Balke-based incline ramp, per-minute monitoring and the ≥3-point symptom-threshold termination criterion.',
+      'The Balke-based ramp — incline rises 1° per minute at a fixed speed — with HR, RPE and symptom score recorded every minute until symptom exacerbation sets the HR threshold.',
   },
   'hrt-to-prescription': {
     eyebrow: 'Prescription',
@@ -75,13 +96,13 @@ export const INFOGRAPHIC_CONFIG: Record<
     eyebrow: 'Module 1 · Biomechanics',
     title: 'Forces that cause concussion',
     caption:
-      'Rotational, linear, coup-contrecoup and diffuse axonal injury mechanisms and why rotational shear is the most damaging.',
+      'Three force patterns — linear, rotational and coup-contrecoup — and why rotational shear, which drives diffuse axonal injury, does the most damage.',
   },
   'recovery-timeline': {
     eyebrow: 'Module 1 · Recovery',
     title: 'The concussion recovery timeline',
     caption:
-      'The typical 7–28 day metabolic recovery course, why symptoms resolve before the brain does, and the prolonged-recovery tail.',
+      'Symptom burden peaks at 24–72 hours and most recover in 2–4 weeks; the 10–30% who do not are the PPCS tail that needs active rehab.',
   },
   'red-flag-decision': {
     eyebrow: 'Module 2 · Red flags',
@@ -99,7 +120,7 @@ export const INFOGRAPHIC_CONFIG: Record<
     eyebrow: 'Module 2 · Tools',
     title: 'The SCAT6 assessment family',
     caption:
-      'SCAT6, SCOAT6 and Child SCAT6 — what each tool covers, who it is for, and the limits of EP use.',
+      'SCAT6, SCOAT6, Child SCAT6 and Child SCOAT6 — when each applies, which ages it covers, and the limits of EP use.',
   },
   'ep-scope-boundary': {
     eyebrow: 'Module 2 · Scope',
@@ -123,7 +144,7 @@ export const INFOGRAPHIC_CONFIG: Record<
     eyebrow: 'Module 4 · Mechanism',
     title: 'How sub-symptom-threshold exercise works',
     caption:
-      'The five impairments SSTAE reverses — autonomic, autoregulatory, CO₂ reactivity, neuroplastic and inflammatory.',
+      'Four proposed, converging mechanisms — restored CBF autoregulation, rebalanced autonomic tone, raised BDNF and neuroplasticity, and dampened neuroinflammation.',
   },
   'fitt-framework': {
     eyebrow: 'Module 4 · Prescription',
@@ -135,31 +156,31 @@ export const INFOGRAPHIC_CONFIG: Record<
     eyebrow: 'Module 5 · Rehab',
     title: 'Phenotype-specific rehab progressions',
     caption:
-      'How each dominant phenotype maps to a targeted EP progression and when to layer in a secondary phenotype.',
+      'Four-rung EP ladders for the vestibular, oculomotor and autonomic/aerobic phenotypes — advance a rung only when the current level is tolerated.',
   },
   'return-to-learn-work': {
     eyebrow: 'Module 6 · Return',
     title: 'Return-to-learn and return-to-work',
     caption:
-      'The staged cognitive-load progression that shares one metabolic budget with the physical reconditioning program.',
+      'Parallel four-step cognitive-load ladders for school and for work, both advancing only on tolerance and generally preceding full return to sport.',
   },
   'load-monitoring': {
     eyebrow: 'Module 6 · Monitoring',
     title: 'Training-load monitoring',
     caption:
-      'Session RPE, heart rate trends, acute:chronic workload ratio and the symptom diary that governs every progression.',
+      'Three checks that keep progression honest — session RPE, the acute:chronic workload ratio, and the 24-hour symptom rule.',
   },
   'ppcs-risk-factors': {
     eyebrow: 'Module 7 · Prognosis',
     title: 'Predictors of prolonged recovery',
     caption:
-      'The injury, pre-existing, behavioural and demographic factors that predict who is most likely to develop PPCS.',
+      'Risk clusters in three windows — pre-existing factors before injury, the injury characteristics themselves, and what happens in the early course.',
   },
   'stalled-rehab-framework': {
     eyebrow: 'Module 7 · Decisions',
     title: 'When rehabilitation stalls',
     caption:
-      'A four-step decision framework for the plateaued program: re-test, screen non-aerobic drivers, route and review.',
+      'A five-step checklist for the plateaued program: re-confirm the picture, check dose and adherence, re-test the thresholds, treat the modifiers, escalate and share care.',
   },
   'referral-pathway': {
     eyebrow: 'Module 8 · Communication',

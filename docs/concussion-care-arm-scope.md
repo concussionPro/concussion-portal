@@ -106,7 +106,7 @@ This is the reason the free tool is worth building: it's a zero-CAC patient-acqu
 ## 1e. Authority positioning — lean on CEA + OA + research + speaking
 
 The whole pitch rides on Zac/CEA being the **concussion authority**, not just another telehealth osteo. Every institution-facing surface leads with:
-- **Concussion Education Australia** — the CPD provider that *trains the clinicians* in concussion management (14 CPD hours, the flagship course).
+- **Concussion Education Australia** — the CPD provider that *trains the clinicians* in concussion management (16 CPD hours, the flagship course).
 - **Osteopathy Australia endorsed** — independent professional-body endorsement.
 - **Research** — [Zac to supply: publications / studies / contributions — cite specifics].
 - **Conference speaking** — [Zac to supply: named conferences / talks — cite specifics].

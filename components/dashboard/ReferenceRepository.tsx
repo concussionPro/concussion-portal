@@ -241,7 +241,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                 Upgrade to Full Course + Practical Skills Training
               </h3>
               <p className="text-sm text-slate-700 mb-4">
-                You have full access to all online modules and research references. Upgrade to include the full-day hands-on workshop to earn your complete {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hour certificate ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person).
+                You have full access to all online modules and research references. Upgrade to include the full-day hands-on workshop to earn your complete {CONFIG.COURSE.TOTAL_CPD_POINTS}-hour AHPRA-aligned CPD certificate ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person).
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a

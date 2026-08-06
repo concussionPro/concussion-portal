@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
 import { CONFIG } from '@/lib/config'
-import { REFERENCE_COUNT } from '@/data/reference-count'
+import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
  * /cimspa — landing page for UK fitness / active-health professionals via
@@ -118,7 +118,7 @@ export default function CimspaLandingPage() {
             <strong className="text-slate-900">Concussion Rehab Mastery</strong> is
             our structured rehab-exercise course for exercise physiologists and
             rehab clinicians — eight online modules, 8 hours of learning, 80% pass
-            mark, {REFERENCE_COUNT} references, and the live clinical platform (SST Trainer +
+            mark, {CRM_REFERENCE_COUNT} references, and the live clinical platform (SST Trainer +
             Baseline tools).
           </p>
           <div className="mt-4 flex items-baseline gap-2">

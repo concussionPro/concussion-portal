@@ -101,7 +101,10 @@ function Shell() {
               <div className="mx-auto mb-5 max-w-xs rounded-2xl bg-[#16243f] p-4 text-left">
                 <SstWatchVisual />
                 <p className="mt-3 mb-0 text-xs text-slate-300/90">The real app: measured threshold, live band, verified sessions.</p>
-                <a href="/sst-trainer" target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-bold text-teal-300">Try the patient demo →</a>
+                {/* ?landing=1 — see /clinical-testing: plain /sst-trainer
+                    resumes persisted state, so "Try the patient demo" handed a
+                    returning clinician their own live session, not the demo. */}
+                <a href="/sst-trainer?landing=1" target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-bold text-teal-300">Try the patient demo →</a>
               </div>
               <a
                 href={CONFIG.SHOP_URL}
