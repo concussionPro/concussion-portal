@@ -221,6 +221,13 @@ const CPD_DASH = /(\d+(?:\.\d+)?)-CPD[- ](?:hour|hr|point)/gi
  */
 const CPD_LABEL = /\bCPD\s*(?:Points?|Hours?)\s*:/i
 const BARE_NUMBER = /\b(\d{1,2})\b/g
+/**
+ * The composition breakdown — "16 CPD hours (8 online + 8 in-person)". Neither
+ * component number touches the letters "CPD", so adjacency alone read the 16
+ * and missed a practical-day figure sitting one bracket away. This is the most
+ * common shape the rating appears in across the site.
+ */
+const CPD_BREAKDOWN = /(\d{1,2})\s*(?:CPD\s*)?(?:hours?|hrs?|points?)?\s*online\s*[+&]\s*(\d{1,2})\s*(?:CPD\s*)?(?:hours?|hrs?|points?)?\s*in[- ]?person/gi
 
 /** Every CPD quantity the business can currently justify, from its source. */
 const ALLOWED_CPD = new Set<number>([
@@ -273,7 +280,7 @@ const THIRD_PARTY_BODY =
  * outreach draft, which is exactly where the last re-rate's stragglers hid.
  */
 const CEA_OFFERING =
-  /Concussion Clinical Mastery|Concussion Rehab Mastery|\bCCM\b|\bCRM\b|Concussion Education Australia|\bCEA\b|SCAT6? Mastery|AI in Clinical Practice|Vagus|our (?:course|program|flagship)|the (?:online|complete|full) course|practical day|in-person day|workshop/i
+  /Concussion Clinical Mastery|Concussion Rehab Mastery|\bCCM\b|\bCRM\b|Concussion Education Australia|\bCEA\b|SCAT6? Mastery|AI in Clinical Practice|Vagus|\bour (?:course|program|flagship)|the (?:online|complete|full) course|practical day|in-person day|workshop/i
 
 function assertsOurCpd(line: string, path: string): boolean {
   const thirdParty =
@@ -296,6 +303,14 @@ function staleCpdFigures(line: string, path = 'app/x.tsx'): number[] {
     let m: RegExpExecArray | null
     while ((m = re.exec(line))) {
       const n = Number(m[1])
+      if (!ALLOWED_CPD.has(n)) found.add(n)
+    }
+  }
+  CPD_BREAKDOWN.lastIndex = 0
+  let b: RegExpExecArray | null
+  while ((b = CPD_BREAKDOWN.exec(line))) {
+    for (const g of [b[1], b[2]]) {
+      const n = Number(g)
       if (!ALLOWED_CPD.has(n)) found.add(n)
     }
   }
@@ -348,6 +363,39 @@ describe('every CPD figure in the repo is one the config can account for', () =>
       CONFIG.COURSE.ONLINE_CPD_POINTS + CONFIG.COURSE.IN_PERSON_CPD_POINTS,
       'online + practical must equal the advertised total',
     ).toBe(CONFIG.COURSE.TOTAL_CPD_POINTS)
+  })
+
+  it('subject-scoping did not defang the rule — a CEA claim still fails anywhere', () => {
+    // The scoping change (match the claim's SUBJECT, not the digits) is only
+    // safe if it still fires on a genuine CEA rating. Proven on BOTH buckets,
+    // in memory, using the paths each assertion actually scans.
+    const publicPage = 'components/PricingOptions.tsx'
+    expect(
+      staleCpdFigures("'Full-day workshop (14 CPD hours)',", publicPage),
+      'a hardcoded 14 CPD hours on a public page must still fail',
+    ).toEqual([14])
+    expect(
+      staleCpdFigures('<p>16 CPD Hours | 8 online + 6 in-person</p>', publicPage),
+    ).toEqual([6])
+    // Internal prose: only when the line names a CEA offering.
+    const draft = 'docs/partnership-outreach.md'
+    expect(
+      staleCpdFigures("I've built Concussion Clinical Mastery, a 14-CPD-hour program", draft),
+      'a stale CEA rating in an outreach draft must still fail',
+    ).toEqual([14])
+    // …and a third party's number in the same file must not.
+    expect(
+      staleCpdFigures('SESNZ / CEPNZ (New Zealand). Low hundreds; 20 CPD pts/yr; scheme modelled on ESSA.', draft),
+    ).toEqual([])
+    expect(
+      staleCpdFigures('CIMSPA members must record 10 CPD points per year, minimum 5 from endorsed providers.', draft),
+    ).toEqual([])
+    expect(
+      staleCpdFigures('AU clinicians need 20–50 CPD hours a year.', 'app/courses/private-preview/page.tsx'),
+    ).toEqual([])
+    expect(
+      staleCpdFigures('- **Total**: **40 CPD credits** per CPD year (1 Oct – 30 Sep). Credit-weighted.', 'docs/ahpra-cpd-requirements.md'),
+    ).toEqual([])
   })
 
   it('the detector catches the exact figures that survived the last re-rate', () => {
