@@ -200,7 +200,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: 'Can my employer pay for this?',
-      a: 'Yes — most practices and employers cover CPD training costs. After purchase, you\'ll receive a tax invoice and AHPRA-aligned CPD certificate that your employer can use for reimbursement. Many clinicians pay nothing out of pocket.',
+      a: 'Yes — most practices and employers cover CPD training costs. Your tax invoice is issued with payment, so you can submit it for reimbursement straight away; the AHPRA-aligned CPD certificate follows on completion. Many clinicians pay nothing out of pocket.',
     },
     {
       q: 'Does this count toward my AHPRA CPD requirements?',
@@ -312,7 +312,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 AHPRA-aligned concussion assessment training for physiotherapists &amp; osteopaths.
-                Tax invoice emailed immediately with your receipt — most employers reimburse. Certificate on completion.
+                Tax invoice with payment · certificate on completion. Most employers reimburse.
               </p>
             </>
           ) : heroVariant === 'scat6' ? (

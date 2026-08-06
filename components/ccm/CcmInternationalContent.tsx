@@ -407,7 +407,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-foreground">Most practitioners pay £0 out of pocket</p>
-            <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice emailed immediately with your receipt · certificate on completion.</p>
+            <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice with payment · certificate on completion.</p>
           </div>
         </div>
 
