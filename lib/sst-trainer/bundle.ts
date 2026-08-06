@@ -49,6 +49,9 @@ export interface BundledSubscription {
  * FREE for year 1, then bills MONTHLY at the real single-clinician SST price —
  * attached here as an sst-trainer subscription with a 365-day trial.
  */
+/** Months of platform included with a course enrolment before the renewal prompt. */
+export const INCLUDED_PLATFORM_MONTHS = 12
+
 export async function provisionPlatformForBuyer(
   email: string,
   name: string,
@@ -104,7 +107,11 @@ export async function provisionPlatformForBuyer(
     // 5 active patients — rather than uncapped. The guard above exists because
     // an unconditional lift once handed every provisioned buyer an unlimited
     // clinic free forever; this is deliberately the included tier, not that.
-    await setSstClinicPlan(clinic.code, 'active', { tier: 'single' })
+    // 12 months included with the enrolment, then a PROMPT to subscribe —
+    // never an automatic charge. A domestic course checkout saves no payment
+    // method and the buyer consented to a one-off course fee, not to
+    // off-session billing a year later.
+    await setSstClinicPlan(clinic.code, 'active', { tier: 'single' }, INCLUDED_PLATFORM_MONTHS)
   } else {
     console.warn(
       `[bundle] clinic ${clinic.code} provisioned WITHOUT a renewal subscription — staying on the trial cap. ` +

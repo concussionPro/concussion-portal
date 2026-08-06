@@ -170,6 +170,12 @@ export async function setSstClinicPlan(
   rawCode: unknown,
   plan: 'trial' | 'active',
   stripe?: { customerId?: string; subscriptionId?: string; tier?: string },
+  /**
+   * Months of INCLUDED platform that came with a course enrolment. Stamps
+   * `included_until` so the renewal prompt has a date to key on. Omit for a
+   * real subscription (Stripe governs the period) and for comped clinics.
+   */
+  includedMonths?: number,
 ): Promise<void> {
   const code = normaliseClinicCode(rawCode)
   if (!code || code === DEMO_CLINIC_CODE) return
@@ -226,7 +232,11 @@ export async function setSstClinicPlan(
       UPDATE sst_clinics SET plan = ${plan},
         tier = COALESCE(${stripe?.tier ?? null}, tier),
         stripe_customer_id = COALESCE(${stripe?.customerId ?? null}, stripe_customer_id),
-        stripe_subscription_id = COALESCE(${stripe?.subscriptionId ?? null}, stripe_subscription_id)
+        stripe_subscription_id = COALESCE(${stripe?.subscriptionId ?? null}, stripe_subscription_id),
+        included_until = CASE
+          WHEN ${includedMonths ?? null}::int IS NULL THEN included_until
+          ELSE NOW() + (${includedMonths ?? 0}::int * INTERVAL '1 month')
+        END
       WHERE code = ${code}
     `
   } catch (err) {
@@ -331,6 +341,13 @@ export async function ensureSstClinicsTable(): Promise<void> {
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS tier TEXT`
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS profile JSONB`
+  // The INCLUDED platform year that comes with a course enrolment. Set when a
+  // course purchase provisions the clinic; NULL for trials, for clinics on a
+  // real subscription, and for comped/alumni clinics (which are open-ended by
+  // owner decision). At expiry the clinic is PROMPTED to subscribe — never
+  // auto-charged, because a domestic course checkout saves no payment method
+  // and nobody consented to off-session billing at the point of sale.
+  await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_until TIMESTAMPTZ`
 }
 
 /**
