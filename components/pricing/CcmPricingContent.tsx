@@ -405,31 +405,10 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             The old comment here claimed "visible within first scroll on mobile".
             It was not, and had not been for some time. Everything that used to
             sit above still sits below — nothing was deleted, it was reordered. */}
-        {/* THE STREAM FORK — first thing after the hero, deliberately.
-            /pricing sold ONE course: "Concussion Rehab", "Exercise Physiolog"
-            and "ESSA" appeared NOWHERE on the live page (measured 2026-08-07).
-            My first fix put this band BELOW the value bento, roughly 60% down —
-            so an exercise physiologist still had to read the entire CCM pitch
-            before discovering they were on the wrong page. Owner, correctly:
-            "still shows ccm then big scroll and no crm".
-
-            Kept to ONE LINE on purpose. The prices were just moved from 1.9
-            screens to under one; a full card here would push them back down to
-            fix a different problem. An EP needs a signpost, not a sales pitch —
-            the selling happens on /concussion-rehab-mastery. */}
-        <div className="max-w-3xl mx-auto mb-3 text-center">
-          <p className="text-[13px] sm:text-sm text-muted-foreground">
-            Physiotherapist, osteopath, GP or chiro? This is your course.{' '}
-            <span className="hidden sm:inline">·</span>{' '}
-            <span className="block sm:inline mt-1 sm:mt-0">
-              Exercise physiologist?{' '}
-              <Link href="/concussion-rehab-mastery" className="font-bold text-accent hover:underline">
-                Take the {CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA-accredited ' : ''}EP stream instead &rarr;
-              </Link>
-            </span>
-          </p>
-        </div>
-
+        {/* The inline EP fork that used to sit here was removed 2026-08-07 when
+            /pricing became stream-TABBED. A tab at the top of the page does the
+            same job better and earlier; the line was a patch for the era when
+            this page could only show one course. */}
         {/* START-ONLINE-UPGRADE-LATER, stated AT the decision point.
             The page did say this — at y=2092, which is 1,187px BELOW the cards,
             and again in the FAQ at y=7601. Measured 2026-08-07. So the buyer
