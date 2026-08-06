@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
+import PricingObjection from '@/components/PricingObjection'
 import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
@@ -695,6 +696,14 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             Choose your plan <ArrowRight className="w-4 h-4" />
           </a>
           <div className="mt-4 flex justify-center"><PaymentMethodsStrip className="!mt-0" /></div>
+        </div>
+
+        {/* Below the final CTA, deliberately. 225 sessions read this page in
+            90 days and 19 clicked; the only pricing events that exist fire for
+            people already converting, so there is no data at all on the other
+            206. This asks them, without interrupting anyone who is buying. */}
+        <div className="max-w-2xl mx-auto">
+          <PricingObjection />
         </div>
 
       </div>
