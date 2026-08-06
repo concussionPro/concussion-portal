@@ -148,6 +148,18 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
             $497 → workshop-upgrade ladder for this city). */}
         <Link
           href={`/pricing?location=${citySlug}`}
+          // The visible label carries no city, and this card is rendered once
+          // PER CITY — so the homepage ships three links whose accessible name
+          // is byte-identical ("Enrol from $497 — early-bird locked") pointing
+          // at three different destinations (byron-bay, melbourne, sydney).
+          // Sighted users read the city from the card; a screen reader
+          // announces three indistinguishable links, and a link list shows
+          // three duplicates with no way to tell which city is which.
+          //
+          // Same class as the "Unlock — A$497" pair on /learning, found in the
+          // same sweep (2026-08-06, master clean register E pass 2): a label
+          // that is unambiguous only because of layout, repeated across items.
+          aria-label={`Enrol in ${city} from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`}
           className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--accent)] px-3 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-[#0b6165]"
         >
           Enrol from ${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked

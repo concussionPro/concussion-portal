@@ -169,7 +169,12 @@ function LearningSuiteInner() {
     <ProtectedRoute>
       <div className="flex min-h-screen bg-background">
         <Sidebar />
-        <main className="ml-0 md:ml-64 flex-1 relative">
+        {/* min-w-0: a flex child's default min-width is `auto`, so this column
+            grew to its widest unbreakable descendant and pushed the page to
+            404px on a 375px viewport (measured for the SST-clinic sidebar,
+            which carries the longest nav labels). Everything below already
+            wraps once the column is allowed to be narrower than its content. */}
+        <main className="ml-0 md:ml-64 flex-1 min-w-0 relative">
           {/* Subtle background gradient */}
           <div className="fixed inset-0 ml-0 md:ml-64 pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-br from-[#64a8b0]/3 via-transparent to-[#7ba8b0]/3" />
@@ -437,6 +442,19 @@ function LearningSuiteInner() {
                             <Link
                               href={c.href}
                               onClick={(e) => e.stopPropagation()}
+                              // The visible label is just "Unlock — A$497", which is
+                              // ambiguous the moment two DIFFERENT courses carry the
+                              // same price. A preview user on this page sees exactly
+                              // that: two buttons reading "Unlock — A$497", one going
+                              // to /pricing (CCM) and one to /concussion-rehab-mastery
+                              // (CRM). Sighted users disambiguate from the card title
+                              // above; a screen reader announces two identically named
+                              // links to different destinations, and a link list shows
+                              // them as duplicates.
+                              // Found by crawling the same page in three authenticated
+                              // states and diffing label -> destination
+                              // (2026-08-06, master clean register E pass 2).
+                              aria-label={c.price ? `Unlock ${c.title} — A$${c.price}` : `Explore ${c.title}`}
                               className="px-5 py-2.5 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-1.5"
                             >
                               <Lock className="w-3 h-3" />
