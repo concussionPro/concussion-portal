@@ -60,24 +60,50 @@ export async function GET(request: NextRequest) {
 
   const base = CONFIG.SEO.SITE_URL.replace(/\/$/, '')
   const checks: Check[] = []
+  /** Inconclusive, not failing — see the note on edgeBlocked below. */
+  const skipped: string[] = []
   const record = (name: string, ok: boolean, detail: string) => checks.push({ name, ok, detail })
+
+  /**
+   * A 403 here is almost certainly Cloudflare, not us.
+   *
+   * This cron runs inside Vercel and fetches our own public hostname, so the
+   * request egresses from a datacenter IP and Cloudflare's bot protection
+   * challenges it. Measured on the first production run: /, /scat-mastery,
+   * /modules/101, /learning, /dashboard and /api/health all returned 403 to
+   * the function while returning 200 to an ordinary client — same paths, same
+   * moment, same user-agent.
+   *
+   * Reporting that as an outage would email a failure every single day for a
+   * perfectly healthy site, which is the exact mistake the deploy monitor made
+   * this afternoon: an alert that fires on green trains its reader to ignore
+   * the one that matters. So an edge challenge is INCONCLUSIVE, not a failure.
+   * A 5xx, a timeout, a redirect loop, or a 200 with no content are still real.
+   */
+  const BROWSERISH = {
+    'user-agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0 Safari/537.36',
+    accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': 'en-AU,en;q=0.9',
+  }
 
   async function fetchText(path: string): Promise<{ status: number; body: string }> {
     try {
-      const res = await fetch(`${base}${path}`, {
-        headers: { 'user-agent': 'CEA-synthetic-journey/1.0' },
-        cache: 'no-store',
-      })
+      const res = await fetch(`${base}${path}`, { headers: BROWSERISH, cache: 'no-store' })
       return { status: res.status, body: res.status === 200 ? await res.text() : '' }
     } catch (err) {
       return { status: 0, body: err instanceof Error ? err.message : String(err) }
     }
   }
 
+  /** True when the edge refused us rather than the app failing. */
+  const edgeBlocked = (status: number) => status === 403 || status === 429
+
   // ── 1. The pages that carry the funnel actually render ──────────────────
   for (const path of ['/', '/pricing', '/scat-mastery', '/concussion-rehab-mastery']) {
     const { status, body } = await fetchText(path)
     // Strip tags so a shell of markup with no words cannot pass as content.
+    if (edgeBlocked(status)) { skipped.push(`renders ${path} (HTTP ${status} at the edge)`); continue }
     const words = body.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
     record(`renders ${path}`, status === 200 && words.length > MIN_CONTENT_CHARS,
       status === 200 ? `${words.length} chars of text` : `HTTP ${status}`)
@@ -87,7 +113,7 @@ export async function GET(request: NextRequest) {
   // Unit tests read source; this reads the live response, which is the only
   // thing that would have caught either of the two leaks found on 2026-08-06.
   for (const doc of [...PAID_DOCS].slice(0, 4)) {
-    const res = await fetch(`${base}${encodeURI(doc)}`, { cache: 'no-store' }).catch(() => null)
+    const res = await fetch(`${base}${encodeURI(doc)}`, { headers: BROWSERISH, cache: 'no-store' }).catch(() => null)
     const status = res?.status ?? 0
     record(`paywall ${doc}`, status !== 200 && status !== 0, `HTTP ${status}`)
   }
@@ -95,7 +121,8 @@ export async function GET(request: NextRequest) {
   // ── 3. Course surfaces respond, and do not redirect-loop ────────────────
   for (const path of ['/modules/101', '/learning', '/dashboard']) {
     try {
-      const res = await fetch(`${base}${path}`, { redirect: 'manual', cache: 'no-store' })
+      const res = await fetch(`${base}${path}`, { headers: BROWSERISH, redirect: 'manual', cache: 'no-store' })
+      if (edgeBlocked(res.status)) { skipped.push(`responds ${path} (HTTP ${res.status} at the edge)`); continue }
       // 200 (renders) or a single redirect to login are both correct for an
       // anonymous caller. A 5xx, or a redirect back to itself, is not.
       const loc = res.headers.get('location') || ''
@@ -109,14 +136,19 @@ export async function GET(request: NextRequest) {
 
   // ── 4. The free-course entry still presents its form ────────────────────
   const scat = await fetchText('/scat-mastery')
-  record('free signup form present', /Get free instant access/i.test(scat.body),
+  if (edgeBlocked(scat.status)) skipped.push(`free signup form (HTTP ${scat.status} at the edge)`)
+  else record('free signup form present', /Get free instant access/i.test(scat.body),
     scat.status === 200 ? 'form found' : `HTTP ${scat.status}`)
 
   // ── 5. The build being served is the one we think it is ─────────────────
   try {
-    const h = await fetch(`${base}/api/health`, { cache: 'no-store' })
-    const j = await h.json()
-    record('health reports a build', !!j?.build?.sha, j?.build?.commit ?? 'no sha')
+    const h = await fetch(`${base}/api/health`, { headers: BROWSERISH, cache: 'no-store' })
+    if (edgeBlocked(h.status)) {
+      skipped.push(`health (HTTP ${h.status} at the edge)`)
+    } else {
+      const j = await h.json()
+      record('health reports a build', !!j?.build?.sha, j?.build?.commit ?? 'no sha')
+    }
   } catch (err) {
     record('health reports a build', false, err instanceof Error ? err.message : String(err))
   }
@@ -149,5 +181,6 @@ export async function GET(request: NextRequest) {
     passed: checks.length - failed.length,
     total: checks.length,
     checks,
+    skipped,
   })
 }
