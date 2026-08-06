@@ -20,6 +20,12 @@ import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 const BASE_NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
   { label: 'Courses', path: '/courses', accent: false },
+  // Pricing was NOT in the nav (owner 2026-08-07: "pricing tab doesn't exist on
+  // home"). /pricing is the page 229 sessions reached in 90 days and the only
+  // one that takes money, and the only routes to it were in-page CTAs and the
+  // footer. A visitor who wanted to know the price had to guess. Sits directly
+  // after Courses, which is where people look for it.
+  { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Clinical Tools', path: '/clinical-suite', accent: false },
   { label: 'Blog', path: '/blog', accent: false },

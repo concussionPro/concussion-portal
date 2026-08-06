@@ -944,25 +944,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
       </div>
 
-      {/* Date alert — full width, under BOTH cards. Shown only while no city
-          has a scheduled date, which is the state where a visitor who came
-          looking for a date otherwise finds nothing and leaves. Once a real
-          date exists the city picker answers the question and this disappears. */}
-      {!anyCityHasLiveDate() && (
-        <div className="mt-6 max-w-3xl mx-auto rounded-2xl border border-border p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Bell className="w-4 h-4 text-[var(--accent)]" />
-            <p className="text-sm font-bold text-foreground">
-              Not ready to enrol? Get the date for {cityLabel(selectedLocation)}
-            </p>
-          </div>
-          <p className="text-[13px] text-[var(--muted-foreground)] mb-3">
-            No payment — you&apos;ll be first told when {cityLabel(selectedLocation)} is locked in.
-          </p>
-          <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
-        </div>
-      )}
-
+      {/* The date-alert block was REMOVED 2026-08-07 (owner: "get rid of this
+          completely"). The location bentos now sit directly under the pricing
+          cards and carry their own per-city signup, so a standalone name/email
+          form here was a second ask for the same thing. */}
       {/* Trust Signals */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
         {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'AHPRA Aligned', 'Lifetime Access', 'Certificate Included'].map(item => (
@@ -973,24 +958,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         ))}
       </div>
 
-      {/* Team / clinic training callout — for clinic owners + sports orgs browsing the pricing page */}
-      <div id="team-training" className="mt-12 max-w-3xl mx-auto rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/60 to-emerald-50/40 p-6 md:p-7">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-teal-800 mb-1">For clinics + organisations</p>
-            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1">Training a whole team?</h3>
-            <p className="text-sm text-slate-700 leading-relaxed">
-              In-house concussion training for clinics, sports organisations, and hospital networks — delivered on-site around your workflow. On-site days from $8,000.
-            </p>
-          </div>
-          <a
-            href="/team-training"
-            className="shrink-0 inline-flex items-center gap-1.5 px-5 py-3 rounded-xl bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 transition-colors whitespace-nowrap"
-          >
-            Send a team inquiry
-          </a>
-        </div>
-      </div>
+      {/* The team/clinic callout moved to CcmPricingContent, below the
+          location bentos (owner 2026-08-07: bentos belong directly under
+          the cards). Kept out of this shared component so the compact
+          /preview variant is unaffected. */}
     </div>
   )
 }
