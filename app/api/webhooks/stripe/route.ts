@@ -569,7 +569,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     CONFIG.FEATURES.CCM_PLATFORM_BUNDLE_LIVE &&
     (accessLevel === 'online-only' || accessLevel === 'full-course')
   ) {
-    await provisionPlatformBestEffort(customerEmail, customerName, `CCM ${courseType}`)
+    await provisionPlatformBestEffort(customerEmail, customerName, `CCM ${courseType}`, undefined, true)
   }
 
   // Step 2: Check workshop threshold — send admin alert when threshold hit
@@ -1003,7 +1003,7 @@ async function handleCrmPurchase(
       console.error(`[crm-intl] no Stripe customer on international CRM session ${session.id} — cannot attach the bundled SST subscription`)
     }
   }
-  const clinicCode = await provisionPlatformBestEffort(customerEmail, customerName, `CRM ${tier}`, bundledSubscription)
+  const clinicCode = await provisionPlatformBestEffort(customerEmail, customerName, `CRM ${tier}`, bundledSubscription, true)
 
   // Analytics — same purchase_complete event the CCM path fires, marked
   // stream='crm' + the nominated city so EP demand shows in Ready-to-Train and
@@ -1177,6 +1177,8 @@ async function provisionPlatformBestEffort(
   name: string,
   context: string,
   bundledSubscription?: { customerId: string; defaultPaymentMethod?: string },
+  /** The purchase entitles them to the included platform (a course enrolment). */
+  entitledPlatform = false,
 ): Promise<string | null> {
   // Returns the clinic code so the welcome email can actually HAND IT OVER.
   // It used to be logged and thrown away: the platform was created for every
@@ -1184,7 +1186,7 @@ async function provisionPlatformBestEffort(
   // provisioned on 2026-08-02 with nobody ever logging in — the product was
   // bought, built and never opened.
   try {
-    const code = await provisionPlatformForBuyer(email, name, bundledSubscription)
+    const code = await provisionPlatformForBuyer(email, name, bundledSubscription, entitledPlatform)
     console.log(`[bundle] platform provisioned for ${redact(email)} (${context}) — clinic ${code}`)
     return code
   } catch (err) {

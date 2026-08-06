@@ -53,6 +53,13 @@ export async function provisionPlatformForBuyer(
   email: string,
   name: string,
   bundledSubscription?: BundledSubscription,
+  /**
+   * True when the purchase itself entitles the buyer to the working platform
+   * (a course enrolment, per the sales page) rather than merely creating a
+   * workspace. Domestic buyers carry no Stripe subscription, so without this
+   * they fell through to the trial cap.
+   */
+  entitledPlatform = false,
 ): Promise<string> {
   const cleanEmail = email.trim().toLowerCase()
   const clinicName = (name || '').trim() || 'Clinic'
@@ -82,6 +89,21 @@ export async function provisionPlatformForBuyer(
     // tier 'single': the intl bundle's included platform IS the single-
     // clinician tier — without it the clinic sat unlimited (null tier) until
     // a random subscription.updated event flipped it to the 5-active cap.
+    await setSstClinicPlan(clinic.code, 'active', { tier: 'single' })
+  } else if (entitledPlatform) {
+    // A DOMESTIC course purchase. The sales page states plainly that "every
+    // enrolment includes the working clinical platform", and the buyer has just
+    // paid for it — so they must not land on the 3-patient TRIAL cap with
+    // TRIAL-watermarked documents. Before this, `bundledSubscription` was only
+    // ever set when metadata.international === 'true', so every AUD buyer
+    // silently got a trial clinic despite the promise on the page they bought
+    // from (found 2026-08-06, walking a real buyer's path an hour before she
+    // purchased).
+    //
+    // Granted at the SAME tier the international bundle grants — 'single',
+    // 5 active patients — rather than uncapped. The guard above exists because
+    // an unconditional lift once handed every provisioned buyer an unlimited
+    // clinic free forever; this is deliberately the included tier, not that.
     await setSstClinicPlan(clinic.code, 'active', { tier: 'single' })
   } else {
     console.warn(
