@@ -97,7 +97,13 @@ export default function HomeClient() {
           homepage confuses crawlers. */}
       <CourseSchema />
 
-      <div className="min-h-screen bg-[#e7ecee] relative">
+      {/* overflow-x-clip: .ambient-glow is a fixed 600px circle centred with
+          left-1/2/-translate-x-1/2. At 375px that spans -112px..488px, which
+          made the DOCUMENT 488px wide and pushed the fixed nav's mobile menu
+          button off-screen (measured left=423 in a 375px viewport) — the
+          hamburger was unreachable and the header showed only the logo.
+          Clip (not hidden) so position:sticky children still work. */}
+      <div className="min-h-screen bg-[#e7ecee] relative overflow-x-clip">
 
         {/* ── Ambient gradient wash behind hero ──────────── */}
         <div className="absolute inset-0 hero-gradient pointer-events-none" aria-hidden="true" />

@@ -541,7 +541,16 @@ export default function PlatformAppPage({
 
   return (
     <SstAppShell
-      deviceName={device.statusLabel}
+      // HONESTY: the chip names the source that is actually FEEDING the app.
+      // A failed pair (camera permission denied, strap dropped) leaves `device`
+      // set to the tapped source with no connection — the chip then claimed
+      // "Camera (resting)" / "Bluetooth HR" for the whole session while the
+      // patient was in fact typing every reading. No live connection = manual.
+      deviceName={
+        connection === null && device.connect !== 'manual'
+          ? DEFAULT_HR_SOURCE.statusLabel
+          : device.statusLabel
+      }
       connected={connection !== null}
       stepIndex={stepIndex}
       totalSteps={STEP_ORDER.length}

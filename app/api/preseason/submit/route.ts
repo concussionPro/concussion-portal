@@ -5,6 +5,7 @@ import { sendEmailWithAttachment, sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { sql } from '@/lib/db'
 import { generateComparisonPdf, type ComparisonTest } from '@/lib/preseason/comparison-pdf'
+import { notAnswered, percentOrNotAnswered } from '@/lib/preseason/report-format'
 
 function escapeHtml(str: string): string {
   return str
@@ -227,7 +228,10 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText('CONCUSSION & MEDICAL HISTORY', margin, y, { fontSize: 12, fontStyle: 'bold' })
   y += 8
 
-  addText(`Previous Concussions: ${data.athlete.previousConcussions || '0'}`, margin, y, { fontSize: 9 })
+  // `|| '0'` printed "Previous Concussions: 0" for an athlete who never answered
+  // — a fabricated negative on the strongest risk factor in the record. An
+  // unanswered field must read as unanswered so the clinician can chase it.
+  addText(`Previous Concussions: ${notAnswered(data.athlete.previousConcussions)}`, margin, y, { fontSize: 9 })
   y += 6
   addText(`Most Recent: ${data.athlete.mostRecentConcussionDate || 'N/A'}`, margin, y, { fontSize: 9 })
   addText(`Longest Recovery: ${data.athlete.longestRecovery || 'N/A'}`, margin + contentWidth / 2, y, { fontSize: 9 })
@@ -276,7 +280,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   }
   y += 3
 
-  addText(`Feels normal: ${data.symptoms.feelNormalPercent}%`, margin, y, { fontSize: 9 })
+  addText(`Feels normal: ${percentOrNotAnswered(data.symptoms.feelNormalPercent)}`, margin, y, { fontSize: 9 })
   y += 5
   if (data.symptoms.notNormalReason) {
     addText(`Reason: ${data.symptoms.notNormalReason}`, margin, y, { fontSize: 9, maxWidth: contentWidth })
@@ -613,7 +617,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
     y += 8
   }
 
-  addText(`Feels Normal: ${data.symptoms.feelNormalPercent}%`, margin + 4, y, { fontSize: 8 })
+  addText(`Feels Normal: ${percentOrNotAnswered(data.symptoms.feelNormalPercent)}`, margin + 4, y, { fontSize: 8 })
   addText(`Physical Worsens: ${data.symptoms.physicalWorsens ? 'Yes' : 'No'}`, margin + contentWidth / 2, y, { fontSize: 8 })
   y += 5
   addText(`Mental Worsens: ${data.symptoms.mentalWorsens ? 'Yes' : 'No'}`, margin + contentWidth / 2, y, { fontSize: 8 })

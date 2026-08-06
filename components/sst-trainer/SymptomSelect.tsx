@@ -66,7 +66,10 @@ export default function SymptomSelect({
           onClick={() => onContinue([...selected])}
           className="flex-[1.4]"
         >
-          Continue
+          {/* A disabled CTA must say WHY (same pattern as the welcome step's
+              "Pick a goal to continue") — an unexplained grey button reads as
+              a broken app, not as a missing choice. */}
+          {selected.size === 0 ? 'Pick at least one to continue' : 'Continue'}
         </PrimaryButton>
       </div>
     </section>

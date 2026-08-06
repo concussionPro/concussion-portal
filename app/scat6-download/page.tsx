@@ -151,6 +151,11 @@ export default function SCAT6DownloadPage() {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           ...(source ? { source } : {}),
+          // Which asset they actually asked for. Only used on the
+          // requiresEmailLogin branch (existing account that owns something):
+          // no session is minted there, so the magic link has to carry the
+          // file or they get nothing. Server re-validates against AUTH_DOCS.
+          downloadPath: wantScat6 ? '/docs/SCAT6_Fillable.pdf' : '/docs/SCOAT6_Fillable.pdf',
         }),
       })
 
@@ -161,22 +166,24 @@ export default function SCAT6DownloadPage() {
       // lib/account-escalation.ts). Navigating on would land them on gated
       // content with no session, so say what actually happened.
       //
-      // The FORMS STILL DOWNLOAD on this path. They are free public assets
-      // (/docs/SCAT6_Fillable.pdf, /docs/SCOAT6_Fillable.pdf) promised by a
-      // button labelled "Download free PDF" \u2014 nothing about them is gated, and
-      // nothing in the anti-takeover rule requires withholding them. Until now
-      // this branch returned with NO download, so every visitor who already
-      // owns something (any paid buyer, CRM buyer, SST clinic, Hub owner,
-      // bundle owner, AI-course enrollee) typed their email into the site's #1
-      // landing surface and got a login email instead of the file they asked
-      // for. The session message and the download are independent \u2014 deliver both.
+      // The forms are NOT free public assets \u2014 /docs/SCAT6_Fillable.pdf and
+      // /docs/SCOAT6_Fillable.pdf are AUTH_DOCS (lib/gated-docs.ts), enforced
+      // by the edge middleware. On this branch there is deliberately NO session
+      // cookie, so calling triggerDownload() here fired two <a download> hits
+      // that both returned 401 {"error":"Please log in to download this file."}
+      // \u2014 silently, because a cancelled download raises no UI. The page then
+      // told them "Your forms are downloading now". Net effect: every EXISTING
+      // CUSTOMER (paid CCM/CRM buyer, SST clinic, Hub owner, bundle owner,
+      // AI-course enrollee, every alumnus) who used the site's #1 landing
+      // surface got a false success message and no file.
+      // The login link now carries the requested doc (downloadPath above), so
+      // one click on the email both signs them in AND starts the download.
+      // Say exactly that instead of claiming a download that cannot happen.
       if (data.requiresEmailLogin) {
-        triggerDownload()
         setNotice(
-          `Your form${wantScat6 && wantScoat6 ? 's are' : ' is'} downloading now. ` +
-            "You already have an account, so we've also emailed a login link to " +
-            email.trim().toLowerCase() +
-            ". Open it and you'll be signed straight in.",
+          `You already have an account, so we can't hand the file straight to this browser. ` +
+            `We've emailed a one-click link to ${email.trim().toLowerCase()} \u2014 opening it signs you in and starts your ` +
+            `${wantScat6 && wantScoat6 ? 'SCAT6 download (SCOAT6 is one click away in the portal)' : 'download'} straight away.`,
         )
         return
       }
@@ -249,9 +256,26 @@ export default function SCAT6DownloadPage() {
               </span>
             </h1>
 
-            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+            <p className="text-lg text-slate-600 mb-6 leading-relaxed">
               The official SCAT6 (sideline) and SCOAT6 (office) assessment tools, ready to use in your clinic. Choose the forms you want for instant download.
             </p>
+
+            {/* Above-the-fold jump to the form. On a 375px phone the two-column
+                grid stacks, so the capture form sits ~1,320px down the page —
+                more than 1.5 viewports past the last thing a visitor can click.
+                The hero had NO affordance at all: headline, five bullets, three
+                trust pills and a preview card before any action. This is the
+                site's #1 organic landing surface, so that dead first screen is
+                the single most expensive thing on it. Desktop already shows the
+                form alongside the hero, so hide it there. */}
+            <a
+              href="#get-the-forms"
+              className="lg:hidden inline-flex items-center justify-center gap-2 w-full py-3.5 mb-8 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white shadow-lg shadow-teal-200/50"
+            >
+              <Download className="w-4 h-4" />
+              Get the free PDF
+              <ArrowRight className="w-4 h-4" />
+            </a>
 
             {/* Feature list */}
             <div className="space-y-3 mb-8">
@@ -304,7 +328,7 @@ export default function SCAT6DownloadPage() {
           </div>
 
           {/* ── Right column: form (2 cols) ── */}
-          <div className="lg:col-span-2 lg:sticky lg:top-8">
+          <div id="get-the-forms" className="lg:col-span-2 lg:sticky lg:top-8 scroll-mt-24">
             {success ? (
               /* Success state */
               <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-emerald-200 p-7 shadow-xl shadow-emerald-100/50">

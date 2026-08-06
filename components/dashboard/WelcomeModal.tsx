@@ -4,20 +4,43 @@ import { useState, useEffect } from 'react'
 import { X, Play, Award, BookOpen, Clock, GraduationCap, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/contexts/SessionContext'
+import { useProgress } from '@/contexts/ProgressContext'
 import { useCourseTier } from './useCourseTier'
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
   const { user } = useSession()
+  const { isInitialized, progress } = useProgress()
   const { ownsCrm, isFreeTier } = useCourseTier()
+  // Values, not getters — a getter is re-created every render, which would
+  // re-arm the open timer forever and the modal would never appear.
+  // "Under way" = anything the server knows about: completed OR merely opened.
+  const hasStarted = isInitialized
+    ? Object.values(progress).some((p) => p.completed || p.startedAt)
+    : false
 
   useEffect(() => {
+    // "hasSeenWelcome" lives in localStorage, so it is EMPTY on any new device,
+    // new browser, private window or after a cache clear. Gating solely on it
+    // meant a returning student — whose progress the server restores correctly
+    // seconds later — was met by a full-screen overlay telling them to "Start
+    // Module 1" and "earn your FIRST CPD hour", on top of (and covering) their
+    // Download Certificate button. Progress is the real signal: this is a
+    // getting-STARTED card, so it only belongs in front of someone who has not
+    // started. Wait for the progress store to settle (server restore included)
+    // before deciding, so a genuinely new user still gets it.
+    if (!user || !isInitialized) return
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
-    if (!hasSeenWelcome && user) {
-      setTimeout(() => setIsOpen(true), 500)
+    if (hasSeenWelcome) return
+    if (hasStarted) {
+      // Already underway on another device — never show the intro again.
+      localStorage.setItem('hasSeenWelcome', 'true')
+      return
     }
-  }, [user])
+    const id = setTimeout(() => setIsOpen(true), 500)
+    return () => clearTimeout(id)
+  }, [user, isInitialized, hasStarted])
 
   const handleClose = () => {
     localStorage.setItem('hasSeenWelcome', 'true')

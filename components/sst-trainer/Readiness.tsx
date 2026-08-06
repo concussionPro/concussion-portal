@@ -140,7 +140,14 @@ export default function Readiness({
           onClick={() => onContinue({ restingSymptomScore: restingScore })}
           className="flex-[1.4]"
         >
-          {restingScore >= MAX_RESTING_TO_TEST ? 'Rest today' : 'Start test'}
+          {/* Every disabled reason names itself — a grey "Start test" with no
+              explanation reads as a broken app. Red flags already have their own
+              banner, so that arm keeps the plain label. */}
+          {restingScore >= MAX_RESTING_TO_TEST
+            ? 'Rest today'
+            : !blocked && !consented
+              ? 'Tick the box to continue'
+              : 'Start test'}
         </PrimaryButton>
       </div>
       </div>

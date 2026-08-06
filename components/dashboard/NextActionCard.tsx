@@ -93,9 +93,9 @@ export function NextActionCard() {
         body: JSON.stringify({ type: certType }),
         credentials: 'include',
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
+        .then(async res => ({ ok: res.ok, data: await res.json().catch(() => null) }))
+        .then(({ ok, data }) => {
+          if (ok && data?.success) {
             setCertificateStatus('sent')
             if (typeof window !== 'undefined') localStorage.setItem(sentKey, '1')
             // Only fire analytics when the server actually sent the email this
@@ -104,6 +104,14 @@ export function NextActionCard() {
             if (data.emailSent) {
               trackEvent('course_complete', { courseType: certType, accessLevel, modules: totalModules })
             }
+          } else if (data?.error) {
+            // The server REFUSED to issue (403: a quiz can't be verified from
+            // the saved answers, etc.). Rendering the generic email-failure
+            // line here told a blocked student "you can still download it
+            // below" — pointing them at the one button that is guaranteed to
+            // fail. Show the server's own, actionable reason instead.
+            setCertificateStatus('idle')
+            setCertificateError(data.error)
           } else {
             setCertificateStatus('error')
           }
@@ -553,7 +561,11 @@ export function NextActionCard() {
               </span>
               <span className="action-pill text-xs py-1 px-3">
                 <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                {progressPercentage}% Complete
+                {/* COURSE progress, not this module's. Sitting unlabelled between
+                    the module's duration and CPD chips, "13% Complete" read as
+                    "you are 13% through this module" — which is never what it
+                    means (it is completedModules / totalModules). */}
+                {progressPercentage}% of course
               </span>
             </div>
 

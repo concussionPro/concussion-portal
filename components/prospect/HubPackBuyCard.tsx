@@ -14,7 +14,7 @@ import { Users, Check, Loader2, ArrowRight, Plane, ShieldCheck } from 'lucide-re
  */
 const HUB_MAX = 12
 
-export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: string }) {
+export function HubPackBuyCard({ clinical, slug, clinicName }: { clinical: number; slug: string; clinicName?: string }) {
   const [loading, setLoading] = useState(false)
   // A failed checkout used to just clear the spinner: the buyer clicked
   // "Full clinic access — A$1,497" and the button did visibly nothing, with no
@@ -47,6 +47,13 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
         body: JSON.stringify({
           courseType: 'clinic-hub-pack',
           clinicianCount: count,
+          // The whole checkout pipe carries clinicName (schema → Stripe metadata
+          // → createCourseHub → the admin "Hub Pack purchased" ping) but this
+          // card — the ONLY self-serve Hub Pack buy surface — never sent it, so
+          // every hub was provisioned with clinic_name NULL and Zac's ops email
+          // read "Clinic: —". The buyer is standing on that clinic's own portal;
+          // the name is right there.
+          ...(clinicName ? { clinicName } : {}),
           utm: { utm_source: 'portal', utm_medium: 'hub_pack_card', utm_campaign: slug },
           attribution: getAttribution(),
         }),

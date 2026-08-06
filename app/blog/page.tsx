@@ -265,7 +265,10 @@ export default function BlogIndexPage() {
         }}
       />
       <SiteNav />
-      <div className="min-h-screen bg-[var(--background)] relative">
+      {/* overflow-x-clip: same defect as the homepage — the 600px .ambient-glow
+          widened the document to 488px at a 375px viewport, pushing the fixed
+          nav's mobile menu button off-screen. */}
+      <div className="min-h-screen bg-[var(--background)] relative overflow-x-clip">
 
         {/* Ambient background */}
         <div className="absolute inset-0 hero-gradient pointer-events-none" aria-hidden="true" />

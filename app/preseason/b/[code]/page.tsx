@@ -31,7 +31,11 @@ const CONSENT_VERSION = 'v2'
 // the athlete whose draft it is and offers "start fresh".
 // v2: symptom ratings changed from "0 by default" to UNRATED by default, so a
 // v1 draft's zeros cannot be restored as if the athlete had answered them.
-const DRAFT_VERSION = 2
+// v3: same reason, for the last two pre-answered fields — previousConcussions
+// ('0' → '') and feelNormalPercent ('100' → ''). A v2 draft carries those
+// fabricated defaults, so restoring one would put the exact values back that
+// this change exists to remove. Bumping invalidates them instead.
+const DRAFT_VERSION = 3
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000
 
 /** Sentinel for a symptom item the athlete has not answered yet. */
@@ -407,7 +411,14 @@ export default function AthleteBaselineForm() {
   const [position, setPosition] = useState('')
   const [yearsOfEducation, setYearsOfEducation] = useState('')
   const [primaryLanguage, setPrimaryLanguage] = useState('English')
-  const [previousConcussions, setPreviousConcussions] = useState('0')
+  // UNANSWERED (''), not '0'. A pre-filled 0 meant an athlete who never touched
+  // this field filed a baseline asserting NO previous concussions — the single
+  // strongest risk factor, fabricated on the very record every future
+  // post-injury comparison is measured against. Same doctrine as the symptom
+  // scale below and the orientation section: report a gap as a gap, never as a
+  // clinical value nobody gave. `parseInt('')` is NaN, so the `> 0` follow-up
+  // guard stays closed while unanswered.
+  const [previousConcussions, setPreviousConcussions] = useState('')
   const [mostRecentConcussionDate, setMostRecentConcussionDate] = useState('')
   const [longestRecovery, setLongestRecovery] = useState('')
   const [previousConcussionSymptoms, setPreviousConcussionSymptoms] = useState('')
@@ -421,7 +432,13 @@ export default function AthleteBaselineForm() {
   // asserting "0/22 symptoms, severity 0/132" — a perfect asymptomatic
   // reference that a later post-injury test is then compared against.
   const [symptomRatings, setSymptomRatings] = useState<number[]>(new Array(22).fill(UNRATED))
-  const [feelNormalPercent, setFeelNormalPercent] = useState('100')
+  // UNANSWERED (''), not '100'. A slider parked at 100 has no null position, so
+  // an athlete who scrolled past filed "100% of normal" — a fabricated
+  // asymptomatic reference, exactly the defect fixed above for the 22-item
+  // scale. '' drives an explicit "Not answered" state in the UI and prints as
+  // "Not answered" on the report; the slider only commits a value once the
+  // athlete actually moves it (or types one).
+  const [feelNormalPercent, setFeelNormalPercent] = useState('')
   const [notNormalReason, setNotNormalReason] = useState('')
   const [physicalWorsens, setPhysicalWorsens] = useState(false)
   const [mentalWorsens, setMentalWorsens] = useState(false)
@@ -1657,17 +1674,28 @@ export default function AthleteBaselineForm() {
               <div>
                 <label className="block text-xs font-semibold mb-1">Do you feel normal? (% of normal)</label>
                 <div className="flex items-center gap-2">
-                  <input type="range" min="0" max="100" value={feelNormalPercent}
+                  {/* A range input cannot represent "no answer" — its thumb is
+                      always somewhere. So while unanswered we render it muted at
+                      the 100 position and treat the FIRST interaction as the
+                      answer; state stays '' until then. */}
+                  <input type="range" min="0" max="100"
+                    value={feelNormalPercent === '' ? '100' : feelNormalPercent}
+                    aria-valuetext={feelNormalPercent === '' ? 'Not answered' : `${feelNormalPercent}% of normal`}
                     onChange={e => setFeelNormalPercent(e.target.value)}
-                    className="flex-1 accent-accent" />
+                    className={`flex-1 accent-accent ${feelNormalPercent === '' ? 'opacity-40' : ''}`} />
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
                       min="0"
                       max="100"
                       value={feelNormalPercent}
+                      placeholder="—"
                       onChange={e => {
-                        const v = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
+                        // Clearing the box returns to unanswered — it must not
+                        // collapse to 0, which is a real (and alarming) answer.
+                        const raw = e.target.value
+                        if (raw.trim() === '') { setFeelNormalPercent(''); return }
+                        const v = Math.max(0, Math.min(100, parseInt(raw) || 0))
                         setFeelNormalPercent(String(v))
                       }}
                       className="w-14 glass px-2 py-1 rounded-lg text-sm font-bold text-center border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
@@ -1675,6 +1703,11 @@ export default function AthleteBaselineForm() {
                     <span className="text-sm font-bold">%</span>
                   </div>
                 </div>
+                {feelNormalPercent === '' && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Not answered — move the slider or type a percentage. Left blank, the report records this as not answered.
+                  </p>
+                )}
               </div>
 
               {parseInt(feelNormalPercent) < 100 && (

@@ -217,7 +217,22 @@ function LoginForm() {
                           Click the link in your email to access your course. The link expires in 24 hours.
                         </p>
                         <p className="text-xs text-slate-500">
-                          Don&apos;t see it? Check your spam folder.
+                          Don&apos;t see it? Check your spam folder — it can take a minute to arrive.
+                        </p>
+                        {/* The moment of failure needs an exit. "Check your
+                            spam folder" was the ONLY advice, and the support
+                            address sat at the bottom of the page as plain,
+                            un-tappable text — so a paying customer whose email
+                            never arrives had nothing to act on. */}
+                        <p className="text-xs text-slate-500 mt-2">
+                          Still nothing after a few minutes?{' '}
+                          <a
+                            href={`mailto:${CONFIG.CONTACT_EMAIL}?subject=${encodeURIComponent("Login link didn't arrive")}&body=${encodeURIComponent(`My account email: ${email}`)}`}
+                            className="inline-block py-2 text-[#5b9aa6] hover:underline font-medium"
+                          >
+                            Email us
+                          </a>{' '}
+                          and we&apos;ll get you in.
                         </p>
                         <p className="text-xs text-slate-400 mt-2">
                           Not enrolled yet? <Link href="/pricing" className="text-[#5b9aa6] hover:underline font-medium">View course options</Link> or start with the <Link href="/scat-mastery" className="text-[#5b9aa6] hover:underline font-medium">free SCAT course</Link>.
@@ -274,8 +289,15 @@ function LoginForm() {
             </div>
           </div>
 
+          {/* Was plain text: on a phone there was no way to act on it. */}
           <p className="text-center text-xs text-slate-400 mt-4">
-            Need help? Contact zac@concussion-education-australia.com
+            Need help?{' '}
+            <a
+              href={`mailto:${CONFIG.CONTACT_EMAIL}?subject=${encodeURIComponent("Can't log in to my CEA account")}`}
+              className="inline-block py-2.5 text-[#5b9aa6] hover:underline"
+            >
+              {CONFIG.CONTACT_EMAIL}
+            </a>
           </p>
 
           {process.env.NODE_ENV === 'development' && (

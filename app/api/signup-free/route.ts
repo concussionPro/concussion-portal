@@ -11,6 +11,7 @@ import { createJWTSession } from '@/lib/jwt-session'
 import { generateMagicLinkJWT, createMagicToken } from '@/lib/magic-link-jwt'
 import { sendEmail, sendMagicLinkEmail, escapeHtml } from '@/lib/resend-client'
 import { isEmailSuppressed } from '@/lib/email-suppression'
+import { isAuthDoc } from '@/lib/gated-docs'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -40,7 +41,14 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
-    const { email, name, prospectSlug, source } = body as { email?: string; name?: string; prospectSlug?: string; source?: string }
+    const { email, name, prospectSlug, source, downloadPath } = body as { email?: string; name?: string; prospectSlug?: string; source?: string; downloadPath?: string }
+
+    // Lead-magnet deep link. The caller (a download page) says which gated
+    // asset the visitor actually asked for. Only ever honoured when it is an
+    // AUTH_DOCS path — /api/auth/verify applies the same allowlist again, so
+    // this can never widen access, it only aims the magic link at the file the
+    // person clicked a button to get.
+    const wantedDoc = typeof downloadPath === 'string' && isAuthDoc(downloadPath) ? downloadPath : null
 
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -79,8 +87,14 @@ export async function POST(request: NextRequest) {
     if (existingUser && (await hasElevatedEntitlement(existingUser))) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
       const magicToken = createMagicToken(existingUser.id, existingUser.email, existingUser.name, existingUser.accessLevel)
-      await sendMagicLinkEmail(existingUser.email, magicToken, baseUrl)
-      return NextResponse.json({ success: true, requiresEmailLogin: true })
+      // The asset they asked for rides the login link. Without this the whole
+      // branch was a dead end for every EXISTING CUSTOMER: no session cookie is
+      // minted here (by design — anti-takeover), but /docs/SCAT6_Fillable.pdf
+      // and /docs/SCOAT6_Fillable.pdf are AUTH_DOCS, so the caller's
+      // `<a download>` 401'd silently and the buyer got no file at all.
+      // /api/auth/verify re-checks isAuthDoc before honouring the redirect.
+      await sendMagicLinkEmail(existingUser.email, magicToken, baseUrl, wantedDoc)
+      return NextResponse.json({ success: true, requiresEmailLogin: true, downloadRequiresLogin: !!wantedDoc })
     }
 
     let userId: string

@@ -365,7 +365,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             ) : teamVerified && clinical <= 1 ? (
               <IndividualPricingCard slug={clinic.slug} />
             ) : (
-              <HubPackBuyCard clinical={teamVerified ? clinical : 0} slug={clinic.slug} />
+              <HubPackBuyCard clinical={teamVerified ? clinical : 0} slug={clinic.slug} clinicName={clinic.name} />
             )}
           </div>
 

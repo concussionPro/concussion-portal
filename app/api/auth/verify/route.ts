@@ -10,6 +10,7 @@ import { hasSstEntitlement, isBookOwner } from '@/lib/users'
 import { isSafeRelativePath } from '@/lib/safe-redirect'
 import { isAuthDoc, isPaidDoc } from '@/lib/gated-docs'
 import { isUserEnrolled } from '@/lib/ai-course/access'
+import { CONFIG } from '@/lib/config'
 
 /** Ensure the used_magic_tokens table exists (runs once per cold start) */
 let tableEnsured = false
@@ -192,13 +193,19 @@ function errorHtml(title: string, message: string): string {
   .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.08);padding:40px 32px;max-width:420px;width:100%;text-align:center}
   h1{font-size:22px;margin:0 0 8px}
   p{font-size:15px;color:#475569;line-height:1.6;margin:0 0 24px}
-  a{display:inline-block;padding:14px 28px;background:#5b9aa6;color:#fff;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none}
+  a.btn{display:inline-block;padding:14px 28px;background:#5b9aa6;color:#fff;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none}
+  .help{font-size:13px;color:#64748b;line-height:1.6;margin:24px 0 0}
+  .help a{color:#0f766e;font-weight:600}
 </style>
 </head><body>
 <div class="card">
   <h1>${escapeHtml(title)}</h1>
   <p>${escapeHtml(message)}</p>
-  <a href="/login">Request a New Login Link</a>
+  <a class="btn" href="/login">Request a New Login Link</a>
+  <p class="help">Links are single-use and expire, so this is normal — a new one works straight away.
+  Still stuck, or the email never arrives? Email
+  <a href="mailto:${CONFIG.CONTACT_EMAIL}?subject=${encodeURIComponent("Can't log in to my CEA account")}">${CONFIG.CONTACT_EMAIL}</a>
+  and we'll get you in.</p>
 </div>
 </body></html>`
 }

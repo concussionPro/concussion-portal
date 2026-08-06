@@ -150,6 +150,18 @@ export async function POST(request: NextRequest) {
       cancelUrl = `${baseUrl}/upgrade?canceled=true`
     } else if (courseType === 'international-online') {
       cancelUrl = `${baseUrl}/pricing-international?canceled=true`
+    } else if (courseType === 'clinic-hub-pack') {
+      // The Hub Pack is sold ONLY on the prospect portal (/p/<slug>#pricing) —
+      // /pricing shows individual seats and never mentions it. Sending a
+      // hesitating hub buyer to /pricing was a one-way exit: they land on a
+      // page with no A$1,497 tier, no seat picker and no route back to their
+      // own portal (the slug is not guessable from there). Bounce them back to
+      // the card they were on. utm_campaign carries the slug on every
+      // HubPackBuyCard POST; fall back to /pricing if it is absent or unsafe.
+      const hubSlug = typeof utm?.utm_campaign === 'string' ? utm.utm_campaign : ''
+      cancelUrl = /^[a-z0-9][a-z0-9-]{0,79}$/.test(hubSlug)
+        ? `${baseUrl}/p/${hubSlug}?canceled=true#pricing`
+        : `${baseUrl}/pricing?canceled=true`
     } else {
       cancelUrl = `${baseUrl}/pricing?canceled=true`
     }

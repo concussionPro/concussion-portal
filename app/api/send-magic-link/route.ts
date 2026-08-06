@@ -9,6 +9,7 @@ import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/moni
 import { getClientIp } from '@/lib/get-client-ip'
 import { rateLimit } from '@/lib/rate-limit'
 import { isSafeRelativePath } from '@/lib/safe-redirect'
+import { CONFIG } from '@/lib/config'
 
 const EMAIL_RATE_LIMIT = 3 // max attempts per email per window
 const IP_RATE_LIMIT = 10 // max attempts per IP per window
@@ -44,23 +45,31 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim()
 
-    // Rate limit by IP (shared across instances via Vercel KV)
-    const ipLimit = await rateLimit({ key: `magic:ip:${ip}`, limit: IP_RATE_LIMIT, windowSec: RATE_LIMIT_WINDOW })
-    if (!ipLimit.ok) {
+    // The person who trips this limit is almost always a customer whose email
+    // never arrived — they pressed "Send login link" a few times. "Try again in
+    // a few minutes" understated a window that is up to 15 MINUTES long and
+    // named no other way in, so the only remaining move was to email the
+    // founder. State the REAL wait (the limiter already computes it) and name
+    // the support address in the same breath. The limit itself is unchanged.
+    const throttled = (resetInSec: number) => {
+      const mins = Math.max(1, Math.ceil(resetInSec / 60))
       return NextResponse.json(
-        { error: 'Too many requests. Please try again in a few minutes.' },
+        {
+          error:
+            `Too many login links requested. Please try again in ${mins} minute${mins === 1 ? '' : 's'}. ` +
+            `If the email still isn't arriving, check your spam folder or email ${CONFIG.CONTACT_EMAIL} and we'll get you in.`,
+        },
         { status: 429 }
       )
     }
 
+    // Rate limit by IP (shared across instances via Vercel KV)
+    const ipLimit = await rateLimit({ key: `magic:ip:${ip}`, limit: IP_RATE_LIMIT, windowSec: RATE_LIMIT_WINDOW })
+    if (!ipLimit.ok) return throttled(ipLimit.resetIn)
+
     // Rate limit by email
     const emailLimit = await rateLimit({ key: `magic:email:${normalizedEmail}`, limit: EMAIL_RATE_LIMIT, windowSec: RATE_LIMIT_WINDOW })
-    if (!emailLimit.ok) {
-      return NextResponse.json(
-        { error: 'Too many requests. Please try again in a few minutes.' },
-        { status: 429 }
-      )
-    }
+    if (!emailLimit.ok) return throttled(emailLimit.resetIn)
 
     // Check if user exists (with performance monitoring)
     const user = await measurePerformance('findUserByEmail', () => findUserByEmail(normalizedEmail))

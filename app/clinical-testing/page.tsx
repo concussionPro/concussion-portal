@@ -195,7 +195,12 @@ function Shell() {
       `}</style>
       <Sidebar />
       <InstrumentKeyframes />
-      <main className="flex-1 ml-0 md:ml-64 p-6 sm:p-8">
+      {/* min-w-0: this <main> is a flex item, so its default min-width:auto
+          resolves to the widest unbreakable content — the clinic's patient and
+          baseline URLs rendered in <code>. At 375px that forced the whole page
+          to 404px and the workspace scrolled sideways (billing/cancel controls
+          included). The URLs already carry `truncate`. */}
+      <main className="min-w-0 flex-1 ml-0 md:ml-64 p-6 sm:p-8">
         <div className="mx-auto max-w-4xl">
           {/* Demo orientation (ACC prospects, 2026-07-28): say what they're
               looking at and give the tour an ending — the booking. Closes the

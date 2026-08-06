@@ -346,7 +346,11 @@ export function SstClinicCard({
           )}
           <SstTeamSection demo={isDemoClinic} />
         </div>
-        <div className="flex flex-none flex-wrap gap-2">
+        {/* No `flex-none`: it pinned this row to the max-content width of
+            Patients + Live hub + Documents on one line, which is wider than a
+            375px screen, so the whole workspace scrolled sideways. The row
+            already wraps internally — let it shrink and wrap. */}
+        <div className="flex flex-wrap gap-2">
           {!isDemoClinic && (
             <Link
               href="/clinical-testing/patients"
