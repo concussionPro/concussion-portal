@@ -565,6 +565,14 @@ export const config = {
     // paid asset was served straight off the CDN (2026-08-06 audit, P0).
     '/(CourseContent_2026.*)',
     '/docs/:path*',
+    // Any docs-LIKE directory, not just /docs. A backup copy of the entire paid
+    // toolkit sat at /docs_backup_2026-01/ and served 200 to anonymous requests
+    // — md5-identical to /docs/RehabFlow.png, which is in PAID_DOCS and returns
+    // 401. The gate was keyed on the exact `/docs/` prefix, so a sibling
+    // directory walked straight past it (2026-08-06 master clean, register B).
+    // The directory is deleted; this makes the CLASS unreachable rather than
+    // just that instance.
+    '/docs:suffix(-|_)?:rest*',
     '/resources/:path*',
     '/api/:path*',
     '/admin/:path*',
