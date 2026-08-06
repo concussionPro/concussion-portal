@@ -299,6 +299,17 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           tabs already give the top offset, so drop the fixed-nav padding. */}
       <div className={`max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
 
+        {/* PRICE FIRST. Moved to the top of the body 2026-08-07.
+            Owner, after three partial fixes: "ABOVE THE FUCKING FOLD. NO
+            FUCKING SCROLL." Measured before this: CCM cards at 672px and CRM
+            cards ~8 sections down, so on the tabbed /pricing page an EP
+            switching streams still had to scroll to find a number.
+            Everything that was above the cards is now below them. Nothing
+            was deleted. */}
+        <div id="pricing-cards">
+          <PricingOptions variant="full" />
+        </div>
+
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
 
@@ -429,9 +440,6 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           </p>
         </div>
 
-        <div id="pricing-cards">
-          <PricingOptions variant="full" />
-        </div>
 
         {/* LOCATION BENTOS — moved directly under the pricing cards
             (owner 2026-08-07: "move the location bentos here"). They were

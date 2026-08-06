@@ -145,6 +145,174 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           nav + tabs already provide the top offset, so drop the fixed-nav pad. */}
       <div className={`max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
 
+        {/* PRICE FIRST. Moved to the top of the body 2026-08-07.
+            Owner, after three partial fixes: "ABOVE THE FUCKING FOLD. NO
+            FUCKING SCROLL." Measured before this: CCM cards at 672px and CRM
+            cards ~8 sections down, so on the tabbed /pricing page an EP
+            switching streams still had to scroll to find a number.
+            Everything that was above the cards is now below them. Nothing
+            was deleted. */}
+        <div id="pricing-cards" className="mt-6">
+          <div className="grid md:grid-cols-2 gap-5 pt-2 max-w-4xl mx-auto items-stretch">
+
+            {/* ── Online tier ───────────────────────────────────────────── */}
+            <div
+              className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
+              style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50 flex-shrink-0">
+                    <BookOpen className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
+                  </div>
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+                    Online tier
+                  </span>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="flex items-baseline gap-1 justify-end">
+                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                  </div>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">one-time</p>
+                </div>
+              </div>
+
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM Online</h3>
+              <p className="text-[12px] text-slate-500 mb-2 font-medium">The EP-scoped course — certify entirely online</p>
+              <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+                8 modules at your own pace, plus the working clinical tools to open a new
+                referral-worthy service line. Add the hands-on practical day anytime to upgrade.
+              </p>
+
+              <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
+                {[
+                  '8 EP-scoped modules · 8 CPD hours',
+                  'SST Trainer app — your patients train to their prescribed HR band',
+                  'Live Baseline & Serial Testing tool',
+                  'BCTT calculator + full Clinical Toolkit',
+                  'NDIS / WorkCover / GP document pack',
+                  'Certificate on 80% pass · lifetime access',
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-1.5 text-[12.5px]">
+                    <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <span className="text-[var(--muted-foreground)]">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto">
+                <CrmCheckoutButton
+                  tier="online"
+                  accredited={accredited}
+                  interestHref={INTEREST_HREF}
+                  label={accredited ? 'Enrol — CRM Online' : 'Register for online'}
+                  className="w-full py-3 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-2"
+                />
+                <PaymentMethodsStrip price={CONFIG.COURSE.PRICE_ONLINE} />
+              </div>
+            </div>
+
+            {/* ── Complete tier — recommended ──────────────────────────── */}
+            <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
+                    <Award className="w-4.5 h-4.5 text-orange-500" strokeWidth={2} />
+                  </div>
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+                    Recommended
+                  </span>
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                    16 CPD
+                  </span>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="flex items-baseline gap-1 justify-end">
+                    {/* "from": the charge is workshopPriceFor(city) — $1,190 early-bird,
+                        full price only in the final window before a scheduled date. */}
+                    <span className="text-[11px] text-[var(--muted-foreground)]">from</span>
+                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
+                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                  </div>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">one-time</p>
+                </div>
+              </div>
+
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM Complete</h3>
+              <p className="text-[12px] text-slate-500 mb-2 font-medium">Online modules + the full-day hands-on practical</p>
+              <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+                Everything in Online — the course and all the tools — plus a supervised practical day. 16 CPD hours{accredited ? ' covers most of your annual ESSA requirement.' : ' in total (ESSA accreditation pending).'}
+              </p>
+
+              <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
+                {[
+                  'Everything in Online — course + all tools',
+                  'Full-day hands-on practical workshop',
+                  'Train alongside osteo / physio / GP — the team handover',
+                  'Supervised SCAT6 / VOMS / BESS / cervical',
+                  'Expert real-time feedback as you go',
+                  'OSCE-assessed hands-on competency',
+                  '16 CPD hours total',
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-1.5 text-[12.5px]">
+                    <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <span className={`text-[var(--foreground)] ${i === 0 ? 'font-semibold' : ''}`}>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto">
+                <p className="text-[10px] text-[var(--muted-foreground)] mb-2">
+                  ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird — standard ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies only in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a confirmed workshop date.
+                </p>
+                <CrmCheckoutButton
+                  tier="complete"
+                  accredited={accredited}
+                  interestHref={INTEREST_HREF}
+                  label={accredited ? 'Enrol — CRM Complete' : 'Register for the complete package'}
+                  className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+                />
+                <PaymentMethodsStrip price={CONFIG.COURSE.PRICE_EARLY_BIRD} />
+              </div>
+            </div>
+          </div>
+
+          {/* Upgrade path — an existing online buyer adds the SHARED practical
+              day. Interest-capture until ESSA; a live upgrade checkout after. */}
+          <div className="mt-5 text-center">
+            <div className="inline-block">
+              <p className="text-[12.5px] text-[var(--muted-foreground)] mb-2">
+                Already enrolled in CRM Online? Add the shared practical day.
+              </p>
+              <CrmCheckoutButton
+                tier="upgrade"
+                accredited={accredited}
+                interestHref={INTEREST_HREF}
+                label={accredited ? 'Add the practical day' : 'Register interest in the practical day'}
+                className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-[13px] hover:bg-slate-50 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Quick signup — directly under the payment cards (owner
+              2026-07-27): the not-ready-to-decide majority gets a one-field
+              path that keeps them, instead of scrolling away. */}
+          <div className="mt-6">
+            <EpLeadCapture variant="hero" location="under-pricing" nextHref="#pricing-cards" nextLabel="Back to the enrolment options" />
+          </div>
+
+          {/* Trust Signals */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
+            {['7-Day Guarantee', 'Lifetime Access', 'Clinical Tools Included', 'Certificate Included', essaTrustChip].map((item) => (
+              <div key={item} className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Page Header */}
         <div className="text-center mb-8">
           <div className="badge mb-5 inline-flex">
@@ -389,167 +557,6 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           </div>
         </div>
 
-        {/* Pricing Cards — two tiers, copied from the CCM bento card design */}
-        <div id="pricing-cards" className="mt-6">
-          <div className="grid md:grid-cols-2 gap-5 pt-2 max-w-4xl mx-auto items-stretch">
-
-            {/* ── Online tier ───────────────────────────────────────────── */}
-            <div
-              className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
-              style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50 flex-shrink-0">
-                    <BookOpen className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
-                  </div>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                    Online tier
-                  </span>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
-                  </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">one-time</p>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM Online</h3>
-              <p className="text-[12px] text-slate-500 mb-2 font-medium">The EP-scoped course — certify entirely online</p>
-              <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-                8 modules at your own pace, plus the working clinical tools to open a new
-                referral-worthy service line. Add the hands-on practical day anytime to upgrade.
-              </p>
-
-              <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
-                {[
-                  '8 EP-scoped modules · 8 CPD hours',
-                  'SST Trainer app — your patients train to their prescribed HR band',
-                  'Live Baseline & Serial Testing tool',
-                  'BCTT calculator + full Clinical Toolkit',
-                  'NDIS / WorkCover / GP document pack',
-                  'Certificate on 80% pass · lifetime access',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[12.5px]">
-                    <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                    <span className="text-[var(--muted-foreground)]">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-auto">
-                <CrmCheckoutButton
-                  tier="online"
-                  accredited={accredited}
-                  interestHref={INTEREST_HREF}
-                  label={accredited ? 'Enrol — CRM Online' : 'Register for online'}
-                  className="w-full py-3 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-2"
-                />
-                <PaymentMethodsStrip price={CONFIG.COURSE.PRICE_ONLINE} />
-              </div>
-            </div>
-
-            {/* ── Complete tier — recommended ──────────────────────────── */}
-            <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
-                    <Award className="w-4.5 h-4.5 text-orange-500" strokeWidth={2} />
-                  </div>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                    Recommended
-                  </span>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                    16 CPD
-                  </span>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="flex items-baseline gap-1 justify-end">
-                    {/* "from": the charge is workshopPriceFor(city) — $1,190 early-bird,
-                        full price only in the final window before a scheduled date. */}
-                    <span className="text-[11px] text-[var(--muted-foreground)]">from</span>
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
-                  </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">one-time</p>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM Complete</h3>
-              <p className="text-[12px] text-slate-500 mb-2 font-medium">Online modules + the full-day hands-on practical</p>
-              <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-                Everything in Online — the course and all the tools — plus a supervised practical day. 16 CPD hours{accredited ? ' covers most of your annual ESSA requirement.' : ' in total (ESSA accreditation pending).'}
-              </p>
-
-              <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
-                {[
-                  'Everything in Online — course + all tools',
-                  'Full-day hands-on practical workshop',
-                  'Train alongside osteo / physio / GP — the team handover',
-                  'Supervised SCAT6 / VOMS / BESS / cervical',
-                  'Expert real-time feedback as you go',
-                  'OSCE-assessed hands-on competency',
-                  '16 CPD hours total',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[12.5px]">
-                    <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                    <span className={`text-[var(--foreground)] ${i === 0 ? 'font-semibold' : ''}`}>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-auto">
-                <p className="text-[10px] text-[var(--muted-foreground)] mb-2">
-                  ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird — standard ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies only in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a confirmed workshop date.
-                </p>
-                <CrmCheckoutButton
-                  tier="complete"
-                  accredited={accredited}
-                  interestHref={INTEREST_HREF}
-                  label={accredited ? 'Enrol — CRM Complete' : 'Register for the complete package'}
-                  className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
-                />
-                <PaymentMethodsStrip price={CONFIG.COURSE.PRICE_EARLY_BIRD} />
-              </div>
-            </div>
-          </div>
-
-          {/* Upgrade path — an existing online buyer adds the SHARED practical
-              day. Interest-capture until ESSA; a live upgrade checkout after. */}
-          <div className="mt-5 text-center">
-            <div className="inline-block">
-              <p className="text-[12.5px] text-[var(--muted-foreground)] mb-2">
-                Already enrolled in CRM Online? Add the shared practical day.
-              </p>
-              <CrmCheckoutButton
-                tier="upgrade"
-                accredited={accredited}
-                interestHref={INTEREST_HREF}
-                label={accredited ? 'Add the practical day' : 'Register interest in the practical day'}
-                className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl border border-slate-300 bg-white text-foreground font-semibold text-[13px] hover:bg-slate-50 transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Quick signup — directly under the payment cards (owner
-              2026-07-27): the not-ready-to-decide majority gets a one-field
-              path that keeps them, instead of scrolling away. */}
-          <div className="mt-6">
-            <EpLeadCapture variant="hero" location="under-pricing" nextHref="#pricing-cards" nextLabel="Back to the enrolment options" />
-          </div>
-
-          {/* Trust Signals */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-            {['7-Day Guarantee', 'Lifetime Access', 'Clinical Tools Included', 'Certificate Included', essaTrustChip].map((item) => (
-              <div key={item} className="flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Compare Plans */}
         <div className="mt-10 max-w-3xl mx-auto">
