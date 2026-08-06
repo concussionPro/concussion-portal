@@ -129,3 +129,46 @@ jobs:
             echo "::error::route configuration failed to parse — check middleware matcher / next.config sources"
             exit 1
           fi
+
+  # The gate above proves the commit CAN build. This one proves it actually
+  # REACHED production — a different question, and the one nobody was asking.
+  #
+  # A failed deploy does not leave a gap where the new code should be; it pins
+  # production to the PREVIOUS build and everything keeps reporting healthy.
+  # /api/health returned {"status":"healthy"} throughout both incidents on
+  # 2026-08-06 because it only pinged Postgres. Twenty cron jobs, tsc and vitest
+  # were all equally blind. The second incident held a live paywall bypass open,
+  # because the commit that failed was the one deleting the leaking directory.
+  #
+  # So: poll the SHA production is serving until it equals the SHA we just
+  # built. Cheap, needs no Vercel token, and fails loudly on BOTH failure modes
+  # — the deploy errored, or the deploy silently never happened.
+  deployed:
+    name: reached production
+    needs: gate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Wait for this commit to be the one serving traffic
+        env:
+          EXPECTED: ${{ github.sha }}
+          URL: https://portal.concussion-education-australia.com/api/health
+        run: |
+          echo "waiting for $EXPECTED"
+          # Vercel builds this project in roughly 2-4 minutes; 18 minutes of
+          # polling is generous enough that a timeout means something is wrong,
+          # not merely slow.
+          for i in $(seq 1 108); do
+            body="$(curl -fsS --max-time 15 "$URL" || true)"
+            got="$(printf '%s' "$body" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).build?.sha??"")}catch{console.log("")}})')"
+            if [ "$got" = "$EXPECTED" ]; then
+              echo "live after $((i*10))s: $got"
+              exit 0
+            fi
+            [ $((i % 6)) -eq 0 ] && echo "  ${i}0s — serving ${got:-<no sha>}"
+            sleep 10
+          done
+          echo "::error::$EXPECTED never reached production. The deploy failed or never ran, which means production is PINNED to an older build — including any security fix in this commit. Check the Vercel deployment log."
+          exit 1

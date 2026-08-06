@@ -125,6 +125,20 @@ function walk(dir: string, out: string[] = []): string[] {
 const sourceFiles = [join(REPO, 'app'), join(REPO, 'components')].flatMap((d) => walk(d))
 
 describe('no surface hardcodes an accreditation status', () => {
+  it('the corpus is real', () => {
+    // The detector below is proven to fire (next test). The CORPUS was not
+    // proven to exist. If app/ or components/ were ever renamed, walk() returns
+    // an empty array, the loop body never executes, and `.toEqual([])` passes
+    // with a green tick while checking nothing at all.
+    //
+    // Register F, 2026-08-06: three guard files scanned a corpus and asserted
+    // emptiness without ever asserting the corpus was non-empty. All three
+    // happened to be fine — by luck, not construction. A guard that cannot fail
+    // is an unlocked defect class wearing a green tick, exactly like a skipped
+    // test.
+    expect(sourceFiles.length).toBeGreaterThan(300)
+  })
+
   it('every ESSA "pending" claim sits INSIDE a conditional on ESSA_ACCREDITED', () => {
     const offenders: string[] = []
     for (const f of sourceFiles) {

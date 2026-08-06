@@ -32,6 +32,16 @@ beforeAll(() => {
 describe('workshop price copy derives from the charged price, not the sticker', () => {
   const src = read('lib/email-sequences.ts')
 
+  it('the file it scans still contains the thing being policed', () => {
+    // Non-vacuity. This guard filters lines interpolating PRICE_REGULAR and
+    // asserts the survivors are none. If PRICE_REGULAR stopped appearing in
+    // this file at all — renamed constant, templates moved elsewhere — the
+    // filter returns empty and the guard reports a pass while policing nothing.
+    // (Register F sweep, 2026-08-06.)
+    expect(src).toMatch(/\$\{CONFIG\.COURSE\.PRICE_REGULAR/)
+    expect(src.length).toBeGreaterThan(10_000)
+  })
+
   it('no template presents CONFIG.COURSE.PRICE_REGULAR as the Complete Course price', () => {
     // PRICE_REGULAR is legitimate only as the "then A$1,400" half of an
     // early-bird sentence, which completeCourseCaveat() owns. Any other
