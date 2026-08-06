@@ -286,7 +286,11 @@ export default function HomeClient() {
                     A graded test measures each patient&apos;s symptom threshold; they train just under
                     it — live heart rate, verified progression, every session on your dashboard.
                   </p>
-                  <Link href="/sst-trainer" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                  {/* ?landing=1 — this is a MARKETING link. Plain /sst-trainer resumes the
+                      app for anyone with persisted state, so a returning clinician
+                      clicking "see the patient app" from the homepage was dropped
+                      straight into the tool instead of the page explaining it. */}
+                  <Link href="/sst-trainer?landing=1" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
                     See the patient app <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -318,7 +322,7 @@ export default function HomeClient() {
                 {[
                   {
                     value: `Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS}`,
-                    label: 'AHPRA CPD Hours',
+                    label: 'AHPRA-aligned CPD Hours',
                     sub: `${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop`,
                   },
                   { value: `${CONFIG.COURSE.TOTAL_MODULES}`, label: 'Online Modules', sub: 'Interactive quizzes' },
@@ -525,8 +529,8 @@ export default function HomeClient() {
                   href: '/blog/ais-concussion-brain-health-position-statement-2024',
                 },
                 {
-                  title: '21-day mandatory stand-down',
-                  desc: 'Youth and community sport now requires structured return-to-play protocols and medical clearance.',
+                  title: '21-day minimum stand-down',
+                  desc: 'AIS/SMA guidance sets a minimum stand-down for youth and community sport, with structured return-to-play and medical clearance. Adopted by 30+ national sporting organisations.',
                   href: '/blog/21-day-concussion-stand-down-youth-sport-australia',
                 },
                 {

@@ -51,6 +51,9 @@ export default function SstEntry() {
     const standalone =
       window.matchMedia?.('(display-mode: standalone)').matches ||
       !!(window as unknown as { Capacitor?: unknown }).Capacitor
+    // ?landing=1 forces the explainer even for someone with saved state —
+    // marketing links must never dump a returning clinician into the tool.
+    if (params.has('landing')) { setView('landing'); return }
     setView(
       params.has('clinic') || params.has('start') || hasState || standalone ? 'app' : 'landing',
     )

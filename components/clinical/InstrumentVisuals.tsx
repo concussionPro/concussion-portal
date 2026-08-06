@@ -62,7 +62,10 @@ export function BaselineLaptopVisual() {
           </span>
         </div>
         <Image
-          src="/instruments/baseline-flow/1.png"
+          // baseline-flow2 is the current capture set (the animation in
+          // BaselineLaptopAnimation already uses it); baseline-flow is the
+          // superseded 13:44 set and was still showing here.
+          src="/instruments/baseline-flow2/1.png"
           alt="Pre-season SCAT6 baseline — athlete self-completing step 1 of 6 on a laptop"
           width={560}
           height={200}
