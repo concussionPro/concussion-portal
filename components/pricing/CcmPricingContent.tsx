@@ -312,7 +312,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 AHPRA-aligned concussion assessment training for physiotherapists &amp; osteopaths.
-                Certificate on completion. Most employers reimburse — we provide the tax invoice.
+                Tax invoice emailed immediately with your receipt — most employers reimburse. Certificate on completion.
               </p>
             </>
           ) : heroVariant === 'scat6' ? (

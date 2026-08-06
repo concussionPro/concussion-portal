@@ -79,7 +79,7 @@ const buildFaqs = (accredited: boolean): FaqItem[] => [
   },
   {
     q: 'Can my employer pay for this?',
-    a: 'Yes — most practices and employers cover CPD training costs. You receive a tax invoice and CPD certificate on completion that your employer can use for reimbursement. Many practitioners pay nothing out of pocket.',
+    a: 'Yes — most practices and employers cover CPD training costs. Your tax invoice is emailed immediately with your receipt, so you can submit it for reimbursement straight away; the CPD certificate follows when you complete the course. Many practitioners pay nothing out of pocket.',
   },
 ]
 
@@ -370,7 +370,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-foreground">Most practitioners pay $0 out of pocket</p>
-            <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice + CPD certificate emailed on completion.</p>
+            <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice emailed immediately with your receipt · CPD certificate on completion.</p>
           </div>
         </div>
 
