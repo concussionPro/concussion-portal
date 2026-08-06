@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
+import { isPrefetchRequest } from '@/lib/prefetch-guard'
 import { createJWTSession, verifySessionToken } from '@/lib/jwt-session'
 import { CLINIC_DEMO_USER_ID, CLINIC_DEMO_EMAIL } from '@/lib/demo-session'
 import { sql } from '@/lib/db'
@@ -68,16 +69,15 @@ async function logTourStart(req: NextRequest) {
  * added later cannot reintroduce it. A real click is a top-level navigation and
  * carries neither header.
  */
-function isPrefetch(req: NextRequest): boolean {
-  return (
-    req.headers.get('next-router-prefetch') === '1' ||
-    (req.headers.get('purpose') || '').toLowerCase() === 'prefetch' ||
-    (req.headers.get('x-purpose') || '').toLowerCase() === 'preview'
-  )
-}
+// Uses the SHARED helper rather than a local copy. This route had its own,
+// and that copy did not check `sec-purpose` — so a Speculation Rules prefetch
+// still reached it and was measured granting 2 cookies in production on
+// 2026-08-06, on the highest-traffic demo route in the app. Nine sibling routes
+// were fixed with the shared helper while this one was skipped precisely
+// BECAUSE it already looked guarded. One implementation, one place to fix.
 
 export async function GET(req: NextRequest) {
-  if (isPrefetch(req)) {
+  if (isPrefetchRequest(req)) {
     return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
   }
   await logTourStart(req)

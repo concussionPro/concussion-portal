@@ -72,6 +72,18 @@ describe('demo routes cannot be triggered by a prefetch', () => {
     }
   })
 
+  it('no route keeps a LOCAL copy of the guard', () => {
+    // /demo/clinic had its own isPrefetch(), which omitted `sec-purpose`. It
+    // was skipped during the sweep precisely BECAUSE it already looked
+    // guarded, and was then measured in production granting 2 cookies to a
+    // Speculation Rules prefetch — on the highest-traffic demo route in the
+    // app. A second implementation is a second thing to forget to update.
+    const localCopies = routes.filter((r) => /function isPrefetch\b/.test(r.src))
+    expect(
+      localCopies.map((r) => `/demo/${r.name} defines its own guard — import from lib/prefetch-guard instead`),
+    ).toEqual([])
+  })
+
   it('the shared helper covers the headers browsers actually send', () => {
     const helper = readFileSync(join(ROOT, 'lib/prefetch-guard.ts'), 'utf8')
     for (const h of ['next-router-prefetch', 'purpose', 'x-purpose', 'sec-purpose']) {
