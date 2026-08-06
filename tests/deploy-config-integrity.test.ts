@@ -161,3 +161,35 @@ describe('the health check can report which build is serving', () => {
     expect(src).toMatch(/export const dynamic = 'force-dynamic'/)
   })
 })
+
+describe('the deploy monitor does not cry wolf', () => {
+  const ci = readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8')
+
+  it('accepts a DESCENDANT of the pushed commit, not only an exact match', () => {
+    // The first version demanded live === github.sha and failed on a perfectly
+    // healthy production: six commits went out in quick succession, Vercel
+    // supersedes an in-flight build when a newer one arrives, so intermediate
+    // SHAs never serve. It waited 18 minutes for a commit that could not exist,
+    // then reported failure.
+    //
+    // A monitor that fires on a healthy system is worse than no monitor,
+    // because the next REAL alert gets ignored. The property that matters is
+    // that production is not stuck BEHIND — so a descendant must pass.
+    expect(ci, 'the superseded-push case must be accepted via an ancestry check')
+      .toMatch(/git merge-base --is-ancestor/)
+  })
+
+  it('still fails when production is genuinely behind', () => {
+    // The alarm must survive the fix. If the job ever unconditionally exits 0,
+    // the whole point is gone.
+    expect(ci).toMatch(/production is PINNED to an older build/)
+    expect(ci).toMatch(/exit 1/)
+  })
+
+  it('checks out full history, which the ancestry test requires', () => {
+    // actions/checkout defaults to depth 1; merge-base then cannot see the
+    // live commit and every comparison silently fails, sending the job back to
+    // exact-match behaviour.
+    expect(ci).toMatch(/fetch-depth:\s*0/)
+  })
+})
