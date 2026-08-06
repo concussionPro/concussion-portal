@@ -405,6 +405,31 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             The old comment here claimed "visible within first scroll on mobile".
             It was not, and had not been for some time. Everything that used to
             sit above still sits below — nothing was deleted, it was reordered. */}
+        {/* THE STREAM FORK — first thing after the hero, deliberately.
+            /pricing sold ONE course: "Concussion Rehab", "Exercise Physiolog"
+            and "ESSA" appeared NOWHERE on the live page (measured 2026-08-07).
+            My first fix put this band BELOW the value bento, roughly 60% down —
+            so an exercise physiologist still had to read the entire CCM pitch
+            before discovering they were on the wrong page. Owner, correctly:
+            "still shows ccm then big scroll and no crm".
+
+            Kept to ONE LINE on purpose. The prices were just moved from 1.9
+            screens to under one; a full card here would push them back down to
+            fix a different problem. An EP needs a signpost, not a sales pitch —
+            the selling happens on /concussion-rehab-mastery. */}
+        <div className="max-w-3xl mx-auto mb-3 text-center">
+          <p className="text-[13px] sm:text-sm text-muted-foreground">
+            Physiotherapist, osteopath, GP or chiro? This is your course.{' '}
+            <span className="hidden sm:inline">·</span>{' '}
+            <span className="block sm:inline mt-1 sm:mt-0">
+              Exercise physiologist?{' '}
+              <Link href="/concussion-rehab-mastery" className="font-bold text-accent hover:underline">
+                Take the {CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA-accredited ' : ''}EP stream instead &rarr;
+              </Link>
+            </span>
+          </p>
+        </div>
+
         {/* START-ONLINE-UPGRADE-LATER, stated AT the decision point.
             The page did say this — at y=2092, which is 1,187px BELOW the cards,
             and again in the FAQ at y=7601. Measured 2026-08-07. So the buyer
@@ -537,40 +562,6 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           </div>
         </div>
 
-
-        {/* THE OTHER STREAM. /pricing sold ONE course. Measured 2026-08-07:
-            the words "Concussion Rehab", "Exercise Physiolog" and "ESSA" appeared
-            NOWHERE on this page, so an exercise physiologist who landed here saw
-            a physio/osteo course, no sign the ESSA-accredited stream existed, and
-            left. CRM is a real product with its own accreditation and the same
-            price points — it simply was not on the page people arrive at to buy.
-
-            Placed immediately AFTER the cards: a CCM buyer has already seen their
-            price, and an EP finds out they are on the wrong page at the first
-            possible moment rather than the last. Facts derive from CONFIG — the
-            ESSA number and points are gated on ESSA_ACCREDITED elsewhere, so this
-            block states the stream and its CPD total only. */}
-        <div className="max-w-3xl mx-auto mt-6 mb-2 rounded-2xl border border-border p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-accent mb-1">
-              Exercise physiologists
-            </p>
-            <p className="text-base font-bold text-foreground leading-snug">
-              There&apos;s a separate stream built for you
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed mt-1">
-              Concussion Rehabilitation Mastery covers prescription, dosing and graded
-              return to exercise{CONFIG.FEATURES.ESSA_ACCREDITED ? ' — ESSA-accredited' : ''}, {CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD points.
-              Same price as above.
-            </p>
-          </div>
-          <Link
-            href="/concussion-rehab-mastery"
-            className="btn-primary rounded-xl px-5 py-3 text-sm font-bold whitespace-nowrap text-center flex-shrink-0"
-          >
-            See the EP course
-          </Link>
-        </div>
 
         {/* Workshop locations — owner 2026-07-10: city blocks belong on the
             pricing page too (Complete-course buyers ask "when's my city?"). */}

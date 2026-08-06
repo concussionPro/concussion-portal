@@ -617,6 +617,25 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </p>
       </div>
 
+      {/* Date alert — full width, under BOTH cards. Shown only while no city
+          has a scheduled date, which is the state where a visitor who came
+          looking for a date otherwise finds nothing and leaves. Once a real
+          date exists the city picker answers the question and this disappears. */}
+      {!anyCityHasLiveDate() && (
+        <div className="mt-6 max-w-3xl mx-auto rounded-2xl border border-border p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Bell className="w-4 h-4 text-[var(--accent)]" />
+            <p className="text-sm font-bold text-foreground">
+              Not ready to enrol? Get the date for {cityLabel(selectedLocation)}
+            </p>
+          </div>
+          <p className="text-[13px] text-[var(--muted-foreground)] mb-3">
+            No payment — you&apos;ll be first told when {cityLabel(selectedLocation)} is locked in.
+          </p>
+          <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
+        </div>
+      )}
+
       {/* Trust Signals */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--muted-foreground)]">
           {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'AHPRA Aligned'].map(item => (
@@ -931,26 +950,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   </span>
                 </div>
               )}
-              {/* Open by default while NO city anywhere has a scheduled date.
-                  In that state the date alert is not a footnote — it is the
-                  only forward action for a visitor who came to find a date,
-                  and hiding it behind a twisty made this card a dead end for
-                  them. Measured over the 28 days to 2026-08-06: four visitors
-                  clicked THROUGH THE WHOLE PICKER (one hit all five cities in
-                  ten seconds), 40 workshop_city_select events in total — and
-                  the page produced 2 workshop_interest_submit and no
-                  purchases. That is date-hunting behaviour finding nothing and
-                  leaving. Once a real date exists the picker answers the
-                  question by itself and this collapses again. */}
-              <details className="mt-2.5 group" open={!anyCityHasLiveDate()}>
-                <summary className="text-[11px] text-[var(--muted-foreground)] cursor-pointer hover:text-[var(--accent)] transition-colors list-none flex items-center gap-1">
-                  <Bell className="w-3 h-3" />
-                  Not ready to enrol? Get a date alert for {cityLabel(selectedLocation)} instead
-                </summary>
-                <div className="mt-2">
-                  <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
-                </div>
-              </details>
+              {/* The date-alert form used to sit HERE, inside the card, expanded by
+                  default. It added ~350px to the Complete tile and left the two
+                  cards visibly unequal — an $1,190 card towering over a $497 one,
+                  with a name/email form competing against its own Enrol button.
+                  Moved to full width directly BELOW both cards (2026-08-07): same
+                  visibility for date-hunters, without a lead-capture form living
+                  inside a price. */}
             </>
           )}
         </div>
