@@ -129,7 +129,13 @@ export default async function ReadyToTrainPage() {
         <div className="space-y-3 mb-10">
           {cities.map((c) => {
             const showCount = c.total >= SHOW_COUNT_FROM
-            const showProgress = showCount && !c.ranAlready
+            // "0 of 8 places confirmed" is the emptiness this rule exists to
+            // avoid — a city with real interest but no paid seats yet (Perth: 6
+            // asked, 0 confirmed) reads as dead when it isn't. Progress renders
+            // only once at least one place is genuinely confirmed; otherwise the
+            // city stands on its interest line.
+            const showProgress = showCount && !c.ranAlready && c.paid > 0
+            const interestOnly = showCount && !showProgress && c.interested > 0
             const pct = Math.min(100, Math.round((c.paid / threshold) * 100))
             return (
               <div key={c.slug} className="rounded-xl border border-border p-5">
@@ -138,7 +144,7 @@ export default async function ReadyToTrainPage() {
                   <span className="text-xs text-muted-foreground">
                     {c.ranAlready
                       ? 'Ran once — collecting for the next round'
-                      : showCount
+                      : showProgress
                         ? `${c.paid} of ${threshold} places confirmed`
                         : 'Collecting names'}
                   </span>
@@ -160,6 +166,12 @@ export default async function ReadyToTrainPage() {
                         : `${threshold - c.paid} more confirmed ${threshold - c.paid === 1 ? 'place' : 'places'} and it runs.`}
                     </p>
                   </>
+                )}
+                {interestOnly && (
+                  <p className="text-[13px] text-muted-foreground">
+                    {c.interested} {c.interested === 1 ? 'clinician has' : 'clinicians have'} asked to be
+                    told when {c.city} is scheduled — it runs once {threshold} places are confirmed.
+                  </p>
                 )}
                 {c.ranAlready && c.interested > 0 && (
                   <p className="text-[13px] text-muted-foreground">
