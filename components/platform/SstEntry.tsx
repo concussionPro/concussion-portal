@@ -18,7 +18,21 @@ import { trackEvent } from '@/lib/analytics'
  * a blank beat beats a flash of marketing for a returning patient.
  */
 export default function SstEntry() {
-  const [view, setView] = useState<'deciding' | 'landing' | 'app'>('deciding')
+  // Start on 'landing', not 'deciding'.
+  //
+  // This used to render NULL until the effect below resolved, so the first
+  // paint of /sst-trainer was an empty document — 85 characters, no nav, no
+  // CTA, no demo. Measured 2026-08-06: it is the site's #2 landing page (55
+  // sessions in 28 days) with a 96% one-page rate, and a crawler or a slow
+  // phone saw nothing at all.
+  //
+  // The landing is the correct default because it is what a NEW visitor should
+  // see; the effect still switches to 'app' on the very next tick for the
+  // cases that need it (?clinic=, ?start=, persisted state, installed PWA), and
+  // those visitors arrive from a QR or an install where a single frame of the
+  // landing is invisible in practice. Getting this backwards cost every cold
+  // visitor the entire page.
+  const [view, setView] = useState<'landing' | 'app'>('landing')
   const [trialFull, setTrialFull] = useState(false)
 
   useEffect(() => {
@@ -42,7 +56,6 @@ export default function SstEntry() {
     )
   }, [])
 
-  if (view === 'deciding') return null
   // publicSurface: patients enter with their clinic's code — the full
   // self-guided version lives only on the gated /platform/app surface.
   if (view === 'app') {

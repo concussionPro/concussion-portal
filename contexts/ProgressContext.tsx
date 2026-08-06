@@ -289,14 +289,23 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
    * snapshot from BEFORE the completion — the module-8 "completed" flag that
    * unlocks the certificate reached the server only if the user stayed on the
    * page long enough for the 2-second debounce to fire again.
+   *
+   * The updater must therefore run OUTSIDE setProgress. Advancing the ref from
+   * inside the setState updater does not fix this: React defers that updater
+   * to the render phase, so `markModuleComplete(); await flushSave()` still
+   * read the pre-completion snapshot. Verified 2026-08-06 — finishing all 8 EP
+   * modules left every server record at `completed: false` (quiz results, saved
+   * by the later debounce, persisted fine) and /api/certificate answered 403
+   * "Course not yet completed" to a buyer who had passed every quiz.
+   *
+   * Chaining off progressRef.current is safe because the ref is advanced here
+   * synchronously on every commit, so two commits in one tick still compose.
    */
   const commitProgress = useCallback(
     (updater: (prev: Record<number, ModuleProgress>) => Record<number, ModuleProgress>) => {
-      setProgress((prev) => {
-        const next = updater(prev)
-        progressRef.current = next
-        return next
-      })
+      const next = updater(progressRef.current)
+      progressRef.current = next
+      setProgress(next)
     },
     [],
   )

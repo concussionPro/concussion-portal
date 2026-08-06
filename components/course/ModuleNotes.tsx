@@ -17,14 +17,27 @@ interface Note {
  *
  * Two jobs in one panel because they're the same gesture for the learner:
  *  - NOTES: "come back to this" / "how this applies to my caseload".
- *  - REFLECTION: the one-per-module note AHPRA wants recorded against a CPD
- *    activity. It flows into the CPD record export, so the certificate ships
- *    audit-ready instead of telling the clinician to write one themselves.
+ *  - REFLECTION: the one-per-module note the learner's CPD framework wants
+ *    recorded against an activity — AHPRA for the registered professions,
+ *    ESSA for AEPs (see the `regulator` prop). It flows into the CPD record
+ *    export, so the certificate ships audit-ready instead of telling the
+ *    clinician to write one themselves.
  *
  * Autosaves on a debounce and on blur; everything is scoped server-side to the
  * session user.
  */
-export function ModuleNotes({ moduleId, moduleTitle }: { moduleId: number; moduleTitle?: string }) {
+export function ModuleNotes({
+  moduleId,
+  moduleTitle,
+  regulator = 'AHPRA',
+}: {
+  moduleId: number
+  moduleTitle?: string
+  /** Whose CPD framework this learner records against — AHPRA for the
+   *  registered professions, ESSA for Accredited Exercise Physiologists (who
+   *  are not AHPRA-registered at all). */
+  regulator?: 'AHPRA' | 'ESSA'
+}) {
   const [notes, setNotes] = useState<Note[]>([])
   const [reflection, setReflection] = useState('')
   const [draft, setDraft] = useState('')
@@ -160,7 +173,8 @@ export function ModuleNotes({ moduleId, moduleTitle }: { moduleId: number; modul
           CPD reflection
         </label>
         <p className="mb-2 text-[11.5px] leading-snug text-slate-500">
-          AHPRA asks for a reflection against each CPD activity. Write it here and it&apos;s included
+          {regulator}
+          {' '}asks for a reflection against each CPD activity. Write it here and it&apos;s included
           in your CPD record export — you won&apos;t have to reconstruct it at audit time.
         </p>
         <textarea

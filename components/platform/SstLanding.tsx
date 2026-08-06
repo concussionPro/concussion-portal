@@ -78,11 +78,17 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
             >
               I have a clinic code — start
             </button>
+            {/* Was /platform — a legacy duplicate landing whose children all
+                307 to /clinical-suite, so a clinician clicked through to
+                another page of copy and looped. This opens the real workspace
+                with sample patients instead: nothing to sign up for, nothing
+                saved. Measured 2026-08-06: this page took 55 sessions in 28
+                days with a 96% one-page rate and no demo reachable from it. */}
             <Link
-              href="/platform"
+              href="/demo/clinic"
               className="flex items-center gap-2 rounded-[13px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[15px] text-[15px] font-bold leading-none text-slate-900 transition-transform active:scale-[0.98]"
             >
-              I&rsquo;m a clinician →
+              I&rsquo;m a clinician — open the demo →
             </Link>
           </div>
 
@@ -106,6 +112,39 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
           <SstTrainerDemo />
         </div>
       </header>
+
+      {/* ===== THE REAL DEMO =====
+          The 57-second recording of the actual product. It existed and was
+          live on /clinical-suite, but NOT here — and this is the page
+          clinicians land on (55 sessions in 28 days, 96% one-page). What sat
+          here instead was SstTrainerDemo, a synthetic animation of the UI.
+          An animated mock is not a demo; a clinician deciding whether this is
+          real wants to watch it work. Self-hosted deliberately — no YouTube
+          click-out. */}
+      <section className="mx-auto max-w-[1180px] px-6 pb-4 pt-2 md:px-8">
+        <div className="mx-auto max-w-[860px]">
+          <h2 className="mb-5 text-center text-[clamp(24px,2.8vw,32px)] font-extrabold leading-[1.05] tracking-[-0.02em]">
+            See it in 60 seconds
+          </h2>
+          <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
+            <video
+              className="aspect-video w-full"
+              src="/sst-demo.mp4"
+              poster="/sst-demo-poster.jpg"
+              controls
+              playsInline
+              preload="metadata"
+            />
+          </div>
+          <p className="mt-3 text-center text-[13px] text-slate-500">
+            Prefer to click around?{' '}
+            <Link href="/demo/clinic" className="font-semibold text-slate-900 underline">
+              Open the demo workspace
+            </Link>{' '}
+            — real clinic, sample patients, nothing saved.
+          </p>
+        </div>
+      </section>
 
       {/* ===== HOW IT WORKS ===== */}
       <section className="mx-auto max-w-[1180px] px-6 pb-16 pt-2 md:px-8">
@@ -229,10 +268,10 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
                 Get your clinic code
               </Link>
               <Link
-                href="/platform"
+                href="/demo/clinic"
                 className="rounded-[12px] border-[1.5px] border-slate-300 bg-white px-5 py-[14px] text-[14px] font-bold leading-none text-slate-900 transition-transform active:scale-[0.98]"
               >
-                See the platform
+                Try it with sample patients
               </Link>
             </div>
           </div>

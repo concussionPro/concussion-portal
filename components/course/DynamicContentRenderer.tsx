@@ -448,8 +448,12 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     )
   }
 
-  // Handle sub-section headers (### Title)
-  const subHeaderMatch = text.match(/^###\s+(.+)$/)
+  // Handle sub-section headers (### Title, and any deeper level).
+  // `{3,}` not `###`: a `#### Title` failed this match (the 4th `#` is not
+  // `\s`), fell through to the `##` branch below, and that branch strips only
+  // TWO hashes — so every one of module 5's 34 `####` headings rendered to a
+  // paying clinician as the literal text "## VOR×1 — Foundation".
+  const subHeaderMatch = text.match(/^#{3,}\s+(.+)$/)
   if (subHeaderMatch) {
     return (
       <div key={key} className="flex items-center gap-2 mt-6 mb-3">
@@ -724,7 +728,12 @@ function renderSubCard(text: string, key: string) {
   const lines = text.split('\n').filter(l => l.trim())
   if (lines.length === 0) return null
 
-  const title = lines[0].trim().replace(/:\s*$/, '')
+  // Strip the leading markdown marker as well as the trailing colon. The
+  // grouping rule that routes a line here fires on "short line ending in `:`
+  // followed by bullets" — which a `### Heading:` or `- Heading:` line also
+  // satisfies. Only the colon was stripped, so those titles rendered with a
+  // literal "### " / "- " prefix in the card header.
+  const title = lines[0].trim().replace(/^\s*(?:#{1,6}|[•\-*])\s*/, '').replace(/:\s*$/, '')
   const bullets = lines.slice(1)
 
   return (

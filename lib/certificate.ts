@@ -127,7 +127,8 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   // points, valid to 24 Jul 2027. The line prints ONLY on the CRM certificate —
   // same false-claim rule as OA above. The mandated ESSA statement (with the
   // accreditation number) prints as a second line, per the letter's terms.
-  if (data.courseType === 'crm-online') {
+  const isEssaAccredited = data.courseType === 'crm-online'
+  if (isEssaAccredited) {
     doc.text('Accredited by Exercise & Sports Science Australia (ESSA) — Accreditation No. PDNF26077 (Online)', centerX, y, { align: 'center' })
     y += 4
     doc.setFontSize(7)
@@ -193,7 +194,7 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   y += descLines.length * 4
 
   // ── Details Grid ──────────────────────────────────
-  y += 8
+  y += 5
   const gridY = y
   const col1X = 50
   const col2X = centerX
@@ -213,7 +214,13 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7)
     doc.setTextColor(100, 116, 139)
-    doc.text('AHPRA-Aligned', col1X, gridY + 13, { align: 'center' })
+    // Same false-claim rule as the OA endorsement line above. CRM buyers are
+    // Accredited Exercise Physiologists — accredited by ESSA/NASRHP, NOT
+    // registered with AHPRA — so "AHPRA-Aligned" on a CRM certificate names
+    // the wrong regulator on the document they lodge with ESSA.
+    doc.text(isEssaAccredited ? 'ESSA CPD Points' : 'AHPRA-Aligned', col1X, gridY + 13, {
+      align: 'center',
+    })
   } else {
     doc.text('STATUS', col1X, gridY, { align: 'center' })
     doc.setFont('helvetica', 'bold')
@@ -248,14 +255,14 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   doc.text(modeOfDelivery, col3X, gridY + 8, { align: 'center' })
 
   // ── Activity Type ──────────────────────────────────
-  y = gridY + 20
+  y = gridY + 16
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(100, 116, 139)
   doc.text('ACTIVITY TYPE: Educational Activity — Reviewing & Reflecting', centerX, y, { align: 'center' })
 
   // ── Learning Outcomes ──────────────────────────────────
-  y += 8
+  y += 6
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8)
   doc.setTextColor(71, 85, 105)
@@ -269,8 +276,19 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   })
 
   // ── Signature / Authorisation ──────────────────────────────────
+  //
+  // The vertical gaps above were tuned when the tallest certificate had a
+  // one-line header. The CRM certificate adds two mandated ESSA header lines
+  // AND five learning outcomes, which pushed this block down onto the footer:
+  // "Zac Lewis — Founder", the Date of Issue and the Verify URL all printed
+  // ON TOP of the footer paragraph, and the footer itself wrapped past the
+  // inner border. Space is reclaimed above, and the footer now sits at a fixed
+  // offset that clears the block on every variant.
   y += 6
   const sigY = y
+  // Sits at the usual height, but never above the signature/verification
+  // block — which grows with the header and the learning-outcome count.
+  const footerY = Math.max(pageHeight - 22, sigY + 12)
   // Left: Signature
   doc.setDrawColor(100, 116, 139)
   doc.setLineWidth(0.3)
@@ -301,9 +319,16 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   // ── Footer ──────────────────────────────────
   doc.setFontSize(6.5)
   doc.setTextColor(148, 163, 184) // slate-400
+  // The AHPRA sentence belongs only on certificates issued to the registered
+  // professions. An AEP is not AHPRA-registered, so the CRM footer states the
+  // accreditation this certificate actually carries (already printed verbatim
+  // in the header, per the ESSA letter's terms) instead of a regulator that
+  // does not regulate the holder.
   doc.text(
-    'This certificate confirms completion of a continuing professional development activity provided by Concussion Education Australia. CPD activities are AHPRA-aligned and developed in accordance with the registration standards for continuing professional development. Retain this certificate for your CPD portfolio — records should be kept for a minimum of 5 years for audit purposes.',
-    centerX, pageHeight - 16, { align: 'center', maxWidth: pageWidth - 40 }
+    isEssaAccredited
+      ? 'This certificate confirms completion of a continuing professional development activity provided by Concussion Education Australia, accredited by Exercise & Sports Science Australia. Retain this certificate for your CPD portfolio — records should be kept for a minimum of 5 years for audit purposes.'
+      : 'This certificate confirms completion of a continuing professional development activity provided by Concussion Education Australia. CPD activities are AHPRA-aligned and developed in accordance with the registration standards for continuing professional development. Retain this certificate for your CPD portfolio — records should be kept for a minimum of 5 years for audit purposes.',
+    centerX, footerY, { align: 'center', maxWidth: pageWidth - 40 }
   )
 
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'))

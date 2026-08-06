@@ -1212,7 +1212,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <Award className="w-4 h-4 text-teal-600" />
-                  <span className="font-semibold text-slate-700">{module.points} CPD Hours</span>
+                  <span className="font-semibold text-slate-700">{module.points} CPD {module.points === 1 ? 'Hour' : 'Hours'}</span>
                 </div>
                 <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
                 <div className="flex items-center gap-2">
@@ -1604,7 +1604,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Complete</h3>
                           <p className="text-[15px] text-slate-700 mb-6 leading-relaxed">
-                            Congratulations! You&apos;ve met all the requirements for this module. Mark it as complete to earn your {module.points} CPD hours.
+                            Congratulations! You&apos;ve met all the requirements for this module. Mark it as complete to earn your {module.points} CPD {module.points === 1 ? 'hour' : 'hours'}.
                           </p>
                           <button
                             onClick={handleCompleteModule}
@@ -1872,7 +1872,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Complete</h3>
                   <p className="text-[15px] text-slate-700 mb-6 leading-relaxed">
-                    Congratulations! You&apos;ve met all the requirements for this module.{module.points > 0 ? ` Mark it as complete to earn your ${module.points} CPD hours.` : ''}
+                    Congratulations! You&apos;ve met all the requirements for this module.{module.points > 0 ? ` Mark it as complete to earn your ${module.points} CPD ${module.points === 1 ? 'hour' : 'hours'}.` : ''}
                   </p>
                   <button
                     onClick={handleCompleteModule}
@@ -1967,7 +1967,14 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               looking at a truncated Module 1 is being sold to, not studying,
               and the notes API is session-scoped anyway. */}
           {!needsUpgrade && accessLevel !== 'preview' && (
-            <ModuleNotes moduleId={progressId} moduleTitle={module?.title} />
+            <ModuleNotes
+              moduleId={progressId}
+              moduleTitle={module?.title}
+              // CRM buyers are Accredited Exercise Physiologists — ESSA/NASRHP
+              // accredited, NOT AHPRA-registered. Naming AHPRA at them is
+              // simply the wrong regulator.
+              regulator={descriptor.course === 'ep' ? 'ESSA' : 'AHPRA'}
+            />
           )}
         </div>
       </main>
