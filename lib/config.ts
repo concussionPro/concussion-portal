@@ -22,7 +22,9 @@ export const CONFIG = {
     // arithmetic (was ONLINE_CPD_POINTS * 2 in three surfaces, which read as
     // coincidence and invited "fixing" the CCM/CRM asymmetry).
     CRM_TOTAL_CPD_POINTS: 16,
-    CPD_BADGE_TEXT: 'Up to 16 CPD hours - AHPRA Aligned, Endorsed by Osteopathy Australia',
+    // Derived below (see 'SELF-DERIVED CLAIM STRINGS'), not a literal — an
+    // object literal cannot reference its own fields while it is being built.
+    CPD_BADGE_TEXT: '',
     PRICE_ONLINE: 497,
     // PRICING MODEL (owner decision 2026-07-02):
     // PRICE_REGULAR ($1,400) is the sticker/standard price. It is only ever
@@ -185,7 +187,21 @@ export const CONFIG = {
     SITE_URL: 'https://portal.concussion-education-australia.com',
     TWITTER_HANDLE: '@ConcussionEduAU',
     OG_IMAGE: 'https://portal.concussion-education-australia.com/og-image.jpg',
-    DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules (8 CPD hours) + optional practical day (up to 16 CPD hours). Endorsed by Osteopathy Australia.',
+    // ENDORSEMENT SCOPE — this string is the metadata FALLBACK for the whole
+    // site (app/layout.tsx uses it for description, og:description and
+    // twitter:description), so it renders on routes that have no business
+    // carrying it. Rendered check 2026-08-06: /acsm, /cep-uk and
+    // /concussion-rehab-mastery — all Concussion Rehab Mastery surfaces — were
+    // serving "Endorsed by Osteopathy Australia" as their twitter:description,
+    // and /concussion-rehab-mastery as its og:description too. OA endorses CCM
+    // only; CRM is the ESSA stream. The JSON-LD Organization node had already
+    // been fixed for exactly this reason (see lib/schema-markup.ts) — the meta
+    // tags one layer up had not.
+    //
+    // So the endorsement names the course it belongs to. Then the sentence
+    // stays true wherever the fallback lands.
+    // Derived below, for the same reason as CPD_BADGE_TEXT.
+    DESCRIPTION: '',
   },
 
   // ESSA accreditation — FORMAL TERMS from the accreditation letter
@@ -288,6 +304,43 @@ export const CONFIG = {
     HPCSA_ACCREDITED: false,
   },
 }
+
+// ---------------------------------------------------------------------------
+// SELF-DERIVED CLAIM STRINGS.
+//
+// Both of these state a CPD rating and an endorsement, and both were literals
+// carrying "16" and "Endorsed by Osteopathy Australia" inside the very file
+// that defines the canonical numbers. A re-rate would have updated
+// TOTAL_CPD_POINTS and left the sentence beside it saying something else —
+// which is precisely how 14 survived the 2026-07-30 re-rate on eight surfaces.
+//
+// Assigned after the literal is built because an object literal cannot
+// reference its own fields mid-construction. Same pattern as the ESSA expiry
+// enforcement below; no call site changes.
+// ---------------------------------------------------------------------------
+CONFIG.COURSE.CPD_BADGE_TEXT =
+  `Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours - AHPRA Aligned. ` +
+  `Concussion Clinical Mastery is endorsed by Osteopathy Australia.`
+
+// ENDORSEMENT SCOPE — this is the metadata FALLBACK for the whole site
+// (app/layout.tsx uses it for description, og:description AND
+// twitter:description), so it renders on routes that have no business carrying
+// it. Rendered check 2026-08-06: /acsm, /cep-uk and /concussion-rehab-mastery —
+// all Concussion Rehab Mastery surfaces — were serving "Endorsed by Osteopathy
+// Australia" as their twitter:description, and the CRM flagship as its
+// og:description too. OA endorses CCM only; CRM is the ESSA stream. The JSON-LD
+// Organization node had already been scoped for exactly this reason
+// (lib/schema-markup.ts) — the meta tags one layer up had not.
+//
+// So the endorsement names the course it belongs to, and the sentence stays
+// true wherever the fallback lands.
+CONFIG.SEO.DESCRIPTION =
+  `AHPRA-aligned concussion CPD from Concussion Education Australia. ` +
+  `SCAT6, VOMS, BESS mastery. Our flagship Concussion Clinical Mastery — ` +
+  `${CONFIG.COURSE.TOTAL_MODULES} online modules (${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours) ` +
+  `+ optional practical day (up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours) — ` +
+  `is endorsed by Osteopathy Australia; Concussion Rehab Mastery is accredited ` +
+  `by ESSA for exercise physiologists.`
 
 // ---------------------------------------------------------------------------
 // ESSA EXPIRY ENFORCEMENT.

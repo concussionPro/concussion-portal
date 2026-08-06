@@ -442,7 +442,15 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
                     <span className="block text-[11px] text-muted-foreground leading-tight">SCAT6 baselines · initial exam</span>
                   </span>
                 </Link>
-                <Link href="/sst-trainer" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
+                {/* ?landing=1 — this tile sits beside /preseason in the
+                    clinical-tools block, and /preseason is the CLINICIAN
+                    explainer, not the athlete form. Plain /sst-trainer
+                    resumes the PATIENT app for anyone with saved state, so a
+                    clinician browsing their own dashboard was dropped into a
+                    patient session. The install CTAs on /platform and
+                    PlatformChrome deliberately keep the bare link — they
+                    promise "get the app" and that IS the PWA entry. */}
+                <Link href="/sst-trainer?landing=1" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
                   <Stethoscope className="w-4 h-4 text-emerald-600/70 flex-shrink-0" strokeWidth={1.8} />
                   <span className="min-w-0">
                     <span className="block text-[13px] font-semibold text-foreground leading-tight">SST Trainer</span>

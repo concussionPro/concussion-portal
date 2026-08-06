@@ -31,6 +31,17 @@ import { SiteFooter } from './SiteFooter'
  * the patient apps (/sst-trainer, /platform) or the prospect portals (/p/*).
  */
 const PUBLIC_ROUTES = [
+  // 2026-08-06 master clean, pass 2: an allowlist is a deny-by-default list,
+  // so every public page added since it was written silently shipped with no
+  // privacy link, no terms, no contact and no ABN. A first sweep added 22
+  // routes; a live check of 64 public URLs found these three still bare —
+  // including /acc, the ACC scheme pitch, and a lead-magnet funnel.
+  // ADD EVERY NEW PUBLIC MARKETING PAGE HERE. App/clinician surfaces
+  // (/clinical-testing/*, /auth/*, /checkout/*) are deliberately excluded —
+  // they carry app chrome, not a marketing footer.
+  '/acc',
+  '/ai-safety-checklist',
+  '/courses/about-the-founder',
   '/',
   '/preview',
   '/pricing',

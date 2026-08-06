@@ -658,6 +658,95 @@ describe('endorsement and accreditation stay attached to their own course', () =
 })
 
 // ───────────────────────────────────────────────────────────────────────────
+// CLASS: a claim that renders by DEFAULT on routes it was never scoped for.
+//
+// Found by reading what production SERVES, not the source: /acsm, /cep-uk and
+// /concussion-rehab-mastery — all CRM surfaces — were shipping "Endorsed by
+// Osteopathy Australia" as their twitter:description, and the CRM flagship as
+// its og:description too, because app/layout.tsx falls back to
+// CONFIG.SEO.DESCRIPTION for all three description tags. The JSON-LD
+// Organization node had already been scoped for this exact reason; the meta
+// tags one layer up had not.
+// ───────────────────────────────────────────────────────────────────────────
+describe('the site-wide metadata fallback is true on every route it lands on', () => {
+  it('the derived claim strings actually resolve', () => {
+    // They are assigned AFTER the CONFIG literal (an object literal cannot read
+    // its own fields mid-construction). A typo in that assignment leaves the
+    // empty-string placeholder in place, which typechecks and renders blank
+    // metadata on every route — silent, and invisible to every other test.
+    expect(CONFIG.SEO.DESCRIPTION.length).toBeGreaterThan(80)
+    expect(CONFIG.COURSE.CPD_BADGE_TEXT).toContain(String(CONFIG.COURSE.TOTAL_CPD_POINTS))
+    expect(CONFIG.SEO.DESCRIPTION).toContain(String(CONFIG.COURSE.TOTAL_CPD_POINTS))
+    expect(CONFIG.SEO.DESCRIPTION).toContain(String(CONFIG.COURSE.ONLINE_CPD_POINTS))
+  })
+
+  it('the default description scopes its endorsement to the endorsed course', () => {
+    const d = CONFIG.SEO.DESCRIPTION
+    if (/Osteopathy Australia/i.test(d)) {
+      expect(
+        d,
+        'this string is the description/og/twitter fallback for EVERY route, including the ESSA (CRM) and international pages — name the course the endorsement covers',
+      ).toMatch(/Concussion Clinical Mastery/i)
+    }
+    // A bare trailing "Endorsed by Osteopathy Australia." is the shape that
+    // made it an entity-level claim wherever it rendered.
+    expect(d).not.toMatch(/(?:^|\.\s)Endorsed by Osteopathy Australia\.?\s*$/i)
+  })
+
+  it('the CRM flagship supplies its own social preview rather than inheriting CCM copy', () => {
+    const src = readFileSync(join(REPO, 'app/concussion-rehab-mastery/page.tsx'), 'utf8')
+    expect(src).toMatch(/openGraph:/)
+    expect(src).toMatch(/twitter:/)
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────────
+// CLASS: an unsubstantiated superlative.
+//
+// docs/brand-voice.md: never "the only Australian…" or any comparable
+// superlative — unsubstantiated, and a breach of the AHPRA advertising
+// guidelines. "The only concussion-rehabilitation course scoped for AEPs" was
+// live in the CRM page's description meta tag.
+// ───────────────────────────────────────────────────────────────────────────
+const SELF_SUPERLATIVE =
+  /\bthe only (?:Australian|concussion|course|program|provider|platform|clinical)|Australia's only|only (?:course|program|provider) in Australia|the first and only|\bthe one (?:concussion )?(?:course|program)/i
+
+describe('no unsubstantiated superlative about CEA or its courses', () => {
+  it('no rendering surface claims to be the only one of its kind', () => {
+    const rendering = live.filter((s) =>
+      /^(?:app|components|lib|data|content|public)\//.test(s.path),
+    )
+    const offenders = scan(rendering, (line) =>
+      SELF_SUPERLATIVE.test(line) &&
+      // Statements ABOUT third parties are facts, not self-promotion.
+      !/\bACC\b|\bBIST\b|instrument named|provider-news/i.test(line),
+    )
+    expect(
+      offenders,
+      `unsubstantiated superlative — breaches the AHPRA advertising guidelines:\n${offenders.join('\n')}`,
+    ).toEqual([])
+  })
+
+  it('the detector catches the form that shipped in a meta description', () => {
+    expect(
+      SELF_SUPERLATIVE.test(
+        'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists.',
+      ),
+    ).toBe(true)
+    expect(
+      SELF_SUPERLATIVE.test(
+        'the one concussion program accredited across both professions',
+      ),
+    ).toBe(true)
+    expect(
+      SELF_SUPERLATIVE.test(
+        'Concussion rehabilitation scoped for Accredited Exercise Physiologists and Exercise Scientists.',
+      ),
+    ).toBe(false)
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────────
 // STRUCTURAL: no second copy of a hand-maintained public claim surface.
 // ───────────────────────────────────────────────────────────────────────────
 describe('the AI-facing surface has exactly one copy', () => {

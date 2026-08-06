@@ -24,11 +24,33 @@ const LIVE = CONFIG.FEATURES.ESSA_ACCREDITED
 
 export const metadata: Metadata = {
   title: 'Concussion Rehab Mastery — Built for Exercise Physiologists',
+  // "The only concussion-rehabilitation course scoped for…" was an
+  // unsubstantiated superlative, live in the description meta tag — the exact
+  // form docs/brand-voice.md bans ("never 'the only Australian…' or any
+  // comparable superlative: it is unsubstantiated and breaches the AHPRA
+  // advertising guidelines"). Scoped-for-EPs is the verifiable claim; being
+  // alone in the market is not, and CEA has no market survey to support it.
   description: LIVE
-    ? 'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists. 8 online modules · 8 ESSA CPD points · the clinical tools to deliver it.'
-    : 'The only concussion-rehabilitation course scoped for Accredited Exercise Physiologists and Exercise Scientists. 8 online modules · 8 CPD hours · the clinical tools to deliver it · designed to ESSA CPD standards (accreditation pending).',
+    ? `Concussion rehabilitation scoped for Accredited Exercise Physiologists and Exercise Scientists. ${CONFIG.COURSE.TOTAL_MODULES} online modules · ${CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} ESSA CPD points · the clinical tools to deliver it.`
+    : `Concussion rehabilitation scoped for Accredited Exercise Physiologists and Exercise Scientists. ${CONFIG.COURSE.TOTAL_MODULES} online modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours · the clinical tools to deliver it · designed to ESSA CPD standards (accreditation pending).`,
   robots: LIVE ? 'index, follow' : 'noindex, nofollow',
   alternates: { canonical: '/concussion-rehab-mastery' },
+  // Without these, app/layout.tsx's CCM-flavoured fallback becomes this page's
+  // social preview — which is how a CRM page came to advertise CCM.
+  openGraph: {
+    title: 'Concussion Rehab Mastery — Built for Exercise Physiologists',
+    description: LIVE
+      ? `Accredited by ESSA (No. ${CONFIG.ESSA_ACCREDITATION.NUMBER}). Heart-rate-threshold exercise prescription, graded exercise testing and the documentation rehab funders require.`
+      : 'Heart-rate-threshold exercise prescription, graded exercise testing and the documentation rehab funders require. Designed to ESSA CPD standards; accreditation pending.',
+    url: `${CONFIG.SEO.SITE_URL}/concussion-rehab-mastery`,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Concussion Rehab Mastery — Built for Exercise Physiologists',
+    description: LIVE
+      ? `Accredited by ESSA (No. ${CONFIG.ESSA_ACCREDITATION.NUMBER}) for Accredited Exercise Physiologists and Exercise Scientists.`
+      : 'Scoped for Accredited Exercise Physiologists and Exercise Scientists. Designed to ESSA CPD standards; accreditation pending.',
+  },
 }
 
 /**
