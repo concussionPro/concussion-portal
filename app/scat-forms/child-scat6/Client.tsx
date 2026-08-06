@@ -254,7 +254,35 @@ export default function ChildSCAT6Client() {
     labels: { key: ChildSCAT6SymptomKey; label: string }[]
   ) => (
     <>
-      <div className="grid grid-cols-[1fr_72px_72px_72px_72px_56px] gap-1 mb-2 text-center">
+      {/* MOBILE LAYOUT (2026-08-06, 375px sweep of all 158 public routes).
+          The fixed grid below needs 1fr + 4×72px + 56px + gaps ≈ 364px of
+          COLUMNS alone, so on a 375px viewport this row ran 150px past the
+          edge with no scroll container — the "A lot/often" column and the
+          clear button were simply unreachable.
+
+          Same defect the adult SCAT6 symptom scale had (its "6" column sat
+          off-screen), fixed there on the same day. This is the CHILD SCAT6,
+          a SEPARATE instrument with a 0–3 scale and its own verbal anchors,
+          so it has its own copy of the layout and was missed.
+
+          Fix mirrors the adult form: stack the symptom name above the scale
+          on mobile and distribute the four targets with flex-1, which lands
+          each at ~44px wide — the minimum touch target — while the desktop
+          grid is untouched at sm and above.
+
+          The verbal anchors are the instrument and must stay visible, so on
+          mobile they move to a legend above the scale and each option keeps
+          its number. Nothing about the scoring changes. */}
+      <div className="sm:hidden mb-3 rounded-lg bg-slate-50 border border-slate-200 p-2">
+        <p className="text-[11px] font-semibold text-slate-600 mb-1">Rating scale</p>
+        <ul className="text-[11px] text-slate-500 leading-snug space-y-0.5">
+          {ratingLabels.map((label, i) => (
+            <li key={label}><span className="font-semibold text-slate-700">{i}</span> — {label}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="hidden sm:grid grid-cols-[1fr_72px_72px_72px_72px_56px] gap-1 mb-2 text-center">
         <div></div>
         {ratingLabels.map(label => (
           <div key={label} className="text-[11px] font-medium text-slate-500 leading-tight">{label}</div>
@@ -263,30 +291,38 @@ export default function ChildSCAT6Client() {
       </div>
 
       {labels.map(({ key, label }) => (
-        <div key={key} className="grid grid-cols-[1fr_72px_72px_72px_72px_56px] gap-1 items-center py-1 border-b border-slate-100">
+        <div key={key} className="flex flex-col gap-1 sm:grid sm:grid-cols-[1fr_72px_72px_72px_72px_56px] sm:gap-1 sm:items-center py-2 sm:py-1 border-b border-slate-100">
           <span className={`text-sm ${formData[scale][key] === null ? 'text-slate-400 italic' : 'text-slate-700'}`}>
             {label}
           </span>
-          {[0, 1, 2, 3].map(val => (
-            <div key={val} className="flex justify-center">
-              <input
-                type="radio"
-                name={`${scale}-${key}`}
-                checked={formData[scale][key] === val}
-                onChange={() => setSymptom(scale, key, val)}
-                className="w-4 h-4 text-green-600"
-              />
+          {/* On mobile this wrapper becomes the scale row; on sm+ it unwraps
+              via `display: contents` so the original grid columns are exactly
+              as they were. */}
+          <div className="flex items-center gap-1 sm:contents">
+            {[0, 1, 2, 3].map(val => (
+              <div key={val} className="flex flex-1 sm:flex-none justify-center">
+                <label className="min-h-[44px] w-full sm:w-auto flex flex-col items-center justify-center gap-0.5 cursor-pointer rounded-lg hover:bg-slate-50">
+                  <input
+                    type="radio"
+                    name={`${scale}-${key}`}
+                    checked={formData[scale][key] === val}
+                    onChange={() => setSymptom(scale, key, val)}
+                    className="w-4 h-4 text-green-600"
+                  />
+                  <span className="text-[10px] text-slate-400 sm:hidden">{val}</span>
+                </label>
+              </div>
+            ))}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => clearSymptom(scale, key)}
+                disabled={formData[scale][key] === null}
+                className="min-h-[44px] px-2 text-[11px] text-slate-500 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
+              >
+                clear
+              </button>
             </div>
-          ))}
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={() => clearSymptom(scale, key)}
-              disabled={formData[scale][key] === null}
-              className="text-[11px] text-slate-500 underline underline-offset-2 disabled:opacity-30 disabled:no-underline"
-            >
-              clear
-            </button>
           </div>
         </div>
       ))}

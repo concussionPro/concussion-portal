@@ -1245,7 +1245,12 @@ export default function ClinicalHubPage() {
               <div className="flex items-center gap-1.5">
                 {STAGES.map((s) => {
                   const done = s.n < p.stage.n, current = s.n === p.stage.n
-                  const cls = `flex-1 h-2 rounded-full transition ${current ? 'bg-[var(--accent)]' : done ? 'bg-[var(--accent)]/35' : 'bg-black/[0.06]'}`
+                  // `min-w-0` matters: flex-1 is `flex: 1 1 0%` but does NOT
+                  // let a child shrink below its min-content width, so seven
+                  // segments plus gaps ran 6px past a 375px viewport (375px
+                  // sweep, 2026-08-06). Same root cause as the /learning
+                  // overflow fixed the same day.
+                  const cls = `flex-1 min-w-0 h-2 rounded-full transition ${current ? 'bg-[var(--accent)]' : done ? 'bg-[var(--accent)]/35' : 'bg-black/[0.06]'}`
                   return isDemo
                     ? <button key={s.n} onClick={() => setStage(s.n)} title={s.label} className={`${cls} hover:bg-black/10`} />
                     : <div key={s.n} title={s.label} className={cls} />
