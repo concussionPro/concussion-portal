@@ -214,6 +214,13 @@ function sendsMail(src: string): boolean {
  * Nothing here may carry a `sequence` tag or List-Unsubscribe headers.
  */
 const MAY_MAIL_SUPPRESSED: Record<string, string> = {
+  // --- internal: alerts to the operator, never to a contact ---
+  // The recipient is hardcoded to zac@concussion-education-australia.com. It is
+  // an outage alert about the paid product, not a message to any customer, so
+  // there is no contact whose unsubscribe could be violated. Added 2026-08-06,
+  // when this guard correctly caught the route the day it was written.
+  'app/api/cron/synthetic-journey/route.ts': 'internal — outage alert to the operator only, hardcoded recipient',
+
   // --- transactional: access, money, clinical ---
   'app/api/admin/create-user/route.ts': 'transactional — operator-created account + its login link',
   'app/api/admin/resend-purchase-welcome/route.ts': 'transactional — replaces a paid buyer’s magic link',
