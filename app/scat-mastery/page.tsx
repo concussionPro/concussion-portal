@@ -156,6 +156,30 @@ export default function SCATMasteryPage() {
   const [notice, setNotice] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [successData, setSuccessData] = useState<{ message?: string } | null>(null)
+  /**
+   * Is someone already signed in?
+   *
+   * WHY (2026-08-06, item 11 of the conversion pass). This is the #1 entry
+   * page — 307 sessions in 90 days, more than the homepage — and it showed the
+   * "Get free instant access · No credit card" signup form plus "Already have
+   * an account? Login" to EVERYONE, including customers who had already paid
+   * for the full course. Asking a paying customer to sign up for the free
+   * thing they finished months ago is the single most obviously wrong state on
+   * the busiest page in the funnel.
+   *
+   * `null` while unknown, so the form is not swapped after paint for the
+   * anonymous majority (which would be a layout jump on the main entry point).
+   * Same fetch pattern as SiteNav and PricingOptions — no new mechanism.
+   */
+  const [auth, setAuth] = useState<{ accessLevel: string } | null>(null)
+  useEffect(() => {
+    fetch('/api/auth/session', { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setAuth({ accessLevel: d?.success && d.user ? d.user.accessLevel : '' }))
+      .catch(() => setAuth({ accessLevel: '' }))
+  }, [])
+  const signedIn = !!auth?.accessLevel
+  const hasPaid = auth?.accessLevel === 'full-course' || auth?.accessLevel === 'online-only'
   // Read ?prospect={slug} from URL on landing — captures B2B cold-outreach
   // attribution. Persisted to sessionStorage so it survives if the user
   // navigates around the page before submitting the form.
@@ -371,6 +395,34 @@ export default function SCATMasteryPage() {
                   </p>
                   <Loader2 className="w-6 h-6 text-[#5b9aa6] animate-spin mx-auto" />
                 </div>
+              </div>
+            ) : signedIn ? (
+              /* Already signed in — never ask an existing user, least of all a
+                 paying customer, to sign up for the free course again. */
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-8 shadow-xl shadow-slate-200/40 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#5b9aa6]/10 to-[#6b9da8]/10 flex items-center justify-center mx-auto mb-4 border border-[#5b9aa6]/20">
+                  <Brain className="w-7 h-7 text-[#5b9aa6]" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1.5">
+                  {hasPaid ? 'You already have access' : 'You already have this course'}
+                </h2>
+                <p className="text-sm text-slate-500 mb-6">
+                  {hasPaid
+                    ? 'Your enrolment includes this course and everything after it.'
+                    : 'Pick up where you left off — it saves your place automatically.'}
+                </p>
+                <a
+                  href={hasPaid ? '/learning' : '/modules/101'}
+                  className="w-full inline-flex items-center justify-center gap-2 bg-[#5b9aa6] hover:bg-[#4a8794] text-white font-semibold py-3.5 rounded-xl transition-colors"
+                >
+                  {hasPaid ? 'Go to my courses' : 'Continue the course'}
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                {!hasPaid && (
+                  <p className="text-xs text-slate-500 mt-4">
+                    Finish all three modules and your ${'50'} code lands automatically.
+                  </p>
+                )}
               </div>
             ) : (
               /* Sign-up form */
