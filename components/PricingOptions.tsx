@@ -617,25 +617,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </p>
       </div>
 
-      {/* Date alert — full width, under BOTH cards. Shown only while no city
-          has a scheduled date, which is the state where a visitor who came
-          looking for a date otherwise finds nothing and leaves. Once a real
-          date exists the city picker answers the question and this disappears. */}
-      {!anyCityHasLiveDate() && (
-        <div className="mt-6 max-w-3xl mx-auto rounded-2xl border border-border p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Bell className="w-4 h-4 text-[var(--accent)]" />
-            <p className="text-sm font-bold text-foreground">
-              Not ready to enrol? Get the date for {cityLabel(selectedLocation)}
-            </p>
-          </div>
-          <p className="text-[13px] text-[var(--muted-foreground)] mb-3">
-            No payment — you&apos;ll be first told when {cityLabel(selectedLocation)} is locked in.
-          </p>
-          <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
-        </div>
-      )}
-
       {/* Trust Signals */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--muted-foreground)]">
           {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'AHPRA Aligned'].map(item => (
@@ -962,6 +943,25 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
 
       </div>
+
+      {/* Date alert — full width, under BOTH cards. Shown only while no city
+          has a scheduled date, which is the state where a visitor who came
+          looking for a date otherwise finds nothing and leaves. Once a real
+          date exists the city picker answers the question and this disappears. */}
+      {!anyCityHasLiveDate() && (
+        <div className="mt-6 max-w-3xl mx-auto rounded-2xl border border-border p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Bell className="w-4 h-4 text-[var(--accent)]" />
+            <p className="text-sm font-bold text-foreground">
+              Not ready to enrol? Get the date for {cityLabel(selectedLocation)}
+            </p>
+          </div>
+          <p className="text-[13px] text-[var(--muted-foreground)] mb-3">
+            No payment — you&apos;ll be first told when {cityLabel(selectedLocation)} is locked in.
+          </p>
+          <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
+        </div>
+      )}
 
       {/* Trust Signals */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
