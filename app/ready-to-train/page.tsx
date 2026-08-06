@@ -40,6 +40,31 @@ export const metadata: Metadata = {
 /** Below this, a raw number reads as "nobody wants this" rather than momentum. */
 const SHOW_COUNT_FROM = 5
 
+/**
+ * Cities that have a hand-built detail page at /courses/<slug>.
+ *
+ * There is no dynamic city route — each page is written by hand — so only these
+ * exist. Kept as an explicit constant rather than guessed, because linking a
+ * city to a page that isn't there is a 404 in the middle of a revenue surface.
+ * `tests/city-page-linkage.test.ts` fails if this drifts from the filesystem in
+ * EITHER direction, so adding app/courses/perth/page.tsx without adding it here
+ * is a test failure rather than a silent orphan.
+ *
+ * WHY (2026-08-06, master clean register A pass 2). Pass 1's headline was that
+ * /ready-to-train shipped as an indexable orphan with no inbound links. That fix
+ * held — footer and /in-person both link here now. But the SAME CLASS had
+ * propagated one level down and nobody looked: /courses/sydney and
+ * /courses/melbourne are listed in sitemap.ts, serve 200, are SEO-targeted at
+ * exactly the buyer this page is collecting, and had ZERO inbound links from
+ * anywhere on the site plus ZERO pageviews in 90 days. Meanwhile this page —
+ * the one that exists to say where each city is up to — linked to neither.
+ *
+ * So a visitor who found /courses/sydney through Google could not reach the
+ * city-status hub, and a visitor on the hub could not reach the page that
+ * actually sells their city. Both directions are now wired.
+ */
+const CITIES_WITH_A_PAGE = new Set(['melbourne', 'sydney'])
+
 // The page reads live counts, so it must not be statically frozen at build.
 export const dynamic = 'force-dynamic'
 
@@ -146,7 +171,15 @@ export default async function ReadyToTrainPage() {
             return (
               <div key={c.slug} className="rounded-xl border border-border p-5">
                 <div className="flex items-baseline justify-between gap-4 mb-2">
-                  <h2 className="text-lg font-bold text-foreground">{c.city}</h2>
+                  <h2 className="text-lg font-bold text-foreground">
+                    {CITIES_WITH_A_PAGE.has(c.slug) ? (
+                      <Link href={`/courses/${c.slug}`} className="hover:text-accent hover:underline">
+                        {c.city}
+                      </Link>
+                    ) : (
+                      c.city
+                    )}
+                  </h2>
                   <span className="text-xs text-muted-foreground">
                     {c.ranAlready
                       ? 'Ran once — collecting for the next round'

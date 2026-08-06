@@ -43,6 +43,21 @@ const nextConfig: NextConfig = {
       { source: '/platform/pricing', destination: '/clinical-suite/pricing', permanent: false },
       { source: '/platform/evidence', destination: '/clinical-suite/evidence', permanent: false },
       { source: '/platform/clinicians', destination: '/clinical-suite', permanent: false },
+      // The parent itself, missed when the four children above were redirected
+      // on 2026-07-06 — so "kill /platform, one canonical" was three-quarters
+      // done for a month. /platform kept serving a full 524-line marketing page
+      // for the SAME product as /clinical-suite, with a DIFFERENT headline
+      // ("Recovery, paced to your threshold." vs "You set the threshold."), no
+      // inbound links from anywhere on the site, and 14 real visitors in 90 days
+      // who arrived from Google or an old link and landed on the non-canonical
+      // copy. Register C also spent this week correcting reference counts on
+      // /platform/evidence — maintenance paid on a surface nobody can reach.
+      // (2026-08-06, master clean register A pass 2.)
+      //
+      // EXACT match only: /platform/app is the installable PWA entry, is gated
+      // in its own nested layout, and must keep serving. A ':path*' here would
+      // break it.
+      { source: '/platform', destination: '/clinical-suite', permanent: false },
     ]
   },
 

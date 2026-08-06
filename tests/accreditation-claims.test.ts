@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync, readdirSync, statSync } from 'fs'
+import { readFileSync, readdirSync, statSync, existsSync } from 'fs'
 import { join } from 'path'
 import { CONFIG } from '../lib/config'
 
@@ -218,12 +218,38 @@ describe('the flags themselves stay honest', () => {
 
   it('the App Store link renders only behind SST_IOS_APP_LIVE (no badge before Apple approves)', () => {
     // Same discipline as ESSA/ACSM: a store listing is not ours to claim until
-    // Apple grants it. The canonical URL lives in ONE place and every render
-    // site is flag-gated.
+    // Apple grants it. iOS was REJECTED on 2026-07-29 pending an org-account
+    // conversion, so SST_IOS_APP_LIVE is false and no badge may render anywhere.
+    //
+    // REWRITTEN 2026-08-06 (register A pass 2). This asserted the rule against
+    // ONE hardcoded path, app/platform/page.tsx. That page was a 524-line
+    // duplicate of /clinical-suite with no inbound links, and deleting it made
+    // this test fail with ENOENT — which is the good outcome, but it exposed
+    // the real weakness: the guard only ever policed one of FOUR render sites,
+    // and would have gone on passing if a badge were added to any of the others.
+    //
+    // Now it sweeps the CLASS: every file referencing the store URL must gate
+    // it, and any NEW surface is covered automatically.
     expect(CONFIG.SST_APP_STORE_URL).toMatch(/^https:\/\/apps\.apple\.com\/au\/app\/id\d+$/)
-    const platform = readFileSync(join(REPO, 'app/platform/page.tsx'), 'utf8')
-    expect(platform).toMatch(/SST_IOS_APP_LIVE/)
-    // The URL must never appear hardcoded outside config.
-    expect(platform).not.toContain('apps.apple.com')
+
+    const renderSites = sourceFiles
+      .concat([join(REPO, 'lib/sst-trainer/clinic-welcome-email.ts')])
+      .filter((f) => existsSync(f))
+      .map((f) => ({ f, src: readFileSync(f, 'utf8') }))
+      .filter(({ src }) => src.includes('SST_APP_STORE_URL') || src.includes('apps.apple.com'))
+
+    // Non-vacuity: the badge exists somewhere, so an empty sweep means the
+    // resolver broke rather than the risk disappearing.
+    expect(renderSites.length).toBeGreaterThan(0)
+
+    const ungated = renderSites.filter(({ src }) => !src.includes('SST_IOS_APP_LIVE'))
+    expect(
+      ungated.map(({ f }) => f.replace(REPO + '/', '')),
+      'these reference the App Store URL without gating on SST_IOS_APP_LIVE — the app is not approved',
+    ).toEqual([])
+
+    // The URL itself is canonical in lib/config.ts and hardcoded nowhere else.
+    const hardcoded = renderSites.filter(({ src }) => src.includes('apps.apple.com'))
+    expect(hardcoded.map(({ f }) => f.replace(REPO + '/', ''))).toEqual([])
   })
 })

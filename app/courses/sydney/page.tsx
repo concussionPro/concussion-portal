@@ -173,6 +173,18 @@ export default function SydneyPage() {
               >
                 Preview Course Content
               </Link>
+              {/* The return path to the city-status hub. This page is in
+                  sitemap.ts and SEO-targeted, but had ZERO inbound links from
+                  anywhere on the site and zero pageviews in 90 days — so the
+                  only way anyone arrives is Google, and once here there was no
+                  route to the page that says how close Sydney actually is
+                  (2026-08-06, register A pass 2). */}
+              <Link
+                href="/ready-to-train"
+                className="glass px-8 py-4 rounded-xl text-base font-semibold hover:bg-slate-100 transition-colors inline-flex items-center gap-2 border border-slate-200 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              >
+                Where Sydney Is Up To
+              </Link>
             </div>
           </div>
 
