@@ -71,8 +71,24 @@ export async function POST(request: NextRequest) {
     // with no audit-key dedupe. Without this, anyone who hard-bounced,
     // complained or replied STOP is remailed simply by the form being filled
     // in with their address. Fails closed.
+    //
+    // The suppression check STAYS as-is — it must never be weakened. What was
+    // wrong (2026-08-06 audit) is what happened next: the emailed link was the
+    // ONLY carrier of the deliverable, and the route answered a flat
+    // {success:true}, so someone who unsubscribed from cold outreach months
+    // ago filled in the form, was told the checklist was on its way, and
+    // received nothing, forever, with no fallback. The checklist page itself
+    // carries no auth (only `robots: noindex`) — so hand back its PATH instead
+    // of emailing. No magic-link JWT crosses the wire, nothing is sent to a
+    // suppressed address, and the person still gets what they asked for.
     if (await isEmailSuppressed(normalizedEmail)) {
-      return NextResponse.json({ success: true, message: 'Checklist ready' })
+      return NextResponse.json({
+        success: true,
+        emailed: false,
+        checklistPath: '/ai-safety-checklist/checklist',
+        message:
+          'That address has opted out of our emails, so we have not sent one — open the checklist directly instead.',
+      })
     }
 
     await sendEmail({

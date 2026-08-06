@@ -426,11 +426,40 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
+  // NEVER DEFAULT A GRANT (2026-08-06 server-surface audit). `accessLevel`
+  // used to fall back to 'online-only', so ANY completed one-time Checkout
+  // Session that reached this point with no metadata — a dashboard-created
+  // Payment Link, a manually issued invoice, a deposit, a test charge —
+  // silently provisioned the payer at the A$497 online course, wrote a
+  // 'ccm-online' purchase row and sent them a welcome email.
+  //
+  // Every legitimate product returns EARLY above (SST subscription,
+  // reference-book, short-course, Hub Pack, CRM), and the only builder that
+  // reaches here always stamps accessLevel from COURSE_ACCESS_MAP
+  // (lib/stripe.ts) — so an absent or unrecognised value here is by definition
+  // not a CEA checkout. Alert the owner and grant nothing, the same
+  // conservative path handleChargeRefunded takes for an unattributable charge.
+  const rawAccessLevel = session.metadata?.accessLevel
+  if (rawAccessLevel !== 'online-only' && rawAccessLevel !== 'full-course') {
+    console.error(
+      `[stripe-webhook] checkout.session.completed with no usable accessLevel metadata (${session.id}) — NOT provisioning`,
+    )
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: 'ACTION: paid checkout with no product metadata — provision manually',
+        html: `<p style="margin:0 0 1em 0;">Checkout session <code>${escapeHtml(session.id)}</code> completed for ${escapeHtml(customerEmail)} ($${(session.amount_total || 0) / 100} ${(session.currency || 'aud').toUpperCase()}) but carried <strong>no recognised accessLevel metadata</strong>${rawAccessLevel ? ` (got <code>${escapeHtml(rawAccessLevel)}</code>)` : ''}.</p><p style="margin:0;">No access was granted and no welcome email was sent — this is almost certainly a Payment Link or manual invoice. Provision manually in admin if it is a real course sale.</p>`,
+        tags: [{ name: 'type', value: 'checkout-unattributed' }],
+      })
+    } catch { /* alert best-effort */ }
+    return
+  }
+
   // Extract metadata
   const courseType = session.metadata?.courseType || 'online-only'
   const location = session.metadata?.location || ''
   const preferredCity = session.metadata?.preferredCity || ''
-  const accessLevel = (session.metadata?.accessLevel || 'online-only') as 'online-only' | 'full-course'
+  const accessLevel = rawAccessLevel
 
   const workshopCity = location || preferredCity
   const currency = (session.currency || 'aud').toUpperCase()
@@ -837,7 +866,7 @@ async function handleShortCoursePurchase(
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1e293b;">
           <div style="height: 4px; background: linear-gradient(90deg, #0d9488, #0ea5e9); border-radius: 2px; margin-bottom: 24px;"></div>
           <h2 style="margin: 0 0 12px; font-size: 22px; color: #0f172a;">You're in, ${escapeHtml(customerName.split(' ')[0] || 'there')}.</h2>
-          <p style="margin: 0 0 14px; font-size: 15px;"><strong>${escapeHtml(course.title)}</strong> is yours — ${course.cpdHours} CPD ${course.cpdHours === 1 ? 'hour' : 'hours'}, 12-month certificate on completion.</p>
+          <p style="margin: 0 0 14px; font-size: 15px;"><strong>${escapeHtml(course.title)}</strong> is yours — ${course.cpdHours} CPD ${course.cpdHours === 1 ? 'hour' : 'hours'}, certificate on completion.</p>
           <p style="text-align: center; margin: 24px 0;">
             <a href="${loginUrl}" style="display: inline-block; padding: 14px 28px; background: #0d9488; color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Open the course →</a>
           </p>
@@ -1986,6 +2015,43 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
     : (user.accessLevel === 'full-course' && chargeAmount < 1000)
   if (isWorkshopUpgradeRefund) {
     downgradeLevel = 'online-only'
+  }
+
+  // NEVER REVOKE MORE THAN THIS CHARGE GRANTED (2026-08-06 server-surface
+  // audit). The user is resolved by `charge.receipt_email` — the address TYPED
+  // AT CHECKOUT — and the UPDATE below is an unconditional SET, so a refund
+  // could revoke an entitlement this charge never paid for. Two live cases:
+  //   - cross-customer attack: buy the A$497 online course entering a
+  //     full-course customer's address, then charge back. The victim (A$1,400)
+  //     was dropped to 'preview' and their CPD certificate revoked, for the
+  //     cost of a reversible A$497.
+  //   - honest customer: bought online-only, later paid the workshop upgrade,
+  //     then refunds the ORIGINAL A$497 — they were dropped to 'preview'
+  //     despite still owning the upgrade.
+  // Both share one shape: the refunded charge granted a level BELOW what the
+  // account currently holds, which means the higher level came from a
+  // different, unrefunded transaction. Hand those to the owner instead of
+  // guessing — the same conservative path this function already takes for an
+  // unattributed charge above.
+  const LEVEL_RANK: Record<string, number> = { preview: 0, 'online-only': 1, 'full-course': 2 }
+  const grantedByThisCharge =
+    courseType === 'full-course' || courseType === 'clinic-hub-pack' ? 'full-course' : 'online-only'
+  if (
+    !isWorkshopUpgradeRefund &&
+    (LEVEL_RANK[grantedByThisCharge] ?? 0) < (LEVEL_RANK[user.accessLevel] ?? 0)
+  ) {
+    console.warn(
+      `[revocation] ${cause} on a '${courseType}' charge for ${redact(email)} who holds '${user.accessLevel}' — higher level came from another transaction, NOT downgrading`,
+    )
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION: ${cause} below current access — review manually`,
+        html: `<p style="margin:0 0 1em 0;">A ${cause} on charge ${charge.id} ($${chargeAmount}) was for a <strong>${escapeHtml(courseType)}</strong> purchase, but ${escapeHtml(email)} currently holds <strong>${escapeHtml(user.accessLevel)}</strong> access — granted by a different, unrefunded transaction.</p><p style="margin:0;">No access was changed and no certificate was revoked. Review in Stripe and apply manually if warranted.</p>`,
+        tags: [{ name: 'type', value: 'revocation-above-charge' }],
+      })
+    } catch { /* alert best-effort */ }
+    return
   }
 
   try {

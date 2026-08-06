@@ -82,8 +82,20 @@ export async function POST(request: NextRequest) {
   // "only when the passed code wasn't found" fallback still opened it: pass
   // ?promo=anything-invalid and the field appears. Same rule as lib/stripe.ts,
   // where the eligible surface is online-only and nothing here qualifies.
+  // ...and the SAME rule must bind the PARAMETER path, not just the manual
+  // field (2026-08-06 server-surface audit). The comment above said "nothing
+  // here qualifies", but only `allow_promotion_codes` was closed — the
+  // `promoCode` body field was still looked up and applied unconditionally, so
+  // `POST {courseSlug, email, promoCode:'SCAT6'}` took A$50 off any short
+  // course. SCAT6 is the CCM-online completion reward, is published in
+  // customer emails (lib/email-sequences.ts), never expires, and cannot be
+  // product-scoped in Stripe because every line item here is ad-hoc
+  // `price_data`. Refuse it explicitly; a genuinely targeted short-course code
+  // still auto-applies.
+  const ineligibleCode = promoCode?.trim().toUpperCase() === CONFIG.COURSE.PROMO_CODE
+
   let discounts: { promotion_code: string }[] | undefined
-  if (promoCode) {
+  if (promoCode && !ineligibleCode) {
     try {
       const promoCodes = await stripe.promotionCodes.list({
         code: promoCode.toUpperCase(),

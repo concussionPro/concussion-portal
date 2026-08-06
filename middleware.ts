@@ -275,6 +275,27 @@ function isSameOriginRequest(request: NextRequest): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // STATIC-ASSET GATES MATCH ON THE DECODED PATH (2026-08-06 server-surface
+  // audit — P0, proven live). The gates below tested the RAW pathname against
+  // an EXTENSION (`/\.(pdf|zip|docx|png)$/`, `endsWith('.pdf')`,
+  // `=== '/CourseContent_2026.pdf'`), and the route matcher was likewise keyed
+  // on `.pdf`/`.zip`/`.docx`/`.png` suffixes. A percent-encoded dot therefore
+  // missed BOTH: middleware never ran, and Vercel's static handler decoded the
+  // path and served the file. Every paid asset was downloadable anonymously —
+  // verified in production: `/docs/CCM_Complete_Reference_2026%2Epdf` returned
+  // 200 application/pdf (6 MB, the A$97 Clinical Reference Text), as did the
+  // Clinical Toolkit ZIP, the fillable-PDF pack and `/CourseContent_2026%2Epdf`.
+  // Decode ONCE here and gate on the DIRECTORY, never the extension, so the
+  // default-deny at the tail of each block is the thing that actually binds.
+  // A malformed sequence keeps the raw value, which matches no allowlist entry
+  // and so falls through to that same default-deny.
+  let assetPath = pathname
+  try {
+    assetPath = decodeURIComponent(pathname)
+  } catch {
+    /* malformed encoding → keep raw; it will fail every allowlist and be denied */
+  }
+
   // ─── CSRF: reject cross-origin state-changing requests to /api/* ───────────
   if (
     pathname.startsWith('/api/') &&
@@ -339,7 +360,7 @@ export async function middleware(request: NextRequest) {
   // Block direct access to CourseContent brochure — paid content only.
   // It is linked as a prominent download card from the PUBLIC /course page,
   // so the anonymous case is the COMMON one and must land somewhere useful.
-  if (pathname === '/CourseContent_2026.pdf') {
+  if (assetPath === '/CourseContent_2026.pdf') {
     const sessionToken = request.cookies.get('session')?.value
     const session = sessionToken ? await verifySessionEdge(sessionToken) : null
     if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
@@ -359,9 +380,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // Handle /docs/ file access (PDFs and ZIPs)
-  if (pathname.startsWith('/docs/') && /\.(pdf|zip|docx|png)$/.test(pathname)) {
+  if (assetPath.startsWith('/docs/')) {
     // Public docs — always allow
-    if (isPublicDoc(pathname)) {
+    if (isPublicDoc(assetPath)) {
       return NextResponse.next()
     }
 
@@ -370,7 +391,7 @@ export async function middleware(request: NextRequest) {
     // offered to a clinician mid-assessment: the denial has to be a page they
     // can act on, and the login round-trip has to come back to the file
     // (/api/auth/verify allows AUTH_DOCS as a preview landing target).
-    if (isAuthDoc(pathname)) {
+    if (isAuthDoc(assetPath)) {
       const sessionToken = request.cookies.get('session')?.value
       if (sessionToken) {
         const session = await verifySessionEdge(sessionToken)
@@ -391,7 +412,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Paid docs — verify session and access level (served via CDN, bypasses serverless body limit)
-    if (isPaidDoc(pathname)) {
+    if (isPaidDoc(assetPath)) {
       const sessionToken = request.cookies.get('session')?.value
       const session = sessionToken ? await verifySessionEdge(sessionToken) : null
       if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
@@ -439,7 +460,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Block direct PDF access in /resources/ directory
-  if (pathname.startsWith('/resources/') && pathname.endsWith('.pdf')) {
+  if (assetPath.startsWith('/resources/')) {
     return denyDoc(request, {
       status: 403,
       error: 'Direct access not allowed. Access via /resources page.',
@@ -539,12 +560,12 @@ export const config = {
     '/',
     '/pricing',
     '/international',
-    '/CourseContent_2026.pdf',
-    '/docs/:path*.pdf',
-    '/docs/:path*.zip',
-    '/docs/:path*.docx',
-    '/docs/:path*.png',
-    '/resources/:path*.pdf',
+    // Whole DIRECTORY, no extension suffix: a matcher keyed on `.pdf`/`.zip`
+    // did not match a percent-encoded dot, so middleware never ran and the
+    // paid asset was served straight off the CDN (2026-08-06 audit, P0).
+    '/(CourseContent_2026.*)',
+    '/docs/:path*',
+    '/resources/:path*',
     '/api/:path*',
     '/admin/:path*',
     '/learning/:path*',

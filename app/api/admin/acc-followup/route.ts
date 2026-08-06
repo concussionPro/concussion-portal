@@ -13,8 +13,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { isAdminRequest } from '@/lib/require-admin'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { CONFIG } from '@/lib/config'
 
 export const maxDuration = 120
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL
 
 const SCHEDULED_AT = '2026-08-05T22:00:00.000Z' // Wed 2026-08-06 10:00 NZST
 
@@ -102,11 +106,20 @@ export async function POST(request: NextRequest) {
       INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW())
       ON CONFLICT (audit_key) DO NOTHING`
     if (!rowCount) { skipped.push(`${email} (already scheduled)`); continue }
+    // A cold outreach blast with a `sequence` tag and no List-Unsubscribe left
+    // "reply STOP" as the only opt-out (AU Spam Act / Google bulk-sender gap,
+    // 2026-08-06 audit). Same token the public /api/unsubscribe route parses,
+    // plus the mailto fallback the prospect engine already uses.
+    const unsubUrl = `${BASE_URL}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${generateUnsubscribeToken(email)}`
     const ok = await sendEmail({
       to: email,
       subject: 'Re: ' + subj,
       html: toHtml(body(email)),
       scheduledAt: SCHEDULED_AT,
+      headers: {
+        'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@concussion-education-australia.com>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
       tags: [
         { name: 'type', value: 'acc-followup' },
         { name: 'sequence', value: 'acc-t2' },

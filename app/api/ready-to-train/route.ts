@@ -193,7 +193,7 @@ function buildConfirmationEmail(name: string, city: string): string {
       </p>
 
       <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
-        Great work completing all 8 online modules! You've been added to the <strong>${city} hands-on training pool</strong>.
+        You've been added to the <strong>${city} hands-on training pool</strong>.
       </p>
 
       <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 20px; margin: 24px 0;">
@@ -203,7 +203,7 @@ function buildConfirmationEmail(name: string, city: string): string {
       </div>
 
       <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
-        In the meantime, keep reviewing your modules to stay sharp for the practical day.
+        In the meantime, work through your online modules — they're the foundation for the practical day.
       </p>
 
       <a href="https://portal.concussion-education-australia.com/dashboard"

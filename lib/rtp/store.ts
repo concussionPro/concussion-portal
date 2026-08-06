@@ -8,6 +8,7 @@
  * rule.
  */
 
+import crypto from 'crypto'
 import { sql } from '@/lib/db'
 import type { Episode, GrtsStage, RtlStage } from '@/lib/rtp/protocol'
 
@@ -102,11 +103,24 @@ export async function ensureRtpTables(): Promise<void> {
 
 // ── Share codes ──────────────────────────────────────────────────────────────
 
-/** 6-char human-friendly code (no I/1/O/0). Mirrors the preseason generator. */
+/**
+ * 6-char human-friendly code (no I/1/O/0). Mirrors the preseason generator.
+ *
+ * CRYPTO-STRONG (2026-08-06 server-surface audit). This code is the ONLY
+ * authorisation on an athlete's concussion record: /api/rtp/state, /advance and
+ * /symptom-log take `code` and return or mutate whatever pathway it names, with
+ * no further ownership check. It was minted with Math.random(), whose xorshift128+
+ * state is recoverable from a handful of consecutive outputs — and org codes and
+ * athlete codes come from this same generator, so anyone who could register an
+ * org (any enrolled user) harvested 6 outputs and could predict subsequent
+ * athletes' codes. crypto.randomInt is the same fix already applied to the
+ * preseason generator (2026-08-04) and lib/sst-trainer/clinic-registry; this
+ * generator was missed.
+ */
 export function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let code = ''
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  for (let i = 0; i < 6; i++) code += chars[crypto.randomInt(chars.length)]
   return code
 }
 

@@ -1,5 +1,9 @@
 import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
+import { CONFIG } from '@/lib/config'
+import { generateUnsubscribeToken } from '@/lib/prospect/unsubscribe-token'
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL
 
 /**
  * Aus-Neuro outreach lane — Resend-based (owner 2026-07-30: "you should be
@@ -122,10 +126,18 @@ export async function sendDueAusNeuro(limit = 10): Promise<{ sent: string[]; ski
       continue
     }
     const { subject, text } = buildAusNeuroEmail(c)
+    // Cold outreach with no List-Unsubscribe left "reply STOP" as the only
+    // opt-out (2026-08-06 audit). These are prospect_clinics rows, so the
+    // prospect token/route is the right one — same header shape the main
+    // cold engine uses in lib/prospect/process-scheduled.ts.
+    const unsubUrl = `${BASE_URL}/api/prospect/unsubscribe?t=${generateUnsubscribeToken(c.slug)}`
     const ok = await sendEmail({
       to: c.contact_email,
       subject,
       html: toHtml(text),
+      headers: {
+        'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@concussion-education-australia.com>`,
+      },
       tags: [
         { name: 'type', value: 'aus-neuro-outreach' },
         { name: 'sequence', value: 'aus-neuro-r1' },

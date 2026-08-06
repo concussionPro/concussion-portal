@@ -14,7 +14,7 @@
  */
 import { sql } from '@/lib/db'
 import { DEMO_CLINIC_CODE, getClinic } from '../clinic-registry'
-import { computePrescription } from '../protocol'
+import { computePrescription, asCondition } from '../protocol'
 import type { Condition, ThresholdResult, TestModality } from '../protocol'
 import type { PersistedTest, PersistedSession } from '../store'
 import type { Jurisdiction, ReportSkinKind } from './jurisdiction'
@@ -273,7 +273,11 @@ export async function loadReportInput(
     rows.filter((r) => r.session_type !== 'threshold' && evTypeOf(r.payload) !== 'session-abandoned'),
   )
   const latest = thresholds[thresholds.length - 1]
-  const condition = ((latest?.condition as Condition) || 'concussion') as Condition
+  // Normalised, never cast: `condition` comes straight out of the
+  // sst_clinic_sessions column, which is patient-app input. A raw `as Condition`
+  // cast let an unrecognised value reach the prescription engine and throw
+  // (500-ing this report) — see asCondition in ../protocol.
+  const condition = asCondition(latest?.condition)
 
   const thresholdHistory: PersistedTest[] = thresholds.map((t) => ({
     at: new Date(occurredIso(t)).getTime(),

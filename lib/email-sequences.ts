@@ -13,10 +13,10 @@
  * - Stop after 6 emails. No more sales emails after that.
  */
 
-import { CONFIG, afterpayInstalment } from '@/lib/config'
+import { CONFIG, afterpayInstalment, workshopPriceFor } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 import { signSurveyAnswer } from '@/lib/survey-token'
-import { findCourse, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+import { findCourse, getEffectivePrice, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
 
 /**
  * Truthful AI-course pricing at SEND time, derived from the provider
@@ -24,24 +24,89 @@ import { findCourse, getEffectivePrice } from '@/lib/ai-course/provider-catalogu
  * deadline in template copy — these emails fire on rolling day-N schedules,
  * so a fixed date becomes false urgency the day after it passes.
  */
-function aiCoursePricing(): { priceLine: string; ctaLabel: string } {
+function aiCoursePricing(): { priceLine: string; ctaLabel: string; cpdLine: string } {
   const course = findCourse('ai-in-clinical-practice')
   const fullPrice = course?.priceAUD ?? 197
   const { price, isEarlyBird } = course
     ? getEffectivePrice(course)
     : { price: fullPrice, isEarlyBird: false }
   const current = price ?? fullPrice
+  // CPD is a REGULATED claim — read it from the catalogue, never a literal.
+  // The catalogue was corrected 2026-06 (3 -> 2 hours, "module reading times
+  // sum to ~2.3 hr"); two email templates kept the retired 3 and were
+  // overstating CPD to every AI-checklist lead.
+  const hours = course?.cpdHours ?? 2
+  const cpdLine = `${hours} CPD ${hours === 1 ? 'hour' : 'hours'}`
   if (isEarlyBird && course?.earlyBirdEndsAt) {
     const endsAt = new Date(course.earlyBirdEndsAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
     return {
       priceLine: `<strong>Launch price: A$${current}</strong> (regular price A$${fullPrice}). Launch pricing ends ${escapeHtml(endsAt)}.`,
       ctaLabel: `Get it at A$${current} (launch price)`,
+      cpdLine,
     }
   }
   return {
-    priceLine: `<strong>A$${current}</strong> &mdash; 2 CPD hours, fully online, certificate on completion.`,
+    priceLine: `<strong>A$${current}</strong> &mdash; ${cpdLine}, fully online, certificate on completion.`,
     ctaLabel: `See the course (A$${current})`,
+    cpdLine,
   }
+}
+
+/**
+ * Escaped first name for a greeting, with a safe fallback.
+ *
+ * Every template used to inline `escapeHtml(name.split(' ')[0])`, which
+ * throws on a null/undefined name and renders a visibly broken "Hi ,"
+ * when the name is an empty string. No user in the table has a blank name
+ * today, but the call sites pass `user.name` straight through from several
+ * capture forms (and the CRM/hub paths pass a name that can be absent), so
+ * the fallback is what stops a merge failure ever shipping.
+ */
+function greetingName(name: string | null | undefined): string {
+  const first = String(name ?? '').trim().split(/\s+/)[0]
+  return first ? escapeHtml(first) : 'there'
+}
+
+/** Afterpay/Klarna line — the bare instalment number needs its sentence.
+ *  `afterpayInstalment()` returns just "111.75"; interpolated on its own it
+ *  rendered a naked number dangling at the end of the price sentence. */
+function afterpayLine(price: number): string {
+  return `Or 4 payments of A$${afterpayInstalment(price)} with Afterpay or Klarna.`
+}
+
+/**
+ * The Complete Course price a reader would ACTUALLY be charged today, as a
+ * formatted "A$1,190" string.
+ *
+ * Five templates quoted CONFIG.COURSE.PRICE_REGULAR ($1,400) as "the" price of
+ * the Complete Course. $1,400 is the sticker, and it is only ever charged in
+ * the final EARLY_BIRD_DAYS_BEFORE window of a CONFIRMED workshop date — no
+ * city has one, so every buyer today pays PRICE_EARLY_BIRD. The emails were
+ * therefore quoting a price ~18% above what the landing page they link to
+ * charges. /pricing already routes through workshopPriceFor(); so does the
+ * Stripe line item. These now use the same single source of truth.
+ */
+function completeCoursePrice(locationSlug?: string | null): string {
+  return `A$${workshopPriceFor(locationSlug).toLocaleString('en-AU')}`
+}
+
+/** Truthful sticker-price caveat to sit next to completeCoursePrice(). */
+function completeCourseCaveat(): string {
+  return workshopPriceFor() < CONFIG.COURSE.PRICE_REGULAR
+    ? ` (early-bird &mdash; it holds until 14 days before your city&rsquo;s confirmed date, then A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')})`
+    : ''
+}
+
+/** Melbourne has a CONFIRMED date that has not already happened. */
+function melbourneIsConfirmedFuture(): boolean {
+  const mel = CONFIG.LOCATIONS.MELBOURNE
+  return mel.status === 'confirmed' && !!mel.date && !!mel.dateObj && mel.dateObj.getTime() > Date.now()
+}
+
+/** True once the AI course's catalogue launch date has passed. */
+function aiCourseHasLaunched(): boolean {
+  const course = findCourse('ai-in-clinical-practice')
+  return !!course && getEffectiveStatus(course) === 'live'
 }
 
 /** Append UTM params to a URL. Handles existing query strings. */
@@ -82,7 +147,9 @@ const EMAIL_STYLES = `
  */
 function nextWorkshopCallout(): string {
   const mel = CONFIG.LOCATIONS.MELBOURNE
-  if (mel.status !== 'confirmed') return ''
+  // status alone is not enough — a 'confirmed' city whose date has passed would
+  // advertise a workshop that already ran.
+  if (!melbourneIsConfirmedFuture()) return ''
   const r = CONFIG.VENUE_BENEFITS.MELBOURNE
   return `
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
@@ -94,14 +161,45 @@ function nextWorkshopCallout(): string {
   `
 }
 
-function emailShell(content: string, unsubscribeUrl?: string): string {
+/**
+ * Footer credential line.
+ *
+ * The two streams carry DIFFERENT credentials and they are not
+ * interchangeable: Osteopathy Australia endorses Concussion Clinical Mastery
+ * (the CCM/flagship stream); ESSA accredits Concussion Rehab Mastery (the
+ * EP/CRM stream, PDNF26077). The shell footer hardcoded "Endorsed by
+ * Osteopathy Australia" on EVERY email, so every CRM onboarding and EP nurture
+ * email — whose entire subject is the EP course — footed an endorsement that
+ * body belongs to the other course. Pass stream: 'ep' on those.
+ *
+ * The ESSA half stays behind CONFIG.FEATURES.ESSA_ACCREDITED, same gate the
+ * ~40 other public ESSA surfaces use, so a lapsed accreditation blanks it
+ * rather than shipping a false claim.
+ */
+function footerCredential(stream: 'ccm' | 'ep'): string {
+  if (stream === 'ep') {
+    return CONFIG.FEATURES.ESSA_ACCREDITED
+      ? ` &middot; Accredited by ESSA (${CONFIG.ESSA_ACCREDITATION.NUMBER})`
+      : ''
+  }
+  return ' &middot; Endorsed by Osteopathy Australia'
+}
+
+function emailShell(content: string, unsubscribeUrl?: string, stream: 'ccm' | 'ep' = 'ccm'): string {
   const unsub = unsubscribeUrl || '{{unsubscribe_url}}'
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${EMAIL_STYLES}</style>
+  <!-- These emails are a hand-tuned LIGHT design: every colour is an explicit
+       hex on a white container. Without a declared scheme, Apple Mail and
+       Outlook auto-invert backgrounds while leaving many explicit text colours
+       alone, which produces dark-on-dark text in the callouts. Declaring light
+       opts out of the automatic inversion. -->
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <style>:root { color-scheme: light; supported-color-schemes: light; }${EMAIL_STYLES}</style>
 </head>
 <body>
   <div class="container">
@@ -110,7 +208,7 @@ function emailShell(content: string, unsubscribeUrl?: string): string {
       ${content}
     </div>
     <div class="footer">
-      Concussion Education Australia &middot; Endorsed by Osteopathy Australia<br>
+      Concussion Education Australia${footerCredential(stream)}<br>
       Melbourne, VIC, Australia<br>
       <a href="https://portal.concussion-education-australia.com?utm_source=email&utm_medium=email&utm_campaign=footer" style="color: #94a3b8;">portal.concussion-education-australia.com</a><br>
       <a href="${unsub}" style="color: #94a3b8; font-size: 11px;">Unsubscribe from this sequence</a>
@@ -134,7 +232,7 @@ export const POST_PURCHASE_SEQUENCE = [
     subject: 'Your course is ready — start with Module 1',
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Welcome aboard, ${escapeHtml(name.split(' ')[0])}!</h2>
+      <h2>Welcome aboard, ${greetingName(name)}!</h2>
       <p>Your Concussion Management course is ready and waiting. Students who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
       <p>Module 1 takes about 75 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
@@ -154,7 +252,7 @@ export const POST_PURCHASE_SEQUENCE = [
     subject: 'How are you going with the course?',
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Just checking in — have you had a chance to get started?</p>
       <p>The first 3 modules cover the clinical foundations:</p>
       <ol>
@@ -174,7 +272,7 @@ export const POST_PURCHASE_SEQUENCE = [
     subject: 'You\'re halfway to 8 CPD hours',
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>One week in — how's it going? Whether you've completed 1 module or 5, you're making progress.</p>
       <p>The modules coming up are where clinicians tell me they get the most practical value:</p>
       <ul>
@@ -193,7 +291,7 @@ export const POST_PURCHASE_SEQUENCE = [
     subject: 'The module clinicians say changes their practice',
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Two weeks in — wherever you're up to, I wanted to flag <strong>Module 7: Rehabilitation by Phenotype</strong>.</p>
       <p>This is the module clinicians consistently say changed how they manage concussion. Instead of generic "rest and wait," you'll learn targeted protocols for each concussion subtype:</p>
       <ul>
@@ -213,7 +311,7 @@ export const POST_PURCHASE_SEQUENCE = [
     subject: 'Your CPD certificate is waiting',
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Quick reminder: once you complete all 8 modules, your <strong>8 CPD hour certificate</strong> is automatically generated and ready to download from your dashboard.</p>
       <p>Each module takes 45-60 minutes. Most clinicians finish over a few sittings — and you have lifetime access, so there's no deadline.</p>
       <p>But if you're close, finishing this week means the material is fresh and ready to apply in clinic.</p>
@@ -227,7 +325,7 @@ export const POST_PURCHASE_SEQUENCE = [
     subject: 'Know a colleague who manages concussions?',
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>You've been with the course for a month now. If you've found the content valuable, I have a small ask:</p>
       <p><strong>Do you know a colleague who would benefit from this training?</strong></p>
       <p>Concussion management is one of those areas where most clinicians feel undertrained — and a recommendation from a trusted colleague goes further than any ad I could run.</p>
@@ -258,7 +356,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
     // checkout (same product/price/discounts, valid 30 days). Falls back to
     // /pricing for sessions created before recovery was enabled.
     template: (name: string, recoveryUrl?: string) => emailShell(`
-      <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Looks like you started enrolling in the Concussion Management course but didn't finish.</p>
       <p>No worries — your spot is still available. If you ran into a technical issue or had questions, just reply to this email.</p>
       <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_1h', 'complete_enrolment')}" class="cta-btn">Complete Your Enrolment</a></center>
@@ -277,7 +375,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
     hoursAfter: 24,
     subject: 'Still thinking it over?',
     template: (name: string, recoveryUrl?: string) => emailShell(`
-      <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>I wanted to follow up in case you had questions about the course.</p>
       <p>Here's what clinicians ask most often:</p>
       <p><strong>"Is this relevant for physios/GPs/exercise physiologists?"</strong><br>
@@ -295,7 +393,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
     hoursAfter: 72,
     subject: 'Concussion Clinical Mastery — the details, in one place',
     template: (name: string, recoveryUrl?: string) => emailShell(`
-      <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>You started enrolling but didn't finish. Here's the course, laid out plainly:</p>
       <ul>
         <li><strong>What it covers:</strong> recognition and red flags, VOMS and BESS, staged return-to-play, and rehab matched to the concussion phenotype.</li>
@@ -323,7 +421,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
     daysBefore: 7,
     subject: 'Your workshop is one week away — here\'s how to prepare',
     template: (name: string, workshopCity: string, workshopDate: string, loginLink?: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Your hands-on concussion workshop in <strong>${workshopCity}</strong> is one week away (<strong>${workshopDate}</strong>).</p>
       <p><strong>To get the most from the day, please complete:</strong></p>
       <ol>
@@ -346,7 +444,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
     daysBefore: 1,
     subject: 'Tomorrow\'s workshop — everything you need to know',
     template: (name: string, workshopCity: string, workshopDate: string, _loginLink?: string) => emailShell(`
-      <h2>See you tomorrow, ${escapeHtml(name.split(' ')[0])}!</h2>
+      <h2>See you tomorrow, ${greetingName(name)}!</h2>
       <p>Your concussion workshop in <strong>${workshopCity}</strong> is tomorrow (<strong>${workshopDate}</strong>).</p>
       <div class="callout">
         <strong>Workshop details:</strong><br><br>
@@ -376,7 +474,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 0,
     subject: 'Module 1 is ready — 20 minutes to confident SCAT6 use',
     template: (name: string, loginLink: string) => emailShell(`
-      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Hi ${greetingName(name)},</p>
       <p>Module 1 is ready. It takes about 20 minutes and covers the rule most clinicians get wrong: <strong>when to use SCAT6 vs SCOAT6</strong>.</p>
       <p>Using the wrong tool at the wrong time isn't just poor practice &mdash; it's a failure of standard of care with medicolegal consequences. Module 1 covers the distinction, red flag recognition, and when to refer.</p>
       <center><a href="${utm(loginLink, 'scat_mastery_day0', 'start_module1')}" class="cta-btn">Start Module 1 (20 min)</a></center>
@@ -400,7 +498,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 3,
     subject: 'The SCAT6-vs-SCOAT6 distinction most clinicians get wrong',
     template: (name: string, loginLink: string) => emailShell(`
-      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Hi ${greetingName(name)},</p>
       <p>Quick check &mdash; have you had a chance to start Module 1?</p>
       <p>It takes 20 minutes and covers <strong>the SCAT6 vs SCOAT6 distinction</strong> &mdash; which tool to use, when, and the medicolegal reasons it matters. Most clinicians haven't been taught this explicitly.</p>
       <p>You'll also cover red flag recognition and the three referral triggers every clinician should know before Saturday sport.</p>
@@ -415,7 +513,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 7,
     subject: 'Would you clear this patient to play Saturday?',
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Quick scenario:</p>
       <div style="background: #f8fafc; padding: 18px 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 16px 0; font-size: 14px;">
         <strong>16-year-old male rugby player</strong><br>
@@ -439,7 +537,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 10,
     subject: 'You earned it — here\'s $50 off the full course',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>You've been working through the SCAT6 Mastery course &mdash; great to see you investing in your concussion knowledge.</p>
       <p>As a thank you, here's <strong>$50 off</strong> the full Concussion Management course:</p>
       <div class="callout-warn">
@@ -460,7 +558,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 14,
     subject: '16 CPD hours — here\'s the full breakdown',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>The SCAT6 Mastery course covers the essentials. If you want to go deeper, here's what the full Concussion Management course covers:</p>
       <p><strong>8 online modules (8 CPD hours):</strong></p>
       <ol>
@@ -485,7 +583,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       </div>
       ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'see_course')}" class="cta-btn">See Full Course</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} &middot; Online + workshop $${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from A$${CONFIG.COURSE.PRICE_ONLINE} &middot; Online + workshop ${completeCoursePrice()}</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -497,7 +595,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 28,
     subject: '$50 SCAT discount — your code is still active',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>This is the last time I'll send this offer.</p>
       <div class="callout-warn">
         <strong>Code: ${CONFIG.COURSE.PROMO_CODE}</strong> &mdash; $50 off the online course, still active on your account
@@ -513,7 +611,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
           <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 16 CPD hours</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</td>
+          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">${completeCoursePrice()}</td>
         </tr>
       </table>
       <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
@@ -528,11 +626,11 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 42,
     subject: 'Your concussion CPD options — final summary',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Last email in this series — your options for the full course, in one place:</p>
       <ul>
         <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access — the full workflow beyond the SCAT6: VOMS, BESS, staged return-to-play, phenotype-based rehab.</li>
-        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}):</strong> everything online, plus a hands-on full-day workshop — 16 CPD hours.</li>
+        <li><strong>Complete Course (${completeCoursePrice()}):</strong> everything online, plus a hands-on full-day workshop — ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.${completeCourseCaveat()}</li>
       </ul>
       <p>Both include the clinical toolkit, reference repository, and CPD certificate. Tax invoice provided — most clinicians pay $0 out of pocket. 7-day money-back guarantee.</p>
       ${nextWorkshopCallout()}
@@ -557,7 +655,7 @@ export const SCAT_MASTERY_SEQUENCE = [
 export const SCAT_COMPLETION_UPSELL = {
   subject: "You've completed SCAT6 Mastery — here's what's next",
   template: (name: string, pricingLink: string) => emailShell(`
-    <h2>Congratulations, ${escapeHtml(name.split(' ')[0])}!</h2>
+    <h2>Congratulations, ${greetingName(name)}!</h2>
     <p>You've finished the SCAT6 Mastery course &mdash; that puts you ahead of most clinicians when it comes to SCAT6 administration.</p>
     <p>The online course picks up where SCAT6 Mastery leaves off &mdash; 8 modules covering the clinical knowledge you need to confidently manage concussion:</p>
     <ul>
@@ -606,7 +704,7 @@ export const WORKSHOP_RESERVATION_EMAIL = {
   day: 1,
   subject: 'Your spot is reserved — here\'s what happens next',
   template: (name: string, loginLink: string, city: string, count: number, threshold: number) => emailShell(`
-    <h2>Welcome aboard, ${escapeHtml(name.split(' ')[0])}!</h2>
+    <h2>Welcome aboard, ${greetingName(name)}!</h2>
     <p>Your spot in <strong>${city}</strong> is reserved. Here's how this works:</p>
     <div class="callout">
       <strong>How workshop dates are confirmed:</strong><br><br>
@@ -642,7 +740,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     template: (name: string, city: string, count: number, threshold: number, _loginLink?: string, shareLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
-        <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+        <h2>Hi ${greetingName(name)},</h2>
         <p>Quick update on your workshop city:</p>
         <div class="callout">
           <strong>${city}:</strong> ${count} of ${threshold} spots filled — ${remaining > 0 ? `${remaining} more to confirm a date` : 'threshold reached!'}<br>
@@ -661,7 +759,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     template: (name: string, city: string, count: number, threshold: number, loginLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
-        <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+        <h2>Hi ${greetingName(name)},</h2>
         <p>Your workshop city update:</p>
         <div class="callout">
           <strong>${city}:</strong> ${count} of ${threshold} spots filled — ${remaining > 0 ? `${remaining} more needed` : 'threshold reached!'}<br>
@@ -678,7 +776,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
       `Your ${city} concussion workshop — building the next date`,
     template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string, shareLink?: string) => {
       return emailShell(`
-        <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+        <h2>Hi ${greetingName(name)},</h2>
         <p>Just a note that you're on the list for the next ${city} hands-on concussion workshop — we run these as demand opens up in each city and you'll get plenty of notice once the date's confirmed.</p>
         <p>If you know anyone who'd benefit from hands-on concussion training, send them our way:</p>
         <center><a href="${utm(shareLink || 'https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d21', 'share')}" class="cta-secondary">Share the Course</a></center>
@@ -692,7 +790,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
       `${city} concussion workshop — still on your radar?`,
     template: (name: string, city: string, _count?: number, _threshold?: number, _loginLink?: string, shareLink?: string) => {
       return emailShell(`
-        <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+        <h2>Hi ${greetingName(name)},</h2>
         <p>Month check-in — you're still on the list for the next ${city} hands-on concussion workshop. We confirm dates as demand opens up in each city, and you'll get plenty of notice when yours lands.</p>
         <p>Know a colleague who manages concussions? Send them our way:</p>
         <center><a href="${utm(shareLink || 'https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d28', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
@@ -707,7 +805,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
     template: (name: string, city: string, count: number, threshold: number, _loginLink?: string, shareLink?: string) => {
       const remaining = threshold - count
       return emailShell(`
-        <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+        <h2>Hi ${greetingName(name)},</h2>
         <p>This is my last update on workshop numbers. ${city} has <strong>${count} of ${threshold}</strong> registrants${remaining > 0 ? ` — ${remaining} more needed to confirm a date` : ''}.</p>
         <p>If you have colleagues who'd benefit from this training, now's the time to let them know. The A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird rate still applies for ${city} — it holds until 14 days before your city's workshop date.</p>
         <center><a href="${utm(shareLink || 'https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d58', 'share')}" class="cta-secondary">Share the Course</a></center>
@@ -724,7 +822,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
 export const WORKSHOP_CONFIRMED_EMAIL = {
   subject: 'Your workshop date is confirmed!',
   template: (name: string, city: string, date: string, loginLink?: string) => emailShell(`
-    <h2>Great news, ${escapeHtml(name.split(' ')[0])}!</h2>
+    <h2>Great news, ${greetingName(name)}!</h2>
     <p>Your workshop date has been confirmed:</p>
     <div class="callout">
       <strong>${city}</strong><br>
@@ -763,7 +861,7 @@ export const WORKSHOP_LOGISTICS_EMAIL = {
   daysBefore: 42,
   subject: 'Your workshop is 6 weeks away — what to know',
   template: (name: string, city: string, date: string, venue?: string, loginLink?: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>Your concussion workshop in <strong>${city}</strong> is 6 weeks away (<strong>${date}</strong>).</p>
     <div class="callout">
       <strong>Workshop details:</strong><br><br>
@@ -794,7 +892,7 @@ export const ONLINE_UPGRADE_SEQUENCE = [
     day: 7,
     subject: 'How are you finding the modules so far?',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>You're a week into the course — how's it going?</p>
       <p>By now you've likely worked through the concussion pathophysiology and diagnostic assessment modules. That's the foundation that most CPD courses stop at.</p>
       <p>What makes this training different is the practical component. The full-day workshop lets you:</p>
@@ -820,7 +918,7 @@ export const ONLINE_UPGRADE_SEQUENCE = [
 export const REENGAGEMENT_EMAIL = {
   subject: 'Your concussion modules are waiting',
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>Just a quick check-in — I noticed you haven't logged into your Concussion Education Australia account recently.</p>
     <p>Your modules are still there, ready when you are. Most clinicians find it easiest to do one module per sitting (about 45–60 minutes each).</p>
     <div class="callout">
@@ -840,7 +938,7 @@ export const REENGAGEMENT_EMAIL = {
 export const FREE_USER_REENGAGEMENT = {
   subject: 'The 20-min module on SCAT6 vs SCOAT6',
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You signed up for the SCAT6 Mastery course a week ago but haven't started yet.</p>
     <p>No pressure — Module 1 takes about 20 minutes and you can pick up where you left off any time.</p>
     <div class="callout">
@@ -890,7 +988,7 @@ function surveyButton(userId: string, baseUrl: string, answer: string, label: st
 export const SCAT_COMPLETER_PERSONAL_FOLLOWUP = {
   subject: 'Quick one — what stopped you?',
   template: (name: string, userId: string, baseUrl: string) => emailShell(`
-    <p style="font-size: 15px; margin: 0 0 14px;">Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p style="font-size: 15px; margin: 0 0 14px;">Hi ${greetingName(name)},</p>
     <p style="font-size: 15px; margin: 0 0 14px;">You finished the SCAT6 Mastery course recently &mdash; thanks for working through it.</p>
     <p style="font-size: 15px; margin: 0 0 14px;">I wanted to ask you one thing directly, because the answer helps me make the rest of the course actually useful for clinicians like you.</p>
     <p style="font-size: 15px; margin: 0 0 18px;"><strong>You finished the first part. What stopped you taking the next step?</strong></p>
@@ -924,7 +1022,7 @@ export const COMPLETER_CONVERT_PRICE = {
   template: (name: string, pricingLink: string) => {
     const discounted = CONFIG.COURSE.PRICE_ONLINE - 50
     return emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])} — still weighing it up?</h2>
+      <h2>Hi ${greetingName(name)} — still weighing it up?</h2>
       <p>You finished SCAT6 Mastery and had a look at the full online course. Totally fair to take your time, so here's the honest case for it.</p>
       <p>SCAT6 tells you how to <em>assess</em>. The online course is the part that tells you what to <em>do next</em> — the bit most concussion CPD skips:</p>
       <ul>
@@ -934,7 +1032,7 @@ export const COMPLETER_CONVERT_PRICE = {
         <li><strong>Persistent symptoms</strong> — when recovery stalls and how to intervene</li>
       </ul>
       <div class="callout">
-        <strong>Your code ${CONFIG.COURSE.PROMO_CODE} is still active</strong> — $50 off the online modules brings it to <strong>A$${discounted}</strong> (was A$${CONFIG.COURSE.PRICE_ONLINE}). ${escapeHtml(afterpayInstalment(discounted))}
+        <strong>Your code ${CONFIG.COURSE.PROMO_CODE} is still active</strong> — $50 off the online modules brings it to <strong>A$${discounted}</strong> (was A$${CONFIG.COURSE.PRICE_ONLINE}). ${afterpayLine(discounted)}
       </div>
       <center><a href="${utm(pricingLink + (pricingLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'completer_convert_price', 'apply_code')}" class="cta-btn">Apply my code &amp; enrol</a></center>
       <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">8 online modules &middot; 8 CPD hours &middot; lifetime access &middot; Osteopathy Australia endorsed</p>
@@ -949,7 +1047,7 @@ export const COMPLETER_CONVERT_PRICE = {
 export const COMPLETER_CONVERT_RELEVANCE = {
   subject: "You've got SCAT6 down — here's what comes after",
   template: (name: string, pricingLink: string) => emailShell(`
-    <h2>Nice work finishing SCAT6 Mastery, ${escapeHtml(name.split(' ')[0])}</h2>
+    <h2>Nice work finishing SCAT6 Mastery, ${greetingName(name)}</h2>
     <p>That covers the assessment side. Most clinicians tell us the harder part is what happens <em>after</em> the sideline test — the management and rehab that actually gets someone back to sport, work and school safely.</p>
     <p>That's the whole online course. Eight modules built for exactly that gap:</p>
     <ul>
@@ -983,7 +1081,7 @@ export const COMPLETER_CONVERT_RELEVANCE = {
 export const FREE_LOGGED_IN_NO_PROGRESS = {
   subject: 'Module 1 is 20 min — here\'s the easiest path back',
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>I noticed you logged in but didn&rsquo;t end up starting Module 1. Curious — was it the right time, or did something stop you?</p>
     <p>If it was just &ldquo;I&rsquo;ll come back later and forgot&rdquo;, that&rsquo;s normal. Most clinicians who finish the SCAT6 Mastery course end up doing it across two short sittings. Here&rsquo;s the easiest re-entry:</p>
     <div class="callout">
@@ -1022,7 +1120,7 @@ export const PDF_LEAD_TOOLS = {
   // UNUSED: these links go to public tools, and sending a PDF-hunter a "log in"
   // CTA is the friction that lost them in the first place.
   template: (name: string, _loginLink?: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You grabbed the SCAT6 PDF last week. If you&rsquo;ve since had to fill one in on a sideline or in clinic, you&rsquo;ll know the annoying part isn&rsquo;t the assessment &mdash; it&rsquo;s the adding up, and the fact that the paper copy ends up in a drawer.</p>
     <p>We built the web versions for exactly that. Free, no cost, nothing to install:</p>
     <div class="callout">
@@ -1047,7 +1145,7 @@ export const PDF_LEAD_TOOLS = {
 export const SCAT_DAY10_ENGAGEMENT = {
   subject: 'Where did you get up to?',
   template: (name: string, loginLink: string, completedCount: number) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You've completed ${completedCount} of 3 modules in the SCAT6 Mastery course${completedCount > 0 ? ' — great start' : ''}.</p>
     <p>The next module picks up right where you left off and takes about 20 minutes.</p>
     <div class="callout">
@@ -1068,7 +1166,7 @@ export const SCAT_DAY10_ENGAGEMENT = {
 export const FREE_ALMOST_DONE = {
   subject: "One module left — finish your SCAT6 Mastery course",
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You've completed <strong>2 of 3 modules</strong> in the SCAT6 Mastery course. One more to go &mdash; clinical case studies and a scenario-based final quiz.</p>
     <p>The final module takes about 15 minutes. It tests everything you've learned with real clinical scenarios.</p>
     <center><a href="${utm(loginLink, 'free_almost_done', 'finish_last_module')}" class="cta-btn">Finish Your Last Module</a></center>
@@ -1093,7 +1191,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
     day: 2,
     subject: 'Getting the most out of your reference text',
     template: (name: string, pricingLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Hope you've had a chance to open the reference. Most clinicians who buy it tell me the same thing — it's denser than they expected. A quick map of where to start:</p>
       <ul>
         <li><strong>Ch. 1–3</strong> — neuroscience, presentation, red flags. Read first if you see acute injuries.</li>
@@ -1111,7 +1209,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
     day: 9,
     subject: "You have A$100 credit sitting on your account",
     template: (name: string, pricingLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>A week in. Quick heads-up — because you bought the Reference + Toolkit, there's an <strong>A$100 credit</strong> automatically waiting for you on the full course.</p>
       <p>No code to remember. Log in with this email and the discount is already applied at the checkout screen — you'll see the strike-through.</p>
       <div class="callout">
@@ -1131,7 +1229,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
     day: 21,
     subject: 'Book vs. course — honest comparison',
     template: (name: string, pricingLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Clinicians ask me this weekly: "I have the book. Do I still need the course?"</p>
       <p>Honest answer — depends on how you learn.</p>
       <p><strong>You're fine with just the reference if:</strong></p>
@@ -1146,7 +1244,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
         <li>You need CPD hours and want them in one structured block</li>
         <li>You want the confidence of watching it done before attempting it yourself</li>
       </ul>
-      <p>With the A$100 bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - 100}</strong> — about the cost of one private consult. The full course (online + a hands-on workshop day in your nominated city) drops to <strong>A$${(CONFIG.COURSE.PRICE_REGULAR - 100).toLocaleString('en-AU')}</strong>.</p>
+      <p>With the A$${CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD} bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD}</strong> — about the cost of one private consult. The full course (online + a hands-on workshop day in your nominated city) drops to <strong>A$${(workshopPriceFor() - CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD).toLocaleString('en-AU')}</strong>.</p>
       <center><a href="${utm(pricingLink, 'ref_upgrade_d21', 'comparison')}" class="cta-btn">View Course Options</a></center>
       <div class="sig">Zac</div>
     `),
@@ -1156,7 +1254,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
     day: 35,
     subject: "Last reminder — your A$100 credit is still there",
     template: (name: string, pricingLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Five weeks since you picked up the reference text. Final note from me on the upgrade path, then I'll leave you alone.</p>
       <p>Your A$100 Reference+Toolkit credit is still auto-applied if you ever decide to pick up the course — log in with this email, the discount appears at checkout.</p>
       ${nextWorkshopCallout()}
@@ -1188,7 +1286,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
 export const PAID_NO_PROGRESS_NUDGE = {
   subject: "Quick one — have you opened Module 1 yet?",
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You picked up the course a few days ago and your account shows you haven't opened Module 1 yet. No judgment — life gets busy. But quick reason to prioritise it:</p>
     <p><strong>Module 1 is the only module that's a hard prerequisite for the other seven.</strong> It's the neuroscience framework everything else hangs off — the bit where the diagnostic distinctions, the rehab phenotypes, the RTP protocols all start to make sense as one connected system rather than a bunch of unrelated rules.</p>
     <p>It's 75 minutes. You can do it across two sittings. Skip it and Module 2 reads like a different language.</p>
@@ -1228,23 +1326,36 @@ export const PAID_NO_PROGRESS_NUDGE = {
  * full-course attendees.
  *
  * RETIRED COPY (June 2026): the early-bird window closed 31 May 2026 and
- * this blast already fired. The template below is the truthful post-early-
- * bird version (regular price, no deadline) so an accidental re-trigger
- * can't quote a price we no longer charge or a deadline that has passed.
+ * this blast already fired.
+ *
+ * DEFUSED 2026-08-06 (same treatment as MELBOURNE_WORKSHOP_PUSH). The previous
+ * "truthful post-early-bird version" still hardcoded "locked in for Saturday
+ * 13 June 2026" and A$1,400 — but that round RAN on 13 June and Melbourne's
+ * status is now 'completed', so an accidental re-trigger sold a workshop that
+ * had already happened, at a price nobody is charged. Both the subject and the
+ * body now read CONFIG.LOCATIONS.MELBOURNE at render time: no confirmed future
+ * Melbourne date means the nominate-your-city copy with NO date.
  */
 export const MELBOURNE_EARLY_BIRD_LAST_CALL = {
-  subject: 'Melbourne workshop — Saturday 13 June 2026',
-  template: (name: string, pricingLink: string) => emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>Quick heads-up since you&rsquo;ve been engaging with our content &mdash; the Melbourne Concussion Clinical Mastery workshop is locked in for <strong>Saturday 13 June 2026, Melbourne CBD (Rydges Exhibition St)</strong>.</p>
+  subject: melbourneIsConfirmedFuture()
+    ? `Melbourne workshop — ${CONFIG.LOCATIONS.MELBOURNE.date}`
+    : 'Concussion Clinical Mastery — the Melbourne workshop day',
+  template: (name: string, pricingLink: string) => {
+    const mel = CONFIG.LOCATIONS.MELBOURNE
+    const dated = melbourneIsConfirmedFuture()
+    return emailShell(`
+    <p>Hi ${greetingName(name)},</p>
+    <p>Quick heads-up since you&rsquo;ve been engaging with our content &mdash; ${dated
+      ? `the Melbourne Concussion Clinical Mastery workshop is locked in for <strong>${escapeHtml(mel.date)}, Melbourne CBD (Rydges Exhibition St)</strong>.`
+      : 'the hands-on Concussion Clinical Mastery workshop day runs city by city. You can enrol in the complete course now, nominate Melbourne, and the date launches once enough clinicians register there.'}</p>
     <div class="callout">
-      <strong>A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')} all-in</strong> &mdash; online course + full-day workshop, 16 CPD hours.
+      <strong>${completeCoursePrice()} all-in</strong> &mdash; online course + full-day workshop, ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.${completeCourseCaveat()}
     </div>
     <ul>
-      <li>16 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
       <li>Full day, 8am&ndash;4pm, buffet lunch included</li>
-      <li>Capped at 12 clinicians for hands-on practice time</li>
-      <li>25% off Rydges accommodation for attendees travelling in</li>
+      <li>Capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for hands-on practice time</li>
+      ${dated ? `<li>${CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off Rydges accommodation for attendees travelling in</li>` : ''}
     </ul>
     <center><a href="${utm(pricingLink, 'melbourne_eb_last_call_v1', 'enrol')}" class="cta-btn">Full details + enrol</a></center>
     <p>If you have any questions about whether it fits your scope or schedule, just reply.</p>
@@ -1252,7 +1363,8 @@ export const MELBOURNE_EARLY_BIRD_LAST_CALL = {
       Zac<br>
       Concussion Education Australia
     </div>
-  `),
+  `)
+  },
 }
 
 export const MELBOURNE_WORKSHOP_PUSH = {
@@ -1266,9 +1378,9 @@ export const MELBOURNE_WORKSHOP_PUSH = {
   subject: 'Concussion Clinical Mastery — Melbourne workshop',
   template: (name: string, pricingLink: string) => {
     const mel = CONFIG.LOCATIONS.MELBOURNE
-    if (mel.status !== 'confirmed' || !mel.date) {
+    if (!melbourneIsConfirmedFuture()) {
       return emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Hi ${greetingName(name)},</p>
     <p>The hands-on Concussion Clinical Mastery workshop day runs city by city &mdash; you can enrol in the complete course now, nominate Melbourne, and the date launches once enough clinicians register there.</p>
     <ul>
       <li>16 CPD hours (8 online + 8 in-person), AHPRA-aligned, Osteopathy Australia endorsed</li>
@@ -1285,7 +1397,7 @@ export const MELBOURNE_WORKSHOP_PUSH = {
   `)
     }
     return emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Hi ${greetingName(name)},</p>
     <p>The next Concussion Clinical Mastery workshop in Melbourne is confirmed for <strong>${escapeHtml(mel.date)}</strong>.</p>
     <ul>
       <li>16 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
@@ -1332,7 +1444,7 @@ export const MELBOURNE_WORKSHOP_PUSH = {
 export const AI_SAFETY_CHECKLIST_DAY0 = {
   subject: 'Your AI Safety Checklist for Allied Health Documentation',
   template: (name: string, checklistLink: string) => emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Hi ${greetingName(name)},</p>
     <p>Here&rsquo;s the AI Safety Checklist for Allied Health Documentation, as promised.</p>
     <center><a href="${utm(checklistLink, 'ai_checklist_delivery', 'open_checklist')}" class="cta-btn">Open the checklist</a></center>
     <p>What&rsquo;s inside:</p>
@@ -1355,7 +1467,7 @@ export const AI_SAFETY_CHECKLIST_DAY0 = {
 export const AI_SAFETY_CHECKLIST_DAY3 = {
   subject: 'The 3 most common AI documentation mistakes I see',
   template: (name: string, courseLink: string) => emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Hi ${greetingName(name)},</p>
     <p>Quick follow-up on the AI Safety Checklist &mdash; the three documentation mistakes I see most often when I review AI-generated allied health notes:</p>
     <ol>
       <li><strong>Templated phrasing recycled across patients.</strong> The NDIA is now flagging this as a fraud-and-assurance trigger. If three of your notes contain the same paragraph structure, you have an audit problem even when the underlying clinical view is correct.</li>
@@ -1374,7 +1486,7 @@ export const AI_SAFETY_CHECKLIST_DAY3 = {
 export const AI_SAFETY_CHECKLIST_DAY7 = {
   subject: 'Heidi vs Lyrebird vs ChatGPT — which one for your practice?',
   template: (name: string, blogLink: string, courseLink: string) => emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Hi ${greetingName(name)},</p>
     <p>This week&rsquo;s most-asked question in my inbox: <em>Heidi or Lyrebird for clinical notes?</em></p>
     <p>The short answer: both are healthcare-purpose-built AU scribes (Tier A in the checklist framework). Heidi has wider adoption and broader workflow support; Lyrebird is leaner and works better for solo practitioners. ChatGPT is a different category entirely &mdash; not a scribe, not Privacy Act-compliant by default.</p>
     <p>I wrote up the full comparison &mdash; including the AHPRA + Privacy Act differences and a side-by-side feature table &mdash; here:</p>
@@ -1394,8 +1506,8 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
   // Pricing/urgency derives from the provider catalogue at send time.
   subject: 'AI in Clinical Practice — the full framework behind your checklist',
   template: (name: string, courseLink: string) => emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>Two weeks with the AI Safety Checklist &mdash; if it&rsquo;s earning its place in your workflow, the course is the full framework behind it. 3 CPD hours, 9 modules, certificate.</p>
+    <p>Hi ${greetingName(name)},</p>
+    <p>Two weeks with the AI Safety Checklist &mdash; if it&rsquo;s earning its place in your workflow, the course is the full framework behind it. ${aiCoursePricing().cpdLine}, 9 modules, certificate.</p>
     <p>${aiCoursePricing().priceLine}</p>
     <center><a href="${utm(courseLink, 'ai_checklist_day14', 'last_chance')}" class="cta-btn">${aiCoursePricing().ctaLabel}</a></center>
     <p>If you&rsquo;ve decided it&rsquo;s not for you, no worries &mdash; you&rsquo;ll stay on the list for future short courses.</p>
@@ -1407,10 +1519,18 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
 }
 
 export const AI_COURSE_LAUNCH_BLAST = {
-  subject: 'AI in clinical practice — launching 17 June (launch pricing for engaged users)',
+  // DEFUSED 2026-08-06 (same treatment as MELBOURNE_WORKSHOP_PUSH): the
+  // 17 June 2026 launch date is in the PAST. Subject and body hardcoded it, so
+  // an admin re-trigger announced a launch that had already happened. Both now
+  // read the catalogue's effective status at render time.
+  subject: aiCourseHasLaunched()
+    ? 'AI in Clinical Practice — the AHPRA-aligned compliance course is live'
+    : 'AI in clinical practice — a new short course for clinicians using AI tools',
   template: (name: string, courseLink: string) => emailShell(`
-    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>Quick heads-up since you&rsquo;ve been engaging with our concussion content — I&rsquo;m launching a new short course on <strong>17 June 2026</strong> that you might find useful.</p>
+    <p>Hi ${greetingName(name)},</p>
+    <p>Quick heads-up since you&rsquo;ve been engaging with our concussion content — ${aiCourseHasLaunched()
+      ? 'a short course of mine is now available that you might find useful.'
+      : 'I&rsquo;m putting together a new short course that you might find useful.'}</p>
     <p><strong>AI in Clinical Practice — AHPRA-aligned compliance for clinicians using AI tools.</strong></p>
     <p>It came out of three things I kept seeing:</p>
     <ul>
@@ -1426,7 +1546,7 @@ export const AI_COURSE_LAUNCH_BLAST = {
       <li>Safe documentation workflows that hold up to NDIS and indemnity scrutiny</li>
       <li>When NOT to use AI &mdash; red flags, edge cases, patient consent</li>
     </ul>
-    <p>3 CPD hours, fully online, certificate on completion.</p>
+    <p>${aiCoursePricing().cpdLine}, fully online, certificate on completion.</p>
     <div class="callout">
       ${aiCoursePricing().priceLine}
     </div>
@@ -1474,7 +1594,7 @@ export const HUB_SEAT_REMINDER_EMAILS: Record<HubSeatReminderStage, {
   day3: {
     subject: (claimed, cap) => `Your team's course seats — ${claimed} of ${cap} redeemed`,
     template: ({ name, claimed, cap, hubKey, redeemUrl, clinicName }) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Quick status on ${clinicName ? `${escapeHtml(clinicName)}'s` : 'your clinic&rsquo;s'} course access: <strong>${claimed} of ${cap} clinician seats</strong> have been redeemed so far. ${cap - claimed} ${cap - claimed === 1 ? 'seat is' : 'seats are'} still sitting unused.</p>
       <p>Each seat is a full login — all 8 modules, the clinical toolkit and the reference library. Your team redeems their own seat in under a minute:</p>
       <div class="callout">
@@ -1492,7 +1612,7 @@ export const HUB_SEAT_REMINDER_EMAILS: Record<HubSeatReminderStage, {
   day10: {
     subject: (claimed, cap) => `${cap - claimed} of your clinic's course seats ${cap - claimed === 1 ? 'is' : 'are'} still unclaimed`,
     template: ({ name, claimed, cap, hubKey, redeemUrl, clinicName }) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>It's been about ten days since you set up ${clinicName ? `${escapeHtml(clinicName)}'s` : 'your clinic&rsquo;s'} team access, and <strong>${claimed} of ${cap} clinician seats</strong> have been redeemed. You've paid for the rest — they're just waiting on a forward.</p>
       <p>The most common reason seats sit unused is simply that the key never made it past the inbox. Here it is again:</p>
       <div class="callout">
@@ -1512,7 +1632,7 @@ export const HUB_SEAT_REMINDER_EMAILS: Record<HubSeatReminderStage, {
 export const ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You've completed <strong>7 of 8 modules</strong> — you're one module away from earning your 8 CPD hour certificate.</p>
     <p>You've already done the hard work. The final module takes about 60 minutes, and once you finish, your certificate is generated automatically and ready to download from your dashboard.</p>
     <div class="callout">
@@ -1556,7 +1676,7 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
     subject: 'Your course is ready — start with Module 1',
     accessLevels: ['crm'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Welcome aboard, ${escapeHtml(name.split(' ')[0])}!</h2>
+      <h2>Welcome aboard, ${greetingName(name)}!</h2>
       <p>Your <strong>Concussion Rehab Mastery</strong> course is ready. Clinicians who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
       <p>Module 1 — <em>Concussion for the Exercise Physiologist</em> — takes about 60 minutes and covers the neurometabolic cascade and why exercise moved to first-line. It's the framework every later module builds on.</p>
       <center><a href="${utm(loginLink, 'crm_post_purchase_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
@@ -1568,14 +1688,14 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
         Zac Lewis<br>
         Concussion Education Australia
       </div>
-    `),
+    `, undefined, 'ep'),
   },
   {
     day: 3,
     subject: 'How are you going with the course?',
     accessLevels: ['crm'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Just checking in — have you had a chance to get started?</p>
       <p>The first three modules build the EP's clinical foundation:</p>
       <ol>
@@ -1587,14 +1707,14 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
       <center><a href="${utm(loginLink, 'crm_post_purchase_day3', 'continue_course')}" class="cta-btn">Open Module 1</a></center>
       <p class="ps">P.S. Lifetime access, no deadline — but momentum matters. Clinicians who finish inside two weeks report the biggest confidence gains.</p>
       <div class="sig">Zac</div>
-    `),
+    `, undefined, 'ep'),
   },
   {
     day: 7,
     subject: `You're halfway to ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours`,
     accessLevels: ['crm'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>One week in — however far you've got, you're making progress.</p>
       <p>The modules coming up are where EPs tell me the practical value lands:</p>
       <ul>
@@ -1605,14 +1725,14 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
       <p>Finish all 8 modules and your <strong>${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hour certificate</strong> is generated automatically, ready to download.</p>
       <center><a href="${utm(loginLink, 'crm_post_purchase_day7', 'keep_going')}" class="cta-btn">Open Module 4: Aerobic Rehabilitation</a></center>
       <div class="sig">Zac</div>
-    `),
+    `, undefined, 'ep'),
   },
   {
     day: 14,
     subject: 'The module EPs say changes their practice',
     accessLevels: ['crm'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Two weeks in — wherever you're up to, I wanted to flag <strong>Module 5: Phenotype-Specific Exercise Rehabilitation</strong>.</p>
       <p>This is the one EPs consistently say changed how they work. Instead of one generic graded-return protocol, you get the exercise-based intervention matched to the presentation in front of you:</p>
       <ul>
@@ -1624,27 +1744,27 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
       <p>It's the bridge between understanding concussion and actually prescribing for it.</p>
       <center><a href="${utm(loginLink, 'crm_post_purchase_day14', 'continue_course')}" class="cta-btn">Open Module 5: Phenotype Rehab</a></center>
       <div class="sig">Zac</div>
-    `),
+    `, undefined, 'ep'),
   },
   {
     day: 21,
     subject: 'Your CPD certificate is waiting',
     accessLevels: ['crm'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>Quick reminder: complete all 8 modules and your <strong>${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hour certificate</strong> is generated automatically and ready to download from your dashboard.</p>
       <p>Each module runs 45-60 minutes. Most people finish over a few sittings — and you have lifetime access, so there's no deadline.</p>
       <p>If you're close, finishing this week means it's fresh when the next concussion referral walks in.</p>
       <center><a href="${utm(loginLink, 'crm_post_purchase_day21', 'finish_course')}" class="cta-btn">Finish Your Course</a></center>
       <div class="sig">Zac</div>
-    `),
+    `, undefined, 'ep'),
   },
   {
     day: 30,
     subject: 'Know an EP who takes concussion referrals?',
     accessLevels: ['crm'] as const,
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <h2>Hi ${greetingName(name)},</h2>
       <p>You've been with the course a month now. If it's been useful, I have a small ask:</p>
       <p><strong>Do you know a colleague who sees concussion referrals?</strong></p>
       <p>Most exercise physiologists were never trained in this — and a recommendation from a trusted colleague goes further than any ad I could run.</p>
@@ -1655,7 +1775,7 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
         Concussion Education Australia
       </div>
       <p class="ps">P.S. This is the last onboarding email. You'll only hear from us for clinical updates or practical-day logistics from here.</p>
-    `),
+    `, undefined, 'ep'),
   },
 ]
 
@@ -1668,7 +1788,7 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
 export const CRM_NO_PROGRESS_NUDGE = {
   subject: 'Quick one — have you opened Module 1 yet?',
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You picked up Concussion Rehab Mastery a few days ago and your account shows Module 1 is still unopened. No judgment — clinic gets busy. One reason to prioritise it:</p>
     <p><strong>Module 1 is the hard prerequisite for the other seven.</strong> It's the neurometabolic and autonomic framework that makes the threshold test in Module 3 and the exercise prescription in Module 4 make sense as one system, rather than a set of rules to memorise.</p>
     <p>It's about 60 minutes, and it splits neatly across two sittings.</p>
@@ -1679,7 +1799,7 @@ export const CRM_NO_PROGRESS_NUDGE = {
       Concussion Education Australia
     </div>
     <p class="ps">P.S. Lifetime access means no expiry, but momentum compounds — finish Module 1 in week 1 and you're 3&times; more likely to finish the course.</p>
-  `),
+  `, undefined, 'ep'),
 }
 
 /**
@@ -1689,7 +1809,7 @@ export const CRM_NO_PROGRESS_NUDGE = {
 export const CRM_ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <h2>Hi ${greetingName(name)},</h2>
     <p>You've completed <strong>7 of 8 modules</strong> in Concussion Rehab Mastery — one away from your ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hour certificate.</p>
     <p>You've already done the hard work. The last module takes about 60 minutes, and your certificate generates automatically the moment you finish.</p>
     <div class="callout">
@@ -1706,7 +1826,7 @@ export const CRM_ALMOST_DONE_EMAIL = {
       Zac Lewis<br>
       Concussion Education Australia
     </div>
-  `),
+  `, undefined, 'ep'),
 }
 
 // ─── EP (Exercise Physiologist) Lead Nurture — Concussion Rehabilitation Mastery ──
@@ -1742,7 +1862,7 @@ export const EP_NURTURE_SEQUENCE = [
     day: 3,
     subject: "The one concussion treatment that's actually yours",
     template: (name: string, courseLink: string) => emailShell(`
-      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Hi ${greetingName(name)},</p>
       <p>You had a look at the Concussion Rehabilitation Mastery course, so here's the part I think matters most to you as an EP.</p>
       <p>Sub-symptom-threshold aerobic exercise (SSTAE) is now the <strong>first-line, guideline-endorsed treatment</strong> for concussion. Not rest. Not "wait and see." The Amsterdam 2023 international consensus put graded aerobic exercise at the front of the pathway.</p>
       <p>Here's the part most clinicians miss: it's an <strong>aerobic-exercise prescription</strong>. Measured threshold, graded progression, load management. That's squarely in your scope &mdash; arguably more yours than anyone else's on the care team.</p>
@@ -1752,7 +1872,7 @@ export const EP_NURTURE_SEQUENCE = [
         Zac Lewis<br>
         Osteopath &middot; Concussion Education Australia
       </div>
-    `),
+    `, undefined, 'ep'),
   },
 
   // DAY 7 — Turnkey / the tools. Answers the "but how do I actually do it in
@@ -1761,7 +1881,7 @@ export const EP_NURTURE_SEQUENCE = [
     day: 7,
     subject: 'Walk out and deliver concussion rehab on Monday',
     template: (name: string, courseLink: string) => emailShell(`
-      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Hi ${greetingName(name)},</p>
       <p>The most common question I get from EPs about concussion rehab is the honest one: "I understand the theory &mdash; but how do I actually do it in clinic?"</p>
       <p>That's the point of the course. Enrolment isn't just the modules &mdash; it's the working instruments you deliver with:</p>
       <ul>
@@ -1776,7 +1896,7 @@ export const EP_NURTURE_SEQUENCE = [
         Zac Lewis<br>
         Concussion Education Australia
       </div>
-    `),
+    `, undefined, 'ep'),
   },
 
   // DAY 14 — CPD + reimbursement. Removes the time + cost objections. Online
@@ -1785,7 +1905,7 @@ export const EP_NURTURE_SEQUENCE = [
     day: 14,
     subject: 'Half your annual CPD, on your own schedule',
     template: (name: string, courseLink: string) => emailShell(`
-      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Hi ${greetingName(name)},</p>
       <p>Two practical objections come up with any CPD: the time and the cost. Here's where the EP course lands on both.</p>
       <p><strong>Time.</strong> ${CONFIG.FEATURES.ESSA_ACCREDITED
         ? '8 CPD points, fully online and self-paced &mdash; roughly half your annual ESSA Further-Education requirement in one course'
@@ -1797,7 +1917,7 @@ export const EP_NURTURE_SEQUENCE = [
         Zac Lewis<br>
         Concussion Education Australia
       </div>
-    `),
+    `, undefined, 'ep'),
   },
 
   // DAY 21 — Last touch / new service line. Concussion rehab as a
@@ -1806,7 +1926,7 @@ export const EP_NURTURE_SEQUENCE = [
     day: 21,
     subject: 'The service line GPs are looking for someone to run',
     template: (name: string, courseLink: string) => emailShell(`
-      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Hi ${greetingName(name)},</p>
       <p>Last note from me on this.</p>
       <p>Concussion rehab is quietly becoming a referral-worthy service line. GPs and clinics have patients who need graded aerobic rehab and often no one obvious to send them to. The EP who can confidently take that referral becomes the person they call.</p>
       <p>That's the real opportunity here &mdash; not just the CPD, but a service you can offer that most practices can't. The course gives you the protocol, the tools and the documentation to be that EP. ${essaCpdLine()}.</p>
@@ -1816,6 +1936,6 @@ export const EP_NURTURE_SEQUENCE = [
         Zac Lewis<br>
         Osteopath &middot; Concussion Education Australia
       </div>
-    `),
+    `, undefined, 'ep'),
   },
 ]

@@ -9,6 +9,9 @@ export function AiSafetyChecklistSignupForm() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Set when the address is on the suppression list: nothing was emailed, so
+  // the route hands back the checklist path instead of a promise it can't keep.
+  const [directPath, setDirectPath] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,12 +33,35 @@ export function AiSafetyChecklistSignupForm() {
         setSubmitting(false)
         return
       }
+      if (data.emailed === false && typeof data.checklistPath === 'string') {
+        setDirectPath(data.checklistPath)
+      }
       setSubmitted(true)
     } catch {
       setError('Network error. Try again.')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (submitted && directPath) {
+    return (
+      <div className="rounded-lg border-2 border-emerald-200 bg-emerald-50 p-4">
+        <p className="text-sm font-semibold text-emerald-900 flex items-center gap-1.5 mb-1">
+          <Check className="w-4 h-4" /> Your checklist is ready
+        </p>
+        <p className="text-xs text-emerald-800 leading-relaxed mb-2">
+          That address has opted out of our emails, so we haven&apos;t sent one. Here&apos;s the
+          checklist directly — use <strong>Cmd/Ctrl+P &rarr; Save as PDF</strong> to keep a copy.
+        </p>
+        <a
+          href={directPath}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+        >
+          Open the checklist <ArrowRight className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    )
   }
 
   if (submitted) {

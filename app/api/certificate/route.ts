@@ -19,7 +19,7 @@ import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { rateLimit } from '@/lib/rate-limit'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
 
 const SCAT_MODULE_IDS = [101, 102, 103]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -518,7 +518,7 @@ async function sendCertificateEmail(opts: {
                   <p style="margin: 0; font-size: 14px; color: #1e40af;">
                     ${opts.courseType === 'crm'
                       ? `<strong>For your ESSA CPD log:</strong> Retain this certificate with your CPD records. Log this activity under Further Education with ${opts.cpdPoints} ESSA CPD ${opts.cpdPoints === 1 ? 'point' : 'points'}.`
-                      : `<strong>For AHPRA Audit:</strong> Retain this certificate in your CPD portfolio for at least 5 years. Log this activity as "Educational Activity — Reviewing &amp; Reflecting" with ${opts.cpdPoints} CPD hours.`}
+                      : `<strong>For AHPRA Audit:</strong> Retain this certificate in your CPD portfolio for at least 5 years. Log this activity as "Educational Activity — Reviewing &amp; Reflecting" with ${opts.cpdPoints} CPD ${opts.cpdPoints === 1 ? 'hour' : 'hours'}.`}
                   </p>
                 </div>
                 ` : ''}
@@ -529,10 +529,10 @@ async function sendCertificateEmail(opts: {
                 <!-- CRM (EP stream) graduate — pitch the CRM practical day, NEVER the CCM flagship. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
-                    Whats next — the practical day
+                    What&rsquo;s next — the practical day
                   </p>
                   <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
-                    Youve completed the online course — 8 ESSA CPD points banked. Add the supervised practical day to take it to 16 CPD hours: hands-on graded exercise testing, threshold determination and progression decisions with real cases.
+                    You&rsquo;ve completed the online course — 8 ESSA CPD points banked. Add the supervised practical day to take it to 16 CPD hours: hands-on graded exercise testing, threshold determination and progression decisions with real cases.
                   </p>
                   <a href="https://portal.concussion-education-australia.com/concussion-rehab-mastery?utm_source=email&utm_medium=email&utm_campaign=crm-certificate-upsell&utm_content=practical-day" style="display: inline-block; padding: 9px 18px; background: #0d9488; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
                     Add the practical day →
@@ -542,10 +542,10 @@ async function sendCertificateEmail(opts: {
                 <!-- Full-course buyer — they already own online + workshop. No upsell. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
-                    Whats next
+                    What&rsquo;s next
                   </p>
                   <p style="margin: 0 0 12px 0; font-size: 14px; color: #475569;">
-                    Youve already got the full Concussion Clinical Mastery course — your in-person workshop seat is included. Your nominated city's date locks in once it reaches its Ready-to-Train threshold, and the logistics email goes out 1 week prior.
+                    You&rsquo;ve already got the full Concussion Clinical Mastery course — your in-person workshop seat is included. Your nominated city's date locks in once it reaches its Ready-to-Train threshold, and the logistics email goes out 1 week prior.
                   </p>
                   <p style="margin: 0 0 0 0; font-size: 13px; color: #475569;">
                     Questions about the workshop, your modules, or CPD logging? Reply to this email.
@@ -555,10 +555,10 @@ async function sendCertificateEmail(opts: {
                 <!-- Online-only buyer — pitch the workshop UPGRADE, not the full course. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
-                    Whats next — workshop upgrade
+                    What&rsquo;s next — workshop upgrade
                   </p>
                   <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
-                    Youve completed the online modules. Add the in-person workshop to bank the full 16 CPD hours + hands-on practice.
+                    You&rsquo;ve completed the online modules. Add the in-person workshop to bank the full 16 CPD hours + hands-on practice.
                   </p>
                   <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
                     <div style="font-size: 11px; font-weight: 700; color: #a16207; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
@@ -595,12 +595,12 @@ async function sendCertificateEmail(opts: {
                     <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=ccm-flagship" style="display: inline-block; padding: 9px 18px; background: #a16207; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
                       View pricing →
                     </a>
-                    <span style="margin-left: 6px; font-size: 11px; color: #64748b;">A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                    <span style="margin-left: 6px; font-size: 11px; color: #64748b;">A$${workshopPriceFor().toLocaleString('en-AU')}</span>
                   </div>
 
                   <!-- Poll — capture intent for upcoming short courses -->
                   <p style="margin: 16px 0 0 0; font-size: 13px; color: #475569;">
-                    Short specialty courses launching from June — <a href="https://portal.concussion-education-australia.com/courses/poll?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=poll" style="color: #0d9488; font-weight: 600;">vote on what gets built first</a>. Voters get 40% off the winner at launch.
+                    Short specialty courses are on the way — <a href="https://portal.concussion-education-australia.com/courses/poll?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=poll" style="color: #0d9488; font-weight: 600;">vote on what gets built first</a>. Voters get 40% off the winner at launch.
                   </p>
                 </div>
                 `}

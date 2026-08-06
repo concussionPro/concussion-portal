@@ -364,4 +364,55 @@ describe('no OTHER checkout builder opens the manual promo field', () => {
     expect(last().discounts).toEqual([{ promotion_code: 'promo_LAUNCH20' }])
     expect(last().allow_promotion_codes).toBeUndefined()
   })
+
+  // The manual FIELD was closed, but the `promoCode` PARAMETER was still
+  // looked up and applied unconditionally — so posting the published,
+  // never-expiring CCM-online completion coupon took A$50 off any short
+  // course. SCAT6 is online-only by policy and cannot be product-scoped in
+  // Stripe (ad-hoc price_data), so the route must refuse it by name.
+  it('a short course refuses SCAT6 passed as a PARAMETER, not just in the field', async () => {
+    const { POST } = await import('@/app/api/courses/checkout/route')
+    const { NextRequest } = await import('next/server')
+    const { CONFIG } = await import('@/lib/config')
+    const { COURSES, getEffectiveStatus, getEffectivePrice } = await import(
+      '@/lib/ai-course/provider-catalogue'
+    )
+    const sellable = COURSES.find(
+      (c) =>
+        c.purchasableViaCheckout &&
+        getEffectiveStatus(c) === 'live' &&
+        getEffectivePrice(c).price !== null,
+    )
+    if (!sellable) throw new Error('no sellable short course in the catalogue — test is vacuous')
+
+    // SCAT6 is active in the Stripe account — the lookup WOULD find it.
+    knownPromotionCodes = [CONFIG.COURSE.PROMO_CODE]
+    await POST(
+      new NextRequest('https://portal.test/api/courses/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          courseSlug: sellable.id,
+          email: 'buyer@clinic.com',
+          promoCode: CONFIG.COURSE.PROMO_CODE,
+        }),
+      }),
+    )
+    expect(last().discounts).toBeUndefined()
+    expect(last().allow_promotion_codes).toBeUndefined()
+
+    // ...and lower-case / padded spellings are the same code.
+    await POST(
+      new NextRequest('https://portal.test/api/courses/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          courseSlug: sellable.id,
+          email: 'buyer@clinic.com',
+          promoCode: `  ${CONFIG.COURSE.PROMO_CODE.toLowerCase()} `,
+        }),
+      }),
+    )
+    expect(last().discounts).toBeUndefined()
+  })
 })

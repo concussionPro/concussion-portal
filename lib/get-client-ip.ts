@@ -34,7 +34,16 @@ function isCloudflareIp(ip: string): boolean {
   const parts = ip.split('.')
   if (parts.length !== 4) return false
   const n = ipToInt(ip)
-  return CF_RANGES.some(([network, mask]) => (n & mask) === network)
+  // `>>> 0` on the RESULT, not just the operands (2026-08-06 server-surface
+  // audit). `n` and `network` are uint32, but JS `&` returns a SIGNED int32 —
+  // so every range whose network address has the high bit set (first octet
+  // >= 128) compared negative-against-positive and could never match. That was
+  // 9 of the 15 Cloudflare ranges (173.245/141.101/190.93/188.114/197.234/
+  // 198.41/162.158/172.64/131.0), meaning getClientIp returned the Cloudflare
+  // EDGE address instead of walking on to the real client — collapsing every
+  // IP-keyed rate-limit bucket (login, magic-link, checkout, sst/start) onto a
+  // shared proxy IP.
+  return CF_RANGES.some(([network, mask]) => ((n & mask) >>> 0) === network)
 }
 
 /**

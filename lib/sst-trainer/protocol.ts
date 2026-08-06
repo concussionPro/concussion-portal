@@ -37,6 +37,47 @@ export type Condition =
   | 'long-covid'
   | 'cardiac'
 
+/**
+ * The canonical Condition allowlist — the ONE list every boundary validates
+ * against. `Condition` is a compile-time type only; every value that reaches
+ * this engine arrives over the wire (the patient app POSTs `condition` to
+ * /api/sst/session) or back out of the `sst_clinic_sessions.condition` column,
+ * so a `as Condition` cast is a lie TypeScript cannot catch.
+ */
+export const CONDITIONS = [
+  'concussion',
+  'mtbi',
+  'tbi',
+  'neuro-other',
+  'cancer',
+  'long-covid',
+  'cardiac',
+] as const satisfies readonly Condition[]
+
+/**
+ * Normalise an untrusted value to a Condition, falling back to the product
+ * default ('concussion') for anything unrecognised — the same default both
+ * call sites already expressed as `|| 'concussion'` for the null case.
+ *
+ * WHY THIS EXISTS (2026-08-06 server-surface audit): `condition` was stored
+ * from the request body with only a 40-char slice, then cast `as Condition`
+ * and indexed straight into CONDITION_DEFAULTS. Two live failure modes:
+ *  - an unrecognised string ('Concussion', 'post-concussion', '') → the
+ *    lookup is `undefined` and reading `.lowerPct` THROWS, 500-ing the GP /
+ *    ACC884 report for that patient;
+ *  - a PROTOTYPE key ('toString', 'constructor', 'valueOf') → the lookup
+ *    resolves to a Function.prototype member, does NOT throw, and silently
+ *    yields `lowerBpm: NaN, upperBpm: NaN, sessionMinutes: undefined` — a
+ *    clinical training band of "NaN-NaN bpm" on a printed prescription, and
+ *    NaN written into the integer band columns.
+ * Use `Object.hasOwn` so the prototype chain can never satisfy the lookup.
+ */
+export function asCondition(raw: unknown): Condition {
+  return typeof raw === 'string' && (CONDITIONS as readonly string[]).includes(raw)
+    ? (raw as Condition)
+    : 'concussion'
+}
+
 /** How the graded test is being performed — stored on the result for the clinician. */
 export type TestModality = 'treadmill' | 'bike' | 'walk' | 'other'
 
@@ -267,7 +308,13 @@ export function computePrescription(
   condition: Condition = 'concussion',
   opts: { restingHr?: number | null } = {},
 ): Prescription {
-  const d = CONDITION_DEFAULTS[condition]
+  // FAIL SAFE, never NaN: `condition` reaches here from the wire and from the
+  // DB column, so it is normalised through the allowlist rather than trusted.
+  // An own-property lookup keeps 'toString'/'constructor' off the prototype
+  // chain (see asCondition) — the difference between a real band and a printed
+  // "NaN-NaN bpm" prescription.
+  const resolved = asCondition(condition)
+  const d = CONDITION_DEFAULTS[resolved]
   const lowerBpm = Math.round(hrt * d.lowerPct)
   const upperBpm = Math.round(hrt * d.upperPct)
 

@@ -165,8 +165,21 @@ async function ensureColumns() {
     // Clinic Hub Pack seat marker (2026-08-06) — see User.hubPackSeatAt. The
     // pack sells ONLINE seats; the practical day is a separate A$600 add-on.
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS hub_pack_seat_at TIMESTAMPTZ`
-  } catch {
-    // Column already exists or permissions differ — safe to continue
+    // Progress-nudge opt-out (2026-08-06 server-surface audit). updateUserProfile
+    // has been WRITING this column since it shipped, but nothing ever created
+    // it — production `users` has no `progress_emails_opted_out`. Every PATCH
+    // /api/user/profile therefore failed with 42703 and 500'd, which meant the
+    // SETTINGS UNSUBSCRIBE TOGGLE HAS NEVER WORKED: the email_suppression
+    // insert sits after that UPDATE, so a settings-toggle unsub reached
+    // neither the flag nor the master blacklist. Unsubs are zero-tolerance.
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_emails_opted_out BOOLEAN NOT NULL DEFAULT false`
+  } catch (err) {
+    // A transient failure (lock/statement timeout) on an early ALTER used to
+    // skip every later one silently AND still latch columnMigrated=true, so
+    // the process spent its whole life 42703-ing with no clue why. Log it and
+    // leave the flag unset so the next call retries.
+    console.error('[users] ensureColumns migration failed — will retry:', err)
+    return
   }
   await backfillHubPackSeats()
   columnMigrated = true
@@ -633,15 +646,19 @@ export async function unsubscribeUser(email: string): Promise<boolean> {
   const { rowCount } = await sql`
     UPDATE users SET nurture_unsubscribed = true WHERE LOWER(email) = LOWER(${email})
   `
-  try {
-    await sql`
-      INSERT INTO email_suppression (email, reason, source)
-      VALUES (${email.toLowerCase()}, 'unsubscribed', 'admin-unsubscribe')
-      ON CONFLICT (email) DO NOTHING
-    `
-  } catch (err) {
-    console.error(`[unsubscribeUser] email_suppression insert failed for ${email.slice(0, 3)}***:`, err)
-  }
+  // This write MUST NOT be swallowed. email_suppression is the master
+  // blacklist; nurture_unsubscribed above only covers the users-table lanes.
+  // Catching here meant a transient DB error left the address unsubscribed
+  // from nurture but still fully reachable by the prospect, partner,
+  // acc-followup, aus-neuro and workshop-date-float engines — forever, and
+  // with the caller told it had succeeded. Unsubs are zero-tolerance, so the
+  // failure propagates: /api/unsubscribe already turns a throw into an honest
+  // "we could not process your unsubscribe" page with the manual fallback.
+  await sql`
+    INSERT INTO email_suppression (email, reason, source)
+    VALUES (${email.toLowerCase()}, 'unsubscribed', 'admin-unsubscribe')
+    ON CONFLICT (email) DO NOTHING
+  `
   return (rowCount ?? 0) > 0
 }
 
@@ -657,24 +674,31 @@ export async function updateUserProfile(
   const newUnsub = updates.nurtureUnsubscribed !== undefined ? updates.nurtureUnsubscribed : (user.nurtureUnsubscribed || false)
   const newProgressOptOut = updates.progressEmailsOptedOut !== undefined ? updates.progressEmailsOptedOut : (user.progressEmailsOptedOut || false)
 
+  // This function writes progress_emails_opted_out, so it must be the thing
+  // that guarantees the column exists — findUserById does not run the
+  // migration (2026-08-06 audit: the column was never created anywhere, so
+  // every call 42703'd and 500'd the settings page).
+  await ensureColumns()
+
+  // SUPPRESSION FIRST. The master-blacklist write used to sit AFTER the UPDATE
+  // above, so any failure in the users write — which is exactly what was
+  // happening — swallowed the unsubscribe entirely: the user was told nothing,
+  // the flag never set, and the address stayed reachable by every cold lane.
+  // Zero-tolerance means the blacklist write must not be downstream of
+  // anything that can fail. Not swallowed, for the same reason as
+  // unsubscribeUser(): reporting a successful opt-out while the blacklist
+  // write failed is how a suppressed address keeps receiving cold outreach.
+  if (updates.nurtureUnsubscribed === true) {
+    await sql`
+      INSERT INTO email_suppression (email, reason, source)
+      VALUES (${user.email.toLowerCase()}, 'unsubscribed', 'settings-toggle')
+      ON CONFLICT (email) DO NOTHING
+    `
+  }
+
   await sql`
     UPDATE users SET name = ${newName}, nurture_unsubscribed = ${newUnsub}, progress_emails_opted_out = ${newProgressOptOut} WHERE id = ${userId}
   `
-
-  // Zero-tolerance rule: ANY unsubscribe writes the master blacklist too.
-  // Settings-toggle unsubs previously only set nurture_unsubscribed, leaving
-  // the user reachable by the prospect/partner lanes (2026-07-05 audit).
-  if (updates.nurtureUnsubscribed === true) {
-    try {
-      await sql`
-        INSERT INTO email_suppression (email, reason, source)
-        VALUES (${user.email.toLowerCase()}, 'unsubscribed', 'settings-toggle')
-        ON CONFLICT (email) DO NOTHING
-      `
-    } catch (err) {
-      console.error(`[updateUserProfile] email_suppression insert failed for ${user.email.slice(0, 3)}***:`, err)
-    }
-  }
 
   return { ...user, name: newName, nurtureUnsubscribed: newUnsub, progressEmailsOptedOut: newProgressOptOut }
 }

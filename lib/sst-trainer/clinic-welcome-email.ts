@@ -30,7 +30,7 @@ function iosBlock(code: string): string {
         <div class="link-block">
           <p class="label">iPhone patients — native app (beta)</p>
           <a href="${escapeHtml(CONFIG.SST_TESTFLIGHT_URL)}">${escapeHtml(CONFIG.SST_TESTFLIGHT_URL)}</a>
-          <p class="note">iPhone patients: install Apple's free TestFlight app, open this link, then enter your clinic code <strong>${code}</strong>. The native app pairs Bluetooth heart-rate devices live, which iPhone browsers cannot. (App Store release is in review — this beta is the same app.)</p>
+          <p class="note">iPhone patients: install Apple's free TestFlight app, open this link, then enter your clinic code <strong>${code}</strong>. The native app pairs Bluetooth heart-rate devices live, which iPhone browsers cannot. (The App Store release is still in progress — this beta is the same app.)</p>
         </div>`
   }
   return ''
@@ -121,7 +121,11 @@ export function buildWelcomeEmail(args: {
           </div>
           <div class="step">
             <div class="step-num">2</div>
-            <div><strong>Give a patient the app link</strong> — they open it on their phone, add it to their home screen, enter your clinic code and their name, and pair a heart-rate source (Bluetooth monitor or phone camera).</div>
+            <div><strong>Give a patient the app link</strong> — they open it on their phone, add it to their home screen, enter your clinic code and their name, and pair a <strong>Bluetooth heart-rate monitor</strong>.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">&nbsp;</div>
+            <div style="font-size: 13.5px; color: #64748b;">A chest strap or optical armband is required for a graded test — the phone camera is a resting spot-check only and never tracks a live session, so a camera-paired test is not heart-rate verified.</div>
           </div>
           <div class="step">
             <div class="step-num">3</div>

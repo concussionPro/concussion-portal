@@ -6,7 +6,7 @@ import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
 import { getClinicUsage, getClinic } from '@/lib/sst-trainer/clinic-registry'
-import { detectThreshold, computePrescription } from '@/lib/sst-trainer/protocol'
+import { detectThreshold, computePrescription, CONDITIONS } from '@/lib/sst-trainer/protocol'
 import type { TestStage, TestInput, Condition } from '@/lib/sst-trainer/protocol'
 
 /**
@@ -102,7 +102,17 @@ export async function POST(request: NextRequest) {
       return Number.isFinite(n) && n > 0 && n < 1000 ? Math.round(n) : null
     }
     const patientLabel = typeof body.patientLabel === 'string' ? body.patientLabel.trim().slice(0, 80) || null : null
-    const condition = typeof body.condition === 'string' ? body.condition.slice(0, 40) : null
+    // ALLOWLIST at the write boundary (2026-08-06 server-surface audit): this
+    // value was stored raw (40-char slice only) and later cast `as Condition`
+    // straight into the prescription engine's defaults table. An unrecognised
+    // string 500-ed the patient's GP/ACC884 report on read, and a prototype key
+    // ('toString') produced a NaN-NaN bpm band that was then written into the
+    // integer band columns. Unrecognised → null, which every reader already
+    // treats as the 'concussion' default.
+    const rawCondition = typeof body.condition === 'string' ? body.condition.trim() : ''
+    const condition = (CONDITIONS as readonly string[]).includes(rawCondition)
+      ? (rawCondition as Condition)
+      : null
     // Cap the payload so a malformed client can't write unbounded JSON.
     const payload = body.payload && typeof body.payload === 'object' ? body.payload : {}
     if (JSON.stringify(payload).length > 20_000) {
@@ -252,13 +262,11 @@ export async function POST(request: NextRequest) {
       storedHrt = derived.hrt != null ? Math.round(derived.hrt) : null
 
       if (storedHrt != null) {
-        try {
-          const rx = computePrescription(storedHrt, ((condition as Condition) || 'concussion'))
-          storedBandLow = rx.lowerBpm
-          storedBandHigh = rx.upperBpm
-        } catch {
-          /* unrecognised condition → keep the client-provided band */
-        }
+        // `condition` is allowlisted above, so computePrescription can no
+        // longer throw or return a NaN band here.
+        const rx = computePrescription(storedHrt, condition ?? 'concussion')
+        storedBandLow = rx.lowerBpm
+        storedBandHigh = rx.upperBpm
       } else {
         storedBandLow = null
         storedBandHigh = null

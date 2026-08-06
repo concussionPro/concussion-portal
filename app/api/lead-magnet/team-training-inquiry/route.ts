@@ -44,6 +44,19 @@ export async function POST(request: NextRequest) {
 
     const ipLimit = await rateLimit({ key: `team_training:ip:${ip}`, limit: 5, windowSec: 15 * 60 })
     if (!ipLimit.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    // PER-EMAIL cap, matching both sibling lead-magnet routes (2026-08-06
+    // server-surface audit). The IP limit alone is defeated by rotating IPs,
+    // and every accepted request sends TWO emails — one to the visitor-supplied
+    // address and one to CONFIG.CONTACT_EMAIL — so this route could be used to
+    // bomb a third party from CEA's sending domain and flood the founder's
+    // inbox. Both are deliverability-reputation risks on a domain already
+    // running close to Google's 0.30% complaint line.
+    const emailLimit = await rateLimit({
+      key: `team_training:email:${email.toLowerCase().trim()}`,
+      limit: 3,
+      windowSec: 15 * 60,
+    })
+    if (!emailLimit.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
     const normalizedEmail = email.toLowerCase().trim()
     const safeName = (name || '').slice(0, 100).trim() || null
@@ -143,7 +156,9 @@ export async function POST(request: NextRequest) {
       console.error('team-training confirmation failed:', err)
     }
 
-    return NextResponse.json({ success: true, id: inserted[0].id })
+    // No internal row id in the response — it is sequential and discloses
+    // inquiry volume to anyone who submits the form.
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Team training inquiry error:', error)
     return NextResponse.json({ error: 'Submission failed' }, { status: 500 })

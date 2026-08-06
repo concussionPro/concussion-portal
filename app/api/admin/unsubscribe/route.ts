@@ -48,7 +48,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email required' }, { status: 400 })
   }
 
-  const success = await unsubscribeUser(email)
+  // unsubscribeUser() no longer swallows a failed email_suppression write
+  // (2026-08-06) — report the failure plainly rather than 500-ing opaquely,
+  // so an admin knows the address is NOT on the master blacklist yet.
+  let success: boolean
+  try {
+    success = await unsubscribeUser(email)
+  } catch (err) {
+    console.error(`[admin/unsubscribe] failed for ${email.slice(0, 3)}***:`, err)
+    return NextResponse.json(
+      { error: 'Unsubscribe failed — address is NOT suppressed. Retry.' },
+      { status: 500 },
+    )
+  }
   if (success) {
     console.log(`Admin unsubscribed: ${email.slice(0, 3)}***`)
     await recordAdminAction(request, { route: '/api/admin/unsubscribe', target: email })

@@ -240,6 +240,12 @@ export function dominantDiscipline(team: ClinicTeam): Discipline {
   const order: Discipline[] = [
     'osteopaths',
     'physiotherapists',
+    // 'chiropractors' was MISSING from this list (2026-08-06 audit). The loop
+    // only ever inspects disciplines named here, so a chiro-dominant clinic
+    // could never win — `best` stayed at its 'osteopaths' seed and the cold
+    // email opened "Most osteos in <city> aren't set up for it yet" to a
+    // chiropractic practice.
+    'chiropractors',
     'generalPractitioners',
     'sportsMedicineDoctors',
     'exercisePhys',
