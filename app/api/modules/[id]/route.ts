@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { resolveModuleForAccess, type AccessLevel } from '@/lib/module-access'
-import { CLINIC_DEMO_KEY, DEMO_KEY } from '@/lib/demo-key'
+import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
 import { isDemoUserId } from '@/lib/demo-session'
 import { getCurrentAccessLevel } from '@/lib/users'
 
@@ -44,27 +44,8 @@ export async function GET(
     // without this (2026-07-27).
     const clinicDemo =
       request.cookies.get('clinic_demo')?.value === CLINIC_DEMO_KEY
-    // REVIEWER KEY (2026-08-07). Every other course in the catalogue already
-    // honours demo_key — CRM, the AI course, RTP, the toolkit, the references,
-    // Clinical Testing — but CCM did not, so an accreditation reviewer or a
-    // partner following a /demo/* link got the full catalogue EXCEPT the
-    // flagship. Measured before changing anything: CRM module 1 served 6,711
-    // characters to a reviewer while CCM modules 1-8 served an 800-character
-    // shell.
-    //
-    // Scope is 'full-course' because a reviewer assessing the course for
-    // accreditation or distribution must see the paid content; 'preview' would
-    // show them the truncated trial and misrepresent the product.
-    //
-    // This is the SAME shared key the accreditation links use, deliberately:
-    // seventeen gates across twelve files already accept it, and introducing a
-    // second key means any gate I miss becomes a locked page for the partner.
-    // Rotating DEMO_KEY (or setting HEIDI_DEMO_KEY) revokes every reviewer link
-    // at once, which is the documented revocation path.
-    const reviewerKey = request.cookies.get('demo_key')?.value === DEMO_KEY
     let accessLevel: AccessLevel | null =
       sessionData?.accessLevel ??
-      (reviewerKey ? 'full-course' : null) ??
       (clinicDemo ? 'preview' : null) ??
       (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
 

@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { CLINIC_DEMO_KEY, DEMO_KEY } from '@/lib/demo-key'
+import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
 import { isDemoUserId } from '@/lib/demo-session'
 import { getCurrentAccessLevel } from '@/lib/users'
 import { resolveModuleForAccess, type AccessLevel } from '@/lib/module-access'
@@ -39,17 +39,10 @@ export default async function ModulePage({
   // Clinic-prospect demo (/demo/clinic) carries no session — the clinic_demo
   // cookie maps to PREVIEW scope, mirroring /api/modules/[id].
   const clinicDemo = cookieStore.get('clinic_demo')?.value === CLINIC_DEMO_KEY
-  // REVIEWER KEY (2026-08-07) — must mirror /api/modules/[id] exactly, or the
-  // page and its data source disagree and the reviewer gets a rendered shell
-  // with no content. Every other course already honoured demo_key; CCM did
-  // not, so a reviewer saw the whole catalogue except the flagship. See the
-  // fuller note in the API route.
-  const reviewerKey = cookieStore.get('demo_key')?.value === DEMO_KEY
   // DEV-ONLY review bypass, mirroring the API route so localhost review of the
   // whole course keeps working without a login. Production is untouched.
   let accessLevel: AccessLevel | null =
     session?.accessLevel ??
-    (reviewerKey ? 'full-course' : null) ??
     (clinicDemo ? 'preview' : null) ??
     (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
 
@@ -99,14 +92,9 @@ export default async function ModulePage({
   // ANYTHING. Without this the server's whole reason for existing here (see the
   // header comment) was cancelled by a client-side auth spinner.
   const initialAuth = {
-    // reviewerKey counts as authenticated. Without it the server resolves the
-    // module and hands down full content, then the client sees
-    // authenticated:false and bounces to /login — content in hand, door shut.
-    // That mismatch is the whole failure mode this server component exists to
-    // prevent, so both halves must agree on who the viewer is.
-    authenticated: !!session || clinicDemo || reviewerKey,
+    authenticated: !!session || clinicDemo,
     email: session?.email ?? '',
-    isDemo: clinicDemo || reviewerKey || (session ? isDemoUserId(session.userId) : false),
+    isDemo: clinicDemo || (session ? isDemoUserId(session.userId) : false),
   }
 
   return <FlagshipModuleClient initialModuleData={initialModuleData} initialAuth={initialAuth} />
