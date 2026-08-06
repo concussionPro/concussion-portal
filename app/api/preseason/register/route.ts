@@ -104,7 +104,16 @@ export async function POST(request: Request) {
 
     // Rate limit already incremented atomically above
 
-    // Persist to Postgres for admin dashboard
+    // Persist to Postgres. NOT "for the admin dashboard" — `preseason_clinics`
+    // is the DURABLE record behind the KV key, and swallowing this failure left
+    // a clinic that worked (KV) but did not exist (PG). Three consequences, all
+    // silent: /api/preseason/submit's Postgres fallback has nothing to fall
+    // back to, adoptExistingClinicForEmail (clinic-registry) reads
+    // preseason_clinics EXCLUSIVELY and so mints the same clinician a SECOND
+    // code in the portal — splitting their patients across two codes, the exact
+    // bug that function exists to prevent — and the clinic never appears in
+    // admin. Compensate the KV write and make the clinician retry, which is
+    // the pattern createSstClinic already uses. 2026-08-06 degradation audit.
     try {
       await sql`
         INSERT INTO preseason_clinics (clinic_name, contact_name, email, code)
@@ -112,7 +121,14 @@ export async function POST(request: Request) {
         ON CONFLICT (code) DO NOTHING
       `
     } catch (err) {
-      console.error('Failed to persist clinic registration to Postgres:', err)
+      console.error('Failed to persist clinic registration to Postgres — rolling back the KV code:', err)
+      await kv.del(`clinic:${code}`).catch((delErr) => {
+        console.error(`[preseason/register] KV rollback failed — orphan code ${code} with no PG row:`, delErr)
+      })
+      return NextResponse.json(
+        { error: 'We could not finish setting up your clinic. Please try again in a moment.' },
+        { status: 503 }
+      )
     }
 
     // Add to user list for nurture emails (won't duplicate if already exists)

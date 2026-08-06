@@ -134,6 +134,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    // ── IDEMPOTENCY ─────────────────────────────────────────────────────────
+    // Svix retries on any non-2xx and can redeliver on its own, and this
+    // handler is NOT naturally idempotent: it appends a row to email_events
+    // and does `opened_count = opened_count + 1` / `clicked_count + 1` on
+    // prospect_outreach_log. A redelivery therefore inflates engagement — the
+    // exact metric the cold-outreach engine is steered by.
+    //
+    // Measured: email_id cc3dbc7b-…98963 carries TWO 'delivered' rows 6.8s
+    // apart (2026-05-30) — a real redelivery, silently double-counted.
+    //
+    // svix-id is the message id and is stable across retries. Reuses the
+    // Stripe webhook's processed_webhook_events table (namespaced) rather than
+    // inventing a second one; claimed BEFORE the writes and rolled back in the
+    // catch so a genuine failure still gets retried.
+    let dedupeKey: string | null = null
+    if (svixId) {
+      try {
+        const { rows } = await sql`
+          INSERT INTO processed_webhook_events (event_id, event_type, processed_at)
+          VALUES (${'resend:' + svixId}, ${type}, now())
+          ON CONFLICT (event_id) DO NOTHING
+          RETURNING event_id
+        `
+        if (rows.length === 0) {
+          console.log(`[Resend webhook] duplicate delivery ${svixId} (${type}) — skipped`)
+          return NextResponse.json({ received: true, duplicate: true })
+        }
+        dedupeKey = 'resend:' + svixId
+      } catch (dedupeErr) {
+        // Table missing (fresh env) or DB blip — process anyway rather than
+        // drop an event. Duplicate rows are recoverable; lost bounces are not.
+        console.warn('[Resend webhook] dedupe claim failed — processing without it:', dedupeErr)
+      }
+    }
+
+    try {
+
     // Resend account is shared with byronwebstudio.com.au (Local Leads project).
     // Tag every row with the project so admin queries can scope cleanly to
     // CEA without dropping Byron Web Studio analytics. Project inferred from
@@ -363,6 +400,18 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Resend] ${eventType}: ${email.slice(0, 3)}*** (${data.subject})`)
     return NextResponse.json({ received: true })
+    } catch (handlerErr) {
+      // Release the claim so Svix's retry actually re-runs the handler
+      // instead of being swallowed as a duplicate.
+      if (dedupeKey) {
+        try {
+          await sql`DELETE FROM processed_webhook_events WHERE event_id = ${dedupeKey}`
+        } catch (cleanupErr) {
+          console.error('[Resend webhook] failed to release dedupe claim:', cleanupErr)
+        }
+      }
+      throw handlerErr
+    }
   } catch (error) {
     console.error('Resend webhook error:', error)
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })

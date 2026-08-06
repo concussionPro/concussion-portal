@@ -369,6 +369,36 @@ export async function GET(request: Request) {
       // and the day-7 progress routing below is about course modules, which
       // this audience has deliberately not been asked to open.
       if (camePdfHunting) {
+        // MIGRATION GUARD. This routing switched an EXISTING audience onto a
+        // new track mid-flight. The two tracks use different audit-key
+        // namespaces (`scat_day*` vs `pdflead_day*`), so nothing dedupes
+        // across them — and their day numbers overlap (SCAT 0/3/7/10/14/28/42,
+        // PDF 3/14/28/45). A lead who received `scat_day14` yesterday sits at
+        // daysSince 15, which is still inside the day-14 catch-up window, so
+        // they would receive `pdflead_day14` today: a second email on the same
+        // beat, one day apart. Measured on 2026-08-06 against production: 14
+        // live users were queued for exactly this on the next cron run
+        // (e.g. jackson@propelphysiotherapy.com and
+        // supremefunctionsportstherapy@gmail.com, both sent scat_day14 on
+        // 08-05 and both at daysSince 15).
+        //
+        // Rule: the old lane's progress carries over. Skip any PDF-lead day the
+        // old sequence has already reached, and pick the track up at its next
+        // unsent beat. A brand-new PDF lead has only `scat_day0` (the welcome
+        // catch-up), so day 3 still sends — only genuine overlap is suppressed.
+        const { rows: priorScat } = await sql<{ max_day: number | null }>`
+          SELECT MAX(NULLIF(regexp_replace(audit_key, '^scat_day([0-9]+)_.*$', '\\1'), audit_key)::int) AS max_day
+          FROM email_audit_log
+          WHERE audit_key LIKE ${'scat_day%_' + user.id}
+        `
+        const oldLaneReachedDay = priorScat[0]?.max_day ?? -1
+        if (oldLaneReachedDay >= email.day) {
+          console.log(
+            `[Nurture] PDF-lead day ${email.day} skipped for ${redact(user.email)} — ` +
+              `the SCAT lane already reached day ${oldLaneReachedDay}`,
+          )
+          continue
+        }
         const auditKey = `pdflead_day${email.day}_${user.id}`
         const { rowCount: fresh } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (fresh === 0) continue
@@ -1317,9 +1347,34 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
       const html = nextEmail.template(checkout.name, checkout.recovery_url || undefined)
         .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
+      // CLAIM BEFORE SEND — the same doctrine every other lane in this cron
+      // uses (email_audit_log INSERT-first, rolled back on failure). This lane
+      // was the exception: it sent first and bumped `emails_sent` after, with
+      // nothing keyed to the step. Two overlapping executions of this route (a
+      // Vercel cron retry, or the admin trigger firing while the scheduled run
+      // is still going — `rows` is SELECTed once at the top and the loop runs
+      // for minutes) both read emails_sent = N and both sent email N+1 to the
+      // same abandoned buyer.
+      //
+      // The compare-and-set makes the counter itself the claim: only one runner
+      // can move N → N+1. `recovered = false` is re-checked here too, so a
+      // buyer whose purchase webhook landed while this loop was running stops
+      // getting "you left something behind" for a course they now own.
+      const { rowCount: claimed } = await sql`
+        UPDATE abandoned_checkouts
+           SET emails_sent = emails_sent + 1
+         WHERE id = ${checkout.id}
+           AND emails_sent = ${checkout.emails_sent}
+           AND recovered = false
+      `
+      if (!claimed) {
+        console.log(`[Abandoned] Step ${checkout.emails_sent + 1} for ${redact(checkout.email)} already claimed (or recovered) — skipping`)
+        continue
+      }
+
       try {
-        // sendEmail returns false (never throws) on failure — only advance
-        // the emails_sent counter on a real send, so failures retry next run.
+        // sendEmail returns false (never throws) on failure — release the claim
+        // so the next run retries instead of silently skipping the step.
         const sent = await sendEmail({
           to: checkout.email,
           scheduledAt: scheduler.next(checkout.email),
@@ -1336,18 +1391,27 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
         })
 
         if (!sent) {
-          console.error(`[Abandoned Checkout] Send failed for ${redact(checkout.email)} — will retry next run`)
+          console.error(`[Abandoned Checkout] Send failed for ${redact(checkout.email)} — releasing claim, will retry next run`)
+          await sql`
+            UPDATE abandoned_checkouts SET emails_sent = ${checkout.emails_sent}
+             WHERE id = ${checkout.id} AND emails_sent = ${checkout.emails_sent + 1}
+          `
           continue
         }
-
-        await sql`
-          UPDATE abandoned_checkouts SET emails_sent = emails_sent + 1 WHERE id = ${checkout.id}
-        `
 
         emailsSent++
         console.log(`[Abandoned] Email ${checkout.emails_sent + 1} → ${redact(checkout.email)}`)
       } catch (err) {
         console.error(`[Abandoned Checkout] Failed to send to ${redact(checkout.email)}:`, err)
+        // Same release as the !sent path — a throw must not consume the step.
+        try {
+          await sql`
+            UPDATE abandoned_checkouts SET emails_sent = ${checkout.emails_sent}
+             WHERE id = ${checkout.id} AND emails_sent = ${checkout.emails_sent + 1}
+          `
+        } catch (releaseErr) {
+          console.error('[Abandoned Checkout] Failed to release claim:', releaseErr)
+        }
       }
     }
   }

@@ -9,6 +9,7 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import { isOwnerEmail } from '@/lib/owner'
 import { clearIdentity } from '@/lib/analytics'
+import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -129,8 +130,13 @@ export function Sidebar() {
     //                     person's browsing was recorded under the previous
     //                     clinician's email address.
     //   login_redirect  — a stale gated destination bounces the NEXT sign-in.
+    //   concussion-pro-progress — the course progress blob (added 2026-08-06).
+    //                     Not user-scoped, and the next sign-in MERGES it into
+    //                     whoever logs in next, carrying quiz answers that the
+    //                     certificate route treats as proof of completion.
     // Runs even if the logout POST threw — the browser state is ours to clear.
     clearIdentity()
+    clearLocalLearnerState()
     try { localStorage.removeItem('login_redirect') } catch { /* private mode */ }
     router.push('/')
   }

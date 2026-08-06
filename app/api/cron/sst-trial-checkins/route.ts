@@ -117,19 +117,31 @@ export async function GET(request: Request) {
     // plan column is added lazily by setSstClinicPlan — mirror the guard here
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
 
+    // `upper(clinic_code) = upper(c.code)` — NOT `clinic_code = c.code`.
+    // The only index on sst_clinic_sessions is
+    //   idx_sst_clinic_sessions_code ON (upper(clinic_code), created_at DESC)
+    // (lib/sst-trainer/clinic-registry.ts), and a raw-column predicate cannot
+    // use a functional index. Written raw, both correlated subqueries below
+    // seq-scan the whole session table ONCE PER CLINIC — measured on prod
+    // 2026-08-06 as 52 seq scans for 26 clinics, i.e. O(clinics x sessions).
+    // Every other reader of this table (registry, reports, session, patient
+    // summary) already writes the upper() form and hits the index; this cron
+    // was the lone exception. Codes are generated uppercase (verified on prod:
+    // 0 non-uppercase rows in either table), so the rewrite is behaviour-
+    // identical and index-usable.
     const { rows } = await sql`
       SELECT c.code, c.clinic_name, c.contact_name, c.email, c.plan, c.created_at,
         (WITH sess AS (
            SELECT NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl,
                   NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref
-           FROM sst_clinic_sessions WHERE clinic_code = c.code
+           FROM sst_clinic_sessions WHERE upper(clinic_code) = upper(c.code)
          ), rl AS (
            SELECT ref, MAX(lbl) AS lbl FROM sess WHERE ref IS NOT NULL AND lbl IS NOT NULL GROUP BY ref
          )
          SELECT COUNT(DISTINCT COALESCE(sess.lbl, rl.lbl, sess.ref))
          FROM sess LEFT JOIN rl ON rl.ref = sess.ref
          WHERE COALESCE(sess.lbl, rl.lbl, sess.ref) IS NOT NULL) AS patients,
-        (SELECT COUNT(*) FROM sst_clinic_sessions s WHERE s.clinic_code = c.code) AS sessions
+        (SELECT COUNT(*) FROM sst_clinic_sessions s WHERE upper(s.clinic_code) = upper(c.code)) AS sessions
       FROM sst_clinics c
       WHERE c.email IS NOT NULL AND c.email <> ''
     `

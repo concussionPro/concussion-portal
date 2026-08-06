@@ -135,7 +135,13 @@ export default async function ReadyToTrainPage() {
             // only once at least one place is genuinely confirmed; otherwise the
             // city stands on its interest line.
             const showProgress = showCount && !c.ranAlready && c.paid > 0
-            const interestOnly = showCount && !showProgress && c.interested > 0
+            // `!c.ranAlready` matters: a completed city has its OWN interest
+            // line below ("asked to be told when Melbourne runs again"), so
+            // without this Melbourne rendered the interest count TWICE, in two
+            // slightly different sentences, one under the other (live on
+            // 2026-08-06). A completed city is never "collecting toward its
+            // first date", which is what this sentence says.
+            const interestOnly = showCount && !showProgress && !c.ranAlready && c.interested > 0
             const pct = Math.min(100, Math.round((c.paid / threshold) * 100))
             return (
               <div key={c.slug} className="rounded-xl border border-border p-5">

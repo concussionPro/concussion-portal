@@ -296,6 +296,11 @@ export async function POST(request: NextRequest) {
   const isFormPost = contentType.includes('application/x-www-form-urlencoded') ||
     contentType.includes('multipart/form-data')
 
+  // Set once the one-time token has been claimed below; released in the catch
+  // so a failure after the claim doesn't burn a paying buyer's only way in.
+  let claimedTokenHash: string | null = null
+  let tokenClaimed = false
+
   try {
     const { searchParams } = new URL(request.url)
     let token = searchParams.get('token')
@@ -360,11 +365,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Replay protection: hash token and check if already used
+    // Replay protection: ATOMIC CLAIM, not check-then-set.
+    //
+    // This used to SELECT here and INSERT ~70 lines below, after the session
+    // was minted. Two deliveries of the same link inside that window — the
+    // /auth/verify client page racing the no-JS interstitial form post, a
+    // double-tapped email button, a mail-gateway prefetch landing alongside the
+    // human click — both read "unused" and both minted a year-long session
+    // from a single one-time token. The INSERT..ON CONFLICT DO NOTHING at the
+    // end hid it: the loser's write silently no-opped and it still returned
+    // success.
+    //
+    // Now the INSERT itself is the claim: exactly one caller can own a token.
+    // Anything that throws afterwards releases the claim (see the catch), so a
+    // transient failure still leaves the buyer a working link.
     await ensureTokenTable()
     const tokenHash = hashToken(token)
-    const { rows: existing } = await sql`SELECT 1 FROM used_magic_tokens WHERE token_hash = ${tokenHash} LIMIT 1`
-    if (existing.length > 0) {
+    const { rows: claimed } = await sql`
+      INSERT INTO used_magic_tokens (token_hash) VALUES (${tokenHash})
+      ON CONFLICT DO NOTHING
+      RETURNING token_hash
+    `
+    tokenClaimed = claimed.length > 0
+    if (!tokenClaimed) {
       // Second click on an already-used link — if the first click set a
       // still-valid session, complete the journey instead of erroring.
       const session = existingValidSession(request)
@@ -401,6 +424,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+    claimedTokenHash = tokenHash
 
     // Update last login (non-critical, async fire-and-forget)
     updateLastLogin(tokenData.userId).catch(err =>
@@ -433,8 +457,7 @@ export async function POST(request: NextRequest) {
       rememberMe
     )
 
-    // Mark token as used (replay protection)
-    await sql`INSERT INTO used_magic_tokens (token_hash) VALUES (${tokenHash}) ON CONFLICT DO NOTHING`
+    // (Token already claimed atomically above — nothing to mark here.)
     // Prune tokens older than 366 days (non-blocking best-effort)
     sql`DELETE FROM used_magic_tokens WHERE used_at < now() - interval '366 days'`.catch(() => {})
 
@@ -481,6 +504,18 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     console.error('Verification error:', error)
+
+    // Release the one-time-token claim. Without this, a blip in the landing-
+    // target lookup (which reads the DB) after the claim would permanently burn
+    // the link — and for a purchase welcome email that link is the buyer's only
+    // way into what they just paid for.
+    if (claimedTokenHash) {
+      try {
+        await sql`DELETE FROM used_magic_tokens WHERE token_hash = ${claimedTokenHash}`
+      } catch (releaseErr) {
+        console.error('Failed to release magic-token claim:', releaseErr)
+      }
+    }
 
     // Log critical verification errors
     if (error instanceof Error) {

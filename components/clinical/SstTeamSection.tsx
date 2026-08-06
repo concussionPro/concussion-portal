@@ -23,6 +23,10 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // The seat was created but the invite email never left (opted-out address,
+  // or a send failure). Not an error — the colleague HAS access — but the
+  // owner has to know nobody is going to tell them that.
+  const [notice, setNotice] = useState<string | null>(null)
 
   const load = useCallback(() => {
     if (demo) {
@@ -45,6 +49,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
     if (demo || busy || !name.trim()) return
     setBusy(true)
     setError(null)
+    setNotice(null)
     try {
       const res = await fetch('/api/clinical-testing/team', {
         method: 'POST',
@@ -55,6 +60,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       if (!res.ok) {
         setError(data?.message || data?.error || 'Could not add practitioner.')
       } else {
+        if (typeof data?.inviteNote === 'string') setNotice(data.inviteNote)
         setName(''); setEmail(''); load()
       }
     } catch {
@@ -146,6 +152,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
         </p>
       )}
       {error && <p className="mt-2 text-[12px] text-red-600">{error}</p>}
+      {notice && <p className="mt-2 text-[12px] text-amber-700">{notice}</p>}
     </div>
   )
 }

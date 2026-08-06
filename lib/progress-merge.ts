@@ -105,11 +105,32 @@ function mergeAttemptHistory(a: unknown, b: unknown): unknown {
  * the incoming side winning a tie so the latest submission stays authoritative
  * — the certificate route re-verifies the stored answers, so the live set must
  * be the most recent one.
+ *
+ * EXCEPT when the tie-winner carries NO answers (2026-08-06 state audit). Every
+ * other axis in this function is monotone; quiz answers were the one field that
+ * could go BACKWARDS, and they are the only thing /api/certificate actually
+ * trusts (lib/quiz-verify.ts returns 'no-answers' → a hard 403 on the CPD
+ * document). A client that posts a completed quiz with quizAnswers null — every
+ * pre-2026-08 record does, see the migration in contexts/ProgressContext.tsx —
+ * tied on score with a stored entry that HAS the answers, won the tie, and
+ * overwrote the evidence with null. Measured on production 2026-08-06: 4 such
+ * rows across 2 accounts, one of them a paying customer, permanently unable to
+ * download a certificate they had passed. An answer-less submission is not a
+ * "more recent authoritative" one — it is the same attempt with the proof
+ * missing, so it must never displace a side that still holds it.
  */
 export function mergeProgressEntry(stored: Json, incoming: Json): Json {
   const storedRank = stored.quizCompleted === true ? 2 + num(stored.quizScore) : answerCount(stored.quizAnswers) > 0 ? 1 : 0
   const incomingRank = incoming.quizCompleted === true ? 2 + num(incoming.quizScore) : answerCount(incoming.quizAnswers) > 0 ? 1 : 0
-  const quizSource = incomingRank >= storedRank ? incoming : stored
+  const incomingHasAnswers = answerCount(incoming.quizAnswers) > 0
+  const storedHasAnswers = answerCount(stored.quizAnswers) > 0
+  const quizSource =
+    incomingRank > storedRank
+      ? incoming
+      : incomingRank < storedRank
+        ? stored
+        // Tie: latest wins, unless it would trade real answers for none.
+        : (!incomingHasAnswers && storedHasAnswers) ? stored : incoming
 
   return {
     // Anything either side knows about, with the fields below taking precedence.

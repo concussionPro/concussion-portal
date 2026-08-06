@@ -786,6 +786,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Consent is required to submit this baseline.' }, { status: 400 })
     }
 
+    // SYMPTOM SCALE COMPLETENESS — server side (2026-08-06 residual sweep).
+    // app/preseason/b/[code]/page.tsx already refuses to submit a partial scale
+    // ("Fail closed: never file a symptom scale with unanswered items"), but the
+    // gate lived ONLY in the client while the server is the record of truth.
+    // Unanswered items arrive as the UNRATED sentinel -1, and both severity
+    // sums here are bare `reduce((a,b) => a+b, 0)` with no clamp (the client
+    // clamps with Math.max(0, b) — the fix was applied to one side only). So a
+    // stale tab on an older bundle, an offline replay, or any crafted client
+    // files a baseline whose PDF prints "Headache: -1" and a Severity Score
+    // UNDERSTATED by one point per skipped item — potentially negative — into
+    // preseason_baselines.symptom_severity, which is the comparator every
+    // future post-injury assessment is measured against. Reject, don't coerce:
+    // silently clamping would file a scale as complete that never was.
+    const ratings = body.symptoms?.ratings
+    if (
+      !Array.isArray(ratings) ||
+      ratings.length !== SYMPTOMS.length ||
+      ratings.some((r) => typeof r !== 'number' || !Number.isInteger(r) || r < 0 || r > 6)
+    ) {
+      return NextResponse.json(
+        {
+          error: `All ${SYMPTOMS.length} symptom items must be answered (0-6) before this baseline can be filed.`,
+        },
+        { status: 400 }
+      )
+    }
+
     // Under-16s additionally require a parent/guardian consent (FIX 2).
     const athleteAge = ageFromDob(body.athlete.dob)
     if (athleteAge !== null && athleteAge < MINOR_CONSENT_AGE && body.consent.guardian?.agreed !== true) {
@@ -802,9 +829,50 @@ export async function POST(request: Request) {
     if (isDemo) {
       clinic = { clinicName: 'Demo — Try It Yourself', contactName: 'Demo', email: '', createdAt: new Date().toISOString() }
     } else {
-      // Validate clinic
-      clinic = await kv.get<ClinicData>(`clinic:${body.clinicCode.toUpperCase()}`)
+      // Validate clinic. KV is the live layer; `preseason_clinics` is the
+      // durable mirror written at registration. A bare `kv.get() → null →
+      // 404` discarded an ENTIRE 20-minute baseline (consent, symptoms,
+      // cognitive, oculomotor — all of it lives in this POST body and nowhere
+      // else) whenever KV blipped or the key was evicted, with no retry path.
+      // Fall back to Postgres, and distinguish "KV is broken" (503, retryable)
+      // from "this code really doesn't exist" (404). 2026-08-06 audit.
+      const code = body.clinicCode.toUpperCase()
+      let kvFailed = false
+      try {
+        clinic = await kv.get<ClinicData>(`clinic:${code}`)
+      } catch (kvErr) {
+        console.error(`[preseason/submit] KV lookup failed for ${code}:`, kvErr)
+        kvFailed = true
+      }
       if (!clinic) {
+        try {
+          const { rows } = await sql<{ clinic_name: string; contact_name: string; email: string; created_at: Date | string | null }>`
+            SELECT clinic_name, contact_name, email, created_at
+            FROM preseason_clinics WHERE code = ${code} LIMIT 1
+          `
+          if (rows[0]) {
+            clinic = {
+              clinicName: rows[0].clinic_name,
+              contactName: rows[0].contact_name,
+              email: rows[0].email,
+              createdAt: rows[0].created_at ? new Date(rows[0].created_at).toISOString() : new Date().toISOString(),
+            }
+            console.warn(`[preseason/submit] KV missed ${code} — served from preseason_clinics`)
+          }
+        } catch (pgErr) {
+          console.error(`[preseason/submit] Postgres clinic fallback failed for ${code}:`, pgErr)
+          kvFailed = true
+        }
+      }
+      if (!clinic) {
+        // Never tell an athlete their valid code is invalid because our cache
+        // is down — that answer is unrecoverable and their data is gone.
+        if (kvFailed) {
+          return NextResponse.json(
+            { error: 'We could not verify your clinic code right now. Please try submitting again in a moment.' },
+            { status: 503 }
+          )
+        }
         return NextResponse.json({ error: 'Invalid clinic code' }, { status: 404 })
       }
     }

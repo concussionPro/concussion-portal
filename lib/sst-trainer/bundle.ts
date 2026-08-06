@@ -52,6 +52,14 @@ export interface BundledSubscription {
 /** Months of platform included with a course enrolment before the renewal prompt. */
 export const INCLUDED_PLATFORM_MONTHS = 12
 
+/**
+ * Ordering of paid tiers by how much they allow, so provisioning can tell an
+ * UPGRADE from a DOWNGRADE. Mirrors TIER_ACTIVE_PATIENT_CAP (single 5 <
+ * clinic 10 < enterprise unlimited). A NULL tier on an active plan is
+ * unlimited and is handled separately — it outranks everything here.
+ */
+const TIER_RANK: Record<string, number> = { single: 1, clinic: 2, enterprise: 3 }
+
 export async function provisionPlatformForBuyer(
   email: string,
   name: string,
@@ -111,7 +119,32 @@ export async function provisionPlatformForBuyer(
     // never an automatic charge. A domestic course checkout saves no payment
     // method and the buyer consented to a one-off course fee, not to
     // off-session billing a year later.
-    await setSstClinicPlan(clinic.code, 'active', { tier: 'single' }, INCLUDED_PLATFORM_MONTHS)
+    //
+    // A FLOOR, NEVER A DOWNGRADE. setSstClinicPlan writes `tier = COALESCE(new,
+    // old)`, so passing 'single' OVERWRITES whatever the clinic already had.
+    // Without the guard below, buying a course made an existing clinic WORSE:
+    //   - an alumni/comp clinic (active, tier NULL = unlimited) dropped to a
+    //     5-active-patient cap AND gained a 12-month expiry it never had;
+    //   - a clinic PAYING $99/mo on tier 'clinic' (10 active) dropped to 5
+    //     while still being billed $99.
+    // Both are live shapes: all 26 production clinics are active/tier-NULL
+    // comps, and alumni are the warmest CRM buyers we have.
+    const alreadyBetter =
+      clinic.plan === 'active' && (clinic.tier === null || TIER_RANK[clinic.tier] > TIER_RANK.single)
+    const hasRealSubscription = !!(await getSstClinicStripeSubscription(clinic.code))
+    if (alreadyBetter || hasRealSubscription) {
+      // Their existing entitlement already meets or beats what the enrolment
+      // includes, so the enrolment adds nothing to take away. Leave tier and
+      // included_until exactly as they are — in particular do NOT stamp an
+      // expiry onto an open-ended comp, and do NOT let a course purchase
+      // reach into a period Stripe is governing.
+      console.log(
+        `[bundle] clinic ${clinic.code} already entitled beyond the included tier ` +
+          `(plan=${clinic.plan}, tier=${clinic.tier ?? 'unlimited'}, subscription=${hasRealSubscription}) — left unchanged`,
+      )
+    } else {
+      await setSstClinicPlan(clinic.code, 'active', { tier: 'single' }, INCLUDED_PLATFORM_MONTHS)
+    }
   } else {
     console.warn(
       `[bundle] clinic ${clinic.code} provisioned WITHOUT a renewal subscription — staying on the trial cap. ` +

@@ -131,6 +131,32 @@ function encodeAttachments(
 }
 
 /**
+ * What the console-only path should REPORT to the caller.
+ *
+ * In dev/test "logged instead of sent" is the intended behaviour, so `true`
+ * (success) is honest. In PRODUCTION a null client means RESEND_API_KEY is
+ * missing or still the placeholder — nothing was sent, and returning `true`
+ * made every caller's success check lie: /api/send-magic-link answers
+ * "check your email", /api/sst/start answers "your clinic code is on its way",
+ * the certificate route answers "emailed successfully", and the ONE warning is
+ * a single console.warn at cold start. One wrong Vercel env var silently turns
+ * the whole email system into a no-op reporting 100% success (2026-08-06
+ * degradation audit). Report the truth so the ~35 call sites that DO check the
+ * boolean surface a real error, and the honest "we couldn't email you"
+ * fallbacks they already contain actually run.
+ */
+function unconfiguredSendResult(options: EmailOptions): boolean {
+  if (process.env.NODE_ENV === 'production' && !getResend()) {
+    console.error(
+      '[resend] RESEND_API_KEY is missing or a placeholder in PRODUCTION — nothing was sent. ' +
+        `Dropped: "${options.subject}" to ${redactEmail(options.to)}`,
+    )
+    return false
+  }
+  return true
+}
+
+/**
  * Send email via Resend (or log to console in dev)
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
@@ -141,7 +167,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       subject: options.subject,
       tags: options.tags,
     })
-    return true
+    return unconfiguredSendResult(options)
   }
 
   try {
@@ -182,7 +208,7 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
       subject: options.subject,
       attachments: options.attachments.map(a => a.filename),
     })
-    return true
+    return unconfiguredSendResult(options)
   }
 
   try {

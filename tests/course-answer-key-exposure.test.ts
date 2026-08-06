@@ -62,8 +62,8 @@ function resolveSpec(spec: string, from: string): string | null {
  * at compile time and puts nothing in a bundle — counting it would make this
  * test unsatisfiable, since the client renderer legitimately imports the types.
  */
-function valueImports(file: string): string[] {
-  const src = read(path.relative(ROOT, file))
+function valueImports(file: string, sourceOf?: Map<string, string>): string[] {
+  const src = (sourceOf?.get(file) ?? read(path.relative(ROOT, file)))
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/^\s*\/\/.*$/gm, '')
   const specs: string[] = []
@@ -81,19 +81,25 @@ function valueImports(file: string): string[] {
 const files = SOURCE_DIRS.flatMap((d) => sourceFiles(path.join(ROOT, d)))
 const isClientEntry = (f: string) => /^\s*['"]use client['"]/m.test(fs.readFileSync(f, 'utf8').slice(0, 400))
 
-/** Every module Next can pull into a browser bundle, with the chain that did it. */
-function clientReachable(): Map<string, string[]> {
+/**
+ * Every module Next can pull into a browser bundle, with the chain that did it.
+ *
+ * `extraEntries` injects synthetic 'use client' files (path -> source) WITHOUT
+ * writing to disk. Only the negative-control test uses it, to prove the walk
+ * actually catches a leak rather than passing because it found nothing.
+ */
+function clientReachable(extraEntries: Map<string, string> = new Map()): Map<string, string[]> {
   const chains = new Map<string, string[]>()
   const queue: string[] = []
-  for (const f of files) {
-    if (isClientEntry(f)) {
+  for (const f of [...files, ...extraEntries.keys()]) {
+    if (extraEntries.has(f) || isClientEntry(f)) {
       chains.set(f, [f])
       queue.push(f)
     }
   }
   while (queue.length) {
     const cur = queue.shift()!
-    for (const dep of valueImports(cur)) {
+    for (const dep of valueImports(cur, extraEntries)) {
       if (chains.has(dep)) continue
       chains.set(dep, [...chains.get(cur)!, dep])
       queue.push(dep)
@@ -111,6 +117,18 @@ describe('paid answer keys stay out of public client chunks', () => {
     'data/modules.ts',
     'data/scat-modules.ts',
     'data/ep-modules/index.ts',
+    // CRM (EP course). Its 157 interactive specs and its eight module content
+    // files carry the same kind of answer key CCM's do, and the same rule
+    // applies: they may only travel inside the entitlement-gated payload.
+    'data/ep-module-interactives.ts',
+    'data/ep-modules/module-1.ts',
+    'data/ep-modules/module-2.ts',
+    'data/ep-modules/module-3.ts',
+    'data/ep-modules/module-4.ts',
+    'data/ep-modules/module-5.ts',
+    'data/ep-modules/module-6.ts',
+    'data/ep-modules/module-7.ts',
+    'data/ep-modules/module-8.ts',
   ])('%s is never reachable from a client component', (target) => {
     const abs = path.join(ROOT, target)
     const chain = reachable.get(abs)
@@ -129,6 +147,26 @@ describe('paid answer keys stay out of public client chunks', () => {
     expect(reachable.size).toBeGreaterThan(50)
     expect(reachable.has(path.join(ROOT, 'components/course/SectionDataInteractives.tsx'))).toBe(true)
     expect(reachable.has(path.join(ROOT, 'components/course/InteractiveElements.tsx'))).toBe(true)
+  })
+
+  it.each([
+    ['data/ep-module-interactives.ts', "import { EP_MODULE_INTERACTIVES } from '@/data/ep-module-interactives'"],
+    ['data/ep-modules/module-4.ts', "import { module4 } from '@/data/ep-modules/module-4'"],
+    ['data/ep-modules/index.ts', "import { getEpModules } from '@/data/ep-modules'"],
+  ])('the walk WOULD catch %s becoming client-reachable (negative control)', (target, importLine) => {
+    // Without this, the assertions above could pass for the wrong reason. A
+    // synthetic 'use client' entry that value-imports the EP data must show up
+    // as reachable — and the reported chain must start at that entry.
+    const fake = path.join(ROOT, 'components/__leak-probe.tsx')
+    const probe = clientReachable(
+      new Map([[fake, `'use client'\n${importLine}\nexport const X = 1\n`]]),
+    )
+    const chain = probe.get(path.join(ROOT, target))
+    expect(chain, `${target} should be reachable from the synthetic client entry`).toBeTruthy()
+    expect(chain![0]).toBe(fake)
+
+    // …and the probe must not exist on disk, so it can never leak for real.
+    expect(fs.existsSync(fake)).toBe(false)
   })
 
   it('the flagship course declares no code-authored interactive component', () => {

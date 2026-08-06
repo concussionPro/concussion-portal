@@ -42,6 +42,9 @@ interface Usage {
   patientCount: number
   cap: number | null
   canAddPatient: boolean
+  /** On the trial ALLOWANCE because an enrolment's included year lapsed — a
+   *  paying course buyer, not a trialist. Changes what this page may say. */
+  includedLapsed?: boolean
 }
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -169,11 +172,17 @@ function Shell() {
         ? usage.cap != null && !usage.canAddPatient
           ? `Your plan covers ${usage.cap} active patients and you’re at the limit. Change plan in the billing portal — a second subscription would double-bill you, so checkout is closed here. `
           : 'Your clinic is already on a plan. Change or cancel it in the billing portal — starting a second subscription would double-bill you. '
-        : trialUsed
-          ? `You’ve used your ${usage?.cap ?? 3} free trial patients. `
-          : usage?.plan === 'trial' && usage.cap != null
-            ? `You’re on the free trial — ${usage.patientCount} of ${usage.cap} patients used. Subscribe whenever you’re ready; nothing stops until you hit the cap. `
-            : ''
+        : // A clinic whose INCLUDED platform year (bought with a course
+          // enrolment) has lapsed is on the trial ALLOWANCE but never was a
+          // trialist. "You've used your 3 free trial patients" is false to
+          // them and reads as a bait-and-switch on what they were sold.
+          usage?.includedLapsed
+          ? `The platform year included with your enrolment has ended, so you’re on the free-trial allowance — ${usage.patientCount} of ${usage.cap ?? 3} patients. Subscribe to restore full access; your existing patients keep working either way. `
+          : trialUsed
+            ? `You’ve used your ${usage?.cap ?? 3} free trial patients. `
+            : usage?.plan === 'trial' && usage.cap != null
+              ? `You’re on the free trial — ${usage.patientCount} of ${usage.cap} patients used. Subscribe whenever you’re ready; nothing stops until you hit the cap. `
+              : ''
 
   return (
     <div className="flex min-h-screen dashboard-bg">

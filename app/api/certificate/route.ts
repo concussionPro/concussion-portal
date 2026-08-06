@@ -374,6 +374,23 @@ export async function POST(request: NextRequest) {
         courseType,
       })
 
+      if (!emailSent) {
+        // ROLL THE DEDUPE ROW BACK. It is written BEFORE the send, so leaving
+        // it in place after a failed send made the dedupe a poison pill: the
+        // first attempt honestly reported "email failed, download it from your
+        // dashboard", and every retry thereafter hit certInserted === 0 and
+        // answered "Certificate already emailed" — the certificate could NEVER
+        // be re-sent, for a CPD document customers forward to their regulator.
+        // Same contract as sendOrRollbackAudit in cron/send-nurture-emails.
+        // Best-effort: if the rollback itself fails we're no worse off than
+        // before, and the PDF is still downloadable via GET /api/certificate.
+        try {
+          await sql`DELETE FROM email_audit_log WHERE audit_key = ${certAuditKey}`
+        } catch (rollbackErr) {
+          console.error('[Certificate] audit rollback failed — retry will be blocked:', rollbackErr)
+        }
+      }
+
       // After scat-mastery certificate: fire the completion upsell email
       // This is the highest-intent moment — they just earned their certificate
       if (emailSent && courseType === 'scat-mastery') {

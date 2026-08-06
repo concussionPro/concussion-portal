@@ -52,6 +52,31 @@ interface ProgressContextType {
 const ProgressContext = createContext<ProgressContextType | undefined>(undefined)
 
 const STORAGE_KEY = 'concussion-pro-progress'
+
+/**
+ * Wipe every learner-scoped browser key on sign-out.
+ *
+ * STORAGE_KEY is NOT user-scoped and was never cleared by either logout handler
+ * (2026-08-06 state audit) — only by resetProgress. On a shared clinic machine
+ * that is a cross-account leak with a CPD document at the end of it: user A
+ * studies and signs out; user B signs in; loadProgress reads A's blob and
+ * reconcileLoadedProgress deliberately unions "the more advanced side" into B's
+ * server snapshot, so B inherits A's completed flags, quiz scores AND quiz
+ * answers, the debounced save persists them to B's row, and /api/certificate
+ * re-verifies A's answers and issues B a certificate for a course B never sat.
+ * Section checkpoints (`module-N-checkpoint`, `ep-module-N-checkpoint`) leak the
+ * same way, less severely.
+ */
+export function clearLocalLearnerState(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    for (const k of Object.keys(localStorage)) {
+      if (/^(ep-)?module-\d+-checkpoint$/.test(k)) localStorage.removeItem(k)
+    }
+  } catch {
+    /* private mode / storage disabled — nothing to clear */
+  }
+}
 // Backoff schedule for a failed progress save (ms). Bounded — after the last
 // attempt we stop and rely on localStorage plus the next progress change.
 const SAVE_RETRY_DELAYS = [2000, 5000, 15000, 45000]

@@ -69,22 +69,43 @@ export async function POST(req: NextRequest) {
             code: 'plan-cap-reached',
             usage,
           }
-        : {
-            error: `Your free trial covers ${usage.cap} patients and you've used all of them. Subscribe to add more — your existing patients keep working.`,
-            code: 'trial-cap-reached',
-            usage,
-          },
+        : usage.includedLapsed
+          ? {
+              // They bought a course and the platform came with it for 12
+              // months. Calling that "your free trial" is untrue and is the
+              // worst possible first sentence to show a customer at renewal.
+              error: `The platform year included with your enrolment has ended, so you're back to the ${usage.cap}-patient allowance. Subscribe to add more — your existing patients keep working.`,
+              code: 'included-period-ended',
+              usage,
+            }
+          : {
+              error: `Your free trial covers ${usage.cap} patients and you've used all of them. Subscribe to add more — your existing patients keep working.`,
+              code: 'trial-cap-reached',
+              usage,
+            },
       { status: 402 },
     )
   }
 
   // Rate limit per clinic per day.
+  //
+  // This route has no enclosing try/catch, so an unguarded kv.incr turned any
+  // KV blip (network, rotated/expired token — the env guard above only checks
+  // KV_REST_API_URL, while @vercel/kv also requires KV_REST_API_TOKEN) into an
+  // unhandled 500 on a clinician's own invite button. Degrade the way
+  // lib/rate-limit.ts already does: log and allow. The limit exists to stop a
+  // compromised clinic account mass-mailing; it is not an entitlement gate,
+  // and the caseload cap above (which reads Postgres) still applies.
   const day = new Date().toISOString().slice(0, 10)
   const rateKey = `rate:sst-invite:${clinic.code}:${day}`
-  const count = await kv.incr(rateKey)
-  if (count === 1) await kv.expire(rateKey, 86_400)
-  if (count > 25) {
-    return NextResponse.json({ error: 'Daily invite limit reached — try again tomorrow.' }, { status: 429 })
+  try {
+    const count = await kv.incr(rateKey)
+    if (count === 1) await kv.expire(rateKey, 86_400)
+    if (count > 25) {
+      return NextResponse.json({ error: 'Daily invite limit reached — try again tomorrow.' }, { status: 429 })
+    }
+  } catch (kvErr) {
+    console.warn(`[sst-invite] KV unreachable — invite rate limit not enforced for ${clinic.code}:`, kvErr)
   }
 
   // Suppression is checked on EVERY send lane, fail closed.

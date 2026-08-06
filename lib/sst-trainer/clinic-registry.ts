@@ -72,6 +72,16 @@ export interface ClinicUsage {
   window: 'lifetime' | '30d'
   /** A NEW patient may be admitted. Existing patients are never blocked. */
   canAddPatient: boolean
+  /**
+   * True when this clinic is on the trial ALLOWANCE because the platform year
+   * included with a course enrolment has lapsed — not because they are a
+   * trialist. They paid; their included period simply ended.
+   *
+   * Every surface that explains the trial must branch on this, because telling
+   * a course buyer "you're on the free trial" is false and reads as a
+   * bait-and-switch on something they were promised at the point of sale.
+   */
+  includedLapsed?: boolean
 }
 
 /**
@@ -98,6 +108,35 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
       if (rows[0]?.plan === 'active') plan = 'active'
       tier = tier ?? rows[0]?.tier ?? null
     } catch { /* table absent → stay trial */ }
+  }
+  // The INCLUDED platform year that came with a course enrolment has a hard
+  // end date. Once it passes, and no real subscription has been attached, the
+  // clinic reverts to the trial allowance for NEW patients — it is not cut off.
+  // Existing patients are never blocked (the same doctrine the caseload cap
+  // uses), because ending someone's access mid-rehabilitation is a clinical
+  // problem, not a billing one. The clinic is PROMPTED to subscribe.
+  let includedLapsed = false
+  if (plan === 'active') {
+    try {
+      // `to_jsonb(c) ->> 'included_until'` instead of naming the column: this
+      // is a LAZILY migrated column (ensureSstClinicsTable), and naming a
+      // column that does not exist yet makes Postgres reject the whole
+      // statement. Reading it out of the row's jsonb form yields NULL when the
+      // column is absent, which is exactly the "no included period" case. Same
+      // reason applies to every other included_until read in this file.
+      const { rows } = await sql<{ included_until: string | null; stripe_subscription_id: string | null }>`
+        SELECT (to_jsonb(c) ->> 'included_until') AS included_until,
+               (to_jsonb(c) ->> 'stripe_subscription_id') AS stripe_subscription_id
+        FROM sst_clinics c WHERE code = ${code} LIMIT 1
+      `
+      const until = rows[0]?.included_until
+      const hasSubscription = !!rows[0]?.stripe_subscription_id
+      if (until && !hasSubscription && new Date(until).getTime() < Date.now()) {
+        plan = 'trial'
+        tier = null
+        includedLapsed = true
+      }
+    } catch { /* column/table absent → leave the plan as-is */ }
   }
   // Paid plans meter ACTIVE caseload in a rolling 30 days; the trial meters
   // lifetime distinct patients. A tier of null on an active plan (alumni
@@ -138,6 +177,7 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
     cap: allowance,
     window: windowed ? '30d' : 'lifetime',
     canAddPatient: allowance == null || patientCount < allowance,
+    includedLapsed,
   }
 }
 
@@ -216,18 +256,34 @@ export async function setSstClinicPlan(
     return
   }
   const prev = rec as unknown as Record<string, unknown>
-  await kv.set(`clinic:${code}`, {
-    ...rec,
-    plan,
-    tier: stripe?.tier ?? prev.tier,
-    stripeCustomerId: stripe?.customerId ?? prev.stripeCustomerId,
-    stripeSubscriptionId: stripe?.subscriptionId ?? prev.stripeSubscriptionId,
-  })
+  // KV first (it is the live gate), but a KV failure must NOT skip the Postgres
+  // mirror below — that would lose the plan flip in BOTH stores while the
+  // caller's `await` reports success. Only two of the four callers
+  // (alumni-sst-activation, bundle.ts) have any retry behind them at all.
+  let kvWriteFailed: unknown = null
+  try {
+    await kv.set(`clinic:${code}`, {
+      ...rec,
+      plan,
+      tier: stripe?.tier ?? prev.tier,
+      stripeCustomerId: stripe?.customerId ?? prev.stripeCustomerId,
+      stripeSubscriptionId: stripe?.subscriptionId ?? prev.stripeSubscriptionId,
+    })
+  } catch (err) {
+    kvWriteFailed = err
+    console.error(`[clinic-registry] KV plan write FAILED for ${code} — writing the PG mirror anyway:`, err)
+  }
   try {
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS tier TEXT`
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`
+    // included_until MUST be self-healed here too. The UPDATE below names the
+    // column, and on 2026-08-06 it did NOT exist in production — so the whole
+    // mirror threw into the catch and plan/tier/stripe ids were ALL silently
+    // lost from Postgres on every plan flip. KV said 'active', PG said 'trial',
+    // and PG is what the KV-blip fallback and the admin list read.
+    await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_until TIMESTAMPTZ`
     await sql`
       UPDATE sst_clinics SET plan = ${plan},
         tier = COALESCE(${stripe?.tier ?? null}, tier),
@@ -241,6 +297,17 @@ export async function setSstClinicPlan(
     `
   } catch (err) {
     console.error('[sst-registry] setSstClinicPlan PG mirror failed:', err)
+    // BOTH stores rejected the flip. Surfacing it lets the Stripe webhook's
+    // retry actually re-attempt instead of 200-ing on a change that never
+    // landed anywhere — silently keeping a paid clinic on the trial cap.
+    if (kvWriteFailed) throw err
+    return
+  }
+  // PG holds the durable record, so a KV-only failure is recoverable (getClinic
+  // now reads through to Postgres). Still loud — the live gate is stale until
+  // the next write.
+  if (kvWriteFailed) {
+    console.error(`[clinic-registry] clinic ${code} plan=${plan} persisted to Postgres but NOT to KV`)
   }
 }
 
@@ -276,9 +343,45 @@ export async function getClinic(rawCode: unknown): Promise<ClinicRecord | null> 
   }
   try {
     const rec = await kv.get<ClinicRecord>(`clinic:${code}`)
-    return rec && typeof rec === 'object' ? rec : null
+    if (rec && typeof rec === 'object') return rec
+  } catch (err) {
+    console.error(`[clinic-registry] KV read failed for ${code} — falling back to Postgres:`, err)
+  }
+  // POSTGRES FALLBACK. `null` from KV is indistinguishable from "no such
+  // clinic", and this accessor backs isRegisteredClinic + verifyViewKey, which
+  // gate ~18 SST routes. Without this, a KV blip tells a PAYING clinic "Clinic
+  // code not recognised" across the hub, GP/ACC reports, PMS filing and live
+  // monitoring — and if KV ever drops the key there is no read path back, even
+  // though sst_clinics holds every field including the viewKey.
+  //
+  // It also closes a MONEY hole: getSstClinicStripeSubscription reads through
+  // here, and bundle.ts uses that as its "never create a second subscription"
+  // idempotency guard. A KV blip made that guard pass and would have attached a
+  // SECOND live A$49/mo subscription to a clinic already carrying one.
+  //
+  // Cost is one indexed primary-key lookup, and only when KV has no record —
+  // the same shape of fallback getClinicUsage and /api/sst/session already use.
+  try {
+    const { rows } = await sql`
+      SELECT clinic_name, contact_name, email, view_key, created_at, plan, tier
+      FROM sst_clinics WHERE code = ${code} LIMIT 1
+    `
+    const r = rows[0]
+    if (!r) return null // genuinely unknown code
+    return {
+      clinicName: r.clinic_name,
+      contactName: r.contact_name ?? undefined,
+      email: r.email ?? undefined,
+      createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+      viewKey: r.view_key ?? undefined,
+      product: 'sst',
+      plan: r.plan === 'active' ? 'active' : 'trial',
+      // Not on ClinicRecord, but getClinicUsage reads it structurally off the
+      // record; dropping it here would silently uncap a tiered clinic.
+      ...(r.tier ? { tier: r.tier } : {}),
+    } as ClinicRecord
   } catch {
-    return null // fail closed
+    return null // fail closed — both stores unreachable
   }
 }
 
@@ -348,6 +451,32 @@ export async function ensureSstClinicsTable(): Promise<void> {
   // auto-charged, because a domestic course checkout saves no payment method
   // and nobody consented to off-session billing at the point of sale.
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_until TIMESTAMPTZ`
+  // ONE CLINIC PER EMAIL, enforced by the database.
+  //
+  // Every provisioning path is check-then-create (`getSstClinicByEmail(...) ??
+  // createSstClinic(...)`) across FOUR callers — the bundle, the self-serve
+  // trial, the in-portal create, and alumni activation. `createSstClinic` mints
+  // a fresh random code each call, so `ON CONFLICT (code)` never fires for a
+  // duplicate EMAIL: two tabs, a double-tapped submit or a browser retry mint
+  // two clinics with two codes and two viewKeys. `getSstClinicByEmail` then
+  // returns the OLDEST, so the clinician's workspace shows one code while the
+  // welcome email may have handed them the other — and every patient onboarded
+  // under the loser lands in a clinic they can never see.
+  //
+  // A unique index makes all four callers safe by construction, which no amount
+  // of application-level locking does. Verified creatable against production on
+  // 2026-08-06: 26 clinics, 26 distinct lowercased emails, 0 duplicates.
+  // Guarded because a pre-existing duplicate must degrade to the old behaviour
+  // rather than break every clinic read behind it.
+  try {
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS uniq_sst_clinics_email ON sst_clinics (lower(email))`
+  } catch (err) {
+    console.error(
+      '[clinic-registry] could not create uniq_sst_clinics_email — duplicate emails already exist; ' +
+        'de-duplicate sst_clinics before relying on one-clinic-per-email:',
+      err,
+    )
+  }
 }
 
 /**
@@ -390,6 +519,12 @@ export interface SstClinic {
   plan: string
   /** paid tier ('single' | 'clinic' | 'enterprise') — null until first subscription */
   tier: string | null
+  /**
+   * End of the platform year included with a course enrolment, ISO. Null for
+   * trials, for clinics on a real subscription, and for comped/alumni clinics.
+   * The workspace reads this to prompt BEFORE it lapses.
+   */
+  includedUntil?: string | null
 }
 
 /**
@@ -399,8 +534,9 @@ export interface SstClinic {
 export async function getSstClinicByEmail(email: string): Promise<SstClinic | null> {
   try {
     const { rows } = await sql`
-      SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier
-      FROM sst_clinics
+      SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier,
+             (to_jsonb(c) ->> 'included_until') AS included_until
+      FROM sst_clinics c
       WHERE email = ${email.toLowerCase()}
       ORDER BY created_at ASC
       LIMIT 1
@@ -411,7 +547,8 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
       // with their own email and resolve to the clinic that seated them.
       try {
         const { rows: viaMember } = await sql`
-          SELECT c.code, c.clinic_name, c.contact_name, c.email, c.view_key, c.created_at, c.plan, c.tier
+          SELECT c.code, c.clinic_name, c.contact_name, c.email, c.view_key, c.created_at, c.plan, c.tier,
+                 (to_jsonb(c) ->> 'included_until') AS included_until
           FROM sst_clinic_members m
           JOIN sst_clinics c ON c.code = m.clinic_code
           WHERE m.email = ${email.toLowerCase()} AND m.revoked_at IS NULL
@@ -431,6 +568,7 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
       createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
       plan: r.plan || 'trial',
       tier: r.tier || null,
+      includedUntil: r.included_until ?? null,
     }
   } catch {
     return null // table may not exist yet — treat as "not provisioned"
@@ -455,8 +593,9 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
  */
 export async function getSstClinicOwnedByEmail(email: string): Promise<SstClinic | null> {
   const { rows } = await sql`
-    SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier
-    FROM sst_clinics
+    SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier,
+           (to_jsonb(c) ->> 'included_until') AS included_until
+    FROM sst_clinics c
     WHERE email = ${email.toLowerCase()}
     ORDER BY created_at ASC
     LIMIT 1
@@ -472,6 +611,7 @@ export async function getSstClinicOwnedByEmail(email: string): Promise<SstClinic
     createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
     plan: r.plan || 'trial',
     tier: r.tier || null,
+    includedUntil: r.included_until ?? null,
   }
 }
 
@@ -512,11 +652,32 @@ export async function createSstClinic(args: {
   // loudly instead — the caller retries and idempotency holds.
   await ensureSstClinicsTable()
   await ensureSstClinicSessionsTable()
-  await sql`
+  // The INSERT is the CLAIM. Untargeted ON CONFLICT covers both the code
+  // primary key and uniq_sst_clinics_email, and RETURNING tells us whether we
+  // won. Losing means a concurrent caller minted this clinic between our read
+  // and our write — the exact double-tap / two-tab race that used to produce a
+  // second code and viewKey for one clinician, splitting their patients across
+  // a clinic they can see and one they cannot.
+  const { rows: claimed } = await sql`
     INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, created_at)
     VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${createdAt})
-    ON CONFLICT (code) DO NOTHING
+    ON CONFLICT DO NOTHING
+    RETURNING code
   `
+  if (claimed.length === 0) {
+    // Somebody else won. Return THEIR clinic rather than a code we never
+    // persisted — the caller is idempotent by contract and must receive the one
+    // real clinic for this email. Do NOT write KV: the winner owns that key,
+    // and getClinic falls back to Postgres if the winner hasn't landed it yet.
+    const winner = await getSstClinicOwnedByEmail(email)
+    if (winner) {
+      console.warn(`[clinic-registry] concurrent create for ${email} — returning the winning clinic ${winner.code}`)
+      return winner
+    }
+    // Conflicted on something other than email (a code collision that survived
+    // the KV pre-check) — retrying with a fresh code is correct and terminates.
+    throw new Error('Clinic code collision — retry provisioning')
+  }
 
   // KV second — the registry every access check reads. If this fails, remove
   // the PG row so a retry re-mints cleanly instead of returning a code whose
@@ -611,8 +772,9 @@ export async function adoptExistingClinicForEmail(rawEmail: string): Promise<Sst
 export async function listSstClinics(): Promise<SstClinic[]> {
   try {
     const { rows } = await sql`
-      SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier
-      FROM sst_clinics
+      SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier,
+             (to_jsonb(c) ->> 'included_until') AS included_until
+      FROM sst_clinics c
       ORDER BY created_at DESC
     `
     return rows.map((r) => ({
@@ -624,6 +786,7 @@ export async function listSstClinics(): Promise<SstClinic[]> {
       createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
       plan: r.plan || 'trial',
       tier: r.tier || null,
+      includedUntil: r.included_until ?? null,
     }))
   } catch {
     return []

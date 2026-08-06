@@ -696,7 +696,11 @@ async function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEve
       FROM prospect_portal_views
       WHERE interaction_type = 'section_view'
         AND section_visited = 'pricing'
-        AND created_at >= ${windowStartIso}
+        -- viewed_at, NOT created_at: prospect_portal_views has never had a
+        -- created_at column, so this query threw 42703 on EVERY run and the
+        -- catch below silently reported 0 pricing viewers forever (measured
+        -- 2026-08-06: real value 9 in the last 30 days, 21 all-time).
+        AND viewed_at >= ${windowStartIso}
     `;
     portalPricingViewers = ppv[0]?.n ?? 0;
   } catch {

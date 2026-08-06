@@ -131,6 +131,13 @@ export async function POST(req: NextRequest) {
   // 7-day magic link). getSstClinicByEmail resolves members to this clinic,
   // so their session opens the same workspace under their own identity —
   // which is what report attribution stamps.
+  // Did the invite actually go out? null = no address supplied, so nothing was
+  // owed. false = the seat and the entitlement exist but no email left the
+  // building, and the owner MUST be told — otherwise they walk away believing
+  // a colleague has been notified when nobody ever will be (2026-08-06 state
+  // audit: the route returned a flat ok:true for every one of these paths).
+  let inviteSent: boolean | null = email ? false : null
+  let inviteNote: string | null = null
   if (email) {
     try {
       // ENTITLEMENT FIRST, SUPPRESSION ONLY ON THE SEND (2026-08-05 adversarial
@@ -146,23 +153,29 @@ export async function POST(req: NextRequest) {
       // suppression fail-closed on the SEND lane
       const { rows: sup } = await sql`
         SELECT 1 FROM email_suppression WHERE LOWER(email) = LOWER(${email}) LIMIT 1`
-      if (sup.length === 0) {
+      if (sup.length > 0) {
+        inviteNote = `${email} has opted out of our emails, so no invite was sent. Their access is already active — ask them to log in at /login with this address.`
+      } else {
         const token = createMagicToken(userId, email, name, 'preview', 7 * 24 * 60 * 60 * 1000)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
         const loginUrl = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent('/clinical-testing')}`
-        await sendEmail({
+        inviteSent = await sendEmail({
           to: email,
           subject: `You've been added to ${clinic.clinicName} on SST Trainer`,
           html: `<p style="margin:0 0 1em 0;">Hi ${escapeHtml(name)},</p><p style="margin:0 0 1em 0;">${escapeHtml(clinic.contactName)} added you as a practitioner at ${escapeHtml(clinic.clinicName)} on SST Trainer. Your clinic workspace — patients, live sessions and reports — is here:</p><p style="margin:0 0 1em 0;"><a href="${loginUrl}">Open your clinic workspace</a> (link valid 7 days; after that, log in at ${baseUrl}/login with this email)</p><p style="margin:0;">Zac Lewis<br/>Concussion Education Australia</p>`,
           tags: [{ name: 'type', value: 'sst-member-invite' }],
         })
+        if (!inviteSent) {
+          inviteNote = `The seat is active but the invite email to ${email} did not send. Ask them to log in at /login with this address.`
+        }
       }
     } catch (err) {
       console.error('[team] member invite failed (seat still created):', err)
+      inviteNote = `The seat is active but the invite email to ${email} did not send. Ask them to log in at /login with this address.`
     }
   }
 
-  return NextResponse.json({ ok: true, id, name })
+  return NextResponse.json({ ok: true, id, name, inviteSent, inviteNote })
 }
 
 export async function DELETE(req: NextRequest) {

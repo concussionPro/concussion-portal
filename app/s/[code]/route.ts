@@ -29,6 +29,13 @@ export async function GET(
     }
     return NextResponse.redirect(rows[0].url, 302)
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Lookup failed' }, { status: 500 })
+    // NEVER echo the raw error: this route is unauthenticated by design, and
+    // the only thing inside the try is a Postgres query. Returning err.message
+    // served anonymous callers verbatim Postgres text — measured 2026-08-06,
+    // a bogus POSTGRES_URL produced a 500 body containing the full
+    // VercelPostgresError (and on a real connection failure that carries the
+    // Neon endpoint). Log server-side, return a generic 500.
+    console.error(`[s/${code}] short-link lookup failed:`, err)
+    return NextResponse.json({ error: 'Link could not be resolved. Please try again.' }, { status: 500 })
   }
 }

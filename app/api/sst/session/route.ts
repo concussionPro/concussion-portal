@@ -27,17 +27,24 @@ async function notifyPlanFull(clinicCode: string, usage: { patientCount: number;
   const monthKey = new Date().toISOString().slice(0, 7)
   const auditKey = `sst_planfull_${clinicCode}_${monthKey}`
   await sql`CREATE TABLE IF NOT EXISTS email_audit_log (audit_key TEXT PRIMARY KEY, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`
+  // SUPPRESSION BEFORE THE AUDIT KEY (2026-08-06 state audit): both exits
+  // below returned WITHOUT releasing the month key, and the rollback at the
+  // bottom only covers a failed send. So one transient DB blip on the
+  // suppression read burned the key and a PAYING clinic silently lost its
+  // only notice — for the rest of the calendar month — that new patients were
+  // being refused at the cap. That notice IS the upgrade prompt. Checking
+  // first costs one indexed select and leaves the key claimable.
+  try {
+    const { rows: sup } = await sql`SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email} LIMIT 1`
+    if (sup.length > 0) return
+  } catch {
+    return // fail closed — key untouched, the next refusal retries
+  }
   const { rowCount: fresh } = await sql`
     INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW())
     ON CONFLICT (audit_key) DO NOTHING
   `
   if (!fresh) return
-  try {
-    const { rows: sup } = await sql`SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email} LIMIT 1`
-    if (sup.length > 0) return
-  } catch {
-    return // fail closed
-  }
   const first = (rec?.contactName || '').trim().split(/\s+/)[0] || ''
   const sent = await sendEmail({
     to: email,
@@ -160,7 +167,15 @@ export async function POST(request: NextRequest) {
           }
           return NextResponse.json(
             usage.plan === 'trial'
-              ? { error: 'trial-full', message: 'This clinic’s free trial is full — ask your clinician to add you.' }
+              ? {
+                  // Same allowance, different truth: an enrolment's included
+                  // year having lapsed is not "a free trial", and the clinician
+                  // reading this over the patient's shoulder paid for it.
+                  error: usage.includedLapsed ? 'included-period-ended' : 'trial-full',
+                  message: usage.includedLapsed
+                    ? 'This clinic’s included platform period has ended — ask your clinician to renew.'
+                    : 'This clinic’s free trial is full — ask your clinician to add you.',
+                }
               : { error: 'plan-full', message: 'This clinic’s plan is at its active-patient limit — ask your clinician to add you.' },
             { status: 402 },
           )
@@ -294,17 +309,32 @@ export async function POST(request: NextRequest) {
         if (to) {
           const dayKey = new Date().toISOString().slice(0, 10)
           const who = patientLabel || patientRef || 'a patient'
+          // ONE expression for the key — the insert and the rollback below
+          // must never be able to drift apart.
+          const alertKey = `sst_redflag_clear_${clinicCode}_${who}_${dayKey}`
           const { rowCount: fresh } = await sql`
             INSERT INTO email_audit_log (audit_key, sent_at)
-            VALUES (${`sst_redflag_clear_${clinicCode}_${who}_${dayKey}`}, NOW())
+            VALUES (${alertKey}, NOW())
             ON CONFLICT (audit_key) DO NOTHING`
           if (fresh) {
-            await sendEmail({
+            const sent = await sendEmail({
               to,
               subject: `SST alert: ${who} resumed after a red-flag hold`,
               html: `<p style="margin:0 0 1em 0;">${escapeHtml(String(who))} at ${escapeHtml(clin[0].clinic_name)} tapped &ldquo;my clinician has cleared me&rdquo; after a red-flag hold and has resumed activity in SST Trainer.</p><p style="margin:0 0 1em 0;">If you did not clear this patient, contact them now. The event is logged in your Clinical Hub.</p>`,
               tags: [{ name: 'type', value: 'sst-redflag-alert' }],
             })
+            // Release the day key on failure so the NEXT event re-fires the
+            // alert. sendEmail returns false rather than throwing on a Resend
+            // failure, so the catch below never saw it: the audit row was
+            // committed before the send and never rolled back, which silently
+            // and permanently suppressed a CLINICAL SAFETY alert — a patient
+            // self-resuming after a red-flag hold with the clinician never
+            // told. Same contract as notifyPlanFull above and
+            // sendOrRollbackAudit in cron/send-nurture-emails.
+            if (!sent) {
+              console.error(`[sst-session] red-flag alert send FAILED for clinic ${clinicCode} — releasing audit key`)
+              await sql`DELETE FROM email_audit_log WHERE audit_key = ${alertKey}`.catch(() => {})
+            }
           }
         }
       } catch (err) {
@@ -315,12 +345,26 @@ export async function POST(request: NextRequest) {
     // Idempotency (final sweep #15): offline replays are at-least-once — the
     // client stamps a syncId at enqueue; reusing it as the row id makes
     // duplicate deliveries no-ops instead of duplicate clinical rows.
+    //
+    // ENTROPY GATE (2026-08-06 residual sweep). The shape test used to be
+    // `/^[0-9a-fA-F-]{16,64}$/` alone, which is a character-class check, not an
+    // identifier check: it accepts zero-entropy constants like
+    // "0000000000000000" or "----------------". `sst_clinic_sessions.id` is a
+    // GLOBAL primary key (not scoped by clinic_code), and the insert below is
+    // ON CONFLICT DO NOTHING returning {ok:true} — so one buggy or tampered
+    // client emitting a constant syncId would have its first session stored and
+    // every subsequent session, at every clinic, SILENTLY DISCARDED with a
+    // success response. Requiring real variety in the id makes a genuine
+    // random/UUID value pass and a degenerate one fall through to a
+    // server-minted UUID (worst case: a replay isn't deduped, which is the
+    // pre-idempotency behaviour — never a lost clinical record).
     const syncIdRaw = (payload as Record<string, unknown>).syncId
-    const rowId =
-      typeof syncIdRaw === 'string' && /^[0-9a-fA-F-]{16,64}$/.test(syncIdRaw)
-        ? syncIdRaw.toLowerCase()
-        : crypto.randomUUID()
-    await sql`
+    const syncIdOk =
+      typeof syncIdRaw === 'string' &&
+      /^[0-9a-fA-F-]{16,64}$/.test(syncIdRaw) &&
+      new Set(syncIdRaw.toLowerCase().replace(/-/g, '')).size >= 6
+    const rowId = syncIdOk ? (syncIdRaw as string).toLowerCase() : crypto.randomUUID()
+    const { rowCount: stored } = await sql`
       INSERT INTO sst_clinic_sessions
         (id, clinic_code, clinic_name, patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at)
       VALUES (
@@ -330,6 +374,14 @@ export async function POST(request: NextRequest) {
       )
       ON CONFLICT (id) DO NOTHING
     `
+    // A swallowed conflict is the intended no-op for a replay, but it is also
+    // the exact signature of a clinical write being lost to a colliding id.
+    // It used to be invisible — the route returned {ok:true} either way.
+    if (!stored) {
+      console.warn(
+        `[sst-session] insert deduped by ON CONFLICT — clinic ${clinicCode}, session ${sessionType}, id ${rowId}. Expected for an offline replay; investigate if the clinic reports a missing session.`,
+      )
+    }
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('SST session ingest error:', err)

@@ -80,7 +80,13 @@ export function getPreviewContent(course: PreviewCourse = 'ccm'): PreviewModuleD
         id: s.id,
         title: s.title,
         content: s.content,
-        interactives: s.interactives,
+        // CCM's trial deliberately ships Module 1's myths quiz, clinical pearl
+        // and branching scenario — that is the hook, and it always has been.
+        // CRM must NOT: every EP module's FIRST section is its myths intro, so
+        // handing over interactives here would publish all eight modules' myth
+        // answer keys on an unauthenticated page. The CRM trial is prose-only
+        // today and stays exactly that.
+        interactives: course === 'crm' ? undefined : s.interactives,
       })),
       sectionTitles: module.sections.map((s) => s.title),
     }

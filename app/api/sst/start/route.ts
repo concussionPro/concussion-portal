@@ -132,17 +132,51 @@ export async function POST(request: NextRequest) {
         // (2026-08-05 journey sim). A seat-holder starting their own trial
         // must get their own clinic.
         const owned = await getSstClinicByEmail(cleanEmail)
-        clinic =
-          (owned && owned.email.toLowerCase() === cleanEmail ? owned : null) ??
-          // A preseason-baseline clinic signing up for the trial keeps its
-          // existing code — minting a second one splits their patients
-          // across codes (2026-08-05 sweep #5; same guard as the portal path).
-          (await adoptExistingClinicForEmail(cleanEmail)) ??
-          (await createSstClinic({
-            clinicName: cleanClinic,
-            contactName: cleanClinician,
-            email: cleanEmail,
-          }))
+        clinic = owned && owned.email.toLowerCase() === cleanEmail ? owned : null
+
+        if (!clinic) {
+          // ── CONCURRENT-SIGNUP MUTEX ───────────────────────────────────────
+          // Everything below is check-then-create, and `sst_clinics` has NO
+          // unique index on email (verified in prod 2026-08-06: the only
+          // unique index is the PRIMARY KEY on `code`). Two deliveries of this
+          // form — a double-clicked submit button, a browser retry, the Cliniko
+          // listing opened in two tabs — both read "no clinic" and both mint
+          // one, because createSstClinic generates a fresh random code each
+          // time and so never conflicts. The clinician then holds two codes and
+          // two welcome emails; getSstClinicByEmail returns the OLDEST, so every
+          // patient they onboard with the newer code lands in a clinic their
+          // workspace does not show.
+          //
+          // kv.incr is atomic across instances, so the first caller in a 60s
+          // window wins the right to mint; a loser waits for the winner's row
+          // and re-uses it (which also re-sends the welcome — the intended
+          // code-recovery behaviour). Fails OPEN on KV trouble, i.e. degrades
+          // to exactly today's behaviour rather than blocking a signup.
+          const mintLock = await rateLimit({ key: `sst-start-mint:${cleanEmail}`, limit: 1, windowSec: 60 })
+          if (!mintLock.ok) {
+            for (let i = 0; i < 8 && !clinic; i++) {
+              await new Promise((r) => setTimeout(r, 400))
+              const again = await getSstClinicByEmail(cleanEmail)
+              clinic = again && again.email.toLowerCase() === cleanEmail ? again : null
+            }
+            if (!clinic) {
+              console.warn(`[sst-start] concurrent signup for ${cleanEmail.slice(0, 3)}*** — mint lock held and no clinic appeared; not minting a second one`)
+            }
+          }
+          if (!clinic && mintLock.ok) {
+            clinic =
+              // A preseason-baseline clinic signing up for the trial keeps its
+              // existing code — minting a second one splits their patients
+              // across codes (2026-08-05 sweep #5; same guard as the portal path).
+              (await adoptExistingClinicForEmail(cleanEmail)) ??
+              (await createSstClinic({
+                clinicName: cleanClinic,
+                contactName: cleanClinician,
+                email: cleanEmail,
+              }))
+          }
+        }
+        if (!clinic) throw new Error('clinic provisioning deferred (concurrent signup)')
         const userId = await grantSstEntitlement(cleanEmail, cleanClinician)
         const token = createMagicToken(userId, cleanEmail, cleanClinician, 'preview', 7 * 24 * 60 * 60 * 1000)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { createCourseCheckoutSession, VALID_COURSE_TYPES, VALID_LOCATIONS, type CourseType } from '@/lib/stripe'
+import {
+  createCourseCheckoutSession,
+  CheckoutUnavailableError,
+  redactStripeSecrets,
+  VALID_COURSE_TYPES,
+  VALID_LOCATIONS,
+  type CourseType,
+} from '@/lib/stripe'
 import { findUserByEmail } from '@/lib/users'
 
 /**
@@ -92,6 +99,26 @@ export async function GET(
     }
     return NextResponse.redirect(session.url, { status: 302, headers: NOINDEX_HEADERS })
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Lookup failed' }, { status: 500, headers: NOINDEX_HEADERS })
+    // Business-rule rejections (workshop already ran / sold out / plan not
+    // configured) carry a buyer-readable message — surface those, same as
+    // /api/create-checkout does.
+    if (err instanceof CheckoutUnavailableError) {
+      return NextResponse.json({ error: err.message }, { status: 409, headers: NOINDEX_HEADERS })
+    }
+    // NEVER echo the raw error. This route is UNAUTHENTICATED (any 4-32 char
+    // code reaches it) and the guarded block spans both a raw Postgres query
+    // and createCourseCheckoutSession. Returning err.message therefore served
+    // anonymous callers verbatim Postgres text (table/column names, and the
+    // Neon endpoint on a connection failure — measured 2026-08-06: a bogus
+    // POSTGRES_URL produced a 500 body containing the full VercelPostgresError)
+    // AND verbatim Stripe text, which echoes a misconfigured id back inside
+    // the message ("No such price: …", "Invalid API Key provided: sk_live_…").
+    // That is exactly the leak redactStripeSecrets exists to stop, on the one
+    // public route that could emit it. Log server-side, return a generic 500.
+    console.error(`[pay/${code}] checkout link failed:`, redactStripeSecrets(String(err)))
+    return NextResponse.json(
+      { error: 'Something went wrong opening this payment link. Please try again, or contact zac@concussion-education-australia.com.' },
+      { status: 500, headers: NOINDEX_HEADERS },
+    )
   }
 }

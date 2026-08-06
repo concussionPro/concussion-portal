@@ -144,6 +144,42 @@ describe('progress retention merge — a save can never move a module backwards'
     expect(hasRealProgress(mod(1, { quizAnswers: { q1: 1 } }))).toBe(true)
   })
 
+  /**
+   * 2026-08-06 state audit. Quiz ANSWERS are the only field in
+   * mergeProgressEntry that could go backwards, and they are the only thing
+   * /api/certificate trusts — lib/quiz-verify.ts answers a null set with
+   * 'no-answers', which the certificate route turns into a hard 403 on a CPD
+   * document the holder has already passed. Every pre-2026-08 record carries
+   * quizCompleted:true with quizAnswers:null (see the migration in
+   * ProgressContext), so an old device syncing a tied score used to WIN the tie
+   * and overwrite the stored evidence with null. Measured on production that
+   * day: 4 such rows across 2 accounts, one a paying customer.
+   */
+  it('a tied quiz submission with no answers never overwrites stored answers', () => {
+    const answers = { q1: 0, q2: 1, q3: 2, q4: 0, q5: 1, q6: 3, q7: 1, q8: 2, q9: 0, q10: 1 }
+    const withAnswers = mod(3, { ...completed(3), quizAnswers: answers })
+    const answerless = mod(3, { ...completed(3), quizAnswers: null })
+
+    // Legacy client syncs UP into a good server row.
+    expect(mergeProgressEntry(withAnswers, answerless).quizAnswers).toEqual(answers)
+    // And the mirror case: a good client syncing into a legacy stored row.
+    expect(mergeProgressEntry(answerless, withAnswers).quizAnswers).toEqual(answers)
+    // Score/completion still merge as before.
+    const merged = mergeProgressEntry(withAnswers, answerless)
+    expect(merged.quizCompleted).toBe(true)
+    expect(merged.quizScore).toBe(9)
+  })
+
+  it('still lets a genuine newer submission replace the answer set', () => {
+    const older = mod(3, { ...completed(3), quizAnswers: { q1: 0, q2: 1 } })
+    const newer = mod(3, { ...completed(3), quizAnswers: { q1: 3, q2: 3 } })
+    // Same score, both sides carry answers → latest wins, as documented.
+    expect(mergeProgressEntry(older, newer).quizAnswers).toEqual({ q1: 3, q2: 3 })
+    // A strictly better attempt still wins outright.
+    const better = mod(3, { ...completed(3), quizScore: 10, quizAnswers: { q1: 9 } })
+    expect(mergeProgressEntry(older, better).quizScore).toBe(10)
+  })
+
   it('tolerates a malformed stored row without throwing away the save', () => {
     const incoming = { ...seed(), 2: completed(2) }
     for (const junk of [null, undefined, {}, { 2: null }, { 2: 'nonsense' }, { 2: 7 }]) {

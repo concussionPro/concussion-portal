@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_TIERS, sstTierAllowance } from '@/lib/config'
 import Image from 'next/image'
 import {
   Check,
@@ -274,6 +274,17 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             (heart-rate threshold &rarr; prescription) and the full Clinical Toolkit with the
             NDIS / WorkCover / GP document pack — all built around the exercise-physiology scope
             of practice.
+          </p>
+          {/* TERM DISCLOSURE (2026-08-06 residual sweep). A domestic enrolment stamps
+              sst_clinics.included_until = NOW() + 12 months (lib/sst-trainer/bundle.ts
+              INCLUDED_PLATFORM_MONTHS) and getClinicUsage drops the clinic back to the
+              trial allowance when it lapses without a subscription. The international
+              CRM page already discloses the same term; this AUD page did not. */}
+          <p className="text-sm text-muted-foreground mt-3">
+            The platform is included for your first year. After that it&rsquo;s
+            A${SST_TIERS[0].monthlyAud}/month to keep it ({sstTierAllowance(SST_TIERS[0]).toLowerCase()};
+            clinicians unlimited on every tier) — you&rsquo;re prompted, never auto-charged, and the
+            course itself is yours for life.
           </p>
         </div>
 

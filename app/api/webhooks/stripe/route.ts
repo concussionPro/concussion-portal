@@ -188,6 +188,29 @@ async function logAnalyticsEvent(
 }
 
 /**
+ * Lazy migration for the two-phase idempotency claim. Runs ONCE per cold start
+ * (not per delivery — this is on the money path).
+ *
+ * The backfill matters: every row written before `completed_at` existed is a
+ * SUCCESSFULLY processed event, and without the stamp the stale-claim recovery
+ * below would treat all 88 of them as crashed attempts and happily re-fulfil a
+ * months-old sale if Stripe ever replayed it. Anything older than a day is
+ * past Stripe's retry horizon anyway, so stamping it complete is exact.
+ */
+let webhookSchemaReady = false
+async function ensureWebhookIdempotencySchema(): Promise<void> {
+  if (webhookSchemaReady) return
+  await sql`ALTER TABLE processed_webhook_events ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`
+  await sql`
+    UPDATE processed_webhook_events
+       SET completed_at = processed_at
+     WHERE completed_at IS NULL
+       AND processed_at < now() - INTERVAL '1 day'
+  `
+  webhookSchemaReady = true
+}
+
+/**
  * Stripe Webhook Handler
  *
  * Handles payment events from Stripe:
@@ -234,9 +257,28 @@ export async function POST(request: NextRequest) {
 
     console.log(`Stripe webhook received: ${event.type} (${event.id})`)
 
-    // Idempotency: atomic INSERT — if event already exists, skip processing
+    // ── IDEMPOTENCY: TWO-PHASE CLAIM ────────────────────────────────────────
+    // Phase 1 claims the event id; phase 2 stamps `completed_at` only AFTER
+    // every side effect has landed.
+    //
+    // The single-phase version (INSERT before the handler, DELETE in the catch)
+    // was safe only for failures the catch could see. It was NOT safe for the
+    // ways a serverless function actually dies mid-fulfilment — a 60s
+    // maxDuration timeout, an OOM kill, an instance being reclaimed — because
+    // none of those run the catch. The claim row survived, every Stripe retry
+    // hit "duplicate → 200", and a paid buyer was left with no account, no
+    // course row, no email, and nothing anywhere saying so.
+    //
+    // A claim with completed_at NULL therefore means "an attempt is in flight
+    // OR died". Younger than STALE_CLAIM_MINUTES → genuinely in flight, answer
+    // non-2xx so Stripe retries later (never 200 for work that may never
+    // finish). Older → the previous attempt is dead; re-claim and reprocess.
+    // Every fulfilment handler is idempotent (upserts keyed on email/session),
+    // so a reprocess costs at worst a repeated email, versus a lost sale.
+    const STALE_CLAIM_MINUTES = 5
     let idempotencyInserted = false
     try {
+      await ensureWebhookIdempotencySchema()
       const { rows } = await sql`
         INSERT INTO processed_webhook_events (event_id, event_type, processed_at)
         VALUES (${event.id}, ${event.type}, now())
@@ -244,8 +286,31 @@ export async function POST(request: NextRequest) {
         RETURNING event_id
       `
       if (rows.length === 0) {
-        console.log(`Skipping duplicate event: ${event.id}`)
-        return NextResponse.json({ received: true, duplicate: true })
+        const { rows: prior } = await sql<{ completed_at: string | null }>`
+          SELECT completed_at FROM processed_webhook_events WHERE event_id = ${event.id} LIMIT 1
+        `
+        if (prior[0]?.completed_at) {
+          console.log(`Skipping duplicate event: ${event.id}`)
+          return NextResponse.json({ received: true, duplicate: true })
+        }
+        // Unfinished claim — re-claim only if it is older than any live attempt
+        // could be. The UPDATE is the race arbiter: exactly one concurrent
+        // retry can win it.
+        const { rows: reclaimed } = await sql`
+          UPDATE processed_webhook_events
+             SET processed_at = now()
+           WHERE event_id = ${event.id}
+             AND completed_at IS NULL
+             AND processed_at < now() - (${STALE_CLAIM_MINUTES}::int * INTERVAL '1 minute')
+          RETURNING event_id
+        `
+        if (reclaimed.length === 0) {
+          console.warn(`Event ${event.id} claimed by an in-flight attempt — asking Stripe to retry`)
+          return NextResponse.json({ received: false, inFlight: true }, { status: 409 })
+        }
+        console.error(
+          `[stripe-webhook] RECOVERING event ${event.id} (${event.type}) — a previous attempt claimed it and never completed (timeout/crash). Reprocessing.`,
+        )
       }
       idempotencyInserted = true
     } catch (idempotencyError: unknown) {
@@ -325,6 +390,19 @@ export async function POST(request: NextRequest) {
       throw handlerError
     }
 
+    // Phase 2 — the side effects are done. Only now is a later delivery of this
+    // event a TRUE duplicate that may be skipped.
+    if (idempotencyInserted) {
+      try {
+        await sql`UPDATE processed_webhook_events SET completed_at = now() WHERE event_id = ${event.id}`
+      } catch (completeErr) {
+        // Worst case the claim stays "unfinished" and a retry reprocesses an
+        // already-fulfilled event through idempotent handlers — safe, and far
+        // better than the reverse.
+        console.error('Failed to mark webhook event complete:', completeErr)
+      }
+    }
+
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Stripe webhook error:', error)
@@ -368,12 +446,42 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (session.mode === 'subscription' && session.metadata?.product === 'sst-trainer') {
     const clinicCode = session.metadata?.clinicCode
     if (clinicCode) {
+      const newSubId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id
+      // DOUBLE-SUBSCRIPTION DETECTION. /api/sst/subscribe refuses a second
+      // checkout once the clinic reads 'active', but that state only exists
+      // AFTER this webhook lands. A trial clinic with the subscribe page open
+      // in two tabs — or one that clicked, saw the page hang, went back and
+      // clicked again — can complete two checkouts before either flips the
+      // plan. setSstClinicPlan then COALESCEs the NEW subscription id over the
+      // old one, so the first subscription is orphaned: still billing monthly,
+      // invisible to the billing portal (which reads the stored id), and
+      // invisible in admin. Nobody finds out until the customer does.
+      //
+      // The money is already taken and only a human can refund it, so the job
+      // here is to make it impossible to miss.
+      let priorSubId: string | null = null
+      try {
+        priorSubId = await getSstClinicStripeSubscription(clinicCode)
+      } catch (lookupErr) {
+        console.error('[sst] prior-subscription lookup failed:', lookupErr)
+      }
       await setSstClinicPlan(clinicCode, 'active', {
         customerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
-        subscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
+        subscriptionId: newSubId,
         tier: session.metadata?.plan,
       })
       console.log(`SST subscription active for clinic ${clinicCode}`)
+      if (priorSubId && newSubId && priorSubId !== newSubId) {
+        console.error(`[sst] clinic ${clinicCode} now has TWO subscriptions: ${priorSubId} (orphaned) and ${newSubId}`)
+        try {
+          await sendEmail({
+            to: CONFIG.CONTACT_EMAIL,
+            subject: `ACTION REQUIRED: clinic ${clinicCode} was billed TWICE — cancel the orphaned subscription`,
+            html: `<p>A second Clinical Testing subscription completed for a clinic that already had one. The clinic record now points at the NEW subscription, so the OLD one is billing monthly with nothing in the product pointing at it.</p><p><strong>Clinic:</strong> ${escapeHtml(clinicCode)}<br><strong>Customer:</strong> ${escapeHtml(customerEmail)}<br><strong>Orphaned subscription:</strong> <code>${escapeHtml(priorSubId)}</code><br><strong>Active subscription:</strong> <code>${escapeHtml(newSubId)}</code><br><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></p><p>Cancel <code>${escapeHtml(priorSubId)}</code> in Stripe and refund what it has charged.</p>`,
+            tags: [{ name: 'type', value: 'sst-double-subscription' }],
+          })
+        } catch (alertErr) { console.error('SST double-subscription alert failed:', alertErr) }
+      }
     } else {
       // Money taken, nothing activated, and the webhook 200s so Stripe never
       // retries — a console line alone means the clinic stays capped while
@@ -859,7 +967,7 @@ async function handleShortCoursePurchase(
   const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=short_course_purchase&redirect=${encodeURIComponent(course.route)}`
 
   try {
-    await sendEmail({
+    const courseEmailSent = await sendEmail({
       to: customerEmail,
       subject: `You're enrolled — ${course.title}`,
       html: `
@@ -884,8 +992,23 @@ async function handleShortCoursePurchase(
       ],
       ...(courseInvoice ? { attachments: [courseInvoice] } : {}),
     })
+    // sendEmail returns FALSE on every Resend failure rather than throwing, so
+    // `catch (emailErr)` alone never fired: the buyer paid, was provisioned,
+    // and their receipt + magic link + tax invoice vanished with one
+    // console.error and no alert. Stripe must still see a 200 (a 500 re-runs
+    // provisioning), so the recovery path is an admin alert.
+    if (!courseEmailSent) throw new Error('sendEmail returned false')
   } catch (emailErr) {
     console.error(`[short-course] Welcome email failed for ${redact(customerEmail)}:`, emailErr)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: short-course welcome email failed for ${redact(customerEmail)}`,
+        html: `<p>A customer paid for a short course and was provisioned, but their welcome email (magic link + tax invoice) did not send.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Course:</strong> ${escapeHtml(courseSlug)}<br><strong>Amount:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></p><p>Error: ${escapeHtml(emailErr instanceof Error ? emailErr.message : String(emailErr))}</p><p>Their access IS provisioned — they can log in via /login. Stripe will NOT retry.</p>`,
+      })
+    } catch (alertErr) {
+      console.error('[short-course] admin alert about failed welcome email ALSO failed:', alertErr)
+    }
   }
 
   console.log(`[short-course] Provisioned ${redact(customerEmail)} for ${courseSlug} — $${amountAud} ${currency}`)
@@ -1107,7 +1230,7 @@ async function handleCrmPurchase(
           </div>`
   }
   try {
-    await sendEmail({
+    const crmEmailSent = await sendEmail({
       to: customerEmail,
       subject: `You're enrolled — Concussion Rehab Mastery`,
       html: `
@@ -1147,8 +1270,25 @@ async function handleCrmPurchase(
       ],
       ...(crmInvoice ? { attachments: [crmInvoice] } : {}),
     })
+    // sendEmail returns FALSE on every Resend failure rather than throwing, so
+    // `catch (emailErr)` alone was dead code on the dominant failure mode. This
+    // is the highest-ticket item in the catalogue (CRM Complete up to A$1,400):
+    // the buyer paid, was provisioned, and their receipt + tax invoice + magic
+    // link + clinic code silently vanished with one console.error. The webhook
+    // must still 200 (a 500 re-runs provisioning and re-mints a token), so the
+    // recovery path is an admin alert. 2026-08-06 degradation audit.
+    if (!crmEmailSent) throw new Error('sendEmail returned false')
   } catch (emailErr) {
     console.error(`[crm] welcome email failed for ${redact(customerEmail)}:`, emailErr)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: CRM welcome email failed for ${redact(customerEmail)}`,
+        html: `<p>A Concussion Rehab Mastery buyer paid and was provisioned, but their welcome email (magic link + tax invoice${clinicCode ? ' + clinic code' : ''}) did not send.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Tier:</strong> ${escapeHtml(tierLabel)}${location ? `<br><strong>Workshop city:</strong> ${escapeHtml(location)}` : ''}${clinicCode ? `<br><strong>Clinic code:</strong> <code>${escapeHtml(clinicCode)}</code>` : ''}<br><strong>Amount:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></p><p>Error: ${escapeHtml(emailErr instanceof Error ? emailErr.message : String(emailErr))}</p><p>Their access IS provisioned — they can log in via /login. Stripe will NOT retry.</p>`,
+      })
+    } catch (alertErr) {
+      console.error('[crm] admin alert about failed welcome email ALSO failed:', alertErr)
+    }
   }
 
   // Admin ping.
@@ -1275,10 +1415,11 @@ async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerE
     console.error('[hub-pack] abandoned-checkout recover failed:', err)
   }
 
-  // Welcome + key + GST invoice.
+  // Welcome + key + GST invoice. baseUrl is hoisted out of the try because the
+  // catch's ACTION-REQUIRED alert quotes the redeem URL.
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   try {
     const token = createMagicToken(userId, customerEmail, customerName, 'full-course')
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     let invoiceAttachment: { filename: string; content: Buffer } | undefined
     try {
       const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
@@ -1304,7 +1445,16 @@ async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerE
       console.error(`[hub-pack][invoice] PDF generation failed for ${redact(customerEmail)}:`, invErr)
     }
 
-    await sendHubOwnerWelcomeEmail({
+    // BIND THE RESULT. sendHubOwnerWelcomeEmail returns false (it does not
+    // throw) on every Resend failure — bad key, suspended domain, 4xx/5xx,
+    // rate limit — so `catch (emailErr)` alone was dead code on the dominant
+    // failure mode. This email carries the forwardable TEAM ACCESS KEY, which
+    // is surfaced nowhere else in the product: losing it silently locks the
+    // buyer's whole clinic out of an A$1,497 purchase with no self-service
+    // recovery, and nobody is told. The webhook must still return 200 (a 500
+    // makes Stripe retry and re-run provisioning), so the recovery path is an
+    // admin alert carrying the key. 2026-08-06 degradation audit.
+    const hubEmailSent = await sendHubOwnerWelcomeEmail({
       email: customerEmail,
       token,
       firstName: customerName,
@@ -1317,8 +1467,20 @@ async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerE
       origin: baseUrl,
       ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
     })
+    if (!hubEmailSent) {
+      throw new Error('sendHubOwnerWelcomeEmail returned false')
+    }
   } catch (emailErr) {
     console.error(`[hub-pack] Welcome email failed for ${redact(customerEmail)}:`, emailErr)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: Hub Pack welcome email failed for ${redact(customerEmail)}`,
+        html: `<p>A Hub Pack buyer paid and was provisioned, but their welcome email — <strong>the only place their team access key appears</strong> — did not send. Their team cannot redeem seats until you forward it.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Clinic:</strong> ${escapeHtml(clinicName || '—')}<br><strong>Team key:</strong> <code>${escapeHtml(code)}</code><br><strong>Redeem URL:</strong> ${escapeHtml(process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com')}/join-clinic?key=${escapeHtml(code)}<br><strong>Seats:</strong> ${clinicianSeats} clinicians + ${HUB_ADMIN_SEATS} admin<br><strong>Amount:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}</p><p>Error: ${escapeHtml(emailErr instanceof Error ? emailErr.message : String(emailErr))}</p>`,
+      })
+    } catch (alertErr) {
+      console.error('[hub-pack] admin alert about failed welcome email ALSO failed:', alertErr)
+    }
   }
 
   // Admin ping.
@@ -1622,29 +1784,51 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     console.error('Failed to log checkout expired analytics:', err)
   }
 
-  // Check if already tracked (same email within last 24h) — dedup before email AND db insert
+  // CLAIM the 24h recovery slot BEFORE sending anything.
+  //
+  // This was a SELECT here and an unconditional INSERT ~70 lines below, with an
+  // email send in between and no unique index on the table (verified in prod
+  // 2026-08-06: abandoned_checkouts has only the PK on `id`). A visitor who
+  // opened two checkouts — genuinely common, they price-compare online-only
+  // against Complete — has both sessions expire together, Stripe delivers the
+  // two `checkout.session.expired` events in parallel, both read "nothing in
+  // the last 24h", and both send recovery email 1 to the same person AND write
+  // two rows, which then drives TWO parallel 3-email sequences off the cron.
+  //
+  // Conditional INSERT..SELECT..WHERE NOT EXISTS is one statement: the row is
+  // claimed before the send, so the loser writes nothing and sends nothing.
+  // The row starts at emails_sent = 0 and is advanced to 1 only after the send
+  // actually goes out — so a failed send leaves the cron to retry step 1
+  // rather than silently consuming it.
+  let claimedCheckoutId: number
   try {
-    const { rows: recent } = await sql`
-      SELECT id FROM abandoned_checkouts
-      WHERE email = ${email.toLowerCase()}
-        AND abandoned_at > now() - interval '24 hours'
-      LIMIT 1
+    await sql`ALTER TABLE abandoned_checkouts ADD COLUMN IF NOT EXISTS recovery_url TEXT`
+    const { rows: claimed } = await sql<{ id: number }>`
+      INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered, recovery_url)
+      SELECT ${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), 0, false, ${recoveryUrl}
+      WHERE NOT EXISTS (
+        SELECT 1 FROM abandoned_checkouts
+        WHERE email = ${email.toLowerCase()}
+          AND abandoned_at > now() - interval '24 hours'
+      )
+      RETURNING id
     `
-    if (recent.length > 0) {
+    if (claimed.length === 0) {
       console.log(`Skipping duplicate abandoned checkout for ${redact(email)} (within 24h)`)
       return
     }
+    claimedCheckoutId = claimed[0].id
   } catch (err) {
-    // Fail-safe: if the dedup check itself failed we can't know whether this
-    // person was already emailed in the last 24h — skip rather than risk a
-    // duplicate recovery email.
-    console.error('Failed to check abandoned checkout dedup — skipping send:', err)
+    // Fail-safe: if the claim itself failed we can't know whether this person
+    // was already emailed in the last 24h — skip rather than risk a duplicate
+    // recovery email.
+    console.error('Failed to claim abandoned checkout slot — skipping send:', err)
     return
   }
 
-  // Store abandoned checkout and send first recovery email immediately.
-  // With 30-min Stripe session expiry, the user just left — strike while warm.
-  // Cron handles emails 2 (24h) and 3 (72h).
+  // Send the first recovery email immediately. With 30-min Stripe session
+  // expiry, the user just left — strike while warm. Cron handles emails 2
+  // (24h) and 3 (72h).
   try {
     // MASTER BLACKLIST FIRST — an abandoned checkout usually has NO `users`
     // row, so nurture_unsubscribed cannot gate this on its own, and its catch
@@ -1691,12 +1875,11 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       console.log(`[Abandoned] Skipped email for ${redact(email)} — unsubscribed`)
     }
 
-    // Store with emails_sent = 1 (or max if unsubscribed, so cron skips entirely)
+    // Advance the claimed row: 1 once email 1 is away, or the full sequence
+    // length when suppressed (so the cron skips this row entirely).
     const emailsSent = unsubscribed ? ABANDONED_CHECKOUT_SEQUENCE.length : 1
-    await sql`ALTER TABLE abandoned_checkouts ADD COLUMN IF NOT EXISTS recovery_url TEXT`
     await sql`
-      INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered, recovery_url)
-      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), ${emailsSent}, false, ${recoveryUrl})
+      UPDATE abandoned_checkouts SET emails_sent = ${emailsSent} WHERE id = ${claimedCheckoutId}
     `
     console.log(`Stored abandoned checkout for ${redact(email)} (emails_sent: ${emailsSent})`)
   } catch (err) {

@@ -14,6 +14,7 @@ import {
   type ClinicDocProfile,
 } from '@/lib/sst-trainer/clinic-registry'
 import { buildWelcomeEmail } from '@/lib/sst-trainer/clinic-welcome-email'
+import { rateLimit } from '@/lib/rate-limit'
 
 /**
  * /api/clinical-testing/clinic — the PAID PORTAL's own clinic provisioning.
@@ -135,6 +136,37 @@ export async function POST(req: NextRequest) {
     if (clinicName.length < 2) {
       return NextResponse.json({ error: 'Enter your clinic or practice name.' }, { status: 400 })
     }
+    // CONCURRENT-PROVISION MUTEX. The check above is a time-of-check/
+    // time-of-use window and `sst_clinics` has NO unique index on email
+    // (verified in prod 2026-08-06: the only unique index is the PK on `code`),
+    // while createSstClinic mints a fresh random code every call and so never
+    // conflicts. A double-clicked "Create my clinic" button therefore produces
+    // TWO clinics and two welcome emails; getSstClinicByEmail then returns the
+    // OLDEST, so every patient onboarded with the newer code lands in a clinic
+    // the clinician's own workspace never shows.
+    //
+    // kv.incr is atomic across instances. Fails OPEN (rateLimit's contract) so
+    // KV trouble degrades to today's behaviour rather than blocking a paid
+    // clinician from provisioning.
+    const mintLock = await rateLimit({
+      key: `clinic-mint:${session.email.toLowerCase()}`,
+      limit: 1,
+      windowSec: 60,
+    })
+    if (!mintLock.ok) {
+      for (let i = 0; i < 8 && !clinic; i++) {
+        await new Promise((r) => setTimeout(r, 400))
+        clinic = await getSstClinicByEmail(session.email)
+      }
+      if (!clinic) {
+        return NextResponse.json(
+          { error: 'Your clinic is still being set up — refresh in a moment.' },
+          { status: 409 },
+        )
+      }
+    }
+  }
+  if (!clinic) {
     clinic = await createSstClinic({
       clinicName,
       contactName: session.name || session.email.split('@')[0],

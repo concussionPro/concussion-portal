@@ -127,16 +127,29 @@ export async function POST(request: NextRequest) {
     // international-online (different currency / market).
     let bundleDiscountAud = 0
     if (courseType === 'online-only' || courseType === 'full-course') {
-      if (sessionEmail) {
-        if (await isBookOwner(sessionEmail)) {
-          bundleDiscountAud = BUNDLE_OWNER_DISCOUNT_AUD
-        }
-      } else if (email) {
-        // Unauthenticated buyer supplying an email — honour the discount if
-        // the email matches an existing book-owner record. Prevents the
-        // awkward case where a bundle owner forgets to log in before buying.
-        if (await isBookOwner(email)) {
-          bundleDiscountAud = BUNDLE_OWNER_DISCOUNT_AUD
+      // The lookup is an OPTIONAL PRICE ENRICHMENT, so it must never be able
+      // to take the checkout down with it. Measured 2026-08-06 with a bogus
+      // POSTGRES_URL: isBookOwner() threw, the outer catch turned it into
+      // `500 {"error":"Failed to create checkout session. Please try again."}`,
+      // and NOBODY COULD BUY ANYTHING while Stripe was perfectly healthy —
+      // a total revenue outage caused by a discount check that applies to a
+      // handful of buyers. Degrade to "no discount" instead: an over-charged
+      // bundle owner is one refundable support ticket; a dead /pricing page is
+      // every sale for the duration of the incident. isBookOwner() also runs
+      // ensureColumns() (ALTER TABLE users …), so this catch additionally
+      // covers a lazy migration failing under lock contention.
+      const buyerEmail = sessionEmail || email
+      if (buyerEmail) {
+        try {
+          if (await isBookOwner(buyerEmail)) {
+            bundleDiscountAud = BUNDLE_OWNER_DISCOUNT_AUD
+          }
+        } catch (err) {
+          console.error(
+            '[create-checkout] bundle-owner lookup failed — proceeding at full price ' +
+              '(a bundle owner may be over-charged; refund manually if reported):',
+            err,
+          )
         }
       }
     }

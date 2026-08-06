@@ -276,9 +276,16 @@ export default function AccSupplierPage() {
           />
         </div>
         <p className="mt-3 text-[12.5px] leading-[1.5] text-slate-400">
+          {/* 2026-08-06 residual sweep: this line used to claim "Jurisdiction is
+              enforced in software: an Australian code cannot emit an ACC form."
+              That is false. app/api/sst/report/route.ts accepts every skin in
+              ALL_SKINS from any registered clinic and DERIVES the jurisdiction
+              from the chosen skin — the route's own comment records the no-gate
+              as deliberate ("the clinician chooses the right paper"). A factual
+              product claim on a sales page must describe what the software does. */}
           ACC884 is the Client Summary Report — not a treatment plan (that&rsquo;s the ACC32).
-          ACC885 is Did Not Attend — not progress. Jurisdiction is enforced in software: an
-          Australian code cannot emit an ACC form.
+          ACC885 is Did Not Attend — not progress. Each form is built to its own jurisdiction&rsquo;s
+          wording, and the clinician selects the form their claim requires.
         </p>
         {/* Work order 2026-07-27 (acc-no-tour): repeat the tour CTA at the
             moment the sample report has just made the case. */}

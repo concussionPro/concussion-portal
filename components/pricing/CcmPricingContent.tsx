@@ -22,7 +22,7 @@ import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
-import { CONFIG, upgradePriceFor } from '@/lib/config'
+import { CONFIG, upgradePriceFor, SST_TIERS } from '@/lib/config'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { trackEvent } from '@/lib/analytics'
 
@@ -547,7 +547,15 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 <tbody>
                   {([
                     [`${CONFIG.COURSE.TOTAL_MODULES} online modules`, true, true],
-                    ['Clinical Testing suite — SST Trainer + club baseline testing (included)', true, true],
+                    // TERM DISCLOSURE (2026-08-06 residual sweep). The webhook stamps
+                    // sst_clinics.included_until = NOW() + 12 months on a domestic course
+                    // purchase (lib/sst-trainer/bundle.ts INCLUDED_PLATFORM_MONTHS), and
+                    // getClinicUsage demotes the clinic to the trial allowance once that
+                    // date passes with no subscription. The international pages already
+                    // say "included free for your first year"; this AUD table said only
+                    // "(included)", so a domestic buyer was not told the term at the point
+                    // of sale. Never sell an unqualified "included" against a dated gate.
+                    [`Clinical Testing suite — SST Trainer + club baseline testing (included for your first year, then A$${SST_TIERS[0].monthlyAud}/mo to keep — cancel anytime)`, true, true],
                     ['Your clinic code — patients & clubs link straight to you', true, true],
                     ['Clinical Toolkit downloads', true, true],
                     ['CPD certificate (online)', `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`, `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`],

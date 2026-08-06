@@ -11,10 +11,17 @@ import { type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/report
  *
  * Emits a JURISDICTION report (e.g. the NZ ACC884 Client Summary Report) from a
  * patient's real episode data. Same auth + premium gate as /api/sst/gp-report.
- * Jurisdiction is derived from the skin (acc* → NZ, else AU) and the skin is
- * validated against that jurisdiction's allowed set, so an AU code can't emit an
- * ACC form and vice-versa. Output is print-ready HTML — the ACC forms are meant
- * to be TRANSCRIBED onto ACC's fillable form; SST compiles the content.
+ * Jurisdiction is derived from the skin (acc* → NZ, else AU). It is NOT a gate:
+ * this docblock used to claim "the skin is validated against that jurisdiction's
+ * allowed set, so an AU code can't emit an ACC form and vice-versa", which was
+ * never true — jurisdiction is derived FROM the skin, so the check was
+ * tautological (see tests/crm-certificate.test.ts, where the same tautology was
+ * removed 2026-08-05). Any registered clinic may render any skin in ALL_SKINS;
+ * the clinician chooses the right paper. Corrected 2026-08-06 along with the
+ * matching false claim on the public /acc page.
+ *
+ * Output is print-ready HTML — the ACC forms are meant to be TRANSCRIBED onto
+ * ACC's fillable form; SST compiles the content.
  *
  * IDENTITY IS REQUEST-SCOPED, NEVER STORED. `sst_clinic_sessions` holds only a
  * clinic-chosen `patient_label` (de-identified by design — see load.ts). An
@@ -55,7 +62,13 @@ export async function GET(request: NextRequest) {
   // trial watermark — the report IS the conversion moment ("the paperwork
   // writes itself"); a 402 here was the pitch contradicting the product
   // (2026-08-05 sweep). Subscribing removes the watermark.
-  const isTrial = code !== 'DEMO00' && (await getClinicUsage(code)).plan !== 'active' 
+  const reportUsage = code === 'DEMO00' ? null : await getClinicUsage(code)
+  const isTrial = reportUsage != null && reportUsage.plan !== 'active'
+  // A clinic whose INCLUDED year (bought with a course enrolment) has lapsed is
+  // on the trial allowance but was never a trialist. Stamping "generated on the
+  // SST free trial" across their documents is simply untrue, and it lands on
+  // someone who paid for the platform and was told it was included.
+  const isLapsedInclusion = isTrial && reportUsage?.includedLapsed === true
 
   // Request-scoped identity (never persisted). Blank fields simply fall back to
   // the de-identified label, so an omitted identity degrades gracefully.
@@ -133,8 +146,10 @@ export async function GET(request: NextRequest) {
         : isTrial
           ? {
               draftBanner:
-                'FREE-TRIAL DOCUMENT — generated on the SST free trial. Subscribe from your clinic workspace to issue reports without this notice.',
-              watermarkText: 'TRIAL',
+                isLapsedInclusion
+                  ? 'UNLICENSED DOCUMENT — the platform year included with your enrolment has ended. Subscribe from your clinic workspace to issue reports without this notice.'
+                  : 'FREE-TRIAL DOCUMENT — generated on the SST free trial. Subscribe from your clinic workspace to issue reports without this notice.',
+              watermarkText: isLapsedInclusion ? 'UNLICENSED' : 'TRIAL',
             }
           : {}),
     })

@@ -247,9 +247,12 @@ export async function bulkCreateClinics(inputs: CreateClinicInput[]): Promise<nu
       (elem->>'notes')::text
     FROM jsonb_array_elements(${payloadJson}::jsonb) AS elem
     -- Suppression screen: never re-import an address on the master blacklist.
+    -- LOWER(TRIM()) both sides — same reason as isSuppressed() below: the
+    -- column has no lowercase constraint, so comparing it raw would re-import
+    -- a clinic that had unsubscribed under a mixed-case stored address.
     WHERE NOT EXISTS (
         SELECT 1 FROM email_suppression es
-        WHERE es.email = LOWER(elem->>'contact_email')
+        WHERE LOWER(TRIM(es.email)) = LOWER(TRIM(elem->>'contact_email'))
       )
       -- Email-level dedupe: the same clinic re-imported under a NEW slug
       -- (so ON CONFLICT (slug) can't catch it) must not restart a sequence.
@@ -269,8 +272,20 @@ export async function bulkCreateClinics(inputs: CreateClinicInput[]): Promise<nu
 
 export async function isSuppressed(email: string): Promise<boolean> {
   try {
+    // LOWER(TRIM()) ON THE COLUMN, not just on the input (2026-08-06 residual
+    // sweep). email_suppression is plain TEXT with no lowercase constraint, and
+    // lib/email-suppression.ts — the canonical checker every other send lane
+    // uses — matches `LOWER(TRIM(email))` precisely because "a mixed-case row
+    // from a manual insert or an import must still match". This copy, which
+    // guards the COLD OUTREACH lane, compared the raw column instead, so a
+    // suppressed address stored as `Tim@Clinic.com.au` (or with a trailing
+    // space) would not have matched and the clinic would have been mailed.
+    // Verified 2026-08-06: 0 of the 101 live rows are mixed-case, so nothing
+    // has leaked yet — this closes it before an import creates one. Unsubs are
+    // zero-tolerance; the two checkers must not disagree.
     const { rows } = await sql`
-      SELECT 1 FROM email_suppression WHERE email = ${email.toLowerCase()} LIMIT 1
+      SELECT 1 FROM email_suppression
+      WHERE LOWER(TRIM(email)) = ${email.trim().toLowerCase()} LIMIT 1
     `
     return rows.length > 0
   } catch (err) {

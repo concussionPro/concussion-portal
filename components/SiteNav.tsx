@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { clearIdentity } from '@/lib/analytics'
+import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 
 // 'Courses' → /pricing (owner 2026-07-29: the old /courses/streams chooser
 // was retired as a homepage duplicate, leaving the tab a pointless reload).
@@ -114,7 +115,12 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
     //                     NEXT sign-in to a page that user may not be entitled
     //                     to, producing a bounce instead of their dashboard.
     // clearIdentity() existed but had no caller anywhere in the codebase.
+    // THIRD key, added 2026-08-06: 'concussion-pro-progress' — the whole course
+    // progress blob, not user-scoped, which the next sign-in merges into
+    // whoever logs in next. See clearLocalLearnerState for why that ends in a
+    // certificate being issued to the wrong person.
     clearIdentity()
+    clearLocalLearnerState()
     try { localStorage.removeItem('login_redirect') } catch { /* private mode */ }
     setAuth({ accessLevel: '', ownsCrm: false })
     router.push('/')
