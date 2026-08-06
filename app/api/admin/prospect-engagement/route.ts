@@ -687,7 +687,23 @@ export async function GET(req: NextRequest) {
       const sends = outreachByClinic.get(c.id) ?? []
       const view = viewsByClinic.get(c.id)
       const totalOpens = sends.reduce((acc, s) => acc + (typeof s.opened_count === 'string' ? parseInt(s.opened_count, 10) : s.opened_count), 0)
-      const totalClicks = sends.reduce((acc, s) => acc + (typeof s.clicked_count === 'string' ? parseInt(s.clicked_count, 10) : s.clicked_count), 0)
+      // Resend open/click tracking is OFF (deliberately — the pixel and the
+      // rewritten redirect domain are the two things that cost deliverability,
+      // and post-Apple-MPP the open number is junk anyway). These two columns
+      // stopped incrementing on 2026-06-30 and have read ZERO ever since, so
+      // the dashboard has been reporting a dead engine as dead.
+      //
+      // The real click signal is FIRST-PARTY and always was: every cold email
+      // links to a clean per-clinic path (/p/<slug>, no key, no query string,
+      // no redirect), so an arrival IS the click — logged to
+      // prospect_portal_views with section, dwell and CTA target. Measured over
+      // the same window it beats what Resend saw: 87 clinics arrived vs 68
+      // tracked clicks, with depth Resend never had and no deliverability cost.
+      //
+      // So `clicks` now means "reached their portal", counted from our own
+      // data. `trackedClicks` keeps the legacy column for the pre-July window.
+      const trackedClicks = sends.reduce((acc, s) => acc + (typeof s.clicked_count === 'string' ? parseInt(s.clicked_count, 10) : s.clicked_count), 0)
+      const totalClicks = Math.max(trackedClicks, view ? 1 : 0)
       // Replies — the money signal. The inbound webhook mirrors the reply
       // onto the latest outreach-log row AND sets prospect_clinics.replied_at
       // / status='replied'. Use BOTH so a reply that matched the clinic but
