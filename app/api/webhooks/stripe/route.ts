@@ -1003,7 +1003,7 @@ async function handleCrmPurchase(
       console.error(`[crm-intl] no Stripe customer on international CRM session ${session.id} — cannot attach the bundled SST subscription`)
     }
   }
-  await provisionPlatformBestEffort(customerEmail, customerName, `CRM ${tier}`, bundledSubscription)
+  const clinicCode = await provisionPlatformBestEffort(customerEmail, customerName, `CRM ${tier}`, bundledSubscription)
 
   // Analytics — same purchase_complete event the CCM path fires, marked
   // stream='crm' + the nominated city so EP demand shows in Ready-to-Train and
@@ -1119,6 +1119,20 @@ async function handleCrmPurchase(
             <a href="${loginUrl}" style="display: inline-block; padding: 14px 28px; background: #0d9488; color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Open the course →</a>
           </p>
           ${seatBlock}
+          ${clinicCode ? `
+          <div style="margin:22px 0;padding:18px;border:1px solid #99f6e4;border-radius:12px;background:#f0fdfa;">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:.08em;">Included with your enrolment — live now</p>
+            <p style="margin:0 0 10px;font-size:14px;color:#134e4a;line-height:1.55;">You don't have to finish the course to use these. Your clinic workspace is already set up:</p>
+            <p style="margin:0 0 12px;font-size:15px;color:#0f172a;">Your clinic code: <strong style="font-family:monospace;font-size:17px;letter-spacing:.06em;">${escapeHtml(clinicCode)}</strong></p>
+            <ul style="margin:0 0 14px;padding-left:18px;font-size:14px;color:#134e4a;line-height:1.7;">
+              <li><strong>SST Trainer</strong> — graded exertion testing, then in-band training your patient runs on their own phone</li>
+              <li><strong>Pre-season Baseline</strong> — one link per club, athletes self-complete in ~5 minutes, reports back to you</li>
+              <li><strong>BCTT calculator</strong> — Buffalo stages in, heart-rate threshold and training band out</li>
+              <li><strong>Clinical toolkit</strong> — the NDIS / WorkCover / GP report templates</li>
+            </ul>
+            <a href="${baseUrl}/clinical-testing" style="display:inline-block;padding:10px 18px;background:#0f766e;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">Open your clinical suite</a>
+            <p style="margin:12px 0 0;font-size:13px;color:#0f766e;">Want to look around first? <a href="${baseUrl}/demo/clinic" style="color:#0f766e;font-weight:600;">Open the demo workspace</a> — a full working clinic with sample patients that saves nothing.</p>
+          </div>` : ''}
           <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
             <strong>What you paid:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br>
             <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>${crmInvoice ? '<br><strong>Tax invoice:</strong> attached to this email' : ''}
@@ -1163,10 +1177,16 @@ async function provisionPlatformBestEffort(
   name: string,
   context: string,
   bundledSubscription?: { customerId: string; defaultPaymentMethod?: string },
-): Promise<void> {
+): Promise<string | null> {
+  // Returns the clinic code so the welcome email can actually HAND IT OVER.
+  // It used to be logged and thrown away: the platform was created for every
+  // buyer and no email ever mentioned it. That is how 25 clinics ended up
+  // provisioned on 2026-08-02 with nobody ever logging in — the product was
+  // bought, built and never opened.
   try {
     const code = await provisionPlatformForBuyer(email, name, bundledSubscription)
     console.log(`[bundle] platform provisioned for ${redact(email)} (${context}) — clinic ${code}`)
+    return code
   } catch (err) {
     console.error(`[bundle] platform provisioning failed for ${redact(email)} (${context}):`, err)
     try {
@@ -1178,6 +1198,7 @@ async function provisionPlatformBestEffort(
     } catch (alertErr) {
       console.error('[bundle] provisioning admin alert failed:', alertErr)
     }
+    return null
   }
 }
 
