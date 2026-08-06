@@ -12,10 +12,16 @@ const CITY_OPTIONS = Object.values(CONFIG.LOCATIONS).map((l) => ({
   label: l.city + (l.status === 'completed' ? ' (past round)' : ''),
 }))
 
+// The amount POSTed decides the access level server-side
+// (`amount >= PRICE_EARLY_BIRD` → full-course). Derive both from CONFIG so the
+// price on the button can never drift from the amount actually sent.
+const AMOUNT_ONLINE = CONFIG.COURSE.PRICE_ONLINE
+const AMOUNT_FULL = CONFIG.COURSE.PRICE_REGULAR
+
 export default function AdminCreateUser() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [amount, setAmount] = useState<'497' | '1400'>('1400')
+  const [amount, setAmount] = useState<number>(AMOUNT_FULL)
   const [location, setLocation] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
@@ -36,9 +42,9 @@ export default function AdminCreateUser() {
         body: JSON.stringify({
           email,
           name,
-          amount: parseInt(amount),
+          amount,
           // City only applies to full-course sales (workshop seat nomination)
-          ...(amount === '1400' && location ? { location } : {}),
+          ...(amount === AMOUNT_FULL && location ? { location } : {}),
         }),
       })
 
@@ -49,14 +55,20 @@ export default function AdminCreateUser() {
       }
 
       setStatus('success')
-      setMessage(`User created! ${data.emailSent ? 'Email sent' : 'Copy magic link below'} to ${email}`)
+      // A repeat within the server's dedup window creates nothing and sends
+      // nothing — saying "User created!" there was a lie.
+      setMessage(
+        data.duplicate
+          ? data.message || `Duplicate suppressed — ${email} was already sent an access email moments ago`
+          : `User created! ${data.emailSent ? 'Email sent' : 'Copy magic link below'} to ${email}`,
+      )
       setMagicLink(data.magicLink || '')
 
       // Clear form after 10 seconds (give time to copy link)
       setTimeout(() => {
         setEmail('')
         setName('')
-        setAmount('1400')
+        setAmount(AMOUNT_FULL)
         setLocation('')
         setStatus('idle')
         setMessage('')
@@ -125,9 +137,9 @@ export default function AdminCreateUser() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => setAmount('497')}
+                  onClick={() => setAmount(AMOUNT_ONLINE)}
                   className={`p-4 rounded-xl border-2 transition-all ${
-                    amount === '497'
+                    amount === AMOUNT_ONLINE
                       ? 'border-purple-500 bg-purple-50'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
@@ -137,9 +149,9 @@ export default function AdminCreateUser() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAmount('1400')}
+                  onClick={() => setAmount(AMOUNT_FULL)}
                   className={`p-4 rounded-xl border-2 transition-all ${
-                    amount === '1400'
+                    amount === AMOUNT_FULL
                       ? 'border-[#5b9aa6] bg-teal-50'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
@@ -153,7 +165,7 @@ export default function AdminCreateUser() {
             {/* Workshop City — full-course only. The nominated city feeds the
                 Ready-to-Train seat board (getEnrollmentCount), so manual sales
                 count toward launching a date. */}
-            {amount === '1400' && (
+            {amount === AMOUNT_FULL && (
               <div>
                 <label className="block text-sm font-bold text-slate-900 mb-2">
                   <MapPin className="w-4 h-4 inline mr-2" />

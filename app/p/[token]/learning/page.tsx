@@ -85,8 +85,8 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
             {isPurpose
-              ? 'Two streams — CCM (allied health) and CRM (exercise physiology), 8 modules each. 8 CPD hrs online per stream (+8 in-person = 16 total). Pick a stream below to see its modules.'
-              : '8 modules · 8 CPD hrs online (+8 in-person = 16 total) · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.'}
+              ? `Two streams — CCM (allied health) and CRM (exercise physiology), 8 modules each. ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online per stream (+${CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person = ${CONFIG.COURSE.TOTAL_CPD_POINTS} total). Pick a stream below to see its modules.`
+              : `8 modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online (+${CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person = ${CONFIG.COURSE.TOTAL_CPD_POINTS} total) · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.`}
           </p>
 
           {isPurpose ? (
@@ -149,7 +149,11 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
 
               <div className="glass-premium rounded-2xl p-4 mt-6 text-center">
                 <p className="text-xs text-muted-foreground">
-                  Modules 2-8 unlock for every {clinic.shortName} clinician with the Hub Program · 8 CPD hrs online each (16 with the in-person day).
+                  {/* "8 CPD hrs online EACH" (fixed 2026-08-06) read as 8 CPD
+                      hours PER MODULE — i.e. 56 for modules 2-8. The 8 online
+                      hours are the whole course. "each" now correctly attaches
+                      to the clinician, which is what the sentence is selling. */}
+                  Modules 2-8 unlock for every {clinic.shortName} clinician with the Hub Program · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online for the full course ({CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day).
                 </p>
               </div>
             </>

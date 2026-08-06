@@ -58,7 +58,6 @@ type SCAT6FormData = import('@/app/scat-forms/shared/types/scat6.types').SCAT6Fo
 
 // Score-box coordinates the exporter writes to (see scat6-pdf-flat.ts).
 const BOX = {
-  symptomCountTop: { page: 3, x: 390, y: 503 },
   symptomCountBottom: { page: 3, x: 167, y: 78 },
   symptomSeverity: { page: 3, x: 390, y: 77 },
   orientation: { page: 4, x: 423, y: 547 },
@@ -101,11 +100,48 @@ describe('SCAT6 export — an untouched form', () => {
     })
   })
 
+  /**
+   * (390, 503) is NOT a symptom-total box. Rendering a populated export of
+   * SCAT6_Flat.pdf at 300 dpi shows that coordinate falling inside the form's
+   * own printed field on page 4 (BJSM 2023;57:625):
+   *
+   *   "Time elapsed since suspected injury: [____] mins/hours/days"
+   *
+   * The exporter used to draw the symptom COUNT there, so a record with 18
+   * symptoms read "18 mins/hours/days" since the injury — a timeline nobody
+   * entered. This form does not collect time-elapsed, so the field stays blank.
+   * The symptom totals have their own boxes at the foot of the page.
+   */
+  it('leaves the form\'s "time elapsed since injury" field untouched', async () => {
+    const fd = getDefaultSCAT6FormData()
+    fd.symptoms.headaches = 4
+    await run(fd)
+    const timeElapsed = { page: 3, x: 390, y: 503 }
+    expect(at(timeElapsed)).toBeUndefined()
+    expect(dashedAt(timeElapsed)).toBe(false)
+  })
+
   it('marks nothing on the 22-item symptom scale', async () => {
     await run(getDefaultSCAT6FormData())
     // Symptom rows live on page index 3 between y=137 and y=393.
     const symptomMarks = calls.circles.filter(c => c.page === 3 && c.y >= 137 && c.y <= 393)
     expect(symptomMarks).toHaveLength(0)
+  })
+
+  /**
+   * Rendered evidence (SCAT6_Flat.pdf page 5, BJSM 2023;57:626, "Step 3:
+   * Cognitive Screening"): with ONLY "Word list used: A" ticked, the export
+   * marked the "0" column for all ten words in all three trials, printed
+   * "0 0 0" as the trial totals and filled the printed box "Immediate Memory
+   * Score [__] of 30" with 0 — a record of profound amnesia in an athlete who
+   * was never read a single word. Choosing a list is setup, not a trial.
+   */
+  it('does not score immediate memory from a word-list choice alone', async () => {
+    await run({ ...getDefaultSCAT6FormData(), wordListUsed: 'A' })
+    expect(dashedAt(BOX.immediateMemory)).toBe(true)
+    expect(at(BOX.immediateMemory)).toBeUndefined()
+    // no "0" circles down the trial columns
+    expect(calls.circles.filter(c => c.page === 4)).toHaveLength(0)
   })
 
   it('marks nothing in the orientation, memory or delayed-recall item columns', async () => {
@@ -183,8 +219,9 @@ describe('SCAT6 export — real findings still reach the record', () => {
     expect(at(BOX.symptomCountBottom)?.text).toBe('1')
     expect(at(BOX.symptomSeverity)?.text).toBe('5')
     // ...and says the scale was only partly rated, so "1 of 22" cannot be read
-    // as the athlete denying the other 20 symptoms.
-    expect(calls.text.filter(c => c.text === '(2/22 rated)')).toHaveLength(3)
+    // as the athlete denying the other 20 symptoms. One qualifier per printed
+    // total box — the form has two (count and severity, at the foot of p4).
+    expect(calls.text.filter(c => c.text === '(2/22 rated)')).toHaveLength(2)
     // exactly two marks on the symptom grid — the two rated items
     expect(calls.circles.filter(c => c.page === 3 && c.y >= 137 && c.y <= 393)).toHaveLength(2)
   })

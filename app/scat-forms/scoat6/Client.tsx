@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Download, Save, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import {
@@ -155,6 +155,13 @@ export default function SCOAT6Client() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showEmailGate, setShowEmailGate] = useState(false)
   const [pendingDraft, setPendingDraft] = useState<{ data: SCOAT6FormData; timestamp: number } | null>(null)
+  /**
+   * The optional foam mBESS is opened by a checkbox. Opening it must NOT write
+   * scores: seeding 0/0/0 exported "Total Errors (Foam) 0 of 30" — a flawless
+   * foam balance test — for a clinician who ticked the box and was interrupted.
+   * The panel's open state therefore lives in the UI, not in the record.
+   */
+  const [foamPerformed, setFoamPerformed] = useState(false)
 
   // Check auth status on mount
   useEffect(() => {
@@ -164,10 +171,17 @@ export default function SCOAT6Client() {
       .catch(() => {})
   }, [])
 
+  /** Serialised empty form, for "has the clinician touched anything yet?". */
+  const pristineForm = useRef<string>(JSON.stringify(getDefaultSCOAT6FormData()))
+
   // Auto-save to localStorage every 3 seconds with timestamp
   // (paused while a restore prompt is pending so the saved draft isn't overwritten)
   useEffect(() => {
-    if (pendingDraft) return
+    // Only hold off while the form is still PRISTINE. Pausing for as long
+    // as the restore banner sits there meant a clinician who ignored the
+    // banner and worked through a whole assessment had nothing auto-saved:
+    // one refresh and the entry was gone, replaced by the older draft.
+    if (pendingDraft && JSON.stringify(formData) === pristineForm.current) return
     const timer = setTimeout(() => {
       const draftWithTimestamp = {
         data: formData,
@@ -210,6 +224,12 @@ export default function SCOAT6Client() {
 
   const calculated = getAllCalculatedScores(formData)
 
+  const foamOpen =
+    foamPerformed ||
+    formData.mBessFoamDoubleErrors !== null ||
+    formData.mBessFoamTandemErrors !== null ||
+    formData.mBessFoamSingleErrors !== null
+
   const toggleSection = (section: string) => {
     setExpandedSections(prev => {
       const next = new Set(prev)
@@ -244,6 +264,7 @@ export default function SCOAT6Client() {
     if (confirm('Start a new assessment? All current form data will be cleared.\n\nThis cannot be undone.')) {
       localStorage.removeItem('scoat6-draft')
       setFormData(getDefaultSCOAT6FormData())
+      setFoamPerformed(false)
       alert('New assessment started - form cleared successfully')
     }
   }
@@ -1825,18 +1846,16 @@ export default function SCOAT6Client() {
                   <div className="flex items-center justify-between mb-3">
                     <h5 className="font-bold text-slate-900">On Foam <span className="text-xs font-normal bg-orange-500 text-white px-2 py-1 rounded ml-2">Optional</span></h5>
                     <label className="flex items-center gap-2">
+                      {/* Ticking this only OPENS the panel — each stance stays
+                          "not recorded" until an error count is typed, so an
+                          opened-but-unused foam section exports blank rather
+                          than as a perfect 0-of-30 result. */}
                       <input
                         type="checkbox"
-                        checked={formData.mBessFoamDoubleErrors !== null}
+                        checked={foamOpen}
                         onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData(prev => ({
-                              ...prev,
-                              mBessFoamDoubleErrors: 0,
-                              mBessFoamTandemErrors: 0,
-                              mBessFoamSingleErrors: 0,
-                            }))
-                          } else {
+                          setFoamPerformed(e.target.checked)
+                          if (!e.target.checked) {
                             setFormData(prev => ({
                               ...prev,
                               mBessFoamDoubleErrors: null,
@@ -1851,7 +1870,7 @@ export default function SCOAT6Client() {
                     </label>
                   </div>
 
-                  {formData.mBessFoamDoubleErrors !== null && (
+                  {foamOpen && (
                     <>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
@@ -2652,7 +2671,12 @@ export default function SCOAT6Client() {
 
                     <div className="mt-4 bg-purple-600 text-white rounded-lg p-6 text-center">
                       <div className="text-sm opacity-90 mb-2">Delayed Recall Score:</div>
-                      <div className="text-4xl font-bold">{calculated.delayedRecall} <span className="text-xl opacity-75">of 10</span></div>
+                      {/* Gated like the PDF: an untouched panel showed "0 of 10"
+                          — no words recalled — before the subtest was given. */}
+                      <div className="text-4xl font-bold">
+                        {calculated.delayedRecallAdministered ? calculated.delayedRecall : NA}
+                        {' '}<span className="text-xl opacity-75">of 10</span>
+                      </div>
                     </div>
                   </div>
                 )}

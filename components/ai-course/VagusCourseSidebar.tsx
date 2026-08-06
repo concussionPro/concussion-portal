@@ -12,6 +12,8 @@ import {
   Wrench,
 } from 'lucide-react'
 import { VAGUS_MODULES } from '@/lib/vagus-course/modules'
+import { VAGUS_REFERENCES, VAGUS_REF_CATEGORIES } from '@/lib/vagus-course/references'
+import { COURSES } from '@/lib/ai-course/provider-catalogue'
 
 /**
  * Course-scoped sidebar for the Vagus Nerve course. Mirrors
@@ -22,6 +24,13 @@ import { VAGUS_MODULES } from '@/lib/vagus-course/modules'
  * <CourseSidebar courseSlug=... /> component. For now, parallel
  * implementation is faster than the refactor.
  */
+// Counts are DERIVED, never typed in. The sidebar advertised "29 sources ·
+// 8 categories" against a repository that holds 40 across 9 — a stale literal
+// that no one would notice going wrong. Same for the CPD figure: it is the
+// catalogue's cpdHours, which is what the certificate and the checkout quote.
+const VAGUS_COURSE = COURSES.find((c) => c.id === 'vagus-nerve')
+const VAGUS_CPD_HOURS = VAGUS_COURSE?.cpdHours ?? 1
+
 export function VagusCourseSidebar() {
   const pathname = usePathname()
   const currentModuleSlug = pathname?.match(/\/vagus-nerve\/([^/]+)/)?.[1]
@@ -41,7 +50,8 @@ export function VagusCourseSidebar() {
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mb-2">CEA Learning</p>
         <p className="text-base font-bold text-foreground leading-tight mb-2">The Vagus Nerve in Clinical Practice</p>
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          {VAGUS_MODULES.length} modules · {totalMin}m total · 1 CPD hour
+          {VAGUS_MODULES.length} modules · {totalMin}m total · {VAGUS_CPD_HOURS} CPD{' '}
+          {VAGUS_CPD_HOURS === 1 ? 'hour' : 'hours'}
         </p>
       </Link>
 
@@ -83,7 +93,7 @@ export function VagusCourseSidebar() {
           <SidebarLink
             href="/courses/vagus-nerve/references"
             label="Reference Repository"
-            sub="29 sources · 8 categories"
+            sub={`${VAGUS_REFERENCES.length} sources · ${VAGUS_REF_CATEGORIES.length} categories`}
             icon={BookMarked}
             active={isResourceActive('references')}
           />

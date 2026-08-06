@@ -261,6 +261,23 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
 
   const clinicalToolkitHref = hubForPaid && isOwnerEmail(user?.email) ? '/clinical-testing' : '/clinical-toolkit'
 
+  // The /clinical-toolkit and /references pages are CCM entitlements:
+  // lib/toolkit-access.ts and /references admit online-only / full-course /
+  // book-owner ONLY. Styling them off `isPreview` (free tier) rendered them
+  // fully unlocked — emerald icon, no chip — for a CRM buyer, who is neither
+  // free nor admitted, so the two tiles a paying EP customer is most likely to
+  // click both dead-ended on a locked screen selling them the other course.
+  // A CRM buyer isn't locked out of a toolkit or a reference library, though —
+  // theirs live in their own stream, and those pages let them straight in.
+  const crmOnlyTier = bentoOwnsCrm && !isCcmPaidTier
+  const ccmToolsLocked = !isCcmPaidTier && !crmOnlyTier
+  const toolkitHref = crmOnlyTier
+    ? '/ep-course/toolkit'
+    : ccmToolsLocked
+      ? '/pricing'
+      : clinicalToolkitHref
+  const referencesHref = crmOnlyTier ? '/ep-course/references' : '/references'
+
   return (
     <div className="space-y-8">
       {/* ═══ Quick stats strip — where you are, at a glance ═══ */}
@@ -507,15 +524,15 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
           {/* Clinical Toolkit → becomes Clinical Hub when launched.
               Bare /clinical-hub renders the DEMO roster — route paid users
               through Clinical Testing, which owns their real code + hub link. */}
-          <Card href={clinicalToolkitHref} span2>
+          <Card href={toolkitHref} span2>
             <div className="flex items-start gap-4">
               <div className={cn(
                 'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
-                isPreview
+                ccmToolsLocked
                   ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
                   : 'bg-gradient-to-br from-emerald-500/10 to-emerald-400/5'
               )}>
-                {isPreview
+                {ccmToolsLocked
                   ? <Lock className="w-5 h-5 text-slate-400" strokeWidth={1.8} />
                   : hubForPaid
                     ? <Stethoscope className="w-5 h-5 text-emerald-600/70" strokeWidth={1.8} />
@@ -525,7 +542,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="stat-label">{hubForPaid ? 'Clinical Hub' : 'Clinical Toolkit'}</p>
-                  {isPreview && (
+                  {ccmToolsLocked && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
                       Paid
                     </span>
@@ -543,28 +560,33 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
             </div>
           </Card>
 
-          {/* Reference Repository */}
-          <Card href="/references">
+          {/* Reference Repository — CCM entitlement; see ccmToolsLocked. */}
+          <Card href={referencesHref}>
             <div className="flex items-center gap-3 mb-3">
               <div className={cn(
                 'w-9 h-9 rounded-xl flex items-center justify-center',
-                isPreview
+                ccmToolsLocked
                   ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
                   : 'bg-gradient-to-br from-amber-500/10 to-amber-400/5'
               )}>
-                {isPreview
+                {ccmToolsLocked
                   ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
                   : <Library className="w-[18px] h-[18px] text-amber-600/70" strokeWidth={1.8} />
                 }
               </div>
               <p className="stat-label mb-0">Reference Repository</p>
-              {isPreview && (
+              {ccmToolsLocked && (
                 <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
                   Paid
                 </span>
               )}
             </div>
-            <p className="text-sm text-foreground font-semibold mb-1">{REFERENCE_COUNT} Peer-Reviewed Sources</p>
+            {/* REFERENCE_COUNT is the CCM repository's count. A CRM buyer is
+                sent to /ep-course/references, a different corpus — quoting the
+                CCM number at them would be a figure we can't stand behind. */}
+            <p className="text-sm text-foreground font-semibold mb-1">
+              {crmOnlyTier ? 'The cited evidence base' : `${REFERENCE_COUNT} Peer-Reviewed Sources`}
+            </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable library of concussion research — journal articles, meta-analyses, and clinical guidelines.
             </p>

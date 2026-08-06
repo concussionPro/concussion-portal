@@ -3,6 +3,7 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { Clock, Eye, Activity, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 const TITLE = "Vestibulo-Ocular Workup for Persistent Post-Concussion Symptoms — Beyond VOMS [2026]"
@@ -136,7 +137,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
               <p className="text-sm font-semibold text-emerald-100 mb-3">Available now:</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Free SCAT Mastery course</Link>
-                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Concussion Clinical Mastery — 8 CPD hrs online, up to 16 with the in-person day · from $1,190 early-bird</Link>
+                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Concussion Clinical Mastery — {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online, up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day · from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird</Link>
               </div>
             </div>
           </section>

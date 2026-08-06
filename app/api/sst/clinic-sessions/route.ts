@@ -98,6 +98,18 @@ function isThresholdEventRow(r: Row): boolean {
   return e === 'test-aborted' || e === 'red-flag-cleared'
 }
 
+/** DISTINCT recorded minutes in a stored stage table (0 when absent/unreadable). */
+function distinctStages(raw: unknown): number {
+  if (!Array.isArray(raw)) return 0
+  const minutes = new Set<number>()
+  for (const st of raw) {
+    if (!st || typeof st !== 'object') continue
+    const m = Number((st as Record<string, unknown>).minute)
+    if (Number.isFinite(m)) minutes.add(m)
+  }
+  return minutes.size
+}
+
 /** Client-minted id for one session ATTEMPT (present from the 2026-08 app on). */
 function sessionUidOf(r: Row): string | null {
   const v = r.payload?.sessionUid
@@ -250,6 +262,14 @@ export async function GET(request: NextRequest) {
             modality: (t.payload?.modality as string | undefined) ?? null,
             verifiedReadingPct:
               typeof t.payload?.verifiedReadingPct === 'number' ? t.payload.verifiedReadingPct : null,
+            // DISTINCT minutes of the graded ramp actually recorded. The
+            // exhaustion arm of detectThreshold returns the CLEARANCE-GRADE
+            // 'no-intolerance' from a ramp of ANY length — one recorded minute
+            // reads identically to a completed PROTOCOL_STAGE_CAP-minute
+            // protocol — and the hub's green "Recovered · ready for your
+            // clearance review" banner said nothing about which. Count
+            // distinct minutes, so a duplicated stage set is not a longer test.
+            stagesRecorded: distinctStages(t.payload?.stages),
             patientRef: t.patient_ref ?? null,
           }
         }),

@@ -163,7 +163,11 @@ export function CourseNavigation({
                     </button>
                   ))}
                   <p className="px-3 pt-2 pb-0.5 text-[10px] font-semibold text-slate-500">Other assets</p>
-                  <button onClick={() => router.push('/pricing-international')} className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-left opacity-70 hover:opacity-100 hover:bg-slate-50 transition-all" title="Enrol to unlock">
+                  {/* CRM's own sales page. This pointed at /pricing-international,
+                      the USD offer for overseas buyers — so an Australian free-tier
+                      user clicking the CRM row was quoted a foreign-currency price
+                      for a different package. */}
+                  <button onClick={() => router.push('/concussion-rehab-mastery')} className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-left opacity-70 hover:opacity-100 hover:bg-slate-50 transition-all" title="Enrol to unlock">
                     <Lock className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
                     <span className="text-xs text-slate-500 truncate">Concussion Rehab Mastery (CRM) — exercise stream</span>
                   </button>

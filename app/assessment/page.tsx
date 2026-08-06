@@ -196,11 +196,11 @@ export default function AssessmentPage() {
             <div className="glass rounded-2xl p-6 md:p-8 text-center bg-gradient-to-br from-[#5b9aa6]/5 to-[#6b9da8]/5">
               <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">
                 <span className="text-gradient">
-                  Master These Skills — 16 CPD Hours
+                  Master These Skills — {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD Hours
                 </span>
               </h2>
               <p className="text-sm md:text-base text-muted-foreground mb-3 max-w-2xl mx-auto leading-relaxed">
-                Complete training: 8 online modules + full-day hands-on practical (SCAT6, VOMS, BESS).
+                Complete training: {CONFIG.COURSE.TOTAL_MODULES} online modules + full-day hands-on practical (SCAT6, VOMS, BESS).
                 Master every assessment you missed above.
               </p>
               <Link
@@ -210,21 +210,25 @@ export default function AssessmentPage() {
                 View workshop agenda →
               </Link>
 
+              {/* CPD figures derive from CONFIG — this grid was hardcoded at
+                  6 in-person / 14 total, which was stale after OA re-rated the
+                  practical day to 8 hrs (2026-07-30) and contradicted the
+                  "16 CPD Hours" heading directly above it. */}
               <div className="grid grid-cols-4 gap-2 mb-5 max-w-2xl mx-auto">
                 <div className="glass rounded-lg p-3">
-                  <div className="text-lg font-bold text-gradient mb-1">8</div>
+                  <div className="text-lg font-bold text-gradient mb-1">{CONFIG.COURSE.TOTAL_MODULES}</div>
                   <div className="text-xs text-muted-foreground leading-tight">Online Modules</div>
                 </div>
                 <div className="glass rounded-lg p-3">
-                  <div className="text-lg font-bold text-gradient mb-1">8</div>
+                  <div className="text-lg font-bold text-gradient mb-1">{CONFIG.COURSE.ONLINE_CPD_POINTS}</div>
                   <div className="text-xs text-muted-foreground leading-tight">Online CPD</div>
                 </div>
                 <div className="glass rounded-lg p-3">
-                  <div className="text-lg font-bold text-gradient mb-1">6</div>
+                  <div className="text-lg font-bold text-gradient mb-1">{CONFIG.COURSE.IN_PERSON_CPD_POINTS}</div>
                   <div className="text-xs text-muted-foreground leading-tight">In-Person CPD</div>
                 </div>
                 <div className="glass rounded-lg p-3 border-2 border-accent/30">
-                  <div className="text-lg font-bold text-accent mb-1">14</div>
+                  <div className="text-lg font-bold text-accent mb-1">{CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
                   <div className="text-xs font-semibold text-accent leading-tight">Total CPD</div>
                 </div>
               </div>

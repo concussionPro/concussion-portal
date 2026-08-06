@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 
@@ -21,7 +21,7 @@ const PRICE_USD = CONFIG.COURSE.PRICE_INTERNATIONAL
 // The bundled platform renews at the real SST single-tier price — the
 // old US$99/yr copy was never wired to any Stripe price and understated
 // the actual charge ~4x (2026-08-05 live crawl).
-const PLATFORM_MONTHLY = 49
+const PLATFORM_MONTHLY = SST_TIER_FROM_AUD
 
 /** Real, verifiable module structure — 480 min = 8.0 instructional hours. */
 const MODULES: { n: string; title: string; mins: number }[] = [

@@ -98,9 +98,49 @@ function sessionFlare(s: Record<string, unknown>): boolean {
   return pre != null && peak != null && peak - pre >= 2
 }
 
+/**
+ * HR provenance for one TRAINING session, on the same rule every SST document
+ * already uses (lib/sst-trainer/reports/load.ts `isVerified`,
+ * gp-report-pdf.ts, gp-report-html.ts, patient-summary.ts): sensor-verified
+ * ONLY — a manual entry, or a row that recorded no source at all, is never
+ * "verified". The Clinical Hub's extra signal-quality guard
+ * (verifiedReadingPct ≥ 80) is applied too, so this roster and /clinical-hub
+ * can never disagree about the same session.
+ *
+ * Three states, not two. This badge used to read
+ * `s.hrVerified === true || s.verified === true`, which (a) trusted an
+ * unvalidated client-supplied `verified` key, (b) skipped the manual/no-source
+ * guard, and (c) printed a positive "unverified" claim over rows whose HR
+ * provenance was simply NOT RECORDED — the same defect skins.ts fixed for the
+ * medicolegal export. Training-session payloads are stored verbatim from the
+ * client (only threshold tests are re-derived server-side), so the check has
+ * to be made here.
+ */
+function sessionProvenance(s: Record<string, unknown>): 'verified' | 'unverified' | 'unknown' {
+  const src = typeof s.hrSource === 'string' && s.hrSource.trim() !== '' ? s.hrSource : undefined
+  const pct = typeof s.verifiedReadingPct === 'number' ? s.verifiedReadingPct : null
+  if (typeof s.hrVerified !== 'boolean' && src === undefined) return 'unknown'
+  const verified =
+    s.hrVerified === true && src !== undefined && src !== 'manual' && (pct == null || pct >= 80)
+  return verified ? 'verified' : 'unverified'
+}
+
+/** A 'session-abandoned' row is an audit record of an interrupted attempt, not
+ *  a delivered session. Every SST document excludes it from the session count
+ *  (lib/sst-trainer/patient-summary.ts), so the roster must not present it as
+ *  an ordinary session or count it — the screen and the insurer's copy have to
+ *  say the same number. */
+function sessionAbandoned(s: Record<string, unknown>): boolean {
+  const e = typeof s.eventType === 'string' ? s.eventType.toLowerCase() : ''
+  return e === 'session-abandoned' || e === 'abandoned'
+}
+
 function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic }) {
   const [open, setOpen] = useState(false)
   const recent = [...patient.sessions].slice(-6).reverse()
+  // DELIVERED sessions only — `sessionCount` from the API includes abandoned
+  // attempts, which every generated document excludes.
+  const deliveredCount = patient.sessions.filter((s) => !sessionAbandoned(s)).length
 
   return (
     <div className="glass-premium rounded-2xl">
@@ -140,7 +180,7 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
           </p>
         </div>
         <div className="text-right">
-          <p className="m-0 font-mono text-[16px] font-bold text-foreground">{patient.sessionCount}</p>
+          <p className="m-0 font-mono text-[16px] font-bold text-foreground">{deliveredCount}</p>
           <p className="m-0 text-[10.5px] text-muted-foreground">sessions</p>
         </div>
         <ChevronDown
@@ -202,7 +242,8 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
                 {recent.map((s, i) => {
                   const flare = sessionFlare(s)
                   const avg = typeof s.avgHeartRate === 'number' ? s.avgHeartRate : null
-                  const verified = s.hrVerified === true || s.verified === true
+                  const prov = sessionProvenance(s)
+                  const abandoned = sessionAbandoned(s)
                   return (
                     <div key={i} className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px]">
                       <span className="w-14 flex-none text-muted-foreground">{fmtDate(s.date)}</span>
@@ -211,13 +252,22 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
                       </span>
                       <span
                         className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold ${
-                          verified
+                          prov === 'verified'
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                             : 'border-slate-200 bg-slate-50 text-slate-500'
                         }`}
                       >
-                        {verified ? 'verified' : 'unverified'}
+                        {prov === 'verified'
+                          ? 'verified'
+                          : prov === 'unverified'
+                            ? 'unverified'
+                            : 'HR source not recorded'}
                       </span>
+                      {abandoned && (
+                        <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                          not completed
+                        </span>
+                      )}
                       {flare && (
                         <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
                           flare

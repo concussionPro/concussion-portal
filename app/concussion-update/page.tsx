@@ -492,7 +492,8 @@ export default function ConcussionUpdatePage() {
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                Ready to close the gap? Get up to 16 CPD hours (8 online + optional in-person day).
+                Ready to close the gap? Get up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours
+                ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + optional in-person day).
               </h2>
               <p className="text-sm text-slate-500">
                 This module makes the gap visible. The complete course is where you close it.

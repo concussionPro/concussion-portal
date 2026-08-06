@@ -71,10 +71,15 @@ function Shell({ content }: { content: DocumentsContent | null }) {
   // second practitioner or a second device printed a blank letterhead while the
   // hub's own reports rendered fully (2026-08-05 crawl #2).
   const [profile, setProfile] = useState<ClinicProfile>(EMPTY_CLINIC_PROFILE)
+  // Whether the letterhead below is EMPTY-because-unset or EMPTY-because-the-
+  // lookup-failed. Collapsing the two told a clinic that had already saved its
+  // details to "set your clinic details once", while every document printed
+  // from this page carried a blank letterhead and no warning.
+  const [profileFailed, setProfileFailed] = useState(false)
 
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => {
         const c: Clinic | null = d?.clinic ?? null
         setClinic(c)
@@ -90,6 +95,7 @@ function Shell({ content }: { content: DocumentsContent | null }) {
       })
       .catch(() => {
         setClinic(null)
+        setProfileFailed(true)
       })
     const sp = new URLSearchParams(window.location.search)
     const p = sp.get('patient')
@@ -159,7 +165,13 @@ function Shell({ content }: { content: DocumentsContent | null }) {
           <DocumentsPaywall clinicName={clinic?.clinicName ?? null} />
         ) : (
           <>
-            {profile.clinic_name || profile.ahpra_number ? (
+            {profileFailed ? (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] text-red-800">
+                Couldn&rsquo;t load your clinic details, so the letterhead and provider block below
+                are <strong>blank</strong> — this is a loading failure, not a missing profile.
+                Reload before printing or filing anything from this page.
+              </div>
+            ) : profile.clinic_name || profile.ahpra_number ? (
               <p className="mb-4 text-[12px] text-slate-500">
                 Letterhead &amp; provider details fill from your{' '}
                 <Link href="/clinical-testing" className="font-semibold text-teal-700 underline">clinic details</Link>.
@@ -200,8 +212,15 @@ function Shell({ content }: { content: DocumentsContent | null }) {
               // Remount when the patient changes, the async SST fields arrive, OR
               // the clinic profile changes, so the autofill takes effect (buyer
               // mode doesn't re-sync in place).
-              key={`${patientLabel ?? 'none'}:${Object.keys(sstFields).length > 0 ? 'sst' : 'base'}:${Object.values(profile).join('|')}`}
-              storageKey={`sst-docs:${patientLabel ?? 'clinic'}`}
+              key={`${patientRef ?? patientLabel ?? 'none'}:${Object.keys(sstFields).length > 0 ? 'sst' : 'base'}:${Object.values(profile).join('|')}`}
+              // The saved draft is PATIENT-IDENTIFIABLE clinical text in
+              // localStorage. Keying it on the display label alone meant the
+              // two same-named patients that `ref` exists to separate shared
+              // ONE filled document (patient A's typed findings pre-filled
+              // into patient B's report), and a locum's device shared drafts
+              // across clinics. Namespace by clinic + install-UUID identity,
+              // falling back to the label only when no ref is available.
+              storageKey={`sst-docs:${clinic?.code ?? 'noclinic'}:${patientRef ?? patientLabel ?? 'clinic'}`}
               templates={content.templates}
               principles={content.principles}
               unlockHref="/clinical-testing/subscribe"

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/require-admin'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 
 export const maxDuration = 60
 
@@ -228,9 +229,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 })
   }
 
-  const { to } = await request.json()
-  if (!to) {
-    return NextResponse.json({ error: 'Missing "to" email address' }, { status: 400 })
+  const { to } = await request.json().catch(() => ({} as { to?: string }))
+  if (!to || typeof to !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to.trim())) {
+    return NextResponse.json({ error: 'A valid "to" email address is required' }, { status: 400 })
+  }
+  const testTo = to.trim()
+
+  // MASTER BLACKLIST — this route fires EIGHTEEN live marketing templates at a
+  // body-supplied address through the Resend API directly (it does not go via
+  // sendEmail), so it was the one send lane in the tree with no suppression
+  // check at all. Being admin-authenticated is not consent: a typo'd or
+  // pasted-in address that hard-bounced, complained or replied STOP would take
+  // 18 sends. isEmailSuppressed fails closed.
+  if (await isEmailSuppressed(testTo)) {
+    return NextResponse.json(
+      { error: 'That address is on the suppression list — refusing to send.' },
+      { status: 409 }
+    )
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
@@ -283,7 +298,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           from: 'Concussion Education Australia <noreply@concussion-education-australia.com>',
-          to: [to],
+          to: [testTo],
           subject: email.subject,
           html: email.html,
         }),

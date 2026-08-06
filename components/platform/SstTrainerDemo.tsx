@@ -68,9 +68,16 @@ function BandBar({ pos }: { pos: number }) {
 
 export function SstTrainerDemo() {
   const [t, setT] = useState(0)
-  // A manual chapter selection overrides the reduced-motion freeze so the tabs
-  // are functional for reduced-motion users (who otherwise see a fixed frame).
+  // A manual chapter selection (or an explicit play) overrides the reduced-motion
+  // freeze so the controls are functional for reduced-motion users, who otherwise
+  // see a fixed frame.
   const [manual, setManual] = useState(false)
+  // The play control used to be a decorative <span> — the exact "play button does
+  // nothing" defect the owner called out on the sibling SstHomepageDemo on
+  // 2026-07-27, fixed there and left here. This demo is the hero on
+  // /sst-trainer, /clinical-suite/clinics, /clinical-suite/acc and the Guild
+  // partner page, so it is the more visible of the two.
+  const [paused, setPaused] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
   const prefersReduced = useSyncExternalStore(
@@ -83,8 +90,10 @@ export function SstTrainerDemo() {
     () => false,
   )
 
+  const playing = !paused && (!prefersReduced || manual)
+
   useEffect(() => {
-    if (prefersReduced) return
+    if (!playing) return
     let iv: ReturnType<typeof setInterval> | null = null
     const start = () => {
       if (iv == null) iv = setInterval(() => setT((s) => s + 90), 90)
@@ -109,7 +118,7 @@ export function SstTrainerDemo() {
       stop()
       io?.disconnect()
     }
-  }, [prefersReduced])
+  }, [playing])
 
   const total = PER * N
   // Reduced motion freezes on a representative frame — unless the user has
@@ -338,8 +347,11 @@ export function SstTrainerDemo() {
                 </div>
                 <div className={CARD + ' mt-2 text-center'}>
                   <p className="m-0 text-[8.5px] text-slate-500">New band</p>
+                  {/* An advance steps the CEILING up by 5 bpm and shifts the whole
+                      band by that same delta (applyCeiling in app/platform/app/page.tsx),
+                      so 114–128 becomes 119–133, not 118–133. */}
                   <p className="m-0 text-[24px] font-extrabold leading-tight" style={{ color: GREEN, fontFamily: 'var(--font-space), monospace' }}>
-                    118–133
+                    119–133
                   </p>
                   <p className="m-0 text-[8.5px] text-slate-500">stepping up as you recover</p>
                 </div>
@@ -368,9 +380,29 @@ export function SstTrainerDemo() {
 
         {/* control bar */}
         <div className="flex items-center gap-[14px] border-t border-slate-100 bg-white px-[18px] py-[14px]">
-          <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full" style={{ background: ACCENT }}>
-            <span className="ml-0.5 block h-0 w-0 border-y-[6px] border-l-[10px] border-y-transparent border-l-white" />
-          </span>
+          <button
+            type="button"
+            aria-label={playing ? 'Pause product tour' : 'Play product tour'}
+            onClick={() => {
+              if (playing) {
+                setPaused(true)
+              } else {
+                setPaused(false)
+                setManual(true) // explicit play also overrides prefers-reduced-motion
+              }
+            }}
+            className="flex h-[30px] w-[30px] flex-none cursor-pointer items-center justify-center rounded-full border-none transition-transform hover:scale-105"
+            style={{ background: ACCENT }}
+          >
+            {playing ? (
+              <span className="flex gap-[3px]">
+                <span className="block h-[10px] w-[3px] rounded-[1px] bg-white" />
+                <span className="block h-[10px] w-[3px] rounded-[1px] bg-white" />
+              </span>
+            ) : (
+              <span className="ml-0.5 block h-0 w-0 border-y-[6px] border-l-[10px] border-y-transparent border-l-white" />
+            )}
+          </button>
           <div className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-slate-200">
             <div className="h-full rounded-[3px]" style={{ width: progressPct, background: ACCENT }} />
           </div>

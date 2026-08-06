@@ -65,10 +65,16 @@ export function calculateOrientation(formData: SCAT6FormData): number {
   return orientationItems(formData).filter(v => v === true).length
 }
 
-/** Was immediate memory administered? */
+/**
+ * Was immediate memory administered?
+ *
+ * Choosing a word list is SETUP, not a score: the clinician picks List A and
+ * can be interrupted before reading a single word. Counting it as evidence made
+ * an untouched trial grid export as 30 filled "0" circles and an Immediate
+ * Memory Score of 0 of 30 — profound amnesia, asserted by a dropdown.
+ */
 export function isImmediateMemoryAdministered(formData: SCAT6FormData): boolean {
   return (
-    formData.wordListUsed !== '' ||
     formData.immediateMemoryTimeCompleted.trim() !== '' ||
     formData.immediateMemoryTrial1.some(Boolean) ||
     formData.immediateMemoryTrial2.some(Boolean) ||

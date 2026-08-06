@@ -147,7 +147,11 @@ export async function exportSCAT6ToFlatPDF(
       }
     }
 
-    drawSymptomTotal(390, 503, symNum)
+    // NOTE: nothing is drawn at (390, 503). That box is the form's own "Time
+    // elapsed since suspected injury ___ mins/hours/days" field — a rendered
+    // export showed the symptom COUNT sitting in it ("18 mins/hours/days"),
+    // inventing an injury timeline nobody recorded. The symptom totals have
+    // their own boxes at the foot of the page (drawn below).
 
     // Symptoms (22 items, 0-6 scale)
     // Column center x positions from fillable field data (s1 radio widgets + half width)
@@ -192,9 +196,11 @@ export async function exportSCAT6ToFlatPDF(
       drawWrappedText(p4, 295, 290, formData.whyNotHundredPercent, 200, { font, size: fsm })
     }
 
-    // Worse with physical/mental (athelete6: Y=462.8/N=478.6 y=384, athelete7: Y=463.8/N=479.6 y=368)
-    drawYesNo(p4, 468, 484, 381, formData.symptomsWorseWithPhysical, font, fs)
-    drawYesNo(p4, 469, 485, 365, formData.symptomsWorseWithMental, font, fs)
+    // Worse with physical/mental. Centres re-measured off a 300 dpi render:
+    // the marks were landing low and left, half outside the answer box and
+    // between the two letters, so a Yes could be read as a No.
+    drawYesNo(p4, 472, 489, 388, formData.symptomsWorseWithPhysical, font, fs)
+    drawYesNo(p4, 472, 489, 372, formData.symptomsWorseWithMental, font, fs)
 
     // ==================== PAGE 5 (index 4): ORIENTATION + IMMEDIATE MEMORY ====================
     const p5 = pages[4]
@@ -358,11 +364,14 @@ export async function exportSCAT6ToFlatPDF(
     })
 
     // mBESS Errors - Foam (optional, page 7 right side)
-    // Text43: x=371.6, y=683.2 (Double Leg foam)
     // Text44: x=371.6, y=652 (Tandem foam)
     // Text43C: x=371.6, y=632.5 (Single Leg foam)
+    // The double-leg foam value was drawn at y=685, which renders INSIDE the
+    // orange "On Foam (Optional)" banner with its own answer box left empty —
+    // a stray digit floating in a section heading. It belongs on the same
+    // baseline as the firm-surface double-leg row (671).
     if (formData.mBessFoamDoubleErrors !== null) {
-      drawText(p7, 373, 685, formData.mBessFoamDoubleErrors.toString(), { font, size: fs })
+      drawText(p7, 373, 671, formData.mBessFoamDoubleErrors.toString(), { font, size: fs })
     }
     if (formData.mBessFoamTandemErrors !== null) {
       drawText(p7, 373, 654, formData.mBessFoamTandemErrors.toString(), { font, size: fs })
@@ -533,15 +542,22 @@ export async function exportSCAT6ToFlatPDF(
     // Data row positions (100-102 series): x=[203, 302, 399]
     const decDateX = [227, 324, 422]
     const decColX = [203, 302, 399]
+    // Row baselines. The printed table has ELEVEN rows under the date row; the
+    // map below used to hold ten and started one row too low, so every value
+    // landed against the NEXT label down — a rendered export read "Symptom
+    // number (of 22): Abnormal", "Orientation (of 5): 61", "Cognitive Total
+    // (of 50): 5". Re-derived from a 300 dpi render of SCAT6_Flat.pdf page 9,
+    // and the missing Cognitive Total row added.
     const decRowY = {
       date: 694,
-      neuroExam: 657,
-      symptomNum: 641,
-      symptomSev: 626,
-      orientation: 609,
-      immMemory: 593,
-      concentration: 578,
-      delRecall: 562,
+      neuroExam: 673,
+      symptomNum: 657,
+      symptomSev: 641,
+      orientation: 626,
+      immMemory: 609,
+      concentration: 593,
+      delRecall: 578,
+      cognitiveTotal: 562,
       mBess: 545,
       tandem: 529,
       dualTask: 514,
@@ -575,6 +591,7 @@ export async function exportSCAT6ToFlatPDF(
         immediateMemory: dd.immediateMemory1,
         concentration: dd.concentration1,
         delayedRecall: dd.delayedRecall1,
+        cognitiveTotal: dd.cognitiveTotal1,
         mBessTotal: dd.mBessTotal1,
         tandemGaitFastest: dd.tandemGaitFastest1,
         dualTaskFastest: dd.dualTaskFastest1,
@@ -589,6 +606,7 @@ export async function exportSCAT6ToFlatPDF(
         immediateMemory: dd.immediateMemory2,
         concentration: dd.concentration2,
         delayedRecall: dd.delayedRecall2,
+        cognitiveTotal: dd.cognitiveTotal2,
         mBessTotal: dd.mBessTotal2,
         tandemGaitFastest: dd.tandemGaitFastest2,
         dualTaskFastest: dd.dualTaskFastest2,
@@ -603,6 +621,7 @@ export async function exportSCAT6ToFlatPDF(
         immediateMemory: dd.immediateMemory3,
         concentration: dd.concentration3,
         delayedRecall: dd.delayedRecall3,
+        cognitiveTotal: dd.cognitiveTotal3,
         mBessTotal: dd.mBessTotal3,
         tandemGaitFastest: dd.tandemGaitFastest3,
         dualTaskFastest: dd.dualTaskFastest3,
@@ -622,6 +641,7 @@ export async function exportSCAT6ToFlatPDF(
       cell(decRowY.immMemory, col.immediateMemory)
       cell(decRowY.concentration, col.concentration)
       cell(decRowY.delRecall, col.delayedRecall)
+      cell(decRowY.cognitiveTotal, col.cognitiveTotal)
       cell(decRowY.mBess, col.mBessTotal)
       drawText(p9, col.x, decRowY.tandem, col.tandemGaitFastest, { font, size: fsm })
       drawText(p9, col.x, decRowY.dualTask, col.dualTaskFastest, { font, size: fsm })

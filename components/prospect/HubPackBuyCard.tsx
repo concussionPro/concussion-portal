@@ -16,6 +16,13 @@ const HUB_MAX = 12
 
 export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: string }) {
   const [loading, setLoading] = useState(false)
+  // A failed checkout used to just clear the spinner: the buyer clicked
+  // "Full clinic access — A$1,497" and the button did visibly nothing, with no
+  // reason given and nothing to do next. Every other buy surface in the portal
+  // surfaces the server's message (PricingOptions, CrmCheckoutButton,
+  // Ccm/CrmInternationalContent); this one — the only self-serve path a 2–7
+  // clinician prospect has — did not.
+  const [error, setError] = useState<string | null>(null)
   const basePrice = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
   const baseSeats = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
   const extraSeatPrice = CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT
@@ -31,6 +38,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
 
   async function buy() {
     setLoading(true)
+    setError(null)
     trackEvent('checkout_start', { courseType: 'clinic-hub-pack', source: 'prospect_portal', slug })
     try {
       const res = await fetch('/api/create-checkout', {
@@ -44,9 +52,17 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
         }),
       })
       const data = await res.json().catch(() => ({}))
-      if (data?.url) window.location.href = data.url
-      else setLoading(false)
+      if (data?.url) {
+        window.location.href = data.url
+        return
+      }
+      setError(
+        (typeof data?.error === 'string' && data.error) ||
+          'Could not start checkout. Please try again, or email zac@concussion-education-australia.com and I’ll invoice you directly.',
+      )
+      setLoading(false)
     } catch {
+      setError('Network error — please check your connection and try again.')
       setLoading(false)
     }
   }
@@ -136,6 +152,11 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           Full clinic access — A${price.toLocaleString()}
           {!loading && <ArrowRight className="w-4 h-4" />}
         </button>
+        {error && (
+          <p role="alert" className="mt-3 text-[12.5px] font-medium text-red-700">
+            {error}
+          </p>
+        )}
         <p className="text-[11px] text-muted-foreground mt-3">
           Secure checkout · instant access · GST invoice emailed. Your access key covers {count} clinicians + your front-desk team — forward it once and each teammate gets their own login.
         </p>

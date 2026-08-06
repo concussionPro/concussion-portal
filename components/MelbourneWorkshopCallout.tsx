@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, MapPin, ArrowRight, Utensils } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
 
 /**
  * Reusable Melbourne workshop promo.
@@ -45,7 +45,7 @@ export function MelbourneWorkshopCallout({
       <div className="relative w-full h-[180px] sm:h-[220px] overflow-hidden">
         <Image
           src="/melbourne-workshop.jpg"
-          alt="Melbourne skyline at dusk — Concussion Clinical Mastery workshop June 13 2026"
+          alt={`${mel.city} skyline at dusk — Concussion Clinical Mastery workshop${mel.date ? ` ${mel.date}` : ''}`}
           fill
           sizes="(max-width: 640px) 100vw, 600px"
           className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
@@ -58,8 +58,12 @@ export function MelbourneWorkshopCallout({
             Next workshop confirmed
           </span>
         </div>
+        {/* Date-bearing copy derives from CONFIG.LOCATIONS — the literal
+            "Melbourne · Saturday 13 June 2026" here would have gone stale the
+            moment the next round is confirmed with a new date, while the
+            `status === 'confirmed'` guard above happily let the card render. */}
         <h3 className="text-xl font-bold text-slate-900 mb-2">
-          Melbourne · Saturday 13 June 2026
+          {mel.city}{mel.date ? ` · ${mel.date}` : ''}
         </h3>
         <p className="text-sm text-slate-700 mb-4">
           Hands-on full day at <strong>Rydges Melbourne</strong> on Exhibition St. {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype. Lifetime online access included.
@@ -84,7 +88,11 @@ export function MelbourneWorkshopCallout({
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
           </span>
           <span className="inline-flex items-center text-xs font-semibold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2 rounded-lg">
-            ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} — online + workshop
+            {/* workshopPriceFor() is what lib/stripe.ts actually charges. The
+                literal PRICE_REGULAR quoted $1,400 to every visitor, including
+                the ~all of them who would be charged the $1,190 early-bird
+                rate — quoting a price above what the buyer pays. */}
+            ${workshopPriceFor(mel.slug).toLocaleString()} — online + workshop
           </span>
         </div>
       </div>

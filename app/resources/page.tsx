@@ -87,8 +87,13 @@ export default function ResourcesPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
             Free Clinical Resources
           </h1>
+          {/* The five cards below are the PAID Clinical Toolkit, previewed —
+              they are inert divs with no download. "5 downloadable tools"
+              promised a download this page has never delivered; the SCAT6 /
+              SCOAT6 forms are the thing that is genuinely free here. */}
           <p className="text-lg text-slate-600 leading-relaxed">
-            5 downloadable tools for concussion assessment and management
+            The free SCAT6 &amp; SCOAT6 fillable forms — plus a look at the clinical
+            toolkit included with the course
           </p>
         </div>
 

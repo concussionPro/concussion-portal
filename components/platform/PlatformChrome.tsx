@@ -30,8 +30,10 @@ export function PlatformLogo({ stroke = PLATFORM.navy, size = 30 }: { stroke?: s
   )
 }
 
+// 'Home' and 'The suite' both pointed at /clinical-suite — two nav items to the
+// same page, and (because the list is keyed by href) a duplicate React key. The
+// wordmark on the left is already the home link, so the suite entry stands alone.
 const NAV_LINKS = [
-  { href: '/clinical-suite', label: 'Home' },
   { href: '/clinical-suite', label: 'The suite' },
   { href: '/clinical-suite/evidence', label: 'Evidence' },
   { href: '/clinical-suite/pricing', label: 'Pricing' },
@@ -64,8 +66,14 @@ export function PlatformNav({ active }: { active?: string }) {
             {l.label}
           </Link>
         ))}
+        {/* /platform/app is the PAID self-guided surface — its layout redirects
+            any visitor without a clinical entitlement to /login (verified live
+            2026-08: 200 + NEXT_REDIRECT to /login?redirect=%2Fplatform%2Fapp),
+            so a public "Get the app" button pointed at a sign-in wall. The
+            public patient entry is /sst-trainer (installable PWA, clinic code,
+            no account) — that is what this button promises. */}
         <Link
-          href="/platform/app"
+          href="/sst-trainer"
           className="rounded-full bg-[#16243f] px-5 py-2.5 text-[14px] font-bold text-white transition-colors hover:bg-[#1f3357]"
         >
           Get the app

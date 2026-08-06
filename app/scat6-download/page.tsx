@@ -160,11 +160,23 @@ export default function SCAT6DownloadPage() {
       // session cookie and emails a login link instead (anti-takeover — see
       // lib/account-escalation.ts). Navigating on would land them on gated
       // content with no session, so say what actually happened.
+      //
+      // The FORMS STILL DOWNLOAD on this path. They are free public assets
+      // (/docs/SCAT6_Fillable.pdf, /docs/SCOAT6_Fillable.pdf) promised by a
+      // button labelled "Download free PDF" \u2014 nothing about them is gated, and
+      // nothing in the anti-takeover rule requires withholding them. Until now
+      // this branch returned with NO download, so every visitor who already
+      // owns something (any paid buyer, CRM buyer, SST clinic, Hub owner,
+      // bundle owner, AI-course enrollee) typed their email into the site's #1
+      // landing surface and got a login email instead of the file they asked
+      // for. The session message and the download are independent \u2014 deliver both.
       if (data.requiresEmailLogin) {
+        triggerDownload()
         setNotice(
-          "You already have an account \u2014 we've emailed a login link to " +
+          `Your form${wantScat6 && wantScoat6 ? 's are' : ' is'} downloading now. ` +
+            "You already have an account, so we've also emailed a login link to " +
             email.trim().toLowerCase() +
-            ". Open it and you'll be signed straight in, and your forms will download.",
+            ". Open it and you'll be signed straight in.",
         )
         return
       }

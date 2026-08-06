@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { clearIdentity } from '@/lib/analytics'
 
 // 'Courses' → /pricing (owner 2026-07-29: the old /courses/streams chooser
 // was retired as a homepage duplicate, leaving the tab a pointless reload).
@@ -100,6 +101,21 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    // The server clears every identity-bearing COOKIE, but the browser also
+    // holds two identity-bearing localStorage keys that survived sign-out:
+    //   cea_user_email  — set by /auth/verify on every magic-link login, and
+    //                     attached as user_email to EVERY subsequent
+    //                     analytics event (lib/analytics.ts). Left behind, the
+    //                     next person on a shared clinic front-desk machine
+    //                     had their whole anonymous browsing session written
+    //                     into analytics_events under the previous clinician's
+    //                     email address.
+    //   login_redirect  — a stashed gated destination; a stale one sends the
+    //                     NEXT sign-in to a page that user may not be entitled
+    //                     to, producing a bounce instead of their dashboard.
+    // clearIdentity() existed but had no caller anywhere in the codebase.
+    clearIdentity()
+    try { localStorage.removeItem('login_redirect') } catch { /* private mode */ }
     setAuth({ accessLevel: '', ownsCrm: false })
     router.push('/')
   }

@@ -32,7 +32,10 @@ type TabId = (typeof TABS)[number]['id']
 const TIER_EXTRAS: Record<string, string[]> = {
   single: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians, each with their own login', 'Measured trajectory, flare flags & auto GP report'],
   clinic: ['Everything in Starter, for a bigger caseload', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team'],
-  enterprise: ['Everything in Clinic, unlimited active patients', 'Referral-directory listing', 'Clubs, leagues & payers — talk to us'],
+  // 'Referral-directory listing' was sold here and existed nowhere in the
+  // product — no directory route, table or admin surface anywhere in the repo.
+  // Never advertise an offering that doesn't ship.
+  enterprise: ['Everything in Clinic, unlimited active patients', 'Priority onboarding + direct line to our team', 'Clubs, leagues & payers — talk to us'],
 }
 
 const TIERS = SST_TIERS.map((t) => ({

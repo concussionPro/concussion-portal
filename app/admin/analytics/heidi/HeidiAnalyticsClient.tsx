@@ -148,7 +148,8 @@ export function HeidiAnalyticsClient() {
       .reverse() // oldest first to show click order
   }, [timeline])
 
-  // Total time engaged (sum of all dwell ms reported)
+  // Total time engaged. NOTE: `timeline` is the API's last-200-events slice,
+  // so this is a floor, not a lifetime total — the label says so.
   const totalDwellMs = useMemo(() => {
     return timeline.reduce((sum, e) => {
       const d = Number(e.event_data?.previousDwellMs)
@@ -259,7 +260,7 @@ export function HeidiAnalyticsClient() {
             icon={Clock}
             label="Total engaged"
             value={fmtDuration(totalDwellMs / 1000)}
-            sub="Sum of measured dwell"
+            sub={`Dwell across the last ${timeline.length} events`}
           />
           <Metric
             icon={FileCheck}

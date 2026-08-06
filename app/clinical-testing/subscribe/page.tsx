@@ -23,6 +23,8 @@ const TIERS = SST_TIERS.map((t) => ({
   who: sstTierAllowance(t),
   price: `A$${t.monthlyAud}`,
   popular: t.popular,
+  /** kept so the page can mark the CURRENT plan from server-reported usage */
+  activePatientCap: t.activePatientCap as number | null,
 }))
 
 export default function SubscribePage() {
@@ -73,6 +75,32 @@ function Shell() {
       .catch(() => setHasClinic(null))
   }, [access])
 
+  // An ACTIVE clinic's tier buttons said "Manage in billing portal" and were
+  // DISABLED — a labelled control that could not act, on the one page a clinic
+  // lands on to change plan. Upgrades are portal-only by design (a second
+  // checkout 409s), so the page has to be able to OPEN the portal.
+  const [portalBusy, setPortalBusy] = useState(false)
+  const PORTAL_COPY: Record<string, string> = {
+    'no-customer': 'This clinic’s access is complimentary — there’s no subscription to manage.',
+    'not-owner': 'Only the clinic owner can manage billing.',
+    'no-clinic': 'Create your clinic code before managing billing.',
+  }
+  async function openBillingPortal() {
+    if (portalBusy) return
+    setPortalBusy(true)
+    setError('')
+    try {
+      const res = await fetch('/api/sst/billing-portal', { method: 'POST', credentials: 'include' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data?.url) window.location.href = data.url
+      else setError(PORTAL_COPY[data?.code as string] || data?.error || 'Could not open billing portal.')
+    } catch {
+      setError('Could not open billing portal — check your connection and try again.')
+    } finally {
+      setPortalBusy(false)
+    }
+  }
+
   async function subscribe(plan: string) {
     setLoading(plan)
     setError('')
@@ -96,7 +124,11 @@ function Shell() {
     return <Frame><p className="text-sm text-muted-foreground">Loading…</p></Frame>
   }
   if (access === 'unreleased') return <ClinicalTestingComingSoon />
-  if (access === 'locked' || access === 'demo') {
+  // FAIL CLOSED. The access route also returns 'none' (no session) — a value
+  // outside the ClinicalAccess union — which fell straight through to the live
+  // pricing page and a "Forbidden" at checkout. Anything not explicitly
+  // entitled gets the locked view.
+  if (!(access === 'owner' || access === 'course' || access === 'sst')) {
     return (
       <Frame>
         <div className="mx-auto max-w-2xl">
@@ -128,12 +160,15 @@ function Shell() {
 
   // Copy states the TRUTH about this clinic's usage — the page used to tell
   // every visitor "You've used your 3 free trial patients" unconditionally.
+  const isActive = usage?.plan === 'active'
   const trialUsed = usage?.plan === 'trial' && usage.cap != null && !usage.canAddPatient
   const subtitle =
     hasClinic === false
       ? 'Create your clinic code first — plans attach to the code your patients use. '
-      : usage?.plan === 'active'
-        ? 'Your clinic is already on a plan. Change or cancel it from Manage billing in your workspace rather than starting a second subscription. '
+      : isActive
+        ? usage.cap != null && !usage.canAddPatient
+          ? `Your plan covers ${usage.cap} active patients and you’re at the limit. Change plan in the billing portal — a second subscription would double-bill you, so checkout is closed here. `
+          : 'Your clinic is already on a plan. Change or cancel it in the billing portal — starting a second subscription would double-bill you. '
         : trialUsed
           ? `You’ve used your ${usage?.cap ?? 3} free trial patients. `
           : usage?.plan === 'trial' && usage.cap != null
@@ -164,6 +199,13 @@ function Shell() {
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t.name}</p>
                 <p className="text-xs text-muted-foreground">{t.who}</p>
                 <p className="mt-3 text-3xl font-extrabold text-foreground">{t.price}<span className="text-sm font-semibold text-muted-foreground"> / mo</span></p>
+                {/* "Your current plan" is asserted ONLY from the server's own
+                    reported cap, and only for a numeric one — an unlimited cap
+                    is equally a comped clinic (tier null), so claiming the
+                    Unlimited plan there would be a billing claim we can't back. */}
+                {isActive && usage?.cap != null && usage.cap === t.activePatientCap && (
+                  <p className="mt-1.5 m-0 text-[11px] font-bold text-emerald-700">Your current plan</p>
+                )}
                 {hasClinic === false ? (
                   <Link
                     href="/clinical-testing"
@@ -171,15 +213,24 @@ function Shell() {
                   >
                     Create your clinic code
                   </Link>
+                ) : isActive ? (
+                  <button
+                    type="button"
+                    onClick={() => void openBillingPortal()}
+                    disabled={portalBusy}
+                    className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    {portalBusy ? 'Opening…' : 'Change plan in billing portal'}
+                  </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => void subscribe(t.plan)}
-                    disabled={loading !== null || usage?.plan === 'active'}
+                    disabled={loading !== null}
                     className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white hover:bg-accent/90 disabled:opacity-50"
                   >
                     {loading === t.plan ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    {loading === t.plan ? 'Starting…' : usage?.plan === 'active' ? 'Manage in billing portal' : 'Choose ' + t.name}
+                    {loading === t.plan ? 'Starting…' : 'Choose ' + t.name}
                   </button>
                 )}
               </div>

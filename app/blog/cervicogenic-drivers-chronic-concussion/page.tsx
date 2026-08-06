@@ -3,6 +3,7 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { Clock, Activity, Stethoscope, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 const TITLE = "Cervicogenic Drivers in Chronic Concussion — Why Every PPCS Patient Needs a Cervical Assessment [2026]"
@@ -134,12 +135,15 @@ export default function CervicogenicChronicConcussionPage() {
               <p className="text-sm font-semibold text-rose-100 mb-3">Available now:</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Free SCAT Mastery course</Link>
-                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Concussion Clinical Mastery — 8 CPD hrs online, up to 16 with the in-person day · from $1,190 early-bird</Link>
+                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Concussion Clinical Mastery — {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online, up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day · from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird</Link>
               </div>
             </div>
           </section>
 
-          <RelatedPosts slugs={['persistent-post-concussion-symptoms-clinician-workup', 'vestibulo-ocular-workup-ppcs', 'how-to-use-scat6-clinicians-guide']} />
+          {/* Headache differential replaces the acute SCAT6 admin guide here:
+              this post's own body defers the migraine / tension-type differential
+              elsewhere, and a dedicated article for it now exists. */}
+          <RelatedPosts slugs={['persistent-post-concussion-symptoms-clinician-workup', 'vestibulo-ocular-workup-ppcs', 'cervicogenic-vs-migraine-vs-tension-headache-differential']} />
         </div>
       </div>
     </>

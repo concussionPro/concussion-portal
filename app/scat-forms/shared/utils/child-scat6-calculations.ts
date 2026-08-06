@@ -58,13 +58,14 @@ export function calculateSymptomSeverity(symptoms: ChildSCAT6SymptomScores): num
 }
 
 /**
- * Was Immediate Memory administered? The word list is chosen before the trials
- * are run, so a recorded list (or a completion time, or any ticked word) is
- * evidence; three empty trials with no list is not.
+ * Was Immediate Memory administered? The word list is chosen BEFORE the trials
+ * are run, so it is setup and NOT evidence — a clinician who selects List A and
+ * is then interrupted otherwise exports a ringed grid of thirty zeros and an
+ * "Immediate Memory Score 0 of 30" for a child who was never tested. Only a
+ * completion time or a ticked word counts.
  */
 export function isImmediateMemoryAdministered(formData: ChildSCAT6FormData): boolean {
   return (
-    formData.wordListUsed !== '' ||
     formData.immediateMemoryTimeCompleted !== '' ||
     formData.immediateMemoryTrial1.some(Boolean) ||
     formData.immediateMemoryTrial2.some(Boolean) ||

@@ -21,6 +21,10 @@ interface EmailEntry {
   nurtureUnsubscribed: boolean
   signupSource: string | null
   convertedFrom: string | null
+  /** Internal test account — excluded from every count on this board, the
+   *  same way the analytics Users tab excludes them. Without this the two
+   *  admin screens reported different totals for the same table. */
+  isTest?: boolean
 }
 
 /**
@@ -34,10 +38,16 @@ function isPaid(e: EmailEntry): boolean {
 }
 
 export default function AdminEmailsPage() {
-  const [emails, setEmails] = useState<EmailEntry[]>([])
+  const [allEmails, setAllEmails] = useState<EmailEntry[]>([])
   const [loading, setLoading] = useState(true)
 
   const [filter, setFilter] = useState<'all' | 'preview' | 'paid'>('all')
+
+  // Real signups only — internal test accounts are never a signup, a free
+  // user or a paying customer, and counting them made this page disagree
+  // with /admin/analytics (same API, different total).
+  const emails = allEmails.filter(e => !e.isTest)
+  const testCount = allEmails.length - emails.length
 
   useEffect(() => {
     fetchEmails()
@@ -48,7 +58,7 @@ export default function AdminEmailsPage() {
       const response = await fetch('/api/admin/emails', { cache: 'no-store' })
       const data = await response.json()
       if (response.ok && data.success) {
-        setEmails(data.emails)
+        setAllEmails(data.emails)
       } else {
         alert('Failed to load emails: ' + (data.error || 'Unknown error'))
       }
@@ -71,7 +81,7 @@ export default function AdminEmailsPage() {
       })
       const data = await response.json()
       if (response.ok && data.success) {
-        setEmails(prev => prev.map(e => e.email === email ? { ...e, nurtureUnsubscribed: true } : e))
+        setAllEmails(prev => prev.map(e => e.email === email ? { ...e, nurtureUnsubscribed: true } : e))
       } else {
         alert('Failed: ' + (data.error || 'Unknown error'))
       }
@@ -126,7 +136,10 @@ export default function AdminEmailsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Email Signups</h1>
-          <p className="text-slate-600">All captured emails from free course signups</p>
+          <p className="text-slate-600">
+            All captured emails from free course signups
+            {testCount > 0 && <span className="text-slate-400"> · {testCount} internal test account{testCount === 1 ? '' : 's'} excluded</span>}
+          </p>
         </div>
 
         {/* Stats */}

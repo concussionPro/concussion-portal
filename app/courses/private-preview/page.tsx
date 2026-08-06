@@ -7,6 +7,12 @@ import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import { ArrowRight, Award, BookOpen, Workflow, Activity, Layers, ShoppingBag } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { AHPRA_BOARDS } from '@/lib/ai-course/cpd-requirements'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+// The price /api/courses/checkout would actually charge — never a literal.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_PRICE = AI_COURSE ? getEffectivePrice(AI_COURSE).price : null
 
 export const metadata: Metadata = {
   title: 'CEA · platform demo',
@@ -37,7 +43,7 @@ export default async function PreviewPage() {
           <span className="text-muted-foreground">Most of what they actually earn never gets logged.</span>
         </h1>
         <p className="text-base text-foreground/85 max-w-2xl mb-10 leading-relaxed">
-          <strong>We built the platform that closes the loop.</strong> OA-endorsed flagship course live. AHPRA-Board calibrated for all 17 Boards. Generic event-ingestion API any AI tool can plug into.
+          <strong>We built the platform that closes the loop.</strong> OA-endorsed flagship course live. AHPRA-Board calibrated for all {AHPRA_BOARDS.length} Boards. Generic event-ingestion API any AI tool can plug into.
         </p>
 
         {/* WHAT PLUGGING IN UNLOCKS — Heidi-relevant value, above the courses */}
@@ -107,9 +113,12 @@ export default async function PreviewPage() {
                   <BookOpen className="w-3 h-3" />
                   Now live
                 </span>
+                {/* The "launch week" ended 24 June — a perpetual strikethrough
+                    against a price never charged is the ACL false-discount risk
+                    lib/ai-course/provider-catalogue.ts:179-183 documents. The
+                    price IS A$99. */}
                 <span className="text-[11px] font-bold text-slate-600">
-                  <span className="line-through text-slate-400 mr-1">A$197</span>
-                  <span className="text-emerald-700">A$99 launch wk</span>
+                  <span className="text-emerald-700">A${AI_PRICE ?? 99}</span>
                 </span>
               </div>
               <h2 className="text-lg font-bold text-foreground leading-tight mb-1.5">

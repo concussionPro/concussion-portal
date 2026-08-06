@@ -187,7 +187,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: 'How much time does the course take?',
-      a: 'The online modules take approximately 8 hours total (8 CPD hours), completed at your own pace with no deadline. The hands-on workshop is a single full day (8 CPD hours). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
+      a: `The online modules take approximately ${CONFIG.COURSE.ONLINE_CPD_POINTS} hours total (${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours), completed at your own pace with no deadline. The hands-on workshop is a single full day (${CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD hours). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.`,
     },
     {
       q: 'Is this course only for osteopaths?',
@@ -307,8 +307,8 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           {heroVariant === 'cpd' ? (
             <>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                Earn 8 CPD Hours Online —{' '}
-                <span className="text-gradient">16 with the Workshop</span>
+                Earn {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD Hours Online —{' '}
+                <span className="text-gradient">{CONFIG.COURSE.TOTAL_CPD_POINTS} with the Workshop</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 AHPRA-aligned concussion assessment training for physiotherapists &amp; osteopaths.
@@ -322,7 +322,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 — for clinicians, not just sideline staff
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Beyond the form: when to use SCAT6 vs SCOAT6, red-flag triage, and how the assessment fits into a defensible return-to-play decision. Includes the full 8-module concussion management course.
+                Beyond the form: when to use SCAT6 vs SCOAT6, red-flag triage, and how the assessment fits into a defensible return-to-play decision. Includes the full {CONFIG.COURSE.TOTAL_MODULES}-module concussion management course.
               </p>
             </>
           ) : heroVariant === 'online' ? (
@@ -332,7 +332,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 <span className="text-gradient">for Australian Clinicians</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                8 modules · 8 AHPRA-aligned CPD hours · self-paced with lifetime access. Workshop optional. Most employers reimburse — we provide the tax invoice.
+                {CONFIG.COURSE.TOTAL_MODULES} modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD hours · self-paced with lifetime access. Workshop optional. Most employers reimburse — we provide the tax invoice.
               </p>
             </>
           ) : (
@@ -386,7 +386,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS})</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
+              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">{CONFIG.COURSE.TOTAL_MODULES}</p>
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Self-paced modules</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
@@ -415,7 +415,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           <div className="text-left">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Endorsed by</p>
             <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">Osteopathy Australia</p>
-            <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · 8 CPD hrs online, 16 with the workshop</p>
+            <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online, {CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop</p>
           </div>
         </div>
         )}
@@ -546,7 +546,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 </thead>
                 <tbody>
                   {([
-                    ['8 online modules', true, true],
+                    [`${CONFIG.COURSE.TOTAL_MODULES} online modules`, true, true],
                     ['Clinical Testing suite — SST Trainer + club baseline testing (included)', true, true],
                     ['Your clinic code — patients & clubs link straight to you', true, true],
                     ['Clinical Toolkit downloads', true, true],

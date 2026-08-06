@@ -88,8 +88,16 @@ export async function POST(req: NextRequest) {
   }
 
   // Suppression is checked on EVERY send lane, fail closed.
+  // LOWER(TRIM(email)) on the STORED column, not a raw `email = ...` match:
+  // email_suppression is plain TEXT with no lowercase constraint (see
+  // lib/email-suppression.ts), so rows written by a manual insert, an import or
+  // an inbound STOP can carry mixed case or a trailing space. The raw equality
+  // this used missed every one of them and sent the invite anyway — a
+  // zero-tolerance breach on a lane that mails a patient.
   try {
-    const { rows } = await sql`SELECT 1 FROM email_suppression WHERE email = ${patientEmail} LIMIT 1`
+    const { rows } = await sql`
+      SELECT 1 FROM email_suppression
+      WHERE LOWER(TRIM(email)) = ${patientEmail} LIMIT 1`
     if (rows.length > 0) {
       return NextResponse.json(
         { error: 'That address has opted out of emails from us — give them the link directly instead.' },

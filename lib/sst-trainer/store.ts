@@ -56,6 +56,17 @@ export interface PersistedTest {
    * synced payload so the clinician's report says so.
    */
   clinicianDirected?: boolean
+  /**
+   * How many minutes of the graded ramp were actually recorded (distinct
+   * stages). A test that terminated at voluntary exhaustion reads as
+   * 'no-intolerance' — the CLEARANCE-GRADE result — whether the ramp ran one
+   * minute or the full PROTOCOL_STAGE_CAP, and nothing on the report said
+   * which. "Exercise tolerance recovered" off a one-minute ramp is a very
+   * different clinical fact from the same words off a completed protocol, so
+   * the duration travels with the finding. Optional: absent on local history
+   * written before 2026-08-06 and on any row whose stage table wasn't stored.
+   */
+  stagesRecorded?: number
 }
 
 /** A clinic-sync body that failed to send — retried on next launch / online. */

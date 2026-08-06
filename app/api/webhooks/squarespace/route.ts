@@ -46,6 +46,16 @@ export async function POST(request: NextRequest) {
       const orderTotal = parseFloat(order.grandTotal?.value || 0)
       const orderId = order.id
 
+      // GUARD FIRST: this log used to dereference customerEmail BEFORE the
+      // null check below, so an order payload without a customer email threw a
+      // TypeError into the outer catch and answered 500 — which Squarespace
+      // treats as retryable, so the same unfixable order was redelivered on a
+      // loop instead of getting the intended terminal 400.
+      if (!customerEmail) {
+        console.error('No customer email in order')
+        return NextResponse.json({ error: 'No customer email' }, { status: 400 })
+      }
+
       console.log(`New order: $${orderTotal} from ${customerEmail.slice(0, 3)}***`)
 
       // Determine access level based on price
@@ -58,11 +68,6 @@ export async function POST(request: NextRequest) {
       } else {
         console.log('Order total too low - not a course purchase')
         return NextResponse.json({ success: true, message: 'Not a course product' })
-      }
-
-      if (!customerEmail) {
-        console.error('No customer email in order')
-        return NextResponse.json({ error: 'No customer email' }, { status: 400 })
       }
 
       // Check if user already exists (upgrade scenario)

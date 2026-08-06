@@ -6,6 +6,19 @@ import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
+// Regulator-published annual CPD requirements. These are NOT CEA numbers — they
+// come from the Board / ESSA guidelines linked in the References block below.
+// Held as named constants so the worked percentages in the copy can never drift
+// from the figures in the "At a Glance" table (they were three independent
+// literals, and the osteopathy one shipped stale after the practical day was
+// re-rated to CONFIG.COURSE.IN_PERSON_CPD_POINTS).
+const PHYSIO_ANNUAL_HOURS = 20
+const OSTEO_ANNUAL_HOURS = 25
+const OSTEO_MANDATORY_HOURS = 4
+const CHIRO_ANNUAL_HOURS = 20
+const ESSA_ANNUAL_POINTS = 20
+const ESSA_FURTHER_ED_POINTS = 15
+
 export const metadata: Metadata = {
   title: 'AHPRA CPD Requirements for Allied Health: Where Concussion Education Fits',
   description: 'A practical guide to annual CPD requirements for physiotherapists, osteopaths, chiropractors, and exercise physiologists — and how concussion management training counts toward your obligations.',
@@ -99,13 +112,13 @@ export default function AHPRACPDPage() {
               <div className="space-y-3 text-slate-700">
                 <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
                   <Award className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Minimum:</strong> 20 hours of CPD per year (pro rata: 5 hours per 3-month period for mid-cycle registrants)</span>
+                  <span><strong>Minimum:</strong> {PHYSIO_ANNUAL_HOURS} hours of CPD per year (pro rata: 5 hours per 3-month period for mid-cycle registrants)</span>
                 </div>
                 <p>
                   CPD activities can be <strong>formal</strong> (accredited courses, conferences, seminars, online learning, in-service education) or <strong>non-formal</strong> (reflective practice, journal reading, quality assurance activities, peer discussion). A CPD portfolio must be maintained for 5 years and is subject to Board audit.
                 </p>
                 <p>
-                  <strong>How concussion education fits:</strong> Structured online courses with assessment components qualify as formal learning activities. An 8-hour online course covering SCAT6, VOMS, BESS, and return-to-play protocols would count as 8 hours of formal CPD &mdash; 40% of the annual requirement in a single activity.
+                  <strong>How concussion education fits:</strong> Structured online courses with assessment components qualify as formal learning activities. A {CONFIG.COURSE.ONLINE_CPD_POINTS}-hour online course covering SCAT6, VOMS, BESS, and return-to-play protocols would count as {CONFIG.COURSE.ONLINE_CPD_POINTS} hours of formal CPD &mdash; {Math.round((CONFIG.COURSE.ONLINE_CPD_POINTS / PHYSIO_ANNUAL_HOURS) * 100)}% of the annual requirement in a single activity.
                 </p>
               </div>
             </div>
@@ -124,13 +137,13 @@ export default function AHPRACPDPage() {
               <div className="space-y-3 text-slate-700">
                 <div className="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg">
                   <Award className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Minimum:</strong> 25 hours of CPD per year (including 4 mandatory hours on Board standards, codes, and the National Law)</span>
+                  <span><strong>Minimum:</strong> {OSTEO_ANNUAL_HOURS} hours of CPD per year (including {OSTEO_MANDATORY_HOURS} mandatory hours on Board standards, codes, and the National Law)</span>
                 </div>
                 <p>
-                  CPD is categorised as <strong>Learning with Others</strong> (courses, conferences, webinars, coaching, peer review) and <strong>Learning by Oneself</strong> (journal reading, distance learning, publications). Osteopaths must also hold a current Senior First Aid (Level 2) certificate, renewed every 3 years &mdash; this does not count toward the 25 hours. Portfolios are retained for 5 years.
+                  CPD is categorised as <strong>Learning with Others</strong> (courses, conferences, webinars, coaching, peer review) and <strong>Learning by Oneself</strong> (journal reading, distance learning, publications). Osteopaths must also hold a current Senior First Aid (Level 2) certificate, renewed every 3 years &mdash; this does not count toward the {OSTEO_ANNUAL_HOURS} hours. Portfolios are retained for 5 years.
                 </p>
                 <p>
-                  <strong>How concussion education fits:</strong> Online concussion courses qualify under &ldquo;Learning by Oneself&rdquo; (distance learning). A hands-on workshop qualifies under &ldquo;Learning with Others.&rdquo; Combined, an 8-hour online + 6-hour workshop covers 14 of the 25 required hours &mdash; 56% of annual obligations.
+                  <strong>How concussion education fits:</strong> Online concussion courses qualify under &ldquo;Learning by Oneself&rdquo; (distance learning). A hands-on workshop qualifies under &ldquo;Learning with Others.&rdquo; Combined, a {CONFIG.COURSE.ONLINE_CPD_POINTS}-hour online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS}-hour workshop covers {CONFIG.COURSE.TOTAL_CPD_POINTS} of the {OSTEO_ANNUAL_HOURS} required hours &mdash; {Math.round((CONFIG.COURSE.TOTAL_CPD_POINTS / OSTEO_ANNUAL_HOURS) * 100)}% of annual obligations.
                 </p>
               </div>
             </div>
@@ -149,7 +162,7 @@ export default function AHPRACPDPage() {
               <div className="space-y-3 text-slate-700">
                 <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
                   <Award className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Minimum:</strong> 20 hours of CPD per year (reduced from 25 hours under the revised standard effective December 2019)</span>
+                  <span><strong>Minimum:</strong> {CHIRO_ANNUAL_HOURS} hours of CPD per year (reduced from 25 hours under the revised standard effective December 2019)</span>
                 </div>
                 <p>
                   The Chiropractic Board no longer categorises CPD into &ldquo;formal&rdquo; and &ldquo;informal&rdquo; learning. Instead, practitioners must develop learning goals, plan CPD activities to meet those goals, and reflect on how the learning will improve their practice. Chiropractors must also hold a current Level 2 / Senior First Aid certificate.
@@ -174,13 +187,13 @@ export default function AHPRACPDPage() {
               <div className="space-y-3 text-slate-700">
                 <div className="flex items-start gap-3 p-3 bg-rose-50 rounded-lg">
                   <Award className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Minimum:</strong> 20 CPD hours per calendar year (1 hour = 1 point). At least 15 points must be from the Further Education category.</span>
+                  <span><strong>Minimum:</strong> {ESSA_ANNUAL_POINTS} CPD hours per calendar year (1 hour = 1 point). At least {ESSA_FURTHER_ED_POINTS} points must be from the Further Education category.</span>
                 </div>
                 <p>
                   <strong>Important distinction:</strong> Exercise physiologists are <strong>not AHPRA-regulated</strong>. They are self-regulated through ESSA, which is part of the National Alliance of Self-Regulating Health Professions (NASRHP). ESSA uses standards closely modelled on AHPRA&apos;s framework. The registration period runs on a calendar year (January to December), not the December&ndash;November AHPRA cycle.
                 </p>
                 <p>
-                  <strong>How concussion education fits:</strong> Structured courses with assessments qualify under the Further Education category. An 8-hour online course would count as 8 of the required 15 Further Education points &mdash; over half the mandatory category in a single activity.
+                  <strong>How concussion education fits:</strong> Structured courses with assessments qualify under the Further Education category. A {CONFIG.COURSE.ONLINE_CPD_POINTS}-hour online course would count as {CONFIG.COURSE.ONLINE_CPD_POINTS} of the required {ESSA_FURTHER_ED_POINTS} Further Education points &mdash; over half the mandatory category in a single activity.
                 </p>
               </div>
             </div>
@@ -205,25 +218,25 @@ export default function AHPRACPDPage() {
                   <tr>
                     <td className="py-3 px-4 font-medium">Physiotherapist</td>
                     <td className="py-3 px-4">AHPRA</td>
-                    <td className="py-3 px-4">20 hours</td>
+                    <td className="py-3 px-4">{PHYSIO_ANNUAL_HOURS} hours</td>
                     <td className="py-3 px-4">1 Dec &ndash; 30 Nov</td>
                   </tr>
                   <tr className="bg-slate-50">
                     <td className="py-3 px-4 font-medium">Osteopath</td>
                     <td className="py-3 px-4">AHPRA</td>
-                    <td className="py-3 px-4">25 hours (incl. 4 mandatory)</td>
+                    <td className="py-3 px-4">{OSTEO_ANNUAL_HOURS} hours (incl. {OSTEO_MANDATORY_HOURS} mandatory)</td>
                     <td className="py-3 px-4">1 Dec &ndash; 30 Nov</td>
                   </tr>
                   <tr>
                     <td className="py-3 px-4 font-medium">Chiropractor</td>
                     <td className="py-3 px-4">AHPRA</td>
-                    <td className="py-3 px-4">20 hours</td>
+                    <td className="py-3 px-4">{CHIRO_ANNUAL_HOURS} hours</td>
                     <td className="py-3 px-4">Annual</td>
                   </tr>
                   <tr className="bg-slate-50">
                     <td className="py-3 px-4 font-medium">Exercise Physiologist</td>
                     <td className="py-3 px-4">ESSA (self-regulated)</td>
-                    <td className="py-3 px-4">20 points (15 Further Ed)</td>
+                    <td className="py-3 px-4">{ESSA_ANNUAL_POINTS} points ({ESSA_FURTHER_ED_POINTS} Further Ed)</td>
                     <td className="py-3 px-4">Jan &ndash; Dec</td>
                   </tr>
                 </tbody>
@@ -264,7 +277,7 @@ export default function AHPRACPDPage() {
                   <div>
                     <strong className="text-slate-900">Efficient CPD coverage:</strong>{' '}
                     <span className="text-slate-600">
-                      A structured concussion course can cover 8 hours of your annual requirement online &mdash; or up to 16 hours with an added in-person workshop day &mdash; in a single, cohesive learning activity, rather than cobbling together unrelated webinars.
+                      A structured concussion course can cover {CONFIG.COURSE.ONLINE_CPD_POINTS} hours of your annual requirement online &mdash; or up to {CONFIG.COURSE.TOTAL_CPD_POINTS} hours with an added in-person workshop day &mdash; in a single, cohesive learning activity, rather than cobbling together unrelated webinars.
                     </span>
                   </div>
                 </div>
@@ -297,7 +310,7 @@ export default function AHPRACPDPage() {
                 <ul className="space-y-2 text-sm">
                   <li><strong>Activity type:</strong> Educational Activity &mdash; Reviewing &amp; Reflecting</li>
                   <li><strong>Category:</strong> Formal learning (for accredited/structured courses with assessment)</li>
-                  <li><strong>Hours:</strong> As per course certificate (e.g., 8 hours for online, 16 hours for online + workshop)</li>
+                  <li><strong>Hours:</strong> As per course certificate (e.g., {CONFIG.COURSE.ONLINE_CPD_POINTS} hours for online, {CONFIG.COURSE.TOTAL_CPD_POINTS} hours for online + workshop)</li>
                   <li><strong>Evidence:</strong> Certificate of completion with CPD hours, certificate ID, and completion date</li>
                   <li><strong>Retention:</strong> Keep certificates in your CPD portfolio for at least 5 years</li>
                 </ul>
@@ -352,7 +365,7 @@ export default function AHPRACPDPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all text-center">
-                Full Course &mdash; 8 CPD hrs online, up to 16 with the in-person day &middot; from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
+                Full Course &mdash; {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online, up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day &middot; from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
               </Link>
             </div>
           </div>

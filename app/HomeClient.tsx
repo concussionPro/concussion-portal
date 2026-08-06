@@ -118,7 +118,13 @@ export default function HomeClient() {
                 Two CPD streams — choose yours
               </p>
             )}
-            <div role="tablist" aria-label="Choose your course stream" className={showCrm ? 'grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3' : 'max-w-md mx-auto'}>
+            {/* role="group", NOT "tablist" (fixed 2026-08-06). These stopped
+                being tabs on 2026-08-04 when each pill became a Link into
+                /courses?stream=… — but the container kept role="tablist" with
+                zero role="tab" children and no aria-selected, so a screen
+                reader announced "Choose your course stream, tab list" and then
+                found nothing tabbable inside it. */}
+            <div role="group" aria-label="Choose your course stream" className={showCrm ? 'grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3' : 'max-w-md mx-auto'}>
               {visibleStreams.map((s) => {
                 const Icon = s.icon
                 return (

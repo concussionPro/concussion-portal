@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { SstLivePanel } from '@/components/sst-trainer/SstLivePanel'
 import { PmsFileButton } from '@/components/clinical/PmsFileButton'
 import { SstTrajectory, type TrajectoryPoint } from '@/components/sst-trainer/SstTrajectory'
-import { SESSION_STOP_RISE } from '@/lib/sst-trainer/protocol'
+import { PROTOCOL_STAGE_CAP, SESSION_STOP_RISE } from '@/lib/sst-trainer/protocol'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
   AlertTriangle, AlertOctagon, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock,
@@ -72,6 +72,8 @@ type Patient = {
   sessions: Session[]             // newest first
   lastActivity?: string | null    // ISO
   clearanceReady?: boolean
+  /** minutes of the graded ramp behind the clearance signal (null = not recorded) */
+  clearanceRamp?: number | null
   flag?: string
   notes?: string
 }
@@ -393,6 +395,7 @@ type ApiTrajectoryPoint = {
   eventType?: string | null
   modality?: string | null
   verifiedReadingPct?: number | null
+  stagesRecorded?: number | null
   patientRef?: string | null
 }
 
@@ -415,6 +418,8 @@ type ApiSession = {
   sessionEndFeel?: string | null
   verifiedReadingPct?: number
   hrVerified?: boolean
+  /** 'bluetooth' | 'camera' | 'manual' — the app stamps this on every sync */
+  hrSource?: string
   modality?: string
   patientRef?: string
   deviceName?: string
@@ -530,8 +535,16 @@ function groupApiPatients(list: ApiPatient[]): ApiPatient[] {
  *              neutrally, never as clean.
  */
 function mapApiSession(s: ApiSession): Session {
-  const avgHr = num(s.avgHr) ?? num(s.avgHeartRate)
-  const peakHr = num(s.peakHr) ?? num(s.peakHeartRate)
+  // A heart rate only if it is PLAUSIBLE. Older app builds saved 0 when a
+  // session recorded no reading at all, and the row printed it verbatim as
+  // "avg 0 · peak 0 bpm" — a measurement shown to a clinician for a session
+  // that measured nothing. The app's own entry fields bound HR to 30–240 bpm.
+  const bpm = (v: unknown): number | null => {
+    const n = num(v)
+    return n != null && n >= 30 && n <= 240 ? n : null
+  }
+  const avgHr = bpm(s.avgHr) ?? bpm(s.avgHeartRate)
+  const peakHr = bpm(s.peakHr) ?? bpm(s.peakHeartRate)
   const mins = num(s.minutes) ?? num(s.mins) ?? num(s.completedMinutes)
   const pre = num(s.preSymptom)
   const peak = num(s.peakSymptom)
@@ -557,7 +570,14 @@ function mapApiSession(s: ApiSession): Session {
     eventType,
     modality: typeof s.modality === 'string' ? s.modality : null,
     verifiedReadingPct: num(s.verifiedReadingPct),
-    hrVerified: s.hrVerified === true,
+    // PROVENANCE REQUIRED, same rule the server applies to the HRt trajectory
+    // (app/api/sst/clinic-sessions/route.ts) and to reports (reports/load.ts
+    // isVerified): a row that claims hrVerified but records NO source, or a
+    // manual one, is not a live-sensor session. Trusting the flag alone let the
+    // row print the emerald "Live HR verified" badge off a self-asserted field
+    // while the trajectory point beside it plotted the same session unverified.
+    hrVerified:
+      s.hrVerified === true && typeof s.hrSource === 'string' && s.hrSource.trim() !== '' && s.hrSource !== 'manual',
     nextDayFlare,
     overrodeStop,
     sessionEndFeel: typeof s.sessionEndFeel === 'string' ? s.sessionEndFeel : null,
@@ -595,9 +615,19 @@ function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
     eventType: normEvent(t.eventType),
     modality: typeof t.modality === 'string' ? t.modality : null,
     verifiedReadingPct: num(t.verifiedReadingPct),
+    stagesRecorded: num(t.stagesRecorded),
   }))
   const latestInterp = [...hrtPoints].reverse().find((t) => t.interpretation)?.interpretation ?? null
   const clearanceReady = p.clearanceReady === true || latestInterp === 'no-intolerance'
+  // How far the ramp that produced the clearance signal actually got. The
+  // engine returns 'no-intolerance' — this banner — from a graded test that
+  // terminated at voluntary exhaustion regardless of length: a one-minute ramp
+  // reads identically to a completed 20-minute protocol. The clinician making
+  // the clearance decision must see the exercise dose behind it. Null when the
+  // stage table wasn't stored (legacy rows) — never guessed.
+  const clearanceRamp = clearanceReady
+    ? ([...hrtPoints].reverse().find((t) => t.interpretation === 'no-intolerance')?.stagesRecorded ?? null)
+    : null
   const stage: Stage = clearanceReady
     ? { n: 7, label: 'Cleared — refer to MD' }
     : p.hrt
@@ -629,6 +659,7 @@ function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
     sessions,
     lastActivity: p.lastActivity ?? sessions[0]?.dateIso ?? null,
     clearanceReady,
+    clearanceRamp,
   }
 }
 
@@ -694,6 +725,19 @@ function ackPatientKeyOf(pt: Patient): string {
 /** localStorage cache key — clinic + patient identity + the escalating event's date. */
 function ackKeyOf(clinic: string, pt: Patient, att: Attention) {
   return `sst-hub-ack:${clinic || 'DEMO'}:${ackPatientKeyOf(pt)}:${att.dateKey}`
+}
+
+/**
+ * The key the SERVER ack map is indexed on. It MUST be built by ONE function:
+ * the loader joined patientKey + dateKey with a NUL escape while both readers
+ * joined them with a SPACE, so a server-recorded acknowledgement never
+ * resolved. Every other seat in the clinic kept staring at the URGENT/REVIEW
+ * banner a colleague had already reviewed, and "Reviewed by <name>" never
+ * rendered — the one question a supervision surface exists to answer. The
+ * localStorage cache hid it on the acting clinician's own browser (2026-08-06).
+ */
+function serverAckKey(patientKey: string, dateKey: string) {
+  return `${patientKey}\u0000${dateKey}`
 }
 
 /** What the hub knows about an acknowledgement — `by` is null for cache-only hits. */
@@ -770,7 +814,7 @@ export default function ClinicalHubPage() {
           const next: Record<string, AckRecord> = {}
           for (const a of data.acks) {
             if (!a?.patientKey || !a?.dateKey) continue
-            next[`${a.patientKey}\u0000${a.dateKey}`] = {
+            next[serverAckKey(a.patientKey, a.dateKey)] = {
               by: typeof a.acknowledgedBy === 'string' && a.acknowledgedBy.trim() ? a.acknowledgedBy.trim() : null,
               at: typeof a.acknowledgedAt === 'string' ? a.acknowledgedAt : null,
             }
@@ -804,7 +848,7 @@ export default function ClinicalHubPage() {
       const att = deriveAttention(pt)
       if (!att) continue
       const key = ackKeyOf(clinicCode, pt, att)
-      const server = serverAcks[`${ackPatientKeyOf(pt)} ${att.dateKey}`]
+      const server = serverAcks[serverAckKey(ackPatientKeyOf(pt), att.dateKey)]
       if (server) {
         next[key] = server
         continue
@@ -845,7 +889,7 @@ export default function ClinicalHubPage() {
         const d = r.ok ? await r.json().catch(() => null) : null
         if (d?.ack) {
           const rec: AckRecord = { by: d.ack.acknowledgedBy ?? null, at: d.ack.acknowledgedAt ?? null }
-          setServerAcks((prev) => ({ ...prev, [`${ackPatientKeyOf(pt)} ${att.dateKey}`]: rec }))
+          setServerAcks((prev) => ({ ...prev, [serverAckKey(ackPatientKeyOf(pt), att.dateKey)]: rec }))
           setAcks((prev) => ({ ...prev, [key]: rec }))
           return
         }
@@ -1151,6 +1195,15 @@ export default function ClinicalHubPage() {
                   <ShieldCheck className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-emerald-800 leading-relaxed">
                     Recovered — no-intolerance on re-test. Ready for your clearance review — clearance is your clinical decision.
+                    {p.clearanceRamp != null && p.clearanceRamp > 0 && (
+                      <>
+                        {' '}
+                        <span className={p.clearanceRamp < PROTOCOL_STAGE_CAP ? 'font-semibold' : ''}>
+                          That test ran {p.clearanceRamp} minute{p.clearanceRamp === 1 ? '' : 's'} of the{' '}
+                          {PROTOCOL_STAGE_CAP}-minute graded ramp before it was stopped.
+                        </span>
+                      </>
+                    )}
                   </p>
                 </div>
               )}

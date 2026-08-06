@@ -86,7 +86,15 @@ function UpgradeContent() {
 
       if (data.url) {
         window.location.href = data.url
+        return
       }
+      // 200 with no url (Stripe session created but url missing / shape drift).
+      // Without this branch checkoutLoading stayed true forever: the button
+      // showed "Redirecting to checkout..." and spun for the rest of the
+      // session with no error and no way back — the user's only signal that
+      // their upgrade had failed was that nothing happened.
+      setError('Checkout could not be started. Please try again, or email zac@concussion-education-australia.com.')
+      setCheckoutLoading(false)
     } catch {
       setError('Something went wrong. Please try again.')
       setCheckoutLoading(false)
@@ -151,7 +159,7 @@ function UpgradeContent() {
             {[
               { title: 'Hands-on practice', desc: 'SCAT6, VOMS, and BESS assessment under supervision' },
               { title: 'Expert feedback', desc: 'Real-time correction from experienced clinicians' },
-              { title: '8 more CPD hours', desc: `${CONFIG.COURSE.TOTAL_CPD_POINTS} total with online + workshop` },
+              { title: `${CONFIG.COURSE.IN_PERSON_CPD_POINTS} more CPD hours`, desc: `${CONFIG.COURSE.TOTAL_CPD_POINTS} total with online + workshop` },
               { title: 'Small groups', desc: `Max ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} participants for quality training` },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-accent/5">
@@ -214,7 +222,7 @@ function UpgradeContent() {
               <span className="text-muted-foreground">AUD</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Adds the full-day workshop (8 CPD hours) to your online course
+              Adds the full-day workshop ({CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD hours) to your online course
             </p>
             {upgradeEarlyBird && (
               <p className="text-xs text-muted-foreground mt-1">

@@ -8,6 +8,7 @@ import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import { isOwnerEmail } from '@/lib/owner'
+import { clearIdentity } from '@/lib/analytics'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -119,6 +120,18 @@ export function Sidebar() {
     } catch (_) {
       // Continue with redirect even if API fails
     }
+    // The server clears every identity-bearing COOKIE, but the browser also
+    // holds two identity-bearing localStorage keys that survived sign-out.
+    // This is the sign-out a paying student actually clicks, so it is the one
+    // that mattered most. See components/SiteNav.tsx for the full rationale:
+    //   cea_user_email  — attached as user_email to EVERY subsequent analytics
+    //                     event, so on a shared clinic machine the next
+    //                     person's browsing was recorded under the previous
+    //                     clinician's email address.
+    //   login_redirect  — a stale gated destination bounces the NEXT sign-in.
+    // Runs even if the logout POST threw — the browser state is ours to clear.
+    clearIdentity()
+    try { localStorage.removeItem('login_redirect') } catch { /* private mode */ }
     router.push('/')
   }
 

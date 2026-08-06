@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/require-admin'
 import { sendEmail } from '@/lib/resend-client'
+import { isEmailSuppressed } from '@/lib/email-suppression'
 
 /**
  * POST /api/admin/send-sst-sequence-preview  { to?, dryRun? }
@@ -55,8 +56,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const body = await req.json().catch(() => ({}))
-  const to = (body.to as string | undefined) || 'z.lew87@gmail.com'
+  const to = ((body.to as string | undefined) || 'z.lew87@gmail.com').trim()
   const dryRun = body.dryRun === true
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    return NextResponse.json({ error: 'A valid "to" address is required' }, { status: 400 })
+  }
+  // MASTER BLACKLIST — `to` is body-supplied, so this is a send lane like any
+  // other and gets the same fail-closed gate (isEmailSuppressed returns true on
+  // a DB error). Skipped for dryRun, which sends nothing.
+  if (!dryRun && (await isEmailSuppressed(to))) {
+    return NextResponse.json(
+      { error: 'That address is on the suppression list — refusing to send.' },
+      { status: 409 },
+    )
+  }
   const mode = (body.mode as string | undefined) || 'full'
 
   // 't1-live': the actual T1 a prospect would receive, plus the live pitch/

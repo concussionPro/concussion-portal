@@ -26,6 +26,13 @@ const EXCLUDED_PREFIXES = [
   // Product apps + their landings: patients and clinics mid-flow are never
   // course-lead-capture targets (owner directive 2026-07-04).
   '/preseason', '/sst-trainer', '/platform',
+  // 2026-08-06: same rule, two surfaces it had never been applied to.
+  // /clinical-suite is the SST product family and /clinical-suite/start is a
+  // paid-trial SIGNUP FORM — interrupting it with a free-SCAT-course email
+  // capture is a competing form on the same screen. /concussion-rehab-mastery
+  // and /ep-course are the exercise-physiology (CRM) stream; the free SCAT
+  // course is the CCM ladder's top step, not theirs.
+  '/clinical-suite', '/concussion-rehab-mastery', '/ep-course',
 ]
 
 export function ExitIntentPopup() {
@@ -84,7 +91,7 @@ export function ExitIntentPopup() {
       }
     }
 
-    // Mobile fallback: 45s idle timer
+    // Mobile fallback: 90s idle timer
     let idleTimer: ReturnType<typeof setTimeout>
     const resetIdle = () => {
       clearTimeout(idleTimer)

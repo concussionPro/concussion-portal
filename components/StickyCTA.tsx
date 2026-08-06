@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { ArrowRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from '@/contexts/SessionContext'
+import { CONFIG } from '@/lib/config'
 
 // Pages where the sticky CTA should NOT appear.
 // Keep in sync (in intent) with ExitIntentPopup EXCLUDED_PREFIXES: workshop
@@ -36,6 +37,19 @@ const EXCLUDED_PATHS = [
   '/preview',
   // Lead-capture page — the $-course sticky bar competes with the email gate.
   '/scat6-download',
+  // WRONG-STREAM CROSS-SELL (2026-08-06). This bar links to /pricing, which is
+  // Concussion Clinical Mastery — the physio/osteo/chiro product. It was
+  // rendering over the exercise-physiology surfaces (/concussion-rehab-mastery
+  // is the ESSA-accredited CRM landing, /ep-course its course home), so an EP
+  // arriving from ESSA got a persistent bottom bar selling them the course
+  // their registration is NOT the audience for. Same defect class as the
+  // top-right "Enrol" fix in SiteNav.
+  '/concussion-rehab-mastery',
+  '/ep-course',
+  // SST / clinical-suite is a separate product with its own funnel and its own
+  // pricing page. /clinical-suite/start is the paid-trial signup form — a
+  // fixed bottom bar sits over its submit button on a 375px viewport.
+  '/clinical-suite',
 ]
 
 export function StickyCTA() {
@@ -78,7 +92,7 @@ export function StickyCTA() {
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <p className="text-sm text-white/80 truncate">
               <span className="font-semibold text-white">Stop guessing on concussion cases.</span>
-              <span className="hidden sm:inline"> Online + hands-on training · 16 CPD hours</span>
+              <span className="hidden sm:inline"> Online + hands-on training · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours</span>
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">

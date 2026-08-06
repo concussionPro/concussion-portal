@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { UserPlus, X } from 'lucide-react'
 
 /**
- * Practitioner seats — the tier's enforceable unit (owner 2026-08-04:
- * clinician identity, not caseload). Lists the named team, adds seats up to
- * the tier allowance, and surfaces the upgrade path at the limit. Owner
- * occupies seat 1 implicitly.
+ * Named practitioners. SUPERSEDED DOCTRINE (owner 2026-08-05): seats are NOT
+ * the paywall — paid tiers meter ACTIVE CASELOAD and every paid plan carries
+ * UNLIMITED clinicians (named logins buy attribution, and kill the shared-
+ * login economics). Only the free trial is capped, at one practitioner.
+ * The server is the authority: /api/clinical-testing/team returns
+ * seatAllowance null for any active plan. Owner occupies seat 1 implicitly.
  */
 interface Member { id: string; name: string; email: string | null }
 
@@ -62,13 +64,26 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
     }
   }
 
-  const remove = async (id: string) => {
+  const remove = async (id: string, memberName: string) => {
     if (demo) return
-    await fetch('/api/clinical-testing/team', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    }).catch(() => {})
+    // One unguarded click revoked a colleague's login (getSstClinicByEmail
+    // stops resolving them to this clinic) with no warning and no undo, and
+    // the failure was swallowed whole — the row just reappeared on reload.
+    if (!window.confirm(`Remove ${memberName}? They lose access to this clinic's workspace, patients and reports.`)) return
+    setError(null)
+    try {
+      const res = await fetch('/api/clinical-testing/team', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data?.error || 'Could not remove that practitioner.')
+      }
+    } catch {
+      setError('Network error — try again.')
+    }
     load()
   }
 
@@ -95,7 +110,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
           <li key={m.id} className="flex items-center justify-between text-[12.5px] text-slate-700">
             <span className="font-medium truncate">{m.name}{m.email ? <span className="text-muted-foreground font-normal"> · {m.email}</span> : null}</span>
             {seats.isOwner && (
-              <button type="button" onClick={() => remove(m.id)} aria-label={`Remove ${m.name}`} className="text-slate-400 hover:text-red-500">
+              <button type="button" onClick={() => void remove(m.id, m.name)} aria-label={`Remove ${m.name}`} className="text-slate-400 hover:text-red-500">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}

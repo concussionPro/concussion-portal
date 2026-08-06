@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, MapPin, Calendar, Mail, Download, CheckCircle, Clock, Eye, Trash2, Loader2 } from 'lucide-react'
+import { Users, MapPin, Calendar, Mail, Download, CheckCircle, Clock, Eye, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 interface PaidRegistrant {
   name: string
@@ -52,11 +53,17 @@ interface InterestCity {
   registrations: InterestRegistration[]
 }
 
-const TARGET = 8
+// Single source of truth — never a literal. The per-city cards read the
+// threshold the API sends (also CONFIG); the prose has to agree with them.
+const TARGET = CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD
 
 export default function AdminReadyToTrainPage() {
   const [paidEnrollments, setPaidEnrollments] = useState<PaidCity[]>([])
   const [paidTotal, setPaidTotal] = useState(0)
+  // Full-course buyers with no nominated city. The API computes them
+  // (getEnrollmentsWithoutLocation) precisely so they aren't invisible — this
+  // page used to drop them, so "N paid" understated real full-course sales.
+  const [paidNoLocation, setPaidNoLocation] = useState<{ count: number; registrants: PaidRegistrant[] }>({ count: 0, registrants: [] })
   const [readyToUpgrade, setReadyToUpgrade] = useState<ReadyCity[]>([])
   const [readyTotal, setReadyTotal] = useState(0)
   const [interest, setInterest] = useState<InterestCity[]>([])
@@ -76,6 +83,7 @@ export default function AdminReadyToTrainPage() {
       if (res.ok && data.success) {
         setPaidEnrollments(data.paidEnrollments || [])
         setPaidTotal(data.paidTotal || 0)
+        setPaidNoLocation(data.paidNoLocation || { count: 0, registrants: [] })
         setReadyToUpgrade(data.readyToUpgrade || [])
         setReadyTotal(data.readyTotal || 0)
         setInterest(data.interest || [])
@@ -104,20 +112,21 @@ export default function AdminReadyToTrainPage() {
         alert(`Delete failed: ${data?.error || 'unknown error'}`)
         return
       }
-      setInterest(prev =>
-        prev
-          .map(c =>
-            c.city !== city
-              ? c
-              : {
-                  ...c,
-                  registrations: c.registrations.filter(r => r.email.toLowerCase() !== email.toLowerCase()),
-                  count: c.registrations.filter(r => r.email.toLowerCase() !== email.toLowerCase()).length,
-                }
-          )
-          .filter(c => c.count > 0)
-      )
-      setInterestTotal(prev => prev - 1)
+      // Derive the total from the surviving rows — the DELETE removes every
+      // row for that email+city, so decrementing by 1 drifted whenever a
+      // duplicate existed.
+      const next = interest
+        .map(c =>
+          c.city !== city
+            ? c
+            : (() => {
+                const registrations = c.registrations.filter(r => r.email.toLowerCase() !== email.toLowerCase())
+                return { ...c, registrations, count: registrations.length }
+              })()
+        )
+        .filter(c => c.count > 0)
+      setInterest(next)
+      setInterestTotal(next.reduce((sum, c) => sum + c.count, 0))
     } catch (err) {
       alert(`Delete failed: ${err instanceof Error ? err.message : 'network error'}`)
     } finally {
@@ -142,6 +151,14 @@ export default function AdminReadyToTrainPage() {
           r.stream === 'crm' ? 'stripe (CRM)' : 'stripe (CCM)',
         ])
       ),
+      ...paidNoLocation.registrants.map(r => [
+        'Paid — no city',
+        '(none)',
+        r.name,
+        r.email,
+        new Date(r.createdAt).toLocaleDateString(),
+        r.stream === 'crm' ? 'stripe (CRM)' : 'stripe (CCM)',
+      ]),
       ...readyToUpgrade.flatMap(c =>
         c.registrations.map(r => [
           'Ready to Upgrade',
@@ -198,7 +215,9 @@ export default function AdminReadyToTrainPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Workshop Pipeline</h1>
           <p className="text-slate-600">
-            {paidTotal} paid &middot; {readyTotal} ready to upgrade &middot; {interestTotal} interested
+            {paidTotal} paid in cities still collecting
+            {paidNoLocation.count > 0 && <> &middot; {paidNoLocation.count} paid with no city</>}
+            {' '}&middot; {readyTotal} ready to upgrade &middot; {interestTotal} interested
           </p>
         </div>
         <button
@@ -216,11 +235,13 @@ export default function AdminReadyToTrainPage() {
           <CheckCircle className="w-5 h-5 text-green-600" />
           <h2 className="text-xl font-bold text-slate-900">Paid Enrollments</h2>
           <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-            {paidTotal} confirmed
+            {paidTotal} counting toward a date
           </span>
         </div>
         <p className="text-sm text-slate-500 mb-4">
-          Full-course users who have paid. {TARGET} per city needed to confirm a workshop date.
+          Paid practical-day seats in cities <strong>still collecting</strong> — {TARGET} per city confirms a date.
+          Buyers whose workshop already ran are <a href="/admin/alumni" className="underline">alumni</a> and are not
+          counted here{paidNoLocation.count > 0 ? ', and buyers who never nominated a city are listed separately below' : ''}.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
@@ -255,6 +276,51 @@ export default function AdminReadyToTrainPage() {
             )
           })}
         </div>
+
+        {/* Paid, but no city nominated — real revenue that counts toward no
+            threshold. Previously computed by the API and dropped by this page. */}
+        {paidNoLocation.count > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-amber-200 mb-4 overflow-hidden">
+            <div className="px-6 py-3 border-b border-amber-100 bg-amber-50 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <h3 className="text-sm font-bold text-amber-800">
+                No city nominated — {paidNoLocation.count} paid
+              </h3>
+              <span className="text-xs text-amber-700">not counted in any city threshold</span>
+            </div>
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Name</th>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Email</th>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Stream</th>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Enrolled</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {paidNoLocation.registrants.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="px-6 py-3 text-sm font-medium text-slate-900">{r.name}</td>
+                    <td className="px-6 py-3 text-sm text-slate-700">
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                        {r.email}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 text-sm">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        r.stream === 'crm' ? 'bg-teal-100 text-teal-700' : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {r.stream === 'crm' ? 'CRM' : 'CCM'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-sm text-slate-600">{new Date(r.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Paid registrants table */}
         {paidEnrollments.filter(c => c.count > 0).map(city => (

@@ -286,16 +286,17 @@ function Certificate({ moduleCount, totalMinutes }: { moduleCount: number; total
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 mt-6 pt-6 border-t border-accent/15 items-end">
-          <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Issued by</p>
-            <p className="text-sm font-bold text-foreground">Zac Lewis</p>
-            <p className="text-[11px] text-muted-foreground">Osteopath · Founder, Concussion Education Australia</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Endorsed by</p>
-            <p className="text-sm font-bold text-foreground">Osteopathy Australia</p>
-          </div>
+        {/* NO endorsement lockup here. Osteopathy Australia endorses the CCM
+            clinician stream — not this non-clinical front-desk micro-course.
+            An "Endorsed by: Osteopathy Australia" line sitting opposite the
+            issuer on a printable certificate reads as endorsement OF THIS
+            CERTIFICATE, which OA has never given. The disclaimer below already
+            says this isn't formal CPD; the two statements contradicted each
+            other on the same page. */}
+        <div className="mt-6 pt-6 border-t border-accent/15">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Issued by</p>
+          <p className="text-sm font-bold text-foreground">Zac Lewis</p>
+          <p className="text-[11px] text-muted-foreground">Osteopath · Founder, Concussion Education Australia</p>
         </div>
       </div>
 

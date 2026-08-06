@@ -6,6 +6,14 @@ import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { requireCourseAccess } from '@/lib/course-access'
 import { getCourseCertificate } from '@/lib/course-certificates'
 import { CONFIG } from '@/lib/config'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+// Cross-sell price must come from the catalogue helper the checkout uses.
+// The reciprocal page (ai-in-clinical-practice/certificate) documents the
+// exact bug a literal caused there: a hardcoded A$97 advertised the sticker
+// while checkout charged the A$82 early-bird.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_PRICE = AI_COURSE ? getEffectivePrice(AI_COURSE).price : null
 
 export const metadata: Metadata = {
   title: 'Certificate — The Vagus Nerve in Clinical Practice',
@@ -144,7 +152,9 @@ export default async function VagusCertificatePage() {
                 href="/courses/ai-in-clinical-practice"
                 className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
               >
-                <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Short course · 2 CPD hours · A$99</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">
+                  Short course · {AI_COURSE?.cpdHours ?? 2} CPD hours{AI_PRICE ? ` · A$${AI_PRICE}` : ''}
+                </p>
                 <p className="text-sm font-semibold text-foreground leading-tight">AI in Clinical Practice</p>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">AHPRA-aligned AI compliance for Australian clinicians — scribes, privacy, documentation, indemnity positions.</p>
               </Link>
@@ -152,7 +162,9 @@ export default async function VagusCertificatePage() {
                 href="/pricing"
                 className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
               >
-                <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Flagship · 8 CPD hours online · up to 16 with the workshop day</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">
+                  Flagship · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online · up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop day
+                </p>
                 <p className="text-sm font-semibold text-foreground leading-tight">Concussion Clinical Mastery</p>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Osteopathy Australia–endorsed concussion assessment and management — SCAT6, VOMS, BESS, return-to-sport protocols.</p>
               </Link>

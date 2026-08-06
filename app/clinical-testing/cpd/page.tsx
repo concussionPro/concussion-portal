@@ -153,6 +153,7 @@ function FirstRun({ packs, onDone }: { packs: PackOption[]; onDone: () => void }
   const [packId, setPackId] = useState('')
   const [regNumber, setRegNumber] = useState('')
   const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-8" style={{ boxShadow: '0 12px 32px -18px rgba(22,36,63,.25)' }}>
       <h2 className="m-0 text-[19px] font-extrabold" style={{ color: NAVY }}>Pick your board — that&rsquo;s the whole setup.</h2>
@@ -168,17 +169,33 @@ function FirstRun({ packs, onDone }: { packs: PackOption[]; onDone: () => void }
           placeholder="Registration number (optional — shown on your export)"
           className="rounded-[10px] border border-slate-300 px-3 py-2.5 text-[14px]"
         />
+        {err && <p className="m-0 text-[12.5px] font-semibold text-red-600">{err}</p>}
         <button
           disabled={!packId || busy}
           onClick={async () => {
             setBusy(true)
-            await fetch('/api/cpd/registrations', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ packId, regNumber }),
-            })
-            onDone()
+            setErr(null)
+            // The response was never checked: a 401/500 re-rendered this same
+            // "pick your board" screen with no error, so the button looked
+            // like it did nothing at all.
+            try {
+              const res = await fetch('/api/cpd/registrations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ packId, regNumber }),
+              })
+              if (!res.ok) {
+                const d = await res.json().catch(() => ({}))
+                setErr(d?.error || 'Could not set that up — try again.')
+                return
+              }
+              onDone()
+            } catch {
+              setErr('Could not set that up — check your connection and try again.')
+            } finally {
+              setBusy(false)
+            }
           }}
           className="rounded-[11px] px-5 py-3 text-[14px] font-bold text-white disabled:opacity-50"
           style={{ background: NAVY }}
@@ -414,12 +431,26 @@ function ActivityList({ activities, onChanged }: { activities: Activity[]; onCha
               <button
                 title="Delete activity"
                 onClick={async () => {
-                  await fetch('/api/cpd/activities', {
+                  // One unguarded click destroyed a logged CPD activity — the
+                  // record an auditor asks for — with no confirmation and no
+                  // undo. Name what is being removed.
+                  const evidence = a.evidenceIds.length
+                  if (!window.confirm(
+                    `Delete "${a.title}" (${a.date}, ${a.hours} hrs) from your CPD record?` +
+                      (evidence > 0 ? `\n\n${evidence} attached evidence file(s) go with it.` : '') +
+                      '\n\nThis cannot be undone.',
+                  )) return
+                  const res = await fetch('/api/cpd/activities', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({ id: a.id }),
                   })
+                  if (!res.ok) {
+                    const d = await res.json().catch(() => ({}))
+                    setUploadErr(d?.error || 'Could not delete that activity.')
+                    return
+                  }
                   onChanged()
                 }}
                 className="rounded-[8px] border border-slate-200 bg-white p-2 text-slate-400 hover:text-red-600"
@@ -561,6 +592,7 @@ function CredentialFile() {
 
 function AddBoard({ packs, existing, onDone }: { packs: PackOption[]; existing: string[]; onDone: () => void }) {
   const [packId, setPackId] = useState('')
+  const [err, setErr] = useState<string | null>(null)
   const available = packs.filter((p) => !existing.includes(p.id))
   if (available.length === 0) return null
   return (
@@ -569,12 +601,25 @@ function AddBoard({ packs, existing, onDone }: { packs: PackOption[]; existing: 
       <button
         disabled={!packId}
         onClick={async () => {
-          await fetch('/api/cpd/registrations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ packId }),
-          })
+          setErr(null)
+          // Same unchecked-response failure as first-run: the select simply
+          // reset itself and the board never appeared.
+          try {
+            const res = await fetch('/api/cpd/registrations', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ packId }),
+            })
+            if (!res.ok) {
+              const d = await res.json().catch(() => ({}))
+              setErr(d?.error || 'Could not add that board.')
+              return
+            }
+          } catch {
+            setErr('Could not add that board — check your connection.')
+            return
+          }
           setPackId('')
           onDone()
         }}
@@ -583,6 +628,7 @@ function AddBoard({ packs, existing, onDone }: { packs: PackOption[]; existing: 
       >
         + Track another registration
       </button>
+      {err && <p className="m-0 w-full text-[12.5px] font-semibold text-red-600">{err}</p>}
     </div>
   )
 }

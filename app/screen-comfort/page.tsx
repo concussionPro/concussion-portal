@@ -3,7 +3,6 @@
 // Sits alongside the Preseason Baseline tool as a future clinic tool + research/literature hub.
 // Compliance: wellness/comfort framing only — NO diagnosis/treatment claims (TGA/AHPRA).
 // To reveal later: add to SiteNav + sitemap.ts and remove the robots block.
-import Link from 'next/link'
 import { Eye, FileText, FlaskConical, ArrowRight, ShieldCheck } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 
@@ -63,16 +62,17 @@ export default function ScreenComfortPage() {
             paper sets out the method, the evidence, and its honest limits; a scoping review and a sham-controlled
             feasibility study are in preparation.
           </p>
+          {/* Rendered as text, NOT links: all three href values were '#', so
+              every one of them looked clickable and did nothing (jumped to the
+              top of the page). Restore a link per row as each DOI lands. */}
           <ul className="mt-4 space-y-2 text-[14px]">
             {[
-              ['White paper — method, evidence & boundaries', '#'],
-              ['Scoping review — objective measurement of photophobia (in prep)', '#'],
-              ['Feasibility / methods paper (in prep)', '#'],
-            ].map(([label, href]) => (
-              <li key={label}>
-                <Link href={href as string} className="inline-flex items-center gap-2 text-slate-700 hover:text-indigo-700">
-                  <FileText size={15} className="text-slate-400" /> {label}
-                </Link>
+              'White paper — method, evidence & boundaries',
+              'Scoping review — objective measurement of photophobia (in prep)',
+              'Feasibility / methods paper (in prep)',
+            ].map((label) => (
+              <li key={label} className="inline-flex items-center gap-2 text-slate-700">
+                <FileText size={15} className="text-slate-400" /> {label}
               </li>
             ))}
           </ul>

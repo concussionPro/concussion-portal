@@ -18,6 +18,9 @@ interface ImportResult {
   skipped?: number
   errors?: number
   skippedNoConsent?: number
+  /** Dropped because the address is on email_suppression (unsub / bounce /
+   *  complaint / STOP). Zero-tolerance policy — must be visible, not silent. */
+  skippedSuppressed?: number
   total?: number
   error?: string
 }
@@ -94,9 +97,13 @@ export default function ImportContactsPage() {
   const [result, setResult] = useState<ImportResult | null>(null)
 
   const parsed = useMemo(() => parseCsv(csv), [csv])
+  // Upper bound only: the server also drops declined-marketing, suppressed
+  // and already-existing addresses, so the real send count is ≤ this.
   const recentCount = useMemo(() => {
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000
-    return parsed.filter((c) => c.date && new Date(c.date).getTime() >= cutoff).length
+    return parsed.filter(
+      (c) => c.acceptsMarketing !== false && c.date && new Date(c.date).getTime() >= cutoff,
+    ).length
   }, [parsed])
 
   async function handleImport() {
@@ -174,7 +181,7 @@ export default function ImportContactsPage() {
             <div className="mt-3 rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-700">
               <strong>{parsed.length}</strong> valid email{parsed.length === 1 ? '' : 's'} parsed.
               {recentCount > 0 && (
-                <> <strong>{recentCount}</strong> signed up in the last 30 days will receive the welcome email; older ones are imported silently.</>
+                <> Up to <strong>{recentCount}</strong> signed up in the last 30 days will receive the welcome email (suppressed and already-existing addresses are skipped server-side); older ones are imported silently.</>
               )}
             </div>
           )}
@@ -205,7 +212,10 @@ export default function ImportContactsPage() {
                     <p className="font-semibold text-emerald-900 mb-1">Import complete</p>
                     <p className="text-emerald-800">
                       {result.created} created, {result.emailed} welcome email{result.emailed === 1 ? '' : 's'} sent,{' '}
-                      {result.skipped} skipped (already existed), {result.errors} errors — {result.total} total processed.
+                      {result.skipped} skipped (already existed),{' '}
+                      {result.skippedNoConsent ?? 0} skipped (declined marketing),{' '}
+                      {result.skippedSuppressed ?? 0} skipped (suppressed — unsub/bounce/complaint),{' '}
+                      {result.errors} errors — {result.total} total processed.
                     </p>
                   </>
                 ) : (

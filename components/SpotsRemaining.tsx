@@ -16,17 +16,21 @@ export default function SpotsRemaining({ location, className = '' }: SpotsRemain
     const locationData = CONFIG.LOCATIONS[location]
     if (!locationData || locationData.status !== 'confirmed') return
 
-    // Fetch live enrollment count for confirmed cities
+    // Fetch live enrollment count for confirmed cities.
+    // NO FALLBACK: a stated seat count must be a REAL one. This used to fall
+    // back to CAPACITY_PER_COURSE on any failure, so a 500 (or an HTML error
+    // page that blew up `.json()`) rendered "12 spots remaining" — a number
+    // nothing had measured, on the page where the buyer decides. Non-2xx and
+    // network throws now both leave the counter unrendered.
     fetch(`/api/early-bird-status?location=${locationData.slug}`)
-      .then(res => res.json())
+      .then(res => (res.ok ? res.json() : null))
       .then(data => {
-        if (typeof data.spotsRemaining === 'number') {
+        if (data && typeof data.spotsRemaining === 'number') {
           setSpotsLeft(data.spotsRemaining)
         }
       })
       .catch(() => {
-        // Fallback to capacity
-        setSpotsLeft(CONFIG.WORKSHOP.CAPACITY_PER_COURSE)
+        // Silent — render nothing rather than a fabricated count.
       })
   }, [location])
 

@@ -128,7 +128,13 @@ export default function ClinikoIntegrationPage() {
             <h2 className="text-base font-bold text-foreground mb-2">Security &amp; data handling</h2>
             <ul className="text-[13.5px] text-muted-foreground leading-relaxed space-y-1.5 list-disc pl-4">
               <li>Your Cliniko API key is stored per-clinic and used only to match patients and file reports; disconnect at any time and the key is removed.</li>
-              <li>All processing runs in Australia (Sydney region) with data stored in Australia.</li>
+              {/* Was "All processing runs in Australia (Sydney region)" — the
+                  same overclaim /security was corrected away from on 2026-08-05
+                  and that /privacy never made. middleware.ts runs a thin
+                  routing/session layer at the edge near the visitor. Three
+                  pages a PMS security reviewer reads side by side must not
+                  disagree on the one fact they check. */}
+              <li>Data is stored in Australia (Sydney region) and the functions that handle clinical records, reports and account data run in the Sydney region. A thin routing and session-authentication layer runs at the network edge; clinical records are neither stored nor processed there. See <Link href="/security" className="text-accent hover:underline">security &amp; data handling</Link>.</li>
               <li>Requests to Cliniko identify the app and a support contact, per Cliniko&rsquo;s API requirements.</li>
               <li>SST never reads your calendar, billing or other patients&rsquo; clinical notes &mdash; patient search and report filing only.</li>
             </ul>

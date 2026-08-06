@@ -136,7 +136,12 @@ export function BuyCourseCard({
         </div>
         <div className="flex items-start gap-2">
           <Check className="w-3.5 h-3.5 text-blue-700 shrink-0 mt-0.5" />
-          <span>30-day satisfaction guarantee. Tax invoice emailed automatically.</span>
+          {/* 7 days, not 30. /terms and /pricing both state a 7-day window
+              (less than 25% of modules accessed); this card was the only
+              surface in the repo promising 30, directly above the Stripe
+              button. A refund promise the published terms don't honour is an
+              ACL problem, not a copy preference. */}
+          <span>7-day satisfaction guarantee. Tax invoice emailed automatically.</span>
         </div>
       </div>
     </section>

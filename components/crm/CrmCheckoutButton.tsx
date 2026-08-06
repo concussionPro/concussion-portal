@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { trackEvent } from '@/lib/analytics'
+import { trackEvent, getAttribution } from '@/lib/analytics'
 
 /**
  * CRM purchase control. Watertight-per-stream on the client too:
@@ -90,10 +90,40 @@ export default function CrmCheckoutButton({
     if (needsCity && !city) { setError('Nominate your city — it sets where the practical day launches.'); return }
     setBusy(true)
     try {
+      // UTM + first-touch attribution, same as the CCM stream
+      // (components/PricingOptions.tsx). /api/crm/checkout already accepts
+      // both and passes them into the Stripe session metadata, but this
+      // client sent neither — so a CRM sale arrived in Stripe with no source
+      // at all. ESSA is the channel this stream lives on (every enrol click
+      // measured so far carries referrer essa.org.au or ?EventKey=PDNF26077)
+      // and ESSA lists the course to members on 20 Aug: without this, the
+      // first paid conversions from that listing are unattributable.
+      const utm: Record<string, string> = {}
+      try {
+        const q = new URLSearchParams(window.location.search)
+        for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid']) {
+          const v = q.get(k)
+          if (v) utm[k] = v.slice(0, 120)
+        }
+        // ESSA's own listing links carry the accreditation number, not a UTM.
+        const eventKey = q.get('EventKey')
+        if (eventKey && !utm.utm_source) {
+          utm.utm_source = 'essa'
+          utm.utm_campaign = eventKey.slice(0, 120)
+        }
+      } catch {
+        /* best-effort — never block checkout on attribution */
+      }
       const res = await fetch('/api/crm/checkout', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ tier, email: email || undefined, location: city || undefined }),
+        body: JSON.stringify({
+          tier,
+          email: email || undefined,
+          location: city || undefined,
+          ...(Object.keys(utm).length ? { utm } : {}),
+          attribution: getAttribution(),
+        }),
       })
       const data = await res.json()
       if (!res.ok || !data.url) { setError(data.error || 'Could not start checkout.'); setBusy(false); return }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Download, ChevronDown, ChevronUp } from 'lucide-react'
 import {
@@ -95,10 +95,17 @@ export default function ChildSCAT6Client() {
       .catch(() => {})
   }, [])
 
+  /** Serialised empty form, for "has the clinician touched anything yet?". */
+  const pristineForm = useRef<string>(JSON.stringify(getDefaultChildSCAT6FormData()))
+
   // Auto-save to localStorage every 3 seconds
   // (paused while a restore prompt is pending so the saved draft isn't overwritten)
   useEffect(() => {
-    if (pendingDraft) return
+    // Only hold off while the form is still PRISTINE. Pausing for as long
+    // as the restore banner sits there meant a clinician who ignored the
+    // banner and worked through a whole assessment had nothing auto-saved:
+    // one refresh and the entry was gone, replaced by the older draft.
+    if (pendingDraft && JSON.stringify(formData) === pristineForm.current) return
     const timer = setTimeout(() => {
       const draftWithTimestamp = {
         data: formData,

@@ -212,6 +212,9 @@ function DashboardContent({ user }: { user: SessionUser | null }) {
   const modules = getEpModulesMeta()
   const [showCert, setShowCert] = useState(false)
   const [certEmail, setCertEmail] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [certDownloading, setCertDownloading] = useState(false)
+  /** The server's OWN reason the certificate could not be issued. */
+  const [certError, setCertError] = useState<string | null>(null)
   // Post-checkout confirmation. Stripe's CRM success_url now lands on the
   // stream-neutral, Stripe-validated /checkout/success, but the welcome email
   // and any older/bookmarked success link still arrive here with
@@ -221,6 +224,7 @@ function DashboardContent({ user }: { user: SessionUser | null }) {
 
   const emailCertificate = async () => {
     setCertEmail('sending')
+    setCertError(null)
     try {
       const res = await fetch('/api/certificate', {
         method: 'POST',
@@ -230,8 +234,45 @@ function DashboardContent({ user }: { user: SessionUser | null }) {
       })
       const data = await res.json().catch(() => ({}))
       setCertEmail(data?.success ? 'sent' : 'error')
+      if (!data?.success && data?.error) setCertError(data.error)
     } catch {
       setCertEmail('error')
+    }
+  }
+
+  /**
+   * Download the CRM certificate.
+   *
+   * This used to be a bare <a href="/api/certificate?type=crm">. The route
+   * re-verifies EVERY module quiz from the stored answers before it issues an
+   * ESSA CPD document, and on failure replies 403 with the exact modules to
+   * retake — so a plain link navigated the buyer's tab to a raw JSON blob under
+   * a green "Course complete" banner, with the actionable reason discarded.
+   * (The 8/8 completion flags that light this card are client-authored; the
+   * server's re-verification is the real gate, so the two CAN disagree.)
+   */
+  const downloadCertificate = async () => {
+    setCertError(null)
+    setCertDownloading(true)
+    try {
+      const res = await fetch('/api/certificate?type=crm', { credentials: 'include' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Download failed. Please try again.')
+      }
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'CPD-Certificate-Concussion-Rehab-Mastery.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      setCertError(err instanceof Error ? err.message : 'Download failed. Please try again.')
+    } finally {
+      setCertDownloading(false)
     }
   }
   // The bundled platform (SST Trainer + Baseline) — provisioning grants the
@@ -291,7 +332,7 @@ function DashboardContent({ user }: { user: SessionUser | null }) {
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
                 <span className="text-[11px] font-semibold text-teal-600 uppercase tracking-[0.14em]">
-                  Concussion Education Australia · CPD — 8 hours
+                  Concussion Education Australia · CPD — {CONFIG.COURSE.ONLINE_CPD_POINTS} hours
                 </span>
               </div>
               <span className="text-[11px] font-medium text-slate-400 pl-3.5">
@@ -391,12 +432,15 @@ function DashboardContent({ user }: { user: SessionUser | null }) {
                     (/api/certificate?type=crm recomputes every quiz from saved
                     answers before issuing). */}
                 <div className="flex flex-wrap gap-2 flex-shrink-0">
-                  <a
-                    href="/api/certificate?type=crm"
-                    className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm"
+                  <button
+                    type="button"
+                    onClick={downloadCertificate}
+                    disabled={certDownloading}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm disabled:opacity-60"
                   >
+                    {certDownloading && <Loader2 className="w-4 h-4 animate-spin" />}
                     Download CPD certificate
-                  </a>
+                  </button>
                   {/* The POST branch of /api/certificate carries the CRM-specific
                       email body (practical-day next step, never the CCM pitch).
                       Without a button it was unreachable code — the only CRM cert
@@ -421,10 +465,17 @@ function DashboardContent({ user }: { user: SessionUser | null }) {
                   Certificate emailed — check your inbox.
                 </p>
               )}
-              {certEmail === 'error' && (
+              {certEmail === 'error' && !certError && (
                 <p className="text-xs text-red-600 font-medium mt-3" role="status" aria-live="polite">
                   Email failed — use the download button instead.
                 </p>
+              )}
+              {/* The route's own words: which module to retake, enrolment
+                  required, etc. Never "please try again" over the top of it. */}
+              {certError && (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3" role="alert">
+                  <p className="text-xs text-red-700 m-0">{certError}</p>
+                </div>
               )}
             </div>
           )}

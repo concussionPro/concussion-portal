@@ -29,6 +29,7 @@ import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
+import { CONFIG } from '@/lib/config'
 
 // 7 sections + 4 quizzes ≈ 10 minutes — sweet spot per Zac. Cuts at
 // "TBI Classification: Severity, Imaging & Secondary Injury" and locks
@@ -43,7 +44,7 @@ const PREVIEW_PRINT_CSS = `
   @media print {
     body * { visibility: hidden !important; }
     body::before {
-      content: "Module 1 trial preview — full Concussion Clinical Mastery (8 modules · 8 CPD hrs online, 16 with the in-person day) activates with the Hub Program. portal.concussion-education-australia.com";
+      content: "Module 1 trial preview — full Concussion Clinical Mastery (8 modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online, ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day) activates with the Hub Program. portal.concussion-education-australia.com";
       visibility: visible !important;
       display: block !important;
       padding: 24px !important;

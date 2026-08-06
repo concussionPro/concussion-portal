@@ -358,8 +358,14 @@ export function SstHomepageDemo() {
                         Live heart rate
                       </span>
                       <span className="flex items-baseline gap-[4px]">
+                        {/* This IS the threshold minute: symptoms 4 against a rested
+                            1/10 is the +3-point PROVOCATION_RISE, and the button below
+                            says so. The next frame reports the HRt as 155 bpm at
+                            minute 7 and derives the 124–140 band (80–90%) from it, so
+                            the live number here has to be that same 155 — it read 139,
+                            which contradicted the result screen one frame later. */}
                         <span className="text-[40px] text-[#5b9aa6] font-semibold" style={{ lineHeight: 0.9, fontFamily: SPACE }}>
-                          139
+                          155
                         </span>
                         <span className="text-[10px] font-semibold leading-none text-[#5d7174]">BPM</span>
                       </span>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { workshopPriceFor } from '@/lib/config'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 import {
   Home,
   BookOpen,
@@ -320,7 +321,7 @@ function ProspectBento() {
         iconTone="amber"
         label="Reference Library"
         title="Amsterdam 2023 · AIS · RACGP · Cochrane"
-        stat="120"
+        stat={String(REFERENCE_COUNT)}
         statSuffix="peer-reviewed sources"
         badge={{ text: 'Preview', tone: 'emerald' }}
         span2
@@ -856,7 +857,7 @@ function SocialProofFooter() {
           <Credential headline="500+" label="SCAT6 forms downloaded by AU clinicians" />
           <Credential headline="OA" label="Endorsed by Osteopathy Australia" />
           <Credential headline="16 hrs" label="AHPRA-aligned CPD per clinician" />
-          <Credential headline="120" label="Peer-reviewed references in the library" />
+          <Credential headline={String(REFERENCE_COUNT)} label="Peer-reviewed references in the library" />
         </div>
         <div className="pt-5 border-t border-accent/10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
           <div>

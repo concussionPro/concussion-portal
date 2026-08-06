@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
+import { CONFIG, SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 
 /**
  * /clinical-suite/start — the self-serve trial signup form. Cold-inbound
@@ -51,32 +51,69 @@ export function SstTrialStart({ source }: { source?: string }) {
   }
 
   if (result) {
+    // NO CODE = provisioning did not run (KV down / registry error). The route
+    // sends no welcome email in that case, so the old unconditional "Your
+    // clinic is set up" + "the email has your login link" was a flat untruth
+    // on the one screen a cold clinician judges us by (2026-08-06 census).
+    const provisioned = !!result.code
     return (
       <div className="rounded-[22px] border border-slate-200 bg-white p-8 sm:p-10" style={{ boxShadow: '0 16px 40px -18px rgba(22,36,63,.25)' }}>
-        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-[13px] font-bold text-emerald-800">
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
-          Your clinic is set up
+        <span
+          className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13px] font-bold ${
+            provisioned ? 'border border-emerald-300 bg-emerald-50 text-emerald-800' : 'border border-amber-300 bg-amber-50 text-amber-900'
+          }`}
+        >
+          <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] text-white ${provisioned ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+            {provisioned ? '✓' : '!'}
+          </span>
+          {provisioned ? 'Your clinic is set up' : 'We’ve got your details'}
         </span>
-        {result.code && (
+        {provisioned && (
           <div className="mt-6">
             <p className="m-0 text-[12px] font-bold uppercase tracking-[0.1em] text-slate-500">Your clinic code</p>
             <p className="m-0 mt-1 font-mono text-[42px] font-extrabold tracking-[0.08em]" style={{ color: NAVY }}>{result.code}</p>
           </div>
         )}
         <p className="m-0 mt-4 max-w-[460px] text-[15px] leading-[1.6] text-slate-600">{result.message}</p>
-        <p className="m-0 mt-2 max-w-[460px] text-[13.5px] leading-[1.6] text-slate-500">
-          The email has your login link, your private dashboard link and the patient app link. Your
-          first <strong>3 patients are free</strong> — no card required. Upgrade any time from your workspace.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/clinical-hub?clinic=DEMO00"
-            className="rounded-[13px] px-[22px] py-[15px] text-[15px] font-bold leading-none"
-            style={{ background: NAVY, color: '#fff' }}
-          >
-            Explore the demo dashboard while you wait
-          </Link>
-        </div>
+        {provisioned ? (
+          <>
+            <p className="m-0 mt-2 max-w-[460px] text-[13.5px] leading-[1.6] text-slate-500">
+              The email has your login link, your private dashboard link and the patient app link. Your
+              first <strong>{SST_TRIAL_PATIENT_CAP} patients are free</strong> — no card required. Upgrade any time from your workspace.
+            </p>
+            <p className="m-0 mt-3 max-w-[460px] text-[13.5px] leading-[1.6] text-slate-500">
+              Your patient link — hand this to your first patient:{' '}
+              <span className="font-semibold" style={{ color: NAVY }}>
+                {typeof window !== 'undefined' ? window.location.origin : ''}/j/{result.code}
+              </span>
+            </p>
+            {/* The ONLY forward action here used to be the DEMO dashboard —
+                a brand-new clinic's next step was someone else's fake data,
+                and their own workspace was reachable only if the welcome
+                email arrived and wasn't junked. Their workspace leads now. */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href={`/login?email=${encodeURIComponent(email.trim())}&redirect=${encodeURIComponent('/clinical-testing')}`}
+                className="rounded-[13px] px-[22px] py-[15px] text-[15px] font-bold leading-none"
+                style={{ background: NAVY, color: '#fff' }}
+              >
+                Open my clinic workspace
+              </Link>
+              <Link
+                href="/clinical-hub?clinic=DEMO00"
+                className="rounded-[13px] border border-slate-300 px-[22px] py-[15px] text-[15px] font-bold leading-none"
+                style={{ color: NAVY }}
+              >
+                See a worked example dashboard
+              </Link>
+            </div>
+          </>
+        ) : (
+          <p className="m-0 mt-2 max-w-[460px] text-[13.5px] leading-[1.6] text-slate-500">
+            Your clinic code hasn’t been issued yet — we finish this by hand and email it to you. If
+            you haven’t heard back within a business day, email {CONFIG.CONTACT_EMAIL}.
+          </p>
+        )}
       </div>
     )
   }

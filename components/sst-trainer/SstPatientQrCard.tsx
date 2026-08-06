@@ -81,10 +81,22 @@ export function SstPatientQrCard({
           Clinic code: <span className="font-mono font-bold tracking-[0.2em] text-teal-700">{code}</span>
         </p>
 
+        {/* This card is PRINTED and handed to the patient, so its steps have to
+            match what the app actually does (2026-08-06 census — they didn't):
+            · /j/CODE already routes iPhones to the app chooser, so "Add to Home
+              Screen in Safari" sent iPhone patients down the one path that
+              CANNOT pair a heart-rate monitor (no Web Bluetooth on iOS).
+            · The phone camera is a RESTING SPOT-CHECK only — camera PPG is not
+              valid during exercise (hr-source.ts) — yet the card offered it as
+              a way to start a training session. */}
         <ol className="text-left text-[12.5px] text-slate-600 leading-relaxed mt-4 mb-4 list-decimal pl-5 space-y-1">
-          <li>Scan the code (or open the link) on your phone.</li>
-          <li>Tap <strong>Share → Add to Home Screen</strong> to install it (iPhone: use Safari).</li>
-          <li>Pair your heart-rate monitor (or use the phone camera), enter your name, and begin.</li>
+          <li>Scan the code (or open the link) on your phone — it takes you to the right place for your device.</li>
+          <li>Enter your name. Your clinic is already linked.</li>
+          <li>
+            Pair your heart-rate monitor or watch if you have one (Garmin, Polar, Wahoo, chest strap).
+            No monitor, or on an iPhone browser? You&rsquo;ll type each reading instead — everything
+            still works.
+          </li>
         </ol>
 
         <p className="text-[10.5px] text-slate-400 break-all mb-4">{url}</p>

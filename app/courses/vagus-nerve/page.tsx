@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { VAGUS_MODULES } from '@/lib/vagus-course/modules'
+import { VAGUS_REFERENCES, VAGUS_REF_CATEGORIES } from '@/lib/vagus-course/references'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
@@ -81,7 +82,9 @@ export default async function VagusCoursePage() {
               href="/courses/vagus-nerve/references"
               icon={BookMarked}
               tag="Reference Repository"
-              title="29 sources · 8 categories"
+              /* Derived — the literal said 29/8 against a real 40/9, understating
+                 the evidence base the card exists to sell. */
+              title={`${VAGUS_REFERENCES.length} sources · ${VAGUS_REF_CATEGORIES.length} categories`}
               note="Anatomy · polyvagal critique · HRV · POTS · post-concussion · long COVID · interventions · guidelines"
             />
             <ResourceCard

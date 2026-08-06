@@ -66,14 +66,22 @@ async function ensureSnapshotTable() {
 }
 
 export async function GET(request: NextRequest) {
-  // Auth: Vercel cron secret OR admin key
-  const cronSecret = request.headers.get('authorization')
-  const adminKey = request.headers.get('x-admin-key')
-  const expectedCron = process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : null
-  const expectedAdmin = process.env.ADMIN_API_KEY
+  // Auth: Vercel cron secret OR admin key. Constant-time compare, matching the
+  // other cron routes (video-link-check, daily-outreach-report,
+  // fire-launch-blasts) — this one alone used `===`, which leaks secret length
+  // and prefix through response timing.
+  const secretEquals = (given: string | null, expected: string | undefined | null): boolean => {
+    if (!given || !expected) return false
+    const a = Buffer.from(given)
+    const b = Buffer.from(expected)
+    if (a.length !== b.length) return false
+    return crypto.timingSafeEqual(a, b)
+  }
   const authed =
-    (expectedCron && cronSecret === expectedCron) ||
-    (expectedAdmin && adminKey === expectedAdmin)
+    secretEquals(
+      request.headers.get('authorization'),
+      process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : null,
+    ) || secretEquals(request.headers.get('x-admin-key'), process.env.ADMIN_API_KEY)
   if (!authed) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

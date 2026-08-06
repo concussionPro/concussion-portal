@@ -378,7 +378,11 @@ export default function BlogIndexPage() {
                     Our courses cover everything in these articles and more — with interactive assessments and CPD hours that count toward your AHPRA registration requirements.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2.5 shrink-0">
+                {/* Bounded width at md+: the secondary CTA's label is long, and a
+                    `shrink-0` auto-width column sized itself to that label's
+                    max-content, pushing the row past the container between ~768px
+                    and ~900px. A fixed column lets the label wrap instead. */}
+                <div className="flex flex-col gap-2.5 shrink-0 w-full md:w-[300px]">
                   <Link
                     href="/scat-mastery"
                     className="btn-primary px-6 py-3 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2"
@@ -390,7 +394,7 @@ export default function BlogIndexPage() {
                     href="/pricing"
                     className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 text-center"
                   >
-                    Full Course — 8 CPD hrs online, up to 16 with the in-person day · from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
+                    Full Course — {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs online, up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the in-person day · from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
                   </Link>
                 </div>
               </div>

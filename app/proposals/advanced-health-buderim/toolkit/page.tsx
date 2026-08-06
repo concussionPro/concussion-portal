@@ -55,7 +55,7 @@ export default async function ToolkitLauncher({
             Toolkit &amp; resources
           </h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
-            The clinical toolkit, outreach kit and front-desk micro-course included with the Concussion Hub Program. Each document is fillable on screen and exports to a clean, branded PDF.
+            The clinical toolkit, outreach kit and front-desk micro-course included with the Concussion Hub Program. Previewed here; on the live program each document is fillable on screen, saves as you type, and exports to a clean, branded PDF on your clinic letterhead.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

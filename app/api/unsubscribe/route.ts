@@ -58,11 +58,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid unsubscribe link' }, { status: 400 })
   }
 
-  await unsubscribeUser(email)
+  const contentType = request.headers.get('content-type') || ''
+  const isFormPost = contentType.includes('form')
+
+  // A DB failure here used to escape the handler entirely: the user clicked
+  // "Confirm Unsubscribe", got Next's generic 500 page, and had no way to tell
+  // whether they were off the list. Unsubs are zero-tolerance — say plainly
+  // that it did not go through and give the manual fallback (the error page
+  // already carries the reply-to-unsubscribe instruction).
+  try {
+    await unsubscribeUser(email)
+  } catch (err) {
+    console.error(`[unsubscribe] failed for ${email.slice(0, 3)}***:`, err)
+    if (isFormPost) {
+      return new NextResponse(
+        unsubscribePage('We could not process your unsubscribe just now.', false),
+        { status: 500, headers: { 'Content-Type': 'text/html' } }
+      )
+    }
+    return NextResponse.json({ error: 'Unsubscribe failed — please try again.' }, { status: 500 })
+  }
 
   // If this came from the browser confirmation form, return HTML success page
-  const contentType = request.headers.get('content-type') || ''
-  if (contentType.includes('form')) {
+  if (isFormPost) {
     return new NextResponse(unsubscribePage(email, true), {
       headers: { 'Content-Type': 'text/html' },
     })

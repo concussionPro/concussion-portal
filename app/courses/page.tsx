@@ -8,7 +8,11 @@ import { BookOpenCheck, Stethoscope, ArrowRight, Check } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
-  title: 'Courses — Concussion Clinical Mastery & Concussion Rehab Mastery | Concussion Education Australia',
+  // NO trailing brand: app/layout.tsx applies `template: '%s | Concussion
+  // Education Australia'`, so a title that already ends in the brand renders
+  // "… | Concussion Education Australia | Concussion Education Australia"
+  // (verified live 2026-08-06).
+  title: 'Courses — Concussion Clinical Mastery & Concussion Rehab Mastery',
   // The ESSA claim is gated: CONFIG.FEATURES.ESSA_ACCREDITED auto-expires from
   // CONFIG.ESSA_ACCREDITATION.VALID_UNTIL, and a bare literal here would keep
   // asserting accreditation in the SERP description after it lapses.

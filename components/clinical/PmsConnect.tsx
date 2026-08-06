@@ -71,11 +71,30 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
   }
 
   const disconnect = async () => {
+    if (!window.confirm(
+      `Disconnect ${status?.kind ?? 'your practice software'}? Reports stop filing into patient records, and you will need to paste a current API key to reconnect.`,
+    )) return
     setBusy(true)
+    setMsg(null)
     try {
-      await fetch(`/api/sst/pms/connection?${auth}`, { method: 'DELETE' })
+      // The response was never read: a 401 (or a network drop, which escaped
+      // as an unhandled rejection past the catch-less try/finally) still
+      // painted "Disconnected." and cleared the card — while the clinic's
+      // encrypted PMS key was STILL stored server-side and reports could
+      // still be filed into patient records. A revocation that silently
+      // didn't happen is the worst possible thing to confirm.
+      const r = await fetch(`/api/sst/pms/connection?${auth}`, { method: 'DELETE' })
+      const d = await r.json().catch(() => null)
+      if (!r.ok || d?.ok !== true) {
+        setMsg(d?.error || 'Could NOT disconnect — your practice software is still connected. Try again.')
+        load()
+        return
+      }
       setMsg('Disconnected.')
       setStatus({ connected: false, kind: null })
+    } catch {
+      setMsg('Could NOT disconnect — your practice software may still be connected. Check the status above and try again.')
+      load()
     } finally {
       setBusy(false)
     }

@@ -57,6 +57,10 @@ export function NextActionCard() {
   // Certificate state
   const [certificateStatus, setCertificateStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [certificateDownloading, setCertificateDownloading] = useState(false)
+  /** The server's OWN reason a certificate could not be issued (which module to
+   *  retake, etc.) — kept separate from the email status so a failed download
+   *  never renders the "email failed, download it instead" line. */
+  const [certificateError, setCertificateError] = useState<string | null>(null)
   const certTriggered = useRef(false)
 
   // Pool CTA state
@@ -110,10 +114,20 @@ export function NextActionCard() {
 
   const handleDownloadCertificate = async () => {
     setCertificateDownloading(true)
+    setCertificateError(null)
     try {
       const certType = isPreview ? 'scat-mastery' : 'online-course'
       const res = await fetch(`/api/certificate?type=${certType}`, { credentials: 'include' })
-      if (!res.ok) throw new Error('Download failed')
+      if (!res.ok) {
+        // Surface the SERVER's reason. This used to throw a generic error and
+        // set certificateStatus='error', which renders "Certificate email
+        // failed — you can still download it below" — i.e. a failed DOWNLOAD
+        // told the clinician to download it. The certificate route re-verifies
+        // every quiz from the saved answers and names the module to retake;
+        // discarding that left a dead-end button under a green banner.
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Download failed. Please try again.')
+      }
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -123,8 +137,8 @@ export function NextActionCard() {
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
-    } catch {
-      setCertificateStatus('error')
+    } catch (err) {
+      setCertificateError(err instanceof Error ? err.message : 'Download failed. Please try again.')
     } finally {
       setCertificateDownloading(false)
     }
@@ -132,6 +146,7 @@ export function NextActionCard() {
 
   const handleResendCertificate = async () => {
     setCertificateStatus('sending')
+    setCertificateError(null)
     try {
       const certType = isPreview ? 'scat-mastery' : 'online-course'
       const res = await fetch('/api/certificate', {
@@ -140,8 +155,9 @@ export function NextActionCard() {
         body: JSON.stringify({ type: certType }),
         credentials: 'include',
       })
-      const data = await res.json()
-      setCertificateStatus(data.success ? 'sent' : 'error')
+      const data = await res.json().catch(() => null)
+      setCertificateStatus(data?.success ? 'sent' : 'error')
+      if (!data?.success && data?.error) setCertificateError(data.error)
     } catch {
       setCertificateStatus('error')
     }
@@ -304,6 +320,11 @@ export function NextActionCard() {
                     Email Certificate
                   </button>
                 </div>
+                {certificateError && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg" role="alert">
+                    <p className="text-xs text-red-700">{certificateError}</p>
+                  </div>
+                )}
               </div>
 
               {isPreview && (
@@ -381,7 +402,7 @@ export function NextActionCard() {
                     onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_primary', from: 'preview' }); router.push('/pricing') }}
                     className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all flex items-center gap-2"
                   >
-                    Unlock all 8 modules · 8 CPD hrs (up to 16 with the workshop)
+                    Unlock all {CONFIG.COURSE.TOTAL_MODULES} modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs (up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop)
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : accessLevel !== 'online-only' ? (

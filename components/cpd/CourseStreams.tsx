@@ -35,9 +35,14 @@ type StreamId = 'allied' | 'ep'
 const PRICE_ONLINE = CONFIG.COURSE.PRICE_ONLINE.toLocaleString()
 const PRICE_EARLY_BIRD = CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()
 
+// CPD hours derive from CONFIG (the header contract said prices did; the CPD
+// numbers were still literals, which is exactly how the stale 6/14 grid on
+// /assessment survived the 2026-07-30 OA re-rate).
+const CPD_LINE = `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online · ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours with the workshop`
+
 // ESSA line depends ONLY on the real flag — pending until the certificate lands.
 const ESSA_LINE = CONFIG.FEATURES.ESSA_ACCREDITED
-  ? 'ESSA-accredited · 8 ESSA CPD points'
+  ? `ESSA-accredited · ${CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} ESSA CPD points`
   : 'Built to ESSA CPD standards · accreditation pending'
 
 type Stream = {
@@ -64,8 +69,8 @@ const STREAMS: Record<StreamId, Stream> = {
     icon: GraduationCap,
     whoFor:
       'Osteopaths, physiotherapists, chiropractors and allied-health clinicians managing concussion in multidisciplinary teams.',
-    format: '8 online modules, self-paced, plus an optional full-day hands-on workshop.',
-    cpd: '8 CPD hours online · 16 CPD hours with the workshop',
+    format: `${CONFIG.COURSE.TOTAL_MODULES} online modules, self-paced, plus an optional full-day hands-on workshop.`,
+    cpd: CPD_LINE,
     credential: 'Endorsed by Osteopathy Australia · AHPRA-aligned',
     covers: [
       'SCAT6 & SCOAT6 assessment',
@@ -89,8 +94,8 @@ const STREAMS: Record<StreamId, Stream> = {
     icon: HeartPulse,
     whoFor:
       'Accredited Exercise Physiologists and Exercise Scientists delivering concussion rehabilitation within EP scope.',
-    format: '8 modules online and self-paced, plus the shared full-day hands-on workshop.',
-    cpd: '8 CPD hours online · 16 CPD hours with the workshop',
+    format: `${CONFIG.COURSE.TOTAL_MODULES} modules online and self-paced, plus the shared full-day hands-on workshop.`,
+    cpd: CPD_LINE,
     credential: ESSA_LINE,
     covers: [
       'Sub-symptom-threshold aerobic exercise as first-line rehab',

@@ -4,6 +4,15 @@ import { Clock, Globe, ShieldCheck, AlertTriangle, CheckCircle, MapPin } from 'l
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+// AI-course price + CPD hours are catalogue-derived (lib/ai-course/provider-catalogue),
+// never literals: /courses/ai-in-clinical-practice and /api/courses/checkout both
+// read the same entry, so a hardcoded figure here could advertise a price the
+// checkout does not charge.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_CPD_HOURS = AI_COURSE?.cpdHours ?? 2
+const AI_PRICE = AI_COURSE ? getEffectivePrice(AI_COURSE).price : null
 
 const TITLE = "AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs Suki vs DAX"
 const DESCRIPTION = 'AI medical scribe comparison 2026 — Heidi, Lyrebird, Tortus, Abridge, Suki, DAX Copilot side-by-side for AU/UK/US/CA clinicians. Data residency, privacy compliance (HIPAA, GDPR, Privacy Act), pricing, specialty fit.'
@@ -203,9 +212,9 @@ export default function AiScribeComparisonPage() {
           {/* CTA */}
           <section className="bg-gradient-to-br from-teal-700 to-emerald-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">Get the full framework — AI in Clinical Practice (now available)</h2>
-            <p className="text-emerald-50 leading-relaxed mb-5">Our short course teaches the Tier A/B/C decision framework with worked examples across physio, osteo, GP and naturopathy. Includes AHPRA compliance, HIPAA-equivalent jurisdictional adaptations, and NDIS audit-safe documentation workflows. 2 CPD hours, fully online, certificate.</p>
+            <p className="text-emerald-50 leading-relaxed mb-5">Our short course teaches the Tier A/B/C decision framework with worked examples across physio, osteo, GP and naturopathy. Includes AHPRA compliance, HIPAA-equivalent jurisdictional adaptations, and NDIS audit-safe documentation workflows. {AI_CPD_HOURS} CPD hours, fully online, certificate.</p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/courses/ai-in-clinical-practice" className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-emerald-50 transition-colors">Explore the course &mdash; A$99</Link>
+              <Link href="/courses/ai-in-clinical-practice" className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-emerald-50 transition-colors">Explore the course{AI_PRICE !== null ? ` \u2014 A$${AI_PRICE}` : ''}</Link>
               <Link href="/ai-safety-checklist" className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 px-5 py-3 rounded-lg font-semibold text-sm transition-colors">Get the free AI Safety Checklist</Link>
               <Link href="/pricing-international" className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 px-5 py-3 rounded-lg font-semibold text-sm transition-colors">International pricing (USD)</Link>
             </div>

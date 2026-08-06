@@ -8,11 +8,11 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: '21-Day Concussion Stand-Down in Youth Sport: What Every Australian Clinician Should Know',
-  description: 'Australia\'s 21-day mandatory stand-down after concussion in youth and community sport is now the national standard. Understand the rules, which sports enforce them, and what clinicians need to do.',
+  description: 'Australia\'s minimum 21-day stand-down after concussion in youth and community sport is now the national standard. Understand the rules, which sports enforce them, and what clinicians need to do.',
   keywords: '21 day concussion stand down australia, concussion return to play youth sport, AFL concussion protocol, rugby concussion stand down, community sport concussion rules, concussion management australia',
   openGraph: {
     title: '21-Day Concussion Stand-Down in Youth Sport: What Every Australian Clinician Should Know',
-    description: 'Australia\'s 21-day mandatory stand-down after concussion in youth and community sport is now the national standard. Here\'s what clinicians need to know.',
+    description: 'Australia\'s minimum 21-day stand-down after concussion in youth and community sport is now the national standard. Here\'s what clinicians need to know.',
     type: 'article',
     url: 'https://portal.concussion-education-australia.com/blog/21-day-concussion-stand-down-youth-sport-australia',
   },
@@ -29,7 +29,7 @@ export default function StandDownPage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(createBlogPostSchema({
             title: '21-Day Concussion Stand-Down in Youth Sport: What Every Australian Clinician Should Know',
-            description: 'Australia\'s 21-day mandatory stand-down after concussion in youth and community sport is now the national standard. Understand the rules, which sports enforce them, and what clinicians need to do.',
+            description: 'Australia\'s minimum 21-day stand-down after concussion in youth and community sport is now the national standard. Understand the rules, which sports enforce them, and what clinicians need to do.',
             datePublished: '2026-03-18',
             dateModified: '2026-03-18',
             author: 'Zac Lewis',

@@ -4,6 +4,15 @@ import { Clock, CheckCircle, AlertTriangle, ShieldCheck, FileText, Building2 } f
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+// AI-course price + CPD hours are catalogue-derived (lib/ai-course/provider-catalogue),
+// never literals: /courses/ai-in-clinical-practice and /api/courses/checkout both
+// read the same entry, so a hardcoded figure here could advertise a price the
+// checkout does not charge.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_CPD_HOURS = AI_COURSE?.cpdHours ?? 2
+const AI_PRICE = AI_COURSE ? getEffectivePrice(AI_COURSE).price : null
 
 const TITLE = "Heidi vs Lyrebird vs ChatGPT for Clinical Notes: An Australian Clinician's 2026 Comparison"
 const DESCRIPTION = 'Heidi vs Lyrebird vs ChatGPT for clinical notes — which AI scribe fits your Australian practice? Side-by-side: AHPRA AI guidelines, Australian Privacy Principles, NDIS audit risk, indemnity insurer positions.'
@@ -267,14 +276,14 @@ export default function HeidiVsLyrebirdPage() {
           <section className="bg-gradient-to-br from-teal-600 to-emerald-600 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">Want the full framework?</h2>
             <p className="text-emerald-50 leading-relaxed mb-5">
-              This article covers the headlines. Our short course <strong>AI in Clinical Practice</strong> walks through the AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation workflows, and the full Tier A/B/C framework with worked examples for physiotherapy, osteopathy, GP and naturopathy. 2 CPD hours, fully online, certificate on completion. Now available.
+              This article covers the headlines. Our short course <strong>AI in Clinical Practice</strong> walks through the AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation workflows, and the full Tier A/B/C framework with worked examples for physiotherapy, osteopathy, GP and naturopathy. {AI_CPD_HOURS} CPD hours, fully online, certificate on completion. Now available.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/courses/ai-in-clinical-practice"
                 className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-emerald-50 transition-colors"
               >
-                Explore the AI in Clinical Practice course &mdash; A$99
+                Explore the AI in Clinical Practice course{AI_PRICE !== null ? ` \u2014 A$${AI_PRICE}` : ''}
               </Link>
             </div>
           </section>

@@ -321,6 +321,12 @@ export async function savePDFAndDownload(
   const link = document.createElement('a')
   link.href = url
   link.download = filename
+  // The anchor has to be in the document for the click to count in Firefox,
+  // and revoking the object URL in the same tick can cancel the download
+  // before it starts — the clinician then gets no file and no error.
+  link.style.display = 'none'
+  document.body.appendChild(link)
   link.click()
-  URL.revokeObjectURL(url)
+  document.body.removeChild(link)
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }

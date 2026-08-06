@@ -91,6 +91,11 @@ function Shell() {
   const access = useClinicalAccess()
   const [clinic, setClinic] = useState<Clinic | null>(null)
   const [loaded, setLoaded] = useState(false)
+  // A FAILED lookup is not "you have no clinic code". Collapsing the two told
+  // an established club-testing clinic to "create your clinic code first" and
+  // pushed them at a form that would have minted nothing — while their real
+  // club link sat one reload away.
+  const [loadFailed, setLoadFailed] = useState(false)
 
   useEffect(() => {
     // Gate on the resolved access DOOR — 'sst' trial clinics are
@@ -99,9 +104,9 @@ function Shell() {
     const canFetch = access === 'owner' || access === 'course' || access === 'sst' || access === 'demo'
     if (!canFetch) return
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => setClinic(d?.clinic ?? null))
-      .catch(() => {})
+      .catch(() => setLoadFailed(true))
       .finally(() => setLoaded(true))
   }, [access])
 
@@ -203,6 +208,16 @@ function Shell() {
                 </div>
                 <p className="mt-2 text-[11.5px] text-muted-foreground">
                   Reports go to the email your clinic code was set up with.
+                </p>
+              </>
+            ) : loadFailed ? (
+              <>
+                <h2 className="text-lg font-bold text-foreground tracking-tight mb-1.5">
+                  Couldn&rsquo;t load your clinic
+                </h2>
+                <p className="text-[13px] text-muted-foreground leading-relaxed mb-0">
+                  This is a loading failure, not a missing clinic code — refresh to retry. If you
+                  already run baseline testing, your existing club link is unchanged.
                 </p>
               </>
             ) : loaded ? (

@@ -53,7 +53,11 @@ export function OtherCityInterest() {
         const res = await fetch('/api/register-interest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name, city: selection }),
+          // /api/register-interest defines an 'other_city' source for exactly
+          // this form and defaults anything unrecognised to 'pricing_page'.
+          // Omitting it filed every registration from here under the pricing
+          // page, so the source column could never separate the two.
+          body: JSON.stringify({ email, name, city: selection, source: 'other_city' }),
         })
         const data = await res.json()
         if (data.success) {

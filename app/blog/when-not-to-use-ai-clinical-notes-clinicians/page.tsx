@@ -4,6 +4,15 @@ import { Clock, AlertTriangle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+// AI-course price + CPD hours are catalogue-derived (lib/ai-course/provider-catalogue),
+// never literals: /courses/ai-in-clinical-practice and /api/courses/checkout both
+// read the same entry, so a hardcoded figure here could advertise a price the
+// checkout does not charge.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_CPD_HOURS = AI_COURSE?.cpdHours ?? 2
+const AI_PRICE = AI_COURSE ? getEffectivePrice(AI_COURSE).price : null
 
 const TITLE = "When NOT to Use AI for Clinical Notes — 7 Red Flags for Australian Clinicians [2026]"
 const DESCRIPTION = 'When NOT to use AI for clinical notes — 7 red flags for Australian clinicians. Mental health, mandatory reporting, family violence, complex medicolegal cases, paediatric consults: when to switch off the AI scribe.'
@@ -99,7 +108,7 @@ export default function WhenNotToUseAiPage() {
 
           <section className="bg-gradient-to-br from-red-700 to-rose-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">The full safe-use framework</h2>
-            <p className="text-rose-50 leading-relaxed mb-5">The AI in Clinical Practice short course (2 CPD hours, A$99) walks through the full framework — when to use AI, when to switch it off, and how to document either way. Free 1-page checklist available now.</p>
+            <p className="text-rose-50 leading-relaxed mb-5">The AI in Clinical Practice short course ({AI_CPD_HOURS} CPD hours{AI_PRICE !== null ? `, A$${AI_PRICE}` : ''}) walks through the full framework — when to use AI, when to switch it off, and how to document either way. Free 1-page checklist available now.</p>
             <Link href="/ai-safety-checklist" className="inline-flex items-center gap-2 bg-white text-red-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-rose-50 transition-colors">Get the AI Safety Checklist (free)</Link>
           </section>
 

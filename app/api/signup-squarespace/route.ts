@@ -105,7 +105,12 @@ export async function POST(request: NextRequest) {
     // MASTER BLACKLIST — Day-0 of the SCAT Mastery sequence on a PUBLIC, CORS-
     // exposed endpoint. Fails closed.
     if (await isEmailSuppressed(email)) {
-      return NextResponse.json({ success: true, userId, suppressed: true })
+      // CORS headers on this branch too — every other response on this route
+      // carries them, and without them the Squarespace-hosted form's fetch is
+      // blocked by the browser, so a suppressed visitor saw a network failure
+      // instead of the success state. userId is not echoed: it is an internal
+      // identifier and this response crosses an origin.
+      return NextResponse.json({ success: true }, { headers: getCorsHeaders(request) })
     }
 
     await sendEmail({

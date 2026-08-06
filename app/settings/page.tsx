@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useRouter } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
+import { clearIdentity } from '@/lib/analytics'
 import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 
@@ -90,6 +91,10 @@ export default function SettingsPage() {
   const ownsCrm = user?.ownsCrm === true
   const isPaidUser =
     user?.accessLevel === 'online-only' || user?.accessLevel === 'full-course' || ownsCrm
+  // Holds CCM specifically. The CCM-only entitlements (Clinical Toolkit,
+  // Reference Repository, /upgrade) must key off THIS, not isPaidUser — a CRM
+  // buyer pays, but lib/toolkit-access.ts and /references turn them away.
+  const isCcmPaid = user?.accessLevel === 'online-only' || user?.accessLevel === 'full-course'
   const isFullCourse = user?.accessLevel === 'full-course'
 
   const handleLogout = async () => {
@@ -98,6 +103,14 @@ export default function SettingsPage() {
     } catch (_) {
       // ignore
     }
+    // Cookies are the server's to clear; these two localStorage keys are ours.
+    // cea_user_email rides on EVERY analytics event, so leaving it behind wrote
+    // the next person on a shared clinic machine into analytics_events under
+    // the previous clinician's email. login_redirect bounces the next sign-in.
+    // See components/SiteNav.tsx for the full rationale — all three sign-out
+    // paths must behave identically.
+    clearIdentity()
+    try { localStorage.removeItem('login_redirect') } catch { /* private mode */ }
     router.push('/')
   }
 
@@ -545,7 +558,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Online Modules</div>
-                        <div className="text-xs text-slate-600 mt-1">8 modules with CPD certification</div>
+                        <div className="text-xs text-slate-600 mt-1">{CONFIG.COURSE.TOTAL_MODULES} modules with CPD certification</div>
                       </div>
                       {isPaidUser ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -559,12 +572,26 @@ export default function SettingsPage() {
                       )}
                     </div>
 
+                    {/* The Clinical Toolkit and the Reference Repository are CCM
+                        entitlements. A CRM buyer is `isPaidUser` (they pay), but
+                        lib/toolkit-access.ts and /references admit online-only /
+                        full-course / book-owner ONLY — so telling them
+                        "FULL ACCESS" here sent a paying customer to two locked
+                        screens selling them CCM. Their equivalents live in their
+                        own stream, and those links actually open. */}
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Clinical Toolkit</div>
-                        <div className="text-xs text-slate-600 mt-1">SCAT6, flowcharts, templates</div>
+                        <div className="text-xs text-slate-600 mt-1">
+                          {isCrmOnly ? 'BCTT sheets, SSTAE prescription, progression templates' : 'SCAT6, flowcharts, templates'}
+                        </div>
                       </div>
-                      {isPaidUser ? (
+                      {isCrmOnly ? (
+                        <a href="/ep-course/toolkit" className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200 transition-colors">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          OPEN
+                        </a>
+                      ) : isCcmPaid ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           FULL ACCESS
@@ -579,9 +606,16 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Reference Repository</div>
-                        <div className="text-xs text-slate-600 mt-1">{REFERENCE_COUNT} academic references</div>
+                        <div className="text-xs text-slate-600 mt-1">
+                          {isCrmOnly ? 'The cited evidence base for the rehab course' : `${REFERENCE_COUNT} academic references`}
+                        </div>
                       </div>
-                      {isPaidUser ? (
+                      {isCrmOnly ? (
+                        <a href="/ep-course/references" className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200 transition-colors">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          OPEN
+                        </a>
+                      ) : isCcmPaid ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           FULL ACCESS
@@ -596,13 +630,21 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">In-Person Workshop</div>
-                        <div className="text-xs text-slate-600 mt-1">Full-day practical training (8 CPD hours)</div>
+                        <div className="text-xs text-slate-600 mt-1">Full-day practical training ({CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD hours)</div>
                       </div>
                       {isFullCourse ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           INCLUDED
                         </div>
+                      ) : isCrmOnly ? (
+                        // /upgrade is CCM-scoped and REDIRECTS a 'preview' user
+                        // (which every CRM buyer is) straight to the CCM /pricing
+                        // page. The CRM practical-day upsell lives on their own
+                        // dashboard (CrmPracticalUpsell → /api/crm/checkout).
+                        <a href="/ep-course/dashboard" className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200 transition-colors">
+                          ADD PRACTICAL DAY →
+                        </a>
                       ) : isPaidUser ? (
                         <a href="/upgrade" className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200 transition-colors">
                           ADD WORKSHOP →
@@ -615,17 +657,22 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  {/* Show confirmation message for paid users */}
+                  {/* Show confirmation message for paid users. Stream-correct:
+                      the CCM line ("all modules, resources and references") is
+                      simply untrue for a CRM buyer, whose unlocked surfaces all
+                      live under /ep-course. */}
                   {isPaidUser && (
                     <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-1">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         <p className="text-sm text-emerald-900 font-semibold">
-                          You have full course access
+                          {isCrmOnly ? 'You have full Concussion Rehab Mastery access' : 'You have full course access'}
                         </p>
                       </div>
                       <p className="text-xs text-emerald-700">
-                        All modules, clinical resources, and reference materials are unlocked for your account.
+                        {isCrmOnly
+                          ? 'All 8 rehab modules, the EP clinical toolkit, the report templates and the reference repository are unlocked.'
+                          : 'All modules, clinical resources, and reference materials are unlocked for your account.'}
                       </p>
                     </div>
                   )}

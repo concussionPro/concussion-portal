@@ -9,6 +9,7 @@
  */
 import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 import Image from 'next/image'
 import {
   Brain,
@@ -987,7 +988,7 @@ function SocialProofFooter() {
             ['500+', 'SCAT6 forms downloaded by AU clinicians'],
             ['OA', 'Endorsed by Osteopathy Australia'],
             ['8 hrs', 'Online CPD per clinician — 16 with the practical day'],
-            ['120', 'Peer-reviewed references in the library'],
+            [String(REFERENCE_COUNT), 'Peer-reviewed references in the library'],
           ].map(([h, l]) => (
             <div key={h}>
               <p className="text-xl sm:text-2xl font-bold text-accent leading-none mb-1">{h}</p>

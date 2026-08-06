@@ -176,7 +176,7 @@ function buildConfirmationEmail(name: string, city: string): string {
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
       <div style="text-align: center; margin-bottom: 32px;">
         <h1 style="font-size: 24px; font-weight: 700; color: #0f172a; margin: 0;">
-          Concussion<span style="color: #5b9aa6;">Pro</span>
+          Concussion Education <span style="color: #5b9aa6;">Australia</span>
         </h1>
       </div>
 
@@ -244,7 +244,7 @@ function buildNotificationEmail(name: string, email: string, city: string, total
       </table>
 
       <p style="font-size: 13px; color: #94a3b8; margin-top: 24px;">
-        This is an automated notification from ConcussionPro portal.
+        This is an automated notification from the Concussion Education Australia portal.
       </p>
     </div>
   `

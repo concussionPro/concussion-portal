@@ -564,9 +564,22 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
 
   // Save current section to localStorage as checkpoint — course-prefixed key
   // (checkpointKeyFor) so the two courses' checkpoints can never collide.
+  //
+  // MUST NOT RUN BEFORE THE RESTORE BELOW. Both effects fire in the same commit
+  // (the one where `module` first becomes non-null) and React runs them in
+  // declaration order — so this one wrote "0" over the saved checkpoint a
+  // moment before the restore effect read it back. "Continue where you left
+  // off" therefore always resumed at section 1, in BOTH courses. The ref is
+  // armed by the restore effect.
+  /** Which checkpointKey the restore has already run for. Also guards client
+   *  module→module navigation, where currentSectionIndex still holds the
+   *  PREVIOUS module's step when the new key arrives. */
+  const restoredForKeyRef = useRef<string | null>(null)
   useEffect(() => {
     if (module) {
-      localStorage.setItem(checkpointKey, currentSectionIndex.toString())
+      if (restoredForKeyRef.current === checkpointKey) {
+        localStorage.setItem(checkpointKey, currentSectionIndex.toString())
+      }
       setVisitedSections(prev => new Set(prev).add(currentSectionIndex))
     }
   }, [currentSectionIndex, checkpointKey, module])
@@ -574,6 +587,11 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
   // Restore checkpoint on mount
   useEffect(() => {
     if (module) {
+      // Restore ONCE per module. Re-running (this effect also fires when
+      // virtualSections.length changes) would yank a reader back to the
+      // stored step mid-session.
+      if (restoredForKeyRef.current === checkpointKey) return
+      restoredForKeyRef.current = checkpointKey
       const saved = localStorage.getItem(checkpointKey)
       if (saved) {
         const idx = parseInt(saved)
@@ -604,7 +622,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
         }
       }
     }
-  }, [moduleId, module, virtualSections.length])
+  }, [moduleId, module, virtualSections.length, checkpointKey])
 
   // Scroll to top of content area on section change
   useEffect(() => {
@@ -1058,7 +1076,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                           Become clinically competent — Concussion Clinical Mastery
                           <ArrowRight className="w-4 h-4" />
                         </button>
-                        <p className="text-xs text-slate-500">8 CPD hours online · A${CONFIG.COURSE.PRICE_ONLINE} · lifetime access</p>
+                        <p className="text-xs text-slate-500">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online · A${CONFIG.COURSE.PRICE_ONLINE} · lifetime access</p>
                         <button
                           onClick={() => router.push('/settings#certificate')}
                           className="mt-1 text-sm font-semibold text-accent hover:underline"

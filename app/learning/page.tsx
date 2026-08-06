@@ -12,6 +12,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useState, useEffect } from 'react'
 import { CONFIG, workshopPriceFor } from '@/lib/config'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
+import { epModulesMeta, epProgressId } from '@/data/ep-module-meta'
 import { holdsPracticalDaySeat, holdsOnlineWithoutPracticalDay } from '@/lib/practical-day-seat'
 
 export default function LearningSuite() {
@@ -81,6 +82,21 @@ function LearningSuiteInner() {
   ).length
   // The completed-module count for whichever 8-module stream this user owns.
   const streamCompleted = isPaidCcm ? completedModules : crmCompleted
+  // CPD IS NOT THE MODULE COUNT. CCM's modules happen to be 1 CPD hour each, so
+  // reusing the module count read correctly there and hid the bug — but CRM
+  // module points are 1 / 0.5 / 1.5 / 1.5 / 1 / 1 / 1 / 0.5, so a CRM buyer two
+  // modules in was told "2 / 8 ESSA CPD Points" when they had earned 1.5, and
+  // this panel disagreed with /ep-course/dashboard (which sums points) and with
+  // the certificate. Sum the same source of truth both of those use.
+  const completedCrmIds = new Set(
+    Object.values(progress)
+      .filter((p) => p.moduleId >= 201 && p.moduleId <= 208 && p.completed)
+      .map((p) => p.moduleId),
+  )
+  const crmCpd = epModulesMeta
+    .filter((m) => completedCrmIds.has(epProgressId(m.id)))
+    .reduce((sum, m) => sum + m.points, 0)
+  const streamCpd = isPaidCcm ? cpdPoints : crmCpd
 
   const handleModuleClick = (moduleId: number) => {
     router.push(`/modules/${moduleId}`)
@@ -119,8 +135,8 @@ function LearningSuiteInner() {
       title: 'Concussion Rehab Mastery',
       subtitle: 'Exercise rehabilitation — EP stream',
       description: 'Graded exercise testing, heart-rate-threshold prescription, phenotype reconditioning and graded return-to-activity — the exercise-physiology course.',
-      moduleCount: 8,
-      cpd: 8,
+      moduleCount: CONFIG.COURSE.TOTAL_MODULES,
+      cpd: CONFIG.COURSE.ONLINE_CPD_POINTS,
       completed: crmCompleted,
       // A CRM owner opens their course; everyone else gets the sales page.
       // Was hardcoded `accessible: false`, which locked paying EP buyers out of
@@ -194,7 +210,7 @@ function LearningSuiteInner() {
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Modules Complete</div>
                   <div className="text-xl font-bold text-gradient">
-                    {isFreeTier ? `${scatCompleted} / 3` : `${streamCompleted} / 8`}
+                    {isFreeTier ? `${scatCompleted} / ${CONFIG.COURSE.SCAT_MASTERY_MODULES}` : `${streamCompleted} / ${CONFIG.COURSE.TOTAL_MODULES}`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
@@ -202,7 +218,7 @@ function LearningSuiteInner() {
                     {isFreeTier ? 'Free CPD Hours' : isPaidCcm ? 'Online CPD Hours' : 'ESSA CPD Points'}
                   </div>
                   <div className="text-xl font-bold text-gradient">
-                    {isFreeTier ? `${scatCPD} / 1` : `${streamCompleted} / 8`}
+                    {isFreeTier ? `${scatCPD} / 1` : `${streamCpd} / ${CONFIG.COURSE.ONLINE_CPD_POINTS}`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
@@ -248,7 +264,7 @@ function LearningSuiteInner() {
                 <h3 className="text-sm font-bold text-foreground mb-1">How This Course Works</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {isFreeTier
-                    ? '3 short modules take you through SCAT6, SCOAT6 and Child SCAT6 — about an hour all up, with 1 CPD hour and a certificate on completion. The full program adds 8 clinical modules (8 CPD hours online, up to 16 with the hands-on workshop).'
+                    ? `3 short modules take you through SCAT6, SCOAT6 and Child SCAT6 — about an hour all up, with ${CONFIG.COURSE.SCAT_MASTERY_CPD_POINTS} CPD hour and a certificate on completion. The full program adds ${CONFIG.COURSE.TOTAL_MODULES} clinical modules (${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the hands-on workshop).`
                     : isPaidCcm
                     ? '8 online modules build your clinical reasoning foundation. The full-day practical workshop (full-course access) is where you apply assessment skills hands-on.'
                     : '8 online modules build your exercise-rehabilitation reasoning — graded testing, heart-rate-threshold prescription and graded return to activity. The shared practical day is where you apply it hands-on.'}

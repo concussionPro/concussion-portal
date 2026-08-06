@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/PlatformChrome'
+import { REFERENCE_COUNT } from '@/data/reference-count'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /platform/evidence — credibility page for the SST Trainer platform site.
@@ -25,24 +26,48 @@ const STATS = [
   },
 ]
 
-const STEPS = [
+const STEPS: { n: number; title: string; body: React.ReactNode; callout: string }[] = [
   {
     n: 1,
     title: 'Find the threshold (the Buffalo test)',
-    body: 'The Buffalo Concussion Treadmill/Bike Test adapts a cardiac stress test to stress the brain instead of the heart. Effort is raised by the minute while heart rate and symptoms are tracked; the heart rate at which symptoms first intensify is the Heart-Rate threshold (HRt) — a validated measure of exercise tolerance after concussion. A free BCTT calculator is available at portal.concussion-education-australia.com/tools/bctt-calculator.',
+    body: (
+      <>
+        The Buffalo Concussion Treadmill/Bike Test adapts a cardiac stress test to stress the brain
+        instead of the heart. Effort is raised by the minute while heart rate and symptoms are
+        tracked; the heart rate at which symptoms first intensify is the Heart-Rate threshold (HRt) —
+        a validated measure of exercise tolerance after concussion. A free BCTT calculator is
+        available at{' '}
+        {/* Was plain text naming the URL — unclickable on the one page a clinician
+            would actually want to try it from. */}
+        <Link
+          href="/tools/bctt-calculator"
+          className="font-semibold text-[#3c7a1f] underline underline-offset-2"
+        >
+          portal.concussion-education-australia.com/tools/bctt-calculator
+        </Link>
+        .
+      </>
+    ),
     callout: 'a guided per-minute ramp captures your HRt automatically, and stops the test at the +3-point symptom rise.',
   },
   {
     n: 2,
     title: 'Prescribe a sub-symptom band',
     body: 'Trials prescribe aerobic exercise at roughly 80–90% of the HRt — hard enough to stimulate recovery, low enough to stay under the symptom threshold. The dose is about 20 minutes a day, most days of the week, individualised to each patient. Some apps prescribe from an age formula (a fixed percentage of 220 − age). SST Trainer prescribes from your patient’s measured threshold.',
-    callout: 'your band is computed at 80–90% of your HRt, with an adjustable 4–7 day/week schedule and a hard ceiling you should not cross.',
+    // The prescription's days-per-week comes from the protocol engine's condition
+    // preset (lib/sst-trainer/protocol.ts CONDITION_DEFAULTS) — there is no UI
+    // anywhere that lets anyone change it, so "an adjustable 4–7 day/week
+    // schedule" described a control that does not exist.
+    callout: 'your band is computed at 80–90% of your HRt, with a prescribed weekly session target and a hard ceiling you should not cross.',
   },
   {
     n: 3,
     title: 'Structure each session',
     body: 'A session is built as a 5–10 minute warm-up, ~20 minutes of steady aerobic work held under the threshold, then a 5–10 minute cool-down — using any mode the patient prefers (walking, stationary bike, light jog).',
-    callout: 'sessions run warm-up → main set → cool-down with a live heart-rate gauge that keeps you in-band and warns the moment you cross the ceiling.',
+    // TrainingSession runs pre → active → stopped → summary; there are no
+    // warm-up or cool-down phases in the product. Describe the session the app
+    // actually delivers (the literature framing stays in `body`).
+    callout: 'each session runs as a timed main set with a live heart-rate gauge that keeps you in-band and alerts the moment you cross the ceiling.',
   },
   {
     n: 4,
@@ -261,7 +286,8 @@ export default function EvidencePage() {
             </p>
             <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-600">
               The citable, peer-reviewable standard of the method this platform delivers — the clinical spine
-              of the Concussion Rehab Mastery course, referenced to a 136-item evidence base.
+              of the Concussion Rehab Mastery course, referenced to a {REFERENCE_COUNT}-item evidence
+              base.
             </p>
             <a
               href="https://doi.org/10.5281/zenodo.21482634"

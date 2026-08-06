@@ -210,7 +210,9 @@ export async function POST(request: NextRequest) {
           await sleep(1000)
         }
       } catch (err) {
-        console.error(`[Import] Error processing ${email}:`, err)
+        // Masked — every other lane in the tree logs `abc***`, and Vercel logs
+        // are a lower-trust store than the DB for customer addresses.
+        console.error(`[Import] Error processing ${email.slice(0, 3)}***:`, err)
         errors++
       }
     }

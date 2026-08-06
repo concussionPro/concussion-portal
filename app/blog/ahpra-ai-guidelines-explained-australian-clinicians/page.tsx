@@ -4,6 +4,15 @@ import { Clock, ShieldCheck, FileText, AlertTriangle, CheckCircle } from 'lucide
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+// AI-course price + CPD hours are catalogue-derived (lib/ai-course/provider-catalogue),
+// never literals: /courses/ai-in-clinical-practice and /api/courses/checkout both
+// read the same entry, so a hardcoded figure here could advertise a price the
+// checkout does not charge.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_CPD_HOURS = AI_COURSE?.cpdHours ?? 2
+const AI_PRICE = AI_COURSE ? getEffectivePrice(AI_COURSE).price : null
 
 const TITLE = "AHPRA AI Guidelines Explained: What Australian Clinicians Actually Need to Do [2026]"
 const DESCRIPTION = 'AHPRA AI guidelines decoded — the 4 obligations every AU clinician must meet when using AI in patient care. Patient consent, clinician responsibility, data location, and documentation integrity.'
@@ -125,11 +134,11 @@ export default function AhpraAiGuidelinesPage() {
 
           <section className="bg-gradient-to-br from-teal-700 to-cyan-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">The full framework in one course</h2>
-            <p className="text-cyan-50 leading-relaxed mb-5">Our short course <strong>AI in Clinical Practice</strong> walks through each of the four AHPRA obligations with worked examples for physiotherapy, osteopathy, GP and naturopathy. Plus the Tier A / B / C tool framework (Heidi vs Lyrebird vs ChatGPT vs Claude), NDIS audit-safe documentation, and the Australian Privacy Principles for clinicians. 2 CPD hours, fully online, certificate on completion. Now <Link href="/courses/ai-in-clinical-practice" className="underline font-semibold text-white hover:text-cyan-100">available for A$99</Link>.</p>
+            <p className="text-cyan-50 leading-relaxed mb-5">Our short course <strong>AI in Clinical Practice</strong> walks through each of the four AHPRA obligations with worked examples for physiotherapy, osteopathy, GP and naturopathy. Plus the Tier A / B / C tool framework (Heidi vs Lyrebird vs ChatGPT vs Claude), NDIS audit-safe documentation, and the Australian Privacy Principles for clinicians. {AI_CPD_HOURS} CPD hours, fully online, certificate on completion. Now <Link href="/courses/ai-in-clinical-practice" className="underline font-semibold text-white hover:text-cyan-100">available{AI_PRICE !== null ? ` for A$${AI_PRICE}` : ''}</Link>.</p>
             <Link href="/ai-safety-checklist" className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-cyan-50 transition-colors">Get the free AI Safety Checklist first</Link>
           </section>
 
-          <RelatedPosts slugs={['heidi-vs-lyrebird-ai-scribe-australian-clinicians', 'ahpra-cpd-requirements-concussion-education', 'how-to-use-scat6-clinicians-guide']} />
+          <RelatedPosts slugs={['heidi-vs-lyrebird-ai-scribe-australian-clinicians', 'when-not-to-use-ai-clinical-notes-clinicians', 'ahpra-cpd-requirements-concussion-education']} />
         </div>
       </div>
     </>

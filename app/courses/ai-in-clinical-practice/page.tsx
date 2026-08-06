@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { MODULES } from '@/lib/ai-course/content'
+import { TOOLS } from '@/lib/ai-course/tools-matrix'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { checkServerAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
@@ -222,7 +223,7 @@ export default async function CoursePage() {
               icon={Library}
               tag="AI Practice Hub"
               title="Prompts · Templates · Tools"
-              note="40 prompts · 14 templates · 9 vendors in the tool comparison · live literature search"
+              note={`40 prompts · 14 templates · ${TOOLS.length} vendors in the tool comparison · live literature search`}
             />
             <ResourceCard
               href="/courses/ai-in-clinical-practice/toolkit"
@@ -255,7 +256,10 @@ export default async function CoursePage() {
               icon={Award}
               tag="My Certificate"
               title="Download · verify"
-              note="12-month validity · public verification URL · AHPRA log-entry template"
+              /* lib/ai-course/certificate.ts retired expires_at and the certificate page
+                 itself renders "No expiry" — "12-month validity" told a buyer their
+                 credential lapses annually when it does not. */
+              note="No expiry · public verification URL · AHPRA log-entry template"
             />
           </div>
 

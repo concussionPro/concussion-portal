@@ -250,9 +250,30 @@ describe('immediate memory and delayed recall', () => {
     expect(calculateImmediateMemory(f)).toBe(20)
   })
 
-  it('treats a chosen word list as evidence the subtest was run', () => {
-    expect(calculateImmediateMemory(form({ wordListUsed: 'A' }))).toBe(0)
+  /**
+   * Choosing a word list is SETUP, not administration.
+   *
+   * Evidence — a Child SCAT6 export whose only input was "Word list used: A",
+   * rendered from public/docs/Child_SCAT6_Flat.pdf page 6 (BJSM 2023;57:641,
+   * "Step 3: Cognitive Screening (Based on Standardized Assessment of
+   * Concussion; SAC)"): every one of the thirty printed "0" digits in the
+   * Trial 1/2/3 cells came out ringed, the Trial Total row read "0  0  0", and
+   * the printed box "Immediate Memory Score [__] of 30" was filled with 0.
+   * That is a record of profound amnesia in a child who was never tested.
+   *
+   * The page's own instruction is "All 3 trials must be administered
+   * irrespective of the number correct on Trial 1" — picking a list is not a
+   * trial. Administration is evidenced by the printed "Time last trial
+   * completed:" field or by any ticked word, both of which still score a
+   * genuine 0.
+   */
+  it('does not treat a chosen word list as evidence the subtest was run', () => {
+    expect(calculateImmediateMemory(form({ wordListUsed: 'A' }))).toBeNull()
     expect(calculateImmediateMemory(form())).toBeNull()
+    // A trial that WAS run and produced nothing still scores 0, not a dash.
+    expect(
+      calculateImmediateMemory(form({ wordListUsed: 'A', immediateMemoryTimeCompleted: '10:05' }))
+    ).toBe(0)
   })
 
   it('scores delayed recall out of 10 and only when it was given', () => {

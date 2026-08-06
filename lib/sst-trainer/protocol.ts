@@ -299,8 +299,18 @@ export interface SessionLog {
    */
   sessionUid?: string
   date: string
-  avgHeartRate: number
-  peakHeartRate: number
+  /**
+   * Session-average / peak HR, or NULL when the session recorded no heart-rate
+   * reading at all (manual tier with nothing typed, or a sensor that never
+   * streamed). It used to be coerced to 0 at the save, which is not a heart
+   * rate — 0 then printed verbatim as "avg 0 / peak 0 bpm" on the patient's
+   * progress list, the clinician's hub row and, worst, the MEDICOLEGAL record,
+   * i.e. a measurement asserted for a session that measured nothing. Anything
+   * below the app's own physiologic floor (30 bpm, the same bound the entry
+   * fields enforce) is treated as "not recorded" on read (2026-08-06).
+   */
+  avgHeartRate: number | null
+  peakHeartRate: number | null
   preSymptom: number      // 0-10 before
   peakSymptom: number     // 0-10 worst during
   nextDayFlare?: boolean  // reported worse the next day (set by the next-day check-in)

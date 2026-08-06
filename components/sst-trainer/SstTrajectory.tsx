@@ -44,6 +44,13 @@ export type TrajectoryPoint = {
   modality?: string | null
   /** % of readings during the test that were live-signal-verified (absent on old rows) */
   verifiedReadingPct?: number | null
+  /**
+   * Distinct minutes of the graded ramp recorded by this test. The exhaustion
+   * arm returns the clearance-grade 'no-intolerance' from a ramp of ANY length,
+   * so the exercise dose has to travel with the finding. 0/absent on rows whose
+   * stage table was not stored — never guessed.
+   */
+  stagesRecorded?: number | null
 }
 
 /** Source accuracy tier — strap/paired sensor is most accurate; camera-PPG has

@@ -18,6 +18,7 @@
  * from ../protocol and the persisted shapes from ../store.
  */
 
+import { PROTOCOL_STAGE_CAP } from '../protocol'
 import type { Prescription, ThresholdResult } from '../protocol'
 import type { PersistedSession, PersistedTest } from '../store'
 import type { Jurisdiction } from './jurisdiction'
@@ -138,6 +139,42 @@ function testedOutcome(input: ReportInput): TestedOutcome {
 }
 
 /**
+ * How far the graded ramp got, for any statement built on the EXHAUSTION
+ * endpoint.
+ *
+ * `no-intolerance` — the clearance-grade read that drives "objective exercise
+ * tolerance recovered", "basis to progress the RTS pathway" and "graded
+ * return-to-work can be progressed" — is returned whenever a test terminated at
+ * voluntary exhaustion (RPE >= EXHAUSTION_RPE) with no >=3-point symptom rise,
+ * REGARDLESS of ramp length: one recorded minute yields exactly the same
+ * interpretation as a completed PROTOCOL_STAGE_CAP-minute protocol. Recovery
+ * asserted off a one-minute ramp is a materially different clinical fact from
+ * the same words off a completed protocol, so the exercise dose now travels
+ * with the finding on every document that states it. Silent when the stage
+ * table was not stored (legacy rows) — an absent count is never guessed.
+ */
+function recoveredRampStages(input: ReportInput): number | null {
+  const last = [...input.thresholdHistory]
+    .reverse()
+    .find((t) => t.interpretation === 'no-intolerance')
+  const n = last?.stagesRecorded
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null
+}
+
+/** Sentence form, appended to a narrative "recovered" statement. */
+function rampNote(input: ReportInput): string {
+  const n = recoveredRampStages(input)
+  if (n == null) return ''
+  return ` That test ran ${n} minute${n === 1 ? '' : 's'} of the ${PROTOCOL_STAGE_CAP}-minute graded ramp before it was stopped — read the finding against that exercise dose.`
+}
+
+/** Parenthetical form, appended to a short field value. */
+function rampShort(input: ReportInput): string {
+  const n = recoveredRampStages(input)
+  return n == null ? '' : ` (ramp ${n}/${PROTOCOL_STAGE_CAP} min)`
+}
+
+/**
  * Red-flag graded tests in this episode.
  *
  * A red flag is a SAFETY event, and until 2026-08-05 it appeared on NO report
@@ -235,10 +272,13 @@ function adherenceReviewSection(input: ReportInput, opts?: { accFraming?: boolea
   // In-band adherence proxy: sessions whose average HR sat inside the prescribed
   // band. Reported as a proxy, not a per-second time-in-zone figure (the store
   // holds session-level averages, not the intra-session HR series).
+  // Only sessions that actually RECORDED a heart rate can be counted in or out
+  // of band; a session with no reading is neither, and the denominator says so.
+  const withHr = input.sessions.filter((s) => typeof s.avgHeartRate === 'number')
   const inBand =
     rx != null
-      ? input.sessions.filter(
-          (s) => s.avgHeartRate >= rx.lowerBpm && s.avgHeartRate <= rx.upperBpm,
+      ? withHr.filter(
+          (s) => (s.avgHeartRate as number) >= rx.lowerBpm && (s.avgHeartRate as number) <= rx.upperBpm,
         ).length
       : 0
   // Each graded re-test is a formal review point — list the dates.
@@ -251,7 +291,12 @@ function adherenceReviewSection(input: ReportInput, opts?: { accFraming?: boolea
     { label: 'Sessions delivered (verified sensor / total)', value: `${verified} / ${total}` },
     {
       label: 'Sessions with average HR inside prescribed band',
-      value: rx != null ? `${inBand} / ${total}` : 'no active prescription',
+      value:
+        rx == null
+          ? 'no active prescription'
+          : withHr.length === 0
+            ? `no heart rate recorded on any of the ${total} session${total === 1 ? '' : 's'}`
+            : `${inBand} / ${withHr.length}${withHr.length < total ? ` (${total - withHr.length} of ${total} recorded no heart rate)` : ''}`,
     },
     {
       label: 'Formal review points (graded re-tests)',
@@ -298,12 +343,41 @@ export function gpReport(input: ReportInput): ReportContent {
       {
         heading: 'Summary',
         kind: 'narrative',
-        body: [
-          input.latestTest?.message ??
-            'Clinician-supervised sub-symptom-threshold aerobic training is in progress; measured exercise tolerance is tracked by serial graded testing (see trajectory).',
-        ],
+        body: [gpSummaryLine(input)],
       },
     ]),
+  }
+}
+
+/**
+ * The GP report's narrative summary.
+ *
+ * `??` DOES NOT FALL BACK ON AN EMPTY STRING, and `loadReportInput` builds
+ * `latestTest` with `message: ''` (the engine's patient-facing message is not
+ * persisted with the row) — so every real clinic's GP report, and the DEMO00
+ * one linked publicly from the /acc pitch, rendered `<h2>Summary</h2>` above an
+ * EMPTY paragraph. The one narrative paragraph on the document a clinician
+ * hands to a doctor was blank (2026-08-06).
+ *
+ * The fallback states the outcome that IS on record, in the same vocabulary the
+ * ACC884 / RTW skins already use — and says plainly when nothing is on record
+ * rather than describing a test that never happened.
+ */
+function gpSummaryLine(input: ReportInput): string {
+  const msg = input.latestTest?.message?.trim()
+  if (msg) return msg
+  switch (testedOutcome(input)) {
+    case 'recovered':
+      return (
+        'The most recent graded test reached volitional exhaustion with no symptom exacerbation — measured exercise tolerance has recovered.' +
+        rampNote(input)
+      )
+    case 'symptom-limited':
+      return 'Measured exercise tolerance remains symptom-limited on graded testing. Sub-symptom-threshold aerobic training continues against the measured band above; the serial trajectory tracks the threshold.'
+    case 'red-flag':
+      return 'The most recent graded test was stopped on a red-flag response, so exercise tolerance is NOT established. Training is held pending clinician review.'
+    default:
+      return 'No valid graded test is on record for this episode, so measured exercise tolerance is not established. Serial graded testing is the measure tracked in the trajectory above.'
   }
 }
 
@@ -372,7 +446,7 @@ export function acc884(input: ReportInput): ReportContent {
         kind: 'outcome',
         body: [
           outcome === 'recovered'
-            ? 'Most recent graded re-test provoked no symptom exacerbation to volitional exhaustion — objective exercise tolerance recovered.'
+            ? 'Most recent graded re-test provoked no symptom exacerbation to volitional exhaustion — objective exercise tolerance recovered.' + rampNote(input)
             : outcome === 'symptom-limited'
               ? 'Exercise tolerance remains symptom-limited on graded testing at service exit.'
               : outcome === 'red-flag'
@@ -418,7 +492,7 @@ export function rtpClearance(input: ReportInput): ReportContent {
             // episode with no valid graded test on record.
             value:
               outcome === 'recovered'
-                ? 'Recovered on graded re-test'
+                ? `Recovered on graded re-test${rampShort(input)}`
                 : outcome === 'symptom-limited'
                   ? 'Still symptom-limited'
                   : outcome === 'red-flag'
@@ -468,7 +542,7 @@ export function rtwSummary(input: ReportInput): ReportContent {
         kind: 'narrative',
         body: [
           outcome === 'recovered'
-            ? 'Objective exercise tolerance has recovered; graded return-to-work can be progressed per the treating clinician.'
+            ? 'Objective exercise tolerance has recovered; graded return-to-work can be progressed per the treating clinician.' + rampNote(input)
             : outcome === 'symptom-limited'
               ? 'Exercise tolerance remains symptom-limited; a graded, tolerance-paced work return is indicated.'
               : outcome === 'red-flag'
@@ -490,7 +564,11 @@ export function medicolegalRecord(input: ReportInput): ReportContent {
   // Session-level audit rows: stop-rule events, overrides, verification, flares.
   const sessionRows: ReportField[] = input.sessions.map((s) => {
     const parts: string[] = [
-      `avg ${s.avgHeartRate} / peak ${s.peakHeartRate} bpm`,
+      // Never print "avg 0 / peak 0 bpm" — 0 is not a heart rate, it is the
+      // absence of one, and this is the export whose purpose is defensibility.
+      typeof s.avgHeartRate === 'number' && typeof s.peakHeartRate === 'number'
+        ? `avg ${s.avgHeartRate} / peak ${s.peakHeartRate} bpm`
+        : 'no heart rate recorded',
       `symptom ${s.preSymptom}→${s.peakSymptom}/10`,
       // STRICT === true. `hrVerified` is optional on SessionLog, and the old
       // `=== false ? unverified : verified` branch printed "verified (live HR)"

@@ -72,19 +72,67 @@ export function PollClient({ topics, initialTallies, initialVoterCount }: PollCl
   }
 
   if (submitted) {
+    // The confirmation used to REPLACE the topic grid while telling the voter
+    // "Live results update below" — there was nothing below, and no next
+    // action at all. It is now a banner ABOVE the (now read-only) results, so
+    // the sentence is true and the page still has somewhere to go.
     return (
-      <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-8 py-10 text-center">
-        <div className="w-14 h-14 rounded-full bg-white border-2 border-emerald-300 mx-auto mb-4 flex items-center justify-center">
-          <Check className="w-7 h-7 text-emerald-700" />
+      <>
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-8 py-10 text-center mb-8">
+          <div className="w-14 h-14 rounded-full bg-white border-2 border-emerald-300 mx-auto mb-4 flex items-center justify-center">
+            <Check className="w-7 h-7 text-emerald-700" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Vote recorded.</h2>
+          <p className="text-sm text-foreground/80 mb-4 max-w-md mx-auto leading-relaxed">
+            Your picks are counted below. When the winning course is built we&rsquo;ll email{' '}
+            <strong>{email}</strong> with the 40% launch-week code.
+          </p>
+          <p className="text-sm font-semibold text-foreground mb-5">
+            {voterCount} clinicians have voted
+          </p>
+          {/* Was a pure dead end. Everything the voter can act on TODAY lives
+              on /courses — the short courses that are already live. */}
+          <a
+            href="/courses"
+            className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-foreground/90"
+          >
+            See the courses that are live now
+            <ArrowRight className="h-4 w-4" />
+          </a>
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">You&rsquo;re in.</h2>
-        <p className="text-sm text-foreground/80 mb-6 max-w-md mx-auto leading-relaxed">
-          We&rsquo;ll email <strong>{email}</strong> when the winning course launches with your 40% discount code. Live results update below — share with a colleague to push your favourite to the top.
-        </p>
-        <p className="text-sm font-semibold text-foreground">
-          {voterCount} clinicians have voted
-        </p>
-      </div>
+
+        {/* Read-only tally — the "results below" the banner promises. */}
+        <div className="grid sm:grid-cols-2 gap-3">
+          {topics.map((t) => {
+            const voteCount = tallyBySlug[t.slug] || 0
+            const widthPct = (voteCount / maxVotes) * 100
+            const isMine = selected.has(t.slug)
+            return (
+              <div
+                key={t.slug}
+                className={`rounded-2xl border-2 p-5 ${isMine ? 'border-accent bg-accent/5' : 'border-slate-200 bg-white'}`}
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.category}</span>
+                  {isMine && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                      <Check className="h-3 w-3" /> Your pick
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-base font-bold text-foreground leading-tight mb-1.5">{t.title}</h3>
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-2">
+                  <span>~{t.estimatedDurationMin} min · A${t.estimatedPriceAUD}</span>
+                  <span className="tabular-nums font-semibold">{voteCount} votes</span>
+                </div>
+                <div className="h-1 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-full bg-accent transition-all" style={{ width: `${widthPct}%` }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </>
     )
   }
 

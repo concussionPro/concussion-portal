@@ -130,9 +130,16 @@ export function DemoAccessClient() {
         acceptanceId: data.acceptanceId || 0,
         hadEmail: !!email.trim(),
       }).catch(() => {})
-      // Land partners on the curated tour, not the raw marketplace.
-      // The tour does the work of orienting them to the build.
-      setTimeout(() => router.push('/courses/private-preview'), 1800)
+      // /courses, NOT /courses/private-preview.
+      //
+      // private-preview calls notFound() for anything without a VERIFIED
+      // ADMIN session cookie (app/courses/private-preview/page.tsx:21). This
+      // route only ever sets demo_key + demo_org, so the partner signed a
+      // 15-clause NDA, saw "Access granted … Redirecting…", and landed on a
+      // hard 404 — the whole demo-access flow terminated in a dead page.
+      // /api/ai-course/demo-access/accept's own docstring already specifies
+      // "Calling page then redirects to /courses"; this now matches it.
+      setTimeout(() => router.push('/courses'), 1800)
     } catch {
       setError('Network error. Try again.')
       setSubmitting(false)

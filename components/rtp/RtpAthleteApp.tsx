@@ -12,6 +12,7 @@ import {
   GRTS_STAGE_NAMES,
   RTL_STAGE_NAMES,
   GRTS_CONTACT_STAGE,
+  RTL_COMPLETE_STAGE,
   type PathwayState,
 } from '@/lib/rtp/protocol'
 import { PCSS_SYMPTOMS, RED_FLAG_SYMPTOMS, PCSS_ITEM_MAX } from '@/lib/rtp/symptoms'
@@ -432,9 +433,14 @@ function PathwayHome({
   const s = data.state
   const tone = statusTone(s)
   const [busy, setBusy] = useState(false)
+  // /api/rtp/advance answers 400 (RTL already complete), 409 (engine refused —
+  // carries `reason`), 429 and 500. Every one of those used to be swallowed
+  // silently, so a refused advance looked like a dead button. Say what happened.
+  const [advanceError, setAdvanceError] = useState('')
 
   const advance = async (track: 'grts' | 'rtl') => {
     setBusy(true)
+    setAdvanceError('')
     try {
       const res = await fetch('/api/rtp/advance', {
         method: 'POST',
@@ -444,7 +450,11 @@ function PathwayHome({
       const json = await res.json()
       if (res.ok && json.state) {
         setData({ ...data, state: json.state })
+        return
       }
+      setAdvanceError(json.reason || json.error || 'Could not advance the stage. Please try again.')
+    } catch {
+      setAdvanceError('Network error. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -497,6 +507,9 @@ function PathwayHome({
       <div className="mt-4 rounded-2xl bg-white p-3.5 shadow-[inset_0_0_0_1px_#e2ecec]">
         <p className="text-[12px] font-semibold text-[#3b4f52]">Advancing a stage</p>
         <p className="mt-1 text-[12.5px] leading-snug text-[#5d7174]">{s.advance.reason}</p>
+        {advanceError && (
+          <p className="mt-2 text-[12.5px] font-semibold leading-snug text-red-600">{advanceError}</p>
+        )}
         <div className="mt-3 flex flex-col gap-2">
           <PrimaryButton
             onClick={() => advance('grts')}
@@ -505,7 +518,7 @@ function PathwayHome({
           >
             Advance sport stage
           </PrimaryButton>
-          {s.rtlStage < 4 && (
+          {s.rtlStage < RTL_COMPLETE_STAGE && (
             <SecondaryButton onClick={() => advance('rtl')} disabled={busy} className="w-full">
               Progress return-to-learn stage
             </SecondaryButton>

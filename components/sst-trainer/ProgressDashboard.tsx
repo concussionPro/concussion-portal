@@ -44,11 +44,15 @@ function Trend({ rx, sessions }: { rx: Prescription; sessions: SessionLog[] }) {
   const padB = 14
   const lo = rx.lowerBpm
   const up = rx.upperBpm
-  const peaks = sessions.map((s) => s.peakHeartRate)
+  // Sessions that recorded NO heart rate have no point on a heart-rate chart —
+  // plotting them at 0 dragged the whole axis to the floor and drew a line to a
+  // reading that never existed.
+  const measured = sessions.filter((s) => typeof s.peakHeartRate === 'number')
+  const peaks = measured.map((s) => s.peakHeartRate as number)
   const minV = Math.min(lo - 8, ...(peaks.length ? peaks : [lo]))
   const maxV = Math.max(up + 8, ...(peaks.length ? peaks : [up]))
   const X = (i: number) =>
-    sessions.length <= 1 ? W / 2 : padL + (i * (W - padL - padR)) / (sessions.length - 1)
+    measured.length <= 1 ? W / 2 : padL + (i * (W - padL - padR)) / (measured.length - 1)
   const Y = (v: number) => padT + (1 - (v - minV) / (maxV - minV)) * (H - padT - padB)
   const yc = Y(up)
   const yl = Y(lo)
@@ -58,7 +62,7 @@ function Trend({ rx, sessions }: { rx: Prescription; sessions: SessionLog[] }) {
       <line x1={0} y1={yc} x2={W} y2={yc} stroke="var(--sst-danger)" strokeWidth={1.5} strokeDasharray="4 4" opacity={0.7} />
       {peaks.length > 1 && (
         <path
-          d={sessions.map((s, i) => `${i ? 'L' : 'M'} ${X(i)} ${Y(s.peakHeartRate)}`).join(' ')}
+          d={measured.map((s, i) => `${i ? 'L' : 'M'} ${X(i)} ${Y(s.peakHeartRate as number)}`).join(' ')}
           fill="none"
           stroke="var(--sst-accent)"
           strokeWidth={2.5}
@@ -66,13 +70,13 @@ function Trend({ rx, sessions }: { rx: Prescription; sessions: SessionLog[] }) {
           strokeLinecap="round"
         />
       )}
-      {sessions.map((s, i) => {
+      {measured.map((s, i) => {
         const flare = s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
         return (
           <circle
             key={`${s.date}-${i}`}
             cx={X(i)}
-            cy={Y(s.peakHeartRate)}
+            cy={Y(s.peakHeartRate as number)}
             r={4.5}
             fill={flare ? 'var(--sst-warn)' : 'var(--sst-accent)'}
             stroke="var(--sst-card)"
@@ -124,7 +128,11 @@ export default function ProgressDashboard({
   retest?: RetestInfo
 }) {
   const dm = DECISION_META[decision.decision]
-  const maxHr = Math.max(rx.upperBpm, ...sessions.map((s) => s.peakHeartRate), 1)
+  const maxHr = Math.max(
+    rx.upperBpm,
+    ...sessions.map((s) => s.peakHeartRate).filter((v): v is number => typeof v === 'number'),
+    1,
+  )
 
   return (
     <section className="flex flex-col gap-3.5 pt-1.5">
@@ -205,7 +213,8 @@ export default function ProgressDashboard({
         {sessions.map((s, i) => {
           const flare = s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
           const tagColor = flare ? 'var(--sst-warn)' : 'var(--sst-accent)'
-          const barW = Math.min(100, (s.peakHeartRate / maxHr) * 100)
+          const barW =
+            typeof s.peakHeartRate === 'number' ? Math.min(100, (s.peakHeartRate / maxHr) * 100) : 0
           return (
             <div
               key={`${s.date}-${i}`}
@@ -234,7 +243,9 @@ export default function ProgressDashboard({
                 className={`flex justify-between text-[10px] text-(--sst-muted) ${numFont}`}
               >
                 <span>
-                  avg {s.avgHeartRate} · peak {s.peakHeartRate} bpm
+                  {typeof s.avgHeartRate === 'number' && typeof s.peakHeartRate === 'number'
+                    ? `avg ${s.avgHeartRate} · peak ${s.peakHeartRate} bpm`
+                    : 'no heart rate recorded'}
                   {s.hrVerified === true ? ' · ✓ live' : s.hrVerified === false ? ' · manual' : ''}
                 </span>
                 <span>

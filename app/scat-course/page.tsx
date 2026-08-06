@@ -257,7 +257,11 @@ export default function SCATCoursePage() {
                   </p>
                   <p className="text-sm text-emerald-700 mb-3">
                     Unlock {CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS, return-to-play protocols, phenotype-based rehabilitation, and more. Your completion discount makes the online course{' '}
-                    <strong>${CONFIG.COURSE.PRICE_ONLINE - 50}</strong> (normally ${CONFIG.COURSE.PRICE_ONLINE}) · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird.
+                    {/* The discount is CONFIG.COURSE.SCAT_DISCOUNT_AUD — the same
+                        number that has to match the Stripe coupon. A literal 50
+                        here quotes a price the buyer would not be charged the
+                        moment that constant moves. */}
+                    <strong>${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD}</strong> (normally ${CONFIG.COURSE.PRICE_ONLINE}) · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird.
                   </p>
                   <Link
                     href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
@@ -442,7 +446,7 @@ export default function SCATCoursePage() {
               </ul>
               <div className="bg-white/80 rounded-lg p-3 mb-5 border border-purple-100">
                 <p className="text-sm text-slate-800">
-                  <strong>Online from ${CONFIG.COURSE.PRICE_ONLINE}</strong> ({`$${CONFIG.COURSE.PRICE_ONLINE - 50} with your completion discount`}) · Complete from <strong>${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</strong> early-bird
+                  <strong>Online from ${CONFIG.COURSE.PRICE_ONLINE}</strong> ({`$${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} with your completion discount`}) · Complete from <strong>${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</strong> early-bird
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   7-day satisfaction guarantee · Afterpay / Klarna available

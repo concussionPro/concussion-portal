@@ -94,7 +94,7 @@ export default function ChatGPTNDISReportsPage() {
             <Link href="/ai-safety-checklist" className="inline-flex items-center gap-2 bg-white text-orange-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-amber-50 transition-colors">Get the checklist (free)</Link>
           </section>
 
-          <RelatedPosts slugs={['ahpra-ai-guidelines-explained-australian-clinicians', 'heidi-vs-lyrebird-ai-scribe-australian-clinicians', 'ahpra-cpd-requirements-concussion-education']} />
+          <RelatedPosts slugs={['ahpra-ai-guidelines-explained-australian-clinicians', 'heidi-vs-lyrebird-ai-scribe-australian-clinicians', 'ai-medical-scribe-comparison-2026']} />
         </div>
       </div>
     </>

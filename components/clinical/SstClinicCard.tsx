@@ -39,19 +39,32 @@ interface Usage {
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false)
+  const [failed, setFailed] = useState(false)
   return (
     <button
       type="button"
       onClick={() => {
-        void navigator.clipboard.writeText(text).then(() => {
-          setCopied(true)
-          setTimeout(() => setCopied(false), 1800)
-        })
+        // clipboard.writeText REJECTS on a denied permission / non-secure
+        // context. The unhandled rejection made the button do nothing at all,
+        // silently — say so instead, the link is on screen to copy by hand.
+        const fail = () => {
+          setFailed(true)
+          setTimeout(() => setFailed(false), 3000)
+        }
+        if (!navigator.clipboard?.writeText) return fail()
+        void navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            setFailed(false)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1800)
+          })
+          .catch(fail)
       }}
       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
     >
       {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? 'Copied' : label}
+      {copied ? 'Copied' : failed ? 'Copy it by hand' : label}
     </button>
   )
 }
@@ -81,6 +94,11 @@ export function SstClinicCard({
   // redirect by a few seconds — show an activating state instead of trial
   // CTAs, and refetch shortly (2026-08-05 sweep #11).
   const [justSubscribed, setJustSubscribed] = useState(false)
+  // …but the wait must END. If the webhook never lands (or never will), the
+  // "activating…" line used to sit there forever WITH the trial badge and the
+  // subscribe CTA both suppressed — a clinic at its cap, freshly charged, with
+  // no forward action on screen. After the last refetch we stop hiding them.
+  const [activationStalled, setActivationStalled] = useState(false)
 
   // Truthful copy for the two states that legitimately have nothing to open:
   // a comped clinic (plan=active, no Stripe customer — the 25 alumni) and a
@@ -131,7 +149,8 @@ export function SstClinicCard({
       // webhook race: refetch twice while Stripe's event lands
       const t1 = setTimeout(load, 4000)
       const t2 = setTimeout(load, 12000)
-      return () => { clearTimeout(t1); clearTimeout(t2) }
+      const t3 = setTimeout(() => setActivationStalled(true), 20000)
+      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
     }
   }, [])
 
@@ -179,11 +198,14 @@ export function SstClinicCard({
         body: JSON.stringify({ patientEmail: patientEmail.trim(), patientName: patientName.trim() || undefined }),
       })
       const data = await res.json()
+      // The cap refusal carries the CURRENT usage — adopting it was skipped on
+      // the error path, so a clinic whose patients joined by QR (not by invite)
+      // kept seeing a stale "0 of 3 used" badge with no upgrade CTA while the
+      // server refused every new patient (2026-08-06 census).
+      if (data?.usage) setUsage(data.usage)
       if (!res.ok) throw new Error(data?.error || 'Send failed.')
       setInviteState('sent')
       setPatientEmail('')
-      // trial usage moves after admitting a patient — reflect it
-      if (data?.usage) setUsage(data.usage)
       setTimeout(() => setInviteState('idle'), 2500)
     } catch (e) {
       setInviteError(e instanceof Error ? e.message : 'Send failed.')
@@ -254,12 +276,16 @@ export function SstClinicCard({
           <p className="mt-1 font-mono text-[34px] font-extrabold tracking-[0.3em] text-accent leading-none">
             {clinic.code}
           </p>
-          {usage?.plan === 'trial' && usage.cap != null && !justSubscribed && (
+          {usage?.plan === 'trial' && usage.cap != null && (!justSubscribed || activationStalled) && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
                 Free trial · {usage.patientCount} of {usage.cap} patients used
               </span>
-              {!usage.canAddPatient && (
+              {/* Never offer a SECOND checkout to someone who just paid and is
+                  waiting on the webhook — /api/sst/subscribe only 409s once the
+                  plan actually flips, so this button is the double-bill path
+                  while activation is stalled. They get the manual route instead. */}
+              {!usage.canAddPatient && !justSubscribed && (
                 <Link href="/clinical-testing/subscribe" className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-white hover:bg-accent/90">
                   Subscribe to add more →
                 </Link>
@@ -273,7 +299,11 @@ export function SstClinicCard({
                   ? 'Subscribed · unlimited patients'
                   : `Subscribed · ${usage.patientCount} of ${usage.cap} active patients (30 days)`}
               </span>
-              {usage.cap != null && !usage.canAddPatient && (
+              {/* DEMO00 has no session and no billing: openBillingPortal returns
+                  immediately for it, so these rendered as buttons that did
+                  literally nothing on click for every prospect on the tour.
+                  Don't render a control that can't act. */}
+              {!isDemoClinic && usage.cap != null && !usage.canAddPatient && (
                 <button
                   type="button"
                   onClick={openBillingPortal}
@@ -283,20 +313,30 @@ export function SstClinicCard({
                   {billingBusy ? 'Opening…' : 'Plan full — upgrade →'}
                 </button>
               )}
-              <button
-                type="button"
-                onClick={openBillingPortal}
-                disabled={billingBusy}
-                className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-              >
-                {billingBusy ? 'Opening…' : 'Manage billing'}
-              </button>
+              {!isDemoClinic && (
+                <button
+                  type="button"
+                  onClick={openBillingPortal}
+                  disabled={billingBusy}
+                  className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {billingBusy ? 'Opening…' : 'Manage billing'}
+                </button>
+              )}
             </div>
           )}
           {justSubscribed && usage?.plan === 'trial' && (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
-              Payment received — activating your plan… this updates within a minute.
-            </p>
+            activationStalled ? (
+              <p className="mt-2 max-w-md text-[11.5px] font-semibold leading-snug text-amber-800">
+                Your payment went through but this clinic still shows the trial plan. Reload in a
+                minute — if it still hasn’t switched, email {CONFIG.CONTACT_EMAIL} with your clinic
+                code and we’ll activate it by hand. Don’t pay again.
+              </p>
+            ) : (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
+                Payment received — activating your plan… this updates within a minute.
+              </p>
+            )
           )}
           {/* Billing / plan errors were only rendered in the PRE-provisioning
               branch, so every failure from "Manage billing" and "Plan full —
@@ -418,6 +458,20 @@ export function SstClinicCard({
       <div className="mt-5 border-t border-slate-100 pt-4">
         <p className="text-xs font-bold text-foreground mb-2">Email the app link to a patient</p>
         <div className="flex flex-wrap gap-2">
+          {/* The name was WIRED (state + payload) but had no input, so it was
+              always blank. Two consequences: every invite opened "Hi," and —
+              the real one — the server's re-send exemption for an EXISTING
+              patient requires the name, so at the cap a clinic could not
+              re-send the link to a patient it was already treating, despite
+              the refusal promising "your existing patients keep working"
+              (2026-08-06 census). */}
+          <input
+            type="text"
+            value={patientName}
+            onChange={(e) => setPatientName(e.target.value)}
+            placeholder="Patient name (as in your hub)"
+            className="min-w-[180px] flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-accent"
+          />
           <input
             type="email"
             value={patientEmail}
@@ -442,7 +496,28 @@ export function SstClinicCard({
           </button>
         </div>
         {inviteState === 'error' && (
-          <p className="mt-2 text-xs font-semibold text-red-600">{inviteError}</p>
+          <p className="mt-2 text-xs font-semibold text-red-600">
+            {inviteError}
+            {/* The refusal text NAMES the next step ("Subscribe", "Manage
+                billing") but shipped as flat prose with nothing to click. */}
+            {usage?.canAddPatient === false &&
+              (usage.plan === 'active' ? (
+                !isDemoClinic && (
+                  <button
+                    type="button"
+                    onClick={openBillingPortal}
+                    disabled={billingBusy}
+                    className="ml-1.5 underline underline-offset-2 disabled:opacity-50"
+                  >
+                    {billingBusy ? 'Opening…' : 'Open billing →'}
+                  </button>
+                )
+              ) : (
+                <Link href="/clinical-testing/subscribe" className="ml-1.5 underline underline-offset-2">
+                  Subscribe →
+                </Link>
+              ))}
+          </p>
         )}
       </div>
 

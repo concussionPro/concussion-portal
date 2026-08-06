@@ -6,7 +6,9 @@ import { Award, BookOpen, Stethoscope, Code, Mail, ExternalLink, ShieldCheck } f
 import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
-  title: 'About the founder — Concussion Education Australia',
+  // app/layout.tsx appends '| Concussion Education Australia' via the title
+  // template — naming the brand here too rendered it twice in the tab.
+  title: 'About the founder',
   robots: 'noindex, nofollow',
 }
 

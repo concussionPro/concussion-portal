@@ -111,10 +111,17 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
   })
   const [busy, setBusy] = useState(false)
   // `unknown` = we never got an answer, so we must NOT claim "Not filed".
-  const [result, setResult] = useState<{ ok: boolean; msg: string; unknown?: boolean } | null>(null)
+  // `title` overrides the red box's heading — a SEARCH failure is not a filing
+  // outcome, and heading it "Not filed" read as a failed write attempt.
+  const [result, setResult] = useState<{ ok: boolean; msg: string; unknown?: boolean; title?: string } | null>(null)
+  // The last search errored, so `results.length === 0` means "we don't know",
+  // not "no matches". Rendering the empty-state line under the error banner
+  // was the very failure mode the banner was added to correct.
+  const [searchFailed, setSearchFailed] = useState(false)
 
   const search = async () => {
     setSearching(true)
+    setSearchFailed(false)
     setResults([])
     if (demo) {
       // Fixture match — the same patient "found" in Gensolve. No API touched.
@@ -128,15 +135,24 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
       setResults(d?.patients ?? [])
       // A FAILED search rendered as "No matches — refine the search", so an
       // expired key or a PMS outage looked like the patient wasn't in the PMS.
-      if (r.status === 404) setResult({ ok: false, msg: 'No PMS connected' })
-      else if (!r.ok) {
+      if (r.status === 404) {
+        setSearchFailed(true)
+        setResult({ ok: false, title: `${pms} could not be searched`, msg: 'No PMS connected' })
+      } else if (!r.ok) {
+        setSearchFailed(true)
         setResult({
           ok: false,
+          title: `${pms} could not be searched`,
           msg: d?.error || `${pms} could not be searched just now — this is a connection problem, not an empty result. Try again in a moment.`,
         })
       }
     } catch {
-      setResult({ ok: false, msg: `Could not reach ${pms} to search — this is a connection problem, not an empty result.` })
+      setSearchFailed(true)
+      setResult({
+        ok: false,
+        title: `${pms} could not be searched`,
+        msg: `Could not reach ${pms} to search — this is a connection problem, not an empty result.`,
+      })
     } finally {
       setSearching(false)
     }
@@ -213,7 +229,16 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
         <p className="m-0 mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">Report</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {SKINS.map(([k, label]) => (
-            <button key={k} type="button" onClick={() => setSkin(k)}
+            <button key={k} type="button" onClick={() => {
+              setSkin(k)
+              // A SUCCESSFUL file left the button permanently disabled reading
+              // "Filed", so a clinician who filed the GP report could not then
+              // file the ACC884 or the clinical record without closing and
+              // reopening the modal. A different report type is a different
+              // note, so clearing the success state creates no duplicate. A
+              // failed/unknown result is deliberately kept on screen.
+              if (result?.ok) setResult(null)
+            }}
               className={`text-[12px] font-semibold px-2.5 py-1.5 rounded-lg border transition ${skin === k ? 'bg-teal-600 border-teal-600 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
               {label}
             </button>
@@ -251,7 +276,7 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
               {r.name}{r.dob ? <span className="text-slate-400"> · {r.dob}</span> : null}
             </button>
           ))}
-          {!searching && results.length === 0 && (
+          {!searching && !searchFailed && results.length === 0 && (
             <p className="text-[12px] text-slate-400 px-1 m-0">No matches — refine the search.</p>
           )}
         </div>
@@ -266,12 +291,23 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
               <AlertTriangle className="mt-0.5 w-3.5 h-3.5 flex-shrink-0 text-red-600" />
               <div>
                 <p className="m-0 text-[12px] font-bold text-red-800">
-                  {result.unknown ? 'Filing status unknown — check the record' : 'Not filed'}
+                  {result.title ?? (result.unknown ? 'Filing status unknown — check the record' : 'Not filed')}
                 </p>
                 <p className="m-0 mt-0.5 text-[12px] leading-snug text-red-700">{result.msg}</p>
               </div>
             </div>
           )
+        )}
+
+        {/* The identity bridge, stated at the moment of the write. The SST label
+            and the PMS record are matched BY HAND here, and a mis-pick files one
+            patient's measured episode into another patient's clinical record —
+            so name both sides before the button is pressed. */}
+        {picked && (
+          <p className="m-0 mb-2 rounded-lg bg-slate-50 px-3 py-2 text-[11.5px] leading-snug text-slate-600">
+            Filing <strong className="text-slate-900">{patientName}</strong>&rsquo;s SST episode into{' '}
+            <strong className="text-slate-900">{picked.name}</strong>&rsquo;s {pms} record.
+          </p>
         )}
 
         <button type="button" onClick={file} disabled={!picked || busy || result?.ok}
@@ -281,6 +317,13 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
         <p className="m-0 mt-2 text-[10.5px] text-slate-400 leading-snug">
           Files as a clinical note in the selected patient&rsquo;s {pms} record. Review before
           relying on it — the supervising clinician signs off, always.
+          {/* The report route stamps "Transcribe onto ACC's current fillable
+              form" in its footer; the PMS note carries no such footer, so the
+              filed note otherwise reads as if it WERE the submitted ACC884. */}
+          {skin === 'acc884' && (
+            <> The ACC884 content is filed as a note to transcribe onto ACC&rsquo;s current fillable
+            ACC884 form — filing here submits nothing to ACC.</>
+          )}
         </p>
       </div>
     </div>

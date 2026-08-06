@@ -76,8 +76,14 @@ function InstallCta() {
   const iosLive = CONFIG.FEATURES.SST_IOS_APP_LIVE
   return (
     <div className="mt-1 flex flex-wrap items-center gap-3">
+      {/* MUST NOT be /platform/app: that surface's layout requires a clinical
+          entitlement and redirects everyone else to /login (verified live
+          2026-08), so this button — labelled "Install in 60 seconds — no app
+          store needed", under a "Free to start" line — landed on a sign-in
+          wall. /sst-trainer is the public patient entry and the PWA install
+          target (public/sst.webmanifest start_url), so the label is true there. */}
       <Link
-        href="/platform/app"
+        href="/sst-trainer"
         className="rounded-[14px] px-[22px] py-[15px] text-[15px] font-bold text-white transition-transform hover:-translate-y-0.5"
         style={{ background: PLATFORM.navy }}
       >

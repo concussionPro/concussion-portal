@@ -688,6 +688,13 @@ export default function PlatformAppPage({
                 thresholdStage: result.thresholdStage,
                 modality: input.modality ?? null,
                 restingSymptomScore: input.restingSymptomScore,
+                // Distinct minutes of the graded ramp actually recorded. The
+                // exhaustion arm returns the clearance-grade 'no-intolerance'
+                // from a ramp of ANY length, so the dose travels with the
+                // finding (mirrored server-side in reports/load.ts).
+                stagesRecorded: new Set(
+                  input.stages.map((st) => st.minute).filter((m) => Number.isFinite(m)),
+                ).size,
                 ...(wasDirected ? { clinicianDirected: true } : {}),
               },
             ])

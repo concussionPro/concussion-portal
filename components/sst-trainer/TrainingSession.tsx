@@ -577,8 +577,11 @@ export default function TrainingSession({
       // pagehide handler — the clinician read side keeps only this one.
       sessionUid: sessionUidRef.current || undefined,
       date: new Date().toLocaleDateString('en-AU', { month: 'short', day: 'numeric' }),
-      avgHeartRate: s?.avg ?? 0,
-      peakHeartRate: s?.peak ?? 0,
+      // NULL, never 0: a session that recorded no reading measured nothing, and
+      // 0 bpm was being printed as a heart rate on the hub row, the patient's
+      // progress list and the medicolegal export.
+      avgHeartRate: s?.avg ?? null,
+      peakHeartRate: s?.peak ?? null,
       preSymptom,
       peakSymptom: Math.max(peakSymptom, currentSymptom),
       // record actual time on the screen — never substitute the prescribed

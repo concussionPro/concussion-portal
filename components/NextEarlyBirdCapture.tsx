@@ -57,7 +57,10 @@ export function NextEarlyBirdCapture({
       const res = await fetch('/api/register-interest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, city }),
+        // 'next_early_bird' exists in /api/register-interest's source
+        // allowlist for this form; without it the route silently defaulted
+        // every one of these to 'pricing_page'.
+        body: JSON.stringify({ email, name, city, source: 'next_early_bird' }),
       })
       const data = await res.json()
       if (data.success) {

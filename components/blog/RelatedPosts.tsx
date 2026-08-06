@@ -115,6 +115,18 @@ const ALL_POSTS: Record<string, RelatedPost> = {
     href: '/blog/ai-scribe-privacy-act-compliance-australia',
     readTime: '8 min',
   },
+  'ai-medical-scribe-comparison-2026': {
+    title: 'AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs Suki vs DAX',
+    description: 'Six AI scribes side-by-side for AU/UK/US/CA clinicians: data residency, HIPAA/GDPR/Privacy Act fit, specialty support, and which one suits which practice.',
+    href: '/blog/ai-medical-scribe-comparison-2026',
+    readTime: '11 min',
+  },
+  'when-not-to-use-ai-clinical-notes-clinicians': {
+    title: 'When NOT to Use AI for Clinical Notes — 7 Red Flags for Australian Clinicians',
+    description: 'Mental health disclosures, mandatory reporting, medicolegal cases, paediatric consent: when to switch the AI scribe off.',
+    href: '/blog/when-not-to-use-ai-clinical-notes-clinicians',
+    readTime: '6 min',
+  },
   'chatgpt-ndis-reports-allied-health-australia': {
     title: 'Can I Use ChatGPT for NDIS Reports? An Allied Health Compliance Guide',
     description: 'Privacy Act exposure, NDIA audit risk, and the safe alternatives for AU allied health practitioners.',
@@ -137,6 +149,15 @@ const ALL_POSTS: Record<string, RelatedPost> = {
     title: 'Vestibulo-Ocular Workup for Persistent Post-Concussion Symptoms — Beyond VOMS',
     description: 'Convergence insufficiency, BPPV after head trauma, gaze stability, VOR exercises, and when to refer for a vestibular specialist.',
     href: '/blog/vestibulo-ocular-workup-ppcs',
+    readTime: '8 min',
+  },
+  // Newest post (12 Jul 2026). Registered here so it is cross-linkable at all —
+  // a post absent from this map can never appear in any Related Articles block,
+  // which is how the AI/PPCS cluster lost its internal linking (see above).
+  'cervicogenic-vs-migraine-vs-tension-headache-differential': {
+    title: 'Cervicogenic vs Migraine vs Tension Headache — The Post-Concussion Differential',
+    description: 'Post-concussion headache is a timing category, not a diagnosis. Phenotype it: distinguishing features, comparison table, and why the phenotype drives management.',
+    href: '/blog/cervicogenic-vs-migraine-vs-tension-headache-differential',
     readTime: '8 min',
   },
 }

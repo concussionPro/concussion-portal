@@ -14,6 +14,13 @@ import {
   Wrench,
 } from 'lucide-react'
 import { MODULES } from '@/lib/ai-course/modules'
+import { COURSES } from '@/lib/ai-course/provider-catalogue'
+
+// CPD figure comes from the catalogue entry that also drives the checkout and
+// the certificate — never a literal in the nav, which is exactly where a stale
+// number survives a re-rating unnoticed.
+const AI_COURSE = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+const AI_CPD_HOURS = AI_COURSE?.cpdHours ?? 2
 
 /**
  * Course-specific sidebar for the AI in Clinical Practice page tree.
@@ -49,7 +56,8 @@ export function CourseSidebar() {
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mb-2">CEA Learning</p>
         <p className="text-base font-bold text-foreground leading-tight mb-2">AI in Clinical Practice</p>
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          {MODULES.length} modules · {totalMin}m total · 2 CPD hours
+          {MODULES.length} modules · {totalMin}m total · {AI_CPD_HOURS} CPD{' '}
+          {AI_CPD_HOURS === 1 ? 'hour' : 'hours'}
         </p>
       </Link>
 

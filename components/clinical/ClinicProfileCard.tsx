@@ -60,11 +60,15 @@ export function cacheClinicProfile(clinicCode: string | null | undefined, profil
   }
 }
 
-const FIELDS: { key: keyof ClinicProfile; label: string; placeholder: string }[] = [
+/** `shared` = a PRACTITIONER-identity field held in the ONE clinic-wide profile
+ *  row. Any seated member may overwrite it and the letterhead of every report
+ *  the clinic generates then carries that person's details — so the label has
+ *  to say so rather than implying "your" number (2026-08-06 census). */
+const FIELDS: { key: keyof ClinicProfile; label: string; placeholder: string; shared?: boolean }[] = [
   { key: 'clinic_name', label: 'Clinic name', placeholder: 'Your clinic name' },
-  { key: 'clinician_name', label: 'Practitioner name', placeholder: 'Your name' },
-  { key: 'ahpra_number', label: 'AHPRA registration no.', placeholder: 'e.g. OST0001234567' },
-  { key: 'provider_number', label: 'Provider number', placeholder: 'e.g. 1234567A' },
+  { key: 'clinician_name', label: 'Default practitioner name', placeholder: 'Name for the letterhead', shared: true },
+  { key: 'ahpra_number', label: 'Default AHPRA registration no.', placeholder: 'e.g. OST0001234567', shared: true },
+  { key: 'provider_number', label: 'Default provider number', placeholder: 'e.g. 1234567A', shared: true },
   { key: 'clinic_address', label: 'Clinic address', placeholder: 'Street, suburb, state, postcode' },
   { key: 'clinic_phone', label: 'Clinic phone', placeholder: 'e.g. (03) 9000 0000' },
 ]
@@ -219,6 +223,12 @@ export function ClinicProfileCard({
                 placeholder={f.placeholder}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-accent focus:outline-none"
               />
+              {f.shared && (
+                <span className="text-[10.5px] leading-snug text-amber-700">
+                  Clinic-wide — shared by every practitioner here, and the last edit wins. Override it
+                  on the document itself when someone else signs the report.
+                </span>
+              )}
             </label>
           ))}
           {saveState === 'error' ? (

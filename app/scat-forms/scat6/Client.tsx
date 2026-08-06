@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Download, Save, ChevronDown, ChevronUp, Check, ArrowLeft } from 'lucide-react'
 import { SCAT6FormData, getDefaultSCAT6FormData } from '../shared/types/scat6.types'
@@ -82,6 +82,13 @@ export default function SCAT6Client() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showEmailGate, setShowEmailGate] = useState(false)
   const [pendingDraft, setPendingDraft] = useState<{ data: SCAT6FormData; timestamp: number } | null>(null)
+  /**
+   * The optional foam mBESS is opened by a checkbox. Opening it must NOT write
+   * scores: seeding 0/0/0 exported "Total Errors (Foam) 0 of 30" — a flawless
+   * foam balance test — for a clinician who ticked the box and was interrupted.
+   * The panel's open state therefore lives in the UI, not in the record.
+   */
+  const [foamPerformed, setFoamPerformed] = useState(false)
 
   // Check auth status on mount
   useEffect(() => {
@@ -91,10 +98,17 @@ export default function SCAT6Client() {
       .catch(() => {})
   }, [])
 
+  /** Serialised empty form, for "has the clinician touched anything yet?". */
+  const pristineForm = useRef<string>(JSON.stringify(getDefaultSCAT6FormData()))
+
   // Auto-save to localStorage every 3 seconds with timestamp
   // (paused while a restore prompt is pending so the saved draft isn't overwritten)
   useEffect(() => {
-    if (pendingDraft) return
+    // Only hold off while the form is still PRISTINE. Pausing for as long
+    // as the restore banner sits there meant a clinician who ignored the
+    // banner and worked through a whole assessment had nothing auto-saved:
+    // one refresh and the entry was gone, replaced by the older draft.
+    if (pendingDraft && JSON.stringify(formData) === pristineForm.current) return
     const timer = setTimeout(() => {
       const draftWithTimestamp = {
         data: formData,
@@ -137,6 +151,12 @@ export default function SCAT6Client() {
 
   const calculated = getAllCalculatedScores(formData)
 
+  const foamOpen =
+    foamPerformed ||
+    formData.mBessFoamDoubleErrors !== null ||
+    formData.mBessFoamTandemErrors !== null ||
+    formData.mBessFoamSingleErrors !== null
+
   const toggleSection = (section: string) => {
     setExpandedSections(prev => {
       const next = new Set(prev)
@@ -171,6 +191,7 @@ export default function SCAT6Client() {
     if (confirm('Start a new assessment? All current form data will be cleared.\n\nThis cannot be undone.')) {
       localStorage.removeItem(DRAFT_KEY)
       setFormData(getDefaultSCAT6FormData())
+      setFoamPerformed(false)
       alert('New assessment started - form cleared successfully')
     }
   }
@@ -1101,25 +1122,20 @@ export default function SCAT6Client() {
                 </div>
               </div>
 
-              {/* Optional On Foam — the "Perform foam assessment" checkbox IS the
-                  administered flag (it nulls all three stances when unticked), so
-                  the inputs inside it stay non-null. */}
+              {/* Optional On Foam — ticking the box only OPENS the panel. Each
+                  stance stays "not recorded" until the clinician types an error
+                  count, so an opened-but-unused foam section exports blank
+                  rather than as a perfect 0-of-30 result. */}
               <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h5 className="font-bold text-slate-900">On Foam <span className="text-xs font-normal bg-orange-500 text-white px-2 py-1 rounded">Optional</span></h5>
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={formData.mBessFoamDoubleErrors !== null}
+                      checked={foamOpen}
                       onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData(prev => ({
-                            ...prev,
-                            mBessFoamDoubleErrors: 0,
-                            mBessFoamTandemErrors: 0,
-                            mBessFoamSingleErrors: 0,
-                          }))
-                        } else {
+                        setFoamPerformed(e.target.checked)
+                        if (!e.target.checked) {
                           setFormData(prev => ({
                             ...prev,
                             mBessFoamDoubleErrors: null,
@@ -1134,7 +1150,7 @@ export default function SCAT6Client() {
                   </label>
                 </div>
 
-                {formData.mBessFoamDoubleErrors !== null && (
+                {foamOpen && (
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2">Double Leg Stance:</label>
@@ -1143,7 +1159,7 @@ export default function SCAT6Client() {
                         min="0"
                         max="10"
                         value={formData.mBessFoamDoubleErrors ?? ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamDoubleErrors: parseCappedCountOrNull(e.target.value, 10) ?? 0 }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamDoubleErrors: parseCappedCountOrNull(e.target.value, 10) }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1155,7 +1171,7 @@ export default function SCAT6Client() {
                         min="0"
                         max="10"
                         value={formData.mBessFoamTandemErrors ?? ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamTandemErrors: parseCappedCountOrNull(e.target.value, 10) ?? 0 }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamTandemErrors: parseCappedCountOrNull(e.target.value, 10) }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
@@ -1167,17 +1183,17 @@ export default function SCAT6Client() {
                         min="0"
                         max="10"
                         value={formData.mBessFoamSingleErrors ?? ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamSingleErrors: parseCappedCountOrNull(e.target.value, 10) ?? 0 }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mBessFoamSingleErrors: parseCappedCountOrNull(e.target.value, 10) }))}
                         className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-lg font-bold text-center"
                       />
                       <p className="text-xs text-slate-500 text-center mt-1">of 10</p>
                     </div>
                   </div>
                 )}
-                {formData.mBessFoamDoubleErrors !== null && (
+                {foamOpen && (
                   <div className="mt-4 bg-orange-600 text-white rounded-lg p-4 text-center">
                     <span className="text-sm opacity-90">Total Errors (Foam): </span>
-                    <span className="text-3xl font-bold">{calculated.mBessFoamTotal}</span>
+                    <span className="text-3xl font-bold">{showScore(calculated.mBessFoamTotal)}</span>
                     <span className="text-lg opacity-75"> of 30</span>
                   </div>
                 )}
@@ -1403,7 +1419,13 @@ export default function SCAT6Client() {
 
                   <div className="mt-4 bg-blue-600 text-white rounded-lg p-6 text-center">
                     <div className="text-sm opacity-90 mb-2">Delayed Recall Score:</div>
-                    <div className="text-4xl font-bold">{calculated.delayedRecall} <span className="text-xl opacity-75">of 10</span></div>
+                    {/* Gated like every other score box (and like the PDF): an
+                        untouched panel showed "0 of 10" — no words recalled —
+                        before the subtest had been given. */}
+                    <div className="text-4xl font-bold">
+                      {calculated.delayedRecallAdministered ? calculated.delayedRecall : NOT_ADMINISTERED}
+                      {' '}<span className="text-xl opacity-75">of 10</span>
+                    </div>
                   </div>
                 </div>
               )}

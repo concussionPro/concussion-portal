@@ -36,6 +36,27 @@ type Row = {
 
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 /**
+ * A number only if it is a PLAUSIBLE heart rate. The app's own entry fields
+ * accept 30–240 bpm; anything outside that (above all the 0 that older builds
+ * wrote when a session recorded nothing) is not a measurement and must never
+ * be printed as one.
+ */
+const bpm = (v: unknown): number | null => {
+  const n = num(v)
+  return n != null && n >= 30 && n <= 240 ? n : null
+}
+/** DISTINCT recorded minutes in a stored stage table (0 when absent/unreadable). */
+const distinctStages = (raw: unknown): number => {
+  if (!Array.isArray(raw)) return 0
+  const minutes = new Set<number>()
+  for (const s of raw) {
+    if (!s || typeof s !== 'object') continue
+    const m = Number((s as Record<string, unknown>).minute)
+    if (Number.isFinite(m)) minutes.add(m)
+  }
+  return minutes.size
+}
+/**
  * When the session ACTUALLY happened. `created_at` is server insert time, so
  * an offline session synced days later — or a whole queue flushed at once —
  * dated every row at sync time and collapsed multi-day episodes onto one day
@@ -265,13 +286,24 @@ export async function loadReportInput(
     // so the serial-testing table can say the spacing rule was lifted on
     // clinical instruction rather than leaving an unexplained same-day pair.
     clinicianDirected: t.payload?.clinicianDirected === true,
+    // How far the graded ramp actually got. The exhaustion arm of
+    // detectThreshold returns the CLEARANCE-GRADE 'no-intolerance' from a
+    // ramp of ANY length — one recorded minute reads the same as a completed
+    // 20-minute protocol — and no document said which. Count DISTINCT minutes
+    // (a duplicated row set is not a longer test).
+    stagesRecorded: distinctStages(t.payload?.stages),
   }))
 
   const sessions: PersistedSession[] = trainings.map((t) => ({
     date: occurredIso(t),
     at: new Date(occurredIso(t)).getTime(),
-    avgHeartRate: num(t.payload?.avgHeartRate) ?? num(t.payload?.avgHr) ?? 0,
-    peakHeartRate: num(t.payload?.peakHeartRate) ?? num(t.payload?.peakHr) ?? 0,
+    // NULL, never 0. A session that recorded no reading measured nothing, and
+    // 0 bpm was reaching the medicolegal export as "avg 0 / peak 0 bpm" — a
+    // measurement asserted for a session that measured nothing. `bpm()` drops
+    // anything under the app's own physiologic floor, so legacy rows (and any
+    // watch build) that wrote a placeholder 0 read as NOT RECORDED too.
+    avgHeartRate: bpm(t.payload?.avgHeartRate) ?? bpm(t.payload?.avgHr),
+    peakHeartRate: bpm(t.payload?.peakHeartRate) ?? bpm(t.payload?.peakHr),
     preSymptom: num(t.payload?.preSymptom) ?? 0,
     peakSymptom: num(t.payload?.peakSymptom) ?? 0,
     completedMinutes: num(t.payload?.completedMinutes) ?? 0,

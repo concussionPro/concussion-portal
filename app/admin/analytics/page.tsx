@@ -323,7 +323,7 @@ interface ProspectAggregates {
     sendOpenRate: number; openClickRate: number; sendReplyRate: number; replyToWinRate: number; deliveryRate?: number
   }
   /** Full cold-outreach funnel: pooled → verified → sent → delivered →
-   *  real portal views (≥60s, scanner-filtered) → replied → booked → won.
+   *  real portal views (≥10s, scanner-filtered) → replied → booked → won.
    *  openedClinics/clickedClinics are retained for backward compat only —
    *  open/click tracking is OFF (scanner-polluted) and they are NEVER shown
    *  as engagement. */
@@ -337,7 +337,7 @@ interface ProspectAggregates {
     openedClinics: number       // ⚠ scanner — not engagement (tracking off)
     clickedClinics: number      // ⚠ scanner — not engagement (tracking off)
     portalViewedClinics: number // raw — includes headless scanner renders
-    realPortalEngagedClinics?: number // ≥60s dwell OR dashboard CTA click — trustworthy
+    realPortalEngagedClinics?: number // ≥10s dwell OR dashboard CTA click — trustworthy
     bookedClinics?: number      // confirmed cal.com booking
     repliedClinics: number
     wonClinics: number
@@ -1223,6 +1223,9 @@ function DeviceIcon({ device }: { device: string }) {
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 const VALID_TAB_TYPES: TabType[] = ['actions', 'ausneuro', 'overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'prospects']
 
+// Both boards count toward the SAME confirmation threshold — never a literal.
+const UPGRADE_TARGET = CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD
+
 export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState<Period>('7d')
   const searchParams = useSearchParams()
@@ -1332,7 +1335,9 @@ export default function AnalyticsDashboard() {
           )
           .map(c => ({ ...c, count: c.registrations.length }))
           .filter(c => c.count > 0)
-        return { ...prev, interest: nextInterest, interestTotal: (prev.interestTotal ?? 0) - 1 }
+        // Derived, not decremented — the DELETE removes every row for that
+        // email+city, so `-1` drifted whenever a duplicate existed.
+        return { ...prev, interest: nextInterest, interestTotal: nextInterest.reduce((sum, c) => sum + c.count, 0) }
       })
     } catch (err) {
       alert(`Delete failed: ${err instanceof Error ? err.message : 'network error'}`)
@@ -1595,7 +1600,10 @@ export default function AnalyticsDashboard() {
    * in ONE batch on load, so grouping costs no extra requests.
    */
   const GROUPS: { id: GroupId; label: string; icon: React.ElementType; panels: TabType[]; hint: string }[] = [
-    { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['actions', 'funnel'], hint: 'What to do today' },
+    // 'insights' belongs here: groupForPanel() already routes it to 'decide',
+    // but it was missing from the panel list, so activePanel fell back to
+    // 'actions' and the Insights panel was unreachable from any route.
+    { id: 'decide', label: 'Decide', icon: Lightbulb, panels: ['actions', 'insights', 'funnel'], hint: 'What to do today' },
     { id: 'traffic', label: 'Traffic', icon: Globe, panels: ['overview', 'channels', 'flow', 'events'], hint: 'Where it comes from' },
     { id: 'pipeline', label: 'Pipeline', icon: MapPin, panels: ['pool', 'prospects', 'sst', 'ausneuro', 'preseason'], hint: 'Close to revenue' },
     { id: 'people', label: 'People', icon: Mail, panels: ['retargeting', 'users'], hint: 'Warm right now' },
@@ -2459,7 +2467,7 @@ export default function AnalyticsDashboard() {
                     {/* Paid Threshold Cards */}
                     {poolData.paidThreshold && poolData.paidThreshold.length > 0 && (
                       <>
-                        <SectionTitle title="Workshop Threshold (Paid)" subtitle="Full-course registrants per city — 8 needed to confirm a date" />
+                        <SectionTitle title="Workshop Threshold (Paid)" subtitle={`Paid practical-day seats per city — ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} needed to confirm a date. Cities whose round already ran are alumni and are excluded.`} />
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                           {poolData.paidThreshold.map((city: { city: string; label: string; count: number; threshold: number }) => {
                             const progress = Math.min((city.count / city.threshold) * 100, 100)
@@ -2495,7 +2503,7 @@ export default function AnalyticsDashboard() {
                               <span className="text-xs font-bold text-[var(--foreground)]">Total Paid</span>
                             </div>
                             <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{poolData.paidTotal ?? 0}</p>
-                            <p className="text-xs text-[var(--muted-foreground)] mt-3">Full-course across all cities</p>
+                            <p className="text-xs text-[var(--muted-foreground)] mt-3">Across cities still collecting — excludes completed rounds (alumni) and the no-city tile</p>
                           </div>
                           {/* Manual / legacy full-course sales with no nominated
                               city — previously invisible on this board. */}
@@ -2630,6 +2638,9 @@ export default function AnalyticsDashboard() {
                               paidNoLocation: j.paidNoLocation,
                               interest: j.interest ?? [],
                               interestTotal: j.interestTotal ?? 0,
+                              // Keep the date-vote panel — omitting it here
+                              // made it vanish after adding one interest row.
+                              dateVotes: j.dateVotes ?? [],
                             })
                           }
                         } catch { /* silent */ }
@@ -2701,8 +2712,8 @@ export default function AnalyticsDashboard() {
                     <SectionTitle title="Online Completers — Ready to Upgrade" subtitle="Online-only buyers who finished all modules and selected a workshop city" />
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                       {poolData.cities.map((city: { city: string; label: string; count: number }) => {
-                        const progress = Math.min((city.count / 8) * 100, 100)
-                        const isReady = city.count >= 8
+                        const progress = Math.min((city.count / UPGRADE_TARGET) * 100, 100)
+                        const isReady = city.count >= UPGRADE_TARGET
                         return (
                           <div
                             key={city.city}
@@ -2713,7 +2724,7 @@ export default function AnalyticsDashboard() {
                               <span className="text-xs font-bold text-[var(--foreground)]">{city.label}</span>
                             </div>
                             <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">
-                              {city.count}<span className="text-sm font-normal text-[var(--muted-foreground)]"> / 8</span>
+                              {city.count}<span className="text-sm font-normal text-[var(--muted-foreground)]"> / {UPGRADE_TARGET}</span>
                             </p>
                             <div className="mt-2 w-full bg-[rgba(13,115,119,0.08)] rounded-full h-1.5">
                               <div
@@ -2722,7 +2733,7 @@ export default function AnalyticsDashboard() {
                               />
                             </div>
                             <p className="text-xs text-[var(--muted-foreground)] mt-1">
-                              {isReady ? 'Ready to schedule!' : `${8 - city.count} more needed`}
+                              {isReady ? 'Ready to schedule!' : `${UPGRADE_TARGET - city.count} more needed`}
                             </p>
                           </div>
                         )
@@ -2740,7 +2751,7 @@ export default function AnalyticsDashboard() {
                     {/* Per-city interest tables */}
                     {poolData.cities.map((city: { city: string; label: string; count: number; registrations: Array<{ name: string; email: string; registeredAt: string }> }) => (
                       <div key={city.city}>
-                        <SectionTitle title={`${city.label} — Interest (${city.count})`} subtitle={city.count >= 8 ? 'Threshold reached' : `${8 - city.count} more clinicians needed`} />
+                        <SectionTitle title={`${city.label} — Ready to Upgrade (${city.count})`} subtitle={city.count >= UPGRADE_TARGET ? 'Threshold reached' : `${UPGRADE_TARGET - city.count} more clinicians needed`} />
                         {city.registrations.length === 0 ? (
                           <EmptyState icon={Users} message={`No registrations for ${city.label}`} />
                         ) : (
@@ -3064,8 +3075,11 @@ export default function AnalyticsDashboard() {
                     <button
                       onClick={async () => {
                         const input = document.getElementById('test-email-to') as HTMLInputElement
-                        const to = input?.value
+                        const to = input?.value?.trim()
                         if (!to) return
+                        // Free-text recipient + 18 real sends: a mistyped
+                        // address mails a stranger the whole template set.
+                        if (!confirm(`Send all 18 template emails to ${to}?`)) return
                         const btn = document.getElementById('test-email-btn') as HTMLButtonElement
                         btn.disabled = true
                         btn.textContent = 'Sending...'
@@ -3232,7 +3246,7 @@ export default function AnalyticsDashboard() {
               //   talk request (filled /talk form)        :  50_000
               //   dashboard CTA click (per click)         :  10_000  ← real intent to act
               //   cal.com clicks on 2+ different days     :   5_000  ← scanner-immune
-              //   engaged session (per >30s session)      :   1_000  ← real read
+              //   engaged session (per ≥10s session)      :   1_000  ← real read
               //   time on portal (per minute, cap 30m)    :     100  ← real dwell
               //   return-day views (extra days, gated)    :     500  ← repeat visit
               //   multi-day opens (3+ total, extra days)  :      50  ← MPP-resistant
@@ -3286,12 +3300,12 @@ export default function AnalyticsDashboard() {
                   case 'cal_booked':       return `${p.contactFirstName} booked via cal.com — prep notes for the call, no manual outreach needed.`
                   case 'preseason_signup': return `${p.contactFirstName} registered for the free pre-season baseline-testing tool — strongest free-content signal (filled the form for athlete-testing). Personal email today, lead with how the Hub Pack / on-site cohort builds on the baseline data.`
                   case 'scat_course_signup': return `${p.contactFirstName} signed up for the free SCAT mastery course — submitted email for clinical content. Personal email today, reference the course + offer the deeper hub.`
-                  case 'portal_deep_dive': return `${p.contactFirstName} viewed ${p.portalUniqueSections} sections with ${p.portalEngagedSessions} engaged session${p.portalEngagedSessions === 1 ? '' : 's'} >30s${p.portalDeepestSection ? ` (deepest: ${p.portalDeepestSection.replace(/-/g, ' ')})` : ''} — genuine deep read. Personal note within 48h.`
+                  case 'portal_deep_dive': return `${p.contactFirstName} viewed ${p.portalUniqueSections} sections with ${p.portalEngagedSessions} engaged session${p.portalEngagedSessions === 1 ? '' : 's'} ≥10s${p.portalDeepestSection ? ` (deepest: ${p.portalDeepestSection.replace(/-/g, ' ')})` : ''} — genuine deep read. Personal note within 48h.`
                   case 'cal_click':        return `${p.contactFirstName} clicked cal.com on ${p.calClickDays} different days — definitely a human. Call today before momentum fades.`
                   case 'return_view':      return `${p.contactFirstName} returned to the dashboard on ${p.viewDays} different days with real dwell — research mode. Personal note within 48h.`
                   case 'portal_long_dwell':return `${p.contactFirstName} spent ${fmtTime(p.portalMaxDwellMs ?? 0)} on the dashboard in a single session — genuine read. Personal email this week.`
                   case 'multi_day_opens':  return `Opens on ${p.openDays} separate days (${p.totalOpens} total) — sustained interest, not MPP noise. Soft nudge ahead of next auto-send.`
-                  case 'scanner_suspect':  return `${p.realSessions} portal session${p.realSessions === 1 ? '' : 's'} but all under 30s = anti-malware scanner pre-fetch (Defender/Cloudflare etc render the page to inspect links). Treat as no signal — let auto-sequence handle.`
+                  case 'scanner_suspect':  return `${p.realSessions} portal session${p.realSessions === 1 ? '' : 's'} but none reached 10s = anti-malware scanner pre-fetch (Defender/Cloudflare etc render the page to inspect links). Treat as no signal — let auto-sequence handle.`
                   case 'product_click':    return `${p.contactFirstName} only clicked through from the email. Likely anti-malware scanner pre-fetch — let auto-sequence handle.`
                   case 'single_view':      return `Single portal view — let auto T2 deliver, gates the price reveal.`
                   case 'single_open':      return `Single open only — likely Apple Mail Privacy prefetch. Auto-sequence handles it.`
@@ -3399,7 +3413,7 @@ export default function AnalyticsDashboard() {
               // Derived data sets for sub-tabs
               const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000
               // Re-engage queue — REAL signals only (opens/clicks excluded:
-              // tracking off, scanner-polluted). Qualifies on ≥60s portal dwell,
+              // tracking off, scanner-polluted). Qualifies on ≥10s portal dwell,
               // a dashboard CTA click, multi-day cal clicks, or a free-content
               // signup. Ranked by the server's scanner-aware engagementScore.
               const reEngageQueue = prospects
@@ -4518,7 +4532,7 @@ export default function AnalyticsDashboard() {
 
                       {/* ── 6 · COLD-OUTREACH FUNNEL · full path from pool to booking ──
                           Trustworthy signals only: pooled → Hunter-verified →
-                          T1/T2/T3 sent → delivered → REAL portal views (≥60s
+                          T1/T2/T3 sent → delivered → REAL portal views (≥10s
                           dwell or CTA click, scanner-filtered) → REPLIED →
                           booked → won. Opens/clicks are EXCLUDED from the funnel
                           (tracking off, scanner-polluted) and shown greyed below
@@ -4640,7 +4654,7 @@ export default function AnalyticsDashboard() {
                         // signal appear in this table.
                         //
                         // Verifiable real human signals (any one qualifies):
-                        //   - Engaged portal session >60s (real dwell)
+                        //   - Engaged portal session ≥10s (real dwell)
                         //   - Dashboard CTA click (JS event, scanner immune)
                         //   - Cal multi-day click (scanner only fetches once)
                         //   - Free-content signup (form submission)
@@ -4672,7 +4686,7 @@ export default function AnalyticsDashboard() {
                             <div className="card rounded-2xl p-6 text-center bg-slate-50/40">
                               <div className="text-sm font-semibold text-[var(--foreground)] mb-1">No real human engagement yet</div>
                               <p className="text-xs text-[var(--muted-foreground)] max-w-xl mx-auto leading-relaxed">
-                                After stripping scanner-suspect activity (mail-gateway pre-fetches, headless Chrome renders), zero prospects show verified human signals: no &gt;60s portal sessions, no dashboard CTA clicks, no multi-day cal clicks, no free-content signups, no replies, no bookings.
+                                After stripping scanner-suspect activity (mail-gateway pre-fetches, headless Chrome renders), zero prospects show verified human signals: no ≥10s portal sessions, no dashboard CTA clicks, no multi-day cal clicks, no free-content signups, no replies, no bookings.
                                 <br /><br />
                                 <strong>This is the honest pipeline state.</strong> New T1 batch firing today should produce first real signals within 5-10 days as emails reach actual human inboxes (post-deliverability-fixes).
                               </p>
@@ -4747,7 +4761,7 @@ export default function AnalyticsDashboard() {
                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">🤖 scanner</span>
                                           ) : (
                                             <>
-                                              {(p.portalEngagedSessions ?? 0) > 0 && <span className="text-rose-700 font-bold">🔥 {p.portalEngagedSessions} session{p.portalEngagedSessions === 1 ? '' : 's'} &gt;60s</span>}
+                                              {(p.portalEngagedSessions ?? 0) > 0 && <span className="text-rose-700 font-bold">🔥 {p.portalEngagedSessions} session{p.portalEngagedSessions === 1 ? '' : 's'} ≥10s</span>}
                                               {(p.portalEngagedSessions ?? 0) > 0 && (p.portalTotalDwellMs ?? 0) > 0 && <span className="text-[var(--foreground)]"> · {fmtTime(p.portalTotalDwellMs ?? 0)}</span>}
                                             </>
                                           )}
@@ -5491,7 +5505,7 @@ export default function AnalyticsDashboard() {
                         } else if (sp.replies > 0) {
                           verdict = { tone: 'done', headline: '✓ Replied — respond inside 2hrs', copy: `Direct reply received. Auto-sequence paused. Personal reply now.` }
                         } else if (sp.scannerSuspect && sp.outreachStatus !== 'go') {
-                          verdict = { tone: 'monitor', headline: '🤖 SCANNER SUSPECT — let auto-sequence handle', copy: `${sp.realSessions} portal session${sp.realSessions === 1 ? '' : 's'} recorded but all under 30s (total ${fmtTime(sp.portalTotalDwellMs ?? 0)}). This is the anti-malware link-inspector pattern (Defender ATP, Cloudflare Email Security, etc) — headless Chrome renders the page, fires IntersectionObserver for every section, then closes in 2-3s. No real human read. Don't waste a personal email — let T2 deliver.` }
+                          verdict = { tone: 'monitor', headline: '🤖 SCANNER SUSPECT — let auto-sequence handle', copy: `${sp.realSessions} portal session${sp.realSessions === 1 ? '' : 's'} recorded but none reached 10s (total ${fmtTime(sp.portalTotalDwellMs ?? 0)}). This is the anti-malware link-inspector pattern (Defender ATP, Cloudflare Email Security, etc) — headless Chrome renders the page, fires IntersectionObserver for every section, then closes in 2-3s. No real human read. Don't waste a personal email — let T2 deliver.` }
                         } else if (sp.outreachStatus === 'go') {
                           const daysLeft = Math.max(0, Math.floor((168 - (hoursSinceSignal ?? 0)) / 24))
                           verdict = { tone: 'go', headline: `🟢 GO NOW — ${daysLeft}d window`, copy: `${sp.contactFirstName} crossed the hot threshold ${Math.floor((hoursSinceSignal ?? 0) / 24)}d ago and has had time to digest T1. Personal email today — reference their strongest signal (${sp.topSignal?.replace(/_/g, ' ') ?? 'engagement'}). Window closes in ${daysLeft}d before they cool.` }
@@ -5775,7 +5789,7 @@ export default function AnalyticsDashboard() {
                           <div className={`bg-white rounded-lg p-4 mb-4 ${sp.scannerSuspect ? 'border border-amber-300' : ''}`}>
                             {sp.scannerSuspect && (
                               <div className="mb-3 p-2 rounded bg-amber-50 border border-amber-200 text-[11px] text-amber-900">
-                                <strong>🤖 Scanner-suspect data.</strong> All {sp.realSessions} portal session{sp.realSessions === 1 ? '' : 's'} were under 30s — likely Defender/Cloudflare link inspector rendering the page in headless Chrome. Section views and dwell numbers below are NOT human interactions.
+                                <strong>🤖 Scanner-suspect data.</strong> All {sp.realSessions} portal session{sp.realSessions === 1 ? '' : 's'} were under 10s — likely Defender/Cloudflare link inspector rendering the page in headless Chrome. Section views and dwell numbers below are NOT human interactions.
                               </div>
                             )}
                             <div className="flex items-center justify-between mb-3">
@@ -5815,7 +5829,7 @@ export default function AnalyticsDashboard() {
                                 <div className="text-[10px] uppercase tracking-wider text-[var(--accent)] font-bold">🔥 Engaged sessions</div>
                                 <div className="text-xl font-bold text-[var(--accent)] tabular-nums">{sp.portalEngagedSessions ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">/ {sp.realSessions ?? 0}</span></div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
-                                  sessions {'>'}30s (not a bounce)
+                                  sessions ≥10s (not a bounce)
                                 </div>
                               </div>
                             </div>
@@ -5848,9 +5862,9 @@ export default function AnalyticsDashboard() {
                                 : (sp.portalUniqueSections ?? 0) >= 5 && (sp.portalMaxDwellMs ?? 0) >= 60_000
                                   ? `Deep dive (${sp.portalUniqueSections} sections, ${fmtTime(sp.portalMaxDwellMs ?? 0)} longest session) — serious research mode.`
                                   : (sp.portalEngagedSessions ?? 0) >= 1
-                                    ? `${sp.portalEngagedSessions} engaged session${sp.portalEngagedSessions === 1 ? '' : 's'} (>30s) — they read it. Soft nudge or let auto-sequence handle.`
+                                    ? `${sp.portalEngagedSessions} engaged session${sp.portalEngagedSessions === 1 ? '' : 's'} (≥10s) — they read it. Soft nudge or let auto-sequence handle.`
                                     : (sp.realSessions ?? 0) > 0
-                                      ? `${sp.realSessions} portal session${sp.realSessions === 1 ? '' : 's'} but all under 30s — bounced. Auto-sequence handles.`
+                                      ? `${sp.realSessions} portal session${sp.realSessions === 1 ? '' : 's'} but none reached 10s — bounced. Auto-sequence handles.`
                                       : 'No real portal engagement yet — let T2/T3 deliver.'}
                             </div>
                           </div>
