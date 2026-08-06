@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { scatModules } from '@/data/scat-modules'
 import { createUser, findUserByEmail, updateLastLogin } from '@/lib/users'
 import { hasElevatedEntitlement } from '@/lib/account-escalation'
 import { createJWTSession } from '@/lib/jwt-session'
@@ -207,12 +208,12 @@ export async function POST(request: NextRequest) {
               <div class="content">
                 <p>Hi ${escapeHtml(userName.split(' ')[0])},</p>
 
-                <p>Module 1 is ready. It takes about 20 minutes and covers the rule most clinicians get wrong: <strong>when to use SCAT6 vs SCOAT6</strong>.</p>
+                <p>Module 1 is ready. It takes about ${scatModules[0].duration} and covers the rule most clinicians get wrong: <strong>when to use SCAT6 vs SCOAT6</strong>.</p>
 
                 <p>Using the wrong tool at the wrong time isn't just poor practice &mdash; it's a failure of standard of care with medicolegal consequences. Module 1 covers the distinction, red flag recognition, and when to refer.</p>
 
                 <center>
-                  <a href="${startModuleLink}" class="cta-btn">Start Module 1 &mdash; SCAT6 Essentials (10 minutes)</a>
+                  <a href="${startModuleLink}" class="cta-btn">Start Module 1 &mdash; SCAT6 Essentials (${scatModules[0].duration})</a>
                   <p style="margin: 8px 0 0; font-size: 13px;">
                     <a href="${baseUrl}/dashboard" style="color: #64748b;">or go to your dashboard</a>
                   </p>

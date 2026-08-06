@@ -161,6 +161,34 @@ describe('no lifecycle email can render a broken merge field', () => {
   })
 })
 
+describe('cold-outreach personalisation cannot mislabel the recipient', () => {
+  it('dominantDiscipline can actually return every discipline it accepts', async () => {
+    const { dominantDiscipline } = await import('@/lib/prospect/pricing')
+    const zero = {
+      osteopaths: 0, physiotherapists: 0, chiropractors: 0, generalPractitioners: 0,
+      sportsMedicineDoctors: 0, exercisePhys: 0, myotherapists: 0, remedialMassage: 0,
+      practiceManager: 0, admin: 0,
+    }
+    for (const d of Object.keys(zero) as Array<keyof typeof zero>) {
+      // A clinic that is ONLY this discipline must resolve to it. 'chiropractors'
+      // was missing from the ranking array, so chiro clinics silently resolved
+      // to 'osteopaths' and were told "most osteos in <city> aren't set up yet".
+      expect(dominantDiscipline({ ...zero, [d]: 5 }), `${d} is unreachable`).toBe(d)
+    }
+  })
+
+  it('partner greetings never render a title or a role word as a first name', async () => {
+    const { partnerFirstName } = await import('@/app/api/cron/partner-process-scheduled/route')
+    expect(partnerFirstName('Dr Michael Rowe')).toBe('Michael')
+    expect(partnerFirstName('Prof. Anna Lee')).toBe('Anna')
+    expect(partnerFirstName('Head of Sport')).toBe('there')
+    expect(partnerFirstName('Reception')).toBe('there')
+    expect(partnerFirstName('John (Director)')).toBe('John')
+    expect(partnerFirstName('')).toBe('there')
+    expect(partnerFirstName(null)).toBe('there')
+  })
+})
+
 describe('opt-out plumbing', () => {
   it('unsubscribeUser does not swallow the email_suppression write', () => {
     const src = read('lib/users.ts')

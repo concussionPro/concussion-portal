@@ -80,6 +80,28 @@ function partnerUnsubHeaders(email: string): Record<string, string> {
 
 /** Followup touches (Zac 2026-07-01). Gentle, value-first, no "free", never
  *  references browsing. The final touch offers a clean opt-out. */
+/**
+ * First name for the greeting, or 'there'.
+ *
+ * The old guard only rejected reception/office/general and then took
+ * `split(' ')[0]` — so "Dr Michael Rowe" greeted "Hi Dr," and "Head of Sport"
+ * greeted "Hi Head,". Strip honorifics first, then reject a leading role word.
+ * Mirrors safeFirstName() in lib/prospect/email-templates.ts.
+ */
+const PARTNER_ROLE_WORD =
+  /^(reception|receptionist|office|general|admin|administration|info|enquiries|enquiry|contact|team|manager|director|principal|owner|founder|partner|ceo|head|chief|coach|coordinator|secretary|president|unknown|n\/a|na|none|test)$/i
+
+export function partnerFirstName(raw: string | null | undefined): string {
+  const cleaned = (raw ?? '')
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/^\s*(dr|doctor|prof|professor|mr|mrs|ms|miss|mx)\.?\s+/i, '')
+    .trim()
+  if (!cleaned) return 'there'
+  const first = cleaned.split(/\s+/)[0].replace(/[^\p{L}'-]/gu, '')
+  if (!first || PARTNER_ROLE_WORD.test(first)) return 'there'
+  return first
+}
+
 function buildFollowup(stage: 'followup' | 'final', name: string, slug: string, firstName: string) {
   const link = `${BASE}/partners/${slug}`
   if (stage === 'followup') {
@@ -186,8 +208,7 @@ export async function GET(request: NextRequest) {
   for (const inst of followEligible) {
     await new Promise((r) => setTimeout(r, 700))
     const stage: 'followup' | 'final' = inst.touches === 1 ? 'followup' : 'final'
-    const firstName = (inst.contact_name && !/reception|office|general/i.test(inst.contact_name))
-      ? inst.contact_name.split(' ')[0] : 'there'
+    const firstName = partnerFirstName(inst.contact_name)
     const { subject, text, html } = buildFollowup(stage, inst.name, inst.slug, firstName)
     const scheduledAt = new Date(runStart + staggerMs).toISOString()
     staggerMs += STAGGER_MIN_MS + Math.random() * (STAGGER_MAX_MS - STAGGER_MIN_MS)
@@ -283,8 +304,7 @@ export async function GET(request: NextRequest) {
       continue
     }
 
-    const firstName = (inst.contact_name && !/reception|office|general/i.test(inst.contact_name))
-      ? inst.contact_name.split(' ')[0] : 'there'
+    const firstName = partnerFirstName(inst.contact_name)
     const { subject, text, html } = buildPitch(inst.name, inst.slug, firstName)
     const scheduledAt = new Date(runStart + staggerMs).toISOString()
     staggerMs += STAGGER_MIN_MS + Math.random() * (STAGGER_MAX_MS - STAGGER_MIN_MS)

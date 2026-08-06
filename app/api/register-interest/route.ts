@@ -189,7 +189,7 @@ function buildConfirmationEmail(name: string, city: string): string {
       </p>
 
       <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
-        Thanks for registering your interest in our <strong>${city} hands-on workshop</strong>. We're finalising the date and venue — you'll be the first to know when it's confirmed.
+        Thanks for registering your interest in our <strong>${city} hands-on workshop</strong>. We run these city by city as demand builds — a date and venue are set once enough clinicians register there, and you'll be the first to know when yours is confirmed.
       </p>
 
       <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 20px; margin: 24px 0;">
