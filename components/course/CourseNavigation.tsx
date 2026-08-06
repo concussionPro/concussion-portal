@@ -27,7 +27,24 @@ export function CourseNavigation({
   const params = useParams()
   const currentModuleId = parseInt(params.id as string)
   const modules = getModulesMeta()
-  const { isModuleComplete, getModuleProgress } = useProgress()
+  const { isModuleComplete: rawIsModuleComplete, getModuleProgress } = useProgress()
+  /**
+   * Course progress lives in localStorage + a server sync (ProgressContext), so
+   * the SERVER render of this nav can only ever show zero completions. That was
+   * invisible while the module player refused to render anything before a
+   * client-side auth check; now that /modules/[id] genuinely server-renders its
+   * content, a returning student with 8/8 complete hydrated a nav full of green
+   * ticks onto a server nav with none — React threw #418 and threw the whole
+   * server tree away (reproduced 2026-08-06: mismatch for the 8/8 account,
+   * clean for a 0/8 account on the identical page).
+   *
+   * Effects never run before hydration, so `hydrated` is false for the
+   * hydrating render on every browser — it matches the server by construction —
+   * and the ticks appear on the very next commit.
+   */
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => { setHydrated(true) }, [])
+  const isModuleComplete = (id: number) => hydrated && rawIsModuleComplete(id)
   const [expandedModules, setExpandedModules] = useState<number[]>([currentModuleId])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
@@ -269,7 +286,11 @@ export function CourseNavigation({
             const isExpanded = expandedModules.includes(module.id)
             const isActive = currentModuleId === module.id
             const isComplete = isModuleComplete(module.id)
-            const progress = getModuleProgress(module.id)
+            // Same hydration rule as isModuleComplete above — the quiz tick a
+            // few lines down is read straight off this object.
+            const progress = hydrated
+              ? getModuleProgress(module.id)
+              : { quizCompleted: false, quizScore: null, quizTotalQuestions: null }
 
             return (
               <div key={module.id} className="space-y-0.5">

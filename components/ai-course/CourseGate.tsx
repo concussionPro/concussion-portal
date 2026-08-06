@@ -80,8 +80,15 @@ export async function checkServerAccess(): Promise<GateResult> {
 export async function requireAiCourseAccess(redirectTo?: string): Promise<GateResult> {
   const result = await checkServerAccess()
   if (!result.ok) {
+    if (redirectTo) redirect(redirectTo)
+    // Same loop as lib/course-access.ts (see that comment): /login sends an
+    // authenticated visitor back to ?redirect, this gate sends them to /login,
+    // repeat until the browser gives up. 'not-enrolled' means a VALID session
+    // that just hasn't bought — logging in again changes nothing. The AI
+    // course has a real public sales page, so send them there.
+    if (result.reason === 'not-enrolled') redirect('/courses/ai-in-clinical-practice')
     // ?redirect= is the only param /login reads — ?from= was dropped silently.
-    redirect(redirectTo || `/login?redirect=${encodeURIComponent('/courses/ai-in-clinical-practice')}`)
+    redirect(`/login?redirect=${encodeURIComponent('/courses/ai-in-clinical-practice')}`)
   }
   return result
 }

@@ -129,8 +129,18 @@ export async function requireCourseAccess(
 ): Promise<CourseGateResult> {
   const result = await checkCourseServerAccess(slug)
   if (!result.ok) {
+    if (redirectTo) redirect(redirectTo)
+    // A SIGNED-IN visitor who simply doesn't own this course must never be
+    // sent to /login: /login bounces an authenticated visitor straight back to
+    // ?redirect, this gate bounces them to /login again, and the tab spins
+    // forever. Measured on /courses/vagus-nerve, 2026-08-06: 102 navigations
+    // in 8 seconds, blank page, no way out but the address bar. Logging in
+    // cannot fix "not entitled", so /login was never the right answer for
+    // them. Send them to the public course index instead — a real page that
+    // lists what they can actually buy.
+    if (result.reason === 'not-entitled') redirect('/courses')
     // ?redirect= is the only param /login reads — ?from= was dropped silently.
-    redirect(redirectTo || `/login?redirect=${encodeURIComponent(`/courses/${slug}`)}`)
+    redirect(`/login?redirect=${encodeURIComponent(`/courses/${slug}`)}`)
   }
   return result
 }

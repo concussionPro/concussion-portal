@@ -123,7 +123,7 @@ export default function AuClinicsPage() {
               style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}>
               See a sample RTP data summary
             </a>
-            <Link href="/demo/clinic"
+            <Link href="/demo/clinic" prefetch={false}
               className="rounded-[13px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[14px] text-[14.5px] font-bold leading-none text-slate-900">
               Tour the clinician workspace
             </Link>

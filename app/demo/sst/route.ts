@@ -13,10 +13,18 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { DEMO_KEY } from '@/lib/demo-key'
+import { isPrefetchRequest } from '@/lib/prefetch-guard'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  // A prefetch must never GRANT anything. Scrolling a public page into
+  // view prefetches this link, and this route hands out access.
+  // See lib/prefetch-guard.ts.
+  if (isPrefetchRequest(request)) {
+    return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
+  }
+
   // Land on /sst-trainer, NOT /platform/app: the global Permissions-Policy
   // blocks camera on /platform/app (camera=()), while /sst-trainer has the
   // camera=(self) + bluetooth=(self) carve-out AND the PWA manifest/service

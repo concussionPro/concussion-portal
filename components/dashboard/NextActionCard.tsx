@@ -11,14 +11,27 @@ import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download,
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
-import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+import { COURSES, getEffectivePrice, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
 import { trackEvent } from '@/lib/analytics'
 
 // Short-course cross-sell for completers — sourced from the catalogue (single
 // source of truth for price + CPD hours) so this copy can never drift from checkout.
+//
+// The status/purchasability filter is NOT optional, and this list did not have
+// it while components/dashboard/BentoGrid.tsx (the same cross-sell, same
+// catalogue) always did. The consequence, measured 2026-08-06: this card
+// advertised "The Vagus Nerve in Clinical Practice · 1 CPD hr · A$82" to every
+// signed-in customer, linking to c.route = /courses/vagus-nerve. That page is
+// requireCourseAccess('vagus-nerve') — enrolled-only — so a signed-in
+// non-owner was sent to /login, which sends a signed-in user straight back:
+// 102 navigations in 8 seconds and a permanently blank tab. The course is
+// `status: 'pilot'` with an explicit "hidden from public pricing display until
+// a proper funnel exists" note in the catalogue, so it should never have been
+// on a customer dashboard at a price in the first place.
 const CROSS_SELL_COURSES = ['ai-in-clinical-practice', 'vagus-nerve']
   .map(id => COURSES.find(c => c.id === id))
-  .filter((c): c is NonNullable<typeof c> => !!c)
+  .filter((c): c is NonNullable<typeof c> =>
+    !!c && c.purchasableViaCheckout && getEffectiveStatus(c) === 'live')
 
 // Ready-to-Train waiting-pool NOMINATION selector — all cities stay listed,
 // including ones whose last round has already run (a completed city simply

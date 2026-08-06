@@ -619,9 +619,19 @@ export default function SCAT6Client() {
                 ].map(({ key, label }) => (
                   <div key={key} className="bg-white rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-200 gap-2">
                     <span className="text-sm font-medium text-slate-700 sm:w-1/3">{label}</span>
-                    <div className="flex gap-1 sm:gap-2">
+                    {/* 7 × min-w-[44px] + gaps = 332px, and with the card and
+                        page padding that measured 419px on a 375px viewport —
+                        the "6" column sat 44px off-screen with no horizontal
+                        scroll container, so the highest symptom rating on the
+                        SCAT6 could not be tapped on an iPhone. This form is
+                        used one-handed at pitch-side; 60%+ of the audience is
+                        on mobile. Distribute the seven targets across the row
+                        instead of forcing a fixed floor that doesn't fit: each
+                        still lands ~45px wide at 375px, and 44px tall is
+                        unchanged. (Matrix sweep at 375px, 2026-08-06.) */}
+                    <div className="flex gap-1 sm:gap-2 w-full sm:w-auto">
                       {[0, 1, 2, 3, 4, 5, 6].map(value => (
-                        <label key={value} className="min-h-[44px] min-w-[44px] sm:min-w-0 flex flex-col items-center justify-center cursor-pointer rounded-lg hover:bg-slate-50">
+                        <label key={value} className="min-h-[44px] flex-1 basis-0 min-w-0 sm:flex-none sm:min-w-0 flex flex-col items-center justify-center cursor-pointer rounded-lg hover:bg-slate-50">
                           <input
                             type="radio"
                             name={key}

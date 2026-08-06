@@ -17,10 +17,18 @@
  * 'heidi user' analytics (demo acceptances + activity) light up unchanged.
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { isPrefetchRequest } from '@/lib/prefetch-guard'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  // A prefetch must never GRANT anything. Scrolling a public page into
+  // view prefetches this link, and this route hands out access.
+  // See lib/prefetch-guard.ts.
+  if (isPrefetchRequest(request)) {
+    return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
+  }
+
   const dest = new URL('/courses', request.url)
   const key = process.env.HEIDI_DEMO_KEY
   if (!key) return NextResponse.redirect(dest)

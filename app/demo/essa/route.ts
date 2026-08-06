@@ -8,10 +8,18 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { DEMO_KEY } from '@/lib/demo-key'
+import { isPrefetchRequest } from '@/lib/prefetch-guard'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  // A prefetch must never GRANT anything. Scrolling a public page into
+  // view prefetches this link, and this route hands out access.
+  // See lib/prefetch-guard.ts.
+  if (isPrefetchRequest(request)) {
+    return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
+  }
+
   const dest = new URL('/ep-course/dashboard', request.url)
 
   const res = NextResponse.redirect(dest)

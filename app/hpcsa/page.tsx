@@ -148,7 +148,7 @@ export default function HpcsaLandingPage() {
           </p>
 
           <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[13px] font-semibold">
-            <Link href="/demo/review-hpcsa" className="text-teal-700 hover:underline">
+            <Link href="/demo/review-hpcsa" prefetch={false} className="text-teal-700 hover:underline">
               Review the full course →
             </Link>
             <Link href="/sst-trainer?clinic=DEMO00" className="text-teal-700 hover:underline">

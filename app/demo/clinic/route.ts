@@ -51,7 +51,35 @@ async function logTourStart(req: NextRequest) {
  * NEVER the reviewer DEMO_KEY — that cookie opens paid course content and
  * is not for prospects.
  */
+/**
+ * A Next.js <Link> PREFETCHES its target as soon as it renders. This route is a
+ * GET with two side effects — it mints an identity and it writes the
+ * demo_tour_start analytics row — so every <Link href="/demo/clinic"> fired both
+ * of them without anyone clicking anything.
+ *
+ * Measured 2026-08-06: loading the PUBLIC patient entry /sst-trainer (74
+ * sessions/90d, the PWA install target, three such links on the page) left the
+ * browser holding `clinic_demo` + a `session` cookie for the synthetic Clinic
+ * Demo user. A patient who opened the trainer was signed into the portal as a
+ * prospect demo, and demo_tour_start — THE conversion signal for the ACC
+ * outreach — counted them.
+ *
+ * The links now carry prefetch={false}; this is the belt-and-braces so a link
+ * added later cannot reintroduce it. A real click is a top-level navigation and
+ * carries neither header.
+ */
+function isPrefetch(req: NextRequest): boolean {
+  return (
+    req.headers.get('next-router-prefetch') === '1' ||
+    (req.headers.get('purpose') || '').toLowerCase() === 'prefetch' ||
+    (req.headers.get('x-purpose') || '').toLowerCase() === 'preview'
+  )
+}
+
 export async function GET(req: NextRequest) {
+  if (isPrefetch(req)) {
+    return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
+  }
   await logTourStart(req)
   const res = NextResponse.redirect(new URL('/clinical-testing', req.url))
   const maxAge = 30 * 24 * 60 * 60

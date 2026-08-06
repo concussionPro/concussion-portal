@@ -422,6 +422,29 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
     isInitialized,
   } = useProgress()
 
+  /**
+   * DISPLAY-ONLY view of progress.
+   *
+   * Progress is localStorage-backed (ProgressContext), so the SERVER render of
+   * this page necessarily shows zero completions. Now that the page really
+   * server-renders (see CourseModulePage.initialAuth), a returning student with
+   * the module already complete hydrated a "Completed" badge onto server HTML
+   * that had none — React #418, and the entire server tree discarded. Effects
+   * never run before hydration, so this flag is false for exactly the hydrating
+   * render and the badge appears on the next commit.
+   *
+   * It MUST NOT touch logic. An earlier attempt shadowed `isModuleComplete`
+   * itself, and the auto-complete effect below — which asks "can complete AND
+   * not already complete?" — read `false` for one commit and re-ran the whole
+   * completion flow on a module the student finished weeks ago, throwing the
+   * full-screen "Module Complete!" celebration over the content they came back
+   * to re-read. Caught before shipping, 2026-08-06. Display gets the gate;
+   * every completion, certificate and quiz decision keeps the real value.
+   */
+  const [progressHydrated, setProgressHydrated] = useState(false)
+  useEffect(() => { setProgressHydrated(true) }, [])
+  const showsAsComplete = (id: number) => progressHydrated && isModuleComplete(id)
+
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
   // In-progress answers hydrate from the server-synced ProgressContext AFTER
   // the server load completes (isInitialized). Hydrating in the useState
@@ -436,7 +459,13 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
   const [visitedSections, setVisitedSections] = useState<Set<number>>(new Set([0]))
   const contentAreaRef = useRef<HTMLDivElement>(null)
 
-  const moduleProgress = getModuleProgress(progressId)
+  // Same hydration rule as isModuleComplete above: the quiz result, the score
+  // line and the "Completed" markers all read straight off this object, and the
+  // server has none of it.
+  const realModuleProgress = getModuleProgress(progressId)
+  const moduleProgress = progressHydrated
+    ? realModuleProgress
+    : { ...realModuleProgress, completed: false, quizCompleted: false, quizScore: null, quizTotalQuestions: null, quizAttempts: 0 }
 
   // Determine if user has full access based on API response
   const hasFullAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
@@ -1215,7 +1244,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                       Module {headerModuleNo}
                     </span>
-                    {isModuleComplete(progressId) && (
+                    {showsAsComplete(progressId) && (
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200">
                         <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
                         Completed
@@ -1256,7 +1285,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               <h1 className="text-lg font-bold text-slate-900 tracking-tight truncate">
                 {module.title}
               </h1>
-              {isModuleComplete(progressId) && (
+              {showsAsComplete(progressId) && (
                 <CheckCircle2 className="w-4 h-4 text-teal-600 flex-shrink-0" strokeWidth={2.5} />
               )}
               {/* Sync status indicator */}
@@ -1910,7 +1939,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
             </div>
           )}
 
-          {!showCompleteButton && !isModuleComplete(progressId) && (
+          {!showCompleteButton && !showsAsComplete(progressId) && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6">
               <h3 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">
                 Completion Requirements

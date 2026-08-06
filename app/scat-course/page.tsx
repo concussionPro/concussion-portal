@@ -148,9 +148,12 @@ export default function SCATCoursePage() {
               <h1 className="text-3xl font-bold mb-2">Free SCAT6/SCOAT6 Mastery Course</h1>
               <p className="text-blue-100">Welcome back! Finish all modules and get <span className="font-bold text-white">${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off</span> the full online course.</p>
             </div>
-            <div className="text-right">
+            {/* min-w-0 + break: an email address is one unbreakable token, so
+                without these the header pushed the page 14px wider than a 375px
+                viewport and the whole course scrolled sideways. */}
+            <div className="text-left sm:text-right min-w-0">
               <div className="text-sm text-blue-100 mb-1">Logged in as</div>
-              <div className="font-semibold">{userEmail}</div>
+              <div className="font-semibold break-all">{userEmail}</div>
             </div>
           </div>
 

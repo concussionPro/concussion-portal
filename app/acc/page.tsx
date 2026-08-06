@@ -134,14 +134,14 @@ export default function AccSupplierPage() {
               booking one click away. Never "email me" as the first ask. */}
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/demo/acc"
+              href="/demo/acc" prefetch={false}
               className="flex cursor-pointer items-center rounded-[13px] px-[22px] py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
               style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.7)' }}
             >
               See a sample ACC884
             </Link>
             <Link
-              href="/demo/clinic"
+              href="/demo/clinic" prefetch={false}
               className="flex items-center rounded-[13px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[15px] text-[15px] font-bold leading-none text-slate-900 transition-transform active:scale-[0.98]"
             >
               Tour the clinician workspace
@@ -249,7 +249,7 @@ export default function AccSupplierPage() {
             </p>
           </div>
           <Link
-            href="/demo/acc"
+            href="/demo/acc" prefetch={false}
             className="flex items-center rounded-[12px] border-[1.5px] border-slate-300 bg-white px-4 py-2.5 text-[13.5px] font-bold leading-none text-slate-900"
           >
             Open full screen →
@@ -295,7 +295,7 @@ export default function AccSupplierPage() {
             <strong className="text-slate-900"> Walk through it yourself</strong> — no sign-in, every patient fabricated.
           </p>
           <Link
-            href="/demo/clinic"
+            href="/demo/clinic" prefetch={false}
             className="rounded-[12px] px-5 py-3 text-[14px] font-bold leading-none text-white"
             style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
           >

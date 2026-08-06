@@ -85,7 +85,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
                 saved. Measured 2026-08-06: this page took 55 sessions in 28
                 days with a 96% one-page rate and no demo reachable from it. */}
             <Link
-              href="/demo/clinic"
+              href="/demo/clinic" prefetch={false}
               className="flex items-center gap-2 rounded-[13px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[15px] text-[15px] font-bold leading-none text-slate-900 transition-transform active:scale-[0.98]"
             >
               I&rsquo;m a clinician — open the demo →
@@ -138,7 +138,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
           </div>
           <p className="mt-3 text-center text-[13px] text-slate-500">
             Prefer to click around?{' '}
-            <Link href="/demo/clinic" className="font-semibold text-slate-900 underline">
+            <Link href="/demo/clinic" prefetch={false} className="font-semibold text-slate-900 underline">
               Open the demo workspace
             </Link>{' '}
             — real clinic, sample patients, nothing saved.
@@ -268,7 +268,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
                 Get your clinic code
               </Link>
               <Link
-                href="/demo/clinic"
+                href="/demo/clinic" prefetch={false}
                 className="rounded-[12px] border-[1.5px] border-slate-300 bg-white px-5 py-[14px] text-[14px] font-bold leading-none text-slate-900 transition-transform active:scale-[0.98]"
               >
                 Try it with sample patients
