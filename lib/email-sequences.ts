@@ -694,6 +694,59 @@ export const SCAT_COMPLETION_UPSELL = {
   `),
 }
 
+/**
+ * SCAT6 Mastery — finished Module 1, stalled before finishing the course.
+ *
+ * WHY THIS EXISTS (2026-08-06, owner-approved).
+ *
+ * SCAT_COMPLETION_UPSELL carries the $50 ladder code, and it requires all THREE
+ * modules. Measured: it has been sent 22 times in its entire life, against 260
+ * for the day-0 lane and 171 for day-42. The offer was not underperforming — it
+ * was barely being made.
+ *
+ * The funnel says why. Of everyone who ever opened the free course:
+ *     116 started Module 1
+ *      37 FINISHED Module 1     <- 68% quit inside the first module
+ *      29 finished Module 2
+ *      26 finished Module 3
+ *
+ * The gate sat well past the point where two thirds had already stopped.
+ *
+ * The obvious "fix" — widen the existing lane to Module 1 completers — would
+ * have sent people an email opening "You've finished the SCAT6 Mastery course"
+ * when they had finished a third of it. That is a false claim to a clinician
+ * about their own CPD record, so this is a separate email that says something
+ * true: you finished Module 1, here are the two that are left, and here is the
+ * code when you want it.
+ *
+ * Deliberately keyed on FINISHING Module 1, not starting one. Starting is a
+ * click; finishing is intent, and it is the point where someone has actually
+ * seen the teaching quality. It also keeps the discount from being handed to
+ * anyone who merely signed up, which would cheapen it.
+ */
+export const SCAT_MODULE1_LADDER = {
+  subject: 'Module 1 done — two short ones left',
+  template: (name: string, loginLink: string, pricingLink: string) => emailShell(`
+    <h2>Nice work, ${greetingName(name)}</h2>
+    <p>You finished <strong>Module 1</strong> of SCAT6 Mastery. There are two modules left and they're the short ones &mdash; most people finish both in about twenty minutes.</p>
+    <p>Finishing the set gets you the certificate and the full SCAT6 administration workflow, which is the part clinicians tell us changes how their first appointment runs.</p>
+    <center><a href="${utm(loginLink, 'scat_module1_ladder', 'finish_course')}" class="cta-btn">Pick up where you left off</a></center>
+    <div class="callout">
+      <strong>And when you're ready for the next step</strong><br><br>
+      The ${CONFIG.COURSE.ONLINE_CPD_POINTS}-hour online course covers what happens after the assessment &mdash; persistent symptoms, phenotype-specific rehab, return-to-play and the documentation that protects you.
+      Use code <strong>${CONFIG.COURSE.PROMO_CODE}</strong> for $50 off.
+    </div>
+    <p style="text-align: center; font-size: 13px; color: #64748b;">
+      <a href="${utm(pricingLink + (pricingLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_module1_ladder', 'see_online_course')}" style="color: #0d9488; font-weight: 600;">See the online course &rarr;</a>
+    </p>
+    <p class="ps">P.S. No rush on the course &mdash; the code doesn't expire. Finishing the free modules is the useful bit either way.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
 // ─── Workshop Threshold Sequences ────────────────────────────────────────────
 
 /**

@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
 import { holdsPracticalDaySeat } from '@/lib/practical-day-seat'
@@ -1063,7 +1063,10 @@ export async function GET(request: Request) {
         const progress = progressRows[0].progress
         if (!progress) continue
 
-        // Check if all 3 SCAT modules (101-103) are completed
+        // Check if all 3 SCAT modules (101-103) are completed.
+        // This lane's copy states "You've finished the SCAT6 Mastery course",
+        // so it must NOT be widened to partial completers — see the separate
+        // stalled-after-module-1 lane below, which says something true instead.
         let allScatDone = true
         for (let i = 101; i <= 103; i++) {
           if (!progress[String(i)]?.completed) {
@@ -1106,6 +1109,80 @@ export async function GET(request: Request) {
         }
       } catch (err) {
         console.error(`[Completion Upsell] Failed for ${redact(user.email)}:`, err)
+      }
+    }
+
+    // ── 8b. Finished Module 1, stalled before finishing the course ──
+    //
+    // The $50 ladder code has only ever been offered to all-three completers:
+    // 22 sends in its entire life, against 260 for the day-0 lane. Of everyone
+    // who opened the free course, 116 started Module 1 and only 37 finished it
+    // — so the offer sat past the point where two thirds had already stopped.
+    //
+    // This lane reaches those who FINISHED Module 1 but not the course, with
+    // copy that says so truthfully (SCAT_COMPLETION_UPSELL opens "You've
+    // finished the SCAT6 Mastery course" and must never be widened to them).
+    // Lane 9 below handles 2-of-3; this is the 1-of-3 gap nobody covered.
+    for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue
+      if (user.accessLevel !== 'preview') continue
+      if (user.nurtureUnsubscribed) continue
+      if (registerQuiet.has(user.email.toLowerCase())) continue
+      if (paysForCrm(user.email)) continue
+
+      try {
+        const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
+        if (progressRows.length === 0) continue
+        const progress = progressRows[0].progress
+        if (!progress) continue
+
+        // Finished module 1 …
+        if (progress['101']?.completed !== true) continue
+        // … but NOT the whole course (those get the real completion upsell) …
+        if (progress['102']?.completed === true && progress['103']?.completed === true) continue
+        // … and not already 2-of-3, which lane 9 ("Almost Done") owns, so the
+        // two lanes cannot both fire at the same person in the same week.
+        if (progress['102']?.completed === true) continue
+
+        const auditKey = `scat_module1_ladder_${user.id}`
+        const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (inserted === 0) continue
+
+        const unsubToken = generateUnsubscribeToken(user.email)
+        const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+        // One-click resume. The whole point of this lane is that they stopped
+        // mid-course; a link that lands on a login wall would recreate the
+        // friction it exists to remove.
+        const resumeLink = generateMagicLinkJWT(
+          user.id,
+          user.email,
+          user.name || 'Student',
+          user.accessLevel as 'preview' | 'online-only' | 'full-course',
+          baseUrl,
+        )
+        const html = SCAT_MODULE1_LADDER.template(user.name || 'there', resumeLink, `${baseUrl}/pricing`)
+          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+
+        const sent = await sendOrRollbackAudit({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: SCAT_MODULE1_LADDER.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'scat-module1-ladder' },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }, auditKey, 'Module 1 ladder')
+        if (sent) {
+          emailsSent++
+          incrementWeeklySent(user.email)
+          console.log(`[Module1 Ladder] → ${redact(user.email)}`)
+        }
+      } catch (err) {
+        console.error(`[Module1 Ladder] Failed for ${redact(user.email)}:`, err)
       }
     }
 
