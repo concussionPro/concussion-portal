@@ -16,6 +16,22 @@
 # deploy. Every test in tests/ is a pure unit or repo-scanning test and needs
 # none of those. Adding a step that needs a secret makes this gate un-runnable
 # locally and skippable on a fork — don't.
+#
+# RULE 3, added 2026-08-06 the hard way. tsc and vitest are both STRUCTURALLY
+# BLIND to route configuration — neither one parses the middleware matcher, the
+# next.config redirect sources, or anything else path-to-regexp compiles. A
+# matcher of `/docs:suffix(-|_)?:rest*` is two adjacent parameters, which Next
+# rejects at BUILD time ("Must have text between two parameters"). tsc printed
+# nothing and 1424 tests passed, so this gate as originally written would have
+# waved it through with a green tick.
+#
+# It shipped. The deploy went to ERROR, production stayed on the previous build,
+# and because that commit was the one DELETING a directory that served the whole
+# paid toolkit unauthenticated, the failed build held a live paywall bypass open
+# for a further eleven minutes. A build failure is not merely "the new thing is
+# missing" — it PINS production to the old state, which is the dangerous half.
+#
+# So the gate builds. It is the only step here that reads route config at all.
 name: CI
 
 on:
@@ -28,7 +44,7 @@ concurrency:
 
 jobs:
   gate:
-    name: typecheck + tests
+    name: typecheck + tests + build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -86,3 +102,30 @@ jobs:
               process.exit(1)
             }
           '
+
+      # The step tsc and vitest cannot stand in for. This compiles the route
+      # manifest, so it is the ONLY thing here that validates a middleware
+      # matcher or a next.config redirect source. It also catches a bad import,
+      # a server/client boundary violation, and a page that throws while being
+      # statically generated — none of which typecheck as errors.
+      #
+      # No secrets: the build must already survive their absence, because Vercel
+      # builds with build-time env only and every runtime secret in this repo is
+      # read inside a request handler. A page that needs a secret AT BUILD TIME
+      # is itself the bug this step should surface.
+      - name: Build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          out="$(npx next build 2>&1)" || {
+            echo "$out"
+            echo "::error::next build failed — this commit would deploy to ERROR and PIN production to the previous build"
+            exit 1
+          }
+          echo "$out" | tail -30
+          # Next exits 0 on some route-config problems while still printing the
+          # parse error, so the text is checked as well as the status.
+          if echo "$out" | grep -qiE "Invalid (route source|source)|Must have text between two parameters|Error parsing"; then
+            echo "::error::route configuration failed to parse — check middleware matcher / next.config sources"
+            exit 1
+          fi
