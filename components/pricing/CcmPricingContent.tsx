@@ -376,35 +376,6 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             </>
           )}
 
-          {/* Punch stat bento — research-backed wording for CPD course
-              conversion: outcome-led labels ("Practical skills" not "online
-              modules"), CPD-hours-as-currency, regulatory framing, status
-              ("specialist-level"), risk reversal at end. Anchors the value
-              prop before the OA block. */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
-            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">{CONFIG.COURSE.TOTAL_CPD_POINTS}<span className="text-base font-semibold">hrs</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS})</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">{CONFIG.COURSE.TOTAL_MODULES}</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Self-paced modules</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">1<span className="text-base font-semibold">day</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Hands-on workshop</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
-              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
-            </div>
-          </div>
-        </div>
-
         {/* OA endorsement — prominent block. The endorsement is one of the
             highest-trust signals in AHPRA-aligned CPD, so it carries visual
             weight here even though the H1 leads with what we do.
@@ -434,6 +405,26 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             The old comment here claimed "visible within first scroll on mobile".
             It was not, and had not been for some time. Everything that used to
             sit above still sits below — nothing was deleted, it was reordered. */}
+        {/* START-ONLINE-UPGRADE-LATER, stated AT the decision point.
+            The page did say this — at y=2092, which is 1,187px BELOW the cards,
+            and again in the FAQ at y=7601. Measured 2026-08-07. So the buyer
+            choosing between $497 and $1,190 at the card had no idea the cheaper
+            option was a stepping stone rather than a lesser course. That frames
+            $1,190 as a commitment and $497 as "missing the workshop", when in
+            fact neither is true: online buyers pay only the difference later,
+            and there is no deadline because the city dates are not set yet.
+
+            Price derives from upgradePriceFor() — the same function that charges
+            the upgrade, so the number here can never drift from the real one. */}
+        <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
+          <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
+            <strong className="font-bold">Start online, add the in-person day whenever you like.</strong>{' '}
+            <span className="text-muted-foreground">
+              Online buyers upgrade later for the difference (${upgradePriceFor(null)}) — no deadline, and your city&apos;s date is chosen when it launches.
+            </span>
+          </p>
+        </div>
+
         <div id="pricing-cards">
           <PricingOptions variant="full" />
         </div>
@@ -510,6 +501,39 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           <div>
             <p className="text-sm font-semibold text-foreground">Most clinicians pay $0 out of pocket</p>
             <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice + AHPRA-aligned CPD certificate emailed instantly on purchase.</p>
+          </div>
+        </div>
+
+
+        {/* Value summary — moved BELOW the price on 2026-08-07. At 251px it
+            was the single largest block sitting between the hero and the
+            pricing cards on mobile. "Here is what you get" reads naturally
+            after the number anyway; before it, it was just distance.
+
+            Original note: outcome-led labels ("Practical skills" not "online
+            modules"), CPD-hours-as-currency, regulatory framing, status
+            ("specialist-level"), risk reversal at the end. */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
+            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">{CONFIG.COURSE.TOTAL_CPD_POINTS}<span className="text-base font-semibold">hrs</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS})</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">{CONFIG.COURSE.TOTAL_MODULES}</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Self-paced modules</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">1<span className="text-base font-semibold">day</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Hands-on workshop</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
+              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
+            </div>
           </div>
         </div>
 
