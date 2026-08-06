@@ -695,6 +695,44 @@ export const SCAT_COMPLETION_UPSELL = {
 }
 
 /**
+ * SST platform — the included 12 months is ending.
+ *
+ * WHY (2026-08-06, item 6 of the approved plan). A course enrolment includes
+ * INCLUDED_PLATFORM_MONTHS of the Clinical Testing suite. Nothing ever told the
+ * clinic that period was ending, so 25 clinics sit on `plan: 'active'` with no
+ * subscription and no prompt — the platform is given away permanently by
+ * default. There are 0 SST subscriptions against 25 active clinics.
+ *
+ * Tone is deliberately not a sales email. These are alumni and early
+ * supporters; the honest framing is "this is what you have, here is what
+ * happens next, here is the number". No urgency theatre, no fake deadline —
+ * the date is real and comes from `included_until`.
+ *
+ * NOT ARMED. Gated on FEATURES.SST_RENEWAL_PROMPT_LIVE, which stays false until
+ * the owner has read this copy AND `included_until` is backfilled (measured
+ * today: 26 clinics, zero with a date).
+ */
+export const SST_INCLUDED_PERIOD_ENDING = {
+  subject: (clinic: string) => `${clinic}: your included Clinical Testing period ends soon`,
+  template: (contactName: string, clinicName: string, endsOn: string, tiers: string, manageLink: string) => emailShell(`
+    <h2>Hi ${greetingName(contactName)},</h2>
+    <p>The Clinical Testing suite that came with your enrolment — SST Trainer and Baseline, unlimited clinicians — runs until <strong>${endsOn}</strong> for ${escapeHtml(clinicName)}.</p>
+    <p>Nothing breaks on that date. Patients already in a programme finish it. What changes is that new patients need an active plan.</p>
+    <div class="callout">
+      <strong>What it costs after that</strong><br><br>
+      ${tiers}<br><br>
+      Billing is on <strong>active caseload</strong>, not seats &mdash; every clinician in your practice is included on every tier.
+    </div>
+    <center><a href="${utm(manageLink, 'sst_included_ending', 'see_plans')}" class="cta-btn">See the plans</a></center>
+    <p style="font-size:13px;color:#64748b;">If the suite hasn't earned its place in your clinic, do nothing and it simply stops taking new patients &mdash; no invoice, no auto-renew.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
+/**
  * SCAT6 Mastery — finished Module 1, stalled before finishing the course.
  *
  * WHY THIS EXISTS (2026-08-06, owner-approved).

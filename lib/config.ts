@@ -258,6 +258,20 @@ export const CONFIG = {
     // /clinical-testing tile, the records page and the /api/cpd/* routes.
     // Data (registrations/activities/evidence) persists while parked.
     CPD_TRACKER_LIVE: false,
+    /**
+     * Arms the SST included-period renewal prompt.
+     *
+     * OFF until two things are true (2026-08-06):
+     *  1. Zac has read the email copy — it goes to real clinics, several of
+     *     them alumni, and the ask is money.
+     *  2. `included_until` is backfilled. Measured today: 26 clinics, ZERO
+     *     with a date. The column exists and new provisioning stamps it, but
+     *     every existing clinic predates the field, so an armed prompt would
+     *     reach nobody — the same "mechanism exists, reach is zero" failure as
+     *     the $50 discount, which sent 22 emails in its lifetime.
+     * Flipping this true without the backfill is a no-op, not a send.
+     */
+    SST_RENEWAL_PROMPT_LIVE: false,
     // International CRM live commerce: online-only, geo-priced checkout, the
     // bundled platform, and the year-2 renewal subscription.
     // LIVE 2026-07-26 — the three STRIPE_SST_*_PRICE_ID vars now hold real

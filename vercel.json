@@ -86,6 +86,10 @@
     {
       "path": "/api/cron/synthetic-journey",
       "schedule": "30 20 * * *"
+    },
+    {
+      "path": "/api/cron/sst-renewal-prompt",
+      "schedule": "0 23 * * 1"
     }
   ]
 }
