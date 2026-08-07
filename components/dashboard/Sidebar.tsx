@@ -30,9 +30,13 @@ const navItems: Array<{
 }> = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
-  // CRM course entry. Stream-isolated: only rendered for course_purchases
-  // slug 'crm' owners, so a CCM buyer never sees it and vice versa.
-  { icon: Activity, label: 'Rehab Mastery (EP)', href: '/ep-course', crmOnly: true },
+  // CRM has NO standalone sidebar entry (owner 2026-08-07: "why is rehab
+  // mastery showing in sidebar? it should just live in learning suite with
+  // others"). The Learning Suite is the single course catalogue: it already
+  // renders CRM with `accessible: ownsCrm` and CCM with `accessible: isPaidCcm`,
+  // so a CRM buyer sees their course open and CCM locked, and a CCM buyer sees
+  // the reverse. A second top-level link duplicated that and made CRM look like
+  // a different kind of thing from every other course.
   // Clinical Testing = the live patient tools (SST Trainer + pre-season
   // baseline). PRE-RELEASE: ownerOnly until the subscription launch
   // (owner directive 2026-07-05) — hidden from every other dashboard.

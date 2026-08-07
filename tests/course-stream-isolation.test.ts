@@ -102,10 +102,25 @@ describe('CRM buyers stay locked out of CCM paid surfaces', () => {
     expect(src).toMatch(/\{isFreeTier && \(/)
   })
 
-  it('the CRM sidebar entry is gated on CRM ownership', () => {
+  it('CRM has NO standalone sidebar entry — the Learning Suite is the catalogue', () => {
+    // CHANGED 2026-08-07 (owner: "why is rehab mastery showing in sidebar? it
+    // should just live in learning suite with others").
+    //
+    // This previously asserted the entry EXISTED and was gated on ownsCrm.
+    // Removing it is a STRONGER isolation guarantee, not a weaker one: there is
+    // no CRM link in the sidebar for anyone, so no gate can regress open. The
+    // real isolation — which course a buyer can actually enter — is asserted by
+    // the two tests below, on the catalogue that owns that decision.
     const src = read('components/dashboard/Sidebar.tsx')
-    expect(src).toMatch(/crmOnly: true/)
-    expect(src).toMatch(/!item\.crmOnly \|\| ownsCrm/)
+    expect(src).not.toMatch(/label: 'Rehab Mastery/)
+    expect(src).not.toMatch(/href: '\/ep-course'/)
+  })
+
+  it('the CRM learning card is gated on CRM ownership', () => {
+    // The isolation the removed sidebar test was really protecting.
+    const src = read('app/learning/page.tsx')
+    expect(src).toMatch(/accessible: ownsCrm/)
+    expect(src).toMatch(/href: ownsCrm \? '\/ep-course' : '\/concussion-rehab-mastery'/)
   })
 
   it('the CCM learning card stays gated on CCM access', () => {
