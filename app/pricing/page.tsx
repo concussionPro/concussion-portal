@@ -46,6 +46,7 @@ const STREAMS: Array<{
   audience: string
   icon: typeof GraduationCap
   endorse: string
+  blurb: string
 }> = [
   {
     id: 'ccm',
@@ -54,6 +55,7 @@ const STREAMS: Array<{
     audience: 'Physios, osteos, chiros & GPs',
     icon: GraduationCap,
     endorse: 'Osteopathy Australia endorsed',
+    blurb: 'Assess, diagnose and manage concussion — SCAT6, VOMS and BESS, return-to-play and phenotype rehab.',
   },
   {
     id: 'crm',
@@ -62,6 +64,7 @@ const STREAMS: Array<{
     audience: 'Exercise physiologists',
     icon: HeartPulse,
     endorse: CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA accredited' : 'Built to ESSA CPD standards',
+    blurb: 'Prescribe the exercise rehab that moves recovery — measured-threshold aerobic training, in EP scope.',
   },
 ]
 
@@ -161,9 +164,40 @@ function PricingTabs() {
         </div>
       </div>
 
-      {/* The selected stream's own pricing body, with its own working checkout.
-          hideNav because the nav is already rendered above. */}
-      {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
+      {/* TITLE / DESCRIPTION — rendered HERE, not taken from the stream body.
+          The body's own heading lives inside a .text-center.mb-8 wrapper that
+          is 1,882px tall and holds twelve children including the workshop
+          photo, so it is not a title block at all. Every attempt to reorder or
+          hide "the hero" hit that: ordering it first pushed the price to
+          2,289px, and hiding it once removed the pricing cards outright.
+          Rendering the title at page level sidesteps the whole problem and
+          keeps the required order exact. */}
+      {(() => {
+        const s = STREAMS.find((x) => x.id === stream)!
+        return (
+          <div className="max-w-3xl mx-auto px-6 text-center mt-6 mb-5">
+            <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">{s.name}</h2>
+            <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-2xl mx-auto">{s.blurb}</p>
+          </div>
+        )
+      })()}
+
+      {/* ORDER: streams -> title/description (above) -> PRICING -> LOCATIONS ->
+          everything else. Flex `order` on the stream body; the only JSX change
+          in the components is a `stream-body` class on their container.
+          The body's own duplicate h1 and its lead paragraph are hidden, since
+          the title above replaces them. */}
+      <style>{`
+        .pricing-embed .stream-body { display: flex; flex-direction: column; }
+        .pricing-embed .stream-body > * { order: 5; }
+        .pricing-embed .stream-body > #pricing-cards { order: 2; }
+        .pricing-embed .stream-body > #workshop-locations { order: 3; }
+        .pricing-embed .stream-body > .text-center.mb-8 > h1,
+        .pricing-embed .stream-body > .text-center.mb-8 > p:first-of-type { display: none; }
+      `}</style>
+      <div className="pricing-embed">
+        {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
+      </div>
     </div>
   )
 }

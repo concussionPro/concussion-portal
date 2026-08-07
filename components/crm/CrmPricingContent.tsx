@@ -143,7 +143,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
 
       {/* When embedded (hideNav — e.g. under the homepage stream tabs) the page
           nav + tabs already provide the top offset, so drop the fixed-nav pad. */}
-      <div className={`max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
+      <div className={`stream-body max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
 
         {/* PRICE FIRST. Moved to the top of the body 2026-08-07.
             Owner, after three partial fixes: "ABOVE THE FUCKING FOLD. NO
