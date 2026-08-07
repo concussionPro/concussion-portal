@@ -2,11 +2,11 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { GraduationCap, HeartPulse, ArrowRight } from 'lucide-react'
+import { GraduationCap, HeartPulse, ArrowRight, Check } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -47,6 +47,8 @@ const STREAMS: Array<{
   icon: typeof GraduationCap
   endorse: string
   blurb: string
+  credential: string
+  chips: string[]
 }> = [
   {
     id: 'ccm',
@@ -56,6 +58,8 @@ const STREAMS: Array<{
     icon: GraduationCap,
     endorse: 'Osteopathy Australia endorsed',
     blurb: 'Assess, diagnose and manage concussion — SCAT6, VOMS and BESS, return-to-play and phenotype rehab.',
+    credential: 'Curriculum aligned to the Amsterdam International Consensus on Concussion in Sport (2023) and the SCAT6/SCOAT6 standard · taught by Zac Lewis, Osteopath',
+    chips: ['Phenotype rehab', 'Cranial nerve', 'Cervical exam', 'VOMS', 'Persistent PCS', 'Return-to-play'],
   },
   {
     id: 'crm',
@@ -65,6 +69,8 @@ const STREAMS: Array<{
     icon: HeartPulse,
     endorse: CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA accredited' : 'Built to ESSA CPD standards',
     blurb: 'Prescribe the exercise rehab that moves recovery — measured-threshold aerobic training, in EP scope.',
+    credential: 'First-line treatment per the Amsterdam 2023 consensus · protocol published open-access · delivered and documented by SST Trainer',
+    chips: ['BCTT & HRt', 'Sub-threshold Rx', 'Graded return-to-activity', 'Phenotype reconditioning', 'Symptom-titrated dosing', 'Red-flag triage'],
   },
 ]
 
@@ -173,11 +179,33 @@ function PricingTabs() {
           Rendering the title at page level sidesteps the whole problem and
           keeps the required order exact. */}
       {(() => {
-        const s = STREAMS.find((x) => x.id === stream)!
+        const st = STREAMS.find((x) => x.id === stream)!
         return (
-          <div className="max-w-3xl mx-auto px-6 text-center mt-6 mb-5">
-            <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">{s.name}</h2>
-            <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-2xl mx-auto">{s.blurb}</p>
+          <div className="max-w-3xl mx-auto px-6 text-center mt-6 mb-6">
+            <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">{st.name}</h2>
+            <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-2xl mx-auto">{st.blurb}</p>
+            {/* Credential line + skill chips + the upgrade note live HERE, with
+                the title, as ONE section (owner 2026-08-07: "put this info UNDER
+                THE TITLE. ITS ONE SECTION"). They used to render from inside the
+                body's hero wrapper, which — with the title now drawn at page
+                level — left them floating mid-page between the trust icons and
+                the price, attached to nothing. */}
+            <p className="text-[12px] text-muted-foreground max-w-2xl mx-auto mt-3">{st.credential}</p>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-3">
+              {st.chips.map((c) => (
+                <span key={c} className="inline-flex items-center gap-1 rounded-full bg-accent/[0.08] border border-accent/20 px-2.5 py-1 text-[12px] font-semibold text-accent">
+                  <Check className="w-3 h-3" strokeWidth={3} />{c}
+                </span>
+              ))}
+            </div>
+            <div className="mt-4 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3">
+              <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
+                <strong className="font-bold">Start online, add the in-person day whenever you like.</strong>{' '}
+                <span className="text-muted-foreground">
+                  Upgrade later for the difference (${upgradePriceFor(null)}) — no deadline, and your city&apos;s date is chosen when it launches.
+                </span>
+              </p>
+            </div>
           </div>
         )
       })()}
@@ -192,8 +220,16 @@ function PricingTabs() {
         .pricing-embed .stream-body > * { order: 5; }
         .pricing-embed .stream-body > #pricing-cards { order: 2; }
         .pricing-embed .stream-body > #workshop-locations { order: 3; }
-        .pricing-embed .stream-body > .text-center.mb-8 > h1,
-        .pricing-embed .stream-body > .text-center.mb-8 > p:first-of-type { display: none; }
+        /* h1, subtitle, credential line, skill chips and upgrade note are all
+           drawn in the title section above — hide the body's copies. */
+        .pricing-embed .stream-body > .text-center.mb-8 > :nth-child(-n+5) { display: none; }
+        /* Give the white cards something to sit on — the page was white boxes
+           on a white background. */
+        .pricing-embed .stream-body > #pricing-cards {
+          background: linear-gradient(180deg, rgba(13,115,119,0.05), rgba(13,115,119,0.02));
+          border: 1px solid rgba(13,115,119,0.10);
+          border-radius: 28px; padding: 26px 20px 30px;
+        }
       `}</style>
       <div className="pricing-embed">
         {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
