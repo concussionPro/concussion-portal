@@ -58,7 +58,15 @@ export const TRIAL_PATIENT_CAP = SST_TRIAL_PATIENT_CAP
  *  destroying the product's value to itself. Enforcement = the same
  *  server-side admission gate as the trial. null = unlimited. */
 export const TIER_ACTIVE_PATIENT_CAP: Record<string, number | null> = {
-  single: 5,
+  // MUST mirror SST_TIERS in lib/config.ts. Four tiers since 2026-08-07 —
+  // 'single' now means ONE active patient (it previously meant five, which is
+  // the contradiction that prompted the restructure), and 'starter' is the new
+  // five-patient rung that course enrolments include.
+  // tests/money-path asserts this map equals SST_TIERS caps for every plan,
+  // because a mismatch means the page advertises one allowance while the
+  // admission gate enforces another.
+  single: 1,
+  starter: 5,
   clinic: 10,
   enterprise: null,
 }

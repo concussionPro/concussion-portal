@@ -9,7 +9,10 @@
  * These are the invariants that model rests on. Each one has been broken at
  * least once:
  *
- *  1. A DOMESTIC course buyer (CRM or CCM) must land on 'active'/'single' with
+ *  1. A DOMESTIC course buyer (CRM or CCM) must land on 'active' at the tier a
+ *     course enrolment INCLUDES (SST_INCLUDED_TIER — the 5-patient 'starter'
+ *     rung since the 2026-08-07 four-tier restructure; it was 'single' when
+ *     'single' still meant five patients) with
  *     FULL, non-watermarked documents — not the 3-patient trial cap. Until
  *     2026-08-06 the cap was lifted only when a Stripe subscription was
  *     attached, and that only ever happened for international CRM, so every AUD
@@ -17,7 +20,7 @@
  *  2. The grant is the INCLUDED tier, not unlimited. An earlier unconditional
  *     lift handed every provisioned buyer an uncapped clinic free forever.
  *  3. The grant is a FLOOR, never a downgrade. setSstClinicPlan writes
- *     `tier = COALESCE(new, old)`, so passing 'single' overwrites a better
+ *     `tier = COALESCE(new, old)`, so passing a LOW tier overwrites a better
  *     existing entitlement: an alumni comp (active/tier NULL = unlimited) fell
  *     to a 5-patient cap, and a clinic paying $99/mo on tier 'clinic' fell from
  *     10 to 5 while still being billed. All 26 production clinics are
@@ -34,6 +37,7 @@
  *     clinic".
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { SST_INCLUDED_TIER } from '@/lib/config'
 
 // ── A programmable Postgres stand-in ────────────────────────────────────────
 // Dispatches on the reconstructed query text so each test can put the database
@@ -97,14 +101,14 @@ beforeEach(() => {
 })
 
 describe('the included platform year, at the admission gate', () => {
-  it('a domestic course buyer inside their included year is ACTIVE at the single tier', async () => {
-    kvRecord = { clinicName: 'Buyer', plan: 'active', tier: 'single' }
-    sqlHandler = dbWithColumn({ includedUntil: FUTURE, subscription: null, tier: 'single' })
+  it('a domestic course buyer inside their included year is ACTIVE at the included tier', async () => {
+    kvRecord = { clinicName: 'Buyer', plan: 'active', tier: SST_INCLUDED_TIER.plan }
+    sqlHandler = dbWithColumn({ includedUntil: FUTURE, subscription: null, tier: SST_INCLUDED_TIER.plan })
 
     const usage = await getClinicUsage('ABC123')
 
     expect(usage.plan).toBe('active')
-    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP.single)
+    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP[SST_INCLUDED_TIER.plan])
     expect(usage.window).toBe('30d')
     // plan === 'active' is exactly what /api/sst/report reads to decide whether
     // to stamp the TRIAL watermark, so this assertion IS the "full documents"
@@ -113,8 +117,8 @@ describe('the included platform year, at the admission gate', () => {
   })
 
   it('reverts to the TRIAL allowance once the included year lapses with no subscription', async () => {
-    kvRecord = { clinicName: 'Lapsed', plan: 'active', tier: 'single' }
-    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: 'single' })
+    kvRecord = { clinicName: 'Lapsed', plan: 'active', tier: SST_INCLUDED_TIER.plan }
+    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: SST_INCLUDED_TIER.plan })
 
     const usage = await getClinicUsage('ABC123')
 
@@ -124,13 +128,13 @@ describe('the included platform year, at the admission gate', () => {
   })
 
   it('a REAL Stripe subscription wins over a lapsed included_until', async () => {
-    kvRecord = { clinicName: 'Subscriber', plan: 'active', tier: 'single' }
-    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: 'sub_live_123', tier: 'single' })
+    kvRecord = { clinicName: 'Subscriber', plan: 'active', tier: SST_INCLUDED_TIER.plan }
+    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: 'sub_live_123', tier: SST_INCLUDED_TIER.plan })
 
     const usage = await getClinicUsage('ABC123')
 
     expect(usage.plan).toBe('active')
-    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP.single)
+    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP[SST_INCLUDED_TIER.plan])
   })
 
   it('a comped/alumni clinic (active, tier NULL, no included_until) stays UNLIMITED', async () => {
@@ -145,8 +149,8 @@ describe('the included platform year, at the admission gate', () => {
 
   it('a lapsed clinic still lets its EXISTING patients through — only new admissions stop', async () => {
     // 20 patients seen over the included year, now reverted to the 3 cap.
-    kvRecord = { clinicName: 'Lapsed busy', plan: 'active', tier: 'single' }
-    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: 'single', patients: 20 })
+    kvRecord = { clinicName: 'Lapsed busy', plan: 'active', tier: SST_INCLUDED_TIER.plan }
+    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: SST_INCLUDED_TIER.plan, patients: 20 })
 
     const usage = await getClinicUsage('ABC123')
 
@@ -161,8 +165,8 @@ describe('the included platform year, at the admission gate', () => {
   })
 
   it('marks a lapsed enrolment as includedLapsed, so no surface calls a buyer a trialist', async () => {
-    kvRecord = { clinicName: 'Lapsed', plan: 'active', tier: 'single' }
-    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: 'single' })
+    kvRecord = { clinicName: 'Lapsed', plan: 'active', tier: SST_INCLUDED_TIER.plan }
+    sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: SST_INCLUDED_TIER.plan })
 
     const usage = await getClinicUsage('ABC123')
 
@@ -198,21 +202,21 @@ describe('the included platform year, at the admission gate', () => {
 
 describe('included_until is lazily migrated, so every read must tolerate its absence', () => {
   it('does NOT demote a paying clinic when the column does not exist yet', async () => {
-    kvRecord = { clinicName: 'Paid', plan: 'active', tier: 'single' }
-    sqlHandler = dbWithoutColumn({ plan: 'active', tier: 'single' })
+    kvRecord = { clinicName: 'Paid', plan: 'active', tier: SST_INCLUDED_TIER.plan }
+    sqlHandler = dbWithoutColumn({ plan: 'active', tier: SST_INCLUDED_TIER.plan })
 
     const usage = await getClinicUsage('ABC123')
 
     // Absent column means "no included period recorded", never "expired".
     expect(usage.plan).toBe('active')
-    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP.single)
+    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP[SST_INCLUDED_TIER.plan])
   })
 
   it('the gate reads the column through to_jsonb so Postgres never rejects the statement', async () => {
     // Regression: naming `included_until` directly made Postgres reject the
     // WHOLE select, which the caller could only see as "no such clinic".
     const seen: string[] = []
-    kvRecord = { clinicName: 'Paid', plan: 'active', tier: 'single' }
+    kvRecord = { clinicName: 'Paid', plan: 'active', tier: SST_INCLUDED_TIER.plan }
     sqlHandler = (query) => {
       seen.push(query)
       if (query.includes('included_until')) {
@@ -221,7 +225,7 @@ describe('included_until is lazily migrated, so every read must tolerate its abs
         return [{ included_until: null, stripe_subscription_id: null }]
       }
       if (query.includes('COUNT(DISTINCT')) return [{ n: 0 }]
-      return [{ plan: 'active', tier: 'single' }]
+      return [{ plan: 'active', tier: SST_INCLUDED_TIER.plan }]
     }
 
     await getClinicUsage('ABC123')
@@ -305,12 +309,14 @@ describe('provisioning a course buyer is a FLOOR, never a downgrade', () => {
     return { setSstClinicPlan, createSstClinic, INCLUDED_PLATFORM_MONTHS }
   }
 
-  it('a brand-new domestic buyer gets active/single with a 12-month included period', async () => {
+  it('a brand-new domestic buyer gets active at the INCLUDED tier with a 12-month period', async () => {
     const { setSstClinicPlan, INCLUDED_PLATFORM_MONTHS } = await provisionAgainst(null, null)
-    expect(setSstClinicPlan).toHaveBeenCalledWith('NEW123', 'active', { tier: 'single' }, INCLUDED_PLATFORM_MONTHS)
-    // Explicitly NOT an unlimited clinic: a tier is always named.
+    expect(setSstClinicPlan).toHaveBeenCalledWith('NEW123', 'active', { tier: SST_INCLUDED_TIER.plan }, INCLUDED_PLATFORM_MONTHS)
+    // Explicitly NOT an unlimited clinic: a tier is always named, and it is the
+    // tier an enrolment INCLUDES — the 5-patient rung, not the $39 single.
     const [, , stripeArg] = setSstClinicPlan.mock.calls[0] as unknown as [string, string, { tier: string }]
-    expect(stripeArg.tier).toBe('single')
+    expect(stripeArg.tier).toBe(SST_INCLUDED_TIER.plan)
+    expect(stripeArg.tier).not.toBe(null)
   })
 
   it('never downgrades an alumni comp (active, tier NULL = unlimited)', async () => {
@@ -324,12 +330,12 @@ describe('provisioning a course buyer is a FLOOR, never a downgrade', () => {
   })
 
   it('never stamps an included period over a period Stripe is governing', async () => {
-    const { setSstClinicPlan } = await provisionAgainst({ plan: 'active', tier: 'single' }, 'sub_live')
+    const { setSstClinicPlan } = await provisionAgainst({ plan: 'active', tier: SST_INCLUDED_TIER.plan }, 'sub_live')
     expect(setSstClinicPlan).not.toHaveBeenCalled()
   })
 
   it('DOES grant to an existing clinic still on the trial cap', async () => {
     const { setSstClinicPlan, INCLUDED_PLATFORM_MONTHS } = await provisionAgainst({ plan: 'trial', tier: null }, null)
-    expect(setSstClinicPlan).toHaveBeenCalledWith('EXIST1', 'active', { tier: 'single' }, INCLUDED_PLATFORM_MONTHS)
+    expect(setSstClinicPlan).toHaveBeenCalledWith('EXIST1', 'active', { tier: SST_INCLUDED_TIER.plan }, INCLUDED_PLATFORM_MONTHS)
   })
 })

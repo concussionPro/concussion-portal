@@ -40,16 +40,19 @@ export async function register() {
    */
   const { CONFIG } = await import('@/lib/config')
   const { isStripePriceId } = await import('@/lib/stripe')
-  const singlePrice = process.env.STRIPE_SST_SINGLE_PRICE_ID
+  // Year-2 renewal rides the tier a course enrolment INCLUDES, which is the
+  // 5-patient Starter rung — not 'single' (1 patient) since the 2026-08-07
+  // restructure.
+  const singlePrice = process.env.STRIPE_SST_STARTER_PRICE_ID
   if ((CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE || CONFIG.FEATURES.CCM_PLATFORM_BUNDLE_LIVE) && !singlePrice) {
-    missing.push('STRIPE_SST_SINGLE_PRICE_ID (required while CRM_INTERNATIONAL_LIVE is true — without it the year-2 renewal is never created and the platform is given away permanently)')
+    missing.push('STRIPE_SST_STARTER_PRICE_ID (required while CRM_INTERNATIONAL_LIVE is true — without it the year-2 renewal is never created and the platform is given away permanently)')
   }
 
   // SHAPE, not just presence. A live secret key was once pasted into this var;
   // a presence check accepts that, and the value then reaches Stripe, which
   // rejects it with an error message CONTAINING the key. Validate the prefix so
   // the misconfiguration is caught at boot instead of at the first sale.
-  for (const key of ['STRIPE_SST_SINGLE_PRICE_ID', 'STRIPE_SST_CLINIC_PRICE_ID', 'STRIPE_SST_ENTERPRISE_PRICE_ID'] as const) {
+  for (const key of ['STRIPE_SST_SINGLE_PRICE_ID', 'STRIPE_SST_STARTER_PRICE_ID', 'STRIPE_SST_CLINIC_PRICE_ID', 'STRIPE_SST_ENTERPRISE_PRICE_ID'] as const) {
     const val = process.env[key]
     if (val && !isStripePriceId(val)) {
       missing.push(`${key} is not a Stripe Price id — it must start with "price_" (a secret key or product id here will be rejected by Stripe, and Stripe echoes the value back in the error)`)

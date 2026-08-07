@@ -27,7 +27,7 @@ import { buildWelcomeEmail } from './clinic-welcome-email'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { grantSstEntitlement } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_INCLUDED_TIER } from '@/lib/config'
 import { sstPlanPriceId, redactStripeSecrets } from '@/lib/stripe'
 
 /**
@@ -58,7 +58,11 @@ export const INCLUDED_PLATFORM_MONTHS = 12
  * clinic 10 < enterprise unlimited). A NULL tier on an active plan is
  * unlimited and is handled separately — it outranks everything here.
  */
-const TIER_RANK: Record<string, number> = { single: 1, clinic: 2, enterprise: 3 }
+// Ordering for the no-downgrade guard. 'starter' inserted 2026-08-07 when the
+// ladder went to four tiers — omitting it would make TIER_RANK['starter']
+// undefined and every comparison against it false, silently allowing a
+// downgrade the guard exists to prevent.
+const TIER_RANK: Record<string, number> = { single: 1, starter: 2, clinic: 3, enterprise: 4 }
 
 export async function provisionPlatformForBuyer(
   email: string,
@@ -143,12 +147,12 @@ export async function provisionPlatformForBuyer(
           `(plan=${clinic.plan}, tier=${clinic.tier ?? 'unlimited'}, subscription=${hasRealSubscription}) — left unchanged`,
       )
     } else {
-      await setSstClinicPlan(clinic.code, 'active', { tier: 'single' }, INCLUDED_PLATFORM_MONTHS)
+      await setSstClinicPlan(clinic.code, 'active', { tier: SST_INCLUDED_TIER.plan }, INCLUDED_PLATFORM_MONTHS)
     }
   } else {
     console.warn(
       `[bundle] clinic ${clinic.code} provisioned WITHOUT a renewal subscription — staying on the trial cap. ` +
-        `Lift it manually (or set STRIPE_SST_SINGLE_PRICE_ID) if this buyer is entitled to an uncapped clinic.`,
+        `Lift it manually (or set STRIPE_SST_STARTER_PRICE_ID) if this buyer is entitled to an uncapped clinic.`,
     )
   }
 

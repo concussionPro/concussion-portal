@@ -23,7 +23,7 @@ import PricingObjection from '@/components/PricingObjection'
 import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
-import { CONFIG, upgradePriceFor, SST_TIERS } from '@/lib/config'
+import { CONFIG, upgradePriceFor, SST_TIERS, SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { trackEvent } from '@/lib/analytics'
 
@@ -633,7 +633,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                     // say "included free for your first year"; this AUD table said only
                     // "(included)", so a domestic buyer was not told the term at the point
                     // of sale. Never sell an unqualified "included" against a dated gate.
-                    [`Clinical Testing suite — SST Trainer + club baseline testing (included for your first year, then A$${SST_TIERS[0].monthlyAud}/mo to keep — cancel anytime)`, true, true],
+                    [`Clinical Testing suite — SST Trainer + club baseline testing (${sstTierAllowance(SST_INCLUDED_TIER).toLowerCase()}, unlimited clinicians — included for your first year, then A$${SST_INCLUDED_TIER.monthlyAud}/mo to keep, cancel anytime)`, true, true],
                     ['Your clinic code — patients & clubs link straight to you', true, true],
                     ['Clinical Toolkit downloads', true, true],
                     ['CPD certificate (online)', `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`, `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`],

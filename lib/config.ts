@@ -532,11 +532,44 @@ export function defaultNominationCity(): string | null {
  *  clinic-registry re-exports it as TRIAL_PATIENT_CAP. */
 export const SST_TRIAL_PATIENT_CAP = 3
 
+/**
+ * SST tiers — metered on ACTIVE CASELOAD, never seats. Clinicians are unlimited
+ * on every tier; what you pay for is how many patients are in a programme at
+ * once.
+ *
+ * RESTRUCTURED 2026-08-07 (owner). Previously three tiers with 'single' capped
+ * at FIVE patients, which read as a contradiction — single means one. Now four,
+ * and the ladder is deliberately SUB-LINEAR ($39 → $15.80 → $12.90 per patient)
+ * so a clinic is never punished for growing its caseload.
+ *
+ * Anchored against what these buyers already pay for their system of record:
+ * Cliniko is USD $45/mo for one practitioner and USD $195/mo for 9-12
+ * (~A$70 and ~A$300). SST is an adjunct tool for ONE condition, so it has to
+ * sit well under the PMS — a A$300 tier would cost the same as running the
+ * entire practice, which is why the 10-patient tier is $129 and not $300.
+ *
+ * Enterprise is quote-only ABOVE a published floor: the NZ/ACC scheme deals are
+ * negotiated per organisation and a published ceiling would cap them.
+ */
 export const SST_TIERS = [
-  { plan: 'single', name: 'Starter', monthlyAud: 49, activePatientCap: 5, popular: false },
-  { plan: 'clinic', name: 'Clinic', monthlyAud: 99, activePatientCap: 10, popular: true },
-  { plan: 'enterprise', name: 'Unlimited', monthlyAud: 149, activePatientCap: null, popular: false },
+  { plan: 'single', name: 'Single', monthlyAud: 39, activePatientCap: 1, popular: false },
+  { plan: 'starter', name: 'Starter', monthlyAud: 79, activePatientCap: 5, popular: false },
+  { plan: 'clinic', name: 'Clinic', monthlyAud: 129, activePatientCap: 10, popular: true },
+  { plan: 'enterprise', name: 'Enterprise', monthlyAud: 249, activePatientCap: null, popular: false },
 ] as const
+
+/**
+ * The tier a COURSE ENROLMENT includes for its first year.
+ *
+ * Deliberately NOT SST_TIERS[0]. Every enrolee to date was provisioned at the
+ * old 'single' tier, which meant FIVE active patients, and the pricing page
+ * told them "included for your first year, then A$49/mo to keep". Making
+ * 'single' mean ONE patient would have silently cut 26 existing clinics — and
+ * this morning's first paying CRM customer — from five patients to one, while
+ * the page rewrote itself to a cheaper-looking number. Enrolments stay on the
+ * 5-patient tier; the new $39 rung is for new standalone buyers.
+ */
+export const SST_INCLUDED_TIER = SST_TIERS[1]
 
 export type SstTier = (typeof SST_TIERS)[number]
 
