@@ -18,7 +18,7 @@ import {
   type PatientIdentity,
 } from './patient-identity'
 import { normaliseClinicCode } from './clinic-registry'
-import { AGE_BANDS, SEXES, RESEARCH_CONSENT_VERSION, type AgeBand, type Sex } from './research'
+import { AGE_BANDS, SEXES, RESEARCH_CONSENT_VERSION, isValidSymptomScore, type AgeBand, type Sex } from './research'
 
 export interface PatientRecord extends PatientIdentity {
   ageBand: AgeBand | null
@@ -44,6 +44,17 @@ export async function ensureSstPatientsTable(): Promise<void> {
       sex           TEXT,
       research_consent_version INTEGER,
       injury_days_at_intake    INTEGER,
+      -- Validated symptom severity (SCAT6/PCSS, 22 items x 0-6, max 132) at
+      -- intake and at discharge. A single 0-10 item will not survive review as
+      -- an outcome measure; this is the instrument reviewers expect.
+      --
+      -- Entered as an INTEGER by the clinician, NOT integrated from anywhere.
+      -- The PCSS is a public instrument in the SCAT lineage, so a clinic
+      -- already administering it (e.g. inside ImPACT) can type the total into
+      -- SST with no data-sharing agreement, no vendor dependency and no
+      -- systems integration.
+      baseline_symptom_score   INTEGER,
+      discharge_symptom_score  INTEGER,
       created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       PRIMARY KEY (clinic_code, patient_code)
     )
@@ -152,6 +163,10 @@ export async function recordIntake(
     researchConsent?: boolean
     daysSinceInjury?: number | null
     label?: string | null
+    /** SCAT6/PCSS total (0-132) at intake. Clinician-entered. */
+    baselineSymptomScore?: number | null
+    /** SCAT6/PCSS total (0-132) at discharge — closes the episode. */
+    dischargeSymptomScore?: number | null
   },
 ): Promise<boolean> {
   const clinicCode = normaliseClinicCode(rawClinicCode)
@@ -168,6 +183,12 @@ export async function recordIntake(
       ? intake.daysSinceInjury
       : null
 
+  // Bounds-checked against the INSTRUMENT's range, so a 0-10 single item
+  // typed into this field is rejected rather than silently stored as if it
+  // were the validated scale.
+  const baseline = isValidSymptomScore(intake.baselineSymptomScore) ? intake.baselineSymptomScore : null
+  const discharge = isValidSymptomScore(intake.dischargeSymptomScore) ? intake.dischargeSymptomScore : null
+
   try {
     await ensureSstPatientsTable()
     // COALESCE on the existing value: an intake screen that omits a field must
@@ -179,6 +200,8 @@ export async function recordIntake(
         sex = COALESCE(${sex}, sex),
         research_consent_version = ${consent},
         injury_days_at_intake = COALESCE(${days}, injury_days_at_intake),
+        baseline_symptom_score = COALESCE(${baseline}, baseline_symptom_score),
+        discharge_symptom_score = COALESCE(${discharge}, discharge_symptom_score),
         label = COALESCE(${intake.label?.trim() || null}, label)
       WHERE clinic_code = ${clinicCode} AND patient_code = ${patientCode}
     `

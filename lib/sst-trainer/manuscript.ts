@@ -78,9 +78,12 @@ export function renderManuscript(r: AnalysisResult, opts: ManuscriptOptions = {}
 **Background.** Sub-symptom threshold aerobic exercise (SSTAE) is first-line
 treatment for concussion. Prescriptions are anchored to a heart-rate threshold
 measured on a graded treadmill test, and patients are instructed to remain below
-a band derived from it. The instruction assumes that exceeding the band provokes
-symptom exacerbation, but that assumption rests on prescribed dose: almost no
-study has measured what patients actually did.
+a band derived from it. Objectively measured adherence has been linked to time
+to recovery at the level of the treatment episode (Haider et al., secondary
+analysis of the adolescent RCT arm). What remains unmeasured is the
+SESSION-level relationship: whether a given session's excursion above the band
+predicts that patient's symptoms the following day, in routine unsupervised
+care, and how either compares with days on which no session was prescribed.
 
 **Objective.** To quantify the relationship between time spent above the
 prescribed band and next-day symptom exacerbation, and to determine whether a
@@ -122,12 +125,21 @@ increased until symptoms rise by a defined margin, the heart rate at that point
 is taken as the threshold, and training is prescribed at a fraction of it. The
 patient is then told not to exceed the resulting band.
 
-**That last instruction is convention rather than measurement.** It follows
-naturally from the logic of the threshold, and it is clinically prudent, but the
-literature that established SSTAE reports *prescribed* dose — what the clinician
-wrote down. Whether patients stayed within the band, and what happened when they
-did not, has largely gone unrecorded, because measuring it requires continuous
-heart rate during unsupervised sessions plus a systematic next-day follow-up.
+**The consequence of crossing it has not been measured at session grain.**
+Objectively monitored adherence has been related to recovery time across a
+treatment episode, but an episode-level association cannot say what a single
+excursion does, nor distinguish a symptom day caused by exertion from one that
+would have occurred anyway. Answering that requires continuous heart rate during
+unsupervised sessions, a systematic next-day follow-up, and — critically — a
+comparator of days on which no exercise was prescribed.
+
+The prescription itself is also less settled than its ubiquity suggests. Across
+the trials the guideline rests on, frequency and duration diverge substantially:
+approximately 20 minutes daily in the Buffalo protocols, 3-5 sessions per week
+of roughly 35 minutes in the Norwegian trial, and a weekly-volume prescription
+elsewhere. These have never been compared with one another. Frequency is not an
+unexamined convention so much as an UNSTANDARDISED parameter inherited
+differently from each foundational protocol.
 
 ### 1.1 The gap
 
@@ -137,9 +149,15 @@ Three things follow from prescribing a boundary whose consequences are unknown:
    imposes avoidable caution on an intervention whose benefit is dose-related.
 2. **It may be too loose in places.** A single tolerable-seeming excursion late
    in a session may matter more than an equivalent one early.
-3. **Adherence is unmeasured, so trials are unblinded to their own exposure.**
-   Where delivered dose is unknown, a null trial cannot distinguish an
-   ineffective prescription from an undelivered one.
+3. **Without a rest-day comparator, exacerbation is unattributable.** Concussion
+   symptoms fluctuate independently of exertion. A flare rate measured only on
+   training days describes the natural history of the condition as much as the
+   response to a dose.
+
+NOTE ON THE INTENSITY QUESTION. Dose-ranging of the intensity parameter itself
+(80% versus 60% of threshold) is under investigation in a registered randomised
+trial and is deliberately NOT the subject of this cohort, which addresses
+excursion above whatever band was prescribed.
 
 ### 1.2 Objective
 

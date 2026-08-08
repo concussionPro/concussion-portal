@@ -119,6 +119,8 @@ export async function PATCH(request: NextRequest) {
     // stray non-empty string would otherwise enrol someone in research.
     researchConsent: body?.researchConsent === true,
     daysSinceInjury: typeof body?.daysSinceInjury === 'number' ? body.daysSinceInjury : null,
+    baselineSymptomScore: typeof body?.baselineSymptomScore === 'number' ? body.baselineSymptomScore : null,
+    dischargeSymptomScore: typeof body?.dischargeSymptomScore === 'number' ? body.dischargeSymptomScore : null,
     label: typeof body?.label === 'string' ? body.label : null,
   })
   if (!ok) return NextResponse.json({ error: 'Could not record intake' }, { status: 400 })

@@ -60,6 +60,40 @@
 export const RESEARCH_CONSENT_VERSION = 1
 
 /**
+ * WHAT VERSION 1 COVERS — the wording an HREC approves and a participant agrees
+ * to. Held here so the scope is reviewable in a diff rather than living only in
+ * a PDF, and so a change to it forces a version bump next to the change.
+ *
+ * THE LINKAGE CLAUSE IS THE ONE THAT CANNOT BE RETROFITTED. Every other gap in
+ * this design is recoverable later: researchRef is minted for everyone from
+ * first use, so a consent obtained afterwards — or an HREC waiver — can still
+ * reach data already collected. Consent to LINK to records held outside this
+ * product cannot be obtained retrospectively in the same way, because a
+ * participant who was never told linkage was contemplated has not agreed to it,
+ * and no architecture fixes that.
+ *
+ * It is named explicitly rather than implied because the highest-value planned
+ * analysis depends on it: whether exercise-tolerance trajectory predicts
+ * recovery BEYOND the neurocognitive testing a clinic already performs. That
+ * comparison needs the clinic's own neurocognitive records joined to SST
+ * sessions at episode grain. An HREC will require the linkage named, not
+ * inferred from a general "research use" clause.
+ *
+ * NOTE ON DIRECTION OF TRANSFER: linkage happens at the CLINIC, which holds the
+ * mapping from patient to record. Only de-identified, researchRef-keyed rows
+ * move to CEA. Receiving identifiable neurocognitive records here would defeat
+ * the pseudonymity the rest of this module exists to guarantee.
+ */
+export const RESEARCH_CONSENT_SCOPE_V1 = [
+  'use of de-identified session data (heart rate, symptoms, adherence) for research',
+  'use of de-identified demographic and injury-timing information',
+  'linkage, performed by the treating clinic, to neurocognitive or other clinical ' +
+    'assessment records the clinic already holds for the same episode of care',
+  'publication of aggregate findings that cannot identify an individual',
+  'sharing of the de-identified dataset with independent researchers for re-analysis',
+] as const
+
+/**
  * Age BANDS, never a birth date. Bands are sufficient for the covariate
  * (adolescents recover differently from adults) and materially harder to
  * re-identify from. The youngest band starts at 13 because the product is not
