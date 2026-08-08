@@ -657,23 +657,44 @@ function formatLocation(slug: string): string {
  * tier as unavailable, so this stays inert until you launch it.
  */
 /**
- * The three Clinical Testing tiers (owner 2026-07-06) → env Stripe price IDs.
- * Amounts live in the Stripe Dashboard prices, never in code, so the plan
- * can change without a deploy. A missing ID makes that tier unavailable.
- *   single     A$49/mo  · 1 clinician
- *   clinic     A$99/mo  · up to 5 clinicians
- *   enterprise A$149/mo · up to 15 clinicians
+ * The PURCHASABLE Clinical Testing tiers → env Stripe price IDs. Amounts live
+ * in the Stripe Dashboard prices, never in code. A missing ID makes that tier
+ * unavailable rather than mis-priced.
  */
-export type SstPlan = 'single' | 'starter' | 'clinic' | 'enterprise'
+export type SstPlan = 'starter' | 'clinic' | 'pro'
 
-// 2026-08-05 caseload pricing: only priceId is consumed. Display copy lives
-// on the subscribe page; enforced caps live in clinic-registry
-// TIER_ACTIVE_PATIENT_CAP (5/10/unlimited active patients / 30d).
+/**
+ * ENV VAR NAMES ARE HISTORICAL SLOTS, NOT TIER NAMES (owner 2026-08-08:
+ * "re-use our stripe env vars already set").
+ *
+ * Only three SST price vars are set in production — SINGLE, CLINIC and
+ * ENTERPRISE. STARTER was never set, which is why the year-2 renewal silently
+ * skipped. The 2026-08-08 ladder has exactly three PURCHASABLE tiers, because
+ * Enterprise is quote-only and needs no Stripe price at all — so the freed
+ * ENTERPRISE slot carries Pro, and no new Vercel variable is required.
+ *
+ *   Starter A$49  / 10 new patients per month → STRIPE_SST_SINGLE_PRICE_ID
+ *   Clinic  A$99  / 30                        → STRIPE_SST_CLINIC_PRICE_ID
+ *   Pro     A$199 / 100                       → STRIPE_SST_ENTERPRISE_PRICE_ID
+ *   Enterprise — quote only, NO price id, never checked out
+ *
+ * Stripe Price amounts are IMMUTABLE. Re-pointing a slot does not re-price it:
+ * each of these three vars must hold a price id whose amount matches the number
+ * above, or the page advertises one figure and the customer is charged another.
+ * tests/money-path asserts display == charge for exactly this reason.
+ */
 export const SST_PLANS: Record<SstPlan, { label: string; priceId: string | undefined }> = {
-  single: { label: 'Single', priceId: process.env.STRIPE_SST_SINGLE_PRICE_ID },
-  starter: { label: 'Starter', priceId: process.env.STRIPE_SST_STARTER_PRICE_ID },
+  starter: { label: 'Starter', priceId: process.env.STRIPE_SST_SINGLE_PRICE_ID },
   clinic: { label: 'Clinic', priceId: process.env.STRIPE_SST_CLINIC_PRICE_ID },
-  enterprise: { label: 'Enterprise', priceId: process.env.STRIPE_SST_ENTERPRISE_PRICE_ID },
+  pro: { label: 'Pro', priceId: process.env.STRIPE_SST_ENTERPRISE_PRICE_ID },
+}
+
+/** The env var backing each plan — used by boot validation so the error names
+ *  the variable an operator must actually set, not the tier. */
+export const SST_PLAN_ENV_VAR: Record<SstPlan, string> = {
+  starter: 'STRIPE_SST_SINGLE_PRICE_ID',
+  clinic: 'STRIPE_SST_CLINIC_PRICE_ID',
+  pro: 'STRIPE_SST_ENTERPRISE_PRICE_ID',
 }
 
 /**
@@ -690,8 +711,11 @@ export function sstPlanPriceId(plan: SstPlan): string | undefined {
   const id = SST_PLANS[plan]?.priceId
   if (!id) return undefined
   if (!isStripePriceId(id)) {
+    // Name the ENV VAR, not the plan — the two deliberately differ (Pro rides
+    // the freed ENTERPRISE slot), so `STRIPE_SST_PRO_PRICE_ID` would send an
+    // operator hunting for a variable that does not exist.
     console.error(
-      `[stripe] STRIPE_SST_${plan.toUpperCase()}_PRICE_ID is not a Stripe Price id ` +
+      `[stripe] ${SST_PLAN_ENV_VAR[plan]} is not a Stripe Price id ` +
         `(expected "price_…", got "${redactStripeSecrets(id.slice(0, 12))}…"). Treating as unset.`,
     )
     return undefined

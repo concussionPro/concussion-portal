@@ -10,7 +10,7 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
-import { CONFIG, SST_TIERS } from '@/lib/config'
+import { CONFIG, SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
@@ -38,7 +38,7 @@ import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
  * that tier's amount from CONFIG — never a literal that can drift away from
  * what the card is actually charged.
  */
-const PLATFORM_MONTHLY_AUD = SST_TIERS.find((t) => t.plan === 'single')!.monthlyAud
+const PLATFORM_MONTHLY_AUD = SST_INCLUDED_TIER.monthlyAud
 
 export interface IntlPriceView {
   display: string // e.g. "£275"
@@ -59,7 +59,7 @@ const buildIntlFaqs = (essaAccredited: boolean): { q: string; a: string }[] => [
   },
   {
     q: 'Is there an ongoing cost?',
-    a: `The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$${PLATFORM_MONTHLY_AUD}/month (the Starter rate — up to ${SST_TIERS[0].activePatientCap} active patients, unlimited clinicians); it starts automatically at the 12-month mark and you can cancel anytime.`,
+    a: `The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$${PLATFORM_MONTHLY_AUD}/month (the Starter rate — ${sstTierAllowance(SST_INCLUDED_TIER).toLowerCase()}, unlimited clinicians); it starts automatically at the 12-month mark and you can cancel anytime.`,
   },
   {
     q: 'What’s the refund policy?',

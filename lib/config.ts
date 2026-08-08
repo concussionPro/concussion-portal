@@ -514,12 +514,12 @@ export function defaultNominationCity(): string | null {
 /**
  * SST Trainer / Clinical Testing plans — the LIVE model (owner 2026-08-05).
  *
- * Priced on ACTIVE CASELOAD, not seats: clinicians are UNLIMITED on every paid
- * tier, and the metered unit is distinct active patients in a rolling 30 days.
- * Caps here mirror TIER_ACTIVE_PATIENT_CAP in lib/sst-trainer/clinic-registry
- * (null = unlimited); amounts mirror the Stripe recurring prices behind
- * STRIPE_SST_{SINGLE,CLINIC,ENTERPRISE}_PRICE_ID — Stripe stays the billing
- * source of truth, this is the single source for DISPLAY.
+ * Priced on NEW PATIENTS PER CALENDAR MONTH, not seats: clinicians are
+ * UNLIMITED on every paid tier. Caps here mirror TIER_MONTHLY_PATIENT_CAP in
+ * lib/sst-trainer/clinic-registry (null = unlimited); amounts mirror the Stripe
+ * recurring prices behind the STRIPE_SST_*_PRICE_ID slots (see SST_PLANS in
+ * lib/stripe — the var NAMES are historical and do not match the tier names).
+ * Stripe stays the billing source of truth, this is the source for DISPLAY.
  *
  * The retired FOUNDING model ("founding terms locked for good") lived here as
  * SST_PRICING and had no consumers. Founding pricing is not sold — do not
@@ -533,54 +533,89 @@ export function defaultNominationCity(): string | null {
 export const SST_TRIAL_PATIENT_CAP = 3
 
 /**
- * SST tiers — metered on ACTIVE CASELOAD, never seats. Clinicians are unlimited
- * on every tier; what you pay for is how many patients are in a programme at
- * once.
+ * SST tiers — metered on NEW PATIENTS STARTED PER CALENDAR MONTH, never seats.
+ * Clinicians are unlimited on every tier.
  *
- * RESTRUCTURED 2026-08-07 (owner). Previously three tiers with 'single' capped
- * at FIVE patients, which read as a contradiction — single means one. Now four,
- * and the ladder is deliberately SUB-LINEAR ($39 → $15.80 → $12.90 per patient)
- * so a clinic is never punished for growing its caseload.
+ * RESTRUCTURED 2026-08-08 (owner). Two changes from the 2026-08-07 four-tier
+ * caseload model, both load-bearing:
+ *
+ * 1. SEATS ARE NOT METERABLE HERE, so patients are the meter and always will
+ *    be. There is no clinician identity anywhere in the product: auth is a
+ *    clinic-level code + view_key, `sst_clinic_members` has never held a row,
+ *    and `sst_clinic_sessions` carries no member reference. A seat-priced
+ *    product would have nothing to count. Patient volume, by contrast, is
+ *    self-policing — a ten-clinician practice generates ~10x a solo's volume
+ *    and cannot hide on a small plan.
+ *
+ * 2. NEW STARTS PER MONTH, not active caseload in a rolling 30 days. A
+ *    rolling-active cap means the way to free a slot when you are near the cap
+ *    is to DISCHARGE SOMEONE EARLY. In a product whose entire thesis is dosed,
+ *    monitored, sub-threshold progression, that incentive is unacceptable.
+ *    Counting first-session-this-month makes a patient cost the same whether
+ *    they finish in three weeks or three months.
+ *
+ * The prior model also mis-set the magnitudes: caps of 1/5/10 were calibrated
+ * as if patient count were a proxy for CLINIC SIZE. It is a proxy for
+ * THROUGHPUT, and one clinician can start 15 patients a week — so the old
+ * ladder was blown through by a single busy user before a second clinician
+ * existed.
+ *
+ * SEASONALITY is the known weakness of a monthly cap: concussion volume tracks
+ * the football season, so a clinic can start 12 in July and 2 in December. The
+ * cap therefore FLOATS BOTH WAYS (see clinic-registry): breaching never blocks
+ * a patient, two consecutive months over moves a clinic up, two consecutive
+ * months under moves it back down. A one-way ratchet would punish a seasonal
+ * buyer for one good month.
  *
  * Anchored against what these buyers already pay for their system of record:
  * Cliniko is USD $45/mo for one practitioner and USD $195/mo for 9-12
- * (~A$70 and ~A$300). SST is an adjunct tool for ONE condition, so it has to
- * sit well under the PMS — a A$300 tier would cost the same as running the
- * entire practice, which is why the 10-patient tier is $129 and not $300.
+ * (~A$70 and ~A$300). SST is an adjunct tool for ONE condition, so it sits
+ * under the PMS at every rung.
  *
- * Enterprise is quote-only ABOVE a published floor: the NZ/ACC scheme deals are
- * negotiated per organisation and a published ceiling would cap them.
+ * Enterprise is QUOTE ONLY and carries no published number — the whole category
+ * prices this way (Sway Medical and Complete Concussions are both quote-only),
+ * and a printed ceiling would cap the NZ/ACC and occupational-rehab deals,
+ * which are negotiated per organisation at an order of magnitude above Pro.
  */
 export const SST_TIERS = [
-  { plan: 'single', name: 'Single', monthlyAud: 39, activePatientCap: 1, popular: false },
-  { plan: 'starter', name: 'Starter', monthlyAud: 79, activePatientCap: 5, popular: false },
-  { plan: 'clinic', name: 'Clinic', monthlyAud: 129, activePatientCap: 10, popular: true },
-  { plan: 'enterprise', name: 'Enterprise', monthlyAud: 249, activePatientCap: null, popular: false },
+  { plan: 'starter', name: 'Starter', monthlyAud: 49, monthlyPatientCap: 10, popular: false },
+  { plan: 'clinic', name: 'Clinic', monthlyAud: 99, monthlyPatientCap: 30, popular: true },
+  { plan: 'pro', name: 'Pro', monthlyAud: 199, monthlyPatientCap: 100, popular: false },
+  { plan: 'enterprise', name: 'Enterprise', monthlyAud: null, monthlyPatientCap: null, popular: false },
 ] as const
 
 /**
- * The tier a COURSE ENROLMENT includes for its first year.
+ * The tier a COURSE ENROLMENT includes for its first year, and the tier the
+ * Embodia one-month lane converts onto. Starter — the entry rung.
  *
- * Deliberately NOT SST_TIERS[0]. Every enrolee to date was provisioned at the
- * old 'single' tier, which meant FIVE active patients, and the pricing page
- * told them "included for your first year, then A$49/mo to keep". Making
- * 'single' mean ONE patient would have silently cut 26 existing clinics — and
- * this morning's first paying CRM customer — from five patients to one, while
- * the page rewrote itself to a cheaper-looking number. Enrolments stay on the
- * 5-patient tier; the new $39 rung is for new standalone buyers.
+ * Under the retired model this pointed at SST_TIERS[1] because SST_TIERS[0]
+ * ('single') meant ONE active patient and would have cut existing clinics from
+ * five to one. That hazard is gone: Starter is now the entry rung at 10 new
+ * patients a month, which is strictly more allowance than any legacy tier gave.
  */
-export const SST_INCLUDED_TIER = SST_TIERS[1]
+export const SST_INCLUDED_TIER = SST_TIERS[0]
 
 export type SstTier = (typeof SST_TIERS)[number]
 
-/** Entry price for the Clinical Testing suite (A$/month). */
-export const SST_TIER_FROM_AUD = Math.min(...SST_TIERS.map((t) => t.monthlyAud))
+/** Tiers a customer can actually buy — Enterprise is quote-only, no price. */
+export type SstPurchasableTier = Extract<SstTier, { monthlyAud: number }>
 
-/** Human label for a tier's caseload allowance. */
+/** True when a tier is sold by quote rather than a published price. */
+export function isQuoteOnlyTier(tier: SstTier): tier is Extract<SstTier, { monthlyAud: null }> {
+  return tier.monthlyAud === null
+}
+
+/** Entry price for the Clinical Testing suite (A$/month). Quote-only tiers are
+ *  excluded — "from $49" must never be computed off a tier with no price. */
+export const SST_TIER_FROM_AUD = Math.min(
+  ...SST_TIERS.flatMap((t) => (t.monthlyAud === null ? [] : [t.monthlyAud])),
+)
+
+/** Human label for a tier's monthly patient allowance. */
 export function sstTierAllowance(tier: SstTier): string {
-  return tier.activePatientCap === null
-    ? 'Unlimited active patients'
-    : `Up to ${tier.activePatientCap} active patients`
+  return tier.monthlyPatientCap === null
+    ? 'Unlimited patients'
+    : `Up to ${tier.monthlyPatientCap} new patients a month`
 }
 
 /** Calculate Afterpay/Klarna instalment amount (price / 4, rounded up to cents) */

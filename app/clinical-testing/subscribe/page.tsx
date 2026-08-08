@@ -21,10 +21,12 @@ const TIERS = SST_TIERS.map((t) => ({
   plan: t.plan,
   name: t.name,
   who: sstTierAllowance(t),
-  price: `A$${t.monthlyAud}`,
+  // Quote-only tiers have no published number — never render "A$null".
+  price: t.monthlyAud === null ? 'Contact us' : `A$${t.monthlyAud}`,
+  quoteOnly: t.monthlyAud === null,
   popular: t.popular,
   /** kept so the page can mark the CURRENT plan from server-reported usage */
-  activePatientCap: t.activePatientCap as number | null,
+  monthlyPatientCap: t.monthlyPatientCap as number | null,
 }))
 
 export default function SubscribePage() {
@@ -170,7 +172,7 @@ function Shell() {
       ? 'Create your clinic code first — plans attach to the code your patients use. '
       : isActive
         ? usage.cap != null && !usage.canAddPatient
-          ? `Your plan covers ${usage.cap} active patients and you’re at the limit. Change plan in the billing portal — a second subscription would double-bill you, so checkout is closed here. `
+          ? `Your plan covers ${usage.cap} new patients a month and you’re at the limit. Change plan in the billing portal — a second subscription would double-bill you, so checkout is closed here. `
           : 'Your clinic is already on a plan. Change or cancel it in the billing portal — starting a second subscription would double-bill you. '
         : // A clinic whose INCLUDED platform year (bought with a course
           // enrolment) has lapsed is on the trial ALLOWANCE but never was a
@@ -201,18 +203,18 @@ function Shell() {
             existing patients keep working either way.
           </p>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {TIERS.map((t) => (
               <div key={t.plan} className="relative flex flex-col rounded-2xl border bg-white p-6" style={{ borderColor: t.popular ? 'var(--accent)' : '#e2e8f0', borderWidth: t.popular ? 2 : 1 }}>
                 {t.popular && <span className="absolute -top-3 left-6 rounded-full bg-accent px-3 py-1 text-[10px] font-bold uppercase text-white">Most clinics</span>}
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t.name}</p>
                 <p className="text-xs text-muted-foreground">{t.who}</p>
-                <p className="mt-3 text-3xl font-extrabold text-foreground">{t.price}<span className="text-sm font-semibold text-muted-foreground"> / mo</span></p>
+                <p className="mt-3 text-3xl font-extrabold text-foreground">{t.price}{!t.quoteOnly && <span className="text-sm font-semibold text-muted-foreground"> / mo</span>}</p>
                 {/* "Your current plan" is asserted ONLY from the server's own
                     reported cap, and only for a numeric one — an unlimited cap
                     is equally a comped clinic (tier null), so claiming the
                     Unlimited plan there would be a billing claim we can't back. */}
-                {isActive && usage?.cap != null && usage.cap === t.activePatientCap && (
+                {isActive && usage?.cap != null && usage.cap === t.monthlyPatientCap && (
                   <p className="mt-1.5 m-0 text-[11px] font-bold text-emerald-700">Your current plan</p>
                 )}
                 {hasClinic === false ? (
@@ -231,6 +233,16 @@ function Shell() {
                   >
                     {portalBusy ? 'Opening…' : 'Change plan in billing portal'}
                   </button>
+                ) : t.quoteOnly ? (
+                  // Enterprise has NO Stripe price and is never checked out
+                  // self-serve — the whole category prices this way, and a
+                  // published ceiling would cap the scheme/occ-rehab deals.
+                  <a
+                    href="mailto:zac@concussion-education-australia.com?subject=SST%20Enterprise%20enquiry"
+                    className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                  >
+                    Talk to us
+                  </a>
                 ) : (
                   <button
                     type="button"

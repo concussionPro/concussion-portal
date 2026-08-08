@@ -62,7 +62,7 @@ vi.mock('@vercel/kv', () => ({
   },
 }))
 
-import { getClinicUsage, TRIAL_PATIENT_CAP, TIER_ACTIVE_PATIENT_CAP } from '@/lib/sst-trainer/clinic-registry'
+import { getClinicUsage, TRIAL_PATIENT_CAP, TIER_MONTHLY_PATIENT_CAP } from '@/lib/sst-trainer/clinic-registry'
 
 /** The column exists and holds `includedUntil`; the clinic has `subscription`. */
 function dbWithColumn(opts: { includedUntil: string | null; subscription: string | null; plan?: string; tier?: string | null; patients?: number }) {
@@ -108,8 +108,8 @@ describe('the included platform year, at the admission gate', () => {
     const usage = await getClinicUsage('ABC123')
 
     expect(usage.plan).toBe('active')
-    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP[SST_INCLUDED_TIER.plan])
-    expect(usage.window).toBe('30d')
+    expect(usage.cap).toBe(TIER_MONTHLY_PATIENT_CAP[SST_INCLUDED_TIER.plan])
+    expect(usage.window).toBe('month')
     // plan === 'active' is exactly what /api/sst/report reads to decide whether
     // to stamp the TRIAL watermark, so this assertion IS the "full documents"
     // guarantee the sales page makes.
@@ -134,7 +134,7 @@ describe('the included platform year, at the admission gate', () => {
     const usage = await getClinicUsage('ABC123')
 
     expect(usage.plan).toBe('active')
-    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP[SST_INCLUDED_TIER.plan])
+    expect(usage.cap).toBe(TIER_MONTHLY_PATIENT_CAP[SST_INCLUDED_TIER.plan])
   })
 
   it('a comped/alumni clinic (active, tier NULL, no included_until) stays UNLIMITED', async () => {
@@ -147,6 +147,47 @@ describe('the included platform year, at the admission gate', () => {
     expect(usage.cap).toBeNull()
   })
 
+  it('a PAID clinic over its monthly cap is NEVER blocked — it goes over-cap instead', async () => {
+    // 40 new patients started this month on Starter (10). Under the retired
+    // rolling-caseload model this refused the 11th admission. A paying clinic
+    // being told it may not start a concussion patient is a billing rule
+    // imposed on clinical care, so the cap is now SOFT: admit, flag, bill up.
+    kvRecord = { clinicName: 'Busy payer', plan: 'active', tier: 'starter' }
+    sqlHandler = dbWithColumn({ includedUntil: FUTURE, subscription: 'sub_live_1', tier: 'starter', patients: 40 })
+
+    const usage = await getClinicUsage('ABC123')
+
+    expect(usage.plan).toBe('active')
+    expect(usage.cap).toBe(10)
+    expect(usage.patientCount).toBe(40)
+    expect(usage.canAddPatient).toBe(true)
+    expect(usage.overCap).toBe(true)
+  })
+
+  it('a PAID clinic inside its cap is not flagged over-cap', async () => {
+    kvRecord = { clinicName: 'Normal payer', plan: 'active', tier: 'clinic' }
+    sqlHandler = dbWithColumn({ includedUntil: FUTURE, subscription: 'sub_live_2', tier: 'clinic', patients: 4 })
+
+    const usage = await getClinicUsage('ABC123')
+
+    expect(usage.cap).toBe(30)
+    expect(usage.overCap).toBe(false)
+    expect(usage.canAddPatient).toBe(true)
+  })
+
+  it('a LEGACY tier string resolves to the included rung, never to unlimited', async () => {
+    // Every clinic provisioned before 2026-08-08 stored tier='single'. If that
+    // key were dropped from the cap map it would read `undefined` → null →
+    // UNLIMITED, silently handing a paid clinic the enterprise allowance.
+    kvRecord = { clinicName: 'Legacy', plan: 'active', tier: 'single' }
+    sqlHandler = dbWithColumn({ includedUntil: FUTURE, subscription: null, tier: 'single', patients: 0 })
+
+    const usage = await getClinicUsage('ABC123')
+
+    expect(usage.cap).not.toBeNull()
+    expect(usage.cap).toBe(SST_INCLUDED_TIER.monthlyPatientCap)
+  })
+
   it('a lapsed clinic still lets its EXISTING patients through — only new admissions stop', async () => {
     // 20 patients seen over the included year, now reverted to the 3 cap.
     kvRecord = { clinicName: 'Lapsed busy', plan: 'active', tier: SST_INCLUDED_TIER.plan }
@@ -154,7 +195,10 @@ describe('the included platform year, at the admission gate', () => {
 
     const usage = await getClinicUsage('ABC123')
 
-    // The gate refuses a NEW admission…
+    // The gate refuses a NEW admission. This clinic has LAPSED — it is back on
+    // the trial allowance, and the trial keeps a hard gate because converting
+    // is a purchase decision. A clinic still inside a PAID tier is never
+    // blocked; it goes over-cap and is billed up (see the soft-cap test).
     expect(usage.canAddPatient).toBe(false)
     // …and that is the ONLY thing it refuses. app/api/sst/session only consults
     // canAddPatient when the patient has never been seen before, so nobody
@@ -209,7 +253,7 @@ describe('included_until is lazily migrated, so every read must tolerate its abs
 
     // Absent column means "no included period recorded", never "expired".
     expect(usage.plan).toBe('active')
-    expect(usage.cap).toBe(TIER_ACTIVE_PATIENT_CAP[SST_INCLUDED_TIER.plan])
+    expect(usage.cap).toBe(TIER_MONTHLY_PATIENT_CAP[SST_INCLUDED_TIER.plan])
   })
 
   it('the gate reads the column through to_jsonb so Postgres never rejects the statement', async () => {

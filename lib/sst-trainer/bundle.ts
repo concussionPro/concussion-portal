@@ -28,7 +28,7 @@ import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { grantSstEntitlement } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { CONFIG, SST_INCLUDED_TIER } from '@/lib/config'
-import { sstPlanPriceId, redactStripeSecrets } from '@/lib/stripe'
+import { sstPlanPriceId, redactStripeSecrets, SST_PLAN_ENV_VAR } from '@/lib/stripe'
 
 /**
  * When a course purchase should carry the bundled-then-monthly SST platform
@@ -54,15 +54,17 @@ export const INCLUDED_PLATFORM_MONTHS = 12
 
 /**
  * Ordering of paid tiers by how much they allow, so provisioning can tell an
- * UPGRADE from a DOWNGRADE. Mirrors TIER_ACTIVE_PATIENT_CAP (single 5 <
- * clinic 10 < enterprise unlimited). A NULL tier on an active plan is
- * unlimited and is handled separately — it outranks everything here.
+ * UPGRADE from a DOWNGRADE. Mirrors TIER_MONTHLY_PATIENT_CAP (starter 10 <
+ * clinic 30 < pro 100 < enterprise unlimited). A NULL tier on an active plan
+ * is unlimited and is handled separately — it outranks everything here.
+ *
+ * LEGACY KEYS MUST STAY. `sst_clinics.tier` still holds 'single' for every
+ * clinic provisioned before 2026-08-08. Dropping it would make
+ * TIER_RANK['single'] undefined, every comparison against it false, and the
+ * no-downgrade guard would silently wave through the downgrade it exists to
+ * prevent. 'single' ranks with Starter, the rung it now maps to.
  */
-// Ordering for the no-downgrade guard. 'starter' inserted 2026-08-07 when the
-// ladder went to four tiers — omitting it would make TIER_RANK['starter']
-// undefined and every comparison against it false, silently allowing a
-// downgrade the guard exists to prevent.
-const TIER_RANK: Record<string, number> = { single: 1, starter: 2, clinic: 3, enterprise: 4 }
+const TIER_RANK: Record<string, number> = { single: 1, starter: 1, clinic: 2, pro: 3, enterprise: 4 }
 
 export async function provisionPlatformForBuyer(
   email: string,
@@ -101,10 +103,13 @@ export async function provisionPlatformForBuyer(
   // international buyers whose subscription creation had silently failed. The
   // free platform year is deliberate; a free platform *forever* is not.
   if (subscriptionAttached) {
-    // tier 'single': the intl bundle's included platform IS the single-
-    // clinician tier — without it the clinic sat unlimited (null tier) until
-    // a random subscription.updated event flipped it to the 5-active cap.
-    await setSstClinicPlan(clinic.code, 'active', { tier: 'single' })
+    // The intl bundle's included platform is the ENTRY rung — without a tier
+    // the clinic sat unlimited (null tier) until a random subscription.updated
+    // event flipped it. Derived from SST_INCLUDED_TIER, never hardcoded: the
+    // 2026-08-07 restructure changed what 'single' meant and left these two
+    // literals behind, which is how the first paying CRM customer ended up on
+    // a 1-patient cap.
+    await setSstClinicPlan(clinic.code, 'active', { tier: SST_INCLUDED_TIER.plan })
   } else if (entitledPlatform) {
     // A DOMESTIC course purchase. The sales page states plainly that "every
     // enrolment includes the working clinical platform", and the buyer has just
@@ -115,26 +120,31 @@ export async function provisionPlatformForBuyer(
     // from (found 2026-08-06, walking a real buyer's path an hour before she
     // purchased).
     //
-    // Granted at the SAME tier the international bundle grants — 'single',
-    // 5 active patients — rather than uncapped. The guard above exists because
-    // an unconditional lift once handed every provisioned buyer an unlimited
-    // clinic free forever; this is deliberately the included tier, not that.
+    // Granted at the SAME tier the international bundle grants — Starter, 10
+    // new patients a month — rather than uncapped. The guard above exists
+    // because an unconditional lift once handed every provisioned buyer an
+    // unlimited clinic free forever; this is deliberately the included tier.
     // 12 months included with the enrolment, then a PROMPT to subscribe —
     // never an automatic charge. A domestic course checkout saves no payment
     // method and the buyer consented to a one-off course fee, not to
     // off-session billing a year later.
     //
     // A FLOOR, NEVER A DOWNGRADE. setSstClinicPlan writes `tier = COALESCE(new,
-    // old)`, so passing 'single' OVERWRITES whatever the clinic already had.
-    // Without the guard below, buying a course made an existing clinic WORSE:
-    //   - an alumni/comp clinic (active, tier NULL = unlimited) dropped to a
-    //     5-active-patient cap AND gained a 12-month expiry it never had;
-    //   - a clinic PAYING $99/mo on tier 'clinic' (10 active) dropped to 5
-    //     while still being billed $99.
-    // Both are live shapes: all 26 production clinics are active/tier-NULL
+    // old)`, so passing the included tier OVERWRITES whatever the clinic
+    // already had. Without the guard below, buying a course made an existing
+    // clinic WORSE:
+    //   - an alumni/comp clinic (active, tier NULL = unlimited) dropped to the
+    //     entry cap AND gained a 12-month expiry it never had;
+    //   - a clinic PAYING for a higher rung dropped to the entry cap while
+    //     still being billed at the higher one.
+    // Both are live shapes: 26 of 27 production clinics are active/tier-NULL
     // comps, and alumni are the warmest CRM buyers we have.
+    //
+    // Ranked against SST_INCLUDED_TIER rather than a literal, so moving the
+    // included rung can never silently invert this comparison.
     const alreadyBetter =
-      clinic.plan === 'active' && (clinic.tier === null || TIER_RANK[clinic.tier] > TIER_RANK.single)
+      clinic.plan === 'active' &&
+      (clinic.tier === null || TIER_RANK[clinic.tier] > TIER_RANK[SST_INCLUDED_TIER.plan])
     const hasRealSubscription = !!(await getSstClinicStripeSubscription(clinic.code))
     if (alreadyBetter || hasRealSubscription) {
       // Their existing entitlement already meets or beats what the enrolment
@@ -190,7 +200,7 @@ export async function provisionPlatformForBuyer(
 }
 
 /**
- * Attach the REAL single-clinician SST subscription (A$49/mo,
+ * Attach the REAL included-tier SST subscription (the entry rung,
  * STRIPE_SST_SINGLE_PRICE_ID) to a clinic, FREE for year 1 then auto-monthly.
  *
  *  - Uses the existing dashboard Price (SST_PLANS.single) — no invented price.
@@ -217,10 +227,12 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
       return true // already has a renewal — the clinic may stay uncapped
     }
 
-    const priceId = sstPlanPriceId('single') // STRIPE_SST_SINGLE_PRICE_ID (A$49/mo)
+    // The included rung, resolved through SST_PLANS — 'starter' rides the
+    // STRIPE_SST_SINGLE_PRICE_ID slot (see lib/stripe SST_PLANS).
+    const priceId = sstPlanPriceId(SST_INCLUDED_TIER.plan)
     if (!priceId) {
       console.warn(
-        `[bundle] STRIPE_SST_SINGLE_PRICE_ID unset — clinic ${clinicCode} gets NO monthly subscription, so the trial cap stays on`,
+        `[bundle] ${SST_PLAN_ENV_VAR[SST_INCLUDED_TIER.plan]} unset — clinic ${clinicCode} gets NO monthly subscription, so the trial cap stays on`,
       )
       return false
     }
@@ -235,16 +247,16 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
       // Reuse the EXISTING sst-trainer plan-flip handling — do NOT add parallel logic.
       metadata: {
         product: 'sst-trainer',
-        plan: 'single',
+        plan: SST_INCLUDED_TIER.plan,
         clinicCode,
         source: 'crm-international-bundle',
       },
     })
 
-    // tier 'single' so year 1 matches what the subscription's webhook events
-    // will set from year 2 (metadata.plan='single') — never a tier flip.
-    await setSstClinicPlan(clinicCode, 'active', { customerId: sub.customerId, subscriptionId: created.id, tier: 'single' })
-    console.log(`[bundle] SST subscription ${created.id} attached to clinic ${clinicCode} (365-day trial → A$49/mo at year 2)`)
+    // Year 1 must match what the subscription's webhook events will set from
+    // year 2 (metadata.plan below) — never a tier flip mid-customer.
+    await setSstClinicPlan(clinicCode, 'active', { customerId: sub.customerId, subscriptionId: created.id, tier: SST_INCLUDED_TIER.plan })
+    console.log(`[bundle] SST subscription ${created.id} attached to clinic ${clinicCode} (365-day trial → ${SST_INCLUDED_TIER.name} at year 2)`)
     return true
   } catch (err) {
     // Redact first: Stripe echoes an invalid id back inside its error message,

@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       usage.plan === 'active'
         ? {
-            error: `Your plan covers ${usage.cap} active patients (30 days) and you're at the limit. Manage billing → change plan to invite more — your existing patients keep working.`,
+            error: `Your plan covers ${usage.cap} new patients a month and you're at the limit. Manage billing → change plan to invite more — your existing patients keep working.`,
             code: 'plan-cap-reached',
             usage,
           }

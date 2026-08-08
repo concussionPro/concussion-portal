@@ -1101,7 +1101,7 @@ async function handleCrmPurchase(
   //
   // INTERNATIONAL only (gated on international:'true' AND the go-live flag): the
   // platform is bundled FREE for year 1, then bills MONTHLY at the real single-
-  // clinician SST price (A$49/mo). We attach a REAL sst-trainer subscription with
+  // included-tier SST price. We attach a REAL sst-trainer subscription with
   // a 365-day trial so monthly billing starts automatically at year 2 — managed
   // by the EXISTING sst-trainer subscription webhook handling. Resolve the Stripe
   // customer + saved card here and hand them to the provisioner (which owns the
@@ -2437,7 +2437,7 @@ async function handleSstSubscriptionChange(sub: Stripe.Subscription) {
   // portal/dashboard doesn't touch subscription metadata, which left seat
   // allowances stuck on the checkout-time tier (2026-08-05 sweep #7).
   const livePriceId = sub.items?.data?.[0]?.price?.id
-  const tierFromPrice = (['single', 'clinic', 'enterprise'] as const).find(
+  const tierFromPrice = (['starter', 'clinic', 'pro'] as const).find(
     (t) => livePriceId && sstPlanPriceId(t) === livePriceId,
   )
   await setSstClinicPlan(clinicCode, active ? 'active' : 'trial', {

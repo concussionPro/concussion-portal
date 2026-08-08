@@ -13,7 +13,7 @@ import { SST_TIERS, SST_TIER_FROM_AUD, sstTierAllowance } from '@/lib/config'
  * toggle between landing pages … not just the demo animations"). Land on
  * SST Trainer. Each tab is a complete landing (hero + facts + how-it-works).
  * Pricing (both tools) + an evidence block are shared below. Tools are
- * included with CCM/CRM enrolment; A$49/mo standalone. Preseason visual style.
+ * included with CCM/CRM enrolment; from A$49/mo standalone. Preseason visual style.
  */
 
 const ACCENT = '#0d9488'
@@ -27,25 +27,38 @@ type TabId = (typeof TABS)[number]['id']
 
 // Plan names, monthly amounts and caseload allowances come from CONFIG's
 // SST_TIERS — the same source the /clinical-testing/subscribe page and the
-// enforced TIER_ACTIVE_PATIENT_CAP read. Hardcoding them here meant a pricing
+// enforced TIER_MONTHLY_PATIENT_CAP read. Hardcoding them here meant a pricing
 // change had to be remembered in four places to keep display == charge.
 const TIER_EXTRAS: Record<string, string[]> = {
-  single: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians, each with their own login', 'Measured trajectory, flare flags & auto GP report'],
+  // 'each with their own login' was sold here and is NOT how access works:
+  // auth is a clinic-level code + viewKey, `sst_clinic_members` has never held
+  // a row, and sessions carry no clinician reference. Unlimited clinicians is
+  // true; per-clinician logins do not exist. Same class of defect as the
+  // 'Referral-directory listing' this block already had removed — never
+  // advertise an offering that doesn't ship.
+  starter: ['Both tools — SST Trainer + baseline', 'Unlimited clinicians on one clinic code', 'Measured trajectory, flare flags & auto GP report'],
   clinic: ['Everything in Starter, for a bigger caseload', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team'],
-  // 'Referral-directory listing' was sold here and existed nowhere in the
-  // product — no directory route, table or admin surface anywhere in the repo.
-  // Never advertise an offering that doesn't ship.
-  enterprise: ['Everything in Clinic, unlimited active patients', 'Priority onboarding + direct line to our team', 'Clubs, leagues & payers — talk to us'],
+  pro: ['Everything in Clinic, for a dedicated concussion service', 'Unlimited clinicians on one licence', 'Priority onboarding + direct line to our team'],
+  enterprise: ['Everything in Pro, with no monthly patient limit', 'Priority onboarding + direct line to our team', 'Clubs, leagues, payers & occupational rehab — talk to us'],
 }
 
 const TIERS = SST_TIERS.map((t) => ({
   name: t.name,
   who: sstTierAllowance(t),
-  price: `A$${t.monthlyAud}`,
+  // Enterprise is quote-only and carries NO published number — a printed
+  // ceiling would cap the scheme and occupational-rehab negotiations, which
+  // are an order of magnitude above Pro.
+  price: t.monthlyAud === null ? 'Talk to us' : `A$${t.monthlyAud}`,
+  // Suppresses the "/ month" suffix — "Talk to us / month" rendered live on
+  // /clinical-suite until the prod-build check caught it. Types and 1,498 tests
+  // were green; only the rendered HTML showed it.
+  quoteOnly: t.monthlyAud === null,
   popular: t.popular,
   features: [
     ...(TIER_EXTRAS[t.plan] ?? []),
-    `A$${t.monthlyAud}/mo standalone — or included with course enrolment`,
+    t.monthlyAud === null
+      ? 'Priced per organisation'
+      : `A$${t.monthlyAud}/mo standalone — or included with course enrolment`,
   ],
 }))
 
@@ -73,7 +86,7 @@ function FreeBadge({ note }: { note: string }) {
         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">✓</span>
         Included with your CCM / CRM course enrolment
       </span>
-      <span className="text-[12.5px] font-bold text-emerald-700">Standalone from A${SST_TIER_FROM_AUD}/month — {SST_TIERS.map((t) => `A$${t.monthlyAud}`).join(' / ')} by caseload.</span>
+      <span className="text-[12.5px] font-bold text-emerald-700">Standalone from A${SST_TIER_FROM_AUD}/month — priced by new patients a month, unlimited clinicians.</span>
       <span className="text-[12px] font-medium text-slate-400">{note}</span>
     </div>
   )
@@ -281,9 +294,18 @@ function SharedPricing() {
               {t.popular && <span className="absolute -top-3 left-6 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: ACCENT }}>Most clinics</span>}
               <p className="m-0 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t.name}</p>
               <p className="m-0 text-[13px] text-slate-500">{t.who}</p>
-              <p className="m-0 mt-0.5 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}<span className="text-[14px] font-semibold text-slate-400"> / month</span></p>
-              <Link href="/pricing" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Get with the course</Link>
-              <Link href="/clinical-suite/start" className="mt-2 text-center text-[13px] font-bold underline-offset-2 hover:underline" style={{ color: ACCENT }}>or start a free trial →</Link>
+              <p className="m-0 mt-0.5 font-extrabold tracking-[-0.02em]" style={{ fontSize: '38px', color: NAVY, lineHeight: 1 }}>{t.price}{!t.quoteOnly && <span className="text-[14px] font-semibold text-slate-400"> / month</span>}</p>
+              {/* Enterprise is negotiated, so it gets a contact CTA rather than
+                  "Get with the course" + a self-serve trial link — neither of
+                  which is the path a league, payer or occ-rehab provider takes. */}
+              {t.quoteOnly ? (
+                <a href="mailto:zac@concussion-education-australia.com?subject=SST%20Enterprise%20enquiry" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: '#fff', color: NAVY, border: '1.5px solid #cbd5e1' }}>Talk to us</a>
+              ) : (
+                <>
+                  <Link href="/pricing" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Get with the course</Link>
+                  <Link href="/clinical-suite/start" className="mt-2 text-center text-[13px] font-bold underline-offset-2 hover:underline" style={{ color: ACCENT }}>or start a free trial →</Link>
+                </>
+              )}
               <ul className="mt-5 flex flex-col gap-2.5 p-0">
                 {t.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.45] text-slate-600">

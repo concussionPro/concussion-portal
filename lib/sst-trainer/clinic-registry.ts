@@ -51,35 +51,64 @@ export interface ClinicRecord {
  *  Defined in lib/config so client components can render it too. */
 export const TRIAL_PATIENT_CAP = SST_TRIAL_PATIENT_CAP
 
-/** PAID tiers are priced on ACTIVE CASELOAD, not seats (owner 2026-08-05:
- *  "make it fool proof — change pricing tiers i dont care"). Clinicians are
- *  unlimited on every paid tier; the metered unit is distinct active patients
- *  in a rolling 30 days — the one metric a clinic cannot fake without
- *  destroying the product's value to itself. Enforcement = the same
- *  server-side admission gate as the trial. null = unlimited. */
-export const TIER_ACTIVE_PATIENT_CAP: Record<string, number | null> = {
-  // MUST mirror SST_TIERS in lib/config.ts. Four tiers since 2026-08-07 —
-  // 'single' now means ONE active patient (it previously meant five, which is
-  // the contradiction that prompted the restructure), and 'starter' is the new
-  // five-patient rung that course enrolments include.
-  // tests/money-path asserts this map equals SST_TIERS caps for every plan,
-  // because a mismatch means the page advertises one allowance while the
-  // admission gate enforces another.
-  single: 1,
-  starter: 5,
-  clinic: 10,
+/**
+ * PAID tiers are priced on NEW PATIENTS STARTED PER CALENDAR MONTH, not seats
+ * and not rolling active caseload (owner 2026-08-08). Clinicians are unlimited
+ * on every paid tier.
+ *
+ * Seats are not an option: there is no clinician identity in this product to
+ * count (clinic-level code + view_key auth, `sst_clinic_members` unused,
+ * sessions carry no member reference). Patient volume is both the only
+ * measurable axis and a self-policing proxy for clinic size.
+ *
+ * Rolling-active was rejected because it makes EARLY DISCHARGE the way to free
+ * a slot. Counting first-session-this-month means a patient costs the same
+ * whether their programme runs three weeks or three months.
+ *
+ * null = unlimited. tests/money-path asserts this map equals the SST_TIERS caps
+ * for every plan, because a mismatch means the page advertises one allowance
+ * while the gate enforces another.
+ */
+export const TIER_MONTHLY_PATIENT_CAP: Record<string, number | null> = {
+  starter: 10,
+  clinic: 30,
+  pro: 100,
   enterprise: null,
+  // LEGACY tier strings still stored in sst_clinics.tier. 'single' was the tier
+  // every course enrolment was provisioned at, including the first paying CRM
+  // customer — it must resolve to the included rung (Starter), NOT fall through
+  // to `undefined`, which `?? null` would turn into UNLIMITED and hand a paid
+  // clinic the enterprise allowance by accident.
+  single: 10,
 }
 
 export interface ClinicUsage {
   plan: 'trial' | 'active'
-  /** trial → lifetime distinct patients; active → distinct active in 30d */
+  /** trial → lifetime distinct patients; active → NEW patients started this
+   *  calendar month */
   patientCount: number
   cap: number | null // null = unlimited
-  /** 'lifetime' (trial) or '30d' (paid caseload window) — for display copy */
-  window: 'lifetime' | '30d'
-  /** A NEW patient may be admitted. Existing patients are never blocked. */
+  /** 'lifetime' (trial) or 'month' (paid monthly-starts window) */
+  window: 'lifetime' | 'month'
+  /**
+   * A NEW patient may be admitted. Existing patients are never blocked.
+   *
+   * On a PAID plan this is ALWAYS true — see `overCap`. Blocking a paying
+   * clinic from starting a patient is refusing care to enforce billing, which
+   * this product will not do. The trial keeps a hard gate: it is a purchase
+   * decision, not an interruption to someone's rehabilitation.
+   */
   canAddPatient: boolean
+  /**
+   * A PAID clinic has passed its monthly allowance. The patient is still
+   * admitted; this drives the upgrade notice and the tier float.
+   *
+   * Concussion volume is SEASONAL — a clinic with football contracts can start
+   * 12 in July and 2 in December — so the float goes BOTH WAYS: two consecutive
+   * months over moves them up, two consecutive months under moves them back
+   * down. A one-way ratchet would bill a seasonal buyer at their peak forever.
+   */
+  overCap: boolean
   /**
    * True when this clinic is on the trial ALLOWANCE because the platform year
    * included with a course enrolment has lapsed — not because they are a
@@ -101,7 +130,7 @@ export interface ClinicUsage {
 export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
   const code = normaliseClinicCode(rawCode)
   if (!code || code === DEMO_CLINIC_CODE) {
-    return { plan: 'active', patientCount: 0, cap: null, window: '30d', canAddPatient: true }
+    return { plan: 'active', patientCount: 0, cap: null, window: 'month', canAddPatient: true, overCap: false }
   }
   const clinic = await getClinic(code)
   let plan: 'trial' | 'active' = clinic?.plan === 'active' ? 'active' : 'trial'
@@ -146,45 +175,68 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
       }
     } catch { /* column/table absent → leave the plan as-is */ }
   }
-  // Paid plans meter ACTIVE caseload in a rolling 30 days; the trial meters
+  // Paid plans meter NEW patients STARTED this calendar month; the trial meters
   // lifetime distinct patients. A tier of null on an active plan (alumni
   // comps, legacy grants, enterprise) is unlimited.
-  const allowance = plan === 'active' ? (tier ? (TIER_ACTIVE_PATIENT_CAP[tier] ?? null) : null) : TRIAL_PATIENT_CAP
+  const allowance = plan === 'active' ? (tier ? (TIER_MONTHLY_PATIENT_CAP[tier] ?? null) : null) : TRIAL_PATIENT_CAP
   const windowed = plan === 'active'
   let patientCount = 0
   try {
     // One human = one identity, LABEL-first (final sweep #13): the ref is an
     // INSTALL UUID, so the same labeled patient on phone + laptop (or after a
-    // reinstall) is one human, not two of a 5-cap. Label when present, ref
+    // reinstall) is one human, not two of a cap. Label when present, ref
     // only for unlabeled installs. This also covers the earlier mixed
     // ref/label double-count (sweep #4): shared label collapses both rows.
     // Ref→label resolution (round-L #5): an install that was unlabeled at
     // first sync and named later must not count twice — a ref that EVER
     // carried a label resolves to that label for all its rows.
+    //
+    // Identity resolution runs over the clinic's WHOLE history, never over the
+    // billing window: a patient's first session may predate this month, and the
+    // only way to know they are not NEW is to have seen it. Filtering first and
+    // aggregating second would re-bill every continuing patient every month —
+    // the exact double-charge this model exists to avoid.
+    //
+    // Month boundaries are AEST/AEDT, matching where the functions run (syd1)
+    // and how the tax invoices are dated. UTC would roll the billing month over
+    // 10-11 hours early for every Australian clinic.
     const { rows } = await sql<{ n: number }>`
       WITH s AS (
         SELECT NULLIF(lower(trim(coalesce(patient_label, ''))), '') AS lbl,
-               NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref
+               NULLIF(trim(coalesce(payload->>'patientRef', '')), '') AS ref,
+               created_at
         FROM sst_clinic_sessions
         WHERE upper(clinic_code) = ${code}
-          AND (${!windowed} OR created_at > NOW() - INTERVAL '30 days')
       ), ref_label AS (
         SELECT ref, MAX(lbl) AS lbl FROM s WHERE ref IS NOT NULL AND lbl IS NOT NULL GROUP BY ref
+      ), ident AS (
+        SELECT COALESCE(s.lbl, rl.lbl, s.ref) AS pid, MIN(s.created_at) AS first_seen
+        FROM s LEFT JOIN ref_label rl ON rl.ref = s.ref
+        WHERE COALESCE(s.lbl, rl.lbl, s.ref) IS NOT NULL
+        GROUP BY 1
       )
-      SELECT COUNT(DISTINCT COALESCE(s.lbl, rl.lbl, s.ref))::int AS n
-      FROM s LEFT JOIN ref_label rl ON rl.ref = s.ref
-      WHERE COALESCE(s.lbl, rl.lbl, s.ref) IS NOT NULL
+      SELECT COUNT(DISTINCT pid)::int AS n FROM ident
+      WHERE ${!windowed}
+         OR first_seen >= (date_trunc('month', NOW() AT TIME ZONE 'Australia/Sydney') AT TIME ZONE 'Australia/Sydney')
     `
     patientCount = rows[0]?.n ?? 0
   } catch {
     /* no sessions table yet → 0 */
   }
+  const atOrOverCap = allowance != null && patientCount >= allowance
   return {
     plan,
     patientCount,
     cap: allowance,
-    window: windowed ? '30d' : 'lifetime',
-    canAddPatient: allowance == null || patientCount < allowance,
+    window: windowed ? 'month' : 'lifetime',
+    // PAID plans are a SOFT cap — the patient is always admitted and the
+    // clinic is billed up next month if they stay over (see `overCap`).
+    // Refusing to start a concussion patient because a subscription tier is
+    // full is a billing decision imposed on clinical care, and this product
+    // does not make it. The TRIAL keeps its hard gate: converting is a
+    // purchase decision, and the clinic can subscribe in one click.
+    canAddPatient: windowed ? true : !atOrOverCap,
+    overCap: windowed && atOrOverCap,
     includedLapsed,
   }
 }

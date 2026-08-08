@@ -224,7 +224,7 @@ describe('SST subscription checkout', () => {
   it('carries the clinicCode the webhook needs on BOTH the session and the subscription', async () => {
     const { createSstSubscriptionCheckoutSession } = await import('@/lib/stripe')
     await createSstSubscriptionCheckoutSession({
-      plan: 'single',
+      plan: 'starter',
       clinicCode: 'ABC123',
       customerEmail: 'owner@clinic.test',
       successUrl: 'https://portal.test/clinical-testing?subscribed=1',
@@ -257,21 +257,32 @@ describe('SST subscription checkout', () => {
     const { sstPlanPriceId, isStripePriceId, redactStripeSecrets } = await import('@/lib/stripe')
     expect(isStripePriceId('price_singleTest')).toBe(true)
     expect(isStripePriceId('sk_live_abc123')).toBe(false)
-    expect(sstPlanPriceId('single')).toBe('price_singleTest')
+    expect(sstPlanPriceId('starter')).toBe('price_singleTest')
     expect(redactStripeSecrets('No such price: sk_live_abc123')).toBe('No such price: sk_live_[REDACTED]')
   })
 })
 
 describe('displayed caseload allowance == the allowance the admission gate enforces', () => {
-  it('SST_TIERS caps match TIER_ACTIVE_PATIENT_CAP for every plan', async () => {
+  it('SST_TIERS caps match TIER_MONTHLY_PATIENT_CAP for every plan', async () => {
     const { SST_TIERS, SST_TRIAL_PATIENT_CAP } = await import('@/lib/config')
-    const { TIER_ACTIVE_PATIENT_CAP, TRIAL_PATIENT_CAP } = await import('@/lib/sst-trainer/clinic-registry')
+    const { TIER_MONTHLY_PATIENT_CAP, TRIAL_PATIENT_CAP } = await import('@/lib/sst-trainer/clinic-registry')
     for (const tier of SST_TIERS) {
-      expect(TIER_ACTIVE_PATIENT_CAP[tier.plan]).toBe(tier.activePatientCap)
+      expect(TIER_MONTHLY_PATIENT_CAP[tier.plan]).toBe(tier.monthlyPatientCap)
     }
-    // Every enforced tier key must be a tier we actually sell.
-    for (const key of Object.keys(TIER_ACTIVE_PATIENT_CAP)) {
-      expect(SST_TIERS.some((t) => t.plan === key)).toBe(true)
+    // Every enforced key must be a tier we sell, OR a documented LEGACY tier
+    // string still present in sst_clinics.tier. A key that is neither is a
+    // typo that would resolve to `undefined` → unlimited.
+    const LEGACY_TIERS = ['single']
+    for (const key of Object.keys(TIER_MONTHLY_PATIENT_CAP)) {
+      expect(SST_TIERS.some((t) => t.plan === key) || LEGACY_TIERS.includes(key)).toBe(true)
+    }
+    // A legacy tier must never resolve to unlimited — that would hand a paid
+    // clinic the enterprise allowance for free. 'single' was the tier every
+    // pre-2026-08-08 enrolment was provisioned at, so it maps to the rung an
+    // enrolment includes.
+    const { SST_INCLUDED_TIER } = await import('@/lib/config')
+    for (const key of LEGACY_TIERS) {
+      expect(TIER_MONTHLY_PATIENT_CAP[key]).toBe(SST_INCLUDED_TIER.monthlyPatientCap)
     }
     expect(TRIAL_PATIENT_CAP).toBe(SST_TRIAL_PATIENT_CAP)
   })
@@ -323,7 +334,7 @@ describe('no OTHER checkout builder opens the manual promo field', () => {
 
   it('the SST subscription does not (was a free month on a $49/mo plan)', async () => {
     const { createSstSubscriptionCheckoutSession } = await import('@/lib/stripe')
-    await createSstSubscriptionCheckoutSession({ plan: 'single', clinicCode: 'ABC123', ...urls })
+    await createSstSubscriptionCheckoutSession({ plan: 'starter', clinicCode: 'ABC123', ...urls })
     expect(last().mode).toBe('subscription')
     expect(last().allow_promotion_codes).toBeUndefined()
   })

@@ -11,11 +11,13 @@ import { SiteNav } from '@/components/SiteNav'
 import { trackEvent } from '@/lib/analytics'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { REFERENCE_COUNT } from '@/data/reference-count'
-import { SST_TIERS, sstTierAllowance } from '@/lib/config'
+import { SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 
-/** The bundled platform's year-2 rate = the REAL single-clinician SST tier the
- *  webhook attaches (STRIPE_SST_SINGLE_PRICE_ID). Never a literal. */
-const STARTER_TIER = SST_TIERS.find((t) => t.plan === 'single')!
+/** The bundled platform's year-2 rate = the tier a course enrolment INCLUDES,
+ *  which is what the webhook attaches. Never a literal, and never a `.find()`
+ *  on a plan name — the 2026-08-08 rename retired 'single' and a stale find()
+ *  would have thrown on a non-null assertion at module load. */
+const STARTER_TIER = SST_INCLUDED_TIER
 const PLATFORM_MONTHLY_AUD = STARTER_TIER.monthlyAud
 
 /**

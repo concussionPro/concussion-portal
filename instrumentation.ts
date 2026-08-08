@@ -38,21 +38,30 @@ export async function register() {
    * ever scheduled. That failure is silent and permanent per customer, so it
    * must not be possible to ship the flag on without the price.
    */
-  const { CONFIG } = await import('@/lib/config')
-  const { isStripePriceId } = await import('@/lib/stripe')
-  // Year-2 renewal rides the tier a course enrolment INCLUDES, which is the
-  // 5-patient Starter rung — not 'single' (1 patient) since the 2026-08-07
-  // restructure.
-  const singlePrice = process.env.STRIPE_SST_STARTER_PRICE_ID
-  if ((CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE || CONFIG.FEATURES.CCM_PLATFORM_BUNDLE_LIVE) && !singlePrice) {
-    missing.push('STRIPE_SST_STARTER_PRICE_ID (required while CRM_INTERNATIONAL_LIVE is true — without it the year-2 renewal is never created and the platform is given away permanently)')
+  const { CONFIG, SST_INCLUDED_TIER } = await import('@/lib/config')
+  const { isStripePriceId, SST_PLAN_ENV_VAR } = await import('@/lib/stripe')
+
+  // The year-2 renewal rides the tier a course enrolment INCLUDES, so the var
+  // to demand is whichever SLOT that tier is wired to — NOT a literal name.
+  //
+  // This was hardcoded to STRIPE_SST_STARTER_PRICE_ID, a variable that has
+  // never been set in production and that the 2026-08-08 ladder retired
+  // altogether (Enterprise went quote-only, freeing its slot for Pro, so three
+  // purchasable tiers now fit the three slots that exist). Because
+  // instrumentation THROWS in production, a stale name here is not a warning —
+  // it is a site-wide outage on deploy. Derive it.
+  const includedPriceVar = SST_PLAN_ENV_VAR[SST_INCLUDED_TIER.plan]
+  const includedPrice = process.env[includedPriceVar]
+  if ((CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE || CONFIG.FEATURES.CCM_PLATFORM_BUNDLE_LIVE) && !includedPrice) {
+    missing.push(`${includedPriceVar} (backs the ${SST_INCLUDED_TIER.name} tier a course enrolment includes — without it the year-2 renewal is never created and the platform is given away permanently)`)
   }
 
   // SHAPE, not just presence. A live secret key was once pasted into this var;
   // a presence check accepts that, and the value then reaches Stripe, which
   // rejects it with an error message CONTAINING the key. Validate the prefix so
   // the misconfiguration is caught at boot instead of at the first sale.
-  for (const key of ['STRIPE_SST_SINGLE_PRICE_ID', 'STRIPE_SST_STARTER_PRICE_ID', 'STRIPE_SST_CLINIC_PRICE_ID', 'STRIPE_SST_ENTERPRISE_PRICE_ID'] as const) {
+  // Enumerated from SST_PLAN_ENV_VAR so a re-wired slot can never be skipped.
+  for (const key of Object.values(SST_PLAN_ENV_VAR)) {
     const val = process.env[key]
     if (val && !isStripePriceId(val)) {
       missing.push(`${key} is not a Stripe Price id — it must start with "price_" (a secret key or product id here will be rejected by Stripe, and Stripe echoes the value back in the error)`)

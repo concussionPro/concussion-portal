@@ -297,7 +297,7 @@ export function SstClinicCard({
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
                 {usage.cap == null
                   ? 'Subscribed · unlimited patients'
-                  : `Subscribed · ${usage.patientCount} of ${usage.cap} active patients (30 days)`}
+                  : `Subscribed · ${usage.patientCount} of ${usage.cap} new patients this month`}
               </span>
               {/* DEMO00 has no session and no billing: openBillingPortal returns
                   immediately for it, so these rendered as buttons that did

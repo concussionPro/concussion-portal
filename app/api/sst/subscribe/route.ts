@@ -6,11 +6,13 @@ import { createSstSubscriptionCheckoutSession, sstPlanPriceId, type SstPlan } fr
 import { CheckoutUnavailableError } from '@/lib/stripe'
 
 /**
- * POST /api/sst/subscribe { plan: 'single'|'clinic'|'enterprise' }
+ * POST /api/sst/subscribe { plan: 'starter'|'clinic'|'pro' }
  * Starts a Stripe subscription Checkout for the signed-in clinic. On success
  * the webhook flips the clinic to 'active' (lifts the 3-patient trial cap).
  */
-const PLANS: SstPlan[] = ['single', 'clinic', 'enterprise']
+// Enterprise is QUOTE ONLY — it has no Stripe price and must never be
+// checked out self-serve. Omitting it here is the enforcement.
+const PLANS: SstPlan[] = ['starter', 'clinic', 'pro']
 
 export async function POST(req: NextRequest) {
   const token = req.cookies.get('session')?.value

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { isEmailSuppressed } from '@/lib/email-suppression'
-import { CONFIG, SST_TIERS } from '@/lib/config'
+import { CONFIG, SST_TIERS, sstTierAllowance } from '@/lib/config'
 import { SST_INCLUDED_PERIOD_ENDING } from '@/lib/email-sequences'
 
 /**
@@ -119,10 +119,12 @@ export async function GET(request: NextRequest) {
     // Derived from CONFIG, never written out — the tiers changed this month
     // (50% launch discount dropped) and any hardcoded price here would be a
     // false quote to a customer.
+    // Quote-only tiers carry no price, so they are described as such rather
+    // than rendered as "$null/mo".
     const tiers = SST_TIERS.map(
       (t) =>
-        `<strong>${t.name}</strong> — $${t.monthlyAud}/mo · ` +
-        (t.activePatientCap === null ? 'unlimited active patients' : `up to ${t.activePatientCap} active patients`),
+        `<strong>${t.name}</strong> — ${t.monthlyAud === null ? 'price on application' : `$${t.monthlyAud}/mo`} · ` +
+        sstTierAllowance(t),
     ).join('<br>')
 
     const ok = await sendEmail({
