@@ -13,6 +13,7 @@
  * (and the ACC45 claim number) when transcribing onto ACC's fillable form.
  */
 import { sql } from '@/lib/db'
+import { normalisePatientCode } from '../patient-identity'
 import { DEMO_CLINIC_CODE, getClinic } from '../clinic-registry'
 import { computePrescription, asCondition } from '../protocol'
 import type { Condition, ThresholdResult, TestModality } from '../protocol'
@@ -107,7 +108,10 @@ const asInterp = (s: unknown): ThresholdResult['interpretation'] =>
   (typeof s === 'string' && VALID_INTERP.has(s) ? s : 'invalid') as ThresholdResult['interpretation']
 
 export interface LoadReportOptions {
-  /** install-UUID identity — prefer over the display label when present */
+  /** Clinic-scoped MINTED identity. Highest precedence — the only key that can
+   *  neither merge two same-named patients nor split one across devices. */
+  patientCode?: string
+  /** install-UUID identity — legacy fallback for clients with no patient code */
   patientRef?: string
   /** Real identity to stamp on the report (else the de-identified label is used). */
   patient?: Partial<ReportPatient>
@@ -240,16 +244,32 @@ export async function loadReportInput(
   // the same human's label-only rows (older clients) via the case-folded
   // label; label-only callers keep working unchanged.
   const ref = (opts.patientRef ?? '').trim()
+  // PATIENT CODE WINS OUTRIGHT (2026-08-09). When the caller has a minted
+  // patient code, it is the ONLY predicate — no ref clause, no label clause.
+  //
+  // The previous ref-first/label-fallback shape had two live defects on a
+  // document that presents itself as the complete record of care:
+  //   - SPLIT: patientRef is an INSTALL uuid, so the same human on a phone and
+  //     a laptop (or after a reinstall) is two refs. A report pulled for one
+  //     returned that device's sessions and SILENTLY OMITTED the other's.
+  //   - MERGE: the label fallback case-folds free text, so two patients
+  //     entered as "John S" at one clinic resolved to a single record.
+  // The billing counter already collapsed devices to one human, so the system
+  // was treating one patient as one for money and as several for the report.
+  const patientCode = normalisePatientCode(opts.patientCode)
   const { rows } = await sql<Row>`
     SELECT patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
     FROM sst_clinic_sessions
     WHERE upper(clinic_code) = ${code.toUpperCase()}
       AND (
-        (${ref} <> '' AND payload->>'patientRef' = ${ref})
-        OR (
-          lower(trim(coalesce(patient_label, ''))) = ${patientLabel.trim().toLowerCase()}
-          AND (${ref} = '' OR NULLIF(trim(coalesce(payload->>'patientRef', '')), '') IS NULL)
-        )
+        CASE WHEN ${patientCode} <> '' THEN payload->>'patientCode' = ${patientCode}
+        ELSE (
+          (${ref} <> '' AND payload->>'patientRef' = ${ref})
+          OR (
+            lower(trim(coalesce(patient_label, ''))) = ${patientLabel.trim().toLowerCase()}
+            AND (${ref} = '' OR NULLIF(trim(coalesce(payload->>'patientRef', '')), '') IS NULL)
+          )
+        ) END
       )
     ORDER BY created_at ASC
   `

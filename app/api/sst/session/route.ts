@@ -5,6 +5,8 @@ import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
+import { normalisePatientCode } from '@/lib/sst-trainer/patient-identity'
+import { parseSessionResearchFields } from '@/lib/sst-trainer/research'
 import { getClinicUsage, getClinic } from '@/lib/sst-trainer/clinic-registry'
 import { detectThreshold, computePrescription, CONDITIONS } from '@/lib/sst-trainer/protocol'
 import type { TestStage, TestInput, Condition } from '@/lib/sst-trainer/protocol'
@@ -196,6 +198,32 @@ export async function POST(request: NextRequest) {
     let storedBandLow = intOrNull(body.bandLow)
     let storedBandHigh = intOrNull(body.bandHigh)
     const payloadForStore: Record<string, unknown> = { ...(payload as Record<string, unknown>) }
+
+    // PATIENT IDENTITY (2026-08-09). `patientCode` is the clinic-scoped, minted
+    // identity key; `patientRef` is an INSTALL uuid and `patientLabel` is free
+    // text a clinician typed. Only the code can neither collide (two "John S"
+    // merging into one record) nor split (the same human on a phone and a
+    // laptop reporting as two). It is normalised and stored as a top-level
+    // payload field so the report query and the research extract both key on
+    // the same value.
+    //
+    // Additive: a client that sends no code behaves exactly as before.
+    const rawPatientCode = (payload as Record<string, unknown>).patientCode
+    const patientCode = normalisePatientCode(rawPatientCode)
+    if (patientCode) payloadForStore.patientCode = patientCode
+    else delete payloadForStore.patientCode
+
+    // Research fields ride the same payload. parseSessionResearchFields FAILS
+    // TO NULL on anything malformed — in particular a consent version that does
+    // not exist is stored as "not enrolled", never trusted, because a
+    // permissive parse here would enrol someone in wording never shown to them.
+    const researchFields = parseSessionResearchFields(payload)
+    payloadForStore.researchConsentVersion = researchFields.researchConsentVersion
+    if (researchFields.daysSinceInjury !== null && researchFields.daysSinceInjury !== undefined) {
+      payloadForStore.daysSinceInjury = researchFields.daysSinceInjury
+    } else {
+      delete payloadForStore.daysSinceInjury
+    }
 
     // CRITICAL (2026-08-05 final sweep #1): an ABORTED test must never be
     // re-derived — a walk-out at minute 2 has no ≥3-pt rise, so detectThreshold

@@ -98,6 +98,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const input = await loadReportInput(code, patientLabel, jurisdiction, {
+      patientCode: str('pcode'),
       patientRef: str('ref'),
       patient: {
         firstName: str('first'),
