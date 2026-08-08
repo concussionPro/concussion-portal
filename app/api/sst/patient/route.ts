@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyViewKey, normaliseClinicCode, DEMO_CLINIC_CODE } from '@/lib/sst-trainer/clinic-registry'
 import { createPatient, resolvePatient, recordIntake } from '@/lib/sst-trainer/patient-registry'
 import { isDemoUserId } from '@/lib/demo-session'
+import { rateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/get-client-ip'
 
 /**
  * PATIENT IDENTITY API.
@@ -54,16 +56,55 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams
   const clinicCode = normaliseClinicCode(sp.get('clinic'))
-  const patient = await resolvePatient(clinicCode, sp.get('code'))
-  if (!patient) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const supplied = sp.get('code')
+
+  /**
+   * RATE LIMITED, TWO WAYS. A patient code is a six-character bearer credential
+   * over a 28-character alphabet — ~4.8e8 combinations, which is enumerable in
+   * hours against an unthrottled endpoint. Combined with a clinic code that is
+   * printed on a QR card, an unlimited resolve endpoint would be a disclosure
+   * of health-adjacent personal information under APP 11, and a direct fail on
+   * the PracSuite security questionnaire.
+   *
+   * Per-CLINIC limits the damage of a single target; per-IP limits a broad
+   * sweep. Both are needed: per-IP alone is defeated by rotating addresses,
+   * per-clinic alone lets one address grind every clinic in parallel.
+   */
+  const ip = getClientIp(request) || 'unknown'
+  const [byClinic, byIp] = await Promise.all([
+    rateLimit({ key: `sst-patient-resolve:c:${clinicCode}`, limit: 20, windowSec: 600 }),
+    rateLimit({ key: `sst-patient-resolve:i:${ip}`, limit: 40, windowSec: 600 }),
+  ])
+  if (!byClinic.ok || !byIp.ok) {
+    console.warn(`[sst-patient] resolve throttled — clinic ${clinicCode || '?'} ip ${ip}`)
+    return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 })
+  }
+
+  const patient = await resolvePatient(clinicCode, supplied)
+  if (!patient) {
+    // Logged so a sweep is visible in the runtime logs rather than silent.
+    console.warn(`[sst-patient] resolve MISS — clinic ${clinicCode || '?'} ip ${ip}`)
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  /**
+   * DELIBERATELY RETURNS NO PERSONAL DATA.
+   *
+   * `label` is a NAME the clinician typed and was returned here in the first
+   * cut — that made a guessed code disclose an identity, which is precisely the
+   * thing the pseudonymous design exists to prevent. The patient already knows
+   * who they are; the app does not need to be told.
+   *
+   * What is returned is only what the PATIENT THEMSELVES supplied (their own
+   * age band, sex and consent state) so a second device can skip re-entry, plus
+   * whether the intake screen is still needed. A guessed code therefore
+   * discloses "this code exists" and nothing more.
+   */
   return NextResponse.json({
     patientCode: patient.patientCode,
-    label: patient.label,
     ageBand: patient.ageBand,
     sex: patient.sex,
     researchConsentVersion: patient.researchConsentVersion,
-    // TRUE when this device needs the full intake screen, FALSE when the
-    // patient already completed it elsewhere and only re-entered their code.
     needsIntake: patient.ageBand === null && patient.sex === null,
   })
 }
