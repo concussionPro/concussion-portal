@@ -803,7 +803,7 @@ function CourseAuthorPanel() {
                 <dd className="text-sm text-slate-600 mt-0.5 leading-relaxed">
                   The rehabilitation method taught here is a published, citable clinical protocol:{' '}
                   <a
-                    href="https://doi.org/10.5281/zenodo.21482634"
+                    href="https://doi.org/10.5281/zenodo.21482633"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-teal-700 font-medium hover:underline"
@@ -811,7 +811,7 @@ function CourseAuthorPanel() {
                     <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise
                     Rehabilitation after Concussion (mTBI)</em>, Lewis&nbsp;Z. (2026), Zenodo, CC-BY-4.0
                   </a>{' '}
-                  (DOI 10.5281/zenodo.21482634). The SST Trainer operationalises it — graded BCTT/BCBT
+                  (DOI 10.5281/zenodo.21482633). The SST Trainer operationalises it — graded BCTT/BCBT
                   test, measured HR threshold, sub-symptom-threshold prescription and monitored home
                   sessions.
                 </dd>

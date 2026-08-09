@@ -82,7 +82,22 @@ const STEP_CAPTION: Record<AppStep, string> = {
 }
 
 const WEEK_MS = 604_800_000
+/**
+ * THE NEXT-DAY CHECK-IN WINDOW — 12 to 36 hours, both bounds.
+ *
+ * The lower bound existed; the upper did not, so an answer given three days
+ * later was stored as "the next-day check-in" for that session. The published
+ * protocol (v2 §5) and the analysis pipeline both define exacerbation as the
+ * rating 12-36h after the session, so an unbounded window meant the product was
+ * generating a different variable from the one its own protocol defines — and
+ * the framework paper would have validated a protocol it does not cite.
+ *
+ * Past 36h the session is NOT re-prompted: the observation is missing, and
+ * missing must stay missing. Coding a late answer as the next-day response, or
+ * a skipped one as "no flare", both bias the estimate toward the null.
+ */
 const CHECKIN_AFTER_MS = 12 * 3_600_000
+const CHECKIN_BEFORE_MS = 36 * 3_600_000
 
 /** Calendar-day key for the check-in skip marker ("skip holds for today"). */
 function todayKey(): string {
@@ -215,7 +230,11 @@ export default function PlatformAppPage({
         const idx = skippedToday
           ? -1
           : s.sessions.findIndex(
-              (sess) => !sess.nextDayCheckin && Date.now() - sess.at >= CHECKIN_AFTER_MS,
+              (sess) => {
+                if (sess.nextDayCheckin) return false
+                const age = Date.now() - sess.at
+                return age >= CHECKIN_AFTER_MS && age <= CHECKIN_BEFORE_MS
+              },
             )
         if (idx >= 0) {
           setCheckinIdx(idx)

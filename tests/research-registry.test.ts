@@ -91,3 +91,39 @@ describe('research consent is gated and names the linkage', () => {
     expect(RESEARCH_CONSENT_SCOPE_V1.some((c) => /independent/i.test(c))).toBe(true)
   })
 })
+
+/**
+ * DOI HYGIENE. Zenodo mints two kinds of DOI and they are not interchangeable:
+ *
+ *   CONCEPT  10.5281/zenodo.21482633 — always resolves to the LATEST version
+ *   VERSION  10.5281/zenodo.21482634 (v1), 10.5281/zenodo.21855932 (v2)
+ *
+ * Every "our protocol is published, here it is" link must be the CONCEPT DOI,
+ * or the accreditation bodies, course pages and pricing surfaces that link it
+ * keep pointing at a superseded document forever. 16 surfaces were doing
+ * exactly that after v2 was deposited — including every accreditation page a
+ * reviewing body actually clicks.
+ *
+ * The GP/insurer report is the deliberate exception: it states which version
+ * the care conformed to, so it must cite the SPECIFIC version DOI.
+ */
+describe('protocol DOI references', () => {
+  const read = async (rel: string) =>
+    (await import('node:fs/promises')).readFile(new URL(rel, import.meta.url), 'utf8')
+
+  it('no surface still points at the superseded v1 version DOI', async () => {
+    const { execSync } = await import('node:child_process')
+    const hits = execSync(
+      "grep -rl '10.5281/zenodo.21482634' app lib components --include=*.ts --include=*.tsx || true",
+      { cwd: new URL('..', import.meta.url).pathname, encoding: 'utf8' },
+    ).trim()
+    expect(hits, `still on the v1 version DOI:\n${hits}`).toBe('')
+  })
+
+  it('the clinical report cites the SPECIFIC version it conforms to', async () => {
+    const src = await read('../lib/sst-trainer/gp-report-html.ts')
+    // A conformance statement that pointed at "latest" would silently re-scope
+    // what a signed, transmitted report claimed about the care delivered.
+    expect(src).toContain('10.5281/zenodo.21855932')
+  })
+})

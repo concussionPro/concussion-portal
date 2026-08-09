@@ -6,6 +6,7 @@ import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
 import { normalisePatientCode } from '@/lib/sst-trainer/patient-identity'
+import { pemGate } from '@/lib/sst-trainer/pem'
 import { parseSessionResearchFields } from '@/lib/sst-trainer/research'
 import { getClinicUsage, getClinic } from '@/lib/sst-trainer/clinic-registry'
 import { detectThreshold, computePrescription, CONDITIONS } from '@/lib/sst-trainer/protocol'
@@ -304,7 +305,38 @@ export async function POST(request: NextRequest) {
       payloadForStore.thresholdStage = derived.thresholdStage
       storedHrt = derived.hrt != null ? Math.round(derived.hrt) : null
 
-      if (storedHrt != null) {
+      /**
+       * PEM INTERLOCK — ENFORCED HERE, ON THE SERVER.
+       *
+       * The gate has to sit at the point the BAND IS COMPUTED, not at the
+       * screen that collects the answers. A client that skips the PEM screen,
+       * an older app build, an offline replay, or a direct POST would otherwise
+       * all obtain a training band for a PEM-risk condition — and the interlock
+       * would be advisory decoration. Placing it here makes it unbypassable.
+       *
+       * FAILS CLOSED. A PEM-risk condition with no screen in the payload, an
+       * incomplete screen, or any positive item yields NO BAND. The session
+       * itself is still recorded — refusing to store a clinical event would
+       * lose data — but no prescription is derived from it, and the reason is
+       * written to the row so the clinician's surface can explain the refusal
+       * as a clinical finding rather than a fault.
+       */
+      const pemScreenRaw = (payload as { pemScreen?: unknown }).pemScreen
+      const gate = pemGate(
+        condition ?? 'concussion',
+        (pemScreenRaw ?? null) as Parameters<typeof pemGate>[1],
+      )
+
+      if (!gate.allowed) {
+        storedBandLow = null
+        storedBandHigh = null
+        payloadForStore.pemBlocked = true
+        payloadForStore.pemVerdict = gate.verdict.status
+        console.warn(
+          `[sst-session] PEM interlock BLOCKED a prescription for clinic ${clinicCode} ` +
+            `(condition=${condition ?? 'concussion'}, verdict=${gate.verdict.status})`,
+        )
+      } else if (storedHrt != null) {
         // `condition` is allowlisted above, so computePrescription can no
         // longer throw or return a NaN band here.
         const rx = computePrescription(storedHrt, condition ?? 'concussion')

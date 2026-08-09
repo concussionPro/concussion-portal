@@ -129,12 +129,12 @@ export default function CimspaLandingPage() {
           <p className="mt-3 text-[12.5px] leading-relaxed text-slate-500">
             The clinical pathway you refer into runs on a published, standardised protocol —{' '}
             <a
-              href="https://doi.org/10.5281/zenodo.21482634"
+              href="https://doi.org/10.5281/zenodo.21482633"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:decoration-teal-500"
             >
-              DOI 10.5281/zenodo.21482634
+              DOI 10.5281/zenodo.21482633
             </a>{' '}
             — delivered by the SST Trainer.
           </p>

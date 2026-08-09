@@ -459,8 +459,8 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
             <strong className="text-foreground">The method is published and citable.</strong>{' '}
             <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise
             Rehabilitation after Concussion (mTBI)</em> — Lewis Z. (2026), Zenodo, CC-BY-4.0,{' '}
-            <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="text-accent font-semibold hover:underline">
-              doi.org/10.5281/zenodo.21482634
+            <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent font-semibold hover:underline">
+              doi.org/10.5281/zenodo.21482633
             </a>
             . The SST Trainer is the tool that delivers it — graded test, measured HR threshold,
             sub-threshold prescription, monitored progression.

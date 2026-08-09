@@ -290,12 +290,12 @@ export default function EvidencePage() {
               base.
             </p>
             <a
-              href="https://doi.org/10.5281/zenodo.21482634"
+              href="https://doi.org/10.5281/zenodo.21482633"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-[#3c7a1f] hover:underline"
             >
-              doi.org/10.5281/zenodo.21482634 →
+              doi.org/10.5281/zenodo.21482633 →
             </a>
           </div>
 

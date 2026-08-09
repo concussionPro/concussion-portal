@@ -84,6 +84,38 @@ export const PEM_ITEMS = [
   'Physically drained or sick after mild activity',
 ] as const
 
+/**
+ * THE RATING ANCHORS. These must be SHOWN to the person answering.
+ *
+ * A 0-4 slider with no anchors does not produce a DSQ-PEM score — it produces
+ * an uncalibrated number that happens to share a range. Cotler et al. report
+ * the frequency scale verbatim as below, and the whole screening rule
+ * (>=2 on both = "at least half the time" and "moderate or greater") is only
+ * meaningful if the respondent saw these words.
+ *
+ * Exported so the UI cannot drift from the instrument.
+ */
+export const PEM_FREQUENCY_ANCHORS = [
+  'None of the time',
+  'A little of the time',
+  'About half the time',
+  'Most of the time',
+  'All of the time',
+] as const
+
+export const PEM_SEVERITY_ANCHORS = [
+  'Symptom not present',
+  'Mild',
+  'Moderate',
+  'Severe',
+  'Very severe',
+] as const
+
+/** Reference for the screen, shown in the UI so a clinician can check it. */
+export const PEM_SOURCE =
+  'Cotler J, Holtzman C, Dudun C, Jason LA. A brief questionnaire to assess ' +
+  'post-exertional malaise. Diagnostics 2018;8(3):66. doi:10.3390/diagnostics8030066'
+
 export interface PemScreen {
   /** Five items, in PEM_ITEMS order. */
   items: PemItem[]

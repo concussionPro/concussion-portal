@@ -38,8 +38,8 @@ export default function PublicBcttCalculatorPage() {
           </p>
           <p className="text-xs text-muted-foreground mt-3">
             Method per the published protocol:{' '}
-            <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-              doi.org/10.5281/zenodo.21482634
+            <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+              doi.org/10.5281/zenodo.21482633
             </a>{' '}
             · decision support only — the treating clinician owns all clinical decisions
           </p>

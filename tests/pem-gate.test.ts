@@ -150,3 +150,46 @@ describe('no condition ships without an explicit PEM decision', () => {
     }
   })
 })
+
+/**
+ * THE INTERLOCK IS ENFORCED WHERE THE BAND IS COMPUTED.
+ *
+ * Until 2026-08-09 `pemGate` was called from nowhere: the module and its tests
+ * existed, and no code path invoked them, so nothing was ever gated. These pin
+ * the property that matters — the refusal must be produced by the SERVER at the
+ * point of prescription, so a client that skips the screen, an old build, an
+ * offline replay or a direct POST cannot obtain a band.
+ */
+describe('the gate is wired, not just written', () => {
+  it('the session route imports and calls pemGate', async () => {
+    const src = await import('node:fs/promises').then((fs) =>
+      fs.readFile(new URL('../app/api/sst/session/route.ts', import.meta.url), 'utf8'),
+    )
+    expect(src).toContain("from '@/lib/sst-trainer/pem'")
+    expect(src).toMatch(/pemGate\(/)
+    // It must sit on the band-computation branch, not merely be imported.
+    expect(src).toMatch(/if \(!gate\.allowed\)/)
+  })
+
+  it('the rating anchors are exported so the UI cannot drift from the instrument', async () => {
+    const { PEM_FREQUENCY_ANCHORS, PEM_SEVERITY_ANCHORS, PEM_ITEMS } = await import('../lib/sst-trainer/pem')
+    // Five points per scale, matching Cotler's 0-4.
+    expect(PEM_FREQUENCY_ANCHORS).toHaveLength(5)
+    expect(PEM_SEVERITY_ANCHORS).toHaveLength(5)
+    // The anchor at index 2 is what makes ">=2" mean "at least half the time".
+    expect(PEM_FREQUENCY_ANCHORS[2]).toMatch(/half the time/i)
+    expect(PEM_SEVERITY_ANCHORS[2]).toMatch(/moderate/i)
+    expect(PEM_ITEMS).toHaveLength(5)
+  })
+
+  it('the screen form renders every anchor, so no rating is unlabelled', async () => {
+    const src = await import('node:fs/promises').then((fs) =>
+      fs.readFile(new URL('../components/sst-trainer/PemScreen.tsx', import.meta.url), 'utf8'),
+    )
+    expect(src).toContain('PEM_FREQUENCY_ANCHORS')
+    expect(src).toContain('PEM_SEVERITY_ANCHORS')
+    // No default selection: a pre-filled 0 would let the least engaged user tap
+    // straight through to "no PEM", defeating the fail-closed design.
+    expect(src).toMatch(/PEM_ITEMS\.map\(\(\) => null\)/)
+  })
+})

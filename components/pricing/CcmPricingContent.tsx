@@ -363,8 +363,8 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 Curriculum aligned to the Amsterdam International Consensus on Concussion in Sport (2023)
                 and the SCAT6/SCOAT6 standard &middot; taught by Zac Lewis, Osteopath &middot; protocol published
                 open-access:{' '}
-                <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-                  DOI 10.5281/zenodo.21482634
+                <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                  DOI 10.5281/zenodo.21482633
                 </a>
               </p>
               {/* Skill chips — inline pills, no text-block. Captures the

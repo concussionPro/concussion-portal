@@ -148,8 +148,8 @@ export default function ClinikoIntegrationPage() {
           </p>
           <p className="text-xs text-muted-foreground">
             The clinical protocol SST delivers is published open-access:{' '}
-            <a href="https://doi.org/10.5281/zenodo.21482634" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-              doi.org/10.5281/zenodo.21482634
+            <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+              doi.org/10.5281/zenodo.21482633
             </a>
           </p>
         </div>

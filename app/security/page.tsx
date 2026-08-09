@@ -64,7 +64,7 @@ const SECTIONS = [
   {
     icon: FileText,
     title: 'Clinical boundaries',
-    body: 'SST Trainer supports clinician prescriptions and documentation. The software never diagnoses and never makes clearance decisions — clinicians review and sign every report. The clinical protocol it delivers is published open-access (DOI 10.5281/zenodo.21482634).',
+    body: 'SST Trainer supports clinician prescriptions and documentation. The software never diagnoses and never makes clearance decisions — clinicians review and sign every report. The clinical protocol it delivers is published open-access (DOI 10.5281/zenodo.21482633).',
   },
 ]
 
