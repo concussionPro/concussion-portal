@@ -1,5 +1,6 @@
 'use client'
 
+import { PROTOCOL_DOI, PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -321,7 +322,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <a
-                href="https://doi.org/10.5281/zenodo.21482633"
+                href={PROTOCOL_DOI_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:border-teal-300 hover:bg-teal-50/40"
@@ -332,7 +333,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                     Published clinical protocol
                     <ExternalLink className="w-3 h-3 opacity-50" strokeWidth={2.2} />
                   </p>
-                  <p className="text-[11.5px] text-muted-foreground mt-0.5">Open-access, peer-reviewable — DOI 10.5281/zenodo.21482633</p>
+                  <p className="text-[11.5px] text-muted-foreground mt-0.5">Open-access, peer-reviewable — {PROTOCOL_DOI_LABEL}</p>
                 </div>
               </a>
               <a
@@ -589,8 +590,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             sub-symptom-threshold rehabilitation method behind the SST Trainer is a citable open-access
             protocol — <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise
             Rehabilitation after Concussion (mTBI)</em>, Lewis Z. (2026), Zenodo, CC-BY-4.0,{' '}
-            <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent font-semibold hover:underline">
-              doi.org/10.5281/zenodo.21482633
+            <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="text-accent font-semibold hover:underline">
+              {PROTOCOL_DOI}
             </a>.
           </p>
         </div>

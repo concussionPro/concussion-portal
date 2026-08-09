@@ -1,5 +1,6 @@
 'use client'
 
+import { PROTOCOL_DOI, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import Link from 'next/link'
 import { SstWatchAnimation } from '@/components/platform/SstWatchAnimation'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
@@ -334,7 +335,7 @@ function SharedPricing() {
                 halves recovery time (Leddy et al., PMC9378725). The method the tools deliver is a citable
                 open-access protocol — <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic
                 Exercise Rehabilitation after Concussion (mTBI)</em>, Lewis Z. (2026), Zenodo, CC-BY-4.0,{' '}
-                <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: ACCENT }}>doi.org/10.5281/zenodo.21482633</a>
+                <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: ACCENT }}>{PROTOCOL_DOI}</a>
                 {' '}— backed by the course&rsquo;s {REFERENCE_COUNT}-reference evidence base.
               </p>
               <div className="mt-4 flex flex-wrap gap-[11px]">

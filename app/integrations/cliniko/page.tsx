@@ -1,3 +1,4 @@
+import { PROTOCOL_DOI, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, KeyRound, FileText, ShieldCheck, Plug, Activity, ClipboardList } from 'lucide-react'
@@ -148,8 +149,8 @@ export default function ClinikoIntegrationPage() {
           </p>
           <p className="text-xs text-muted-foreground">
             The clinical protocol SST delivers is published open-access:{' '}
-            <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-              doi.org/10.5281/zenodo.21482633
+            <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+              {PROTOCOL_DOI}
             </a>
           </p>
         </div>

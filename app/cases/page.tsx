@@ -1,3 +1,4 @@
+import { PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import Link from 'next/link'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
@@ -166,14 +167,14 @@ export default function CasesLandingPage() {
           <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600">
             It is a published, citable clinical protocol —{' '}
             <a
-              href="https://doi.org/10.5281/zenodo.21482633"
+              href={PROTOCOL_DOI_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-slate-800 underline decoration-slate-300 underline-offset-2 hover:decoration-teal-500"
             >
               <em>A Standardised Clinical Protocol for Sub-Symptom-Threshold Aerobic Exercise Rehabilitation after Concussion (mTBI)</em>, Lewis&nbsp;Z. (2026), Zenodo, CC-BY-4.0
             </a>{' '}
-            (DOI 10.5281/zenodo.21482633). The{' '}
+            ({PROTOCOL_DOI_LABEL}). The{' '}
             <strong className="font-semibold text-slate-700">SST Trainer</strong> is the tool
             that delivers it — graded BCTT/BCBT test → measured HR threshold →
             sub-symptom-threshold prescription → monitored home sessions with a measured

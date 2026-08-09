@@ -15,6 +15,7 @@
  * plus the live tool demos and an enrol CTA.
  */
 
+import { PROTOCOL_DOI, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
                   <p style="margin:0 0 16px;font-size:15px;">Every enrolment also includes the working clinical platform — SCAT6 baseline &amp; serial testing, the SST Trainer app and the BCTT calculator. You can try both exactly as a patient or clinician would, no login:</p>
                   <p style="margin:0 0 6px;font-size:14px;">&bull; <a href="${baseUrl}/sst-trainer?clinic=DEMO00" style="color:#0d9488;font-weight:600;">SST Trainer — live demo</a></p>
                   <p style="margin:0 0 20px;font-size:14px;">&bull; <a href="${baseUrl}/preseason/b/DEMO00" style="color:#0d9488;font-weight:600;">Baseline testing — live demo</a></p>
-                  <p style="margin:0 0 16px;font-size:15px;">The clinical protocol the course teaches is published open-access: <a href="https://doi.org/10.5281/zenodo.21482633" style="color:#0d9488;">doi.org/10.5281/zenodo.21482633</a></p>
+                  <p style="margin:0 0 16px;font-size:15px;">The clinical protocol the course teaches is published open-access: <a href="${PROTOCOL_DOI_URL}" style="color:#0d9488;">${PROTOCOL_DOI}</a></p>
                   <div style="background:#f0fdfa;padding:16px 20px;border-radius:8px;border-left:3px solid #0d9488;margin:20px 0;font-size:14px;">
                     Certificate and CPD-hours statement provided on completion for your portfolio${safePrice ? ` &middot; enrolment is ${escapeHtml(safePrice)}` : ''} &middot; 7-day money-back guarantee.
                   </div>

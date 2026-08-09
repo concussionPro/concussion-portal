@@ -1,3 +1,4 @@
+import { PROTOCOL_DOI, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import Link from 'next/link'
 import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/PlatformChrome'
 import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
@@ -290,12 +291,12 @@ export default function EvidencePage() {
               base.
             </p>
             <a
-              href="https://doi.org/10.5281/zenodo.21482633"
+              href={PROTOCOL_DOI_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-[#3c7a1f] hover:underline"
             >
-              doi.org/10.5281/zenodo.21482633 →
+              {PROTOCOL_DOI} →
             </a>
           </div>
 

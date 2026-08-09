@@ -1,3 +1,4 @@
+import { PROTOCOL_DOI_LABEL } from '@/lib/protocol-reference'
 import type { Metadata } from 'next'
 import { ShieldCheck, Lock, Server, KeyRound, FileText, Users, AlertTriangle, Globe } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
@@ -64,7 +65,7 @@ const SECTIONS = [
   {
     icon: FileText,
     title: 'Clinical boundaries',
-    body: 'SST Trainer supports clinician prescriptions and documentation. The software never diagnoses and never makes clearance decisions — clinicians review and sign every report. The clinical protocol it delivers is published open-access (DOI 10.5281/zenodo.21482633).',
+    body: 'SST Trainer supports clinician prescriptions and documentation. The software never diagnoses and never makes clearance decisions — clinicians review and sign every report. The clinical protocol it delivers is published open-access (' + PROTOCOL_DOI_LABEL + ').',
   },
 ]
 

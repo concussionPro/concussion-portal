@@ -1,3 +1,4 @@
+import { PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import Link from 'next/link'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
@@ -129,12 +130,12 @@ export default function CimspaLandingPage() {
           <p className="mt-3 text-[12.5px] leading-relaxed text-slate-500">
             The clinical pathway you refer into runs on a published, standardised protocol —{' '}
             <a
-              href="https://doi.org/10.5281/zenodo.21482633"
+              href={PROTOCOL_DOI_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:decoration-teal-500"
             >
-              DOI 10.5281/zenodo.21482633
+              {PROTOCOL_DOI_LABEL}
             </a>{' '}
             — delivered by the SST Trainer.
           </p>

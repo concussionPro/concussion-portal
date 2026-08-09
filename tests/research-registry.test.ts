@@ -127,3 +127,29 @@ describe('protocol DOI references', () => {
     expect(src).toContain('10.5281/zenodo.21855932')
   })
 })
+
+describe('the protocol reference is centralised', () => {
+  it('no file hardcodes a zenodo DOI except the reference module and the report', async () => {
+    const { execSync } = await import('node:child_process')
+    const hits = execSync(
+      "grep -rl 'zenodo\\.' app lib components --include=*.ts --include=*.tsx || true",
+      { cwd: new URL('..', import.meta.url).pathname, encoding: 'utf8' },
+    ).trim().split('\n').filter(Boolean)
+    // Two legitimate holders: the source of truth, and the clinical report,
+    // which pins a SPECIFIC version because it is a conformance claim.
+    const allowed = ['lib/protocol-reference.ts', 'lib/sst-trainer/gp-report-html.ts']
+    const stray = hits.filter((h) => !allowed.includes(h))
+    expect(stray, `hardcoded DOI outside the reference module:\n${stray.join('\n')}`).toEqual([])
+  })
+
+  it('the visible label states the version so a reviewer knows what they will open', async () => {
+    const { PROTOCOL_DOI_LABEL, PROTOCOL_VERSION, PROTOCOL_DOI } = await import('../lib/protocol-reference')
+    expect(PROTOCOL_DOI_LABEL).toContain(PROTOCOL_DOI)
+    expect(PROTOCOL_DOI_LABEL).toContain(`v${PROTOCOL_VERSION}`)
+  })
+
+  it('concept and version DOIs are distinct — conflating them is the whole bug', async () => {
+    const { PROTOCOL_DOI, PROTOCOL_VERSION_DOI } = await import('../lib/protocol-reference')
+    expect(PROTOCOL_DOI).not.toBe(PROTOCOL_VERSION_DOI)
+  })
+})

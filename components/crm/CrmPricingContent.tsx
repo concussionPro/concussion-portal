@@ -1,5 +1,6 @@
 'use client'
 
+import { PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import { useState, useEffect } from 'react'
 import { CONFIG, SST_TIERS, sstTierAllowance } from '@/lib/config'
 import Image from 'next/image'
@@ -384,8 +385,8 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               in the hero but the receipts sat at the bottom of the page). */}
           <div className="max-w-3xl mx-auto mt-5 rounded-xl border border-teal-200 bg-teal-50/50 px-4 py-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[12.5px]">
             <span className="font-semibold text-foreground">First-line treatment per the Amsterdam 2023 consensus</span>
-            <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
-              Published protocol — DOI 10.5281/zenodo.21482633
+            <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
+              Published protocol — {PROTOCOL_DOI_LABEL}
             </a>
             <span className="text-muted-foreground">Delivered &amp; documented by SST Trainer — included</span>
           </div>

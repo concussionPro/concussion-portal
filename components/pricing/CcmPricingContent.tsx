@@ -1,5 +1,6 @@
 'use client'
 
+import { PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -363,8 +364,8 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                 Curriculum aligned to the Amsterdam International Consensus on Concussion in Sport (2023)
                 and the SCAT6/SCOAT6 standard &middot; taught by Zac Lewis, Osteopath &middot; protocol published
                 open-access:{' '}
-                <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-                  DOI 10.5281/zenodo.21482633
+                <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                  {PROTOCOL_DOI_LABEL}
                 </a>
               </p>
               {/* Skill chips — inline pills, no text-block. Captures the

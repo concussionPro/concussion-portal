@@ -1,3 +1,4 @@
+import { PROTOCOL_DOI, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
@@ -38,8 +39,8 @@ export default function PublicBcttCalculatorPage() {
           </p>
           <p className="text-xs text-muted-foreground mt-3">
             Method per the published protocol:{' '}
-            <a href="https://doi.org/10.5281/zenodo.21482633" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-              doi.org/10.5281/zenodo.21482633
+            <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+              {PROTOCOL_DOI}
             </a>{' '}
             · decision support only — the treating clinician owns all clinical decisions
           </p>
