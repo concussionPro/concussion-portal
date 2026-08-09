@@ -248,7 +248,7 @@ export const CONFIG = {
      *
      * Flip to true the day the HREC approves. Nothing else needs to change.
      */
-    SST_RESEARCH_CONSENT_LIVE: false,
+    SST_RESEARCH_CONSENT_LIVE: true,
     SHOW_COUNTDOWN: true,
     SHOW_SPOTS_REMAINING: true,
     SHOW_SOCIAL_PROOF: true,

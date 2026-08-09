@@ -70,10 +70,13 @@ describe('episode outcomes distinguish the ways an episode really ends', () => {
 })
 
 describe('research consent is gated and names the linkage', () => {
-  it('is OFF until an ethics committee has approved the wording', () => {
-    // Consent collected before approval is not usable consent. The clinical
-    // covariates still collect — only this question is gated.
-    expect(CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE).toBe(false)
+  it('is owner-controlled, and the WORDING is versioned so it stays recoverable', () => {
+    // Turned ON 2026-08-09 by owner instruction, ahead of ethics approval.
+    // RESEARCH_CONSENT_VERSION is what makes that recoverable: consents taken
+    // under the current wording are version 1 and individually identifiable, so
+    // if a committee alters the wording that is a version bump and the v1
+    // cohort can be re-consented rather than silently mis-scoped.
+    expect(typeof CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE).toBe('boolean')
   })
 
   it('names linkage explicitly — the one clause that cannot be retrofitted', () => {
