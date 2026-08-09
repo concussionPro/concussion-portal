@@ -101,3 +101,52 @@ describe('DSQ-PEM scoring follows the instrument', () => {
     expect(allZero.items).toHaveLength(PEM_ITEMS.length)
   })
 })
+
+/**
+ * FORWARD GUARD (2026-08-09). Every Condition must be an EXPLICIT decision:
+ * either PEM-gated, or deliberately not.
+ *
+ * Protocol v2 names POTS in the interlock. POTS is not yet a Condition in this
+ * product — but it is a named expansion target, and ME/CFS features co-occur in
+ * a large share of POTS presentations, so adding it as a condition without
+ * adding it to PEM_RISK_CONDITIONS would ship graded exertion, ungated, to the
+ * population it is most contraindicated in.
+ *
+ * This test fails the moment a new Condition appears without a decision
+ * recorded here. That is the point: it converts "someone must remember" into
+ * "the build stops".
+ */
+describe('no condition ships without an explicit PEM decision', () => {
+  /** Conditions deliberately NOT gated, with the reason. */
+  const DELIBERATELY_UNGATED: Record<string, string> = {
+    concussion: 'first-line treatment; gating would train click-through',
+    mtbi: 'same as concussion',
+    tbi: 'exertion is indicated; PEM is not the expected phenotype',
+    cardiac: 'gated by cardiac contraindication screening, not by PEM',
+  }
+
+  it('every Condition is either PEM-gated or explicitly exempt', () => {
+    const gated = new Set<string>(PEM_RISK_CONDITIONS as readonly string[])
+    const undecided = (CONDITIONS as readonly string[]).filter(
+      (c) => !gated.has(c) && !(c in DELIBERATELY_UNGATED),
+    )
+    expect(
+      undecided,
+      `Condition(s) with no PEM decision: ${undecided.join(', ')}. ` +
+        'Add to PEM_RISK_CONDITIONS in lib/sst-trainer/pem.ts, or to ' +
+        'DELIBERATELY_UNGATED here with the clinical reason. Protocol v2 ' +
+        'requires POTS to be gated if it is ever added as a condition.',
+    ).toEqual([])
+  })
+
+  it('POTS, if it is ever added, must be gated', () => {
+    const isPots = (c: string) => /pots|orthostatic/i.test(c)
+    const potsConditions = (CONDITIONS as readonly string[]).filter(isPots)
+    for (const c of potsConditions) {
+      expect(
+        (PEM_RISK_CONDITIONS as readonly string[]).includes(c),
+        `${c} is a Condition but is NOT in PEM_RISK_CONDITIONS — protocol v2 §1.1 requires it`,
+      ).toBe(true)
+    }
+  })
+})

@@ -285,6 +285,101 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
   )
 }
 
+
+/**
+ * NEW PATIENT — mints the clinic-scoped patient code.
+ *
+ * This is the only way a patient's data becomes linkable. A session logged
+ * without a patient code can never be attributed to a person: not for a
+ * complete report, and not for research, no matter what any ethics approval
+ * later permits. So this button is upstream of everything.
+ *
+ * The code is shown ONCE, large, with copy — the clinician reads it to the
+ * patient or writes it on their card. It is deliberately not emailed: it is an
+ * identity key, and a clinic-scoped identity key does not belong in a mailbox.
+ */
+function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const [label, setLabel] = useState('')
+  const [minted, setMinted] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  async function mint() {
+    setBusy(true); setErr(null)
+    try {
+      const res = await fetch('/api/sst/patient', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ clinicCode: clinic.code, viewKey: clinic.viewKey, label: label.trim() || null }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data?.patientCode) throw new Error(data?.error || 'Could not create patient')
+      setMinted(data.patientCode)
+      onMinted()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Could not create patient')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (minted) {
+    return (
+      <div className="mb-6 rounded-2xl border-2 border-accent bg-accent/[0.06] p-5 text-center">
+        <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
+          Patient code{label ? ` · ${label}` : ''}
+        </p>
+        <p className="my-2 font-mono text-4xl font-extrabold tracking-[0.22em] text-foreground">{minted}</p>
+        <p className="mx-auto mb-3 max-w-sm text-[12px] leading-snug text-muted-foreground">
+          Give this to the patient. They enter it once in the app — and again on any new phone to
+          pick up exactly where they left off.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => { void navigator.clipboard?.writeText(minted); setCopied(true) }}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+          >
+            {copied ? 'Copied' : 'Copy code'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMinted(null); setLabel(''); setCopied(false) }}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:bg-accent/90"
+          >
+            Add another patient
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-6 rounded-2xl border border-[rgba(13,115,119,0.16)] bg-white p-4">
+      <p className="m-0 mb-2 text-[12px] font-semibold text-foreground">Add a patient</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="Name or reference (for your list only)"
+          className="min-w-[220px] flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm"
+        />
+        <button
+          type="button"
+          onClick={() => void mint()}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-white hover:bg-accent/90 disabled:opacity-50"
+        >
+          {busy ? 'Creating…' : 'Create patient code'}
+        </button>
+      </div>
+      {err && <p className="mt-2 text-xs font-semibold text-red-600">{err}</p>}
+    </div>
+  )
+}
+
 function Shell() {
   const { user, isLoading } = useSession()
   const access = useClinicalAccess()
@@ -412,6 +507,10 @@ function Shell() {
               </Link>
             )}
           </div>
+
+          {clinic && state === 'ready' && (
+            <NewPatientButton clinic={clinic} onMinted={() => { /* list refreshes on next load */ }} />
+          )}
 
           {state === 'loading' && <p className="text-sm text-muted-foreground">Loading your patients…</p>}
 
