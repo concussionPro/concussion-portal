@@ -25,6 +25,19 @@ const nextConfig: NextConfig = {
   },
 
   // Redirects
+  /**
+   * Short pitch URLs. A REWRITE, not a redirect — the browser keeps showing
+   * `/mscc` instead of bouncing to `/sst-pitch/mscc`, which matters when the
+   * URL is read aloud or typed in front of the people it is named after.
+   *
+   * Listed one slug at a time on purpose. A catch-all `/:slug -> /sst-pitch/:slug`
+   * would swallow every unmatched path in the app and turn genuine 404s into
+   * prospect-page lookups.
+   */
+  async rewrites() {
+    return [{ source: '/mscc', destination: '/sst-pitch/mscc' }]
+  },
+
   async redirects() {
     return [
       {
