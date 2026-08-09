@@ -241,7 +241,68 @@ export interface ResearchRow {
   payload: Record<string, unknown>
 }
 
-export async function researchExtract(minConsentVersion = 1): Promise<ResearchRow[]> {
+/**
+ * THE AUTHORITY under which an extract is run. Required, explicit, and logged.
+ *
+ * The previous version hard-filtered to consented rows only. That looked
+ * cautious and was actually wrong: it encoded an ethics decision in a query.
+ * Scope is decided by the reviewing HREC, not by this file — and an ethics
+ * committee can lawfully authorise secondary use of de-identified routine-care
+ * data WITHOUT individual consent (waiver, or an approved opt-out model). A
+ * hardcoded consent filter silently discards data the approval covers, which
+ * throws away the entire back catalogue the pseudonym architecture exists to
+ * preserve.
+ *
+ * So the gate is not a boolean here. The gate is the approval, and this type
+ * forces the caller to say which approval they are acting under.
+ */
+export type ExtractAuthority =
+  | {
+      /** Individual opt-in consent recorded against each participant. */
+      kind: 'consent'
+      minVersion?: number
+    }
+  | {
+      /**
+       * HREC-approved waiver or opt-out model covering routine-care data,
+       * INCLUDING participants who were never individually consented.
+       * `reference` is the approval number and is written to the log so any
+       * extract can be traced back to the document that authorised it.
+       */
+      kind: 'approval'
+      reference: string
+      /** True when the approval also covers participants who opted OUT. It
+       *  almost never does — an opt-out that is not honoured is not an
+       *  opt-out — so this defaults false and must be set deliberately. */
+      includeOptedOut?: boolean
+    }
+
+/**
+ * THE RESEARCH EXTRACT.
+ *
+ * The single place an analysis dataset is produced, so no ad-hoc query can
+ * leak an identifier or silently change the cohort.
+ *
+ * WHAT IT DROPS, and why each matters:
+ *   clinic_code    — a clinic plus a date is close to re-identifying in one city
+ *   patient_code   — the clinic holds the code→name mapping
+ *   patient_label  — a name
+ *   created_at     — replaced by days-since-injury; an exact session timestamp
+ *                    plus a small clinic re-identifies almost as well as a name
+ *
+ * WHAT IT KEEPS: researchRef, the covariates, and the session measurements.
+ */
+export async function researchExtract(authority: ExtractAuthority): Promise<ResearchRow[]> {
+  // Under an approval, EVERY linkable session is in scope. Under individual
+  // consent, only participants who gave it. Either way the filter is a
+  // consequence of the stated authority rather than a default buried in SQL.
+  const consentOnly = authority.kind === 'consent'
+  const minVersion = authority.kind === 'consent' ? (authority.minVersion ?? 1) : 0
+  const label =
+    authority.kind === 'consent'
+      ? `individual consent v>=${minVersion}`
+      : `HREC approval ${authority.reference}${authority.includeOptedOut ? ' (INCLUDING opted-out — verify this is really approved)' : ''}`
+
   try {
     const { rows } = await sql<{
       research_ref: string; age_band: string | null; sex: string | null
@@ -257,10 +318,13 @@ export async function researchExtract(minConsentVersion = 1): Promise<ResearchRo
       JOIN sst_clinic_patients p
         ON p.clinic_code = s.clinic_code
        AND p.patient_code = s.payload->>'patientCode'
-      WHERE p.research_consent_version IS NOT NULL
-        AND p.research_consent_version >= ${minConsentVersion}
+      WHERE (${!consentOnly} OR (p.research_consent_version IS NOT NULL
+                                 AND p.research_consent_version >= ${minVersion}))
       ORDER BY p.research_ref, s.created_at ASC
     `
+    // Logged so every extract is attributable to the authority it ran under —
+    // this is what an ethics committee or an auditor asks for.
+    console.log(`[sst-research] extract under ${label} → ${rows.length} sessions`)
     return rows.map((r) => ({
       researchRef: r.research_ref,
       ageBand: r.age_band,
@@ -271,12 +335,55 @@ export async function researchExtract(minConsentVersion = 1): Promise<ResearchRo
       bandLow: r.band_low,
       bandHigh: r.band_high,
       sessionType: r.session_type,
-      // Strip anything identifying that rode along inside the payload blob.
       payload: stripIdentifiers(r.payload),
     }))
   } catch (err) {
     console.error('[sst-research] extract failed:', err)
     return []
+  }
+}
+
+/**
+ * HOW MUCH OF THE ARCHIVE IS REACHABLE.
+ *
+ * Run this before an HREC application: it says what a waiver would actually
+ * buy, and — more usefully — how many sessions are NOT linkable to a
+ * participant at all. Unlinkable rows are lost to research permanently no
+ * matter what any committee later approves, so this number is the real cost of
+ * any delay in shipping the patient code.
+ */
+export async function researchReachability(): Promise<{
+  totalSessions: number
+  linkable: number
+  unlinkable: number
+  consented: number
+  participants: number
+}> {
+  try {
+    const { rows } = await sql<{
+      total: number; linkable: number; consented: number; participants: number
+    }>`
+      SELECT
+        (SELECT COUNT(*)::int FROM sst_clinic_sessions) AS total,
+        (SELECT COUNT(*)::int FROM sst_clinic_sessions s
+           JOIN sst_clinic_patients p ON p.clinic_code = s.clinic_code
+                                     AND p.patient_code = s.payload->>'patientCode') AS linkable,
+        (SELECT COUNT(*)::int FROM sst_clinic_sessions s
+           JOIN sst_clinic_patients p ON p.clinic_code = s.clinic_code
+                                     AND p.patient_code = s.payload->>'patientCode'
+          WHERE p.research_consent_version IS NOT NULL) AS consented,
+        (SELECT COUNT(DISTINCT research_ref)::int FROM sst_clinic_patients) AS participants
+    `
+    const r = rows[0]
+    return {
+      totalSessions: r?.total ?? 0,
+      linkable: r?.linkable ?? 0,
+      unlinkable: (r?.total ?? 0) - (r?.linkable ?? 0),
+      consented: r?.consented ?? 0,
+      participants: r?.participants ?? 0,
+    }
+  } catch {
+    return { totalSessions: 0, linkable: 0, unlinkable: 0, consented: 0, participants: 0 }
   }
 }
 
