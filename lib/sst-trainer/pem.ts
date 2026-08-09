@@ -33,13 +33,26 @@ import type { Condition } from './protocol'
  *    clinically wrong and would train clinicians to click through the gate,
  *    which is how safety interlocks die.
  *
- * SCORING follows the DePaul Symptom Questionnaire PEM subscale (Jason et al.),
- * the instrument used in the long-COVID and ME/CFS literature: each item is
- * rated for FREQUENCY and SEVERITY on 0–4, and an item counts as positive when
- * BOTH are ≥2 (i.e. at least "about half the time" and at least "moderate").
- * Any single positive item is treated as a positive screen here — this is a
- * safety gate, not a diagnostic instrument, and it is deliberately more
- * cautious than a research case definition.
+ * SCORING follows the five-item post-exertional malaise screen from the DePaul
+ * Symptom Questionnaire — the items recommended as a FIRST STEP by the NIH/CDC
+ * Common Data Elements PEM working group, and distinct from the fuller ten-item
+ * DSQ-PEM described in the same paper.
+ *
+ *   Cotler J, Holtzman C, Dudun C, Jason LA. A brief questionnaire to assess
+ *   post-exertional malaise. Diagnostics (Basel) 2018;8(3):66.
+ *   doi:10.3390/diagnostics8030066 · PMID 30208578
+ *
+ * Each item is rated 0–4 for FREQUENCY (0 = none of the time, 1 = a little of
+ * the time, 2 = about half the time, 3 = most of the time, 4 = all of the time)
+ * and 0–4 for SEVERITY. An item counts as positive when BOTH are ≥2.
+ *
+ * ANY single positive item is a positive screen. An earlier version of this
+ * comment called that "deliberately more cautious than a research case
+ * definition" — checked against the source, that was wrong in a way worth
+ * correcting: it IS the published rule for these five items, reported there as
+ * at least one PEM symptom occurring "at least half the time and of a moderate
+ * or greater severity". It is applied here as a safety gate rather than as a
+ * diagnostic instrument, but it is not an invention of this product.
  *
  * LANGUAGE DOCTRINE. Nothing in this product may describe itself as "graded
  * exercise therapy" to a PEM-positive patient, and the refusal must not read as
