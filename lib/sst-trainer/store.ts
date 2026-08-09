@@ -31,6 +31,21 @@ export interface WelcomeSelection {
    *  their patients apart in the dashboard (mirrors the preseason athlete name). */
   patientName: string | null
   condition: Condition
+  /**
+   * INTAKE (2026-08-09). Clinic-scoped minted identity plus the covariates a
+   * threshold is uninterpretable without. Asked ONCE; a returning patient is
+   * hydrated from stored state and a patient on a new device re-enters only the
+   * code, because everything else already exists server-side against it.
+   */
+  patientCode?: string | null
+  /** Local only — converted to daysSinceInjury on device, never transmitted. */
+  injuryDate?: string | null
+  ageBand?: string | null
+  sex?: string | null
+  /** Separate from `dataConsent` (quality assurance). Opt-in, declinable, and
+   *  gated behind CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE until an HREC has
+   *  approved the wording. Declining must never affect care. */
+  researchConsent?: boolean
 }
 
 // ── persisted shapes ─────────────────────────────────────────────────────────

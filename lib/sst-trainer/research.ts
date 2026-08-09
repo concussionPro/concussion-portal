@@ -283,3 +283,95 @@ export const PRIMARY_ANALYSIS_UNIT = 'session' as const
  *  typed-in heart rate cannot evidence time-above-band, so unverified sessions
  *  are descriptive only. Mirrors VERIFIED_READING_MIN_PCT in protocol.ts. */
 export const RESEARCH_MIN_VERIFIED_PCT = 80
+
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════════
+ * FLARE — THE PRIMARY OUTCOME DEFINITION. LOCKED BEFORE DATA.
+ *
+ * This constant exists so the definition is fixed in a commit that predates the
+ * first observation. Choosing a flare threshold after seeing the distribution is
+ * the most available form of outcome switching in this study, and it would be
+ * invisible in the write-up. Changing any value below after recruitment opens
+ * must be a visible commit with a stated reason, and must be disclosed.
+ *
+ * MAGNITUDE: >= 2 points on the 0-10 symptom item. Chosen to match the
+ * >= 2-point rise that already terminates a training session in protocol.ts
+ * (SESSION_STOP_RISE), so "what counts as worse" means the same thing in the
+ * prescription and in the analysis. A 1-point move on a 0-10 single item is
+ * within measurement noise.
+ *
+ * DURATION: sustained at the next-day check-in, 12-36h after the session. PEM
+ * and exertional exacerbation are characteristically DELAYED, so an immediate
+ * post-session reading would miss the phenomenon entirely; that is what
+ * `endFeel` captures separately and it is NOT the outcome.
+ *
+ * MISSING IS NOT NEGATIVE. A patient who does not answer is unobserved. Coding
+ * silence as "no flare" would bias the estimate toward the null, and the people
+ * least likely to answer are the ones who feel worst.
+ */
+export const FLARE_MIN_RISE = 2
+export const FLARE_WINDOW_HOURS = { min: 12, max: 36 } as const
+
+export type FlareOutcome = 'flare' | 'no-flare' | 'unobserved'
+
+export function classifyFlare(
+  preSymptom: number | null | undefined,
+  nextDaySymptom: number | null | undefined,
+  answered: boolean,
+): FlareOutcome {
+  if (!answered || typeof nextDaySymptom !== 'number' || typeof preSymptom !== 'number') {
+    return 'unobserved'
+  }
+  return nextDaySymptom - preSymptom >= FLARE_MIN_RISE ? 'flare' : 'no-flare'
+}
+
+/**
+ * WHY A DAY HAD NO SESSION.
+ *
+ * Without this, a gap between sessions is uninterpretable — and gaps are the
+ * comparator the whole exacerbation claim rests on. A day off because the
+ * clinician paused training is clinically different from a day off because the
+ * patient felt terrible, which is different again from a day off because they
+ * were at a wedding. Pooling them makes rest days look bad for reasons that have
+ * nothing to do with rest.
+ *
+ * This does NOT make the rest-day comparator clean — days skipped for symptoms
+ * remain confounded with the outcome. It makes the confounding VISIBLE and
+ * adjustable rather than baked in.
+ */
+export const MISSED_SESSION_REASONS = [
+  'symptomatic',        // felt too unwell — CONFOUNDED with the outcome
+  'clinician-paused',   // interlock or clinical decision
+  'rest-day',           // prescribed or planned non-training day
+  'life',               // work, travel, unrelated illness
+  'forgot',
+  'other',
+] as const
+export type MissedSessionReason = (typeof MISSED_SESSION_REASONS)[number]
+
+/** Reasons that are NOT independent of symptom state. Any analysis using rest
+ *  days as a comparator must handle these separately or exclude them. */
+export const CONFOUNDED_MISS_REASONS: readonly MissedSessionReason[] = ['symptomatic', 'clinician-paused']
+
+export function isMissedSessionReason(v: unknown): v is MissedSessionReason {
+  return typeof v === 'string' && (MISSED_SESSION_REASONS as readonly string[]).includes(v)
+}
+
+/**
+ * A DAY-LEVEL observation: the row that makes exacerbation attributable.
+ *
+ * Every symptom datum in the product currently hangs off a session, so days
+ * without a session are invisible. A flare rate measured only on training days
+ * describes the natural fluctuation of concussion as much as the response to a
+ * dose. This is the comparator.
+ */
+export interface DailyCheckin {
+  researchRef?: string
+  /** Local date the check-in refers to (YYYY-MM-DD), client-derived. */
+  onDate: string
+  symptomScore: number
+  trained: boolean
+  missedReason?: MissedSessionReason
+  daysSinceInjury?: number | null
+}

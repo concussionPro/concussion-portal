@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 /**
  * PATIENT REGISTRY — the server side of patient identity.
  *
@@ -18,7 +19,10 @@ import {
   type PatientIdentity,
 } from './patient-identity'
 import { normaliseClinicCode } from './clinic-registry'
-import { AGE_BANDS, SEXES, RESEARCH_CONSENT_VERSION, isValidSymptomScore, type AgeBand, type Sex } from './research'
+import {
+  AGE_BANDS, SEXES, RESEARCH_CONSENT_VERSION, isValidSymptomScore,
+  EPISODE_OUTCOMES, isMissedSessionReason, type AgeBand, type Sex,
+} from './research'
 
 export interface PatientRecord extends PatientIdentity {
   ageBand: AgeBand | null
@@ -407,4 +411,179 @@ export function stripIdentifiers(payload: Record<string, unknown> | null): Recor
     out[k] = v
   }
   return out
+}
+
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════════
+ * SITE PSEUDONYM — the registry equivalent of researchRef, one level up.
+ *
+ * researchExtract() strips `clinic_code`, which is right for a single-site study
+ * and WRONG for a registry. Multi-site analysis needs a site dimension: site-level
+ * random effects, between-site heterogeneity, and per-site approval tracking. But
+ * the real clinic code must not travel with the dataset — a named clinic plus a
+ * date narrows re-identification sharply in one city.
+ *
+ * So a site gets a stable random pseudonym, in exactly the relationship to
+ * clinic_code that researchRef holds to patient_code. Minted once, on first
+ * registry enrolment, and never shown in any analysis-facing surface.
+ *
+ * `approval_reference` records WHICH ethics approval covers this site, because a
+ * registry with rolling site amendments has different sites live under different
+ * amendment numbers, and an extract must be able to say so.
+ */
+export async function ensureSstSitesTable(): Promise<void> {
+  await sql`
+    CREATE TABLE IF NOT EXISTS sst_research_sites (
+      clinic_code        TEXT PRIMARY KEY,
+      site_ref           TEXT NOT NULL,
+      site_name          TEXT,
+      approval_reference TEXT,
+      enrolled_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      withdrawn_at       TIMESTAMPTZ
+    )
+  `
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS sst_sites_site_ref ON sst_research_sites (site_ref)`
+}
+
+export async function enrolSite(
+  rawClinicCode: unknown,
+  opts: { siteName?: string | null; approvalReference?: string | null } = {},
+): Promise<string | null> {
+  const clinicCode = normaliseClinicCode(rawClinicCode)
+  if (!clinicCode) return null
+  try {
+    await ensureSstSitesTable()
+    const siteRef = generateResearchRef()
+    await sql`
+      INSERT INTO sst_research_sites (clinic_code, site_ref, site_name, approval_reference)
+      VALUES (${clinicCode}, ${siteRef}, ${opts.siteName ?? null}, ${opts.approvalReference ?? null})
+      ON CONFLICT (clinic_code) DO UPDATE SET
+        site_name = COALESCE(EXCLUDED.site_name, sst_research_sites.site_name),
+        approval_reference = COALESCE(EXCLUDED.approval_reference, sst_research_sites.approval_reference)
+    `
+    const { rows } = await sql<{ site_ref: string }>`
+      SELECT site_ref FROM sst_research_sites WHERE clinic_code = ${clinicCode} LIMIT 1
+    `
+    return rows[0]?.site_ref ?? null
+  } catch (err) {
+    console.error('[sst-research] site enrolment failed:', err)
+    return null
+  }
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════════
+ * DAILY CHECK-IN — the rest-day comparator.
+ *
+ * NOT a change to the prescription. Non-training days already occur (missed
+ * sessions, interlock pauses, clinician de-loads); they are simply invisible,
+ * because every symptom datum in the product hangs off a session record. Without
+ * the flare rate on days with no exertion, a next-day flare after exercise is
+ * uninterpretable — it describes the natural fluctuation of concussion as much
+ * as the response to a dose.
+ *
+ * Stored append-only in its own table rather than in sst_clinic_sessions: a
+ * check-in is not a delivered session and must never be counted as one by the
+ * billing meter, the report's "sessions delivered" row, or adherence.
+ */
+export async function ensureSstCheckinsTable(): Promise<void> {
+  await sql`
+    CREATE TABLE IF NOT EXISTS sst_daily_checkins (
+      id             TEXT PRIMARY KEY,
+      clinic_code    TEXT NOT NULL,
+      patient_code   TEXT NOT NULL,
+      on_date        DATE NOT NULL,
+      symptom_score  INTEGER NOT NULL,
+      trained        BOOLEAN NOT NULL,
+      missed_reason  TEXT,
+      days_since_injury INTEGER,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (clinic_code, patient_code, on_date)
+    )
+  `
+}
+
+export async function recordDailyCheckin(input: {
+  clinicCode: unknown
+  patientCode: unknown
+  onDate: string
+  symptomScore: number
+  trained: boolean
+  missedReason?: unknown
+  daysSinceInjury?: number | null
+}): Promise<boolean> {
+  const clinicCode = normaliseClinicCode(input.clinicCode)
+  const patientCode = normalisePatientCode(input.patientCode)
+  if (!clinicCode || !patientCode) return false
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(input.onDate))) return false
+  const score = input.symptomScore
+  // 0-10 single item, the same scale the session screens use.
+  if (typeof score !== 'number' || !Number.isInteger(score) || score < 0 || score > 10) return false
+  const reason = isMissedSessionReason(input.missedReason) ? input.missedReason : null
+  const days =
+    typeof input.daysSinceInjury === 'number' && Number.isInteger(input.daysSinceInjury) && input.daysSinceInjury >= 0
+      ? input.daysSinceInjury
+      : null
+  try {
+    await ensureSstCheckinsTable()
+    // One check-in per patient per day. A later answer for the same day REPLACES
+    // the earlier one rather than creating a second row — otherwise a patient
+    // who answers twice contributes two correlated observations for one day.
+    await sql`
+      INSERT INTO sst_daily_checkins
+        (id, clinic_code, patient_code, on_date, symptom_score, trained, missed_reason, days_since_injury)
+      VALUES (${crypto.randomUUID()}, ${clinicCode}, ${patientCode}, ${input.onDate},
+              ${score}, ${input.trained}, ${reason}, ${days})
+      ON CONFLICT (clinic_code, patient_code, on_date) DO UPDATE SET
+        symptom_score = EXCLUDED.symptom_score,
+        trained = EXCLUDED.trained,
+        missed_reason = EXCLUDED.missed_reason
+    `
+    return true
+  } catch (err) {
+    console.error('[sst-checkin] write failed:', err)
+    return false
+  }
+}
+
+/**
+ * EPISODE ENDPOINT — the terminus a trajectory needs.
+ *
+ * Without it there is no prognostic paper at all: a threshold trajectory with no
+ * end point cannot be related to time-to-recovery, only described.
+ */
+export async function closeEpisode(
+  rawClinicCode: unknown,
+  rawPatientCode: unknown,
+  outcome: string,
+  opts: { daysInjuryToReturn?: number | null; dischargeSymptomScore?: number | null } = {},
+): Promise<boolean> {
+  const clinicCode = normaliseClinicCode(rawClinicCode)
+  const patientCode = normalisePatientCode(rawPatientCode)
+  if (!clinicCode || !patientCode) return false
+  if (!(EPISODE_OUTCOMES as readonly string[]).includes(outcome)) return false
+  const discharge = isValidSymptomScore(opts.dischargeSymptomScore) ? opts.dischargeSymptomScore : null
+  const days =
+    typeof opts.daysInjuryToReturn === 'number' && Number.isInteger(opts.daysInjuryToReturn) && opts.daysInjuryToReturn >= 0
+      ? opts.daysInjuryToReturn
+      : null
+  try {
+    await ensureSstPatientsTable()
+    await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS episode_outcome TEXT`
+    await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS days_injury_to_return INTEGER`
+    await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ`
+    await sql`
+      UPDATE sst_clinic_patients SET
+        episode_outcome = ${outcome},
+        days_injury_to_return = COALESCE(${days}, days_injury_to_return),
+        discharge_symptom_score = COALESCE(${discharge}, discharge_symptom_score),
+        closed_at = NOW()
+      WHERE clinic_code = ${clinicCode} AND patient_code = ${patientCode}
+    `
+    return true
+  } catch (err) {
+    console.error('[sst-research] episode close failed:', err)
+    return false
+  }
 }

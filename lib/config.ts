@@ -237,6 +237,18 @@ export const CONFIG = {
 
   // Feature Flags
   FEATURES: {
+    /**
+     * The RESEARCH consent block inside SST intake. Default FALSE.
+     *
+     * The clinical covariates (injury date, age band, sex) collect regardless —
+     * they change how a clinician reads a threshold and are justifiable under
+     * the existing quality-assurance framing. Only the research consent question
+     * is gated, because showing it before an ethics committee has approved the
+     * wording produces consent no journal will accept.
+     *
+     * Flip to true the day the HREC approves. Nothing else needs to change.
+     */
+    SST_RESEARCH_CONSENT_LIVE: false,
     SHOW_COUNTDOWN: true,
     SHOW_SPOTS_REMAINING: true,
     SHOW_SOCIAL_PROOF: true,

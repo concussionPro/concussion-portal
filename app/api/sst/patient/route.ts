@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyViewKey, normaliseClinicCode, DEMO_CLINIC_CODE } from '@/lib/sst-trainer/clinic-registry'
-import { createPatient, resolvePatient, recordIntake } from '@/lib/sst-trainer/patient-registry'
+import { createPatient, resolvePatient, recordIntake, closeEpisode, enrolSite } from '@/lib/sst-trainer/patient-registry'
 import { isDemoUserId } from '@/lib/demo-session'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -124,5 +124,44 @@ export async function PATCH(request: NextRequest) {
     label: typeof body?.label === 'string' ? body.label : null,
   })
   if (!ok) return NextResponse.json({ error: 'Could not record intake' }, { status: 400 })
+  return NextResponse.json({ ok: true })
+}
+
+
+/**
+ * PUT /api/sst/patient — clinician closes an episode, or enrols the site.
+ *
+ * Both are clinician actions and both require the clinic viewKey. Episode
+ * closure is what gives a threshold trajectory a terminus; without it there is
+ * no prognostic analysis, only description.
+ */
+export async function PUT(request: NextRequest) {
+  const body = await request.json().catch(() => ({}))
+  const clinicCode = normaliseClinicCode(body?.clinicCode)
+  const viewKey = typeof body?.viewKey === 'string' ? body.viewKey : ''
+  if (!clinicCode || !(await verifyViewKey(clinicCode, viewKey))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  if (clinicCode === DEMO_CLINIC_CODE || isDemoUserId(clinicCode)) {
+    return NextResponse.json({ error: 'Demo clinic is read-only' }, { status: 403 })
+  }
+
+  if (body?.action === 'enrol-site') {
+    const siteRef = await enrolSite(clinicCode, {
+      siteName: typeof body?.siteName === 'string' ? body.siteName : null,
+      approvalReference: typeof body?.approvalReference === 'string' ? body.approvalReference : null,
+    })
+    if (!siteRef) return NextResponse.json({ error: 'Could not enrol site' }, { status: 500 })
+    // siteRef is NOT returned — it is an analysis-side pseudonym and showing it
+    // to the clinic would let a site re-identify its own rows in a published
+    // dataset, which is the property it exists to prevent.
+    return NextResponse.json({ ok: true })
+  }
+
+  const ok = await closeEpisode(clinicCode, body?.patientCode, String(body?.outcome ?? ''), {
+    daysInjuryToReturn: typeof body?.daysInjuryToReturn === 'number' ? body.daysInjuryToReturn : null,
+    dischargeSymptomScore: typeof body?.dischargeSymptomScore === 'number' ? body.dischargeSymptomScore : null,
+  })
+  if (!ok) return NextResponse.json({ error: 'Could not close episode' }, { status: 400 })
   return NextResponse.json({ ok: true })
 }

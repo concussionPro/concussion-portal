@@ -13,6 +13,7 @@ import {
 } from '@/lib/sst-trainer/hr-live'
 import { validateClinicCode } from '@/lib/sst-trainer/clinic-sync'
 import { PrimaryButton } from '@/components/sst-trainer/shell'
+import { CONFIG } from '@/lib/config'
 import SstConnectWizard from '@/components/platform/SstConnectWizard'
 
 /**
@@ -109,6 +110,12 @@ export default function SstOnboarding({
   const [clinicName, setClinicName] = useState<string | null>(null)
   const [patientName, setPatientName] = useState('')
   const [dataConsent, setDataConsent] = useState(false)
+  // INTAKE (2026-08-09) — asked once, five controls, consent LAST.
+  const [patientCode, setPatientCode] = useState('')
+  const [injuryDate, setInjuryDate] = useState('')
+  const [ageBand, setAgeBand] = useState('')
+  const [sex, setSex] = useState('')
+  const [researchConsent, setResearchConsent] = useState(false)
   const [goal, setGoal] = useState<string | null>(null)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
   const [pairError, setPairError] = useState<string | null>(null)
@@ -567,6 +574,78 @@ export default function SstOnboarding({
         }}
       />
 
+      {/* ── INTAKE (2026-08-09) ──────────────────────────────────────────────
+          Five controls, asked ONCE. Every field earns its place against a
+          specific clinical or analytical need; anything a clinician could
+          supply later was pushed to the clinician rather than added here.
+
+            patientCode  the ONLY identity that neither merges two same-named
+                         patients nor splits one across devices. Typing it on a
+                         new phone restores the record instead of starting a
+                         second one.
+            injuryDate   days-since-injury is the dominant covariate in
+                         concussion recovery — a threshold means something
+                         different at day 4 and at day 40. Converted to an
+                         integer on THIS DEVICE; the date itself is never sent.
+            ageBand/sex  established recovery modifiers. Bands, not a birth date.
+
+          Only shown in clinic-code mode: a self-guided user has no clinic to
+          mint a code and no clinician reading the covariates. */}
+      {mode === 'clinic-code' && (
+        <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-3">
+          <p className="m-0 mb-2.5 text-[11px] font-semibold leading-snug text-(--sst-ink-2)">
+            Your clinic gave you a patient code — enter it once and this device remembers you.
+          </p>
+          <input
+            value={patientCode}
+            onChange={(e) => setPatientCode(e.target.value.toUpperCase())}
+            placeholder="Patient code"
+            autoCapitalize="characters"
+            spellCheck={false}
+            maxLength={9}
+            className="w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 text-[15px] tracking-[0.18em] text-(--sst-ink-1) placeholder:tracking-normal placeholder:text-(--sst-ink-4)"
+          />
+          <div className="mt-2.5 grid grid-cols-2 gap-2">
+            <label className="text-[10.5px] font-semibold text-(--sst-ink-3)">
+              Date of injury
+              <input
+                type="date"
+                value={injuryDate}
+                onChange={(e) => setInjuryDate(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-2.5 py-1.5 text-[13px] font-normal text-(--sst-ink-1)"
+              />
+            </label>
+            <label className="text-[10.5px] font-semibold text-(--sst-ink-3)">
+              Age
+              <select
+                value={ageBand}
+                onChange={(e) => setAgeBand(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-2.5 py-1.5 text-[13px] font-normal text-(--sst-ink-1)"
+              >
+                <option value="">—</option>
+                {['13-17', '18-24', '25-34', '35-49', '50-64', '65+'].map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="mt-2 block text-[10.5px] font-semibold text-(--sst-ink-3)">
+            Sex
+            <select
+              value={sex}
+              onChange={(e) => setSex(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-2.5 py-1.5 text-[13px] font-normal text-(--sst-ink-1)"
+            >
+              <option value="">—</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="other">Other</option>
+              <option value="undisclosed">Prefer not to say</option>
+            </select>
+          </label>
+        </div>
+      )}
+
       {/* Accurate collection notice (APP 5) + opt-in for the SECONDARY use only.
           Primary flow is stated as fact: name + results go to the patient's own
           clinician (that IS the service, not a revocable consent). The checkbox
@@ -590,6 +669,33 @@ export default function SstOnboarding({
           </span>
         </label>
       </div>
+
+      {/* RESEARCH consent — SEPARATE, LAST, and independently declinable.
+          Asked after the patient has seen exactly what is collected: asking
+          first, before they know what they are agreeing to, is both worse
+          ethics and a worse consent rate.
+
+          Gated behind SST_RESEARCH_CONSENT_LIVE (default false) because consent
+          collected before an ethics committee approves the wording is not
+          usable consent. Declining changes nothing about care — the clinical
+          path never reads this value. */}
+      {CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE && mode === 'clinic-code' && (
+        <div className="mt-2 rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-2.5">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={researchConsent}
+              onChange={(e) => setResearchConsent(e.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-none accent-(--sst-accent-ink)"
+            />
+            <span className="text-[11px] leading-snug text-(--sst-ink-3)">
+              I agree my <strong>de-identified</strong> data may be used in approved research, including
+              linkage by my clinic to other assessments from this episode of care, and publication of
+              group findings that cannot identify me. Optional — my care is the same either way.
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* Patient-neutral wall: the trial cap is the CLINIC's billing state and
           never the patient's problem — no trial/payment framing here. */}
@@ -615,6 +721,11 @@ export default function SstOnboarding({
               clinicCode: mode === 'clinic-code' ? clinicCode.trim() : null,
               patientName: mode === 'clinic-code' ? patientName.trim() || null : null,
               condition,
+              patientCode: mode === 'clinic-code' ? patientCode.trim().toUpperCase() || null : null,
+              injuryDate: injuryDate || null,
+              ageBand: ageBand || null,
+              sex: sex || null,
+              researchConsent,
             },
             clinicName: mode === 'clinic-code' ? clinicName : null,
             goal,
