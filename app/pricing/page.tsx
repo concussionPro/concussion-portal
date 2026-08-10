@@ -6,7 +6,7 @@ import { GraduationCap, HeartPulse, ArrowRight, Check } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -237,20 +237,39 @@ function PricingTabs() {
         {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
       </div>
 
-      {/* THE PRACTICAL PROMISE — REMOVED 2026-08-10 (owner).
-          It read "Three practical days run in Q4. Melbourne on 31 October, then
-          Sydney and Byron Bay in November", and those dates are NOT secured —
-          no venue is confirmed. It was also a hardcoded literal contradicting
-          CONFIG.LOCATIONS, which still has Melbourne 'completed' on 13 June, so
-          it broke the date-bearing copy rule as well as being untrue.
+      {/* THE PRACTICAL PROMISE.
+          It answers "will I ever actually get the practical day?" — the
+          objection that makes a browser register instead of buy — and it sits
+          BELOW the location cards because putting it under the title pushed
+          the price below the fold, which is the one rule this page has.
 
-          Do not restore it with dates until CONFIG carries them. When a city is
-          genuinely confirmed, this block should DERIVE from CONFIG.LOCATIONS
-          rather than restate it — that is the whole point of the rule.
+          It states the CADENCE, never a date. The version pulled on 2026-08-10
+          named "Melbourne on 31 October, then Sydney and Byron Bay in November"
+          when no venue was booked for any of them, and it was a hardcoded
+          literal contradicting CONFIG.LOCATIONS besides.
 
-          Nothing true was lost: the "upgrade later for the difference, the
-          early-bird rate never expires" promise it also carried now sits on the
-          CCM Online card itself, priced through upgradePriceFor(). */}
+          A day runs every quarter — that is a standing commitment and it holds
+          without a venue, so it is what the page promises. Specific dates
+          belong to the location cards, which derive them from CONFIG.LOCATIONS
+          and show them only once a round is confirmed. Do not put a date here. */}
+      <div className="max-w-3xl mx-auto px-6 pb-10 -mt-2">
+        <div className="rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
+          <p className="m-0 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
+            <strong className="font-bold">A practical day runs every quarter.</strong>{' '}
+            <span className="text-muted-foreground">
+              Dates are announced city by city as venues are confirmed — you are not waiting for a
+              city to reach a number before one is scheduled.
+            </span>
+          </p>
+          <p className="m-0 mt-1.5 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
+            <strong className="font-bold">Start online, add the day whenever suits.</strong>{' '}
+            <span className="text-muted-foreground">
+              Upgrade later for the difference (${upgradePriceFor(null)}) at the early-bird rate — it
+              never expires, and it works at whichever day you go to.
+            </span>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

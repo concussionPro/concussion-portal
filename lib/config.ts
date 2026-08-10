@@ -135,6 +135,16 @@ export const CONFIG = {
   // Workshop Capacity & Threshold
   WORKSHOP: {
     CAPACITY_PER_COURSE: 12,
+    // STANDING CADENCE COMMITMENT (owner): a practical day runs EVERY QUARTER.
+    // This is the answer to "if I buy online, will the day ever actually
+    // happen?" — the objection that makes a browser register instead of buy.
+    //
+    // It lives here rather than in copy because the copy that carried it named
+    // specific unsecured dates ("Melbourne on 31 October") and had to be pulled
+    // on 2026-08-10. The COMMITMENT is true and standing; the DATES are only
+    // true once a venue is booked and CONFIG.LOCATIONS carries them. Surfaces
+    // state the cadence from here, and name a date only when one is confirmed.
+    RUNS_PER_QUARTER: 1,
     CONFIRMATION_THRESHOLD: 8,    // paid registrants needed to confirm a date
     LEAD_TIME_WEEKS: 6,           // weeks of notice after threshold hit
     // Early bird ($1,190) closes this many days before a CONFIRMED workshop
