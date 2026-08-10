@@ -1354,7 +1354,7 @@ export default function AnalyticsDashboard() {
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
-  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; ownsCrm?: boolean; ownsReferenceBook?: boolean; ownsCrmPractical?: boolean; completedCrmModules?: number; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; ownsCrm?: boolean; ownsReferenceBook?: boolean; ownsCrmPractical?: boolean; completedCrmModules?: number; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }>; lastPurchaseAt?: string | null }>>([])
   // Internal test accounts are excluded from every count on the Users tab.
   // The tiles read raw `usersData` while the daily report and the insight
   // engine below both filter on `!isTest`, so the headline said N and the
@@ -2931,7 +2931,15 @@ export default function AnalyticsDashboard() {
                       <Clock size={14} className="text-orange-600" />
                       <span className="text-xs font-bold text-[var(--foreground)]">Today</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{realUsersData.filter(u => new Date(u.createdAt).toDateString() === new Date().toDateString()).length}</p>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{realUsersData.filter(u => {
+                      const today = new Date().toDateString()
+                      // Signed up today OR bought today. A purchase that upgrades
+                      // an existing free account is activity today even though the
+                      // account is months old — counting createdAt alone reported 0
+                      // on the day a $497 sale landed.
+                      return new Date(u.createdAt).toDateString() === today
+                        || (!!u.lastPurchaseAt && new Date(u.lastPurchaseAt).toDateString() === today)
+                    }).length}</p>
                   </div>
                 </div>
 
@@ -2960,7 +2968,7 @@ export default function AnalyticsDashboard() {
                         return true
                       })
                       const csv = [
-                        ['Email', 'Name', 'Access Level', 'Modules Completed', 'SCAT Modules', 'CPD Hours', 'Created', 'Last Login'],
+                        ['Email', 'Name', 'Access Level', 'Modules Completed', 'SCAT Modules', 'CPD Hours', 'Created', 'Purchased', 'Last Login'],
                         ...filtered.map(u => [
                           u.email,
                           u.name,
@@ -2969,6 +2977,7 @@ export default function AnalyticsDashboard() {
                           `${u.completedScatModules || 0}/3`,
                           u.totalCPDPoints || 0,
                           new Date(u.createdAt).toLocaleDateString(),
+                          u.lastPurchaseAt ? new Date(u.lastPurchaseAt).toLocaleDateString() : '',
                           u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never',
                         ]),
                       ].map(row => row.map(csvCell).join(',')).join('\n')
@@ -2996,6 +3005,7 @@ export default function AnalyticsDashboard() {
                         <th className="text-center py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Access</th>
                         <th className="text-center py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Progress</th>
                         <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Signed Up</th>
+                        <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Purchased</th>
                         <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Last Login</th>
                       </tr>
                     </thead>
@@ -3050,6 +3060,13 @@ export default function AnalyticsDashboard() {
                             </div>
                           </td>
                           <td className="py-2.5 px-2 text-right text-xs text-[var(--muted-foreground)]">{new Date(u.createdAt).toLocaleDateString('en-AU')}</td>
+                          <td className="py-2.5 px-2 text-right text-xs">
+                            {u.lastPurchaseAt ? (
+                              <span className="font-semibold text-[var(--accent)]">{new Date(u.lastPurchaseAt).toLocaleDateString('en-AU')}</span>
+                            ) : (
+                              <span className="text-[var(--muted-foreground)]">&mdash;</span>
+                            )}
+                          </td>
                           <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-AU') : 'Never'}</td>
                         </tr>
                         )

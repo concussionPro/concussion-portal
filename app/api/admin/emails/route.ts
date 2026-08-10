@@ -27,6 +27,23 @@ export async function GET(request: NextRequest) {
       crmPracticalOwnerEmails(),
     ])
 
+    // Latest purchase per user. Without it this route can only report when an
+    // ACCOUNT was created, and a purchase that upgrades an existing free signup
+    // is then indistinguishable from that signup's original date. A $497 sale
+    // on 2026-08-10 by a user who joined the free course on 2026-03-29 sorted
+    // to position 233 of 297 and counted 0 against "Today".
+    const { rows: purchaseRows } = await sql`
+      SELECT LOWER(user_email) AS email, MAX(purchased_at) AS last_purchase
+      FROM course_purchases GROUP BY LOWER(user_email)
+    `
+    const lastPurchaseMap = new Map<string, string>()
+    for (const row of purchaseRows) {
+      lastPurchaseMap.set(
+        row.email,
+        row.last_purchase instanceof Date ? row.last_purchase.toISOString() : row.last_purchase,
+      )
+    }
+
     // Load all progress from Postgres in one query
     const { rows: progressRows } = await sql`SELECT user_id, progress FROM user_progress`
     const progressMap = new Map<string, Record<string, { completed?: boolean; completedAt?: string; quizScore?: number; quizCompleted?: boolean }> | null>()
@@ -102,10 +119,19 @@ export async function GET(request: NextRequest) {
         completedCrmModules,
         totalCPDPoints,
         moduleDetails,
+        lastPurchaseAt: lastPurchaseMap.get(user.email.toLowerCase()) ?? null,
       }
     })
 
-    emailList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    // Sort by LAST ACTIVITY — the later of "bought something" and "signed up" —
+    // not by account age. Otherwise the newest revenue is the hardest thing on
+    // the page to find.
+    const activityAt = (u: { createdAt: string; lastPurchaseAt: string | null }) =>
+      Math.max(
+        new Date(u.createdAt).getTime(),
+        u.lastPurchaseAt ? new Date(u.lastPurchaseAt).getTime() : 0,
+      )
+    emailList.sort((a, b) => activityAt(b) - activityAt(a))
 
     return NextResponse.json({
       success: true,
