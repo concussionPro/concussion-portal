@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { isPrefetchRequest } from '@/lib/prefetch-guard'
 
 /**
  * ONE-CLICK CITY NOMINATION FROM AN EMAIL.
@@ -19,15 +20,32 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
  * same HMAC used for one-click unsubscribe, so a link can only be minted by us
  * and a nomination cannot be stuffed for someone else's address.
  *
- * SAFE TO PREFETCH. Recording a city preference is idempotent
- * (ON CONFLICT DO NOTHING) and carries no cost or side effect beyond a row, so
- * unlike the entitlement-grant routes this one does not need a prefetch guard.
+ * SCANNERS AND PREFETCHERS ARE THE MAIN THREAT HERE, and it is not a security
+ * one — it is a data one. Corporate mail security (Mimecast, Proofpoint,
+ * Barracuda, Microsoft SafeLinks) FETCHES EVERY LINK in an inbound email inside
+ * its sandbox. This endpoint writes on GET, so without a guard every protected
+ * recipient would register a Sydney AND a Byron Bay nomination the moment the
+ * mail landed, before a human saw it.
+ *
+ * That would not merely add noise — it would destroy the only number this
+ * campaign exists to produce, and it would look like success while doing it.
+ *
+ * So: known scanner user-agents and prefetch requests are redirected WITHOUT
+ * writing. Both still reach /pricing, so a scanner that follows the redirect
+ * sees a normal page and the link is not flagged.
  *
  * It redirects rather than returning JSON: the click should land the person on
  * the page where they can buy, not on a blank success message.
  */
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * Same list the demo-tour entry uses. These agents follow links automatically
+ * from inside inbound mail; a hit from one is not a person expressing a
+ * preference.
+ */
+const SCANNER_UA = /bot|crawler|spider|headless|safelinks|mimecast|proofpoint|barracuda|googleimageproxy|expanse|urlscan|preview|scan/i
 
 const CITIES: Record<string, string> = {
   sydney: 'Sydney',
@@ -48,6 +66,14 @@ export async function GET(request: NextRequest) {
     city ? `/pricing?location=${slug}#pricing-cards` : '/pricing',
     CONFIG.APP_URL,
   )
+
+  // Fetched by a mail-security sandbox or a link prefetcher, not a person.
+  // Redirect normally so nothing looks broken, but record nothing.
+  const ua = request.headers.get('user-agent') || ''
+  if (SCANNER_UA.test(ua) || isPrefetchRequest(request)) {
+    console.log(`[nominate-click] scanner/prefetch ignored (${slug || 'no city'})`)
+    return NextResponse.redirect(dest, { status: 302 })
+  }
 
   if (!email || !city || token !== generateUnsubscribeToken(email)) {
     // Never explain WHY to the browser — a signed-link failure that describes

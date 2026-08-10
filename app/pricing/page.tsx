@@ -245,7 +245,7 @@ function PricingTabs() {
       <div className="max-w-3xl mx-auto px-6 pb-10 -mt-2">
         <div className="rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
           <p className="m-0 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-            <strong className="font-bold">Three practical days run this quarter.</strong>{' '}
+            <strong className="font-bold">Three practical days run in Q4.</strong>{' '}
             <span className="text-muted-foreground">
               Melbourne on 31 October, then Sydney and Byron Bay in November — you are not waiting
               for a city to reach a number.

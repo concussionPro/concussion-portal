@@ -1735,7 +1735,7 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
  * "14 CPD hours" survived the 2026-07-30 re-rate into live sends.
  */
 export const QUARTERLY_PRACTICAL_BLAST = {
-  subject: 'Practical days are running this quarter — Melbourne first',
+  subject: 'Q4 practical days — Melbourne first',
   /**
    * Deliberately SHORT. The whole email is three options and a sentence each:
    * anything longer is scrolled past, and the ask here is a single click, not a
@@ -1747,7 +1747,7 @@ export const QUARTERLY_PRACTICAL_BLAST = {
    */
   template: (name: string, bookLink: string, onlineLink: string, sydneyUrl: string, byronUrl: string) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p><strong>The practical days are running this quarter.</strong> Melbourne is dated; Sydney and Byron Bay follow in November.</p>
+    <p><strong>The practical days are running in Q4.</strong> Melbourne is dated; Sydney and Byron Bay follow in November.</p>
     <div class="callout">
       <strong>Melbourne &mdash; Saturday 31 October</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
       SCAT6 and VOMS, phenotype rehab, and a graded exertion test run on a real person.

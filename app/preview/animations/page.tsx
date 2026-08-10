@@ -6,6 +6,10 @@ import { GradedReturnToSportAnimated } from '@/components/course/ep-infographics
 import { CbfAutoregulationAnimated } from '@/components/course/ep-infographics/CbfAutoregulationAnimated'
 import { SstaeMechanismAnimated } from '@/components/course/ep-infographics/SstaeMechanismAnimated'
 import { RedFlagDecisionAnimated } from '@/components/course/ep-infographics/RedFlagDecisionAnimated'
+import { PhenotypeMapAnimated } from '@/components/course/ep-infographics/PhenotypeMapAnimated'
+import { FittFrameworkAnimated } from '@/components/course/ep-infographics/FittFrameworkAnimated'
+import { LoadMonitoringAnimated } from '@/components/course/ep-infographics/LoadMonitoringAnimated'
+import { RecoveryTimelineAnimated } from '@/components/course/ep-infographics/RecoveryTimelineAnimated'
 
 /**
  * REVIEW PAGE for animated course infographics — approval before embedding.
@@ -90,6 +94,42 @@ const ITEMS = [
     rationale:
       'A printed decision tree is read once and remembered as a shape. What a clinician needs is the rehearsal — being asked the questions in the order they would ask them and arriving at the action. Fails toward escalation: any yes ends the walk, because in practice you do not keep assessing, you stop and refer.',
   },
+  {
+    id: 'phenotype-map',
+    Component: PhenotypeMapAnimated,
+    placements: 'CCM M7 · CRM M5 · CRM M7',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'The static map shows six labels and six interventions at once — the one presentation guaranteed not to be learned, because the whole clinical skill is going from a FINDING to a TREATMENT and a grid shows both simultaneously. Selecting one and having the intervention arrive is the mapping being taught.',
+  },
+  {
+    id: 'fitt-framework',
+    Component: FittFrameworkAnimated,
+    placements: 'CCM M7 · CRM M4',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'FITT as a table is four words and four values, and teaches nothing — the learner already knows what frequency means. What they cannot do from a table is turn a NUMBER into a PRESCRIPTION. Moving the threshold and watching the band follow is the skill, and the evidence caveat sits on the face of it rather than in a footnote.',
+  },
+  {
+    id: 'load-monitoring',
+    Component: LoadMonitoringAnimated,
+    placements: 'CCM M6 · CRM M6',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'Not a concept to understand but a judgement to practise: given this trace, progress, hold or de-load? Four cases, committing to a call before the answer. The fourth is deliberately the one where symptoms look fine and the right answer is still to hold — a trace read on symptoms alone would call it a success.',
+  },
+  {
+    id: 'recovery-timeline',
+    Component: RecoveryTimelineAnimated,
+    placements: 'CCM M2 · CRM M1',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'The number every patient asks for is "how long", and the honest answer is a distribution. A static curve gets read as an average and the average gets quoted back to patients as a promise. Dragging the day marker makes the spread the subject rather than the mean.',
+  },
 ]
 
 export default function AnimationReviewPage() {
@@ -142,12 +182,9 @@ export default function AnimationReviewPage() {
 
         <footer className="rounded-xl border border-[#dcebeb] bg-white p-4">
           <p className="m-0 text-[13px] leading-relaxed text-[#4a6a6e]">
-            <strong className="text-[#16282b]">Queued next</strong>, all existing ids with
-            placements already in the course, so none needs a content edit:{' '}
-            <code className="text-[12px]">phenotype-map</code> (3),{' '}
-            <code className="text-[12px]">load-monitoring</code> (2),{' '}
-            <code className="text-[12px]">fitt-framework</code> (2),{' '}
-            <code className="text-[12px]">recovery-timeline</code> (2).
+            <strong className="text-[#16282b]">That is all of them.</strong> Eleven animations
+            covering every infographic id that carries a placement in either course — 26 placements
+            in total, and not one course-content edit. Approving any is a single registry line.
           </p>
         </footer>
       </div>
