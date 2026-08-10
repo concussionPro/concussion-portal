@@ -13,8 +13,8 @@ import { CONFIG } from '@/lib/config'
  * This is the review surface instead. It renders the real template with the
  * real CONFIG figures, so what is on screen is what would be delivered.
  *
- * ?segment=other switches to the opening used for people who never registered
- * interest — the two are materially different sentences and both need reading.
+ * One email for everyone — the city personalisation was removed once the two
+ * November buttons became the way a preference is expressed.
  *
  * noindex, and it sends nothing. The send path is
  * /api/admin/quarterly-practical-blast, which is dry-run on both verbs and
@@ -26,13 +26,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function BlastPreviewPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ segment?: string; city?: string }>
-}) {
-  const { segment, city } = await searchParams
-  const registered = segment !== 'other'
+export default async function BlastPreviewPage() {
   const link = `${CONFIG.APP_URL}/pricing`
 
   const demo = (c: string) => `${CONFIG.APP_URL}/api/workshop/nominate-click?e=demo&t=demo&city=${c}`
@@ -48,33 +42,6 @@ export default async function BlastPreviewPage({
         <h1 style={{ margin: '4px 0 10px', fontSize: 24, fontWeight: 700, color: '#16282b', fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
           {QUARTERLY_PRACTICAL_BLAST.subject}
         </h1>
-
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
-          <a
-            href="/preview/blast"
-            style={{
-              flex: 1, textAlign: 'center', padding: '9px 12px', borderRadius: 9, fontSize: 13, fontWeight: 700,
-              textDecoration: 'none',
-              background: registered ? '#0d7377' : '#fff',
-              color: registered ? '#fff' : '#4a6a6e',
-              border: registered ? 'none' : '1px solid #cfe3e4',
-            }}
-          >
-            Registered-interest segment
-          </a>
-          <a
-            href="/preview/blast?segment=other"
-            style={{
-              flex: 1, textAlign: 'center', padding: '9px 12px', borderRadius: 9, fontSize: 13, fontWeight: 700,
-              textDecoration: 'none',
-              background: !registered ? '#0d7377' : '#fff',
-              color: !registered ? '#fff' : '#4a6a6e',
-              border: !registered ? 'none' : '1px solid #cfe3e4',
-            }}
-          >
-            Everyone else
-          </a>
-        </div>
 
         <p style={{ margin: '0 0 14px', padding: '10px 13px', borderRadius: 9, border: '1px solid #e0c3ad', background: '#fbf0e8', color: '#6b3a1c', fontSize: 13, lineHeight: 1.55, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
           <strong>Melbourne 31 October is not in CONFIG yet.</strong> Both buttons currently point at

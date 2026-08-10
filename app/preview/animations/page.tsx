@@ -4,6 +4,8 @@ import { AutonomicDysfunctionAnimated } from '@/components/course/ep-infographic
 import { NeurometabolicCascadeAnimated } from '@/components/course/ep-infographics/NeurometabolicCascadeAnimated'
 import { GradedReturnToSportAnimated } from '@/components/course/ep-infographics/GradedReturnToSportAnimated'
 import { CbfAutoregulationAnimated } from '@/components/course/ep-infographics/CbfAutoregulationAnimated'
+import { SstaeMechanismAnimated } from '@/components/course/ep-infographics/SstaeMechanismAnimated'
+import { RedFlagDecisionAnimated } from '@/components/course/ep-infographics/RedFlagDecisionAnimated'
 
 /**
  * REVIEW PAGE for animated course infographics — approval before embedding.
@@ -70,6 +72,24 @@ const ITEMS = [
     rationale:
       'Every static version is six boxes in a row, and every clinician still asks the same two questions: what happens if symptoms return, and how long does each stage take. Those are the actual content. Stepping through — with the drop-back rule firing as a consequence rather than sitting in a footnote — answers both.',
   },
+  {
+    id: 'sstae-mechanism',
+    Component: SstaeMechanismAnimated,
+    placements: 'CCM M4 · CRM M4',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'The claim is comparative: three ways of managing the same injury produce three different curves. A static diagram can assert that; only a comparison the learner drives makes the magnitude land — and the magnitude is the argument for the whole intervention. The rest arm is deliberately not flat, because overstating it is the kind of claim that gets a course pulled apart in review.',
+  },
+  {
+    id: 'red-flag-decision',
+    Component: RedFlagDecisionAnimated,
+    placements: 'CCM M2 · CRM M2',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'A printed decision tree is read once and remembered as a shape. What a clinician needs is the rehearsal — being asked the questions in the order they would ask them and arriving at the action. Fails toward escalation: any yes ends the walk, because in practice you do not keep assessing, you stop and refer.',
+  },
 ]
 
 export default function AnimationReviewPage() {
@@ -124,11 +144,9 @@ export default function AnimationReviewPage() {
           <p className="m-0 text-[13px] leading-relaxed text-[#4a6a6e]">
             <strong className="text-[#16282b]">Queued next</strong>, all existing ids with
             placements already in the course, so none needs a content edit:{' '}
-            <code className="text-[12px]">sstae-mechanism</code> (2),{' '}
             <code className="text-[12px]">phenotype-map</code> (3),{' '}
             <code className="text-[12px]">load-monitoring</code> (2),{' '}
             <code className="text-[12px]">fitt-framework</code> (2),{' '}
-            <code className="text-[12px]">red-flag-decision</code> (2),{' '}
             <code className="text-[12px]">recovery-timeline</code> (2).
           </p>
         </footer>

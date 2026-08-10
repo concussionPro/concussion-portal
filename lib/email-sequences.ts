@@ -1737,27 +1737,29 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
 export const QUARTERLY_PRACTICAL_BLAST = {
   subject: 'Practical days are running this quarter — Melbourne first',
   /**
-   * @param sydneyUrl / byronUrl  SIGNED one-click nomination links. Clicking
+   * Deliberately SHORT. The whole email is three options and a sentence each:
+   * anything longer is scrolled past, and the ask here is a single click, not a
+   * case to be argued.
+   *
+   * @param sydneyUrl / byronUrl  SIGNED one-click nomination links. The click
    *   records the city and lands them on /pricing for it — the click IS the
-   *   count, which is the entire purpose of this send.
+   *   count, which is the entire purpose of the send.
    */
   template: (name: string, bookLink: string, onlineLink: string, sydneyUrl: string, byronUrl: string) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p><strong>The practical days are running this quarter.</strong> Melbourne is first and it is dated; Sydney and Byron Bay follow in November.</p>
+    <p><strong>The practical days are running this quarter.</strong> Melbourne is dated; Sydney and Byron Bay follow in November.</p>
     <div class="callout">
-      <strong>Melbourne &mdash; Saturday 31 October</strong><br>
-      ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places. The full practical day: SCAT6 and VOMS assessment, phenotype-based rehab, and running a graded exertion test on a real person until you find their threshold.
+      <strong>Melbourne &mdash; Saturday 31 October</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
+      SCAT6 and VOMS, phenotype rehab, and a graded exertion test run on a real person.
     </div>
-    <p><strong>Take the Melbourne seat.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together.</p>
-    <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat &mdash; 31 October</a></center>
-    <p><strong>Melbourne doesn&rsquo;t work?</strong> Tell me which November day you want and I will hold you a place on it. One click &mdash; nothing to fill in.</p>
+    <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take the Melbourne seat &mdash; A$${CONFIG.COURSE.PRICE_EARLY_BIRD}</a></center>
+    <p><strong>Melbourne doesn&rsquo;t work?</strong> One click and I&rsquo;ll hold you a place on the November day you want. Dates are set once I have the numbers.</p>
     <center>
       <a href="${sydneyUrl}" class="cta-btn" style="margin:0 6px 8px 0;">Sydney &mdash; November</a>
       <a href="${byronUrl}" class="cta-btn" style="margin:0 0 8px 6px;">Byron Bay &mdash; November</a>
     </center>
-    <p>Dates for the November days are set once I know the numbers, which is what those two buttons are for.</p>
-    <p><strong>Or start online today.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. The upgrade is the difference, at the early-bird rate, and it never expires &mdash; use it at whichever day suits.</p>
-    <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online now</a></center>
+    <p><strong>Or start online.</strong> A$${CONFIG.COURSE.PRICE_ONLINE}, ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours (up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the day). The upgrade never expires and works at any of the three.</p>
+    <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online</a></center>
     <div class="sig">Zac</div>
   `),
 }
