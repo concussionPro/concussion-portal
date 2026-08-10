@@ -546,6 +546,13 @@ export default function GuidedTest({
         ← End test without a result
       </button>
 
+      {/* Desktop (lg+): two columns — the interaction stack left, the logged-
+          minutes panel right beside the countdown (owner, 2026-08-11: the log
+          was buried under the fold and the limit bar dominated). Phone keeps
+          the single stack + its compact bottom strip, untouched. */}
+      <div className="flex flex-col gap-[9px] lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6">
+      <div className="flex flex-col gap-[9px]">
+
       {/* hero: stage countdown ring + live/entered HR */}
       <div className="flex items-center gap-3.5">
         <div className="relative h-[114px] w-[114px] flex-none">
@@ -632,7 +639,7 @@ export default function GuidedTest({
         type="button"
         onClick={() => setRpe((r) => (r >= EXHAUSTION_RPE ? 8 : EXHAUSTION_RPE))}
         aria-pressed={rpe >= EXHAUSTION_RPE}
-        className={`flex items-center justify-center gap-2 rounded-[14px] border-[1.5px] px-3.5 py-3 text-[13.5px] font-semibold transition active:scale-[0.98] ${
+        className={`flex items-center justify-center gap-2 rounded-[14px] border-[1.5px] px-3.5 py-3 text-[13.5px] font-semibold transition active:scale-[0.98] lg:self-start lg:px-5 lg:py-2.5 lg:text-[12.5px] ${
           rpe >= EXHAUSTION_RPE
             ? 'border-(--sst-warn) bg-(--sst-warn-soft) text-(--sst-warn-ink)'
             : 'border-(--sst-line) bg-(--sst-card) text-(--sst-ink-2)'
@@ -795,8 +802,9 @@ export default function GuidedTest({
         </button>
       </div>
 
+      {/* phone: the compact bottom strip (unchanged); desktop uses the panel */}
       {recordedStages.length > 0 && (
-        <div className="rounded-[12px] bg-(--sst-surface-2) px-3 py-2.5">
+        <div className="rounded-[12px] bg-(--sst-surface-2) px-3 py-2.5 lg:hidden">
           <p className="m-0 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-(--sst-ghost)">
             Logged this test
           </p>
@@ -812,6 +820,38 @@ export default function GuidedTest({
           </div>
         </div>
       )}
+
+      </div>
+
+      {/* Desktop log panel — always present so the column doesn't pop into
+          existence at minute 2; each row is one logged Buffalo stage. */}
+      <aside className="hidden lg:flex lg:flex-col lg:gap-2 lg:self-stretch lg:rounded-[16px] lg:border lg:border-(--sst-line) lg:bg-(--sst-surface-2) lg:px-4 lg:py-3.5">
+        <p className="m-0 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sst-ghost)">
+          Logged this test
+        </p>
+        {recordedStages.length === 0 ? (
+          <p className="m-0 text-[12px] leading-snug text-(--sst-muted)">
+            Each minute logs here as it completes — heart rate and symptom level against the stage.
+          </p>
+        ) : (
+          <div className="flex max-h-[420px] flex-col gap-1 overflow-y-auto">
+            {recordedStages.map((s) => (
+              <div
+                key={s.minute}
+                className="flex items-baseline justify-between gap-2 rounded-[10px] bg-(--sst-card) px-3 py-1.5"
+              >
+                <span className="text-[11px] font-semibold text-(--sst-muted)">Min {s.minute}</span>
+                <span className={`text-[14px] font-bold text-(--sst-ink) ${numFont}`}>
+                  {s.heartRate} <span className="text-[10px] font-semibold text-(--sst-muted)">bpm</span>
+                </span>
+                <span className={`text-[11px] text-(--sst-muted) ${numFont}`}>sx {s.symptomScore}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </aside>
+
+      </div>
     </section>
   )
 }

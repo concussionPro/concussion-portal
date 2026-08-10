@@ -8,10 +8,13 @@ import { SESSION_STOP_RISE } from '../lib/sst-trainer/protocol'
 import { CONFIG } from '../lib/config'
 
 describe('the flare definition is locked before data', () => {
-  it('matches the within-session stop rule so "worse" means one thing', () => {
-    // If these drift apart, the prescription and the analysis disagree about
-    // what counts as a meaningful symptom rise.
-    expect(FLARE_MIN_RISE).toBe(SESSION_STOP_RISE)
+  it('keeps its pre-registered magnitude — and the stop rule its own', () => {
+    // These share the number 2 but are DIFFERENT variables since 2026-08-11:
+    // the in-session stop fires on a rise EXCEEDING SESSION_STOP_RISE
+    // (Amsterdam 2023 tolerates <=2), while the delayed flare outcome keeps
+    // its locked >=2 definition (see research.ts for the disclosure).
+    expect(FLARE_MIN_RISE).toBe(2)
+    expect(SESSION_STOP_RISE).toBe(2)
   })
 
   it('classifies a >=2 point rise as a flare', () => {

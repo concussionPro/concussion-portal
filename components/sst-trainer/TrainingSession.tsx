@@ -373,7 +373,9 @@ export default function TrainingSession({
     return () => clearInterval(iv)
   }, [phase])
 
-  // SESSION_STOP_RISE rule: stop if symptoms rise >= 2 points from pre-session.
+  // Stop rule: stop when symptoms rise MORE than SESSION_STOP_RISE (2) points
+  // from pre-session — a rise of up to 2 points is the acceptable mild
+  // exacerbation (Patricios et al., Amsterdam consensus, BJSM 2023).
   // A rise is a STOP, not a suggestion — the flow moves to the stopped screen.
   // One "I feel okay, continue" override is allowed ONCE; any further rise after
   // the override re-stops with no second chance.
@@ -513,7 +515,7 @@ export default function TrainingSession({
   const symptomRise = currentSymptom - preSymptom
   useEffect(() => {
     if (phase !== 'active') return
-    const risen = symptomRise >= SESSION_STOP_RISE
+    const risen = symptomRise > SESSION_STOP_RISE
     if (!risen) return
     if (override.used && currentSymptom <= override.atScore) return // overridden at this level
     setPhase('stopped')
@@ -967,7 +969,7 @@ export default function TrainingSession({
           <span className="text-xs font-semibold text-(--sst-ink-2)">Symptom check now</span>
           <span
             className={`text-[16px] ${numFont}`}
-            style={{ color: symptomRise >= SESSION_STOP_RISE ? 'var(--sst-warn)' : 'var(--sst-accent)' }}
+            style={{ color: symptomRise > SESSION_STOP_RISE ? 'var(--sst-warn)' : 'var(--sst-accent)' }}
           >
             {currentSymptom}
             <span className="text-[11px] text-(--sst-muted)">/10</span>
@@ -976,7 +978,7 @@ export default function TrainingSession({
         <SymptomStepper
           value={currentSymptom}
           onChange={updateSymptom}
-          danger={symptomRise >= SESSION_STOP_RISE}
+          danger={symptomRise > SESSION_STOP_RISE}
           compact
           ariaLabel="Current symptom level, 0 to 10"
         />

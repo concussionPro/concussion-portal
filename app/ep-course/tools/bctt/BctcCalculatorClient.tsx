@@ -604,7 +604,8 @@ export default function BctcCalculatorClient() {
                 <strong>{ok.rx.daysPerWeek} days/week</strong>, at a heart-rate target of{' '}
                 <strong>{ok.rx.lowerBpm}–{ok.rx.upperBpm} bpm</strong> (80–90% of an HRt of {ok.hrt} bpm), RPE roughly{' '}
                 <strong>11–13</strong>. Stop the session if symptoms rise{' '}
-                <strong>≥{ok.rx.stopRisePoints} points</strong> above the pre-session baseline. Re-test on the Buffalo
+                <strong>more than {ok.rx.stopRisePoints} points</strong> above the pre-session baseline (a rise of up
+                to {ok.rx.stopRisePoints} points is the acceptable mild exacerbation — Amsterdam 2023). Re-test on the Buffalo
                 protocol in <strong>~1–2 weeks</strong> to re-establish HRt and progress the training band as tolerance
                 improves.
               </p>

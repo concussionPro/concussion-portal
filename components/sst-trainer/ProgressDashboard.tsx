@@ -71,7 +71,7 @@ function Trend({ rx, sessions }: { rx: Prescription; sessions: SessionLog[] }) {
         />
       )}
       {measured.map((s, i) => {
-        const flare = s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
+        const flare = s.nextDayFlare || s.peakSymptom - s.preSymptom > SESSION_STOP_RISE
         return (
           <circle
             key={`${s.date}-${i}`}
@@ -211,7 +211,7 @@ export default function ProgressDashboard({
           </p>
         )}
         {sessions.map((s, i) => {
-          const flare = s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
+          const flare = s.nextDayFlare || s.peakSymptom - s.preSymptom > SESSION_STOP_RISE
           const tagColor = flare ? 'var(--sst-warn)' : 'var(--sst-accent)'
           const barW =
             typeof s.peakHeartRate === 'number' ? Math.min(100, (s.peakHeartRate / maxHr) * 100) : 0

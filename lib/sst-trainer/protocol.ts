@@ -102,6 +102,14 @@ export interface TestInput {
   condition?: Condition
   /** treadmill / bike / brisk walking — chosen on the pre-test setup screen */
   modality?: TestModality
+  /**
+   * Measured resting heart rate (bpm), when a surface has one (camera
+   * spot-check, watch). Optional — the web ramp doesn't capture it yet — but
+   * when present it arms the stronger arm of the validity gate in
+   * detectThreshold (HRt must clear resting by MIN_HRT_ABOVE_RESTING and the
+   * band floor must sit above resting).
+   */
+  restingHr?: number | null
 }
 
 export interface ThresholdResult {
@@ -147,8 +155,30 @@ const CONDITION_DEFAULTS: Record<Condition, { lowerPct: number; upperPct: number
 
 /** The validated symptom-provocation threshold: a rise of >=3 points from rest. */
 export const PROVOCATION_RISE = 3
-/** Within-session stop rule during training: a rise of >=2 points. */
+/**
+ * Within-session symptom tolerance during training: the MAXIMUM ACCEPTABLE
+ * rise. The consensus wording is that no MORE than mild exacerbation is
+ * acceptable — an increase of up to 2 points on 0–10 is explicitly tolerated
+ * (Patricios et al., Amsterdam consensus statement, Br J Sports Med
+ * 2023;57:695–711). The stop rule is therefore a rise EXCEEDING this value
+ * (>2, i.e. ≥3 on an integer scale) — comparisons use `>`, never `>=`.
+ * (Until 2026-08-11 the app stopped at exactly ≥2 — stricter than the
+ * consensus, truncating sessions at the rise the guideline deems acceptable.)
+ *
+ * NOTE: the pre-registered NEXT-DAY flare definition (research.ts
+ * FLARE_MIN_RISE, ≥2 at the 12–36h check-in) is a DIFFERENT variable and
+ * deliberately keeps its locked ≥2 definition — see research.ts.
+ */
 export const SESSION_STOP_RISE = 2
+/**
+ * PHYSIOLOGICAL VALIDITY GATE (owner, 2026-08-11): an HRt is a submaximal
+ * EXERTION heart rate. When resting HR is known, the threshold must clear it
+ * by this margin or the test is not readable (the ΔHR construct — HRt minus
+ * resting — is established: Haider 2019 treats ΔHR ≤50 bpm as prognostic of
+ * prolonged recovery; a ΔHR at or near zero is not a measurement at all, it
+ * is artefact). 15 bpm is the owner-set floor under any plausible ΔHR.
+ */
+export const MIN_HRT_ABOVE_RESTING = 15
 /**
  * Voluntary-exhaustion RPE (Borg 6-20) without symptom provocation. The BCTT
  * manual phrases the criterion as RPE > 17; the applied rule everywhere in this
@@ -209,6 +239,34 @@ export function detectThreshold(input: TestInput): ThresholdResult {
   )
 
   if (provoked) {
+    // ── PHYSIOLOGICAL VALIDITY GATE (owner, 2026-08-11) ──────────────────────
+    // A demo run produced HRt 65 bpm beside a live resting HR of 76 — a
+    // threshold BELOW rest, prescribing a band the patient exceeded by sitting
+    // still. The engine accepted a garbage reading (sensor artefact or
+    // mis-entry) and prescribed from it. An HRt is a submaximal EXERTION heart
+    // rate; the checks below fail closed to 'invalid' — re-test, never
+    // prescribe:
+    //  - vs the ramp itself (always available): threshold-stage HR strictly
+    //    below the FIRST stage's HR means heart rate fell while effort ramped.
+    //  - vs resting HR (when a surface supplied one): HRt must clear resting
+    //    by MIN_HRT_ABOVE_RESTING (ΔHR construct — Haider 2019 uses HRt−resting;
+    //    ΔHR near zero is artefact, not a result), and the prescribed band's
+    //    FLOOR must sit above resting — a floor below rest is untrainable.
+    const firstStageHr = input.stages[0]?.heartRate
+    const resting =
+      typeof input.restingHr === 'number' && Number.isFinite(input.restingHr) && input.restingHr >= 30
+        ? input.restingHr
+        : null
+    const bandFloor = Math.round(provoked.heartRate * CONDITION_DEFAULTS[asCondition(input.condition)].lowerPct)
+    const belowStart = typeof firstStageHr === 'number' && provoked.heartRate < firstStageHr
+    const belowResting =
+      resting !== null && (provoked.heartRate < resting + MIN_HRT_ABOVE_RESTING || bandFloor <= resting)
+    if (belowStart || belowResting) {
+      return {
+        hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'invalid',
+        message: `Your symptoms rose, but the heart rate recorded at that moment (${provoked.heartRate} bpm) was ${belowStart ? `below your first minute's ${firstStageHr} bpm` : `too close to your resting ${resting} bpm`} — a threshold at or below resting heart rate isn't a readable result. This usually means a dropped sensor reading or a typing slip. Re-test with a reliable heart-rate source; your symptom response still counts, so tell your clinician it happened.`,
+      }
+    }
     return {
       hrtFound: true,
       hrt: provoked.heartRate,
@@ -296,7 +354,10 @@ export interface Prescription {
  *  - ~20 min/day, most days (5–7/wk) — FIXED from day one in the RCTs; those
  *    protocols progressed by HEART RATE (+5–10 bpm/day if tolerated), NOT by
  *    lengthening sessions (Haider/Leddy, Sports Health 2021).
- *  - within-session stop at a ≥2-pt symptom rise on 0–10 (Leddy 2019).
+ *  - within-session stop when the symptom rise EXCEEDS 2 points on 0–10: up to
+ *    a 2-point ("mild") exacerbation is explicitly acceptable (Patricios et al.,
+ *    Amsterdam consensus, BJSM 2023;57:695–711; Leddy trials tolerated mild
+ *    exacerbation during sub-threshold work).
  *
  * There is NO published rule that shortens the starting dose by severity of
  * exercise intolerance, so we do not invent one. Instead we compute the
@@ -333,7 +394,7 @@ export function computePrescription(
     stopRisePoints: SESSION_STOP_RISE,
     prolongedRecoveryRisk,
     clinicianNote,
-    summary: `Train at ${lowerBpm}-${upperBpm} bpm (${Math.round(d.lowerPct * 100)}-${Math.round(d.upperPct * 100)}% of your ${hrt} bpm threshold). Aim for ${d.sessionMinutes} minutes, ${d.daysPerWeek} days a week. Keep your heart rate under ${upperBpm} bpm. Stop the session if your symptoms rise ${SESSION_STOP_RISE} or more points above how you felt before you started.`,
+    summary: `Train at ${lowerBpm}-${upperBpm} bpm (${Math.round(d.lowerPct * 100)}-${Math.round(d.upperPct * 100)}% of your ${hrt} bpm threshold). Aim for ${d.sessionMinutes} minutes, ${d.daysPerWeek} days a week. Don't let your heart rate go above ${upperBpm} bpm. Stop the session if your symptoms rise more than ${SESSION_STOP_RISE} points above how you felt before you started — a small rise of up to ${SESSION_STOP_RISE} points is okay.`,
   }
 }
 
@@ -507,8 +568,12 @@ export function progressionDecision(
   const step = opts.stepBpm ?? 5
   if (!recent.length) return { decision: 'hold', message: 'Log a few sessions first.' }
 
+  // In-session semantics track the stop rule: a rise EXCEEDING the tolerated
+  // 2 points (Amsterdam 2023). A ≤2-pt rise is the acceptable mild
+  // exacerbation and must not count as provocation, or the engine regresses
+  // patients for sessions the guideline calls well-tolerated.
   const isFlare = (s: SessionLog) =>
-    s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
+    s.nextDayFlare || s.peakSymptom - s.preSymptom > SESSION_STOP_RISE
 
   // Regress only on RECENT repeated provocation — window to the last few
   // sessions so old, long-since-resolved flares can't ratchet the ceiling down

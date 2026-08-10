@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { normaliseClinicCode } from '@/lib/sst-trainer/clinic-registry'
+import { normaliseClinicCode, DEMO_CLINIC_CODE } from '@/lib/sst-trainer/clinic-registry'
 import { recordDailyCheckin } from '@/lib/sst-trainer/patient-registry'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
+import { isDemoUserId } from '@/lib/demo-session'
 
 /**
  * DAILY CHECK-IN — POST /api/sst/checkin
@@ -37,6 +38,11 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}))
   const clinicCode = normaliseClinicCode(body?.clinicCode)
   if (!clinicCode) return NextResponse.json({ error: 'Bad request' }, { status: 400 })
+  // The demo clinic must never write — same guard as every other write path.
+  // (This route shipped 2026-08-09 without it; caught in the 08-11 demo sweep.)
+  if (clinicCode === DEMO_CLINIC_CODE || isDemoUserId(clinicCode)) {
+    return NextResponse.json({ error: 'Demo clinic is read-only' }, { status: 403 })
+  }
 
   const ok = await recordDailyCheckin({
     clinicCode,

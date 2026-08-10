@@ -112,6 +112,11 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const body = await request.json().catch(() => ({}))
   const clinicCode = normaliseClinicCode(body?.clinicCode)
+  // The demo clinic must never write — same guard as POST/PUT above. PATCH
+  // shipped 2026-08-09 without it; caught in the 08-11 demo sweep.
+  if (clinicCode === DEMO_CLINIC_CODE || isDemoUserId(clinicCode)) {
+    return NextResponse.json({ error: 'Demo clinic is read-only' }, { status: 403 })
+  }
   const ok = await recordIntake(clinicCode, body?.patientCode, {
     ageBand: typeof body?.ageBand === 'string' ? body.ageBand : null,
     sex: typeof body?.sex === 'string' ? body.sex : null,

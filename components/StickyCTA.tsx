@@ -37,6 +37,13 @@ const EXCLUDED_PATHS = [
   '/preview',
   // Lead-capture page — the $-course sticky bar competes with the email gate.
   '/scat6-download',
+  // 2026-08-11 (owner, MSCC demo prep): clinician workspace + demo surfaces —
+  // product demonstrations, often screen-shared to a prospect clinic. No
+  // course cross-sell chrome there (mirrors ExitIntentPopup).
+  '/clinical-testing',
+  '/clinical-hub',
+  '/demo',
+  '/mscc-demo',
   // WRONG-STREAM CROSS-SELL (2026-08-06). This bar links to /pricing, which is
   // Concussion Clinical Mastery — the physio/osteo/chiro product. It was
   // rendering over the exercise-physiology surfaces (/concussion-rehab-mastery

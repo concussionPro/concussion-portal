@@ -458,7 +458,7 @@ export default function PlatformAppPage({
         ...prev,
         upperBpm,
         lowerBpm,
-        summary: `Train at ${lowerBpm}–${upperBpm} bpm. Aim for ${prev.sessionMinutes} minutes, ${prev.daysPerWeek} days a week. Keep your heart rate under ${upperBpm} bpm. Stop the session if your symptoms rise ${prev.stopRisePoints} or more points above how you felt before you started.`,
+        summary: `Train at ${lowerBpm}–${upperBpm} bpm. Aim for ${prev.sessionMinutes} minutes, ${prev.daysPerWeek} days a week. Don't let your heart rate go above ${upperBpm} bpm. Stop the session if your symptoms rise more than ${prev.stopRisePoints} points above how you felt before you started — a small rise of up to ${prev.stopRisePoints} points is okay.`,
       }
     })
   }
@@ -568,8 +568,14 @@ export default function PlatformAppPage({
   // Clinic-code + minted patient code only: the server keys the check-in table
   // on the code, and a row it can't tie to a patient is noise. Never gates the
   // session — an unanswered day is a missing observation and stays missing.
+  // DEMO00 shows the card WITHOUT a patient code so the instrument is
+  // demonstrable live: the answer lands as a local receipt only (sync no-ops
+  // with no patient code, and the server rejects demo writes regardless).
   const canDailyCheckin =
-    welcome?.mode === 'clinic-code' && !!welcome?.clinicCode && !!welcome?.patientCode && !!prescription
+    welcome?.mode === 'clinic-code' &&
+    !!welcome?.clinicCode &&
+    !!prescription &&
+    (!!welcome?.patientCode || welcome.clinicCode.trim().toUpperCase() === 'DEMO00')
   const dailyCheckinAnswered =
     dailyCheckinOn === localDateIso(new Date()) ? dailyCheckinScore : null
 

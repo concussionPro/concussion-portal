@@ -47,7 +47,9 @@ const stage = (minute: number, heartRate: number, symptomScore: number, rpe?: nu
 describe('HR threshold arithmetic — hand-checked against the cited constants', () => {
   it('the BCTT constants match the protocol the engine cites', () => {
     expect(PROVOCATION_RISE).toBe(3) // symptom exacerbation endpoint
-    expect(SESSION_STOP_RISE).toBe(2) // within-session stop rule (Leddy 2019)
+    // Maximum ACCEPTABLE in-session rise — the stop fires when the rise
+    // EXCEEDS this (Amsterdam 2023: a <=2-pt exacerbation is tolerated).
+    expect(SESSION_STOP_RISE).toBe(2)
     expect(EXHAUSTION_RPE).toBe(17) // voluntary-exhaustion endpoint (Borg 6–20)
   })
 
@@ -109,7 +111,7 @@ describe('HR threshold arithmetic — hand-checked against the cited constants',
     expect(rx.summary).toContain(`${rx.lowerBpm}-${rx.upperBpm} bpm`)
     expect(rx.summary).toContain('80-90%')
     expect(rx.summary).toContain(`${rx.sessionMinutes} minutes`)
-    expect(rx.summary).toContain(`${SESSION_STOP_RISE} or more points`)
+    expect(rx.summary).toContain(`more than ${SESSION_STOP_RISE} points`)
   })
 
   it('HRt is the HR at the FIRST provoking stage, not the peak of the test', () => {
@@ -121,6 +123,77 @@ describe('HR threshold arithmetic — hand-checked against the cited constants',
     expect(r.hrt).toBe(128) // first stage where 5 − 2 >= 3 — NOT 152
     expect(r.thresholdStage).toBe(2)
     expect(r.interpretation).toBe('physiologic')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1b. PHYSIOLOGICAL VALIDITY GATE (owner, 2026-08-11) — a garbage HRt is
+//     invalid, never a prescription. The motivating case: a demo run accepted
+//     HRt 65 bpm beside a resting HR of 76 and prescribed a 52–59 band the
+//     patient exceeded by sitting still.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('physiological validity gate — an HRt below rest is artefact, not a result', () => {
+  it('rejects a threshold-stage HR below the first stage (HR fell while effort ramped)', () => {
+    const r = detectThreshold({
+      restingSymptomScore: 0,
+      // start at 76 bpm, "threshold" logged at 65 — the live demo case
+      stages: [stage(1, 76, 0, 9), stage(2, 73, 1, 11), stage(3, 65, 3, 12)],
+      termination: 'symptom-limited',
+    })
+    expect(r.interpretation).toBe('invalid')
+    expect(r.hrt).toBeNull()
+    expect(r.hrtFound).toBe(false)
+    expect(r.message).toContain('65 bpm')
+  })
+
+  it('with resting HR known, rejects an HRt inside the MIN_HRT_ABOVE_RESTING margin', () => {
+    const r = detectThreshold({
+      restingSymptomScore: 0,
+      restingHr: 76,
+      // rises from stage 1, so the stage gate alone would pass — but 84 bpm is
+      // only ΔHR 8 above rest, inside the 15 bpm margin
+      stages: [stage(1, 80, 0, 9), stage(2, 84, 3, 11)],
+      termination: 'symptom-limited',
+    })
+    expect(r.interpretation).toBe('invalid')
+    expect(r.hrt).toBeNull()
+  })
+
+  it('with resting HR known, rejects a band whose floor sits at or below resting', () => {
+    // HRt 116 clears resting 95 by 21 bpm (margin OK), but the 80% floor is
+    // 93 bpm — below rest, so the band is exceeded sitting still.
+    const r = detectThreshold({
+      restingSymptomScore: 0,
+      restingHr: 95,
+      stages: [stage(1, 100, 0, 9), stage(2, 116, 3, 11)],
+      termination: 'symptom-limited',
+    })
+    expect(r.interpretation).toBe('invalid')
+  })
+
+  it('passes a plausible result (resting 62, HRt 132 → band 106–119)', () => {
+    const r = detectThreshold({
+      restingSymptomScore: 0,
+      restingHr: 62,
+      stages: [stage(1, 95, 0, 9), stage(2, 118, 1, 11), stage(3, 132, 3, 13)],
+      termination: 'symptom-limited',
+    })
+    expect(r.interpretation).toBe('physiologic')
+    expect(r.hrt).toBe(132)
+    const rx = computePrescription(132)
+    expect(rx.lowerBpm).toBe(106)
+    expect(rx.upperBpm).toBe(119)
+  })
+
+  it('a minute-1 threshold is not rejected by the stage gate (no earlier stage to fall below)', () => {
+    const r = detectThreshold({
+      restingSymptomScore: 0,
+      stages: [stage(1, 118, 3, 11)],
+      termination: 'symptom-limited',
+    })
+    expect(r.interpretation).toBe('physiologic')
+    expect(r.hrt).toBe(118)
   })
 })
 

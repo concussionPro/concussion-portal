@@ -620,18 +620,27 @@ export default function SstOnboarding({
           mint a code and no clinician reading the covariates. */}
       {mode === 'clinic-code' && (
         <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-3">
-          <p className="m-0 mb-2.5 text-[11px] font-semibold leading-snug text-(--sst-ink-2)">
-            Your clinic gave you a patient code — enter it once and this device remembers you.
-          </p>
-          <input
-            value={patientCode}
-            onChange={(e) => setPatientCode(e.target.value.toUpperCase())}
-            placeholder="Patient code"
-            autoCapitalize="characters"
-            spellCheck={false}
-            maxLength={9}
-            className="w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 text-[15px] tracking-[0.18em] text-(--sst-ink-1) placeholder:tracking-normal placeholder:text-(--sst-ink-4)"
-          />
+          {/* DEMO00 mints no patient codes, so "your clinic gave you a patient
+              code" is a false sentence there — and the third code-shaped ask on
+              one screen (2026-08-11 demo sweep). The covariate fields stay:
+              they demo the day-4-vs-day-40 story, and every demo write path is
+              server-guarded read-only. */}
+          {clinicCode.trim().toUpperCase() !== 'DEMO00' && (
+            <>
+              <p className="m-0 mb-2.5 text-[11px] font-semibold leading-snug text-(--sst-ink-2)">
+                Your clinic gave you a patient code — enter it once and this device remembers you.
+              </p>
+              <input
+                value={patientCode}
+                onChange={(e) => setPatientCode(e.target.value.toUpperCase())}
+                placeholder="Patient code"
+                autoCapitalize="characters"
+                spellCheck={false}
+                maxLength={9}
+                className="w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 text-[15px] tracking-[0.18em] text-(--sst-ink-1) placeholder:tracking-normal placeholder:text-(--sst-ink-4)"
+              />
+            </>
+          )}
           <div className="mt-2.5 grid grid-cols-2 gap-2">
             <label className="text-[10.5px] font-semibold text-(--sst-ink-3)">
               Date of injury

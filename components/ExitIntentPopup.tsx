@@ -33,6 +33,11 @@ const EXCLUDED_PREFIXES = [
   // and /ep-course are the exercise-physiology (CRM) stream; the free SCAT
   // course is the CCM ladder's top step, not theirs.
   '/clinical-suite', '/concussion-rehab-mastery', '/ep-course',
+  // 2026-08-11 (owner, MSCC demo prep): the clinician workspace and every demo
+  // surface are PRODUCT demonstrations — often on a projector in front of a
+  // prospect clinic. A course-signup interrupt there pitches the wrong product
+  // to the wrong audience at the worst possible moment.
+  '/clinical-testing', '/clinical-hub', '/demo', '/mscc-demo',
 ]
 
 export function ExitIntentPopup() {

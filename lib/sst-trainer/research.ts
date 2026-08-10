@@ -295,11 +295,16 @@ export const RESEARCH_MIN_VERIFIED_PCT = 80
  * invisible in the write-up. Changing any value below after recruitment opens
  * must be a visible commit with a stated reason, and must be disclosed.
  *
- * MAGNITUDE: >= 2 points on the 0-10 symptom item. Chosen to match the
- * >= 2-point rise that already terminates a training session in protocol.ts
- * (SESSION_STOP_RISE), so "what counts as worse" means the same thing in the
- * prescription and in the analysis. A 1-point move on a 0-10 single item is
- * within measurement noise.
+ * MAGNITUDE: >= 2 points on the 0-10 symptom item. A 1-point move on a 0-10
+ * single item is within measurement noise.
+ *
+ * DISCLOSED DIVERGENCE (2026-08-11, before recruitment): when this was locked
+ * it matched the in-session stop rule (both >=2). The stop rule has since been
+ * corrected to "MORE than 2 points" — a <=2-pt rise is the tolerated mild
+ * exacerbation (Patricios et al., Amsterdam consensus, BJSM 2023;57:695-711) —
+ * so the two are now deliberately different variables: the stop rule is a
+ * DURING-SESSION tolerance bound; this flare definition is the DELAYED
+ * (12-36h) outcome, and it keeps its pre-registered >=2 definition unchanged.
  *
  * DURATION: sustained at the next-day check-in, 12-36h after the session. PEM
  * and exertional exacerbation are characteristically DELAYED, so an immediate
