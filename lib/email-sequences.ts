@@ -1750,9 +1750,9 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     <p><strong>The practical days are running in Q4.</strong> Melbourne is dated; Sydney and Byron Bay follow in November.</p>
     <div class="callout">
       <strong>Melbourne &mdash; Saturday 31 October</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
-      SCAT6 and VOMS, phenotype rehab, and a graded exertion test run on a real person.
+      SCAT6 and VOMS, phenotype rehab, and graded exertional rehab protocols.
     </div>
-    <p>You are hearing this before it goes public &mdash; the ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places are open to this list first.</p>
+    <p>Enrol now, before the dates go public.</p>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take the Melbourne seat &mdash; A$${CONFIG.COURSE.PRICE_EARLY_BIRD}</a></center>
     <p><strong>Melbourne doesn&rsquo;t work?</strong> One click and I&rsquo;ll hold you a place on the November day you want. Dates are set once I have the numbers.</p>
     <center>

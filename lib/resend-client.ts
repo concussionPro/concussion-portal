@@ -32,6 +32,51 @@ export function getResend(): Resend | null {
 const FROM_EMAIL = 'zac@concussion-education-australia.com'
 const FROM_NAME = 'Concussion Education Australia'
 
+
+/**
+ * PLAIN-TEXT ALTERNATIVE, derived from the HTML.
+ *
+ * WHY EVERY SEND NEEDS ONE. An HTML-only email is a multipart/alternative with
+ * one part, and spam filters treat that as a signal in its own right —
+ * legitimate bulk senders send both, and a message with no text part looks like
+ * something assembled by a tool that did not care. It also renders as a blank
+ * or garbled message in text-only clients, on some watch previews, and in the
+ * inbox preview line, which is the first thing a recipient reads.
+ *
+ * Nothing in this codebase was passing `text`, so every email the system has
+ * ever sent has been HTML-only. That is free deliverability left on the table:
+ * it costs nothing per send and it is one of the few levers that does not
+ * depend on DNS or on warming.
+ *
+ * Deliberately simple. It is not a Markdown renderer — it keeps the reading
+ * order, turns links into "label (url)" so the destination survives, and drops
+ * everything else. A text part that is merely FAITHFUL beats a clever one.
+ */
+export function htmlToText(html: string): string {
+  return html
+    // Anchors first, so the href survives the tag strip.
+    .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_m, href, label) => {
+      const text = String(label).replace(/<[^>]+>/g, '').trim()
+      // A bare URL as its own label reads as duplication in text.
+      return text && text !== href ? `${text} (${href})` : href
+    })
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<\/(p|div|tr|h[1-6]|li|table|center)>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li\b[^>]*>/gi, '- ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&mdash;/g, '—')
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .split('\n').map((l) => l.trim()).join('\n')
+    .trim()
+}
+
 interface EmailOptions {
   to: string
   subject: string
@@ -48,6 +93,9 @@ interface EmailOptions {
    *  API silently drops attachments in that form. Pre-encoding to base64
    *  string is what their API expects. */
   attachments?: Array<{ filename: string; content: Buffer | string }>
+  /** Plain-text alternative. Omit and one is derived from `html` — see
+   *  htmlToText below for why every send must carry one. */
+  text?: string
 }
 
 /**
@@ -179,6 +227,8 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       to: options.to,
       subject: options.subject,
       html: options.html,
+      // Never HTML-only — see htmlToText.
+      text: options.text ?? htmlToText(options.html),
       tags: normalisedTags,
       headers: options.headers,
       ...(options.scheduledAt ? { scheduledAt: options.scheduledAt } : {}),
@@ -220,6 +270,8 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
       to: options.to,
       subject: options.subject,
       html: options.html,
+      // Never HTML-only — see htmlToText.
+      text: options.text ?? htmlToText(options.html),
       tags: normalisedTags,
       headers: options.headers,
       attachments: encodedAttachments,

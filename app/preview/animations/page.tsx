@@ -35,7 +35,7 @@ const ITEMS = [
     id: 'hrt-to-prescription',
     Component: HrtToPrescriptionAnimated,
     placements: 'CCM M7 · CRM M3 · CRM M4',
-    status: 'LIVE — already embedded',
+    status: 'LIVE — embedded',
     live: true,
     rationale:
       'The band does not exist until the threshold fires. A static chart shows the finished result and hides the causality, which is the thing being taught.',
@@ -44,8 +44,8 @@ const ITEMS = [
     id: 'autonomic-dysfunction',
     Component: AutonomicDysfunctionAnimated,
     placements: 'CCM M7 · CRM M1 · CRM M2 · CRM M4 · CRM M7',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'Most-used infographic in either course (5 placements). The teaching point is a change of state — letting the learner flip between healthy and concussed does the comparison for them.',
   },
@@ -53,8 +53,8 @@ const ITEMS = [
     id: 'neurometabolic-cascade',
     Component: NeurometabolicCascadeAnimated,
     placements: 'CCM M1 · CRM M1',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'Opens both courses and sits in the heaviest pure-text stretch (CRM M1 ≈ 7,800 words). Order and overlap are the content: demand spikes as supply fails, and the gap between the curves is why exertion provokes symptoms.',
   },
@@ -62,8 +62,8 @@ const ITEMS = [
     id: 'cbf-autoregulation',
     Component: CbfAutoregulationAnimated,
     placements: 'CCM M1 · CRM M1 · CRM M4',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'Autoregulation is a RELATIONSHIP — perfusion held flat while pressure swings. A static curve shows the shape but not the behaviour. Dragging pressure and watching flow either hold or follow demonstrates in seconds what the text spends four paragraphs on, and it is the mechanistic justification for SSTAE itself.',
   },
@@ -71,8 +71,8 @@ const ITEMS = [
     id: 'graded-return-to-sport',
     Component: GradedReturnToSportAnimated,
     placements: 'CCM M6 · CRM M6',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'Every static version is six boxes in a row, and every clinician still asks the same two questions: what happens if symptoms return, and how long does each stage take. Those are the actual content. Stepping through — with the drop-back rule firing as a consequence rather than sitting in a footnote — answers both.',
   },
@@ -80,8 +80,8 @@ const ITEMS = [
     id: 'sstae-mechanism',
     Component: SstaeMechanismAnimated,
     placements: 'CCM M4 · CRM M4',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'The claim is comparative: three ways of managing the same injury produce three different curves. A static diagram can assert that; only a comparison the learner drives makes the magnitude land — and the magnitude is the argument for the whole intervention. The rest arm is deliberately not flat, because overstating it is the kind of claim that gets a course pulled apart in review.',
   },
@@ -89,8 +89,8 @@ const ITEMS = [
     id: 'red-flag-decision',
     Component: RedFlagDecisionAnimated,
     placements: 'CCM M2 · CRM M2',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'A printed decision tree is read once and remembered as a shape. What a clinician needs is the rehearsal — being asked the questions in the order they would ask them and arriving at the action. Fails toward escalation: any yes ends the walk, because in practice you do not keep assessing, you stop and refer.',
   },
@@ -98,8 +98,8 @@ const ITEMS = [
     id: 'phenotype-map',
     Component: PhenotypeMapAnimated,
     placements: 'CCM M7 · CRM M5 · CRM M7',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'The static map shows six labels and six interventions at once — the one presentation guaranteed not to be learned, because the whole clinical skill is going from a FINDING to a TREATMENT and a grid shows both simultaneously. Selecting one and having the intervention arrive is the mapping being taught.',
   },
@@ -107,8 +107,8 @@ const ITEMS = [
     id: 'fitt-framework',
     Component: FittFrameworkAnimated,
     placements: 'CCM M7 · CRM M4',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'FITT as a table is four words and four values, and teaches nothing — the learner already knows what frequency means. What they cannot do from a table is turn a NUMBER into a PRESCRIPTION. Moving the threshold and watching the band follow is the skill, and the evidence caveat sits on the face of it rather than in a footnote.',
   },
@@ -116,8 +116,8 @@ const ITEMS = [
     id: 'load-monitoring',
     Component: LoadMonitoringAnimated,
     placements: 'CCM M6 · CRM M6',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'Not a concept to understand but a judgement to practise: given this trace, progress, hold or de-load? Four cases, committing to a call before the answer. The fourth is deliberately the one where symptoms look fine and the right answer is still to hold — a trace read on symptoms alone would call it a success.',
   },
@@ -125,8 +125,8 @@ const ITEMS = [
     id: 'recovery-timeline',
     Component: RecoveryTimelineAnimated,
     placements: 'CCM M2 · CRM M1',
-    status: 'AWAITING APPROVAL',
-    live: false,
+    status: 'LIVE — embedded',
+    live: true,
     rationale:
       'The number every patient asks for is "how long", and the honest answer is a distribution. A static curve gets read as an average and the average gets quoted back to patients as a promise. Dragging the day marker makes the spread the subject rather than the mean.',
   },
@@ -199,9 +199,9 @@ export default function AnimationReviewPage() {
 
         <footer className="rounded-xl border border-[#dcebeb] bg-white p-4">
           <p className="m-0 text-[13px] leading-relaxed text-[#4a6a6e]">
-            <strong className="text-[#16282b]">That is all of them.</strong> Eleven animations
-            covering every infographic id that carries a placement in either course — 26 placements
-            in total, and not one course-content edit. Approving any is a single registry line.
+            <strong className="text-[#16282b]">All eleven are live</strong> across CCM and CRM —
+            26 placements, wired through one registry map, with not a single course-content edit.
+            Removing any one is deleting a line.
           </p>
         </footer>
       </div>

@@ -39,7 +39,19 @@ export interface VideoIndexEntry {
  * components. A test asserts the two stay in step, so the duplication cannot
  * rot silently.
  */
-export const ANIMATED_INFOGRAPHIC_IDS: readonly string[] = ['hrt-to-prescription']
+export const ANIMATED_INFOGRAPHIC_IDS: readonly string[] = [
+  'hrt-to-prescription',
+  'autonomic-dysfunction',
+  'neurometabolic-cascade',
+  'cbf-autoregulation',
+  'graded-return-to-sport',
+  'sstae-mechanism',
+  'red-flag-decision',
+  'phenotype-map',
+  'fitt-framework',
+  'load-monitoring',
+  'recovery-timeline',
+]
 
 /** Is there enough moving content to show the index at all? */
 export const VIDEO_INDEX_MIN_ENTRIES = 1
