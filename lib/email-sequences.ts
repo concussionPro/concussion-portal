@@ -1723,6 +1723,14 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
  * Melbourne is named, because only Melbourne is confirmed — naming the other
  * two before they exist is how the previous model lost trust.
  *
+ * CITY IS THE PERSONALISATION. The registered-interest list is ~25 people
+ * across five cities, so this is closer to 25 personal notes than a campaign.
+ * Naming the city they actually registered for, and telling them it is in
+ * contention for one of the two unplaced dates, is a far stronger ask than a
+ * generic "vote for a city" — and the reply is the signal needed to place
+ * them. A reply also costs more than a click, which is what makes it worth
+ * reading as demand.
+ *
  * Every figure derives from CONFIG. A literal price or CPD number here is how
  * "14 CPD hours" survived the 2026-07-30 re-rate into live sends.
  */
@@ -1734,12 +1742,14 @@ export const QUARTERLY_PRACTICAL_BLAST = {
    *                    opening line claims that, so it must not be sent to a
    *                    cold or free-course segment where it would be false.
    */
-  template: (name: string, registered: boolean, bookLink: string, onlineLink: string) => emailShell(`
+  template: (name: string, registered: boolean, bookLink: string, onlineLink: string, city?: string | null) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p>${registered
-      ? 'You registered interest in the concussion practical training.'
-      : 'A change to how the concussion practical training runs, in case it&rsquo;s useful.'}</p>
-    <p><strong>Three practical days run this quarter.</strong> No more waiting for your city to reach a number &mdash; the dates run, and they are placed where the most people are waiting.</p>
+    <p>${registered && city
+      ? `You registered interest in the concussion practical training for <strong>${city}</strong>.`
+      : registered
+        ? 'You registered interest in the concussion practical training.'
+        : 'A change to how the concussion practical training runs, in case it&rsquo;s useful.'}</p>
+    <p><strong>Three practical days run this quarter</strong> &mdash; Melbourne on 31 October, then Sydney and Byron Bay in November. No more waiting for a city to reach a number.</p>
     <div class="callout">
       <strong>Melbourne &mdash; Saturday 31 October</strong><br>
       ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places. A full practical day: SCAT6 and VOMS assessment, phenotype-based rehab, and running a graded exertion test on a real person until you find their threshold.
@@ -1748,7 +1758,19 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat &mdash; 31 October</a></center>
     <p><strong>Or start online today, in the next five minutes.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. Upgrade to any future quarterly practical for the difference, at the early-bird rate, whenever suits. <strong>Your upgrade never expires.</strong></p>
     <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online now</a></center>
-    <p>Melbourne is the first of the three and it is open now. If it doesn&rsquo;t suit, start online and put your upgrade against either of the other two &mdash; both land inside this quarter.</p>
+    <p>${(() => {
+      const c = (city || '').toLowerCase()
+      // Q4 is Melbourne (dated), then Sydney and Byron Bay in November. November
+      // dates are deliberately NOT stated — they are not locked, and naming a
+      // date that then moves is exactly how the previous model lost trust.
+      if (c.includes('sydney')) return 'Sydney runs in November. The date is confirmed shortly &mdash; take the online course now and your upgrade is waiting for it.'
+      if (c.includes('byron')) return 'Byron Bay runs in November. The date is confirmed shortly &mdash; take the online course now and your upgrade is waiting for it.'
+      if (c.includes('melbourne')) return 'Melbourne is the first of the three, and it is the one that is dated.'
+      // Perth and Adelaide are not in Q4. Say so plainly rather than implying
+      // otherwise — 9 of the 25 registrants are in this position, and pretending
+      // their city is imminent is what makes the next email unopened.
+      return `${city || 'Your city'} is not one of the three this quarter &mdash; the other two are Sydney and Byron Bay, both in November. The online course stands on its own, and the upgrade never expires, so it is there whenever a date lands near you.`
+    })()}</p>
     <div class="sig">Zac</div>
   `),
 }

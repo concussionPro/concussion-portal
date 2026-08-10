@@ -35,27 +35,32 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 // Bump this to re-arm. Firing requires it verbatim, so a stale flag fails safe.
 const CONFIRM_FLAG = 'quarterly-practical-melbourne-2026-10-31'
 
-type Recipient = { email: string; name: string; registered: boolean }
+type Recipient = { email: string; name: string; registered: boolean; city: string | null }
 
 async function audience(): Promise<Recipient[]> {
   const out: Recipient[] = []
   const seen = new Set<string>()
 
-  const push = (email: string | null, name: string | null, registered: boolean) => {
+  const push = (email: string | null, name: string | null, registered: boolean, city: string | null = null) => {
     const e = (email || '').trim().toLowerCase()
     if (!e || seen.has(e)) return
     // Partner and internal addresses are never campaign recipients.
     if (e.includes('embodia') || e.endsWith('@concussion-education-australia.com')) return
     seen.add(e)
-    out.push({ email: e, name: (name || '').trim(), registered })
+    out.push({ email: e, name: (name || '').trim(), registered, city })
   }
 
   // 1. Registered interest — the segment the opening line is literally about.
   try {
-    const { rows } = await sql<{ email: string; name: string | null }>`
-      SELECT DISTINCT email, name FROM workshop_interest WHERE email IS NOT NULL
+    // Most recent registration wins when someone registered two cities — two
+    // of the twenty-five did, and the later choice is the better signal.
+    const { rows } = await sql<{ email: string; name: string | null; city: string | null }>`
+      SELECT DISTINCT ON (lower(email)) email, name, city
+      FROM workshop_interest
+      WHERE email IS NOT NULL
+      ORDER BY lower(email), created_at DESC
     `
-    rows.forEach((r) => push(r.email, r.name, true))
+    rows.forEach((r) => push(r.email, r.name, true, r.city))
   } catch { /* table absent → segment simply empty */ }
 
   // 2. Free-course completers and online-only owners who have NOT bought the
@@ -117,8 +122,13 @@ async function run(request: NextRequest, willSend: boolean) {
         otherSegment: eligible.filter((r) => !r.registered).length,
         suppressedOrErrored: skipped.length,
       },
-      sample: eligible.slice(0, 8).map((r) => ({ email: r.email, registered: r.registered })),
-      previewHtml: QUARTERLY_PRACTICAL_BLAST.template('Sample', true, bookLink, onlineLink),
+      sample: eligible.slice(0, 8).map((r) => ({ email: r.email, registered: r.registered, city: r.city })),
+      byCity: eligible.reduce<Record<string, number>>((acc, r) => {
+        const k = r.city || '(no city)'
+        acc[k] = (acc[k] ?? 0) + 1
+        return acc
+      }, {}),
+      previewHtml: QUARTERLY_PRACTICAL_BLAST.template('Sample', true, bookLink, onlineLink, 'Sydney'),
     })
   }
 
@@ -128,7 +138,7 @@ async function run(request: NextRequest, willSend: boolean) {
     const token = generateUnsubscribeToken(r.email)
     const unsubscribeUrl = `${base}/api/unsubscribe?email=${encodeURIComponent(r.email)}&token=${token}`
     const html = QUARTERLY_PRACTICAL_BLAST
-      .template(r.name, r.registered, bookLink, onlineLink)
+      .template(r.name, r.registered, bookLink, onlineLink, r.city)
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
     const ok = await sendEmail({

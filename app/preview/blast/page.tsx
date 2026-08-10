@@ -29,13 +29,13 @@ export const metadata: Metadata = {
 export default async function BlastPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ segment?: string }>
+  searchParams: Promise<{ segment?: string; city?: string }>
 }) {
-  const { segment } = await searchParams
+  const { segment, city } = await searchParams
   const registered = segment !== 'other'
   const link = `${CONFIG.APP_URL}/pricing`
 
-  const html = QUARTERLY_PRACTICAL_BLAST.template('Sarah', registered, link, link)
+  const html = QUARTERLY_PRACTICAL_BLAST.template('Sarah', registered, link, link, city ?? 'Sydney')
     .replaceAll('{{unsubscribe_url}}', '#unsubscribe-example')
 
   return (
