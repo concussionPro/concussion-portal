@@ -53,12 +53,15 @@ export function SiteFooter() {
                 </a>
               </li>
               <li><Link href="/pricing#faq" className="hover:text-white transition-colors">FAQ</Link></li>
-              <li>
-                <a href="https://concussion-education-australia.com/#facilitators" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">
-                  Instructor Bios
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </li>
+              {/* /about/zac-lewis, not the Squarespace #facilitators anchor.
+                  The portal HAS a full instructor page — Person schema, AHPRA
+                  registration, the lot — and this was the only nav element
+                  pointing at a bio anywhere on the site. It sent the reader OFF
+                  the portal, in a new tab, at the exact moment they were
+                  checking who teaches the thing they are about to pay for. The
+                  internal page got 2 sessions in 90 days against 182 on
+                  /pricing, which is what an orphaned page looks like. */}
+              <li><Link href="/about/zac-lewis" className="hover:text-white transition-colors">Instructor</Link></li>
               <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Refund Policy</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>

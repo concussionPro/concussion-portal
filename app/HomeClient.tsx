@@ -561,6 +561,54 @@ export default function HomeClient() {
         </div>
 
 
+        {/* ── Who teaches it ───────────────────────────────
+            The homepage named the instructor NOWHERE, and the only bio link on
+            the whole portal sat in the footer pointing OFF-SITE to Squarespace.
+            /about/zac-lewis — a full page with Person schema and AHPRA
+            registration — took 2 sessions in 90 days against 182 on /pricing.
+
+            It sits immediately before the testimonials on purpose: who taught
+            it, then what people said about it. A solo-instructor clinical CPD
+            product at $497–$1,190 is bought on the instructor, and this is a
+            YMYL surface where E-E-A-T wants the credential visible rather than
+            one click into the footer. */}
+        <section className="section-padding relative z-10">
+          <div className="max-w-[640px] mx-auto">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--foreground)] mb-6">
+              Who teaches it
+            </h2>
+            <Link
+              href="/about/zac-lewis"
+              className="card rounded-2xl p-5 md:p-6 flex items-start gap-4 no-underline transition-shadow hover:shadow-md"
+            >
+              <Image
+                src="/zac-lewis-headshot.jpg"
+                alt="Zac Lewis"
+                width={72}
+                height={72}
+                className="w-[72px] h-[72px] rounded-full object-cover flex-shrink-0 shadow-sm"
+              />
+              <div className="min-w-0">
+                <div className="text-[15px] font-bold text-[var(--foreground)]">Zac Lewis</div>
+                <div className="text-[12px] text-[var(--muted-foreground)] mb-1">
+                  Founder &amp; Lead Educator &middot; B.Clin.Sci., M.Ost.Med
+                </div>
+                <div className="text-[11px] font-semibold text-[var(--accent)] mb-2">
+                  AHPRA-registered Osteopath
+                </div>
+                <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed m-0">
+                  Practising in concussion assessment and rehabilitation, and the clinician who
+                  writes and delivers every module. CCM is endorsed by Osteopathy Australia.
+                </p>
+                <span className="inline-block mt-2.5 text-[12px] font-bold text-[var(--accent)]">
+                  Full background and credentials &rarr;
+                </span>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+
         {/* ── Testimonials ─────────────────────────────────── */}
         <section className="section-padding relative z-10">
           <div className="max-w-[640px] mx-auto">

@@ -32,6 +32,23 @@ function fetchCityProgress(): Promise<CityProgress[]> {
   return cityProgressPromise
 }
 
+/**
+ * True when this city has a CONFIRMED, future-dated round.
+ *
+ * The CTA label depends on it: with no date on the board, "Enrol from $497 —
+ * early-bird locked" promises a seat at an event that does not exist yet. What
+ * the buyer is actually doing is registering interest in the next round and
+ * starting the online course — so that is what the button says.
+ */
+function cityHasLiveDate(slug: string): boolean {
+  const config = Object.values(CONFIG.LOCATIONS).find((loc) => loc.slug === slug)
+  return (
+    config?.status === 'confirmed' &&
+    !!config.dateObj &&
+    config.dateObj.getTime() > Date.now()
+  )
+}
+
 export type LocationCardProps = {
   city: string
   /** register-interest city slug — must be in the API's VALID_CITIES */
@@ -68,6 +85,7 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
   }, [citySlug])
 
   const showMomentum = !!progress && progress.enrolled >= MOMENTUM_MIN_ENROLLED
+  const hasLiveDate = cityHasLiveDate(citySlug)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -166,10 +184,16 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
           // Same class as the "Unlock — A$497" pair on /learning, found in the
           // same sweep (2026-08-06, master clean register E pass 2): a label
           // that is unambiguous only because of layout, repeated across items.
-          aria-label={`Enrol in ${city} from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`}
+          aria-label={
+            hasLiveDate
+              ? `Enrol in ${city} from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`
+              : `Register interest in ${city} and start online from $${CONFIG.COURSE.PRICE_ONLINE}`
+          }
           className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--accent)] px-3 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-[#0b6165]"
         >
-          Enrol from ${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked
+          {hasLiveDate
+            ? `Enrol from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`
+            : `Register interest — start online from $${CONFIG.COURSE.PRICE_ONLINE}`}
           <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
         </Link>
 

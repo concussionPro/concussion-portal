@@ -41,9 +41,14 @@ const REPEATED_CTAS = [
   {
     file: 'components/LocationInterestCard.tsx',
     what: 'the per-city enrol button on the homepage',
-    visible: /Enrol from \$\{CONFIG\.COURSE\.PRICE_ONLINE\} — early-bird locked/,
-    // The accessible name must name the city.
-    aria: /aria-label=\{`Enrol in \$\{city\}/,
+    // The visible label is CONDITIONAL since 2026-08-10: a city with no
+    // confirmed future date is registering interest, not enrolling into a day
+    // that does not exist. Both branches are price-bearing and both repeat
+    // once per city, so both need the aria-label — the guard matches whichever
+    // ships rather than pinning one wording.
+    visible: /(Enrol from|Register interest — start online from) \$\$\{CONFIG\.COURSE\.PRICE_ONLINE\}/,
+    // The accessible name must name the city, on EITHER branch.
+    aria: /aria-label=\{[\s\S]{0,200}?(Enrol in|Register interest in) \$\{city\}/,
   },
   {
     file: 'app/learning/page.tsx',
@@ -77,8 +82,12 @@ describe('repeated calls to action name what they act on', () => {
   it('the guard can fail', () => {
     // Proven against the exact shape that shipped: the visible label present,
     // no aria-label anywhere.
-    const shipped = 'Enrol from ${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked'
+    const shipped = '`Enrol from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`'
     expect(REPEATED_CTAS[0].visible.test(shipped)).toBe(true)
     expect(REPEATED_CTAS[0].aria.test(shipped)).toBe(false)
+    // The register-interest branch is guarded on the same terms.
+    const interest = '`Register interest — start online from $${CONFIG.COURSE.PRICE_ONLINE}`'
+    expect(REPEATED_CTAS[0].visible.test(interest)).toBe(true)
+    expect(REPEATED_CTAS[0].aria.test(interest)).toBe(false)
   })
 })
