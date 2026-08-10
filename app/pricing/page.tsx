@@ -198,11 +198,31 @@ function PricingTabs() {
                 </span>
               ))}
             </div>
+            {/* THE DECISION MOMENT.
+                This block answers the one objection that stops a browser
+                buying: "if I take the online course, will I ever actually get
+                the practical day?" Until 2026-08-10 it said the date "is chosen
+                when it launches" — the old collect-interest-and-wait model,
+                which is precisely the doubt that makes people register instead
+                of purchase.
+                Three dated practical days in one quarter is the answer, and it
+                belongs HERE rather than only in the campaign: someone arriving
+                from that email must not lose the argument that made them click.
+                CONFIG-derived price; never a literal (the 2026-07-30 CPD
+                re-rate is what that rule exists for). */}
             <div className="mt-4 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3">
               <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-                <strong className="font-bold">Start online, add the in-person day whenever you like.</strong>{' '}
+                <strong className="font-bold">Three practical days run this quarter.</strong>{' '}
                 <span className="text-muted-foreground">
-                  Upgrade later for the difference (${upgradePriceFor(null)}) — no deadline, and your city&apos;s date is chosen when it launches.
+                  Melbourne on 31 October, then Sydney and Byron Bay in November — so you are not
+                  waiting for a city to reach a number.
+                </span>
+              </p>
+              <p className="mt-1.5 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
+                <strong className="font-bold">Start online, add the day whenever suits.</strong>{' '}
+                <span className="text-muted-foreground">
+                  Upgrade later for the difference (${upgradePriceFor(null)}) at the early-bird rate —
+                  it never expires, and it works at any of the three.
                 </span>
               </p>
             </div>
