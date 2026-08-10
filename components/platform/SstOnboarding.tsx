@@ -338,7 +338,28 @@ export default function SstOnboarding({
         </div>
       )}
 
-      {mode === 'clinic-code' && (
+      {mode === 'clinic-code' && initialClinicCode && codeStatus === 'valid' ? (
+        /* The code came WITH the surface — the clinician's embedded workspace or
+           a QR deep link. It is already validated; asking the user to re-type
+           the code displayed an inch away was the "entered twice" of 2026-08-11.
+           A confirmed chip states the linkage; "change" reopens the input for
+           the rare wrong-clinic case. */
+        <div className="flex items-center justify-between gap-3 rounded-[14px] border-[1.5px] border-(--sst-good) bg-(--sst-card) px-3.5 py-3">
+          <div className="flex flex-col">
+            <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">Clinic</span>
+            <span className="text-[14px] font-bold text-(--sst-navy)">
+              ✓ {clinicName ?? clinicCode} <span className="font-[family-name:var(--font-space)] font-medium text-(--sst-faint) tracking-[0.06em]">· {clinicCode}</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setCodeStatus('idle'); setClinicName(null); setClinicCode('') }}
+            className="text-[11.5px] font-semibold text-(--sst-faint) underline"
+          >
+            Change
+          </button>
+        </div>
+      ) : mode === 'clinic-code' && (
         <div className="flex flex-col gap-1.5">
           <label htmlFor="clinic-code" className="text-xs font-semibold text-(--sst-ink-2)">
             Clinic code
@@ -392,7 +413,13 @@ export default function SstOnboarding({
             </span>
           )}
 
-          <label htmlFor="patient-name" className="mt-1.5 text-xs font-semibold text-(--sst-ink-2)">
+        </div>
+      )}
+
+      {/* the patient's name — needed on BOTH code branches (chip and input) */}
+      {mode === 'clinic-code' && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="patient-name" className="text-xs font-semibold text-(--sst-ink-2)">
             Your name
           </label>
           <input

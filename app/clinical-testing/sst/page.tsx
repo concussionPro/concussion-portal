@@ -53,6 +53,10 @@ function Shell() {
   // "Hide setup" toggle collapses it once you're running a patient so the app
   // owns the width. Always open until a clinic code exists (you need it to provision).
   const [setupOpen, setSetupOpen] = useState(true)
+  // DEMO mode: the rail duplicates what the demo already shows (the code is
+  // pre-wired into the app, there is nothing to provision) and its practitioner
+  // box was the widest thing on the screen. The app IS the demo — rail starts
+  // hidden, one click brings it back.
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
@@ -60,6 +64,8 @@ function Shell() {
       // NOT d.code (the earlier bug: always fell through to "set up your code").
       .then((d) => {
         const c = d?.clinic?.code
+        // Demo clinic → the rail starts hidden (see comment above state).
+        if (c === 'DEMO00') setSetupOpen(false)
         setClinicCode(typeof c === 'string' && c.trim() ? c : null)
       })
       .catch(() => setClinicCode(null))

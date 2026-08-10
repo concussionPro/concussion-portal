@@ -129,16 +129,16 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       {!seats.isOwner ? (
         <p className="mt-3 text-[12px] text-muted-foreground">Practitioners are managed by the clinic owner.</p>
       ) : seats.allowance === null || seats.used < seats.allowance ? (
-        <div className="mt-3 flex flex-col sm:flex-row gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <input
             type="text" value={name} onChange={(e) => setName(e.target.value)}
             placeholder="Practitioner name"
-            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] outline-none focus:border-accent"
+            className="flex-1 min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] outline-none focus:border-accent"
           />
           <input
             type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="Email (optional)"
-            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] outline-none focus:border-accent"
+            className="flex-1 min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] outline-none focus:border-accent"
           />
           <button
             type="button" onClick={add} disabled={busy || !name.trim()}
