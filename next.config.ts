@@ -35,7 +35,13 @@ const nextConfig: NextConfig = {
    * prospect-page lookups.
    */
   async rewrites() {
-    return [{ source: '/mscc', destination: '/sst-pitch/mscc' }]
+    return [
+      { source: '/mscc', destination: '/sst-pitch/mscc' },
+      // The live-demo navigator used on the call. A sibling of /mscc rather
+      // than a child of the pitch page, because it is the URL that gets shared
+      // on a screenshare and read aloud.
+      { source: '/mscc/demo', destination: '/mscc-demo' },
+    ]
   },
 
   async redirects() {
