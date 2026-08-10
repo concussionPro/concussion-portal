@@ -48,6 +48,9 @@ const nextConfig: NextConfig = {
       // pitch page was built here on 2026-08-10 against an explicit "do not
       // build from scratch" and is deleted; the product demos the product.
       { source: '/mscc/demo', destination: '/demo/clinic', permanent: false },
+      // The bespoke page's old path — anything that cached or noted it
+      // (screenshare history, meeting notes) must land on the demo, not a 404.
+      { source: '/mscc-demo', destination: '/demo/clinic', permanent: false },
       {
         source: '/pricing/international',
         destination: '/pricing-international',
