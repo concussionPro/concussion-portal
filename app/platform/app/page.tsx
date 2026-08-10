@@ -36,9 +36,12 @@ import SstInstallPrompt from '@/components/sst-trainer/SstInstallPrompt'
 import {
   flushPendingSyncs,
   pushLiveTick,
+  syncDailyCheckin,
   syncSessionToClinic,
   type SyncEventType,
 } from '@/lib/sst-trainer/clinic-sync'
+import { daysSinceInjury } from '@/lib/sst-trainer/research'
+import DailyCheckin from '@/components/sst-trainer/DailyCheckin'
 import { SstAppShell } from '@/components/platform/SstAppShell'
 import SstOnboarding, { type OnboardingResult } from '@/components/platform/SstOnboarding'
 import SstPwaRegister from '@/components/platform/SstPwaRegister'
@@ -102,6 +105,13 @@ const CHECKIN_BEFORE_MS = 36 * 3_600_000
 /** Calendar-day key for the check-in skip marker ("skip holds for today"). */
 function todayKey(): string {
   return new Date().toDateString()
+}
+
+/** LOCAL calendar date as YYYY-MM-DD — the daily check-in is about the
+ *  patient's day, so this is deliberately not toISOString() (UTC would put an
+ *  evening Sydney answer on tomorrow's date). */
+function localDateIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 /** "Tuesday's session" / "yesterday's session" for the next-day check-in. */
@@ -182,6 +192,11 @@ export default function PlatformAppPage({
   // "Skip for now" persists for the rest of the day — the check-in must never
   // re-ambush on every open, and must never gate 'Start today's session'.
   const [checkinSkippedOn, setCheckinSkippedOn] = useState<string | null>(null)
+  // DAILY check-in (rest-day comparator) — last answered local date + score.
+  // The score is kept so a session completed later the same day re-sends the
+  // row with trained=true instead of re-asking the question.
+  const [dailyCheckinOn, setDailyCheckinOn] = useState<string | null>(null)
+  const [dailyCheckinScore, setDailyCheckinScore] = useState<number | null>(null)
 
   const installIdRef = useRef<string>('')
   const condition: Condition = welcome?.condition ?? 'concussion'
@@ -199,6 +214,11 @@ export default function PlatformAppPage({
           clinicCode: s.clinicCode,
           patientName: s.patientName,
           condition: 'concussion', // the only live pathway today
+          patientCode: s.patientCode,
+          injuryDate: s.injuryDate,
+          ageBand: s.ageBand,
+          sex: s.sex,
+          researchConsent: s.researchConsent,
         })
       }
       setClinicName(s.clinicName)
@@ -219,6 +239,8 @@ export default function PlatformAppPage({
       setLastTestAt(s.lastTestAt)
       setLastRegressAt(s.lastRegressAt)
       setCheckinSkippedOn(s.checkinSkippedOn)
+      setDailyCheckinOn(s.dailyCheckinOn)
+      setDailyCheckinScore(s.dailyCheckinScore)
 
       if (s.redFlagLocked) {
         setStep('locked')
@@ -287,12 +309,19 @@ export default function PlatformAppPage({
       lastTestAt,
       lastRegressAt,
       checkinSkippedOn,
+      patientCode: welcome?.patientCode ?? null,
+      injuryDate: welcome?.injuryDate ?? null,
+      ageBand: welcome?.ageBand ?? null,
+      sex: welcome?.sex ?? null,
+      researchConsent: welcome?.researchConsent ?? false,
+      dailyCheckinOn,
+      dailyCheckinScore,
     })
   }, [
     hydrated, welcome, clinicName, goal, goalLabel, selectedSymptomIds, restingSymptomScore,
     prescription, thresholdHistory, sessions, archivedSessions, verifiedSessions,
     progressionCheckpoint, decisionCheckpoint, lastRedFlagAt, redFlagLocked, redFlagClearedAt,
-    lastTestAt, lastRegressAt, checkinSkippedOn,
+    lastTestAt, lastRegressAt, checkinSkippedOn, dailyCheckinOn, dailyCheckinScore,
   ])
 
   // Per-clinic QR deep link (/sst-trainer?clinic=CODE) → pre-fill the clinic code
@@ -380,6 +409,13 @@ export default function PlatformAppPage({
         dataConsent: welcome?.dataConsent ?? false,
         hrSource: device.connect,
         deviceName: connection?.label ?? null,
+        // Minted clinic-scoped identity (intake 2026-08-09). Without it every
+        // row resolved by install-UUID/label fallback — the exact merge/split
+        // failure the code exists to prevent. Null for pre-intake patients;
+        // the server-side fallbacks still apply.
+        patientCode: welcome?.patientCode ?? null,
+        // Derived on device at event time; the injury date itself never leaves.
+        daysSinceInjury: welcome?.injuryDate ? daysSinceInjury(welcome.injuryDate, new Date()) : null,
       },
     })
   }
@@ -528,6 +564,36 @@ export default function PlatformAppPage({
     [archivedSessions, sessions],
   )
 
+  // ── daily check-in (rest-day comparator) ────────────────────────────────────
+  // Clinic-code + minted patient code only: the server keys the check-in table
+  // on the code, and a row it can't tie to a patient is noise. Never gates the
+  // session — an unanswered day is a missing observation and stays missing.
+  const canDailyCheckin =
+    welcome?.mode === 'clinic-code' && !!welcome?.clinicCode && !!welcome?.patientCode && !!prescription
+  const dailyCheckinAnswered =
+    dailyCheckinOn === localDateIso(new Date()) ? dailyCheckinScore : null
+
+  const saveDailyCheckin = (score: number) => {
+    const today = localDateIso(new Date())
+    // `trained` is asserted from THIS device's own session log for the date —
+    // deliberately not inferred server-side, where an unsynced session would
+    // silently reclassify a training day as a rest day (the one
+    // misclassification that corrupts the comparator).
+    const trainedToday = [...archivedSessions, ...sessions].some(
+      (s) => localDateIso(new Date(s.at)) === today,
+    )
+    syncDailyCheckin({
+      clinicCode: welcome?.clinicCode,
+      patientCode: welcome?.patientCode,
+      onDate: today,
+      symptomScore: score,
+      trained: trainedToday,
+      daysSinceInjury: welcome?.injuryDate ? daysSinceInjury(welcome.injuryDate, new Date()) : null,
+    })
+    setDailyCheckinOn(today)
+    setDailyCheckinScore(score)
+  }
+
   const stepIndex = Math.max(0, STEP_ORDER.indexOf((STEP_ORDER as readonly string[]).includes(step) ? (step as Step) : 'home'))
 
   const hasCompletedSession = sessions.length + archivedSessions.length > 0
@@ -638,6 +704,27 @@ export default function PlatformAppPage({
             setClinicName(r.clinicName)
             setGoal(r.goal)
             setGoalLabel(r.goalLabel)
+            // Intake → server (2026-08-11: onboarding captured these and the
+            // page dropped them). Best-effort: covariates also reachable via
+            // the clinician's patients screen, so a lost PATCH degrades, it
+            // doesn't corrupt. The injury DATE stays on device — only the
+            // derived day count is sent.
+            if (r.welcome.clinicCode && r.welcome.patientCode) {
+              void fetch('/api/sst/patient', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  clinicCode: r.welcome.clinicCode,
+                  patientCode: r.welcome.patientCode,
+                  ageBand: r.welcome.ageBand ?? null,
+                  sex: r.welcome.sex ?? null,
+                  researchConsent: r.welcome.researchConsent === true,
+                  daysSinceInjury: r.welcome.injuryDate
+                    ? daysSinceInjury(r.welcome.injuryDate, new Date())
+                    : null,
+                }),
+              }).catch(() => {})
+            }
             setStep('symptoms')
           }}
         />
@@ -841,6 +928,9 @@ export default function PlatformAppPage({
           {hasCompletedSession && <SstInstallPrompt />}
           {regressNotice}
           {directedRetestPrompt}
+          {canDailyCheckin && (
+            <DailyCheckin answeredScore={dailyCheckinAnswered} onSave={saveDailyCheckin} />
+          )}
           <HomeHub
             rx={prescription}
             condition={condition}
@@ -877,6 +967,25 @@ export default function PlatformAppPage({
             const persisted: PersistedSession = { ...log, at: Date.now() }
             setSessions((prev) => [...prev, persisted])
             if (log.hrVerified) setVerifiedSessions((n) => n + 1) // verified-only counts toward progression
+            // A check-in answered THIS MORNING said trained=false — it was
+            // true when given. Re-send today's row with trained=true (same
+            // score; the server upserts on clinic+patient+date) so this day
+            // never reads as a rest day in the comparator.
+            {
+              const today = localDateIso(new Date())
+              if (dailyCheckinOn === today && dailyCheckinScore != null) {
+                syncDailyCheckin({
+                  clinicCode: welcome?.clinicCode,
+                  patientCode: welcome?.patientCode,
+                  onDate: today,
+                  symptomScore: dailyCheckinScore,
+                  trained: true,
+                  daysSinceInjury: welcome?.injuryDate
+                    ? daysSinceInjury(welcome.injuryDate, new Date())
+                    : null,
+                })
+              }
+            }
             // Rehab session → clinician (HR, minutes, symptom Δ, zone time).
             syncEvent({
               sessionType: 'training',

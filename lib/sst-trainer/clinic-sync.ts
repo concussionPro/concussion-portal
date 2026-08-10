@@ -164,6 +164,45 @@ export function syncSessionToClinic(input: ClinicSyncInput): void {
   }
 }
 
+const CHECKIN_URL = '/api/sst/checkin'
+
+/**
+ * DAILY check-in (rest-day comparator) — one 0–10 answer per patient per day,
+ * whether or not they trained. Same reliability contract as session syncs:
+ * fire-and-forget for the caller, queued on network failure, and safe to
+ * replay because the server upserts on (clinic, patient, date). Requires the
+ * minted patient code — the check-in table is keyed on it, and a check-in that
+ * can't be tied to a patient is noise, not data.
+ */
+export function syncDailyCheckin(input: {
+  clinicCode?: string | null
+  patientCode?: string | null
+  /** local calendar date being answered, YYYY-MM-DD */
+  onDate: string
+  symptomScore: number
+  trained: boolean
+  daysSinceInjury?: number | null
+}): void {
+  const code = input.clinicCode?.trim()
+  const patientCode = input.patientCode?.trim()
+  if (!code || !patientCode) return
+  const body = {
+    clinicCode: code,
+    patientCode,
+    onDate: input.onDate,
+    symptomScore: input.symptomScore,
+    trained: input.trained,
+    daysSinceInjury: input.daysSinceInjury ?? null,
+  }
+  try {
+    void post(CHECKIN_URL, body).then((ok) => {
+      if (!ok) enqueuePendingSync({ url: CHECKIN_URL, body, queuedAt: Date.now() })
+    })
+  } catch {
+    /* best-effort — never throw into the patient UI */
+  }
+}
+
 let flushing = false
 
 /**

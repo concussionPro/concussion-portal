@@ -120,6 +120,57 @@ export default function MsccDemoPage() {
           ))}
         </section>
 
+        {/* The bad-day beat — shipped, so it can be said in present tense. A
+            faithful static replica of the live app card (same --sst tokens the
+            real component uses) so the room SEES the instrument without a
+            walkthrough of the patient app. Not a link: the demo clinic has no
+            check-in data, and a link that dead-ends is worse than a picture. */}
+        <section className="flex flex-col gap-3 rounded-2xl bg-white p-5 ring-1 ring-[#dcebeb] sm:flex-row sm:items-center sm:gap-6">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-[0.13em] text-accent">
+              And the bad days are measured too
+            </span>
+            <p className="m-0 text-[13.5px] leading-relaxed text-muted-foreground">
+              Every patient answers one 0&ndash;10 symptom question a day &mdash; trained or not. Without
+              the flare rate on rest days, a next-day flare after a session is uninterpretable, because
+              concussion symptoms fluctuate on their own. The rest-day baseline is what makes the
+              session data readable.
+            </p>
+            <p className="m-0 text-[12.5px] font-semibold leading-relaxed text-foreground">
+              Check-ins live in their own record &mdash; never counted as delivered sessions, never
+              touching adherence.
+            </p>
+          </div>
+          <div
+            aria-hidden="true"
+            className="w-full flex-none rounded-[18px] border-[1.5px] border-(--sst-line-strong) bg-(--sst-card) px-4 py-3.5 sm:w-[250px]"
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-(--sst-accent-ink)">
+                Daily check-in
+              </span>
+              <span className="text-[10.5px] text-(--sst-muted)">0 none · 10 worst</span>
+            </div>
+            <p className="m-0 mt-1 text-[13.5px] font-semibold leading-snug text-(--sst-ink)">
+              How are your symptoms today?
+            </p>
+            <div className="mt-2.5 flex items-stretch gap-2.5">
+              <span className="flex h-[44px] flex-1 items-center justify-center rounded-[14px] border-[1.5px] border-(--sst-line) bg-(--sst-card) text-[22px] font-bold leading-none text-(--sst-ink)">
+                −
+              </span>
+              <span className="flex h-[44px] w-[58px] flex-none items-center justify-center rounded-[14px] bg-(--sst-accent-soft) text-[22px] font-bold text-(--sst-accent-ink) [font-variant-numeric:tabular-nums]">
+                3
+              </span>
+              <span className="flex h-[44px] flex-1 items-center justify-center rounded-[14px] border-[1.5px] border-(--sst-line) bg-(--sst-card) text-[22px] font-bold leading-none text-(--sst-ink)">
+                +
+              </span>
+            </div>
+            <span className="mt-2.5 block rounded-[14px] bg-(--sst-accent) p-2.5 text-center text-[13px] font-bold text-(--sst-on-accent)">
+              Log today
+            </span>
+          </div>
+        </section>
+
         <section className="flex flex-col gap-2">
           <p className="m-0 text-[11px] font-bold uppercase tracking-[0.16em] text-[#7d9598]">
             Everything else
@@ -142,8 +193,8 @@ export default function MsccDemoPage() {
 
         <footer className="rounded-xl border border-[#dcebeb] bg-white p-4">
           <p className="m-0 text-[13px] leading-relaxed text-muted-foreground">
-            <strong className="text-foreground">What we would put to Zee, Omer and Paul:</strong> a
-            founding-site registry — zero cost either direction, co-authorship, your patients&rsquo;
+            <strong className="text-foreground">What we would put to Zee, Omer and Paul:</strong>{' '}
+            a founding-site registry — zero cost either direction, co-authorship, your patients&rsquo;
             data validated across both entities alongside the sites we are adding. Session-level
             delivered dose against next-day symptoms is a gap in the literature, and you would be
             generating it as a by-product of care.

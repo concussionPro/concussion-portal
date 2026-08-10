@@ -131,6 +131,27 @@ export interface PersistedState {
    * returns tomorrow (the session's nextDayCheckin stays unanswered).
    */
   checkinSkippedOn: string | null
+  /**
+   * INTAKE (2026-08-09), persisted (2026-08-11 — onboarding captured these and
+   * the page dropped them: nothing persisted, nothing transmitted). The code is
+   * the clinic-scoped minted identity every server write needs; the covariates
+   * ride locally so a returning patient is never re-asked. `injuryDate` stays
+   * LOCAL ONLY — converted to daysSinceInjury on device, never transmitted.
+   */
+  patientCode: string | null
+  injuryDate: string | null
+  ageBand: string | null
+  sex: string | null
+  researchConsent: boolean
+  /**
+   * DAILY check-in (the rest-day comparator — distinct from the session-anchored
+   * next-day check-in above): the local calendar day (YYYY-MM-DD) last answered,
+   * and the score given. The score is kept so a session completed later the
+   * same day can re-send the row with trained=true (the server upserts on
+   * clinic+patient+date) without asking the patient the same question twice.
+   */
+  dailyCheckinOn: string | null
+  dailyCheckinScore: number | null
   pendingSyncs: QueuedSync[]
 }
 
@@ -171,6 +192,13 @@ export function defaultState(): PersistedState {
     lastTestAt: null,
     lastRegressAt: null,
     checkinSkippedOn: null,
+    patientCode: null,
+    injuryDate: null,
+    ageBand: null,
+    sex: null,
+    researchConsent: false,
+    dailyCheckinOn: null,
+    dailyCheckinScore: null,
     pendingSyncs: [],
   }
 }
