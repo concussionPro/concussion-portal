@@ -1695,6 +1695,57 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
   `),
 }
 
+/**
+ * QUARTERLY PRACTICAL BLAST — the structural announcement.
+ *
+ * WHY THIS EXISTS. The registration model turns leads stale: someone registers
+ * interest in a city, nothing can be told to them because no date exists, and
+ * by the time one does they have stopped opening. This email replaces that with
+ * a promise that does not depend on their city ever reaching a number —
+ * practical days run every quarter, guaranteed, rotating nationally.
+ *
+ * The point is NOT to fill one room. It is to make the ONLINE course safe to
+ * buy. Today, purchasing online is a bet that a practical will eventually run
+ * somewhere reachable; that bet is why people register instead of buying. The
+ * guarantee removes it, so the metric is online sales, not seats.
+ *
+ * THREE EXITS, RANKED BY COMMITMENT — deliberately in this order:
+ *   1. the dated room (highest intent, real scarcity)
+ *   2. start online (the conversion that actually matters)
+ *   3. tell us where you are (last, and only after declining two paid options,
+ *      which is what makes it a qualified signal rather than a free click)
+ *
+ * Every figure derives from CONFIG. A literal price or CPD number here is how
+ * "14 CPD hours" survived the 2026-07-30 re-rate into live sends.
+ */
+export const QUARTERLY_PRACTICAL_BLAST = {
+  subject: 'Practical days are now quarterly — first up: Melbourne',
+  /**
+   * @param name        recipient first name
+   * @param registered  true when they previously registered interest — the
+   *                    opening line claims that, so it must not be sent to a
+   *                    cold or free-course segment where it would be false.
+   */
+  template: (name: string, registered: boolean, bookLink: string, onlineLink: string) => emailShell(`
+    <p>Hi ${greetingName(name)},</p>
+    <p>${registered
+      ? 'You registered interest in the concussion practical training &mdash; here&rsquo;s the update, and it&rsquo;s a structural one.'
+      : 'A structural change to how the concussion practical training runs, in case it&rsquo;s useful.'}</p>
+    <p><strong>Practical days now run every quarter, guaranteed, rotating nationally.</strong> No more waiting for your city to reach a number. A date runs each quarter; the city follows demand.</p>
+    <div class="callout">
+      <strong>Melbourne &mdash; Saturday 31 October</strong><br>
+      ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places. A full practical day: SCAT6 and VOMS assessment, phenotype-based rehab, and running a graded exertion test on a real person until you find their threshold.
+    </div>
+    <p><strong>1. Take the Melbourne seat.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together.</p>
+    <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat &mdash; 31 October</a></center>
+    <p><strong>2. Start online today, in the next five minutes.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. Upgrade to any future quarterly practical for the difference, at the early-bird rate, whenever suits. <strong>Your upgrade never expires.</strong></p>
+    <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online now</a></center>
+    <p><strong>3. Melbourne doesn&rsquo;t suit?</strong> Reply with your city. The next quarter&rsquo;s location is announced at the Osteopathy Australia conference in October, and it lands where the most people are waiting.</p>
+    <p>Endorsed by Osteopathy Australia. There&rsquo;s a separate ESSA-accredited stream for exercise physiologists.</p>
+    <div class="sig">Zac</div>
+  `),
+}
+
 export const AI_COURSE_LAUNCH_BLAST = {
   // DEFUSED 2026-08-06 (same treatment as MELBOURNE_WORKSHOP_PUSH): the
   // 17 June 2026 launch date is in the PAST. Subject and body hardcoded it, so
