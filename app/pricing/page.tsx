@@ -6,7 +6,7 @@ import { GraduationCap, HeartPulse, ArrowRight, Check } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
-import { CONFIG, upgradePriceFor } from '@/lib/config'
+import { CONFIG } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -237,29 +237,20 @@ function PricingTabs() {
         {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
       </div>
 
-      {/* THE PRACTICAL PROMISE — deliberately BELOW the location cards.
-          It answers "will I ever actually get the practical day?", which is the
-          objection that makes browsers register instead of buy. It sits here
-          rather than under the title because putting it there pushed the price
-          below the fold, which is the one rule this page has. */}
-      <div className="max-w-3xl mx-auto px-6 pb-10 -mt-2">
-        <div className="rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
-          <p className="m-0 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-            <strong className="font-bold">Three practical days run in Q4.</strong>{' '}
-            <span className="text-muted-foreground">
-              Melbourne on 31 October, then Sydney and Byron Bay in November — you are not waiting
-              for a city to reach a number.
-            </span>
-          </p>
-          <p className="m-0 mt-1.5 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-            <strong className="font-bold">Start online, add the day whenever suits.</strong>{' '}
-            <span className="text-muted-foreground">
-              Upgrade later for the difference (${upgradePriceFor(null)}) at the early-bird rate — it
-              never expires, and it works at any of the three.
-            </span>
-          </p>
-        </div>
-      </div>
+      {/* THE PRACTICAL PROMISE — REMOVED 2026-08-10 (owner).
+          It read "Three practical days run in Q4. Melbourne on 31 October, then
+          Sydney and Byron Bay in November", and those dates are NOT secured —
+          no venue is confirmed. It was also a hardcoded literal contradicting
+          CONFIG.LOCATIONS, which still has Melbourne 'completed' on 13 June, so
+          it broke the date-bearing copy rule as well as being untrue.
+
+          Do not restore it with dates until CONFIG carries them. When a city is
+          genuinely confirmed, this block should DERIVE from CONFIG.LOCATIONS
+          rather than restate it — that is the whole point of the rule.
+
+          Nothing true was lost: the "upgrade later for the difference, the
+          early-bird rate never expires" promise it also carried now sits on the
+          CCM Online card itself, priced through upgradePriceFor(). */}
     </div>
   )
 }
