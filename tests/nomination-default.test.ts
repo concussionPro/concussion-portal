@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { CONFIG, defaultNominationCity, openNominationLocations } from '@/lib/config'
 
 /**
@@ -58,5 +60,57 @@ describe('default workshop-city nomination', () => {
     if (CONFIG.LOCATIONS.MELBOURNE.status === 'completed') {
       expect(defaultNominationCity()).not.toBe('melbourne')
     }
+  })
+})
+
+/**
+ * THE DEFAULT MUST NEVER BECOME A NOMINATION (2026-08-10).
+ *
+ * `selectedLocation` initialises to defaultNominationCity() so the Complete
+ * Course tile can price a city on first paint. That default is correct for
+ * PRICING and wrong as a NOMINATION, and PricingOptions used to send it as
+ * both: the CCM Online card carried no city control at all, yet checkout
+ * still posted `preferredCity: selectedLocation`. Every online buyer who
+ * touched nothing was recorded as nominating the first 'collecting' city.
+ *
+ * The first person to ever hit that path (2026-08-10, $497) was in Melbourne,
+ * opened /pricing?location=melbourne four minutes before buying, returned to a
+ * bare /pricing — which remounted at the default — and landed in the pipeline
+ * as SYDNEY. The nomination count is what decides which city gets booked, so a
+ * default reaching it manufactures demand for whichever city CONFIG declares
+ * first.
+ *
+ * These assert the source, not behaviour, because the guard lives in a client
+ * component's state and there is no server seam to test through.
+ */
+describe('an untouched default is never sent as a nomination', () => {
+  const src = readFileSync(
+    join(process.cwd(), 'components/PricingOptions.tsx'),
+    'utf-8',
+  )
+
+  it('gates the online-only preferredCity on an explicit choice', () => {
+    // The nomination may only ride along when locationExplicit is true.
+    expect(
+      /courseType === 'online-only' && selectedLocation && locationExplicit/.test(src),
+      'online-only checkout must gate preferredCity on locationExplicit',
+    ).toBe(true)
+  })
+
+  it('only ever sets locationExplicit from a user action', () => {
+    // It must never be initialised true, which would restore the old behaviour.
+    expect(src).toContain('useState(false)')
+    expect(/const \[locationExplicit, setLocationExplicit\] = useState\(false\)/.test(src)).toBe(true)
+
+    // Every setter call sits in a picker onClick or the ?location= effect.
+    const setters = src.match(/setLocationExplicit\(true\)/g) ?? []
+    expect(setters.length, 'expected the ?location= effect plus one per city picker').toBeGreaterThanOrEqual(4)
+    expect(src).not.toMatch(/setLocationExplicit\(true\)\s*;?\s*\/\/\s*default/)
+  })
+
+  it('gives the online-only card a city control if it nominates at all', () => {
+    // A card that can nominate must show what it is nominating. The online
+    // card's picker is identifiable by its own tracking source.
+    expect(src).toContain("source: 'pricing_online_card'")
   })
 })

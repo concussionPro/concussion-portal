@@ -256,6 +256,18 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // pre-workshop lanes all skip. Buyers can still pick any city, Melbourne
   // included; only the untouched default is constrained.
   const [selectedLocation, setSelectedLocation] = useState<string>(defaultNominationCity() ?? '')
+  // Did the BUYER choose this city, or is it just the mount default?
+  //
+  // `selectedLocation` initialises to defaultNominationCity() so the full-course
+  // card can price a city immediately. That default is fine for PRICING and
+  // fatal as a NOMINATION: an online-only buyer never sees a city control, so
+  // recording the default as their nominated city invents demand for whichever
+  // city happens to be declared first in CONFIG.LOCATIONS (currently Sydney).
+  // That number decides which city gets booked, so a default must never reach it.
+  //
+  // Set by an explicit picker click or by a ?location= link (user-originated
+  // either way). Never by the mount default.
+  const [locationExplicit, setLocationExplicit] = useState(false)
   const [cityProgress, setCityProgress] = useState<Record<string, CityProgress>>({})
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
@@ -265,6 +277,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
     const loc = params.get('location')
     if (loc && CITY_OPTIONS.some((c) => c.slug === loc)) {
       setSelectedLocation(loc)
+      setLocationExplicit(true)
     }
     const promo = params.get('promo')
     if (promo) {
@@ -342,7 +355,11 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         body: JSON.stringify({
           courseType,
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
-          ...(courseType === 'online-only' && selectedLocation ? { preferredCity: selectedLocation } : {}),
+          // Online-only: send the city ONLY if the buyer picked one. An
+          // untouched default is not a nomination — see locationExplicit.
+          ...(courseType === 'online-only' && selectedLocation && locationExplicit
+            ? { preferredCity: selectedLocation }
+            : {}),
           ...(promoCode ? { promoCode } : {}),
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
           attribution: getAttribution(),
@@ -556,6 +573,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     type="button"
                     onClick={() => {
                       setSelectedLocation(city.slug)
+                      setLocationExplicit(true)
                       trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_compact' })
                     }}
                     className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
@@ -748,6 +766,45 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             ))}
           </ul>
 
+          {/* Workshop-city nomination — OPTIONAL, and never pre-selected.
+              Until 2026-08-10 this card had no city control at all while
+              checkout still sent selectedLocation, so every online buyer who
+              touched nothing was silently nominated into the mount default
+              (Sydney) for a city they were never shown. That number is what
+              decides which city gets booked. Now: nothing is sent unless the
+              buyer picks, and if they pick they can see what they picked. */}
+          <div className="mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">
+              Workshop city <span className="font-medium normal-case tracking-normal opacity-70">— optional, for when you upgrade</span>
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {CITY_OPTIONS.map((city) => (
+                <button
+                  key={city.slug}
+                  type="button"
+                  onClick={() => {
+                    setSelectedLocation(city.slug)
+                    setLocationExplicit(true)
+                    trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_online_card' })
+                  }}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                    locationExplicit && selectedLocation === city.slug
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
+                  }`}
+                  aria-pressed={locationExplicit && selectedLocation === city.slug}
+                >
+                  {city.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-1.5 leading-snug">
+              {locationExplicit
+                ? `We'll tell you first when a ${cityLabel(selectedLocation)} date is announced.`
+                : "Skip it if you're not sure — you can choose a city any time before you upgrade."}
+            </p>
+          </div>
+
           <button
             onClick={() => handleCheckout('online-only')}
             disabled={loading !== null}
@@ -880,6 +937,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   type="button"
                   onClick={() => {
                     setSelectedLocation(city.slug)
+                    setLocationExplicit(true)
                     trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_card' })
                   }}
                   className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
