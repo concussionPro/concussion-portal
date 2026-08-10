@@ -1766,10 +1766,13 @@ export const QUARTERLY_PRACTICAL_BLAST = {
       if (c.includes('sydney')) return 'Sydney runs in November. The date is confirmed shortly &mdash; take the online course now and your upgrade is waiting for it.'
       if (c.includes('byron')) return 'Byron Bay runs in November. The date is confirmed shortly &mdash; take the online course now and your upgrade is waiting for it.'
       if (c.includes('melbourne')) return 'Melbourne is the first of the three, and it is the one that is dated.'
-      // Perth and Adelaide are not in Q4. Say so plainly rather than implying
-      // otherwise — 9 of the 25 registrants are in this position, and pretending
-      // their city is imminent is what makes the next email unopened.
-      return `${city || 'Your city'} is not one of the three this quarter &mdash; the other two are Sydney and Byron Bay, both in November. The online course stands on its own, and the upgrade never expires, so it is there whenever a date lands near you.`
+      // Perth and Adelaide are not among the three this quarter — 9 of the 25
+      // registrants sit here. State it neutrally and hand them the options
+      // rather than writing them off: people travel for this, and it is their
+      // call to make, not ours to make for them. An apologetic "we'll get to
+      // you eventually" reads as a closed door and loses a buyer who would have
+      // flown.
+      return `${city || 'Your city'} is not one of the three this quarter &mdash; they are Melbourne on 31 October, then Sydney and Byron Bay in November. Plenty of people travel for the day, so those are all open to you. And if none of them work, the online course stands on its own and the upgrade never expires.`
     })()}</p>
     <div class="sig">Zac</div>
   `),
