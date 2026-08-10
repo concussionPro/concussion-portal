@@ -95,7 +95,7 @@ function PricingTabs() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f4f8f8]">
       <SiteNav />
 
       <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-2">
@@ -198,34 +198,6 @@ function PricingTabs() {
                 </span>
               ))}
             </div>
-            {/* THE DECISION MOMENT.
-                This block answers the one objection that stops a browser
-                buying: "if I take the online course, will I ever actually get
-                the practical day?" Until 2026-08-10 it said the date "is chosen
-                when it launches" — the old collect-interest-and-wait model,
-                which is precisely the doubt that makes people register instead
-                of purchase.
-                Three dated practical days in one quarter is the answer, and it
-                belongs HERE rather than only in the campaign: someone arriving
-                from that email must not lose the argument that made them click.
-                CONFIG-derived price; never a literal (the 2026-07-30 CPD
-                re-rate is what that rule exists for). */}
-            <div className="mt-4 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3">
-              <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-                <strong className="font-bold">Three practical days run this quarter.</strong>{' '}
-                <span className="text-muted-foreground">
-                  Melbourne on 31 October, then Sydney and Byron Bay in November — so you are not
-                  waiting for a city to reach a number.
-                </span>
-              </p>
-              <p className="mt-1.5 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-                <strong className="font-bold">Start online, add the day whenever suits.</strong>{' '}
-                <span className="text-muted-foreground">
-                  Upgrade later for the difference (${upgradePriceFor(null)}) at the early-bird rate —
-                  it never expires, and it works at any of the three.
-                </span>
-              </p>
-            </div>
           </div>
         )
       })()}
@@ -236,12 +208,22 @@ function PricingTabs() {
           The body's own duplicate h1 and its lead paragraph are hidden, since
           the title above replaces them. */}
       <style>{`
+        /* ORDER, and it is the whole layout of this page:
+             1 title (drawn at page level, above)
+             2 workshop photo — the single strongest proof the day is real
+             3 price cards
+             4 locations
+             5 everything else
+           Owner 2026-08-10: photo under the title and above the cards, then
+           locations. The photo used to inherit order 5 from its wrapper and
+           landed BELOW the locations, buried under a team-inquiry panel. */
         .pricing-embed .stream-body { display: flex; flex-direction: column; }
         .pricing-embed .stream-body > * { order: 5; }
-        .pricing-embed .stream-body > #pricing-cards { order: 2; }
-        .pricing-embed .stream-body > #workshop-locations { order: 3; }
-        /* h1, subtitle, credential line, skill chips and upgrade note are all
-           drawn in the title section above — hide the body's copies. */
+        .pricing-embed .stream-body > #workshop-photo { order: 2; }
+        .pricing-embed .stream-body > #pricing-cards { order: 3; }
+        .pricing-embed .stream-body > #workshop-locations { order: 4; }
+        /* The hero wrapper still holds the h1, subtitle, credential, chips and
+           upgrade note that the page-level title now replaces. */
         .pricing-embed .stream-body > .text-center.mb-8 > :nth-child(-n+5) { display: none; }
         /* Give the white cards something to sit on — the page was white boxes
            on a white background. */
@@ -253,6 +235,30 @@ function PricingTabs() {
       `}</style>
       <div className="pricing-embed">
         {stream === 'ccm' ? <CcmPricingContent hideNav /> : <CrmPricingContent hideNav />}
+      </div>
+
+      {/* THE PRACTICAL PROMISE — deliberately BELOW the location cards.
+          It answers "will I ever actually get the practical day?", which is the
+          objection that makes browsers register instead of buy. It sits here
+          rather than under the title because putting it there pushed the price
+          below the fold, which is the one rule this page has. */}
+      <div className="max-w-3xl mx-auto px-6 pb-10 -mt-2">
+        <div className="rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
+          <p className="m-0 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
+            <strong className="font-bold">Three practical days run this quarter.</strong>{' '}
+            <span className="text-muted-foreground">
+              Melbourne on 31 October, then Sydney and Byron Bay in November — you are not waiting
+              for a city to reach a number.
+            </span>
+          </p>
+          <p className="m-0 mt-1.5 text-[13.5px] sm:text-sm text-foreground leading-relaxed">
+            <strong className="font-bold">Start online, add the day whenever suits.</strong>{' '}
+            <span className="text-muted-foreground">
+              Upgrade later for the difference (${upgradePriceFor(null)}) at the early-bird rate — it
+              never expires, and it works at any of the three.
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   )

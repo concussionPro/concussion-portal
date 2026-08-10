@@ -147,7 +147,14 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         {/* Primary action: enrol (tier-neutral — /pricing shows the online
             $497 → workshop-upgrade ladder for this city). */}
         <Link
-          href={`/pricing?location=${citySlug}`}
+          // #pricing-cards, NOT bare /pricing. This card renders on /pricing
+          // itself (CcmPricingContent #workshop-locations) as well as on the
+          // homepage, so a plain `/pricing?location=…` is a same-page
+          // navigation there: nothing changes and the browser simply jumps to
+          // the top, which is what the button appeared to do. The anchor works
+          // in both places — navigate-and-scroll from home, scroll-in-place on
+          // /pricing.
+          href={`/pricing?location=${citySlug}#pricing-cards`}
           // The visible label carries no city, and this card is rendered once
           // PER CITY — so the homepage ships three links whose accessible name
           // is byte-identical ("Enrol from $497 — early-bird locked") pointing

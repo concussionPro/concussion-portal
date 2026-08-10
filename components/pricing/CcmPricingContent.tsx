@@ -503,7 +503,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             being delivered convert higher than stock imagery, especially
             for healthcare CPD where buyers want certainty the experience
             is real. Caption ties to "what you get" value prop. */}
-        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
+        <div id="workshop-photo" className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
           <Image
             src="/workshop-training.jpg"
             alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
