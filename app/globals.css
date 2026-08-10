@@ -68,6 +68,14 @@
   --color-accent-dark: var(--accent);
 }
 
+/* iOS Safari double-tap-to-zoom fires on rapid taps of small controls — the
+   symptom-level steppers in the SST app zoomed the whole screen mid-session
+   (owner report 2026-08-11). `manipulation` keeps pinch-zoom (accessibility)
+   and kills only the double-tap gesture on interactive elements. */
+button, [role='button'], input, select, textarea, label, a {
+  touch-action: manipulation;
+}
+
 body {
   background:
     radial-gradient(ellipse 80% 50% at 20% 0%, rgba(13, 115, 119, 0.04) 0%, transparent 50%),

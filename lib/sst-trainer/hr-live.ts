@@ -119,6 +119,12 @@ interface NativeBlePlugin {
   // dialog on Android) filtered to the given service UUIDs, and resolves with
   // the chosen device. This is what actually surfaces a wearable chooser.
   requestDevice(opts?: { services?: string[]; optionalServices?: string[] }): Promise<{ deviceId: string; name?: string }>
+  // Continuous scan → onScanResult events. Unlike requestDevice there is no
+  // plugin-rendered chooser: WE render the list, which is the whole point —
+  // the plugin's iOS picker shows every BLE device in the room, unsectioned,
+  // with overlapping rows (owner screenshot 2026-08-11).
+  requestLEScan(opts?: { services?: string[]; allowDuplicates?: boolean }): Promise<void>
+  stopLEScan(): Promise<void>
   connect(opts: { deviceId: string; timeout?: number }): Promise<void>
   disconnect(opts: { deviceId: string }): Promise<void>
   startNotifications(opts: { deviceId: string; service: string; characteristic: string }): Promise<void>
@@ -127,6 +133,14 @@ interface NativeBlePlugin {
   // "16 00 4b"), not base64 — the wrapper decodes it via hexStringToDataView.
   // `ReadResult.value` is optional (Data = DataView | string), so guard it.
   addListener(event: string, cb: (result: { value?: string }) => void): Promise<NativeBleListener>
+  // overload used by the scan path — same method, richer payload
+  addListener(event: 'onScanResult', cb: (result: NativeScanResult) => void): Promise<NativeBleListener>
+}
+interface NativeScanResult {
+  device?: { deviceId?: string; name?: string }
+  localName?: string
+  rssi?: number
+  uuids?: string[]
 }
 interface CapacitorGlobal {
   isNativePlatform?(): boolean
@@ -182,13 +196,76 @@ function hexStringToDataView(hex: string): DataView {
  */
 async function connectNativeBleHr(plugin: NativeBlePlugin): Promise<LiveHrConnection> {
   await plugin.initialize().catch(() => {})
-  // Do NOT filter the scan by the HR service UUID. Many watches in broadcast
-  // mode (Garmin, Coros, Suunto, Amazfit…) advertise a heart-rate stream but do
-  // NOT list 0x180D in their advertising packet, so a `services` filter shows an
-  // empty picker and the watch "won't show up". Scan ALL devices (same reason
-  // the Web Bluetooth path uses acceptAllDevices) and declare the HR service as
-  // optional so we can still discover + subscribe to it once connected.
+  // Fallback path only (wizard normally scans + renders its own list): the
+  // plugin's own picker, unfiltered for the broadcast-mode-watch reason
+  // documented on startNativeHrScan.
   const device = await plugin.requestDevice({ optionalServices: [HR_SERVICE_UUID] })
+  return wireNativeDevice(plugin, device)
+}
+
+/** True inside the native app shell (the only place the custom scan list runs). */
+export function nativeShellAvailable(): boolean {
+  return nativeBle() != null
+}
+
+export interface HrScanDevice {
+  deviceId: string
+  name: string | null
+  rssi: number | null
+  /** advertised the HR service OR carries a known HR-wearable name. */
+  hrLikely: boolean
+}
+
+// Known heart-rate wearable names — used only to SORT the list, never to hide.
+const HR_NAME_RE = /polar|garmin|forerunner|fenix|venu|vivo|wahoo|tickr|coros|pace|apex|suunto|amazfit|whoop|hrm|heart|magene|coospo|xoss|igpsport|4iiii|myzone|scosche|rhythm/i
+
+/**
+ * Continuous native BLE scan with OUR list semantics (owner 2026-08-11: the
+ * plugin's iOS picker listed every device in the room with overlapping rows).
+ *
+ * Deliberately UNFILTERED at the radio (broadcast-mode Garmin/Coros/Suunto/
+ * Amazfit don't advertise 0x180D, a services filter hides exactly the watches
+ * patients own) — the FILTERING is presentational: callers get `hrLikely` to
+ * float wearables to the top and tuck TVs and headphones behind a disclosure.
+ */
+export async function startNativeHrScan(
+  onDevice: (d: HrScanDevice) => void,
+): Promise<{ stop: () => Promise<void> }> {
+  const plugin = nativeBle()
+  if (!plugin) throw new Error('Native BLE is not available.')
+  await plugin.initialize().catch(() => {})
+  const handle = await plugin.addListener('onScanResult', (r: NativeScanResult) => {
+    const deviceId = r?.device?.deviceId
+    if (!deviceId) return
+    const name = (r.localName || r.device?.name || '').trim() || null
+    const uuids = (r.uuids ?? []).map((u) => u.toLowerCase())
+    onDevice({
+      deviceId,
+      name,
+      rssi: typeof r.rssi === 'number' ? r.rssi : null,
+      hrLikely: uuids.includes(HR_SERVICE_UUID) || (!!name && HR_NAME_RE.test(name)),
+    })
+  })
+  await plugin.requestLEScan({ allowDuplicates: false })
+  return {
+    stop: async () => {
+      await plugin.stopLEScan().catch(() => {})
+      await handle.remove().catch(() => {})
+    },
+  }
+}
+
+/** Connect to a device chosen from startNativeHrScan's list. */
+export async function connectNativeHrDevice(d: { deviceId: string; name: string | null }): Promise<LiveHrConnection> {
+  const plugin = nativeBle()
+  if (!plugin) throw new Error('Native BLE is not available.')
+  return wireNativeDevice(plugin, { deviceId: d.deviceId, name: d.name ?? undefined })
+}
+
+async function wireNativeDevice(
+  plugin: NativeBlePlugin,
+  device: { deviceId: string; name?: string },
+): Promise<LiveHrConnection> {
 
   const listeners = new Set<(bpm: number) => void>()
   // Event-name format is fixed by the plugin: `notification|<deviceId>|<service>|<characteristic>`

@@ -332,17 +332,24 @@ function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () =
           Patient code{label ? ` · ${label}` : ''}
         </p>
         <p className="my-2 font-mono text-4xl font-extrabold tracking-[0.22em] text-foreground">{minted}</p>
+        {/* ONE link = clinic + patient in a single scan (owner 2026-08-11).
+            The patient types nothing; the code below is the fallback for a
+            verbal handover or a future new phone. */}
+        <p className="m-0 mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Patient link — one tap links everything</p>
+        <p className="mx-auto mb-3 max-w-md break-all rounded-lg bg-white/70 px-3 py-2 font-mono text-[12px] text-foreground">
+          {`${typeof window !== 'undefined' ? window.location.origin : ''}/j/${clinic.code}?p=${minted}`}
+        </p>
         <p className="mx-auto mb-3 max-w-sm text-[12px] leading-snug text-muted-foreground">
-          Give this to the patient. They enter it once in the app — and again on any new phone to
-          pick up exactly where they left off.
+          Send the link (or its QR) and the app opens already linked — clinic and record in one.
+          The code alone works too: entered once, remembered; re-entered on a new phone to restore.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
-            onClick={() => { void navigator.clipboard?.writeText(minted); setCopied(true) }}
+            onClick={() => { void navigator.clipboard?.writeText(`${window.location.origin}/j/${clinic.code}?p=${minted}`); setCopied(true) }}
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
           >
-            {copied ? 'Copied' : 'Copy code'}
+            {copied ? 'Copied' : 'Copy patient link'}
           </button>
           <button
             type="button"

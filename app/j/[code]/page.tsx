@@ -19,10 +19,17 @@ export const metadata: Metadata = {
  * Every other platform 307s straight into the web app with the code
  * prefilled, exactly as the old direct QR did.
  */
-export default async function JoinPage({ params }: { params: Promise<{ code: string }> }) {
+export default async function JoinPage({ params, searchParams }: { params: Promise<{ code: string }>; searchParams: Promise<{ p?: string }> }) {
   const { code: raw } = await params
   const code = decodeURIComponent(raw).toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 12)
-  const webUrl = `/sst-trainer?clinic=${encodeURIComponent(code)}`
+  // ONE code for the patient (owner 2026-08-11): a per-patient QR carries the
+  // minted patient code as ?p=, so scanning links clinic AND record in one go —
+  // the app asks for nothing. The bare clinic QR still works for walk-ins.
+  const { p: rawP } = await searchParams
+  const patientCode = typeof rawP === 'string'
+    ? rawP.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9)
+    : ''
+  const webUrl = `/sst-trainer?clinic=${encodeURIComponent(code)}${patientCode ? `&p=${encodeURIComponent(patientCode)}` : ''}`
 
   const ua = (await headers()).get('user-agent') || ''
   const isIos = /iPhone|iPad|iPod/i.test(ua)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { connectBluetoothHr, type LiveHrConnection } from '@/lib/sst-trainer/hr-live'
+import { connectBluetoothHr, connectNativeHrDevice, nativeShellAvailable, startNativeHrScan, type HrScanDevice, type LiveHrConnection } from '@/lib/sst-trainer/hr-live'
 
 /**
  * Guided wearable-connection wizard — replaces the old one-tap-and-pray pair
@@ -114,6 +114,76 @@ export default function SstConnectWizard({
   // force it on — detect it and give the exact fix instead of a dead click.
   const [isBrave, setIsBrave] = useState(false)
   const connRef = useRef<LiveHrConnection | null>(null)
+
+  // ── native shell: WE render the device list (the plugin's iOS picker showed
+  // every BLE device in the room with overlapping rows — owner 2026-08-11).
+  // Radio stays unfiltered so broadcast-mode watches appear; presentation is
+  // sectioned: wearables first, everything else behind a disclosure.
+  const isNative = nativeShellAvailable()
+  const [found, setFound] = useState<Map<string, HrScanDevice>>(new Map())
+  const [showOthers, setShowOthers] = useState(false)
+  const [connectingId, setConnectingId] = useState<string | null>(null)
+  const scanRef = useRef<{ stop: () => Promise<void> } | null>(null)
+
+  const stopNativeScan = useCallback(() => {
+    void scanRef.current?.stop()
+    scanRef.current = null
+    setScanning(false)
+  }, [])
+
+  const startScanList = useCallback(async () => {
+    setFailure(null)
+    setFound(new Map())
+    setShowOthers(false)
+    setScanning(true)
+    try {
+      scanRef.current = await startNativeHrScan((d) => {
+        setFound((prev) => {
+          const next = new Map(prev)
+          const existing = next.get(d.deviceId)
+          // keep the best info we've seen (a later ad may carry the name)
+          next.set(d.deviceId, {
+            ...d,
+            name: d.name ?? existing?.name ?? null,
+            hrLikely: d.hrLikely || !!existing?.hrLikely,
+          })
+          return next
+        })
+      })
+    } catch (err) {
+      setScanning(false)
+      setFailure(diagnose(err, platform))
+    }
+  }, [platform])
+
+  const pickDevice = useCallback(async (d: HrScanDevice) => {
+    if (connectingId) return
+    setConnectingId(d.deviceId)
+    try {
+      stopNativeScan()
+      const conn = await connectNativeHrDevice(d)
+      connRef.current = conn
+      setBpm(null)
+      setSilent(false)
+      setStep('verify')
+      const timeout = setTimeout(() => setSilent(true), 12_000)
+      conn.subscribe((next) => {
+        clearTimeout(timeout)
+        setSilent(false)
+        setBpm(Math.round(next))
+      })
+    } catch (err) {
+      setFailure(diagnose(err, platform))
+      void startScanList()
+    } finally {
+      setConnectingId(null)
+    }
+  }, [connectingId, platform, startScanList, stopNativeScan])
+
+  // scanning must not outlive the sheet
+  useEffect(() => {
+    if (!open) { void scanRef.current?.stop(); scanRef.current = null }
+  }, [open])
 
   // Environment check runs on open. Native shell exposes its BLE bridge through
   // the same connect call, so "supported" covers both paths.
@@ -320,7 +390,101 @@ export default function SstConnectWizard({
           </>
         )}
 
-        {step === 'scan' && (
+        {step === 'scan' && isNative && (
+          <>
+            <p className={body}>
+              Turn on your watch&rsquo;s <strong>heart-rate broadcast</strong>, then scan — wearables appear at the
+              top. (Chest straps broadcast automatically — nothing to turn on.)
+            </p>
+            {!scanning && found.size === 0 ? (
+              <button type="button" className={primaryBtn} onClick={() => void startScanList()}>
+                Scan for your watch
+              </button>
+            ) : (
+              <>
+                {(() => {
+                  const all = [...found.values()]
+                  const wearables = all
+                    .filter((d) => d.hrLikely)
+                    .sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999))
+                  const others = all
+                    .filter((d) => !d.hrLikely && d.name)
+                    .sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999))
+                  const unnamed = all.filter((d) => !d.hrLikely && !d.name).length
+                  return (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-(--sst-faint-2)">
+                          Heart-rate devices
+                        </span>
+                        {scanning && <span className="text-[11px] font-semibold text-(--sst-faint)">Scanning…</span>}
+                      </div>
+                      {wearables.length === 0 ? (
+                        <p className={`${body} rounded-[12px] border border-dashed border-(--sst-line) px-3 py-3 text-center`}>
+                          Nothing yet — make sure the watch&rsquo;s broadcast icon is showing.
+                        </p>
+                      ) : (
+                        wearables.map((d) => (
+                          <button key={d.deviceId} type="button" onClick={() => void pickDevice(d)}
+                            disabled={connectingId != null}
+                            className="flex w-full items-center justify-between gap-3 rounded-[14px] border-[1.5px] border-(--sst-accent) bg-(--sst-card) px-3.5 py-3 text-left disabled:opacity-60">
+                            <span className="text-[14px] font-bold text-(--sst-navy)">{d.name ?? 'Heart-rate device'}</span>
+                            <span className="text-[12px] font-semibold text-(--sst-accent-ink)">
+                              {connectingId === d.deviceId ? 'Connecting…' : 'Pair →'}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                      {(others.length > 0 || unnamed > 0) && (
+                        <button type="button" onClick={() => setShowOthers((v) => !v)}
+                          className="text-left text-[12px] font-semibold text-(--sst-faint) underline underline-offset-2">
+                          {showOthers ? 'Hide other devices' : `Other nearby devices (${others.length + unnamed}) — headphones, TVs…`}
+                        </button>
+                      )}
+                      {showOthers && (
+                        <>
+                          {others.map((d) => (
+                            <button key={d.deviceId} type="button" onClick={() => void pickDevice(d)}
+                              disabled={connectingId != null}
+                              className="flex w-full items-center justify-between gap-3 rounded-[12px] border border-(--sst-line) bg-(--sst-card) px-3.5 py-2.5 text-left disabled:opacity-60">
+                              <span className="truncate text-[13px] font-semibold text-(--sst-ink-2)">{d.name}</span>
+                              <span className="flex-none text-[12px] font-semibold text-(--sst-faint)">
+                                {connectingId === d.deviceId ? 'Connecting…' : 'Pair →'}
+                              </span>
+                            </button>
+                          ))}
+                          {unnamed > 0 && (
+                            <p className={`${body} text-(--sst-ghost)`}>{unnamed} unnamed device{unnamed === 1 ? '' : 's'} hidden — a watch always broadcasts its name.</p>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )
+                })()}
+              </>
+            )}
+            {failure && (
+              <div className={card}>
+                <p className={`${body} font-bold`}>{failure.title}</p>
+                <ul className="m-0 mt-1.5 flex list-disc flex-col gap-1 pl-4">
+                  {failure.fixes.map((f) => (
+                    <li key={f} className={body}>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <button type="button" className={quietBtn} onClick={() => setStep('broadcast')}>
+              My watch isn’t showing up →
+            </button>
+            <button type="button" className={quietBtn} onClick={onManual}>
+              Skip — I’ll type readings in
+            </button>
+          </>
+        )}
+
+        {step === 'scan' && !isNative && (
           <>
             <p className={body}>
               Turn on your watch&rsquo;s <strong>heart-rate broadcast</strong>, then open the picker — your watch

@@ -328,9 +328,15 @@ export default function PlatformAppPage({
   // in onboarding. Read client-side; the onboarding component is KEYED on this
   // value so it genuinely remounts pre-filled (and auto-validates) once read.
   const [urlClinicCode, setUrlClinicCode] = useState<string | undefined>(undefined)
+  const [urlPatientCode, setUrlPatientCode] = useState<string | undefined>(undefined)
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get('clinic')?.trim()
+    const qp = new URLSearchParams(window.location.search)
+    const code = qp.get('clinic')?.trim()
     if (code) setUrlClinicCode(code.toUpperCase())
+    // ?p= — the patient code minted by the clinic, carried by the per-patient
+    // QR (/j/CODE?p=XXXX). One scan links clinic AND record; nothing is typed.
+    const pp = qp.get('p')?.trim()
+    if (pp) setUrlPatientCode(pp.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9))
   }, [])
 
   // Live HR feed from the REAL paired connection. Null connection → 'manual'.
@@ -704,6 +710,7 @@ export default function PlatformAppPage({
           device={device}
           allowSelfGuided={!publicSurface && !embeddedClinicCode}
           initialClinicCode={urlClinicCode ?? embeddedClinicCode ?? undefined}
+          initialPatientCode={urlPatientCode}
           onPair={handlePair}
           onStart={(r: OnboardingResult) => {
             setWelcome(r.welcome)

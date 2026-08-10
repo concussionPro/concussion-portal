@@ -90,6 +90,7 @@ export default function SstOnboarding({
   onPair,
   onStart,
   initialClinicCode,
+  initialPatientCode,
   allowSelfGuided = false,
 }: {
   device: HrSource
@@ -98,6 +99,8 @@ export default function SstOnboarding({
   onStart: (result: OnboardingResult) => void
   /** pre-fill from a per-clinic QR deep link (/sst-trainer?clinic=CODE) */
   initialClinicCode?: string
+  /** Patient code carried by the per-patient QR — links the record silently. */
+  initialPatientCode?: string
   /** self-guided (no clinic code) is a paid-surface capability — see header */
   allowSelfGuided?: boolean
 }) {
@@ -111,7 +114,11 @@ export default function SstOnboarding({
   const [patientName, setPatientName] = useState('')
   const [dataConsent, setDataConsent] = useState(false)
   // INTAKE (2026-08-09) — asked once, five controls, consent LAST.
-  const [patientCode, setPatientCode] = useState('')
+  const [patientCode, setPatientCode] = useState(initialPatientCode ?? '')
+  // The patient-code input is a RE-LINK affordance, not a default ask. It
+  // renders only when the patient opens it (new phone, code from the clinic
+  // front desk) — or is satisfied silently by the QR's ?p=.
+  const [showCodeEntry, setShowCodeEntry] = useState(false)
   const [injuryDate, setInjuryDate] = useState('')
   const [ageBand, setAgeBand] = useState('')
   const [sex, setSex] = useState('')
@@ -626,20 +633,39 @@ export default function SstOnboarding({
               they demo the day-4-vs-day-40 story, and every demo write path is
               server-guarded read-only. */}
           {clinicCode.trim().toUpperCase() !== 'DEMO00' && (
-            <>
-              <p className="m-0 mb-2.5 text-[11px] font-semibold leading-snug text-(--sst-ink-2)">
-                Your clinic gave you a patient code — enter it once and this device remembers you.
+            initialPatientCode ? (
+              /* The QR carried the code — the record is linked, say so, ask nothing. */
+              <p className="m-0 mb-1 text-[11.5px] font-semibold leading-snug text-(--sst-good)">
+                ✓ Linked to your clinic record — this device is remembered.
               </p>
-              <input
-                value={patientCode}
-                onChange={(e) => setPatientCode(e.target.value.toUpperCase())}
-                placeholder="Patient code"
-                autoCapitalize="characters"
-                spellCheck={false}
-                maxLength={9}
-                className="w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 text-[15px] tracking-[0.18em] text-(--sst-ink-1) placeholder:tracking-normal placeholder:text-(--sst-ink-4)"
-              />
-            </>
+            ) : showCodeEntry ? (
+              <>
+                <p className="m-0 mb-2.5 text-[11px] font-semibold leading-snug text-(--sst-ink-2)">
+                  Enter the patient code from your clinic — once, and this device remembers you.
+                </p>
+                <input
+                  value={patientCode}
+                  onChange={(e) => setPatientCode(e.target.value.toUpperCase())}
+                  placeholder="Patient code"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  maxLength={9}
+                  autoFocus
+                  className="w-full min-h-[44px] rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 text-[15px] tracking-[0.18em] text-(--sst-ink-1) placeholder:tracking-normal placeholder:text-(--sst-ink-4)"
+                />
+              </>
+            ) : (
+              /* No second code on the default screen (owner 2026-08-11: ONE
+                 code). The QR links the record; this is the fallback for a
+                 new phone or a code handed over verbally. */
+              <button
+                type="button"
+                onClick={() => setShowCodeEntry(true)}
+                className="m-0 mb-1 block text-left text-[11.5px] font-semibold text-(--sst-accent-ink) underline underline-offset-2"
+              >
+                Already have a patient code from this clinic? Enter it
+              </button>
+            )
           )}
           <div className="mt-2.5 grid grid-cols-2 gap-2">
             <label className="text-[10.5px] font-semibold text-(--sst-ink-3)">
@@ -648,7 +674,7 @@ export default function SstOnboarding({
                 type="date"
                 value={injuryDate}
                 onChange={(e) => setInjuryDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-2.5 py-1.5 text-[13px] font-normal text-(--sst-ink-1)"
+                className="mt-1 w-full min-h-[44px] appearance-none rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 text-[15px] font-normal text-(--sst-ink-1) [&::-webkit-date-and-time-value]:text-left"
               />
             </label>
             <label className="text-[10.5px] font-semibold text-(--sst-ink-3)">
@@ -656,7 +682,7 @@ export default function SstOnboarding({
               <select
                 value={ageBand}
                 onChange={(e) => setAgeBand(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-2.5 py-1.5 text-[13px] font-normal text-(--sst-ink-1)"
+                className="mt-1 w-full min-h-[44px] appearance-none rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 pr-9 text-[15px] font-normal text-(--sst-ink-1) bg-no-repeat bg-[right_0.65rem_center] bg-[length:14px] bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%237d9598%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')]"
               >
                 <option value="">—</option>
                 {['13-17', '18-24', '25-34', '35-49', '50-64', '65+'].map((b) => (
@@ -670,7 +696,7 @@ export default function SstOnboarding({
             <select
               value={sex}
               onChange={(e) => setSex(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-2.5 py-1.5 text-[13px] font-normal text-(--sst-ink-1)"
+              className="mt-1 w-full min-h-[44px] appearance-none rounded-lg border border-(--sst-line) bg-(--sst-surface-2) px-3 py-2 pr-9 text-[15px] font-normal text-(--sst-ink-1) bg-no-repeat bg-[right_0.65rem_center] bg-[length:14px] bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%237d9598%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')]"
             >
               <option value="">—</option>
               <option value="female">Female</option>
