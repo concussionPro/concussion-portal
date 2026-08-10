@@ -104,7 +104,7 @@ const band = (hrt: number) => ({ bandLow: Math.round(hrt * 0.8), bandHigh: Math.
    no-intolerance re-test that surfaces clearance review. */
 const PATIENTS: Patient[] = [
   {
-    id: 'p0', name: 'Priya Raman', age: 29, sport: 'Football (soccer)', code: 'CEA-7104',
+    id: 'p0', name: 'P.R. — 29F, football (soccer)', age: 29, sport: 'Football (soccer)', code: 'CEA-7104',
     injuryDate: short(3), daysPost: 3, stage: { n: 1, label: 'Intake — symptom-limited' },
     hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 7, baseline: 'due',
     trend: [46, 43],
@@ -113,7 +113,7 @@ const PATIENTS: Patient[] = [
     flag: 'Referred 3 days post-injury. Symptom-limited at rest (7/10) — screen and schedule the graded test.',
   },
   {
-    id: 'p2', name: 'Ava Nguyen', age: 24, sport: 'Netball', code: 'CEA-5193',
+    id: 'p2', name: 'A.N. — 24F, netball', age: 24, sport: 'Netball', code: 'CEA-5193',
     injuryDate: short(9), daysPost: 9, stage: { n: 2, label: 'Threshold test pending' },
     hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 6, baseline: 'due',
     trend: [44, 41, 38],
@@ -122,7 +122,7 @@ const PATIENTS: Patient[] = [
     flag: 'No threshold test yet — symptoms still elevated at rest (6/10).',
   },
   {
-    id: 'p4', name: 'Sophie Reid', age: 14, sport: 'AFL', code: 'CEA-6011',
+    id: 'p4', name: 'S.R. — 14F, AFL', age: 14, sport: 'AFL', code: 'CEA-6011',
     injuryDate: short(16), daysPost: 16, stage: { n: 3, label: 'Sub-symptom aerobic (light)' },
     hrt: 128, ...band(128), restSymptoms: 3, baseline: 'none',
     trend: [40, 33, 27],
@@ -139,7 +139,7 @@ const PATIENTS: Patient[] = [
     flag: 'Measured HRt 128 bpm is below the 135 bpm prognostic cut-off — associated with slower recovery. Oversee dosing and re-assess more often.',
   },
   {
-    id: 'p1', name: 'Liam Carter', age: 17, sport: 'Rugby union', code: 'CEA-4827',
+    id: 'p1', name: 'L.C. — 17M, rugby union', age: 17, sport: 'Rugby union', code: 'CEA-4827',
     injuryDate: short(28), daysPost: 28, stage: { n: 4, label: 'Sub-symptom aerobic (moderate)' },
     hrt: 148, ...band(148), restSymptoms: 2, baseline: 'captured', baselineDate: short(128),
     trend: [38, 31, 22, 14, 9, 5],
@@ -160,7 +160,7 @@ const PATIENTS: Patient[] = [
     notes: 'Flare six days ago at 9 min — ceiling reduced, daily sessions continued at the lower intensity. Three clean verified sessions since; band advanced.',
   },
   {
-    id: 'p3', name: 'Marcus Webb', age: 31, sport: 'Cycling', code: 'CEA-3340',
+    id: 'p3', name: 'M.W. — 31M, cycling', age: 31, sport: 'Cycling', code: 'CEA-3340',
     injuryDate: short(52), daysPost: 52, stage: { n: 6, label: 'Return-to-sport progression' },
     hrt: 171, ...band(171), restSymptoms: 0, baseline: 'captured', baselineDate: short(168),
     trend: [29, 20, 12, 6, 2, 0, 0],
@@ -179,7 +179,7 @@ const PATIENTS: Patient[] = [
     notes: 'Band has reached the measured threshold — a further advance would exceed it, so the next step is a re-test rather than a higher ceiling.',
   },
   {
-    id: 'p5', name: 'Daniel Okafor', age: 22, sport: 'Basketball', code: 'CEA-2286',
+    id: 'p5', name: 'D.O. — 22M, basketball', age: 22, sport: 'Basketball', code: 'CEA-2286',
     injuryDate: short(63), daysPost: 63, stage: { n: 7, label: 'Cleared — refer to MD' },
     hrt: 178, ...band(178), restSymptoms: 0, baseline: 'captured', baselineDate: short(201),
     trend: [34, 26, 17, 9, 3, 0, 0, 0],
@@ -960,10 +960,13 @@ export default function ClinicalHubPage() {
     <div className="min-h-screen dashboard-bg">
       {/* Preview banner — demo mode only. A real clinic sees its real data,
           unbannered. This page is linked publicly from the /acc supplier pitch,
-          so the banner must state plainly that the patients are INVENTED. Names
-          like "Liam Carter" read as real people to a clinician, and a viewer
-          must never be left to wonder whether they are looking at someone's
-          actual health record. */}
+          so the banner must state plainly that the patients are INVENTED.
+          The fixtures previously carried full given names, which read as real
+          people to a clinician — on a shared screen there is no way to tell a
+          fixture from a patient, and nobody should have to work it out from a
+          banner. They are now initials plus age band, sex and sport: enough
+          clinical context for the case to land, nothing that resembles a
+          person. The banner stays regardless. */}
       {isDemo && (
         <div className="bg-[var(--accent)] text-white text-center text-xs py-2 px-4 font-medium">
           <strong>Demonstration only — every patient below is fabricated.</strong>{' '}

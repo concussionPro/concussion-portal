@@ -3,6 +3,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { SST_TIER_FROM_AUD, SST_TRIAL_PATIENT_CAP } from '@/lib/config'
 import { isRegisteredClinic, verifyViewKey, getClinicUsage } from '@/lib/sst-trainer/clinic-registry'
 import { buildGpReportHtml } from '@/lib/sst-trainer/gp-report-html'
+import { DEMO_CLINIC_CODE } from '@/lib/sst-trainer/clinic-registry'
 import { loadGpReportData, renderGpReportPdf } from '@/lib/sst-trainer/gp-report-pdf'
 
 /**
@@ -46,6 +47,29 @@ export async function GET(request: NextRequest) {
   if (!(await isRegisteredClinic(code))) {
     return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
   }
+  /**
+   * DEMO00 has no rows, and this route reads the database directly — so every
+   * patient on the demo roster returned "No episode data for that patient".
+   * /clinical-testing/patients links straight here, which meant the GP report
+   * was a dead end for every demo patient a prospect clicked, in the middle of
+   * a live demo.
+   *
+   * /api/sst/report already serves the synthetic episode for DEMO00, so the
+   * demo delegates to it rather than duplicating the fixture in a second
+   * renderer — one source of demo truth, and it cannot drift.
+   *
+   * `?case=` chooses which anonymous episode; anything else falls to the
+   * default. Real clinics never reach this branch.
+   */
+  if (code === DEMO_CLINIC_CODE) {
+    const demoCase = request.nextUrl.searchParams.get('case') || 'recovery'
+    const url = new URL('/api/sst/report', request.nextUrl.origin)
+    url.searchParams.set('code', DEMO_CLINIC_CODE)
+    url.searchParams.set('patient', patientLabel)
+    url.searchParams.set('case', demoCase)
+    return NextResponse.redirect(url, { status: 302 })
+  }
+
   const viewKey = request.nextUrl.searchParams.get('k')
   if (!(await verifyViewKey(code, viewKey))) {
     return NextResponse.json({ error: 'Clinician key required' }, { status: 401 })

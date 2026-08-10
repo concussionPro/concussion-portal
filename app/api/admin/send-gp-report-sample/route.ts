@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
   const body = await req.json().catch(() => ({}))
   const code = (body.code as string | undefined)?.toUpperCase() || 'DEMO00'
-  const patient = (body.patient as string | undefined) || 'Jordan Pike'
+  const patient = (body.patient as string | undefined) || 'M.T. — 24M, community football'
   const to = (body.to as string | undefined) || 'z.lew87@gmail.com'
   // dryRun: build everything, send nothing — for deploy probes and previews.
   const dryRun = body.dryRun === true

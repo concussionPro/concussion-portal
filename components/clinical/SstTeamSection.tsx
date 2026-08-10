@@ -30,7 +30,10 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
 
   const load = useCallback(() => {
     if (demo) {
-      setMembers([{ id: 'demo-1', name: 'Alex Reviewer', email: null }])
+      // No person-shaped names anywhere in demo data — a clinician
+      // reading a plausible name on a shared screen cannot tell a fixture from a
+      // patient, and should not have to.
+      setMembers([{ id: 'demo-1', name: 'Clinician 1', email: null }])
       setSeats({ used: 2, allowance: null, tier: 'clinic', isOwner: true })
       return
     }

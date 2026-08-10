@@ -67,21 +67,21 @@ function demoFixtureRows(): Row[] {
   } as unknown as Row)
   return [
     // Alex — mid-episode, progressing cleanly
-    mk('demo-alex', 'Alex D', 'threshold', 12, 142, 114, 128, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
-    mk('demo-alex', 'Alex D', 'training', 10, null, 114, 128, { minutesInBand: 19 }),
-    mk('demo-alex', 'Alex D', 'training', 8, null, 114, 128, { minutesInBand: 20 }),
-    mk('demo-alex', 'Alex D', 'training', 6, null, 118, 132, { minutesInBand: 20 }),
-    mk('demo-alex', 'Alex D', 'threshold', 3, 156, 125, 140, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
-    mk('demo-alex', 'Alex D', 'training', 1, null, 125, 140, { minutesInBand: 20 }),
+    mk('demo-mt', 'M.T. — 24M, community football', 'threshold', 12, 142, 114, 128, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-mt', 'M.T. — 24M, community football', 'training', 10, null, 114, 128, { minutesInBand: 19 }),
+    mk('demo-mt', 'M.T. — 24M, community football', 'training', 8, null, 114, 128, { minutesInBand: 20 }),
+    mk('demo-mt', 'M.T. — 24M, community football', 'training', 6, null, 118, 132, { minutesInBand: 20 }),
+    mk('demo-mt', 'M.T. — 24M, community football', 'threshold', 3, 156, 125, 140, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-mt', 'M.T. — 24M, community football', 'training', 1, null, 125, 140, { minutesInBand: 20 }),
     // Sam — fresh episode, first test done
-    mk('demo-sam', 'Sam K', 'threshold', 2, 131, 105, 118, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
-    mk('demo-sam', 'Sam K', 'training', 1, null, 105, 118, { minutesInBand: 17 }),
+    mk('demo-rk', 'R.K. — 31F, recreational netball', 'threshold', 2, 131, 105, 118, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-rk', 'R.K. — 31F, recreational netball', 'training', 1, null, 105, 118, { minutesInBand: 17 }),
     // Jordan — late episode, near clearance
-    mk('demo-jordan', 'Jordan P', 'threshold', 20, 138, 110, 124, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
-    mk('demo-jordan', 'Jordan P', 'training', 17, null, 110, 124, { minutesInBand: 20 }),
-    mk('demo-jordan', 'Jordan P', 'training', 14, null, 116, 130, { minutesInBand: 20 }),
-    mk('demo-jordan', 'Jordan P', 'threshold', 9, 171, 137, 154, { interpretation: 'no-intolerance', terminationReason: 'exhaustion' }),
-    mk('demo-jordan', 'Jordan P', 'training', 5, null, 137, 154, { minutesInBand: 20 }),
+    mk('demo-dp', 'D.P. — 17M, school rugby', 'threshold', 20, 138, 110, 124, { interpretation: 'exercise-intolerance', terminationReason: 'symptom' }),
+    mk('demo-dp', 'D.P. — 17M, school rugby', 'training', 17, null, 110, 124, { minutesInBand: 20 }),
+    mk('demo-dp', 'D.P. — 17M, school rugby', 'training', 14, null, 116, 130, { minutesInBand: 20 }),
+    mk('demo-dp', 'D.P. — 17M, school rugby', 'threshold', 9, 171, 137, 154, { interpretation: 'no-intolerance', terminationReason: 'exhaustion' }),
+    mk('demo-dp', 'D.P. — 17M, school rugby', 'training', 5, null, 137, 154, { minutesInBand: 20 }),
   ]
 }
 
