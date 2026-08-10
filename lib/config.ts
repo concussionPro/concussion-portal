@@ -489,10 +489,39 @@ export function workshopPriceFor(locationSlug?: string | null): number {
     : CONFIG.COURSE.PRICE_REGULAR
 }
 
-/** Workshop-upgrade price for an online-only owner (difference to the
- *  current Complete Course price for their city). */
-export function upgradePriceFor(locationSlug?: string | null): number {
-  return workshopPriceFor(locationSlug) - CONFIG.COURSE.PRICE_ONLINE
+/**
+ * Workshop-upgrade price for an online-only owner.
+ *
+ * ALWAYS the early-bird difference, for EVERY city, at EVERY time (owner,
+ * 2026-08-10: "all online buyers get to upgrade for the early bird price").
+ *
+ * This used to derive from workshopPriceFor(city), so once a city's early bird
+ * closed — 14 days before its confirmed date — the same upgrade jumped from
+ * $693 to $903 depending on which city the buyer picked. Three things were
+ * wrong with that:
+ *
+ *  - It contradicted the promise. "Start online, upgrade whenever you like,
+ *    your upgrade never expires" is the whole reason the online course is safe
+ *    to buy. A price that silently rises 30% two weeks before each date makes
+ *    that promise false exactly when someone acts on it.
+ *  - It was internally inconsistent. `upgradePriceFor(null)` returns the
+ *    early-bird difference, so the checkout-success page and the nomination
+ *    campaign quoted $693 while /upgrade quoted the city-dependent figure. Same
+ *    customer, two prices, decided by which page they happened to land on.
+ *  - It punished the behaviour the funnel is built to encourage. The online
+ *    course is the practical's pipeline; charging more to convert late is
+ *    backwards.
+ *
+ * PRICE_REGULAR still means something: it is charged on a DIRECT Complete
+ * Course purchase inside the final EARLY_BIRD_DAYS_BEFORE window. That keeps
+ * $1,400 a real price (ACL — never present $1,190 as a discount off a price
+ * that is never charged) without taxing the upgrade path.
+ *
+ * The location parameter is retained so call sites need no change and the
+ * signature stays honest about what it is pricing.
+ */
+export function upgradePriceFor(_locationSlug?: string | null): number {
+  return CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
 }
 
 /**

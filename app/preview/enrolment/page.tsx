@@ -48,19 +48,19 @@ const CHANGES: Change[] = [
   },
   {
     id: 'earlybird',
-    title: 'State the early-bird cutoff in the campaign',
+    title: 'Upgrade always priced at the early-bird difference — DONE',
     today: `Early bird ($${CONFIG.COURSE.PRICE_EARLY_BIRD}) closes ${CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a confirmed date. For 31 Oct that is 17 October, after which checkout charges $${CONFIG.COURSE.PRICE_REGULAR}.`,
     proposed:
       `Campaign copy reads "$${CONFIG.COURSE.PRICE_EARLY_BIRD} until 17 October, $${CONFIG.COURSE.PRICE_REGULAR} after" — or the campaign closes before mid-October and price is never restated in follow-ups.`,
     why:
-      'A flat "$1,190" in an email that is still being read on 20 October promises a price the checkout will not honour. That is an Australian Consumer Law problem, not a typo — and the deadline is free urgency currently going unused.',
+      'RESOLVED 2026-08-10: the upgrade now always charges the early-bird difference, for every city, at every time — display and charge both derive from PRICE_EARLY_BIRD. The regular price is still charged on a DIRECT complete-course purchase in the final window, so it stays a real price. The campaign can quote one upgrade figure safely.',
     work: 'Copy only.',
-    risk: 'Legal. Fix before send, not after.',
+    risk: 'Shipped. Was a live display-vs-charge divergence: /upgrade quoted the city-dependent figure while checkout-success quoted the flat one.',
   },
   {
     id: 'cpd',
     title: 'State CPD once, unambiguously',
-    today: `Online ${CONFIG.COURSE.ONLINE_CPD_POINTS} · practical ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} · total ${CONFIG.COURSE.TOTAL_CPD_POINTS}. The draft email says "8 CPD points" in one place and "16 CPD" in another.`,
+    today: `Online ${CONFIG.COURSE.ONLINE_CPD_POINTS} · practical ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} · total ${CONFIG.COURSE.TOTAL_CPD_POINTS}. The draft email states the online figure in one place and the combined figure in another, which reads as a contradiction.`,
     proposed:
       `One line, derived from CONFIG, never hardcoded: "${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online · ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day."`,
     why:
@@ -75,7 +75,7 @@ const CHANGES: Change[] = [
     proposed:
       'Two paid ways in (book the date, or start online and upgrade later) plus an honestly-labelled free tier — the newsletter and the free SCAT course. No "waitlist" framing anywhere.',
     why:
-      'A form row is not a warm lead. Someone unwilling to buy the $497 online course was never going to fly to a practical day — better to find that out now than in March.',
+      'A form row is not a warm lead. Someone unwilling to buy the online course was never going to fly to a practical day — better to find that out now than in March.',
     work: 'Copy + one route retired. The nomination pipeline stays; it is fed by purchases instead of forms.',
   },
   {

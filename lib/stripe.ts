@@ -210,7 +210,20 @@ export async function createCourseCheckoutSession({
     // combined CONFIG.COURSE.TOTAL_CPD_POINTS.
     productDescription = '8 online modules (8 hours of learning) · Lifetime access · Clinical Toolkit · Reference Repository · Certificate of completion'
   } else if (courseType === 'workshop-upgrade') {
-    unitAmount = isEarlyBird ? COURSE_PRICING.WORKSHOP_UPGRADE_EARLY : COURSE_PRICING.WORKSHOP_UPGRADE_REGULAR
+    // ALWAYS the early-bird difference — never city- or date-dependent (owner,
+    // 2026-08-10). Mirrors upgradePriceFor() in lib/config, and the two MUST
+    // agree: this is the amount actually charged, that is the amount displayed.
+    //
+    // The old `isEarlyBird ? … : …` charged $903 instead of $693 once a city's
+    // early bird closed, 14 days before its confirmed date — silently breaking
+    // "start online, upgrade whenever, your upgrade never expires" at exactly
+    // the moment a buyer acted on it, and taxing the conversion the funnel
+    // exists to produce.
+    //
+    // PRICE_REGULAR is still charged on a DIRECT Complete Course purchase in
+    // that final window, so $1,400 remains a real price (ACL) without the
+    // upgrade path inheriting it.
+    unitAmount = COURSE_PRICING.WORKSHOP_UPGRADE_EARLY
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `Concussion Education Australia — Workshop Upgrade (${locationLabel})`

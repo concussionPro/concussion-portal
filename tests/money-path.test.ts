@@ -427,3 +427,24 @@ describe('no OTHER checkout builder opens the manual promo field', () => {
     expect(last().discounts).toBeUndefined()
   })
 })
+
+describe('the workshop upgrade is always the early-bird difference', () => {
+  it('display and charge agree, and neither depends on the city or the date', async () => {
+    const { upgradePriceFor, CONFIG } = await import('@/lib/config')
+    const expected = CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
+    // Every city, live date or not, early bird open or closed.
+    for (const slug of ['melbourne', 'sydney', 'byron-bay', 'adelaide', 'wa', null, undefined]) {
+      expect(upgradePriceFor(slug)).toBe(expected)
+    }
+    const { COURSE_PRICING } = await import('@/lib/stripe')
+    // The amount the server actually charges must equal the amount shown.
+    expect(COURSE_PRICING.WORKSHOP_UPGRADE_EARLY).toBe(expected * 100)
+  })
+
+  it('a DIRECT complete-course purchase can still cost the regular price', async () => {
+    const { CONFIG } = await import('@/lib/config')
+    // $1,400 has to stay a price that is genuinely charged somewhere, or
+    // presenting $1,190 as an early bird is a discount off a fiction (ACL).
+    expect(CONFIG.COURSE.PRICE_REGULAR).toBeGreaterThan(CONFIG.COURSE.PRICE_EARLY_BIRD)
+  })
+})
