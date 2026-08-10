@@ -5,6 +5,7 @@ import { sendEmail } from '@/lib/resend-client'
 import { QUARTERLY_PRACTICAL_BLAST } from '@/lib/email-sequences'
 import { isEmailSuppressed } from '@/lib/email-suppression'
 import { CONFIG } from '@/lib/config'
+import { nominateClickUrl } from '@/app/api/workshop/nominate-click/route'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
 /**
@@ -128,7 +129,11 @@ async function run(request: NextRequest, willSend: boolean) {
         acc[k] = (acc[k] ?? 0) + 1
         return acc
       }, {}),
-      previewHtml: QUARTERLY_PRACTICAL_BLAST.template('Sample', true, bookLink, onlineLink, 'Sydney'),
+      previewHtml: QUARTERLY_PRACTICAL_BLAST.template(
+        'Sample', bookLink, onlineLink,
+        nominateClickUrl('sample@example.com', 'sydney'),
+        nominateClickUrl('sample@example.com', 'byron-bay'),
+      ),
     })
   }
 
@@ -138,7 +143,11 @@ async function run(request: NextRequest, willSend: boolean) {
     const token = generateUnsubscribeToken(r.email)
     const unsubscribeUrl = `${base}/api/unsubscribe?email=${encodeURIComponent(r.email)}&token=${token}`
     const html = QUARTERLY_PRACTICAL_BLAST
-      .template(r.name, r.registered, bookLink, onlineLink, r.city)
+      .template(
+        r.name, bookLink, onlineLink,
+        nominateClickUrl(r.email, 'sydney'),
+        nominateClickUrl(r.email, 'byron-bay'),
+      )
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
     const ok = await sendEmail({

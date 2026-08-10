@@ -1735,56 +1735,29 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
  * "14 CPD hours" survived the 2026-07-30 re-rate into live sends.
  */
 export const QUARTERLY_PRACTICAL_BLAST = {
-  subject: 'Practical days are now quarterly — first up: Melbourne',
+  subject: 'Practical days are running this quarter — Melbourne first',
   /**
-   * @param name        recipient first name
-   * @param registered  true when they previously registered interest — the
-   *                    opening line claims that, so it must not be sent to a
-   *                    cold or free-course segment where it would be false.
+   * @param sydneyUrl / byronUrl  SIGNED one-click nomination links. Clicking
+   *   records the city and lands them on /pricing for it — the click IS the
+   *   count, which is the entire purpose of this send.
    */
-  template: (name: string, registered: boolean, bookLink: string, onlineLink: string, city?: string | null) => emailShell(`
+  template: (name: string, bookLink: string, onlineLink: string, sydneyUrl: string, byronUrl: string) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p>${registered && city
-      ? `You registered interest in the concussion practical training for <strong>${city}</strong>.`
-      : registered
-        ? 'You registered interest in the concussion practical training.'
-        : 'A change to how the concussion practical training runs, in case it&rsquo;s useful.'}</p>
-    <p><strong>Three practical days run this quarter</strong> &mdash; Melbourne on 31 October, then Sydney and Byron Bay in November. No more waiting for a city to reach a number.</p>
+    <p><strong>The practical days are running this quarter.</strong> Melbourne is first and it is dated; Sydney and Byron Bay follow in November.</p>
     <div class="callout">
       <strong>Melbourne &mdash; Saturday 31 October</strong><br>
-      ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places. A full practical day: SCAT6 and VOMS assessment, phenotype-based rehab, and running a graded exertion test on a real person until you find their threshold.
+      ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places. The full practical day: SCAT6 and VOMS assessment, phenotype-based rehab, and running a graded exertion test on a real person until you find their threshold.
     </div>
-    <p><strong>${city && !(city || '').toLowerCase().includes('melbourne') ? 'Take your seat' : 'Take the Melbourne seat'}.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together, at whichever of the three you name.</p>
-    <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat</a></center>
-    <p><strong>Or start online today, in the next five minutes.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. Upgrade to any future quarterly practical for the difference, at the early-bird rate, whenever suits. <strong>Your upgrade never expires.</strong></p>
+    <p><strong>Take the Melbourne seat.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together.</p>
+    <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat &mdash; 31 October</a></center>
+    <p><strong>Melbourne doesn&rsquo;t work?</strong> Tell me which November day you want and I will hold you a place on it. One click &mdash; nothing to fill in.</p>
+    <center>
+      <a href="${sydneyUrl}" class="cta-btn" style="margin:0 6px 8px 0;">Sydney &mdash; November</a>
+      <a href="${byronUrl}" class="cta-btn" style="margin:0 0 8px 6px;">Byron Bay &mdash; November</a>
+    </center>
+    <p>Dates for the November days are set once I know the numbers, which is what those two buttons are for.</p>
+    <p><strong>Or start online today.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. The upgrade is the difference, at the early-bird rate, and it never expires &mdash; use it at whichever day suits.</p>
     <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online now</a></center>
-    <p>${(() => {
-      const c = (city || '').toLowerCase()
-      // Q4 is Melbourne (dated), then Sydney and Byron Bay in November. November
-      // dates are deliberately NOT stated — they are not locked, and naming a
-      // date that then moves is exactly how the previous model lost trust.
-      // SEATS, NOT DATES — the difference matters.
-      //
-      // "Your date is coming in November" invites the reader to do nothing and
-      // wait, which makes silence uninterpretable: seventeen of the
-      // twenty-five are non-Melbourne, and we cannot tell "I'll take the Sydney
-      // one" apart from "gone" if neither produces an action.
-      //
-      // Booking is buyable now for any city under the nomination model, so the
-      // ask becomes a seat held in order of purchase. Someone who intends to
-      // come has a reason to act today; someone who does not, doesn't — and
-      // silence finally means something.
-      if (c.includes('sydney')) return `Sydney runs in November. You can take a seat now &mdash; the date is set shortly and the ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places are held in the order people book, not announced and then scrambled for.`
-      if (c.includes('byron')) return `Byron Bay runs in November. You can take a seat now &mdash; the date is set shortly and the ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places are held in the order people book, not announced and then scrambled for.`
-      if (c.includes('melbourne')) return 'Melbourne is the first of the three, and it is the one that is dated.'
-      // Perth and Adelaide are not among the three this quarter — 9 of the 25
-      // registrants sit here. State it neutrally and hand them the options
-      // rather than writing them off: people travel for this, and it is their
-      // call to make, not ours to make for them. An apologetic "we'll get to
-      // you eventually" reads as a closed door and loses a buyer who would have
-      // flown.
-      return `${city || 'Your city'} is not one of the three this quarter &mdash; they are Melbourne on 31 October, then Sydney and Byron Bay in November. Plenty of people travel for the day, so those are all open to you. And if none of them work, the online course stands on its own and the upgrade never expires.`
-    })()}</p>
     <div class="sig">Zac</div>
   `),
 }

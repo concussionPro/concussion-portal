@@ -35,7 +35,8 @@ export default async function BlastPreviewPage({
   const registered = segment !== 'other'
   const link = `${CONFIG.APP_URL}/pricing`
 
-  const html = QUARTERLY_PRACTICAL_BLAST.template('Sarah', registered, link, link, city ?? 'Sydney')
+  const demo = (c: string) => `${CONFIG.APP_URL}/api/workshop/nominate-click?e=demo&t=demo&city=${c}`
+  const html = QUARTERLY_PRACTICAL_BLAST.template('Sarah', link, link, demo('sydney'), demo('byron-bay'))
     .replaceAll('{{unsubscribe_url}}', '#unsubscribe-example')
 
   return (
