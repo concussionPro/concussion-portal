@@ -426,20 +426,61 @@ export async function GET(request: Request) {
         continue
       }
 
-      // Load user progress for routing decisions (Day 7+)
+      // Load user progress. ALWAYS — not `if (daysSinceSignup >= 7)`.
+      //
+      // It used to load only from day 7 because only the day-7 three-way route
+      // consulted it, which meant every step from day 10 onward ran blind to
+      // whether the person had started or finished. Two live consequences,
+      // measured 2026-08-10:
+      //
+      //   joe.darley@hartpury.ac.uk completed the course and received his
+      //   certificate on 07-15, then got "Module 1 is ready" on 07-21 — a
+      //   start-nudge for a course he had already finished.
+      //
+      //   emmahall1690@gmail.com received five emails in fifteen days
+      //   (07-14, 17, 21, 25, 29), every one of them a variant of "start
+      //   module 1".
+      //
+      // A sequence that keeps asking for a step the recipient has already taken
+      // is the fastest way to train someone to stop opening.
       let scatCompletedCount = 0
-      if (daysSinceSignup >= 7) {
-        try {
-          const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
-          if (progressRows.length > 0 && progressRows[0].progress) {
-            const progress = progressRows[0].progress
-            for (let i = 101; i <= 103; i++) {
-              if (progress[String(i)]?.completed) scatCompletedCount++
-            }
+      let scatStartedCount = 0
+      try {
+        const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
+        if (progressRows.length > 0 && progressRows[0].progress) {
+          const progress = progressRows[0].progress
+          for (let i = 101; i <= 103; i++) {
+            const m = progress[String(i)]
+            if (m?.completed) scatCompletedCount++
+            if (m?.startedAt || m?.completed) scatStartedCount++
           }
-        } catch (err) {
-          console.error(`[Nurture] Failed to load progress for ${redact(user.email)}:`, err)
         }
+      } catch (err) {
+        console.error(`[Nurture] Failed to load progress for ${redact(user.email)}:`, err)
+      }
+
+      // FINISHED THE COURSE → this lane has nothing left to say. The
+      // completer is handed to SCAT_COMPLETION_UPSELL and the
+      // completer-conversion cron, which are about what comes NEXT. Continuing
+      // to drip "start module 1" at them is both wrong and the loudest possible
+      // signal that nobody is reading their record.
+      const SCAT_MODULE_COUNT = 3
+      if (scatCompletedCount >= SCAT_MODULE_COUNT && !camePdfHunting) {
+        console.log(
+          `[Nurture] scat-mastery day ${email.day} skipped for ${redact(user.email)} — course completed`,
+        )
+        continue
+      }
+
+      // ALREADY STARTED → skip the steps whose whole job is to get them to
+      // start. The later, content-bearing steps still send; only the
+      // "open module 1" beats are suppressed, and only for someone who has.
+      const START_NUDGE_DAYS = [0, 3, 10]
+      if (scatStartedCount > 0 && !camePdfHunting && START_NUDGE_DAYS.includes(email.day)) {
+        console.log(
+          `[Nurture] scat-mastery day ${email.day} skipped for ${redact(user.email)} — already started (${scatStartedCount} module(s))`,
+        )
+        continue
       }
 
       // ── Day 7: Three-way route based on login + progress ──
