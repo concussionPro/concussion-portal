@@ -1754,8 +1754,8 @@ export const QUARTERLY_PRACTICAL_BLAST = {
       <strong>Melbourne &mdash; Saturday 31 October</strong><br>
       ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places. A full practical day: SCAT6 and VOMS assessment, phenotype-based rehab, and running a graded exertion test on a real person until you find their threshold.
     </div>
-    <p><strong>Take the Melbourne seat.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together.</p>
-    <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat &mdash; 31 October</a></center>
+    <p><strong>${city && !(city || '').toLowerCase().includes('melbourne') ? 'Take your seat' : 'Take the Melbourne seat'}.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together, at whichever of the three you name.</p>
+    <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat</a></center>
     <p><strong>Or start online today, in the next five minutes.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. Upgrade to any future quarterly practical for the difference, at the early-bird rate, whenever suits. <strong>Your upgrade never expires.</strong></p>
     <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online now</a></center>
     <p>${(() => {
@@ -1763,8 +1763,19 @@ export const QUARTERLY_PRACTICAL_BLAST = {
       // Q4 is Melbourne (dated), then Sydney and Byron Bay in November. November
       // dates are deliberately NOT stated — they are not locked, and naming a
       // date that then moves is exactly how the previous model lost trust.
-      if (c.includes('sydney')) return 'Sydney runs in November. The date is confirmed shortly &mdash; take the online course now and your upgrade is waiting for it.'
-      if (c.includes('byron')) return 'Byron Bay runs in November. The date is confirmed shortly &mdash; take the online course now and your upgrade is waiting for it.'
+      // SEATS, NOT DATES — the difference matters.
+      //
+      // "Your date is coming in November" invites the reader to do nothing and
+      // wait, which makes silence uninterpretable: seventeen of the
+      // twenty-five are non-Melbourne, and we cannot tell "I'll take the Sydney
+      // one" apart from "gone" if neither produces an action.
+      //
+      // Booking is buyable now for any city under the nomination model, so the
+      // ask becomes a seat held in order of purchase. Someone who intends to
+      // come has a reason to act today; someone who does not, doesn't — and
+      // silence finally means something.
+      if (c.includes('sydney')) return `Sydney runs in November. You can take a seat now &mdash; the date is set shortly and the ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places are held in the order people book, not announced and then scrambled for.`
+      if (c.includes('byron')) return `Byron Bay runs in November. You can take a seat now &mdash; the date is set shortly and the ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places are held in the order people book, not announced and then scrambled for.`
       if (c.includes('melbourne')) return 'Melbourne is the first of the three, and it is the one that is dated.'
       // Perth and Adelaide are not among the three this quarter — 9 of the 25
       // registrants sit here. State it neutrally and hand them the options
