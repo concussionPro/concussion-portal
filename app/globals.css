@@ -2,7 +2,14 @@
 
 :root {
   /* ── Foundation ─────────────────────────────────────── */
-  --background: #f8fafb;
+  /* The site ground. Matches the homepage hero (#e7ecee) so every page reads
+     as one site — it was #f8fafb, a near-white, which left /pricing, /courses,
+     /scat-forms and ~17 other pages visibly whiter than the page users land on
+     first. Owner 2026-08-10: "all of these pages are white instead of the teal
+     seen on the homepage — just make them all the same."
+     Set HERE rather than per page: bg-background is what those pages already
+     use, so one token moves all of them and nothing can drift back. */
+  --background: #e7ecee;
   --foreground: #0a0f14;
   --border: rgba(13, 115, 119, 0.08);
   --border-strong: rgba(13, 115, 119, 0.15);

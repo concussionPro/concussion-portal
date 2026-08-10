@@ -95,7 +95,7 @@ function PricingTabs() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f8f8]">
+    <div className="min-h-screen bg-background">
       <SiteNav />
 
       <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-2">
