@@ -7,6 +7,7 @@ import { isEmailSuppressed } from '@/lib/email-suppression'
 import { CONFIG } from '@/lib/config'
 import { nominateClickUrl } from '@/app/api/workshop/nominate-click/route'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { EmailScheduler } from '@/lib/email-scheduler'
 
 /**
  * QUARTERLY PRACTICAL BLAST — the structural announcement.
@@ -137,6 +138,22 @@ async function run(request: NextRequest, willSend: boolean) {
     })
   }
 
+  // DELIVERABILITY. Two things every other send lane in this codebase does and
+  // this one did not:
+  //
+  //  1. LIST-UNSUBSCRIBE header. Google, Yahoo and Microsoft bulk-sender rules
+  //     require one-click unsubscribe on bulk mail. A footer link in the body
+  //     is not that — without the header the send is a spam-folder candidate
+  //     before anyone reads a word, and it is the exact omission the 2026-08-06
+  //     audit found on the neuro lane.
+  //  2. SPACING. Every recipient fired in a tight loop lands as a burst from one
+  //     domain, which is what a filter is built to notice. EmailScheduler
+  //     staggers per recipient domain with jitter; Resend holds each send until
+  //     its scheduledAt.
+  //
+  // The list is small enough that neither is urgent, and both are how a domain
+  // reputation is kept rather than repaired.
+  const scheduler = new EmailScheduler()
   let sent = 0
   const failed: string[] = []
   for (const r of eligible) {
@@ -152,8 +169,13 @@ async function run(request: NextRequest, willSend: boolean) {
 
     const ok = await sendEmail({
       to: r.email,
+      scheduledAt: scheduler.next(r.email),
       subject: QUARTERLY_PRACTICAL_BLAST.subject,
       html,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@concussion-education-australia.com>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
       tags: [
         { name: 'sequence', value: 'quarterly-practical-blast' },
         { name: 'segment', value: r.registered ? 'registered-interest' : 'other' },
