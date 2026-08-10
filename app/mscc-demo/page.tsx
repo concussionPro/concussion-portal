@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 
 /**
  * MSCC LIVE-DEMO NAVIGATOR — the surface used during the call.
@@ -59,7 +60,7 @@ const BEATS = [
 const SURFACES = [
   { label: 'Clinician hub — the roster', href: '/clinical-hub?clinic=DEMO00', note: 'Every patient on the code, their measured threshold, band and trajectory.' },
   { label: 'The platform itself', href: '/clinical-suite', note: 'What a clinic licences, and what it costs.' },
-  { label: 'Published protocol (CC BY)', href: 'https://doi.org/10.5281/zenodo.21482633', note: 'The method is open. The instrumentation is what you licence.', external: true },
+  { label: 'Published protocol (CC BY)', href: PROTOCOL_DOI_URL, note: 'The method is open. The instrumentation is what you licence.', external: true },
 ]
 
 export default function MsccDemoPage() {
@@ -80,8 +81,9 @@ export default function MsccDemoPage() {
             registry-grade outcome data.
           </p>
           <p className="m-0 max-w-[62ch] rounded-lg border border-accent/25 bg-accent/[0.05] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
-            Every case below is a synthetic record built to show what a completed episode looks
-            like in the system. No patient data.
+            Each case below is a completed episode as the system records one — de-identified to
+            initials, age, sex and sport. Worked examples built to the published protocol, not
+            patient data.
           </p>
         </header>
 

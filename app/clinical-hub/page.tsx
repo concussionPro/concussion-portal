@@ -76,6 +76,8 @@ type Patient = {
   clearanceRamp?: number | null
   flag?: string
   notes?: string
+  /** DEMO only — which completed episode this row's reports render. */
+  demoCase?: 'recovery' | 'adherence' | 'stalled'
 }
 
 /* ── Demo fixture helpers ───────────────────────────────────────────────────
@@ -103,6 +105,104 @@ const band = (hrt: number) => ({ bandLow: Math.round(hrt * 0.8), bandHigh: Math.
    verified-only progression gate, the ceiling cap forcing a re-test, and the
    no-intolerance re-test that surfaces clearance review. */
 const PATIENTS: Patient[] = [
+  /* ── The three COMPLETED episodes ───────────────────────────────────────
+     These are the case set. Everything below them is the live pathway at
+     earlier stages; these three are finished courses of care with a full
+     serial-threshold trajectory and a signable report behind each one, and
+     they are what a clinician is actually being shown.
+
+     De-identified to initials, age band, sex and sport — enough clinical
+     context for the case to read, nothing that resembles a person. Each row's
+     report opens its own episode via `demoCase`. */
+  {
+    id: 'c-adherence', name: 'R.K. — 31F, recreational netball', age: 31,
+    sport: 'Netball', code: 'CEA-8812', demoCase: 'adherence',
+    injuryDate: short(30), daysPost: 30, stage: { n: 4, label: 'Sub-symptom aerobic — plateaued' },
+    hrt: 131, ...band(131), restSymptoms: 3, baseline: 'none',
+    trend: [52, 48, 45, 43],
+    hrtPoints: [
+      { date: iso(27), hrt: 124, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(18), hrt: 127, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(9), hrt: 129, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(1), hrt: 131, source: 'bluetooth', verified: true, gated: true },
+    ],
+    sessions: [
+      { date: short(1), avgHr: 118, peakHr: 127, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 91, modality: 'Bike' },
+      { date: short(3), avgHr: 121, peakHr: 133, mins: 20, symptomDelta: 1, status: 'clean', hrVerified: true, timeInBandPct: 84, modality: 'Bike' },
+      { date: short(5), avgHr: 127, peakHr: 141, mins: 20, symptomDelta: 2, status: 'flare', hrVerified: true, nextDayFlare: true, timeInBandPct: 38, modality: 'Treadmill' },
+      { date: short(8), avgHr: 116, peakHr: 124, mins: 18, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 96, modality: 'Bike' },
+      { date: short(10), avgHr: 124, peakHr: 138, mins: 20, symptomDelta: 1, status: 'clean', hrVerified: true, timeInBandPct: 44, modality: 'Treadmill' },
+      { date: short(12), avgHr: null, peakHr: null, mins: 20, symptomDelta: 0, status: 'unknown', hrVerified: false, modality: 'Bike' },
+      { date: short(15), avgHr: 119, peakHr: 129, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 88, modality: 'Bike' },
+      { date: short(17), avgHr: 126, peakHr: 140, mins: 20, symptomDelta: 2, status: 'flare', hrVerified: true, nextDayFlare: true, timeInBandPct: 41, modality: 'Treadmill' },
+      { date: short(19), avgHr: 115, peakHr: 123, mins: 16, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 94, modality: 'Bike' },
+      { date: short(22), avgHr: 123, peakHr: 136, mins: 20, symptomDelta: 1, status: 'clean', hrVerified: true, timeInBandPct: 47, modality: 'Treadmill' },
+      { date: short(24), avgHr: null, peakHr: null, mins: 20, symptomDelta: 1, status: 'unknown', hrVerified: false, modality: 'Bike' },
+      { date: short(26), avgHr: 117, peakHr: 126, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 92, modality: 'Bike' },
+      { date: short(28), avgHr: 120, peakHr: 130, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 86, modality: 'Bike' },
+    ],
+    lastActivity: iso(1),
+    flag: 'Adherent on paper — 11 of 13 sessions HR-verified, but only 7 held inside the band and 4 drifted above it. Threshold has moved 7 bpm in four weeks.',
+  },
+  {
+    id: 'c-stalled', name: 'D.P. — 17M, school rugby', age: 17,
+    sport: 'Rugby union', code: 'CEA-9034', demoCase: 'stalled',
+    injuryDate: short(30), daysPost: 30, stage: { n: 4, label: 'Sub-symptom aerobic — flat since wk 3' },
+    hrt: 142, ...band(142), restSymptoms: 3, baseline: 'captured',
+    trend: [50, 40, 36, 35],
+    hrtPoints: [
+      { date: iso(27), hrt: 126, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(18), hrt: 141, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(9), hrt: 143, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(1), hrt: 142, source: 'bluetooth', verified: true, gated: true },
+    ],
+    sessions: [
+      { date: short(1), avgHr: 122, peakHr: 131, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 95, modality: 'Bike' },
+      { date: short(3), avgHr: 124, peakHr: 133, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 97, modality: 'Bike' },
+      { date: short(6), avgHr: 123, peakHr: 132, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 93, modality: 'Bike' },
+      { date: short(8), avgHr: 125, peakHr: 134, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 98, modality: 'Bike' },
+      { date: short(11), avgHr: 124, peakHr: 133, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 96, modality: 'Treadmill' },
+      { date: short(13), avgHr: 126, peakHr: 135, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 94, modality: 'Treadmill' },
+      { date: short(16), avgHr: 125, peakHr: 134, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 97, modality: 'Bike' },
+      { date: short(18), avgHr: 127, peakHr: 136, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 95, modality: 'Bike' },
+      { date: short(20), avgHr: 126, peakHr: 135, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 99, modality: 'Treadmill' },
+      { date: short(23), avgHr: 128, peakHr: 137, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 96, modality: 'Bike' },
+      { date: short(25), avgHr: 127, peakHr: 136, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 98, modality: 'Bike' },
+      { date: short(27), avgHr: 128, peakHr: 138, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 95, modality: 'Treadmill' },
+      { date: short(29), avgHr: 127, peakHr: 137, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 97, modality: 'Bike' },
+    ],
+    lastActivity: iso(1),
+    flag: 'Delivered exactly as prescribed — 13 of 13 verified, all in band, no flares — and the threshold has not moved since week three. Re-assess rather than progress.',
+  },
+  {
+    id: 'c-recovery', name: 'M.T. — 24M, community football', age: 24,
+    sport: 'Football (AFL)', code: 'CEA-7729', demoCase: 'recovery',
+    injuryDate: short(30), daysPost: 30, stage: { n: 6, label: 'Clearance review' },
+    hrt: 155, ...band(155), restSymptoms: 0, baseline: 'captured',
+    trend: [48, 34, 20, 8],
+    clearanceReady: true, clearanceRamp: 20,
+    hrtPoints: [
+      { date: iso(27), hrt: 128, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(18), hrt: 142, source: 'bluetooth', verified: true, gated: true },
+      { date: iso(9), hrt: 155, source: 'bluetooth', verified: true, gated: true },
+    ],
+    sessions: [
+      { date: short(2), avgHr: 141, peakHr: 152, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 96, modality: 'Treadmill' },
+      { date: short(4), avgHr: 136, peakHr: 145, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 94, modality: 'Treadmill' },
+      { date: short(7), avgHr: 134, peakHr: 143, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 97, modality: 'Bike' },
+      { date: short(9), avgHr: 131, peakHr: 140, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 95, modality: 'Bike' },
+      { date: short(12), avgHr: 128, peakHr: 137, mins: 20, symptomDelta: 0, status: 'clean', hrVerified: true, timeInBandPct: 98, modality: 'Bike' },
+      { date: short(14), avgHr: 126, peakHr: 134, mins: 20, symptomDelta: 1, status: 'clean', hrVerified: true, timeInBandPct: 92, modality: 'Bike' },
+      { date: short(17), avgHr: 122, peakHr: 130, mins: 18, symptomDelta: 1, status: 'clean', hrVerified: true, timeInBandPct: 96, modality: 'Bike' },
+      { date: short(19), avgHr: 119, peakHr: 127, mins: 18, symptomDelta: 1, status: 'clean', hrVerified: true, timeInBandPct: 93, modality: 'Bike' },
+      { date: short(22), avgHr: 116, peakHr: 124, mins: 16, symptomDelta: 2, status: 'clean', hrVerified: true, timeInBandPct: 97, modality: 'Bike' },
+      { date: short(25), avgHr: 113, peakHr: 121, mins: 14, symptomDelta: 2, status: 'clean', hrVerified: true, timeInBandPct: 95, modality: 'Bike' },
+      { date: short(28), avgHr: 111, peakHr: 118, mins: 12, symptomDelta: 3, status: 'clean', hrVerified: true, timeInBandPct: 91, modality: 'Bike' },
+    ],
+    lastActivity: iso(2),
+    flag: 'Final graded re-test reached volitional exhaustion with no symptom provocation. Exercise tolerance recovered — clearance is a matter for the treating practitioner.',
+  },
+
   {
     id: 'p0', name: 'P.R. — 29F, football (soccer)', age: 29, sport: 'Football (soccer)', code: 'CEA-7104',
     injuryDate: short(3), daysPost: 3, stage: { n: 1, label: 'Intake — symptom-limited' },
@@ -756,7 +856,9 @@ type RealState = 'idle' | 'loading' | 'ready' | 'missing-key' | 'unauthorized' |
 
 export default function ClinicalHubPage() {
   const [roster, setRoster] = useState<Patient[]>(PATIENTS)
-  const [selectedId, setSelectedId] = useState('p1')
+  // Opens on the delivered-dose case: prescribed-is-not-performed is the beat
+  // the demo is built around, so it should be on screen before anyone clicks.
+  const [selectedId, setSelectedId] = useState('c-adherence')
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [clinicCode, setClinicCode] = useState('')
@@ -951,26 +1053,34 @@ export default function ClinicalHubPage() {
   // clinic-sessions returns clinicName; the `?? code` is a defensive fallback
   // for the pre-load tick (and any legacy record without a name).
   const clinicTitle = isDemo
-    ? 'Example Clinic (fabricated demonstration data)'
+    ? 'Example Clinic — worked cases'
     : clinicName ?? `${clinicCode} · Your clinic`
 
   const showLive = clinicCode !== '' && (clinicCode === 'DEMO00' || !!viewKey)
 
   return (
     <div className="min-h-screen dashboard-bg">
-      {/* Preview banner — demo mode only. A real clinic sees its real data,
-          unbannered. This page is linked publicly from the /acc supplier pitch,
-          so the banner must state plainly that the patients are INVENTED.
+      {/* Demo disclosure — demo mode only. A real clinic sees its real data,
+          unbannered.
+
+          This page is linked publicly from the /acc supplier pitch, so the
+          disclosure STAYS: the episodes below are worked examples built to the
+          published protocol, not people. What changed is the volume. It used to
+          be a full-width bar reading "every patient below is fabricated", which
+          is both louder than the disclosure needs to be and reads, on a
+          screenshare, as though the product itself is a mock-up. The instrument
+          is real; the episodes are examples. The line below says exactly that,
+          once, without shouting over the thing it is captioning.
+
           The fixtures previously carried full given names, which read as real
           people to a clinician — on a shared screen there is no way to tell a
-          fixture from a patient, and nobody should have to work it out from a
-          banner. They are now initials plus age band, sex and sport: enough
-          clinical context for the case to land, nothing that resembles a
-          person. The banner stays regardless. */}
+          fixture from a patient. They are now initials plus age band, sex and
+          sport: enough clinical context for the case to land, nothing that
+          resembles a person. */}
       {isDemo && (
-        <div className="bg-[var(--accent)] text-white text-center text-xs py-2 px-4 font-medium">
-          <strong>Demonstration only — every patient below is fabricated.</strong>{' '}
-          Illustrative example cases, not real people and not real health data.
+        <div className="bg-[var(--accent)]/[0.07] border-b border-[var(--accent)]/20 text-center text-[11.5px] py-1.5 px-4 text-[#4a6a6e]">
+          <strong className="font-semibold text-[#2c5457]">Example clinic.</strong>{' '}
+          Worked cases built to the published protocol — not patients, and not real health data.
         </div>
       )}
 
@@ -1098,10 +1208,13 @@ export default function ClinicalHubPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-lg font-bold text-foreground leading-tight">{p.name}</h2>
                       {/* Sits beside the NAME, the one element most likely to be
-                          read as a real person. */}
+                          read as a real person — so it stays. Neutral rather
+                          than amber: this is a provenance label, not a warning
+                          about the record's integrity, and amber on a shared
+                          screen reads as the latter. */}
                       {isDemo && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                          Fabricated example
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#eef5f5] text-[#4a6a6e] border border-[#dcebeb]">
+                          Example case
                         </span>
                       )}
                     </div>
@@ -1148,7 +1261,7 @@ export default function ClinicalHubPage() {
                       ] as const).map(([skin, label]) => (
                         <a
                           key={skin}
-                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(labelOf(p))}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}`}
+                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(labelOf(p))}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}${p.demoCase ? `&case=${p.demoCase}` : ''}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
