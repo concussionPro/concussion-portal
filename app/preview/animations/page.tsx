@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { HrtToPrescriptionAnimated } from '@/components/course/ep-infographics/HrtToPrescriptionAnimated'
 import { AutonomicDysfunctionAnimated } from '@/components/course/ep-infographics/AutonomicDysfunctionAnimated'
 import { NeurometabolicCascadeAnimated } from '@/components/course/ep-infographics/NeurometabolicCascadeAnimated'
+import { GradedReturnToSportAnimated } from '@/components/course/ep-infographics/GradedReturnToSportAnimated'
+import { CbfAutoregulationAnimated } from '@/components/course/ep-infographics/CbfAutoregulationAnimated'
 
 /**
  * REVIEW PAGE for animated course infographics — approval before embedding.
@@ -49,6 +51,24 @@ const ITEMS = [
     live: false,
     rationale:
       'Opens both courses and sits in the heaviest pure-text stretch (CRM M1 ≈ 7,800 words). Order and overlap are the content: demand spikes as supply fails, and the gap between the curves is why exertion provokes symptoms.',
+  },
+  {
+    id: 'cbf-autoregulation',
+    Component: CbfAutoregulationAnimated,
+    placements: 'CCM M1 · CRM M1 · CRM M4',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'Autoregulation is a RELATIONSHIP — perfusion held flat while pressure swings. A static curve shows the shape but not the behaviour. Dragging pressure and watching flow either hold or follow demonstrates in seconds what the text spends four paragraphs on, and it is the mechanistic justification for SSTAE itself.',
+  },
+  {
+    id: 'graded-return-to-sport',
+    Component: GradedReturnToSportAnimated,
+    placements: 'CCM M6 · CRM M6',
+    status: 'AWAITING APPROVAL',
+    live: false,
+    rationale:
+      'Every static version is six boxes in a row, and every clinician still asks the same two questions: what happens if symptoms return, and how long does each stage take. Those are the actual content. Stepping through — with the drop-back rule firing as a consequence rather than sitting in a footnote — answers both.',
   },
 ]
 
@@ -104,10 +124,8 @@ export default function AnimationReviewPage() {
           <p className="m-0 text-[13px] leading-relaxed text-[#4a6a6e]">
             <strong className="text-[#16282b]">Queued next</strong>, all existing ids with
             placements already in the course, so none needs a content edit:{' '}
-            <code className="text-[12px]">cbf-autoregulation</code> (3),{' '}
             <code className="text-[12px]">sstae-mechanism</code> (2),{' '}
             <code className="text-[12px]">phenotype-map</code> (3),{' '}
-            <code className="text-[12px]">graded-return-to-sport</code> (2),{' '}
             <code className="text-[12px]">load-monitoring</code> (2),{' '}
             <code className="text-[12px]">fitt-framework</code> (2),{' '}
             <code className="text-[12px]">red-flag-decision</code> (2),{' '}
