@@ -89,7 +89,45 @@ export async function GET(request: NextRequest) {
       ORDER BY w.city, w.registered_at DESC
     `
 
-    const readyByCity = new Map<string, Array<{ email: string; name: string; registeredAt: string; completedAt: string }>>()
+    // 2b. CHECKOUT NOMINATIONS — paid online-only buyers who named a city at
+    // checkout and have not self-registered on /ready-to-train.
+    //
+    // Until 2026-08-10 this state had no occupant, so nothing read it. The
+    // signup gate now routes buyers through "begin online, then upgrade", which
+    // makes a checkout nomination on an online-only purchase the NORMAL path
+    // rather than an edge case — and `users.workshop_location` was written by
+    // the Stripe webhook and read by nobody. A buyer who paid $497 and named a
+    // city was invisible on the board that decides which city runs next, which
+    // is the one number the nomination model exists to produce.
+    //
+    // They join section 2 (the upgrade pipeline), NOT section 1: section 1 is
+    // paid practical-day seats counting toward a threshold, and these people
+    // have not bought a seat. Excluded if they have since bought either stream's
+    // practical day, on the same basis as the self-registered pool above.
+    const { rows: nominationRows } = await sql`
+      SELECT u.email, u.name, u.workshop_location AS city,
+             COALESCE(
+               (SELECT MIN(cp.purchased_at) FROM course_purchases cp
+                 WHERE LOWER(cp.user_email) = LOWER(u.email)),
+               u.created_at
+             ) AS nominated_at
+      FROM users u
+      WHERE u.access_level = 'online-only'
+        AND u.workshop_location IS NOT NULL
+        AND u.workshop_location <> ''
+        AND NOT EXISTS (
+          SELECT 1 FROM workshop_ready_to_train w
+          WHERE LOWER(w.email) = LOWER(u.email) AND w.city = u.workshop_location
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM course_purchases cp
+          WHERE LOWER(cp.user_email) = LOWER(u.email)
+            AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
+        )
+      ORDER BY nominated_at DESC
+    `
+
+    const readyByCity = new Map<string, Array<{ email: string; name: string; registeredAt: string; completedAt: string | null; source: 'registered' | 'checkout' }>>()
     for (const r of rttRows) {
       const city = r.city
       if (!readyByCity.has(city)) readyByCity.set(city, [])
@@ -98,20 +136,39 @@ export async function GET(request: NextRequest) {
         name: r.name,
         registeredAt: r.registered_at instanceof Date ? r.registered_at.toISOString() : r.registered_at,
         completedAt: r.completed_at instanceof Date ? r.completed_at.toISOString() : r.completed_at,
+        source: 'registered',
+      })
+    }
+
+    // Checkout nominations fold into the same per-city buckets, marked by
+    // source so the board distinguishes "finished the course and asked for a
+    // city" from "named a city on the way through checkout". Both are real
+    // demand for that city; only the first is a warm upgrade conversation.
+    for (const r of nominationRows) {
+      const city = r.city
+      if (!readyByCity.has(city)) readyByCity.set(city, [])
+      readyByCity.get(city)!.push({
+        email: r.email,
+        name: r.name,
+        registeredAt: r.nominated_at instanceof Date ? r.nominated_at.toISOString() : r.nominated_at,
+        completedAt: null,
+        source: 'checkout',
       })
     }
 
     const readyToUpgrade: Array<{
-      city: string; label: string; count: number;
-      registrations: Array<{ email: string; name: string; registeredAt: string; completedAt: string }>
+      city: string; label: string; count: number; nominatedCount: number;
+      registrations: Array<{ email: string; name: string; registeredAt: string; completedAt: string | null; source: 'registered' | 'checkout' }>
     }> = []
     let readyTotal = 0
 
     for (const [city, registrations] of readyByCity) {
+      registrations.sort((a, b) => +new Date(b.registeredAt) - +new Date(a.registeredAt))
       readyToUpgrade.push({
         city,
         label: CITY_LABELS[city] || city,
         count: registrations.length,
+        nominatedCount: registrations.filter((r) => r.source === 'checkout').length,
         registrations,
       })
       readyTotal += registrations.length

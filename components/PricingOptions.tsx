@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
+import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocation, upgradePriceFor, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 
@@ -716,7 +716,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM Online</h3>
           <p className="text-[12px] text-slate-500 mb-2 font-medium">Online component of Concussion Clinical Mastery — no workshop</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Same 8 modules as the full CCM, at your own pace. Your payment counts toward the Complete course — upgrade for the difference when your city&rsquo;s date launches.
+            Same 8 modules as the full CCM, at your own pace. Your payment counts toward the Complete course — upgrade for ${upgradePriceFor()}{' '}when your city&rsquo;s date is announced, and you&rsquo;re on the list for a seat before it goes public.
           </p>
 
           {/* Visual: CCM Online course preview screenshot */}
@@ -739,7 +739,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Pathophysiology',
               'Clinical Toolkit',
               'Lifetime access',
-              'Workshop upgrade',
+              `Upgrade $${upgradePriceFor()} anytime`,
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">
                 <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />

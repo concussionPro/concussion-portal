@@ -2709,7 +2709,7 @@ export default function AnalyticsDashboard() {
                     )}
 
                     {/* Online completers — Ready to Upgrade (workshop_ready_to_train table) */}
-                    <SectionTitle title="Online Completers — Ready to Upgrade" subtitle="Online-only buyers who finished all modules and selected a workshop city" />
+                    <SectionTitle title="Online Buyers — Ready to Upgrade" subtitle="Online-only buyers who named a workshop city — either by finishing the modules and registering, or by nominating one at checkout" />
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                       {poolData.cities.map((city: { city: string; label: string; count: number }) => {
                         const progress = Math.min((city.count / UPGRADE_TARGET) * 100, 100)
@@ -2761,14 +2761,26 @@ export default function AnalyticsDashboard() {
                                 <tr className="border-b border-[rgba(13,115,119,0.08)]">
                                   <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
                                   <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
-                                  <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Registered</th>
+                                  <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Nominated via</th>
+                                  <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Date</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {city.registrations.map((r: { name: string; email: string; registeredAt: string }, i: number) => (
+                                {city.registrations.map((r: { name: string; email: string; registeredAt: string; source?: 'registered' | 'checkout' }, i: number) => (
                                   <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
                                     <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
                                     <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
+                                    <td className="py-2.5 px-2">
+                                      {r.source === 'checkout' ? (
+                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.08)] text-[var(--accent)]">
+                                          Checkout nomination
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                                          Completed &amp; registered
+                                        </span>
+                                      )}
+                                    </td>
                                     <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">
                                       {new Date(r.registeredAt).toLocaleDateString('en-AU')}
                                     </td>
