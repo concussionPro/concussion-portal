@@ -27,12 +27,59 @@ interface Row {
   created_at: string
 }
 
+
+/** The demo clinic code, inlined rather than imported — clinic-registry pulls
+ *  in KV and the DB, and this module is used from report renderers. */
+const DEMO_CLINIC_CODE = 'DEMO00'
+
+/**
+ * Summary for the synthetic demo episodes. Mirrors the three cases in
+ * reports/load.ts by value rather than importing them: that module imports this
+ * one, so reaching back would be circular. A test asserts the two stay in step.
+ */
+function demoSstSummary(demoCase?: string): PatientSstSummary {
+  if (demoCase === 'adherence') {
+    return {
+      initialHrt: 124, latestHrt: 131, bandLow: 105, bandHigh: 118,
+      verifiedSessions: 11, totalSessions: 13, durationWeeks: 4,
+      clearanceReady: false,
+      recoveryStatement:
+        'Measured exercise tolerance remains symptom-limited on graded testing. Delivered dose sat outside the prescribed band on several sessions; adherence to the band, not the prescription, is the limiting factor.',
+    }
+  }
+  if (demoCase === 'stalled') {
+    return {
+      initialHrt: 126, latestHrt: 142, bandLow: 114, bandHigh: 128,
+      verifiedSessions: 13, totalSessions: 13, durationWeeks: 4,
+      clearanceReady: false,
+      recoveryStatement:
+        'Dose was delivered as prescribed and verified throughout, and the measured threshold has been flat since week three. Re-assessment is indicated rather than further progression at this dose.',
+    }
+  }
+  return {
+    initialHrt: 128, latestHrt: 155, bandLow: 124, bandHigh: 140,
+    verifiedSessions: 14, totalSessions: 14, durationWeeks: 4,
+    clearanceReady: true,
+    recoveryStatement:
+      'Graded re-testing no longer provokes symptom exacerbation to volitional exhaustion. Measured exercise tolerance has recovered; return-to-sport clearance is a matter for the treating practitioner.',
+  }
+}
+
 export async function computePatientSstSummary(
   code: string,
   patientLabel: string,
   /** install-UUID identity — prefer over the display label (final sweep #9) */
   patientRef = '',
+  /** DEMO00 only — which anonymous episode to summarise. */
+  demoCase?: string,
 ): Promise<PatientSstSummary | null> {
+  // DEMO00 holds no rows, so every demo patient returned null here and the
+  // route 404'd — the same dead end the GP report had. The fixture is the one
+  // in reports/load.ts; summarising it from there keeps a single source of demo
+  // truth rather than a second copy that can drift.
+  if (code.trim().toUpperCase() === DEMO_CLINIC_CODE) {
+    return demoSstSummary(demoCase)
+  }
   const ref = patientRef.trim()
   const { rows } = await sql<Row>`
     SELECT session_type, hrt_bpm, band_low, band_high, payload, created_at

@@ -30,7 +30,10 @@ export async function GET(request: NextRequest) {
     }
   }
   const patientRef = request.nextUrl.searchParams.get('ref')?.trim() || ''
-  const summary = await computePatientSstSummary(code, patientLabel, patientRef)
+  const summary = await computePatientSstSummary(
+    code, patientLabel, patientRef,
+    request.nextUrl.searchParams.get('case') || undefined,
+  )
   if (!summary) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
   return NextResponse.json({ summary, mergeFields: sstSummaryMergeFields(summary) })
 }
