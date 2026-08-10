@@ -99,6 +99,8 @@ export async function GET(request: NextRequest) {
   try {
     const input = await loadReportInput(code, patientLabel, jurisdiction, {
       patientCode: str('pcode'),
+      // DEMO00 only — picks which of the three anonymous demo episodes renders.
+      demoCase: str('case'),
       patientRef: str('ref'),
       patient: {
         firstName: str('first'),
