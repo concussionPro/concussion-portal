@@ -3,6 +3,12 @@
 import { useEffect, useState } from 'react'
 import { Send, Loader2, CheckCircle2, X, Search, AlertTriangle } from 'lucide-react'
 
+/** Adapter slugs → what a clinician calls the product. */
+const PMS_LABELS: Record<string, string> = {
+  cliniko: 'Cliniko', gensolve: 'Gensolve', pracsuite: 'PracSuite', coreplus: 'coreplus',
+}
+const pmsLabel = (slug: string) => PMS_LABELS[slug] ?? slug
+
 /**
  * "File to PMS" — the hub-side end of the plugin. The clinician picks the
  * report type and the matching patient IN THEIR PMS (the identity bridge:
@@ -23,10 +29,12 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
   patientName: string
   /** install-UUID identity — disambiguates same-named patients (round-3 #3) */
   patientRef?: string | null
-  /** DEMO00 showcase: full Gensolve filing flow, clearly labelled, writes nothing. */
+  /** DEMO00 showcase: full Cliniko filing flow, clearly labelled, writes nothing. */
   demo?: boolean
 }) {
-  const [pms, setPms] = useState<string | null>(demo ? 'gensolve' : null)
+  // Demo defaults to Cliniko — the demo audience is AU clinics (MSCC is on
+  // Cliniko); Gensolve is the NZ rail and read as noise on every AU call.
+  const [pms, setPms] = useState<string | null>(demo ? 'cliniko' : null)
   // A connection the API could not verify (revoked key, rotated server secret).
   // The control stays visible — the clinician still needs to know filing exists
   // — but it says so up front instead of failing after they pick a patient.
@@ -63,7 +71,7 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
         }
       >
         {needsAttention ? <AlertTriangle className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
-        {needsAttention ? `${pms} needs attention` : `File to ${pms}`}
+        {needsAttention ? `${pmsLabel(pms)} needs attention` : `File to ${pmsLabel(pms)}`}
       </button>
       {open && (
         <FileModal
@@ -124,7 +132,7 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
     setSearchFailed(false)
     setResults([])
     if (demo) {
-      // Fixture match — the same patient "found" in Gensolve. No API touched.
+      // Fixture match — the same patient "found" in Cliniko. No API touched.
       setResults([{ id: 'demo-1', name: patientName, dob: null }])
       setSearching(false)
       return
@@ -137,21 +145,21 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
       // expired key or a PMS outage looked like the patient wasn't in the PMS.
       if (r.status === 404) {
         setSearchFailed(true)
-        setResult({ ok: false, title: `${pms} could not be searched`, msg: 'No PMS connected' })
+        setResult({ ok: false, title: `${pmsLabel(pms)} could not be searched`, msg: 'No PMS connected' })
       } else if (!r.ok) {
         setSearchFailed(true)
         setResult({
           ok: false,
-          title: `${pms} could not be searched`,
-          msg: d?.error || `${pms} could not be searched just now — this is a connection problem, not an empty result. Try again in a moment.`,
+          title: `${pmsLabel(pms)} could not be searched`,
+          msg: d?.error || `${pmsLabel(pms)} could not be searched just now — this is a connection problem, not an empty result. Try again in a moment.`,
         })
       }
     } catch {
       setSearchFailed(true)
       setResult({
         ok: false,
-        title: `${pms} could not be searched`,
-        msg: `Could not reach ${pms} to search — this is a connection problem, not an empty result.`,
+        title: `${pmsLabel(pms)} could not be searched`,
+        msg: `Could not reach ${pmsLabel(pms)} to search — this is a connection problem, not an empty result.`,
       })
     } finally {
       setSearching(false)
@@ -165,7 +173,7 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
     setResult(null)
     if (demo) {
       setTimeout(() => {
-        setResult({ ok: true, msg: `Filed to ${picked.name}'s record in Gensolve (demo — nothing written).` })
+        setResult({ ok: true, msg: `Filed to ${picked.name}'s record in Cliniko (demo — nothing written).` })
         setBusy(false)
       }, 600)
       return
@@ -187,8 +195,8 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
       // raw "cliniko: HTTP 401" — and it is rendered as an error, not as an
       // amber note the same colour as the informational text beneath it.
       setResult(r.ok && d.ok
-        ? { ok: true, msg: `Filed to ${picked.name}'s record in ${pms}.` }
-        : { ok: false, msg: d.error || `${pms} refused the note — nothing was filed. Try again in a moment.` })
+        ? { ok: true, msg: `Filed to ${picked.name}'s record in ${pmsLabel(pms)}.` }
+        : { ok: false, msg: d.error || `${pmsLabel(pms)} refused the note — nothing was filed. Try again in a moment.` })
     } catch {
       // A dropped/timed-out request leaves the outcome UNKNOWN — the write may
       // well have landed. Claiming "nothing was filed" here and inviting a
@@ -198,7 +206,7 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
       setResult({
         ok: false,
         unknown: true,
-        msg: `The connection to ${pms} dropped before we got an answer, so we can't confirm whether the note was filed. Check ${picked.name}'s record in ${pms} before filing again — a second attempt would create a duplicate note.`,
+        msg: `The connection to ${pmsLabel(pms)} dropped before we got an answer, so we can't confirm whether the note was filed. Check ${picked.name}'s record in ${pmsLabel(pms)} before filing again — a second attempt would create a duplicate note.`,
       })
     } finally {
       setBusy(false)

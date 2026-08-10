@@ -628,7 +628,8 @@ function groupApiPatients(list: ApiPatient[]): ApiPatient[] {
 /**
  * STATUS DERIVATION (a flare must NEVER display as clean):
  *  - symptomDelta = explicit symptomDelta, else peakSymptom − preSymptom.
- *  - 'flare'   when symptomDelta ≥ 2 (SESSION_STOP_RISE) OR eventType is
+ *  - 'flare'   when symptomDelta EXCEEDS 2 (SESSION_STOP_RISE; a ≤2-pt rise
+ *              is tolerated — Amsterdam 2023) OR eventType is
  *              'symptom-stopped' OR nextDayFlare is true.
  *  - 'clean'   only when we HAVE a symptom delta and none of the above fired.
  *  - 'unknown' when no symptom data exists (old/partial rows) — rendered
@@ -652,7 +653,7 @@ function mapApiSession(s: ApiSession): Session {
   const overrodeStop = s.overrode_stop === true || s.overrodeStop === true
   const nextDayFlare = s.nextDayFlare === true
   const eventType = normEvent(s.eventType)
-  const flare = (symptomDelta != null && symptomDelta >= SESSION_STOP_RISE) || eventType === 'symptom-stopped' || nextDayFlare
+  const flare = (symptomDelta != null && symptomDelta > SESSION_STOP_RISE) || eventType === 'symptom-stopped' || nextDayFlare
   const status: Session['status'] = flare ? 'flare' : symptomDelta != null ? 'clean' : 'unknown'
 
   let timeInBandPct = num(s.timeInBandPct) ?? num(s.inBandPct)
@@ -859,6 +860,8 @@ export default function ClinicalHubPage() {
   // Opens on the delivered-dose case: prescribed-is-not-performed is the beat
   // the demo is built around, so it should be on screen before anyone clicks.
   const [selectedId, setSelectedId] = useState('c-adherence')
+  // Session history is capped at the 6 most recent; a full episode expands.
+  const [showAllSessions, setShowAllSessions] = useState(false)
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [clinicCode, setClinicCode] = useState('')
@@ -1038,6 +1041,7 @@ export default function ClinicalHubPage() {
     }
     setRoster((r) => [next, ...r])
     setSelectedId(id)
+    setShowAllSessions(false)
     setAddOpen(false)
   }
 
@@ -1219,9 +1223,11 @@ export default function ClinicalHubPage() {
                       )}
                     </div>
                     {/* Render only what we actually know — no zeroed placeholders */}
+                    {/* The name line already carries age, sex and sport —
+                        repeating them here was the first thing a reader saw
+                        twice. This line holds only what the name doesn't. */}
                     <p className="text-sm text-muted-foreground">
-                      {[p.age != null ? `${p.age} yrs` : null, p.sport ?? null].filter(Boolean).join(' · ')}
-                      {(p.age != null || p.sport) ? ' · ' : ''}clinic code <span className="font-mono text-foreground">{p.code}</span>
+                      clinic code <span className="font-mono text-foreground">{p.code}</span>
                     </p>
                     {(p.injuryDate || p.daysPost != null || p.lastActivity) && (
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
@@ -1288,13 +1294,20 @@ export default function ClinicalHubPage() {
               )}
               {/* REVIEW — flare / symptom-stopped / overrode stop / next-day flare / aborted test */}
               {selAtt?.level === 'review' && !selAcked && selAckKey && (
-                <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
-                  <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-amber-800 leading-relaxed flex-1">{selAtt.reason}</p>
-                  <button onClick={() => markReviewed(selAckKey, p, selAtt)}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-100 transition flex-shrink-0">
-                    Mark reviewed
-                  </button>
+                <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-amber-800 leading-relaxed">{selAtt.reason}</p>
+                      {p.flag && !p.clearanceReady && (
+                        <p className="text-xs text-amber-800/90 leading-relaxed mt-1">{p.flag}</p>
+                      )}
+                    </div>
+                    <button onClick={() => markReviewed(selAckKey, p, selAtt)}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-100 transition flex-shrink-0">
+                      Mark reviewed
+                    </button>
+                  </div>
                 </div>
               )}
               {selAtt && selAcked && (
@@ -1324,7 +1337,7 @@ export default function ClinicalHubPage() {
                 </div>
               )}
 
-              {p.flag && !p.clearanceReady && (
+              {p.flag && !p.clearanceReady && !(selAtt?.level === 'review' && !selAcked && selAckKey) && (
                 <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
                   <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-amber-800 leading-relaxed">{p.flag}</p>
@@ -1428,7 +1441,13 @@ export default function ClinicalHubPage() {
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {p.sessions.map((s, i) => <SessionRow key={i} s={s} />)}
+                    {(showAllSessions ? p.sessions : p.sessions.slice(0, 6)).map((s, i) => <SessionRow key={i} s={s} />)}
+                    {p.sessions.length > 6 && (
+                      <button type="button" onClick={() => setShowAllSessions((v) => !v)}
+                        className="w-full text-center text-xs font-semibold text-[var(--accent)] py-2 rounded-lg hover:bg-[var(--accent)]/5 transition">
+                        {showAllSessions ? 'Show recent only' : `Show all ${p.sessions.length} sessions`}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -1477,8 +1496,14 @@ function RosterCard({ pt, att, acked, active, onSelect }: {
   active: boolean
   onSelect: () => void
 }) {
-  const meta = [pt.age != null ? String(pt.age) : null, pt.sport ?? null].filter(Boolean).join(' · ')
+  // The de-identified name already reads "R.K. — 31F, recreational netball";
+  // repeating "31 · Netball" under it was pure noise. The second line now says
+  // what the name can't: activity.
   const last = daysAgo(pt.lastActivity)
+  const meta = [
+    pt.sessions.length ? `${pt.sessions.length} session${pt.sessions.length === 1 ? '' : 's'}` : null,
+    last != null ? (last === 0 ? 'active today' : `last ${last}d ago`) : null,
+  ].filter(Boolean).join(' · ')
   return (
     <button onClick={onSelect}
       className={`w-full text-left glass-premium rounded-2xl p-4 transition group ${active ? 'ring-2 ring-[var(--accent)]/40' : 'hover:-translate-y-0.5'}`}>
@@ -1489,7 +1514,7 @@ function RosterCard({ pt, att, acked, active, onSelect }: {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground truncate">{pt.name}</p>
           <p className="text-xs text-muted-foreground truncate">
-            {meta || `${pt.sessions.length} session${pt.sessions.length === 1 ? '' : 's'}`}
+            {meta || 'no sessions yet'}
           </p>
         </div>
         {att && !acked
@@ -1548,7 +1573,7 @@ function SessionRow({ s }: { s: Session }) {
         <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotCls}`} />
         <p className="text-xs font-medium text-foreground w-14 flex-shrink-0">{s.date}</p>
         <p className="text-xs text-muted-foreground flex-1">{bits || 'no data recorded'}</p>
-        <span className={`text-[11px] font-semibold ${s.symptomDelta != null && s.symptomDelta >= SESSION_STOP_RISE ? 'text-amber-600' : s.symptomDelta == null ? 'text-muted-foreground/60' : 'text-[var(--accent)]'}`}>
+        <span className={`text-[11px] font-semibold ${s.symptomDelta != null && s.symptomDelta > SESSION_STOP_RISE ? 'text-amber-600' : s.symptomDelta == null ? 'text-muted-foreground/60' : 'text-[var(--accent)]'}`}>
           {s.symptomDelta == null ? 'Δ —' : s.symptomDelta === 0 ? 'no Δ' : s.symptomDelta > 0 ? `+${s.symptomDelta}` : `${s.symptomDelta}`}
         </span>
       </div>

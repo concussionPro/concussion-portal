@@ -10,7 +10,7 @@ import { ClinicProfileCard } from '@/components/clinical/ClinicProfileCard'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes, CpdRingVisual } from '@/components/clinical/InstrumentVisuals'
 import { TrackedOutbound } from '@/components/TrackedOutbound'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
-import { Lock, ArrowRight } from 'lucide-react'
+import { Lock, ArrowRight, LayoutDashboard, ArrowUpRight } from 'lucide-react'
 import { CONFIG, SST_TIER_FROM_AUD, SST_TIERS, sstTierAllowance } from '@/lib/config'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
@@ -86,12 +86,15 @@ function Shell() {
   // (2026-08-05 crawl #1). SstClinicCard lifts the code up the moment it
   // provisions, so the card appears without a reload.
   const [clinicCode, setClinicCode] = useState<string | null | undefined>(undefined)
+  const [clinicViewKey, setClinicViewKey] = useState<string | null>(null)
   useEffect(() => {
     void fetch('/api/clinical-testing/clinic', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const c = d?.clinic?.code
         setClinicCode(typeof c === 'string' && c.trim() ? c : null)
+        const k = d?.clinic?.viewKey
+        setClinicViewKey(typeof k === 'string' && k ? k : null)
       })
       .catch(() => setClinicCode(null))
   }, [])
@@ -242,6 +245,35 @@ function Shell() {
             </p>
           </div>
 
+          {/* THE CLINICAL HUB — the live patient roster. It used to be
+              reachable only through a button inside the SST setup rail, which
+              is collapsed by default in the demo — so the single surface that
+              shows every patient, their measured threshold, band and
+              trajectory was invisible from the dash (owner, 2026-08-11). */}
+          {clinicCode && (
+            <a
+              href={`/clinical-hub?clinic=${encodeURIComponent(clinicCode)}${clinicViewKey ? `&k=${encodeURIComponent(clinicViewKey)}` : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-accent/30 bg-white px-5 py-4 no-underline shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <LayoutDashboard className="h-5 w-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[15px] font-bold text-slate-900">Clinical Hub — your patient roster</span>
+                  <span className="block text-[12.5px] text-slate-500">
+                    Every patient on your code: measured threshold, training band, session history and the live trajectory.
+                  </span>
+                </span>
+              </div>
+              <span className="inline-flex flex-none items-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white">
+                Open the hub <ArrowUpRight className="h-3.5 w-3.5" />
+              </span>
+            </a>
+          )}
+
           {/* the tools, side by side, each its own baked-in portal */}
           <div className={`mb-5 grid grid-cols-1 gap-5 ${CONFIG.FEATURES.CPD_TRACKER_LIVE ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
             <InstrumentTile
@@ -304,7 +336,7 @@ function Shell() {
                 <div className="flex flex-col items-start justify-center gap-2.5 p-5 bg-teal-50/60">
                   <p className="m-0 text-[13px] font-bold leading-snug text-slate-900">
                     Next: a 30-minute scoping call, then full onboarding — team trained and certificated,
-                    instruments live on your clinic code, Gensolve connected.
+                    instruments live on your clinic code, your PMS connected (Cliniko live; Gensolve for NZ).
                   </p>
                   <TrackedOutbound
                     href="https://cal.com/zac-lewis-so8zjs/30min"

@@ -30,7 +30,7 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
 
   const load = useCallback(() => {
     if (demo) {
-      setStatus({ connected: true, kind: 'gensolve', health: 'ok' })
+      setStatus({ connected: true, kind: 'cliniko', health: 'ok' })
       return
     }
     void fetch(`/api/sst/pms/connection?${auth}`)
