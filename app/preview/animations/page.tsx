@@ -155,8 +155,25 @@ export default function AnimationReviewPage() {
           </p>
         </header>
 
+        <nav aria-label="Jump to an animation" className="flex flex-wrap gap-1.5">
+          {ITEMS.map(({ id, live }) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className={[
+                'rounded-lg px-2.5 py-1.5 text-[11.5px] font-bold no-underline transition-colors',
+                live
+                  ? 'bg-[#dff0e6] text-[#1d6b3f] hover:bg-[#cbe7d6]'
+                  : 'bg-white text-[#4a6a6e] ring-1 ring-[#dcebeb] hover:ring-[#0d7377]',
+              ].join(' ')}
+            >
+              {id}
+            </a>
+          ))}
+        </nav>
+
         {ITEMS.map(({ id, Component, placements, status, live, rationale }) => (
-          <section key={id} className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#dcebeb]">
+          <section id={id} key={id} className="scroll-mt-6 flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#dcebeb]">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <code className="rounded bg-[#eef6f6] px-1.5 py-0.5 text-[12.5px] font-bold text-[#0d7377]">
                 {id}

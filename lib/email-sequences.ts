@@ -1752,6 +1752,7 @@ export const QUARTERLY_PRACTICAL_BLAST = {
       <strong>Melbourne &mdash; Saturday 31 October</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
       SCAT6 and VOMS, phenotype rehab, and a graded exertion test run on a real person.
     </div>
+    <p>You are hearing this before it goes public &mdash; the ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places are open to this list first.</p>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take the Melbourne seat &mdash; A$${CONFIG.COURSE.PRICE_EARLY_BIRD}</a></center>
     <p><strong>Melbourne doesn&rsquo;t work?</strong> One click and I&rsquo;ll hold you a place on the November day you want. Dates are set once I have the numbers.</p>
     <center>
