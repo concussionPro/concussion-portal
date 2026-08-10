@@ -1709,11 +1709,19 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
  * somewhere reachable; that bet is why people register instead of buying. The
  * guarantee removes it, so the metric is online sales, not seats.
  *
- * THREE EXITS, RANKED BY COMMITMENT — deliberately in this order:
+ * TWO EXITS, both paid, in this order:
  *   1. the dated room (highest intent, real scarcity)
  *   2. start online (the conversion that actually matters)
- *   3. tell us where you are (last, and only after declining two paid options,
- *      which is what makes it a qualified signal rather than a free click)
+ *
+ * There is deliberately no "register interest" or "vote for a city" exit. A
+ * free click absorbs people who would otherwise have had to choose, and the
+ * whole point of the restructure is to stop collecting rows instead of buyers.
+ *
+ * THREE DATES IN ONE QUARTER is a materially stronger promise than quarterly
+ * rotation: it turns "wait up to a year for your city" into "three chances in
+ * ten weeks", which is what actually makes the online purchase safe. Only
+ * Melbourne is named, because only Melbourne is confirmed — naming the other
+ * two before they exist is how the previous model lost trust.
  *
  * Every figure derives from CONFIG. A literal price or CPD number here is how
  * "14 CPD hours" survived the 2026-07-30 re-rate into live sends.
@@ -1729,19 +1737,18 @@ export const QUARTERLY_PRACTICAL_BLAST = {
   template: (name: string, registered: boolean, bookLink: string, onlineLink: string) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
     <p>${registered
-      ? 'You registered interest in the concussion practical training &mdash; here&rsquo;s the update, and it&rsquo;s a structural one.'
-      : 'A structural change to how the concussion practical training runs, in case it&rsquo;s useful.'}</p>
-    <p><strong>Practical days now run every quarter, guaranteed, rotating nationally.</strong> No more waiting for your city to reach a number. A date runs each quarter; the city follows demand.</p>
+      ? 'You registered interest in the concussion practical training.'
+      : 'A change to how the concussion practical training runs, in case it&rsquo;s useful.'}</p>
+    <p><strong>Three practical days run this quarter.</strong> No more waiting for your city to reach a number &mdash; the dates run, and they are placed where the most people are waiting.</p>
     <div class="callout">
       <strong>Melbourne &mdash; Saturday 31 October</strong><br>
       ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places. A full practical day: SCAT6 and VOMS assessment, phenotype-based rehab, and running a graded exertion test on a real person until you find their threshold.
     </div>
-    <p><strong>1. Take the Melbourne seat.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together.</p>
+    <p><strong>Take the Melbourne seat.</strong> A$${CONFIG.COURSE.PRICE_EARLY_BIRD} &mdash; the online course and the practical day together.</p>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Secure my seat &mdash; 31 October</a></center>
-    <p><strong>2. Start online today, in the next five minutes.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. Upgrade to any future quarterly practical for the difference, at the early-bird rate, whenever suits. <strong>Your upgrade never expires.</strong></p>
+    <p><strong>Or start online today, in the next five minutes.</strong> A$${CONFIG.COURSE.PRICE_ONLINE} for the ${CONFIG.COURSE.TOTAL_MODULES} modules &mdash; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day. Upgrade to any future quarterly practical for the difference, at the early-bird rate, whenever suits. <strong>Your upgrade never expires.</strong></p>
     <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online now</a></center>
-    <p><strong>3. Melbourne doesn&rsquo;t suit?</strong> Reply with your city. The next quarter&rsquo;s location is announced at the Osteopathy Australia conference in October, and it lands where the most people are waiting.</p>
-    <p>Endorsed by Osteopathy Australia. There&rsquo;s a separate ESSA-accredited stream for exercise physiologists.</p>
+    <p>Melbourne is the first of the three and it is open now. If it doesn&rsquo;t suit, start online and put your upgrade against either of the other two &mdash; both land inside this quarter.</p>
     <div class="sig">Zac</div>
   `),
 }
