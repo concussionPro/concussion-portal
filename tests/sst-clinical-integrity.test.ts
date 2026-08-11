@@ -388,6 +388,21 @@ describe('the watch mirrors the web protocol constants', () => {
     expect(Number(borg![1])).toBe(BORG_MAX)
   })
 
+  it('the watch stop rule uses the SAME comparator as the web, not just the same number', () => {
+    // 2026-08-12: the web moved to "stop when the rise EXCEEDS 2" (Amsterdam
+    // 2023) and the watch silently kept ">= 2" — this suite passed because it
+    // compared the CONSTANTS. Same number, different comparator, different
+    // clinical behaviour. Assert the comparator itself.
+    const proto = read('SSTProtocol.swift')
+    const training = read('TrainingSession.swift')
+    expect(proto).toMatch(/\(peakSymptom - preSymptom\)\s*>\s*SSTProtocol\.sessionStopRise/)
+    expect(proto).not.toMatch(/\(peakSymptom - preSymptom\)\s*>=\s*SSTProtocol\.sessionStopRise/)
+    expect(training).toMatch(/\(v - preSymptom\)\s*>\s*SSTProtocol\.sessionStopRise/)
+    expect(training).not.toMatch(/\(v - preSymptom\)\s*>=\s*SSTProtocol\.sessionStopRise/)
+    // endFeel "worse" must map to a peak that IS a flare under the > rule.
+    expect(training).toMatch(/preSymptom \+ SSTProtocol\.sessionStopRise \+ 1/)
+  })
+
   it('the watch Borg picker is NOT pre-seeded at the exhaustion endpoint', () => {
     const swift = read('GradedTest.swift')
     const seed = swift.match(/@State private var exhaustionRPE\s*=\s*(\d+)/)

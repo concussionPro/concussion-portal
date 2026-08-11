@@ -21,7 +21,7 @@ type PmsStatus = {
   message?: string | null
 }
 
-export function PmsConnect({ code, viewKey, demo = false }: { code: string; viewKey: string; demo?: boolean }) {
+export function PmsConnect({ code, viewKey, demo = false, onStatusChange }: { code: string; viewKey: string; demo?: boolean; onStatusChange?: (connected: boolean) => void }) {
   const [status, setStatus] = useState<PmsStatus | null>(null)
   const [kind, setKind] = useState<'cliniko' | 'gensolve' | 'nookal'>('cliniko')
   const [apiKey, setApiKey] = useState('')
@@ -37,14 +37,20 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
     }
     void fetch(`/api/sst/pms/connection?${auth}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setStatus({
-        connected: !!d.connected,
-        kind: d.kind,
-        health: d.health ?? null,
-        needsAttention: d.needsAttention === true,
-        message: typeof d.message === 'string' ? d.message : null,
-      }))
+      .then((d) => {
+        if (!d) return
+        setStatus({
+          connected: !!d.connected,
+          kind: d.kind,
+          health: d.health ?? null,
+          needsAttention: d.needsAttention === true,
+          message: typeof d.message === 'string' ? d.message : null,
+        })
+        // Lets the parent card show/hide its big "connect your PMS" setup step.
+        onStatusChange?.(!!d.connected)
+      })
       .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth, demo])
   useEffect(load, [load])
 
@@ -103,7 +109,7 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
   }
 
   return (
-    <div className="mt-5 border-t border-slate-100 pt-4">
+    <div id="pms-connect" className="mt-5 scroll-mt-24 border-t border-slate-100 pt-4">
       <div className="flex items-center gap-2 mb-1">
         <Plug className="w-4 h-4 text-teal-600" />
         <p className="text-xs font-bold text-foreground m-0">Connect your practice software</p>

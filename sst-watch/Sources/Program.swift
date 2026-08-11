@@ -28,7 +28,7 @@ struct ProgramView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         row("timer", "\(p.minutes) minutes a session — the watch times it and ends it for you")
                         row("calendar", "\(SSTProtocol.sessionsPerWeek) days a week, easy cardio (walk, bike, jog)")
-                        row("waveform.path.ecg", "Feel worse during a session? Tap Symptoms — a rise of \(SSTProtocol.sessionStopRise)+ stops it safely")
+                        row("waveform.path.ecg", "Feel worse during a session? Tap Symptoms — a rise of more than \(SSTProtocol.sessionStopRise) stops it safely")
                         row("arrow.up.circle", "\(SSTProtocol.cleanNeeded) clean tracked sessions in a row step your band up")
                         row("arrow.clockwise", "At your ceiling (\(p.hrt) bpm) the app asks for a re-test — that's progress, not a setback")
                         row("exclamationmark.triangle", "Warning signs? Stop and get checked before training again")

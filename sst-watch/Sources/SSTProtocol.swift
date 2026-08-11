@@ -16,7 +16,7 @@ enum SSTProtocol {
 
     // Symptom rules
     static let provocationRise = 3   // graded-test HRt = first stage with a ≥3-pt rise over rest
-    static let sessionStopRise = 2   // within-session: ≥2-pt rise → stop
+    static let sessionStopRise = 2   // max ACCEPTABLE rise — stop when EXCEEDED (>2; Amsterdam 2023 tolerates ≤2)
     static let maxRestingToTest = 8  // resting symptoms ≥8/10 → don't test today
     // The OTHER validated BCTT termination criterion: volitional exhaustion.
     // The manual phrases it as RPE > 17; the applied rule on every surface is
@@ -248,7 +248,7 @@ struct SessionLog: Codable {
     var verified: Bool
     var nextDayFlare: Bool = false
     /// A flare = within-session provocation OR a next-day flare.
-    var flare: Bool { (peakSymptom - preSymptom) >= SSTProtocol.sessionStopRise || nextDayFlare }
+    var flare: Bool { (peakSymptom - preSymptom) > SSTProtocol.sessionStopRise || nextDayFlare }
 }
 
 enum ProgressionDecision: Equatable {

@@ -137,7 +137,7 @@ struct TrainingSessionView: View {
                 CrownScorePicker(title: "Symptoms now", value: $symptomNow, descriptor: symptomWord, accentFor: symptomSeverityColor)
                     .onChange(of: symptomNow) { _, v in
                         peakSymptom = max(peakSymptom, v)
-                        if (v - preSymptom) >= SSTProtocol.sessionStopRise {
+                        if (v - preSymptom) > SSTProtocol.sessionStopRise {
                             Haptics.play(.failure)
                             endSession(stoppedForSymptom: true)
                         }
@@ -269,7 +269,7 @@ struct TrainingSessionView: View {
         // "Worse" is a global post-session worsening → ensure it registers as a
         // flare so progression treats it honestly (see divergence notes).
         var peak = peakSymptom
-        if feeling == .worse { peak = max(peak, preSymptom + SSTProtocol.sessionStopRise) }
+        if feeling == .worse { peak = max(peak, preSymptom + SSTProtocol.sessionStopRise + 1) }
 
         // Dropout seconds produce NO readings, so session verification must
         // also require the readings to COVER the session — otherwise a mostly

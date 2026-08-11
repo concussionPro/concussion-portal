@@ -90,6 +90,8 @@ export function SstClinicCard({
   const [inviteState, setInviteState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [inviteError, setInviteError] = useState('')
   const [billingBusy, setBillingBusy] = useState(false)
+  // null until PmsConnect reports; false drives the big connect setup step.
+  const [pmsConnected, setPmsConnected] = useState<boolean | null>(null)
   // ?subscribed=1 = back from Stripe checkout; the webhook may lag the
   // redirect by a few seconds — show an activating state instead of trial
   // CTAs, and refetch shortly (2026-08-05 sweep #11).
@@ -281,15 +283,32 @@ export function SstClinicCard({
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
                 Free trial · {usage.patientCount} of {usage.cap} patients used
               </span>
-              {/* Never offer a SECOND checkout to someone who just paid and is
-                  waiting on the webhook — /api/sst/subscribe only 409s once the
-                  plan actually flips, so this button is the double-bill path
-                  while activation is stalled. They get the manual route instead. */}
-              {!usage.canAddPatient && !justSubscribed && (
-                <Link href="/clinical-testing/subscribe" className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-white hover:bg-accent/90">
-                  Subscribe to add more →
-                </Link>
-              )}
+            </div>
+          )}
+          {/* TRIAL FULL = a LOCK, stated like one (owner, 2026-08-12: "ensure
+              the 3 patient trial locks their use until they upgrade"). The
+              server already refuses admission #4 with a 402; this banner makes
+              that state impossible to miss instead of a small pill + small
+              button. Existing patients continue — pausing mid-episode care
+              over billing is clinically wrong and stays out of the design.
+              Never rendered while a fresh payment is activating (double-bill
+              guard unchanged). */}
+          {usage?.plan === 'trial' && usage.cap != null && !usage.canAddPatient && !justSubscribed && (
+            <div className="mt-3 rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
+              <p className="m-0 text-[13.5px] font-bold text-amber-900">
+                Trial full — {usage.patientCount} of {usage.cap} free patients used. New patients are
+                paused until you subscribe.
+              </p>
+              <p className="mt-1 mb-0 text-[12px] leading-snug text-amber-800">
+                A new patient entering your clinic code will be told to ask your clinic to activate
+                their spot. Your existing patients are unaffected and keep training.
+              </p>
+              <Link
+                href="/clinical-testing/subscribe"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-accent px-5 py-2.5 text-[13px] font-bold text-white hover:bg-accent/90"
+              >
+                Subscribe — unlock unlimited practitioners &amp; more patients →
+              </Link>
             </div>
           )}
           {usage?.plan === 'active' && (
@@ -343,6 +362,35 @@ export function SstClinicCard({
               upgrade" was invisible (2026-08-05 crawl #4). */}
           {error && (
             <p className="mt-2 max-w-md text-[11.5px] font-semibold leading-snug text-amber-800">{error}</p>
+          )}
+          {/* SETUP STEP — connect the PMS (owner, 2026-08-12: "big obvious
+              button on initial setup"). Rendered only while PmsConnect has
+              reported NO connection (null = still loading → no flash); the
+              demo's connection is a fixture, so it never shows there. Anchors
+              to the full connect card lower in this panel. */}
+          {clinic && !isDemoClinic && pmsConnected === false && (
+            <a
+              href="#pms-connect"
+              className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-accent/40 bg-accent/[0.04] p-4 transition hover:border-accent"
+            >
+              <span className="flex min-w-0 flex-col gap-1">
+                <span className="text-[13.5px] font-bold text-foreground">Connect your practice software</span>
+                <span className="text-[12px] text-muted-foreground">
+                  One API key — reports file straight into your patients&rsquo; records.
+                </span>
+                <span className="mt-1.5 flex items-center gap-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logos/pms/cliniko.svg" alt="Cliniko" className="h-4 w-auto" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logos/pms/nookal.png" alt="Nookal" className="h-[10px] w-auto" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logos/pms/gensolve.png" alt="Gensolve" className="h-[15px] w-auto" />
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-5 py-2.5 text-[13px] font-bold text-white">
+                Connect now <ArrowRight className="h-4 w-4" />
+              </span>
+            </a>
           )}
           <SstTeamSection demo={isDemoClinic} />
         </div>
@@ -456,7 +504,7 @@ export function SstClinicCard({
       </div>
 
       {/* PMS plugin — connect the clinic's own Cliniko/Nookal/Gensolve tenant */}
-      {clinic && <PmsConnect code={clinic.code} viewKey={clinic.viewKey} demo={isDemoClinic} />}
+      {clinic && <PmsConnect code={clinic.code} viewKey={clinic.viewKey} demo={isDemoClinic} onStatusChange={setPmsConnected} />}
 
       {/* email the link straight to a patient */}
       <div className="mt-5 border-t border-slate-100 pt-4">
