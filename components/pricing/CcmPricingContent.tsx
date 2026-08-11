@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import {
   AlertCircle,
   ChevronDown,
@@ -498,33 +499,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
 
 
 
-        {/* Live workshop training photo — visual proof of the in-person
-            component before pricing. Research: photos of the actual product
-            being delivered convert higher than stock imagery, especially
-            for healthcare CPD where buyers want certainty the experience
-            is real. Caption ties to "what you get" value prop. */}
-        <div id="workshop-photo" className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
-          <Image
-            src="/workshop-training.jpg"
-            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
-            width={1200}
-            height={675}
-            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
-            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Live workshop training</p>
-            <h3 className="text-base sm:text-xl font-bold leading-tight">
-              Cranial nerve exam, VOMS interpretation, phenotype-driven rehab — hands-on.
-            </h3>
-            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
-              Workshop day: advanced clinical skill on real subjects with expert feedback. Cervical assessment, cranial nerve, VOMS, then designing phenotype-specific rehab protocols.
-            </p>
-          </div>
-        </div>
-
-        {/* Clinic-owner early signal — high-ROI traffic. Surfaces the team
+                {/* Clinic-owner early signal — high-ROI traffic. Surfaces the team
             inquiry path before they bounce on individual sticker shock. */}
         <div className="text-center mb-4">
           <a
@@ -605,6 +580,14 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             </div>
           </div>
         </div>
+
+        {/* The practical day — under the title, above the cards (owner
+            2026-08-10/11). MUST be a direct child of .stream-body: the
+            /pricing embed orders children by id, and nested inside the hero it
+            is display:none'd by the nth-child hider — which is exactly how it
+            vanished from the CCM tab. Shared component; see PracticalDayPhoto. */}
+        <PracticalDayPhoto />
+
 
 
         {/* Compare Plans — analytical decision support IMMEDIATELY after

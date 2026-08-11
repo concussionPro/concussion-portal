@@ -23,6 +23,7 @@ import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import CrmCheckoutButton from '@/components/crm/CrmCheckoutButton'
+import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { createFAQSchema } from '@/lib/schema-markup'
@@ -425,6 +426,10 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           </p>
         </div>
 
+
+        {/* The practical day — under the title (owner 2026-08-11). Shared. */}
+        <PracticalDayPhoto />
+
         {/* Value intro + instruments — MOVED directly under the hero (2026-07-27,
             Zac: "sst trainer is buried. it is a huge part of their training").
             The platform is the practical-relevance proof, and clinician research
@@ -527,28 +532,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
         </div>
         )}
 
-        {/* Live workshop training photo — visual proof of the in-person day */}
-        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
-          <Image
-            src="/workshop-training.jpg"
-            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
-            width={1200}
-            height={675}
-            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
-            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">The practical day</p>
-            <h3 className="text-base sm:text-xl font-bold leading-tight">
-              Assess &rarr; prescribe, supervised &mdash; the same full-day workshop every clinician takes.
-            </h3>
-            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
-              SCAT6, VOMS, BESS and cervicogenic assessment on real subjects with expert feedback, then turning each screen into an in-scope exercise prescription. OSCE-assessed competency.
-            </p>
-          </div>
-        </div>
-
+        
         {/* Employer-reimbursement callout */}
         <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
           <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
