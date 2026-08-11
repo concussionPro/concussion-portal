@@ -13,7 +13,6 @@ import { UserPlus, X } from 'lucide-react'
  */
 interface Member { id: string; name: string; email: string | null }
 
-const TIER_NAMES: Record<string, string> = { single: 'Starter', clinic: 'Clinic', enterprise: 'Unlimited' }
 
 export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   const [members, setMembers] = useState<Member[]>([])
@@ -117,17 +116,12 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       <div className="flex items-center justify-between gap-3 mb-2.5">
         <p className="text-[12px] font-bold text-foreground">Practitioners</p>
         <span className="text-[11px] font-semibold text-muted-foreground">
-          {seats.allowance === null
-            ? `${seats.used} practitioner${seats.used === 1 ? '' : 's'} · unlimited on every plan`
-            : `${seats.used} practitioner${seats.used === 1 ? '' : 's'} · trial`}
-          {/* only a KNOWN tier name gets the suffix — null/trial render nothing */}
-          {seats.tier && TIER_NAMES[seats.tier] ? ` · ${TIER_NAMES[seats.tier]} plan` : null}
+          {seats.allowance === null ? `${seats.used} · unlimited` : `${seats.used} · trial`}
         </span>
       </div>
       <ul className="space-y-1.5">
         <li className="flex items-center justify-between text-[12.5px] text-slate-700">
           <span className="font-medium">{seats.isOwner ? 'You (clinic owner)' : 'Clinic owner'}</span>
-          <span className="text-[11px] text-muted-foreground">owner</span>
         </li>
         {members.map((m) => (
           <li key={m.id} className="flex items-center justify-between text-[12.5px] text-slate-700">
