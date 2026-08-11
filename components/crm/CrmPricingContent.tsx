@@ -428,7 +428,7 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
 
 
         {/* The practical day — under the title (owner 2026-08-11). Shared. */}
-        <PracticalDayPhoto />
+        <PracticalDayPhoto stream="crm" />
 
         {/* Value intro + instruments — MOVED directly under the hero (2026-07-27,
             Zac: "sst trainer is buried. it is a huge part of their training").

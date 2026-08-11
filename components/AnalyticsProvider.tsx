@@ -84,6 +84,11 @@ async function sendEvent(
   search: string | null
 ): Promise<void> {
   if (typeof window === 'undefined') return;
+  // Automation + localhost guard — local builds run against the PRODUCTION
+  // database, so every local verification pass wrote real page_views (31 of 89
+  // /sst-trainer sessions in 30d were ::1). Same rule as lib/analytics.
+  if ((navigator as { webdriver?: boolean }).webdriver) return;
+  if (/^(localhost|127\.|\[?::1)/.test(location.hostname)) return;
 
   const sessionId = getOrCreateSessionId();
 

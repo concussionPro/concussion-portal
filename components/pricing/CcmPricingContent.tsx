@@ -586,7 +586,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             /pricing embed orders children by id, and nested inside the hero it
             is display:none'd by the nth-child hider — which is exactly how it
             vanished from the CCM tab. Shared component; see PracticalDayPhoto. */}
-        <PracticalDayPhoto />
+        <PracticalDayPhoto stream="ccm" />
 
 
 

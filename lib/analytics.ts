@@ -250,10 +250,27 @@ export function getVisitorContext(): Record<string, unknown> {
   }
 }
 
+/**
+ * True for traffic that must never reach the analytics store:
+ *  - localhost / 127.x — local builds run against the PRODUCTION database
+ *    (.env.local), so every local verification pass was writing real rows.
+ *    Measured 2026-08-11: 31 of 89 /sst-trainer sessions in 30d were ::1.
+ *  - navigator.webdriver — Playwright/Selenium; modern headless ships a plain
+ *    Chrome UA, so the UA can't be used to filter this after the fact.
+ */
+function isAutomation(): boolean {
+  try {
+    if (typeof navigator !== 'undefined' && (navigator as { webdriver?: boolean }).webdriver) return true
+    if (typeof location !== 'undefined' && /^(localhost|127\.|\[?::1)/.test(location.hostname)) return true
+  } catch { /* SSR */ }
+  return false
+}
+
 export async function trackEvent(
   eventType: string,
   eventData: Record<string, unknown> = {}
 ): Promise<void> {
+  if (isAutomation()) return
   try {
     // Session id first — getVisitNumber() keys off its value, not its absence.
     const sessionId = getOrCreateSessionId()
