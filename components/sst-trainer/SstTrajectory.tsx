@@ -134,10 +134,10 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
   // Chart geometry — a labelled instrument, not floating dots: value labels
   // above each point, dates on the x-axis, bpm gridlines, soft area fill.
   const W = 560
-  const H = 150
+  const H = 176
   const padL = 34
   const padR = 16
-  const padT = 22
+  const padT = 24
   const padB = 26
   const innerW = W - padL - padR
   const innerH = H - padT - padB
@@ -168,11 +168,10 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
           <ShieldCheck className="w-3 h-3" /> paired sensor · clinician-gated
         </span>
       </div>
-      {/* SPEC 2 — a trend to interpret, NOT a recovery verdict */}
-      <p className="text-[11px] text-muted-foreground leading-snug mb-4">
-        Serial <strong>measured</strong> HRt — not a symptom score and not a recovery verdict. A rising threshold
-        suggests improving exercise tolerance; interpret with your clinical judgment.
-      </p>
+      {/* SPEC 2 (a trend to interpret, NOT a recovery verdict) now rides in the
+          footnote under the chart — as a lead paragraph it was the third
+          integrity statement before any data (2026-08-11 design pass). */}
+      <div className="mb-3" />
 
       {retestDue && (
         <div className="mb-4 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-2">
@@ -225,11 +224,15 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
             })}
           </svg>
 
-          {/* provenance summary — one line; the per-point detail now lives ON
-              the chart, so a row-per-point ledger would just repeat it */}
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            {plottable.length} graded test{plottable.length === 1 ? '' : 's'} plotted — all paired-sensor, clinician-gated
+          {/* provenance + SPEC 2 in one footnote — the per-point detail lives
+              ON the chart, and the trend-not-verdict framing belongs with the
+              data it qualifies, not above it */}
+          <div className="mt-2 flex items-start gap-1.5 text-[11px] text-muted-foreground">
+            <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0 mt-px text-emerald-600" />
+            <span>
+              {plottable.length} graded test{plottable.length === 1 ? '' : 's'} plotted — all paired-sensor,
+              clinician-gated. A measured trend to interpret with clinical judgment, not a recovery verdict.
+            </span>
           </div>
         </>
       )}

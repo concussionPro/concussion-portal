@@ -147,6 +147,22 @@ export function SstLivePanel({ code, viewKey }: { code: string; viewKey?: string
 
   if (!loaded && active.length === 0) return null
 
+  // IDLE = healthy poll, nobody training. This used to render the full panel —
+  // three lines of provenance language as the first thing on the page, with no
+  // readings for it to qualify (2026-08-11 design pass). Idle is one quiet
+  // line; the provenance paragraph returns with the data it qualifies.
+  if (active.length === 0 && conn === 'ok') {
+    return (
+      <div className="mb-6 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5">
+        <span className="relative inline-flex h-2 w-2 flex-none rounded-full bg-slate-300" />
+        <span className="text-xs font-bold text-slate-700">Live now</span>
+        <span className="truncate text-xs text-slate-500">
+          no active sessions — patients training with this clinic code appear here in real time
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 mb-6">
       <div className="flex items-center gap-2 mb-3">

@@ -1294,46 +1294,45 @@ export default function ClinicalHubPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
-                    Stage {p.stage.n} — {p.stage.label}
-                  </span>
-                  {/* Episode reports — the SKINNED report API (/api/sst/report),
-                      which until 2026-07-27 had NO real-clinic UI consumer: a
-                      genuine NZ supplier could not produce the ACC884 the /acc
-                      pitch sells without hand-crafting a URL ("shell of a
-                      product" — owner). Authorises via the same code+viewKey
-                      this hub carries; the server validates each skin against
-                      its jurisdiction. Real synced patients only. */}
-                  {/* Reports + PMS filing render on REAL synced patients AND on
-                      the DEMO00 fixtures — the demo dashboard is the pitch
-                      surface; hiding the product's best features from it was
-                      the mistake (owner, 2026-07-27). DEMO00's report API is
-                      keyless by design and the loader synthesises a coherent
-                      episode for any patient label. */}
-                  {((clinicCode !== '' && viewKey && p.id.startsWith('real-')) || isDemo) && (
-                    <>
-                      {([
-                        ['gp-report', 'GP report'],
-                        ['rtp-clearance', 'RTP data'],
-                        ['medicolegal', 'Clinical record'],
-                        ['acc884', 'ACC884 (NZ)'],
-                      ] as const).map(([skin, label]) => (
-                        <a
-                          key={skin}
-                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(labelOf(p))}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}${p.demoCase ? `&case=${p.demoCase}` : ''}${practisingAs ? `&clinician=${encodeURIComponent(practisingAs)}` : ''}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
-                        >
-                          <FileText className="w-3.5 h-3.5" /> {label} <ArrowUpRight className="w-3.5 h-3.5" />
-                        </a>
-                      ))}
-                      <PmsFileButton clinicCode={isDemo ? 'DEMO00' : clinicCode} viewKey={viewKey ?? ''} patientName={labelOf(p)} patientRef={refOf(p)} demo={isDemo} />
-                    </>
-                  )}
-                </div>
               </div>
+
+              {/* Documents — their own labelled row (2026-08-11 design pass:
+                  they shared a flex-wrap with the stage chip and wrapped
+                  raggedly, with "File to Cliniko" orphaned on its own line;
+                  the stage chip itself duplicated the Return-to-activity card
+                  directly below and is gone). */}
+              {/* Episode reports — the SKINNED report API (/api/sst/report),
+                  which until 2026-07-27 had NO real-clinic UI consumer.
+                  Authorises via the same code+viewKey this hub carries; the
+                  server validates each skin against its jurisdiction.
+                  Reports + PMS filing render on REAL synced patients AND on
+                  the DEMO00 fixtures — the demo dashboard is the pitch
+                  surface (owner, 2026-07-27); DEMO00's report API is keyless
+                  by design. */}
+              {((clinicCode !== '' && viewKey && p.id.startsWith('real-')) || isDemo) && (
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-black/[0.06] pt-3.5">
+                  <span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                    Documents
+                  </span>
+                  {([
+                    ['gp-report', 'GP report'],
+                    ['rtp-clearance', 'RTP data'],
+                    ['medicolegal', 'Clinical record'],
+                    ['acc884', 'ACC884 (NZ)'],
+                  ] as const).map(([skin, label]) => (
+                    <a
+                      key={skin}
+                      href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(labelOf(p))}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}${p.demoCase ? `&case=${p.demoCase}` : ''}${practisingAs ? `&clinician=${encodeURIComponent(practisingAs)}` : ''}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> {label} <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+                  ))}
+                  <PmsFileButton clinicCode={isDemo ? 'DEMO00' : clinicCode} viewKey={viewKey ?? ''} patientName={labelOf(p)} patientRef={refOf(p)} demo={isDemo} />
+                </div>
+              )}
 
               {/* URGENT — red-flag test event */}
               {selAtt?.level === 'urgent' && !selAcked && selAckKey && (
@@ -1635,7 +1634,13 @@ function SessionRow({ s }: { s: Session }) {
         <div className="flex items-center flex-wrap gap-1.5 mt-1.5 pl-5">
           {s.modality && <MiniChip tone="slate"><span className="capitalize">{s.modality}</span></MiniChip>}
           {s.timeInBandPct != null && <MiniChip tone="slate">{s.timeInBandPct}% in band</MiniChip>}
-          {verified && <MiniChip tone="emerald"><ShieldCheck className="w-3 h-3" /> Live HR verified</MiniChip>}
+          {/* shortened from "Live HR verified" — it repeats on nearly every
+              row, so the label carries the tier and the title the sentence */}
+          {verified && (
+            <span title="Live HR verified — live Bluetooth stream, ≥80% verified readings">
+              <MiniChip tone="emerald"><ShieldCheck className="w-3 h-3" /> live HR</MiniChip>
+            </span>
+          )}
           {s.deviceName && <MiniChip tone="slate">{s.deviceName}</MiniChip>}
           {s.eventType === 'symptom-stopped' && <MiniChip tone="amber">stopped on symptoms</MiniChip>}
           {s.eventType === 'abandoned' && <MiniChip tone="slate">abandoned</MiniChip>}

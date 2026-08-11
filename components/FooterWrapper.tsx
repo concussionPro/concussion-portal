@@ -73,7 +73,10 @@ const PUBLIC_ROUTES = [
   '/clinical-suite',
   '/team-training',
   '/clinics',
-  '/clinical-hub',
+  // '/clinical-hub' deliberately ABSENT (2026-08-11): it is the clinician
+  // patient-roster workspace, not a marketing page — course links and a blog
+  // under a patient's clinical record read as chaos (and this file's own
+  // doctrine already excludes app surfaces).
   '/partners',
   '/cases',
   '/talk',
