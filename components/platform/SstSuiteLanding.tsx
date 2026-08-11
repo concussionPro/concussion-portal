@@ -124,9 +124,35 @@ function SstTab() {
     have. The clinician's actual try-it path is "Start free trial →" next to
     this. Label it for what it shows. */}
 <Cta variant="ghost" href="/sst-trainer?landing=1">See the patient app</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
-          <FreeBadge note="Buffalo-protocol graded test · their own wearable · integrates with Cliniko" />
+          <FreeBadge note="Buffalo-protocol graded test · their own wearable · files into your PMS" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
+      </Section>
+
+      {/* PMS logo strip (owner, 2026-08-11) — the integrations we ACTUALLY
+          ship: Cliniko (live), Nookal (MSCC onboarding), Gensolve (NZ rail).
+          PracSuite/corePlus exist but are deliberately unsurfaced, and Jane is
+          NOT built — no logo until an adapter exists (no fabricated
+          offerings). Official marks, self-hosted; Nookal's wordmark is their
+          white asset with the type set in ink for light backgrounds. */}
+      <Section className="pb-12">
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 rounded-[18px] border border-slate-200 bg-white/70 px-6 py-4">
+          <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+            Files straight into
+          </span>
+          <a href="/integrations/cliniko" aria-label="Cliniko integration" className="opacity-85 transition hover:opacity-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logos/pms/cliniko.svg" alt="Cliniko" className="h-[26px] w-auto" />
+          </a>
+          <a href="/integrations/nookal" aria-label="Nookal integration" className="opacity-85 transition hover:opacity-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logos/pms/nookal.png" alt="Nookal" className="h-[19px] w-auto" />
+          </a>
+          <span title="Gensolve Practice Manager — New Zealand" className="opacity-85">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logos/pms/gensolve.png" alt="Gensolve" className="h-[26px] w-auto" />
+          </span>
+        </div>
       </Section>
 
       <Section className="pb-14">
