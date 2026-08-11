@@ -132,6 +132,16 @@ export default function AhpraAiGuidelinesPage() {
             <p>The fix is straightforward but requires discipline: <strong>edit every note before saving</strong>. The AI gives you a draft; you make it specific.</p>
           </Section>
 
+          <Section icon={ShieldCheck} title="APP 8 — the offshore-disclosure rule every AI scribe decision turns on">
+            <p>Australian Privacy Principle 8 is short: before disclosing personal information to an entity outside Australia, you must take reasonable steps to ensure the overseas recipient handles it to Australian standards. Consumer ChatGPT is a US-operated service &mdash; pasting a patient&rsquo;s history, an NDIS functional impact statement or clinical reasoning into it <strong>is an offshore disclosure</strong>, and the narrow APP&nbsp;8 exceptions rarely apply to a consumer tool. Healthcare-purpose-built scribes with Australian hosting and enterprise agreements exist precisely to make this analysis passable.</p>
+            <p><strong>NDIS reports specifically:</strong> the safe pattern is a healthcare-purpose-built tool for the draft, then heavy clinician editing so every report is specific to the client &mdash; never consumer ChatGPT with identifiable client detail.</p>
+          </Section>
+
+          <Section icon={AlertTriangle} title="When to switch the scribe off">
+            <p>Some consults should not run through any AI scribe, whatever the tool&rsquo;s compliance posture. Pause and take manual notes for: mental-health disclosures and suicide-risk conversations; anything touching mandatory reporting (child safety, family violence, elder abuse); complex medicolegal cases likely to attract scrutiny; paediatric consults where consent is mixed; and sensitive sexual or reproductive health consults. The two tests are clinical safety and patient trust &mdash; if either is in doubt for this portion of the consult, the scribe goes off.</p>
+          </Section>
+
+
           <section className="bg-gradient-to-br from-teal-700 to-cyan-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">The full framework in one course</h2>
             <p className="text-cyan-50 leading-relaxed mb-5">Our short course <strong>AI in Clinical Practice</strong> walks through each of the four AHPRA obligations with worked examples for physiotherapy, osteopathy, GP and naturopathy. Plus the Tier A / B / C tool framework (Heidi vs Lyrebird vs ChatGPT vs Claude), NDIS audit-safe documentation, and the Australian Privacy Principles for clinicians. {AI_CPD_HOURS} CPD hours, fully online, certificate on completion. Now <Link href="/courses/ai-in-clinical-practice" className="underline font-semibold text-white hover:text-cyan-100">available{AI_PRICE !== null ? ` for A$${AI_PRICE}` : ''}</Link>.</p>

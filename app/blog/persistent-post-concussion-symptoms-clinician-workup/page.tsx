@@ -76,7 +76,7 @@ export default function PpcsWorkupPage() {
               <li><strong>BPPV screening</strong> — Dix-Hallpike and supine roll test. BPPV after head trauma is common and treatable; missing it leaves a fixable cause active.</li>
               <li><strong>Gaze stability training tolerance</strong> — VOR ×1 and ×2 exercises with symptom and performance benchmarks.</li>
             </ul>
-            <p>See our existing guide: <Link href="/blog/vestibular-ocular-screening-voms-concussion" className="text-purple-700 underline">Vestibular/Ocular Motor Screening (VOMS) in Concussion Care</Link>.</p>
+            <p>See our existing guide: <Link href="/scat-forms/voms" className="text-purple-700 underline">Vestibular/Ocular Motor Screening (VOMS) in Concussion Care</Link>.</p>
           </Section>
 
           <Section icon={Activity} title="The cervical workup">
@@ -126,6 +126,12 @@ export default function PpcsWorkupPage() {
             </ul>
             <p>The art is sequencing — not every patient needs everything in week one. Identify the dominant driver, address it, reassess at 2-week intervals.</p>
           </Section>
+
+          <Section icon={Eye} title="Characterising vestibulo-ocular dysfunction — beyond the screen">
+            <p>Vestibulo-ocular dysfunction is a finding to rule in or out in <strong>every</strong> persistent case &mdash; and when present and treated, symptom improvement is often substantial. Missing it is the most common reason a PPCS case fails to progress.</p>
+            <p>The acute <a href="/scat-forms/voms" className="text-blue-600 hover:underline">VOMS</a> answers a yes/no question: is there vestibulo-ocular involvement worth pursuing? In chronic cases the answer is almost always yes, which is why the screen alone can&rsquo;t drive treatment. The chronic workup characterises <em>which</em> subsystem is driving symptoms &mdash; gaze stability (VOR), saccadic control, convergence, and visual-motion tolerance &mdash; so rehabilitation targets the deficit rather than the label. That characterisation, and the phenotype-specific exercise progressions that follow from it, is the difference between &ldquo;vestibular exercises&rdquo; and a plan that resolves.</p>
+          </Section>
+
 
           <section className="bg-gradient-to-br from-purple-800 to-indigo-800 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">PPCS course in development — join the waitlist</h2>

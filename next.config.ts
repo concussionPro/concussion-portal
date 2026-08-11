@@ -64,6 +64,20 @@ const nextConfig: NextConfig = {
       { source: '/allied', destination: '/pricing', permanent: false },
       { source: '/gp-portal', destination: '/pricing', permanent: false },
       { source: '/ty-page', destination: '/scat-mastery', permanent: false },
+      // ── Blog consolidation (2026-08-11): 23 posts split authority across
+      // overlapping terms and cannibalised the /scat-forms artifact pages.
+      // Ten low-traffic/overlapping posts 301 into their stronger sibling —
+      // four pure redirects, six merged into the keeper first. Never a 404.
+      { source: '/blog/vestibular-ocular-screening-voms-concussion', destination: '/scat-forms/voms', permanent: true },
+      { source: '/blog/scat6-vs-scoat6-difference', destination: '/scat-forms/about', permanent: true },
+      { source: '/blog/free-scat6-pdf-download', destination: '/scat6-download', permanent: true },
+      { source: '/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians', destination: '/blog/ai-medical-scribe-comparison-2026', permanent: true },
+      { source: '/blog/cervicogenic-vs-migraine-vs-tension-headache-differential', destination: '/blog/cervicogenic-drivers-chronic-concussion', permanent: true },
+      { source: '/blog/vestibulo-ocular-workup-ppcs', destination: '/blog/persistent-post-concussion-symptoms-clinician-workup', permanent: true },
+      { source: '/blog/ai-scribe-privacy-act-compliance-australia', destination: '/blog/ahpra-ai-guidelines-explained-australian-clinicians', permanent: true },
+      { source: '/blog/when-not-to-use-ai-clinical-notes-clinicians', destination: '/blog/ahpra-ai-guidelines-explained-australian-clinicians', permanent: true },
+      { source: '/blog/chatgpt-ndis-reports-allied-health-australia', destination: '/blog/ahpra-ai-guidelines-explained-australian-clinicians', permanent: true },
+      { source: '/blog/concussion-myths-clinicians-should-stop-believing', destination: '/blog/concussion-update-2026-wait-until-symptom-free-obsolete', permanent: true },
       { source: '/blog-1', destination: '/blog', permanent: false },
       { source: '/blog-1/:slug*', destination: '/blog', permanent: false },
       // Legacy trial page → SCAT Mastery (better UX: instant session vs magic link wall)

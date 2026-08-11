@@ -178,7 +178,7 @@ export default function AiScribeComparisonPage() {
               <li><strong>Larger practice, multi-specialty:</strong> Heidi</li>
               <li><strong>Solo or small clinic:</strong> Lyrebird</li>
               <li><strong>Allied health (physio, osteo, etc.):</strong> Heidi has broader allied-health template depth</li>
-              <li><strong>NDIS-heavy practice:</strong> Either Tier A scribe with the audit-safe documentation workflow (see our <Link href="/blog/chatgpt-ndis-reports-allied-health-australia" className="text-teal-700 underline">ChatGPT NDIS reports article</Link>)</li>
+              <li><strong>NDIS-heavy practice:</strong> Either Tier A scribe with the audit-safe documentation workflow (see our <Link href="/blog/ahpra-ai-guidelines-explained-australian-clinicians" className="text-teal-700 underline">ChatGPT NDIS reports article</Link>)</li>
             </ul>
 
             <p className="font-semibold text-slate-900">United Kingdom:</p>
@@ -206,7 +206,7 @@ export default function AiScribeComparisonPage() {
           {/* When NOT to use AI scribes */}
           <Section icon={AlertTriangle} title="When NOT to use ANY AI scribe — universal across jurisdictions">
             <p>Switch off the AI scribe regardless of tool choice for: mental health disclosures, mandatory reporting (child safety, family violence, elder abuse), complex medicolegal cases, paediatric consults with mixed consent, patients who decline AI use, sensitive sexual/reproductive health consults, and any situation where transcript accuracy matters more than note-writing speed.</p>
-            <p>See our full red-flags article: <Link href="/blog/when-not-to-use-ai-clinical-notes-clinicians" className="text-teal-700 underline">7 red flags for AI clinical documentation</Link>.</p>
+            <p>See our full red-flags article: <Link href="/blog/ahpra-ai-guidelines-explained-australian-clinicians" className="text-teal-700 underline">7 red flags for AI clinical documentation</Link>.</p>
           </Section>
 
           {/* CTA */}

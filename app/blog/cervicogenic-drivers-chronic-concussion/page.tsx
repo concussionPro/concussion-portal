@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { createBlogPostSchema } from '@/lib/schema-markup'
-import { Clock, Activity, Stethoscope, AlertTriangle } from 'lucide-react'
+import { Clock, Activity, Stethoscope, AlertTriangle, GitCompare } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
@@ -76,7 +76,7 @@ export default function CervicogenicChronicConcussionPage() {
               <li><strong>Neck torsion test (Norré)</strong> — patient sitting, head held stationary, body rotated. If symptoms reproduce, cervicogenic involvement is likely.</li>
               <li><strong>Cervical relocation test</strong> — patient closes eyes, head rotated to target, asked to return to neutral. Increased error suggests cervical proprioceptive dysfunction.</li>
             </ul>
-            <p>Note: cervicogenic dizziness and vestibular dysfunction frequently coexist in PPCS. Identifying the cervical contribution doesn&apos;t rule out the need for vestibular workup — see our <Link href="/blog/vestibulo-ocular-workup-ppcs" className="text-rose-700 underline">vestibulo-ocular workup article</Link>.</p>
+            <p>Note: cervicogenic dizziness and vestibular dysfunction frequently coexist in PPCS. Identifying the cervical contribution doesn&apos;t rule out the need for vestibular workup — see our <Link href="/blog/persistent-post-concussion-symptoms-clinician-workup" className="text-rose-700 underline">vestibulo-ocular workup article</Link>.</p>
           </Section>
 
           <Section icon={Stethoscope} title="Cervicogenic headache — clinical features">
@@ -126,6 +126,32 @@ export default function CervicogenicChronicConcussionPage() {
             </ul>
             <p>Expect noticeable improvement within 4-6 sessions if cervical contribution is a primary driver. If no improvement, the cervical is contributing but not primary — escalate to the broader PPCS workup.</p>
           </Section>
+
+          <Section icon={GitCompare} title="The headache differential — cervicogenic vs migraine vs tension-type">
+            <p><strong>&ldquo;Post-concussion headache&rdquo; is a timing category, not a diagnosis</strong> &mdash; ICHD-3 defines it purely by onset within 7 days of injury. The treatment lives in the phenotype underneath, and the three phenotypes separate cleanly:</p>
+            <div className="overflow-x-auto -mx-2 mt-2">
+              <table className="w-full text-sm border-collapse min-w-[640px]">
+                <thead>
+                  <tr className="bg-purple-50 text-slate-900">
+                    <th className="text-left font-bold p-3 border border-slate-200">Feature</th>
+                    <th className="text-left font-bold p-3 border border-slate-200">Cervicogenic</th>
+                    <th className="text-left font-bold p-3 border border-slate-200">Migraine-phenotype</th>
+                    <th className="text-left font-bold p-3 border border-slate-200">Tension-type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td className="p-3 border border-slate-200 font-semibold">Laterality</td><td className="p-3 border border-slate-200">Unilateral, side-locked</td><td className="p-3 border border-slate-200">Unilateral or bilateral</td><td className="p-3 border border-slate-200">Bilateral</td></tr>
+                  <tr><td className="p-3 border border-slate-200 font-semibold">Quality</td><td className="p-3 border border-slate-200">Dull, aching, non-throbbing</td><td className="p-3 border border-slate-200">Throbbing, moderate&ndash;severe</td><td className="p-3 border border-slate-200">Pressing &ldquo;band&rdquo;, mild&ndash;moderate</td></tr>
+                  <tr><td className="p-3 border border-slate-200 font-semibold">Pattern</td><td className="p-3 border border-slate-200">Starts occiput/neck, refers forward</td><td className="p-3 border border-slate-200">Discrete attacks, 4&ndash;72&nbsp;h</td><td className="p-3 border border-slate-200">Diffuse, often daily background</td></tr>
+                  <tr><td className="p-3 border border-slate-200 font-semibold">Provoked by</td><td className="p-3 border border-slate-200">Neck movement, sustained posture, upper-cervical palpation</td><td className="p-3 border border-slate-200">Routine activity, sensory load</td><td className="p-3 border border-slate-200">Stress, fatigue &mdash; not routine activity</td></tr>
+                  <tr><td className="p-3 border border-slate-200 font-semibold">Associated</td><td className="p-3 border border-slate-200">Neck pain/stiffness; no nausea or aura</td><td className="p-3 border border-slate-200">Photophobia + phonophobia, nausea, &plusmn;aura</td><td className="p-3 border border-slate-200">No nausea; not both photo- and phonophobia</td></tr>
+                  <tr><td className="p-3 border border-slate-200 font-semibold">Cervical signs</td><td className="p-3 border border-slate-200">Reduced ROM, +ve flexion-rotation, tender C0&ndash;C3</td><td className="p-3 border border-slate-200">Usually normal (may coexist)</td><td className="p-3 border border-slate-200">Tender pericranial muscles</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3">Mixed pictures are common &mdash; every concussion mechanism is also a cervical-acceleration mechanism, so a cervicogenic component frequently coexists with a migraine phenotype. Treating only the dominant phenotype is a common reason post-concussion headache fails to resolve. Escalate for thunderclap or first-and-worst headache, progressive worsening, focal signs, or fever with neck stiffness &mdash; and screen medication use: analgesia on 10&ndash;15+ days/month can drive medication-overuse headache that mimics a non-resolving post-traumatic headache.</p>
+          </Section>
+
 
           <section className="bg-gradient-to-br from-rose-700 to-pink-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">PPCS course in development — join the waitlist</h2>

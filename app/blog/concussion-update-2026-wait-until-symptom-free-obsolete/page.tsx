@@ -347,6 +347,12 @@ export default function ConcussionUpdate2026Page() {
           <RelatedPosts slugs={['voms-screening', 'scat6-vs-scoat6', 'return-to-play']} />
 
           {/* CTA Section */}
+
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">The other myths that keep surfacing in clinic</h2>
+            <p className="text-slate-700 leading-relaxed">&ldquo;Rest until symptom-free&rdquo; is the biggest casualty of the modern evidence &mdash; but it travels with companions that deserve the same retirement: <strong>&ldquo;you have to lose consciousness to be concussed&rdquo;</strong> (LOC occurs in a minority of concussions and is not required for diagnosis); <strong>&ldquo;a normal CT rules it out&rdquo;</strong> (concussion is a functional injury &mdash; structural imaging is expected to be normal); <strong>&ldquo;children recover faster&rdquo;</strong> (the opposite &mdash; paediatric recovery typically runs longer, which is why age-specific tools and the 21-day stand-down exist); and <strong>&ldquo;passing the SCAT6 means cleared&rdquo;</strong> (the SCAT6 is an assessment aid, not a clearance instrument &mdash; clearance is a graded, exertion-tested clinical decision).</p>
+          </div>
+
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">
             <h2 className="text-2xl font-bold mb-3">Take the Next Step</h2>
             <p className="text-white/70 mb-6 leading-relaxed">
