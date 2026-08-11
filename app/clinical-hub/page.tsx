@@ -1318,8 +1318,15 @@ export default function ClinicalHubPage() {
                     {/* The name line already carries age, sex and sport —
                         repeating them here was the first thing a reader saw
                         twice. This line holds only what the name doesn't. */}
+                    {/* PATIENT code, not clinic code (owner caught the mislabel
+                        2026-08-11): the clinic code is ONE shared code per
+                        clinic — the demo fixtures' per-patient IDs under a
+                        "clinic code" label contradicted the one-code model on
+                        the exact screen used to pitch it. Real rosters show
+                        the shared clinic code here, and say so. */}
                     <p className="text-sm text-muted-foreground">
-                      clinic code <span className="font-mono text-foreground">{p.code}</span>
+                      {isDemo ? 'patient code' : 'clinic code'}{' '}
+                      <span className="font-mono text-foreground">{p.code}</span>
                     </p>
                     {(p.injuryDate || p.daysPost != null || p.lastActivity) && (
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
