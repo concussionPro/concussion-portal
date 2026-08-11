@@ -160,10 +160,7 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
   return (
     <div className="glass-premium rounded-2xl p-5 sm:p-6">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
-        <div className="flex items-center gap-2">
-          <HeartPulse className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-          <h3 className="text-sm font-bold text-foreground">Measured HR-threshold over time</h3>
-        </div>
+        <h3 className="text-sm font-bold text-foreground">Measured HR-threshold over time</h3>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
           <ShieldCheck className="w-3 h-3" /> paired sensor · clinician-gated
         </span>

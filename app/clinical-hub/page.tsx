@@ -1264,25 +1264,30 @@ export default function ClinicalHubPage() {
               </div>
             )}
 
-            {/* Escalation ladder: unacknowledged attention pins to the top */}
-            {needsReview.length > 0 && (
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700/80 px-1 pt-1">
-                Needs review · {needsReview.length}
-              </p>
-            )}
-            {needsReview.map((d) => (
-              <RosterCard key={d.pt.id} pt={d.pt} att={d.att} acked={false}
-                active={d.pt.id === selectedId} onSelect={() => setSelectedId(d.pt.id)} />
-            ))}
-            {needsReview.length > 0 && others.length > 0 && (
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-1 pt-2">
-                All patients
-              </p>
-            )}
-            {others.map((d) => (
-              <RosterCard key={d.pt.id} pt={d.pt} att={d.att} acked={d.acked}
-                active={d.pt.id === selectedId} onSelect={() => setSelectedId(d.pt.id)} />
-            ))}
+            {/* ONE list, compact rows (2026-08-11 design pass #2: a floating
+                card per patient — avatar, chevron, three pills — made a
+                9-person roster scroll like a card gallery). Escalation still
+                pins unacknowledged attention to the top. */}
+            <div className="glass-premium overflow-hidden rounded-2xl py-1">
+              {needsReview.length > 0 && (
+                <p className="px-4 pb-1 pt-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-700/80">
+                  Needs review · {needsReview.length}
+                </p>
+              )}
+              {needsReview.map((d) => (
+                <RosterCard key={d.pt.id} pt={d.pt} att={d.att} acked={false}
+                  active={d.pt.id === selectedId} onSelect={() => setSelectedId(d.pt.id)} />
+              ))}
+              {needsReview.length > 0 && others.length > 0 && (
+                <p className="px-4 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  All patients
+                </p>
+              )}
+              {others.map((d) => (
+                <RosterCard key={d.pt.id} pt={d.pt} att={d.att} acked={d.acked}
+                  active={d.pt.id === selectedId} onSelect={() => setSelectedId(d.pt.id)} />
+              ))}
+            </div>
           </aside>
 
           {/* ── Detail ── */}
@@ -1429,96 +1434,93 @@ export default function ClinicalHubPage() {
                   <p className="text-xs text-amber-800 leading-relaxed">{p.flag}</p>
                 </div>
               )}
-            </div>
-
-            {/* Return-to-activity stage — editable in demo only; stage edits
-                aren't persisted anywhere yet, so a real clinic sees the stage
-                DERIVED from threshold results, read-only. */}
-            <div className="glass-premium rounded-2xl p-5 sm:p-6">
-              <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-                  <h3 className="text-sm font-bold text-foreground">Return-to-activity stage</h3>
-                </div>
-                {isDemo ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Demo preview</span>
-                    <button onClick={() => setStage(Math.max(1, p.stage.n - 1))} disabled={p.stage.n <= 1}
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-black/10 text-muted-foreground hover:bg-black/[0.03] transition disabled:opacity-40">
-                      <ChevronLeft className="w-3.5 h-3.5" /> Step back
-                    </button>
-                    <button onClick={() => setStage(Math.min(7, p.stage.n + 1))} disabled={p.stage.n >= 7}
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition disabled:opacity-40">
-                      Advance <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+              {/* ── STATUS BAND (2026-08-11 design pass #2) ──────────────────
+                  Stage + the three numbers a clinician orients by, as ONE
+                  hairline-divided strip inside the case sheet — they were four
+                  separate floating cards of equal weight ("blocky"). The stage
+                  cell keeps the demo-only advance controls, shrunk to arrows. */}
+              <div className="mt-5 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 flex flex-col divide-y divide-black/[0.06] border-t border-black/[0.06] bg-black/[0.012] lg:flex-row lg:divide-x lg:divide-y-0">
+                {/* stage */}
+                <div className="p-4 sm:px-6 sm:py-4 lg:flex-[1.6]">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="stat-label mb-0">Return to activity</p>
+                    {isDemo ? (
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setStage(Math.max(1, p.stage.n - 1))} disabled={p.stage.n <= 1}
+                          aria-label="Step back a stage" title="Step back (demo preview)"
+                          className="flex h-7 w-7 min-h-0 min-w-0 items-center justify-center rounded-md border border-black/10 text-muted-foreground transition hover:bg-black/[0.03] disabled:opacity-40">
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => setStage(Math.min(7, p.stage.n + 1))} disabled={p.stage.n >= 7}
+                          aria-label="Advance a stage" title="Advance (demo preview)"
+                          className="flex h-7 w-7 min-h-0 min-w-0 items-center justify-center rounded-md bg-[var(--accent)] text-white transition hover:opacity-90 disabled:opacity-40">
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground/70">from threshold results</span>
+                    )}
                   </div>
-                ) : (
-                  <span className="text-[11px] text-muted-foreground">Derived from threshold results</span>
-                )}
-              </div>
-              {/* ladder — clickable in demo only */}
-              <div className="flex items-center gap-1.5">
-                {STAGES.map((s) => {
-                  const done = s.n < p.stage.n, current = s.n === p.stage.n
-                  // `min-w-0` matters: flex-1 is `flex: 1 1 0%` but does NOT
-                  // let a child shrink below its min-content width, so seven
-                  // segments plus gaps ran 6px past a 375px viewport (375px
-                  // sweep, 2026-08-06). Same root cause as the /learning
-                  // overflow fixed the same day.
-                  const cls = `flex-1 min-w-0 h-2 rounded-full transition ${current ? 'bg-[var(--accent)]' : done ? 'bg-[var(--accent)]/35' : 'bg-black/[0.06]'}`
-                  return isDemo
-                    ? <button key={s.n} onClick={() => setStage(s.n)} title={s.label} className={`${cls} hover:bg-black/10`} />
-                    : <div key={s.n} title={s.label} className={cls} />
-                })}
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <p className="text-xs font-semibold text-foreground">Stage {p.stage.n} · {p.stage.label}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {p.stage.n < 7 ? `Next: ${STAGES.find((s) => s.n === p.stage.n + 1)?.label}` : 'Refer to treating doctor for clearance'}
-                </p>
+                  {/* ladder — clickable in demo only. `min-w-0` matters: flex-1
+                      does NOT shrink below min-content, so seven segments plus
+                      gaps ran past a 375px viewport (2026-08-06 sweep). */}
+                  <div className="flex items-center gap-1">
+                    {STAGES.map((s) => {
+                      const done = s.n < p.stage.n, current = s.n === p.stage.n
+                      const cls = `flex-1 min-w-0 min-h-0 h-1.5 rounded-full p-0 transition ${current ? 'bg-[var(--accent)]' : done ? 'bg-[var(--accent)]/35' : 'bg-black/[0.07]'}`
+                      return isDemo
+                        ? <button key={s.n} onClick={() => setStage(s.n)} title={s.label} className={`${cls} hover:bg-black/10`} />
+                        : <div key={s.n} title={s.label} className={cls} />
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs font-semibold text-foreground">
+                    Stage {p.stage.n} · {p.stage.label}
+                    <span className="ml-1.5 font-normal text-muted-foreground">
+                      {p.stage.n < 7 ? `· next: ${STAGES.find((s) => s.n === p.stage.n + 1)?.label}` : '· refer for clearance'}
+                    </span>
+                  </p>
+                </div>
+                {/* HRt */}
+                <div className="p-4 sm:px-6 sm:py-4 lg:flex-1">
+                  <p className="stat-label">HR threshold</p>
+                  <p className="stat-value">{p.hrt ? <>{p.hrt}<span className="text-base font-medium text-muted-foreground"> bpm</span></> : <span className="text-base text-muted-foreground">Not set</span>}</p>
+                  {p.hrt != null && p.hrt < 135 && (
+                    <p className="mt-1 text-[10.5px] font-semibold leading-snug text-amber-700" title="Haider et al. 2019">
+                      &lt;135 bpm — slower-recovery marker; oversee dosing, re-assess often.
+                    </p>
+                  )}
+                </div>
+                {/* band */}
+                <div className="p-4 sm:px-6 sm:py-4 lg:flex-1">
+                  <p className="stat-label">Training band</p>
+                  <p className="stat-value">{p.hrt ? <>{p.bandLow}–{p.bandHigh}<span className="text-base font-medium text-muted-foreground"> bpm</span></> : <span className="text-base text-muted-foreground">—</span>}</p>
+                </div>
+                {/* rest symptoms / last activity */}
+                <div className="p-4 sm:px-6 sm:py-4 lg:flex-1">
+                  {p.restSymptoms != null ? (
+                    <>
+                      <p className="stat-label">Symptoms at rest</p>
+                      <p className="stat-value">{p.restSymptoms}<span className="text-base font-medium text-muted-foreground"> / 10</span></p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="stat-label">Last activity</p>
+                      <p className="stat-value">
+                        {daysAgo(p.lastActivity) != null
+                          ? daysAgo(p.lastActivity) === 0 ? 'Today' : <>{daysAgo(p.lastActivity)}<span className="text-base font-medium text-muted-foreground">d ago</span></>
+                          : <span className="text-base text-muted-foreground">—</span>}
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Stat tiles */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="glass-premium rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-2"><HeartPulse className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">HR threshold</p></div>
-                <p className="stat-value">{p.hrt ? <>{p.hrt}<span className="text-base font-medium text-muted-foreground"> bpm</span></> : <span className="text-base text-muted-foreground">Not set</span>}</p>
-                {p.hrt != null && p.hrt < 135 && (
-                  <p className="mt-1 text-[11px] font-semibold leading-snug text-amber-700" title="Haider et al. 2019">
-                    Low threshold (&lt;135 bpm) — associated with slower recovery; oversee dosing, re-assess more often.
-                  </p>
-                )}
-              </div>
-              <div className="glass-premium rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-2"><Activity className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Training band</p></div>
-                <p className="stat-value">{p.hrt ? <>{p.bandLow}–{p.bandHigh}<span className="text-base font-medium text-muted-foreground"> bpm</span></> : <span className="text-base text-muted-foreground">—</span>}</p>
-              </div>
-              {p.restSymptoms != null ? (
-                <div className="glass-premium rounded-2xl p-5 col-span-2 sm:col-span-1">
-                  <div className="flex items-center gap-2 mb-2"><TrendingDown className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Symptoms at rest</p></div>
-                  <p className="stat-value">{p.restSymptoms}<span className="text-base font-medium text-muted-foreground"> / 10</span></p>
-                </div>
-              ) : (
-                <div className="glass-premium rounded-2xl p-5 col-span-2 sm:col-span-1">
-                  <div className="flex items-center gap-2 mb-2"><Clock className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Last activity</p></div>
-                  <p className="stat-value">
-                    {daysAgo(p.lastActivity) != null
-                      ? daysAgo(p.lastActivity) === 0 ? 'Today' : <>{daysAgo(p.lastActivity)}<span className="text-base font-medium text-muted-foreground">d ago</span></>
-                      : <span className="text-base text-muted-foreground">—</span>}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
               {/* SST session history */}
               <div className="glass-premium rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <HeartPulse className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-                    <h3 className="text-sm font-bold text-foreground">SST program</h3>
-                  </div>
+                  <h3 className="text-sm font-bold text-foreground">SST program</h3>
                   <span className="text-[11px] text-muted-foreground">{p.sessions.length} session{p.sessions.length === 1 ? '' : 's'}</span>
                 </div>
                 {p.sessions.length === 0 ? (
@@ -1538,32 +1540,36 @@ export default function ClinicalHubPage() {
                 )}
               </div>
 
-              {/* Measured-HRt recovery-trajectory instrument — the wedge made
-                  visible (serial MEASURED HRt, not a symptom-score curve), with
-                  per-point provenance + clinician-gated-only enforcement. */}
-              <SstTrajectory points={p.hrtPoints ?? []} />
+              {/* Right column: trajectory + notes stacked — the notes card used
+                  to sit full-width below while this column ended in dead space
+                  (2026-08-11 design pass #2). */}
+              <div className="space-y-5">
+                {/* Measured-HRt recovery-trajectory instrument — the wedge made
+                    visible (serial MEASURED HRt, not a symptom-score curve), with
+                    per-point provenance + clinician-gated-only enforcement. */}
+                <SstTrajectory points={p.hrtPoints ?? []} />
+
+                {/* Clinical notes — not persisted anywhere yet, so demo mode only */}
+                {isDemo && (
+                  <div className="glass-premium rounded-2xl p-5 sm:p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="text-sm font-bold text-foreground">Clinical notes</h3>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Demo preview — not saved</span>
+                    </div>
+                    <textarea
+                      value={p.notes ?? ''}
+                      onChange={(e) => updatePatient(p.id, { notes: e.target.value })}
+                      placeholder="Session observations, symptom triggers, RTP decisions, referrals…"
+                      rows={3}
+                      className="w-full px-3 py-2.5 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/50 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Baseline & serial testing (SCAT6/SCOAT6) — FIXTURE data, demo mode only */}
             {isDemo && BASELINES[p.id] && <BaselinePanel base={BASELINES[p.id]} />}
-
-            {/* Clinical notes — not persisted anywhere yet, so demo mode only */}
-            {isDemo && (
-              <div className="glass-premium rounded-2xl p-5 sm:p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <NotebookPen className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-                  <h3 className="text-sm font-bold text-foreground">Clinical notes</h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Demo preview — not saved</span>
-                </div>
-                <textarea
-                  value={p.notes ?? ''}
-                  onChange={(e) => updatePatient(p.id, { notes: e.target.value })}
-                  placeholder="Session observations, symptom triggers, RTP decisions, referrals…"
-                  rows={3}
-                  className="w-full px-3 py-2.5 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/50 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
-                />
-              </div>
-            )}
           </section>
           )}
         </div>
@@ -1582,60 +1588,51 @@ function RosterCard({ pt, att, acked, active, onSelect }: {
   active: boolean
   onSelect: () => void
 }) {
-  // The de-identified name already reads "R.K. — 31F, recreational netball";
-  // repeating "31 · Netball" under it was pure noise. The second line now says
-  // what the name can't: activity.
+  // Compact LIST ROW (2026-08-11 design pass #2). One row = name line + meta
+  // line; state lives in the smallest honest signal: a red/amber dot only
+  // while attention is UNACKNOWLEDGED (the old triangle rendered on nearly
+  // every card, so it meant nothing), stage as a quiet right-aligned "S4"
+  // (full label on hover), selection as a left accent rail + tint instead of
+  // a floating ring. Avatars, chevrons and the pill row are gone — the name
+  // already carries identity, and the group header carries "Review".
   const last = daysAgo(pt.lastActivity)
   const meta = [
     pt.sessions.length ? `${pt.sessions.length} session${pt.sessions.length === 1 ? '' : 's'}` : null,
     last != null ? (last === 0 ? 'active today' : `last ${last}d ago`) : null,
+    pt.daysPost != null ? `${pt.daysPost}d post` : null,
+    pt.practitioner || null,
   ].filter(Boolean).join(' · ')
+  const urgent = att?.level === 'urgent' && !acked
+  const review = att?.level === 'review' && !acked
   return (
-    <button onClick={onSelect}
-      className={`w-full text-left glass-premium rounded-2xl p-4 transition group ${active ? 'ring-2 ring-[var(--accent)]/40' : 'hover:-translate-y-0.5'}`}>
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)]/15 to-[var(--accent)]/5 flex items-center justify-center text-[var(--accent)] font-bold text-sm flex-shrink-0">
-          {initials(pt.name)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{pt.name}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {meta || 'no sessions yet'}
+    <button
+      onClick={onSelect}
+      className={`block w-full px-4 py-2.5 text-left transition ${
+        active
+          ? 'bg-[var(--accent)]/[0.07] shadow-[inset_2.5px_0_0_var(--accent)]'
+          : 'hover:bg-black/[0.025]'
+      }`}
+    >
+      <div className="flex items-center gap-2.5">
+        {(urgent || review) && (
+          <span className={`h-2 w-2 flex-shrink-0 rounded-full ${urgent ? 'bg-red-500' : 'bg-amber-400'}`} />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className={`truncate text-[13px] leading-snug ${active ? 'font-bold text-foreground' : 'font-semibold text-foreground/90'}`}>
+            {pt.name}
           </p>
+          <p className="truncate text-[11px] text-muted-foreground">{meta || 'no sessions yet'}</p>
         </div>
-        {att && !acked
-          ? (att.level === 'urgent'
-              ? <AlertOctagon className="w-4 h-4 text-red-500 flex-shrink-0" />
-              : <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />)
-          : pt.flag
-            ? <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-            : <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-[var(--accent)] flex-shrink-0" />}
-      </div>
-      <div className="flex items-center gap-2 mt-3 flex-wrap">
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
-          Stage {pt.stage.n}
+        <span
+          className="flex-shrink-0 text-[10.5px] font-bold tabular-nums text-muted-foreground/70"
+          title={`Stage ${pt.stage.n} — ${pt.stage.label}`}
+        >
+          S{pt.stage.n}
         </span>
-        {att?.level === 'review' && !acked && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Review</span>
-        )}
-        {att && acked && (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/[0.03] text-muted-foreground border border-black/5">Reviewed</span>
-        )}
-        {pt.practitioner && (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/[0.04] text-muted-foreground border border-black/5">{pt.practitioner}</span>
-        )}
-        {pt.daysPost != null
-          ? <span className="text-[11px] text-muted-foreground">{pt.daysPost}d post-injury</span>
-          : last != null
-            ? <span className="text-[11px] text-muted-foreground">last session {last === 0 ? 'today' : `${last}d ago`}</span>
-            : null}
       </div>
-      {/* URGENT — red-flag banner on the patient card */}
-      {att?.level === 'urgent' && !acked && (
-        <div className="mt-3 flex items-start gap-1.5 rounded-lg bg-red-50 border border-red-200 px-2.5 py-1.5">
-          <AlertOctagon className="w-3.5 h-3.5 text-red-600 mt-0.5 flex-shrink-0" />
-          <p className="text-[11px] font-semibold text-red-700 leading-snug">{att.reason}</p>
-        </div>
+      {/* the red-flag reason stays visible on the row — urgency is never a dot alone */}
+      {urgent && (
+        <p className="mt-1 pl-[18px] text-[11px] font-semibold leading-snug text-red-700">{att?.reason}</p>
       )}
     </button>
   )
