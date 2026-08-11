@@ -2766,12 +2766,16 @@ export default function AnalyticsDashboard() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {city.registrations.map((r: { name: string; email: string; registeredAt: string; source?: 'registered' | 'checkout' }, i: number) => (
+                                {city.registrations.map((r: { name: string; email: string; registeredAt: string; source?: 'registered' | 'checkout' | 'geo' }, i: number) => (
                                   <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
                                     <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
                                     <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
                                     <td className="py-2.5 px-2">
-                                      {r.source === 'checkout' ? (
+                                      {r.source === 'geo' ? (
+                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                                          Geo estimate (IP) — not counted
+                                        </span>
+                                      ) : r.source === 'checkout' ? (
                                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.08)] text-[var(--accent)]">
                                           Checkout nomination
                                         </span>

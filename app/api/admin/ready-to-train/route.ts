@@ -127,7 +127,29 @@ export async function GET(request: NextRequest) {
       ORDER BY nominated_at DESC
     `
 
-    const readyByCity = new Map<string, Array<{ email: string; name: string; registeredAt: string; completedAt: string | null; source: 'registered' | 'checkout' }>>()
+    // 2c. GEO SIGNAL (owner 2026-08-11): paid online-only buyers who nominated
+    // NOTHING — checkout skipped (correctly) and the post-purchase ask unused.
+    // Their purchase event carries likelyWorkshopCity (nearest workshop slug
+    // from Stripe billing geo). Weakest of the three signals, so rows are
+    // tagged 'geo' and EXCLUDED from the city counts the launch threshold
+    // reads — they give "an idea of location", never a nomination.
+    const { rows: geoRows } = await sql`
+      SELECT u.email, u.name,
+             (SELECT e.event_data->>'likelyWorkshopCity' FROM analytics_events e
+               WHERE e.event_type = 'purchase_complete' AND LOWER(e.user_email) = LOWER(u.email)
+               ORDER BY e.created_at DESC LIMIT 1) AS geo_city,
+             COALESCE((SELECT MIN(cp.purchased_at) FROM course_purchases cp
+               WHERE LOWER(cp.user_email) = LOWER(u.email)), u.created_at) AS purchased_at
+      FROM users u
+      WHERE u.access_level = 'online-only'
+        AND (u.workshop_location IS NULL OR u.workshop_location = '')
+        AND EXISTS (SELECT 1 FROM course_purchases cp WHERE LOWER(cp.user_email) = LOWER(u.email))
+        AND NOT EXISTS (SELECT 1 FROM workshop_ready_to_train w WHERE LOWER(w.email) = LOWER(u.email))
+        AND NOT EXISTS (SELECT 1 FROM course_purchases cp
+          WHERE LOWER(cp.user_email) = LOWER(u.email) AND cp.course_slug = ${CRM_PRACTICAL_SLUG})
+    `
+
+    const readyByCity = new Map<string, Array<{ email: string; name: string; registeredAt: string; completedAt: string | null; source: 'registered' | 'checkout' | 'geo' }>>()
     for (const r of rttRows) {
       const city = r.city
       if (!readyByCity.has(city)) readyByCity.set(city, [])
@@ -144,6 +166,19 @@ export async function GET(request: NextRequest) {
     // source so the board distinguishes "finished the course and asked for a
     // city" from "named a city on the way through checkout". Both are real
     // demand for that city; only the first is a warm upgrade conversation.
+    for (const r of geoRows) {
+      const city = typeof r.geo_city === 'string' ? r.geo_city : ''
+      if (!CITY_LABELS[city]) continue
+      if (!readyByCity.has(city)) readyByCity.set(city, [])
+      readyByCity.get(city)!.push({
+        email: r.email,
+        name: r.name,
+        registeredAt: r.purchased_at instanceof Date ? r.purchased_at.toISOString() : r.purchased_at,
+        completedAt: null,
+        source: 'geo',
+      })
+    }
+
     for (const r of nominationRows) {
       const city = r.city
       if (!readyByCity.has(city)) readyByCity.set(city, [])
@@ -157,21 +192,23 @@ export async function GET(request: NextRequest) {
     }
 
     const readyToUpgrade: Array<{
-      city: string; label: string; count: number; nominatedCount: number;
-      registrations: Array<{ email: string; name: string; registeredAt: string; completedAt: string | null; source: 'registered' | 'checkout' }>
+      city: string; label: string; count: number; nominatedCount: number; geoCount: number;
+      registrations: Array<{ email: string; name: string; registeredAt: string; completedAt: string | null; source: 'registered' | 'checkout' | 'geo' }>
     }> = []
     let readyTotal = 0
 
     for (const [city, registrations] of readyByCity) {
       registrations.sort((a, b) => +new Date(b.registeredAt) - +new Date(a.registeredAt))
+      const real = registrations.filter((r) => r.source !== 'geo')
       readyToUpgrade.push({
         city,
         label: CITY_LABELS[city] || city,
-        count: registrations.length,
+        count: real.length,
         nominatedCount: registrations.filter((r) => r.source === 'checkout').length,
+        geoCount: registrations.filter((r) => r.source === 'geo').length,
         registrations,
       })
-      readyTotal += registrations.length
+      readyTotal += real.length
     }
     readyToUpgrade.sort((a, b) => b.count - a.count)
 
