@@ -140,17 +140,21 @@ function SstTab() {
           <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
             Files straight into
           </span>
-          <a href="/integrations/cliniko" aria-label="Cliniko integration" className="opacity-85 transition hover:opacity-100">
+          {/* Fixed-height centered wells + per-mark heights tuned for equal
+              OPTICAL size (owner: "logos are all uneven") — raw equal heights
+              read wrong because Nookal is heavy all-caps and Gensolve is
+              icon-dominant. Verified by screenshot against a shared centreline. */}
+          <a href="/integrations/cliniko" aria-label="Cliniko integration" className="flex h-8 items-center opacity-85 transition hover:opacity-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logos/pms/cliniko.svg" alt="Cliniko" className="h-[26px] w-auto" />
+            <img src="/logos/pms/cliniko.svg" alt="Cliniko" className="block h-6 w-auto" />
           </a>
-          <a href="/integrations/nookal" aria-label="Nookal integration" className="opacity-85 transition hover:opacity-100">
+          <a href="/integrations/nookal" aria-label="Nookal integration" className="flex h-8 items-center opacity-85 transition hover:opacity-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logos/pms/nookal.png" alt="Nookal" className="h-[19px] w-auto" />
+            <img src="/logos/pms/nookal.png" alt="Nookal" className="block h-[15px] w-auto" />
           </a>
-          <span title="Gensolve Practice Manager — New Zealand" className="opacity-85">
+          <span title="Gensolve Practice Manager — New Zealand" className="flex h-8 items-center opacity-85">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logos/pms/gensolve.png" alt="Gensolve" className="h-[26px] w-auto" />
+            <img src="/logos/pms/gensolve.png" alt="Gensolve" className="block h-[23px] w-auto" />
           </span>
         </div>
       </Section>

@@ -26,7 +26,7 @@ export default function BaselineLandingPage() {
       className={`${hanken.className} ${spaceGrotesk.variable} min-h-screen w-full text-slate-900`}
       style={{ background: 'radial-gradient(120% 75% at 82% -8%, #effbfa 0%, #f8fafc 46%, #f1f5f9 100%)' }}
     >
-      <SiteNav logoHref="/clinical-suite" />
+      <SiteNav />
       <SstSuiteLanding tool="baseline" />
     </div>
   )
