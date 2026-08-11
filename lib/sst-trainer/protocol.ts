@@ -16,7 +16,7 @@
  *    (Leddy & Willer 2013; Leddy et al. 2018/2019; BCTT instruction manual,
  *    J Sport Med suppl.) -> this is why the app prompts PER MINUTE, not per 10bpm.
  *  - Sub-symptom-threshold aerobic exercise (SSTAE): train at 80-90% of HRt,
- *    ~20 min, most days; within-session stop if symptoms rise >=2 points; re-test
+ *    ~20 min, most days; within-session stop if symptoms rise MORE than 2 points; re-test
  *    and advance the ceiling as tolerance recovers (Leddy 2019 JAMA Peds;
  *    Bezherano et al. "Practical Management: Prescribing SSTAE" 2021, CJSM).
  *
@@ -432,7 +432,7 @@ export interface SessionLog {
   hrVerified?: boolean
   /** share (0-100) of readings that were live-feed-verified at log time */
   verifiedReadingPct?: number
-  /** the session ended on the >=2-point symptom-rise stop rule */
+  /** the session ended on the more-than-2-point symptom-rise stop rule */
   symptomLimited?: boolean
   /** the patient used their one "I feel okay, continue" override */
   overrodeStop?: boolean

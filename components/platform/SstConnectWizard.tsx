@@ -301,7 +301,7 @@ export default function SstConnectWizard({
                 <p className={body}>
                   {platform.ios
                     ? 'iPhones and iPads can’t do live Bluetooth in any browser (Apple doesn’t ship Web Bluetooth). You can still run everything here with manual entry — read the number off your watch and type it in.'
-                    : 'This browser can’t do live Bluetooth. Open this same page in Chrome or Edge on this computer and your watch will pair — or continue here with manual entry.'}
+                    : 'This browser can’t do live Bluetooth. On a computer or Android phone, Chrome or Edge pairs your watch — open this same page there. On an iPhone or iPad no browser can (Apple doesn’t allow it) — manual entry works everywhere.'}
                 </p>
               </div>
             ) : adapterOn === false ? (

@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, MapPin, Stethoscope, Sparkles, ArrowRight } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, MapPin, Stethoscope, Sparkles, ArrowRight, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { holdsOnlineWithoutPracticalDay } from '@/lib/practical-day-seat'
@@ -41,6 +41,11 @@ const navItems: Array<{
   // baseline). PRE-RELEASE: ownerOnly until the subscription launch
   // (owner directive 2026-07-05) — hidden from every other dashboard.
   { icon: Stethoscope, label: 'Clinical Testing', href: '/clinical-testing', clinicalGated: true },
+  // The patient-roster hub was only reachable through the SST setup rail —
+  // invisible exactly where a clinic looks first (owner, 2026-08-11). The
+  // /clinical-testing/hub redirector resolves this clinician's code + viewKey
+  // and forwards; DEMO00 goes keyless.
+  { icon: Radio, label: 'Live Hub', href: '/clinical-testing/hub', clinicalGated: true },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit', paidOnly: true },
   { icon: Mail, label: 'Outreach Kit', href: '/outreach-kit', paidOnly: true },
   // Admin Workflow removed: Hub Pack material (clinic operations), not

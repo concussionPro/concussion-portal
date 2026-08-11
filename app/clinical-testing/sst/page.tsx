@@ -7,6 +7,7 @@ import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { SstClinicCard } from '@/components/clinical/SstClinicCard'
 import PlatformApp from '@/app/platform/app/page'
 import { clearState, getPendingSyncs } from '@/lib/sst-trainer/store'
+import { flushPendingSyncs } from '@/lib/sst-trainer/clinic-sync'
 import Link from 'next/link'
 import { Lock, ArrowRight, ChevronLeft } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -161,17 +162,25 @@ function Shell() {
               <button
                 type="button"
                 onClick={() => {
-                  // This device persists ONE patient's state (sst:v1). When a
-                  // clinician runs a second patient on the same browser, clear it
-                  // first so patient B never inherits patient A's band/history.
-                  // UNSENT CLINICAL EVENTS SURVIVE (2026-08-05): clearState used
-                  // to drop the pendingSyncs queue with everything else, so any
-                  // session that hadn't reached the clinic was lost for good.
+                  // This device persists ONE patient's state (sst:v1). "New
+                  // patient" opens a FRESH FILE: the outgoing patient's tests
+                  // and sessions are already in the Clinical Hub (every event
+                  // syncs as it happens), so nothing clinical lives only here —
+                  // the copy says so instead of reading like a data wipe
+                  // (owner, 2026-08-11). Best-effort flush first so even a
+                  // just-finished session lands before the slot clears; unsent
+                  // events survive the clear regardless (2026-08-05) and keep
+                  // retrying under the new patient.
+                  void flushPendingSyncs()
                   const unsent = getPendingSyncs().length
                   const warning = unsent
-                    ? `\n\n${unsent} session${unsent === 1 ? '' : 's'} ${unsent === 1 ? 'has' : 'have'} not reached your clinic yet — ${unsent === 1 ? 'it is' : 'they are'} kept and will keep retrying.`
+                    ? `\n\n${unsent} unsent session${unsent === 1 ? '' : 's'} will keep retrying in the background — nothing is lost.`
                     : ''
-                  if (window.confirm(`Start a fresh patient? This clears the current patient’s in-progress data on THIS device.${warning}`)) {
+                  if (
+                    window.confirm(
+                      `Start a new patient file on this device?\n\nThe current patient’s record is already in your Live Hub — their tests and sessions synced as they happened. This just frees the device for the next patient.${warning}`,
+                    )
+                  ) {
                     clearState({ preservePendingSyncs: true })
                     setResetSeq((n) => n + 1)
                   }

@@ -34,7 +34,7 @@ const STEPS = [
 const COVERS = [
   { icon: '❤', title: 'Measured, not estimated', body: 'Your training band is anchored to your own symptom threshold — not a formula guessed from your age.' },
   { icon: '⌚', title: 'Your watch works here', body: 'Garmin, Polar, WHOOP, Coros, Suunto and chest straps stream live heart rate in broadcast mode.' },
-  { icon: '2', title: 'Symptom stop rules', body: 'A 2-point symptom rise ends a session safely. Warning signs pause everything until you’re reviewed.' },
+  { icon: '2', title: 'Symptom stop rules', body: 'A symptom rise of more than 2 points ends a session safely — a small rise is expected and okay. Warning signs pause everything until you’re reviewed.' },
   { icon: '✓', title: 'Verified progression', body: 'Only live-verified sessions advance your band — typed numbers count for safety, never for progression.' },
   { icon: '⟳', title: 'Re-test as you recover', body: 'Your ceiling never ratchets past your measurement. A fresh graded test moves it — that’s progress.' },
   { icon: '⤴', title: 'Clinician oversight', body: 'Link a clinic code and every test and session syncs to your clinician’s dashboard, live.' },

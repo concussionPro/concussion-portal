@@ -7,7 +7,7 @@ const AMBER = '#c2772e'
 
 /**
  * Module 3/4 — converting HRt into the sub-symptom-threshold training band.
- * Input (HRt) → ×80–90% band on a HR gauge → FITT dose, with the ≥2-point
+ * Input (HRt) → ×80–90% band on a HR gauge → FITT dose, with the >2-point
  * symptom stop-rule as the governing strip beneath.
  */
 export function HrtToPrescription() {
@@ -24,7 +24,7 @@ export function HrtToPrescription() {
     <InfographicFrame
       eyebrow="Module 3–4 · From threshold to dose"
       title="HRt → the sub-symptom-threshold training band"
-      ariaLabel="Input to dose diagram. The heart rate at symptom threshold, HRt, of 150 beats per minute is multiplied by 80 to 90 percent to set a training band of 120 to 135 beats per minute, shown as a highlighted zone on a heart-rate gauge sitting just below the 150 threshold line. That band becomes a FITT prescription: frequency most days, 5 to 7 sessions a week; intensity 80 to 90 percent of HRt; time about 20 minutes continuous; type walking, stationary cycling or treadmill. The governing rule beneath: if symptoms rise 2 or more points, ease off regardless of heart rate."
+      ariaLabel="Input to dose diagram. The heart rate at symptom threshold, HRt, of 150 beats per minute is multiplied by 80 to 90 percent to set a training band of 120 to 135 beats per minute, shown as a highlighted zone on a heart-rate gauge sitting just below the 150 threshold line. That band becomes a FITT prescription: frequency most days, 5 to 7 sessions a week; intensity 80 to 90 percent of HRt; time about 20 minutes continuous; type walking, stationary cycling or treadmill. The governing rule beneath: if symptoms rise more than 2 points, ease off regardless of heart rate."
       caption="The test result personalises the dose: train inside an 80–90% band that loads the system without crossing the symptom ceiling."
     >
       <svg viewBox="0 0 760 380" className="h-auto w-full" preserveAspectRatio="xMidYMid meet">
@@ -79,7 +79,7 @@ export function HrtToPrescription() {
         {/* stop-rule strip */}
         <rect x="24" y="296" width="712" height="52" rx="14" fill="#f0e6d9" stroke={AMBER} />
         <text x="48" y="320" fontSize="13" fontWeight="800" fill="#a8631f">STOP RULE</text>
-        <text x="140" y="320" fontSize="12.5" fill={INK}>Symptoms rise ≥ 2 points → ease off — the symptom always overrides the number.</text>
+        <text x="140" y="320" fontSize="12.5" fill={INK}>Symptoms rise {'>'} 2 points → ease off — the symptom always overrides the number.</text>
         <text x="48" y="338" fontSize="11" fill={SUB}>Start nearer 80% if highly symptomatic or deconditioned; 90% if tolerating exertion well.</text>
       </svg>
     </InfographicFrame>
