@@ -29,6 +29,8 @@ export interface PatientRecord extends PatientIdentity {
   sex: Sex | null
   researchConsentVersion: number | null
   createdAt: string
+  /** Treating practitioner (display name from the clinic's team list). */
+  practitioner?: string | null
 }
 
 /**
@@ -77,23 +79,29 @@ export async function ensureSstPatientsTable(): Promise<void> {
 export async function createPatient(
   rawClinicCode: unknown,
   label?: string | null,
+  practitioner?: string | null,
 ): Promise<PatientRecord | null> {
   const clinicCode = normaliseClinicCode(rawClinicCode)
   if (!clinicCode) return null
   await ensureSstPatientsTable()
+  // Lazy column, same pattern as episode_outcome below: the assignment is the
+  // "their patients" half of practitioner identity (owner 2026-08-11).
+  await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS practitioner TEXT`.catch(() => {})
+  const prac = practitioner?.trim().slice(0, 80) || null
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const patientCode = generatePatientCode()
     const researchRef = generateResearchRef()
     const { rowCount } = await sql`
-      INSERT INTO sst_clinic_patients (clinic_code, patient_code, research_ref, label)
-      VALUES (${clinicCode}, ${patientCode}, ${researchRef}, ${label?.trim() || null})
+      INSERT INTO sst_clinic_patients (clinic_code, patient_code, research_ref, label, practitioner)
+      VALUES (${clinicCode}, ${patientCode}, ${researchRef}, ${label?.trim() || null}, ${prac})
       ON CONFLICT (clinic_code, patient_code) DO NOTHING
     `
     if (rowCount) {
       return {
         clinicCode, patientCode, researchRef,
         label: label?.trim() || null,
+        practitioner: prac,
         ageBand: null, sex: null, researchConsentVersion: null,
         createdAt: new Date().toISOString(),
       }

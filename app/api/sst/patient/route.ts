@@ -42,7 +42,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Demo clinic is read-only' }, { status: 403 })
   }
   const label = typeof body?.label === 'string' ? body.label.trim().slice(0, 80) : null
-  const patient = await createPatient(clinicCode, label)
+  // Treating practitioner — the "their patients" assignment (owner 2026-08-11).
+  const practitioner = typeof body?.practitioner === 'string' ? body.practitioner.trim().slice(0, 80) : null
+  const patient = await createPatient(clinicCode, label, practitioner)
   if (!patient) return NextResponse.json({ error: 'Could not create patient' }, { status: 500 })
   // researchRef is NEVER returned to the clinic — a clinician who could see it
   // could re-identify a published row from their own patient list, which is the
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     patientCode: patient.patientCode,
     label: patient.label,
+    practitioner: patient.practitioner ?? null,
   })
 }
 

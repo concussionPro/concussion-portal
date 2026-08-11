@@ -21,6 +21,7 @@ import { listClinicAcks } from '@/lib/sst-trainer/clinic-acks'
  */
 type Row = {
   patient_label: string | null
+  patient_code?: string | null
   /** install UUID from the patient app (payload.patientRef) — the stable
    *  per-device identity. Null only for builds that predate the field. */
   patient_ref: string | null
@@ -167,6 +168,7 @@ export async function GET(request: NextRequest) {
     // here meant one anonymous POST could deface every prospect's demo).
     const rows: Row[] = code === 'DEMO00' ? demoFixtureRows() : (await sql<Row>`
       SELECT patient_label, payload->>'patientRef' AS patient_ref,
+             payload->>'patientCode' AS patient_code,
              session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
       FROM sst_clinic_sessions
       WHERE upper(clinic_code) = ${code}
@@ -179,13 +181,15 @@ export async function GET(request: NextRequest) {
     // "Unidentified" patient. patientRef is the same stable per-device identity
     // /api/sst/live already keys on. Falls back to the label for pre-patientRef
     // rows so legacy history still groups the way it always did.
-    const byPatient = new Map<string, { label: string; ref: string | null; thresholds: Row[]; trainings: Row[] }>()
+    const byPatient = new Map<string, { label: string; ref: string | null; patientCode: string | null; thresholds: Row[]; trainings: Row[] }>()
     for (const r of rows) {
       const label = (r.patient_label || '').trim() || 'Unidentified'
       const ref = (r.patient_ref || '').trim() || null
       const key = ref || `label:${label}`
-      if (!byPatient.has(key)) byPatient.set(key, { label, ref, thresholds: [], trainings: [] })
+      if (!byPatient.has(key)) byPatient.set(key, { label, ref, patientCode: null, thresholds: [], trainings: [] })
       const p = byPatient.get(key)!
+      const pc = (r.patient_code || '').trim()
+      if (pc) p.patientCode = pc
       // Keep the most recent non-placeholder label for this device.
       if (label !== 'Unidentified') p.label = label
       if (r.session_type === 'threshold') p.thresholds.push(r)
@@ -216,6 +220,23 @@ export async function GET(request: NextRequest) {
     }
     const labelSeen = new Map<string, number>()
 
+    // Practitioner assignments (minted registry) — one guarded query for the
+    // whole roster; the column is lazily migrated, so failure = no assignments,
+    // never a broken roster.
+    const practitionerByCode = new Map<string, string>()
+    const codes = [...byPatient.values()].map((p) => p.patientCode).filter((c): c is string => !!c)
+    if (codes.length) {
+      try {
+        const { rows: pracRows } = await sql.query(
+          `SELECT patient_code, practitioner FROM sst_clinic_patients
+           WHERE clinic_code = $1 AND patient_code = ANY($2::text[])
+             AND practitioner IS NOT NULL`,
+          [code, codes],
+        )
+        for (const r of pracRows) practitionerByCode.set(String(r.patient_code), String(r.practitioner))
+      } catch { /* pre-migration DB — roster renders unassigned */ }
+    }
+
     const patients = [...byPatient.values()].map((p) => {
       let name = p.label
       if ((labelCounts.get(p.label) ?? 0) > 1) {
@@ -235,6 +256,7 @@ export async function GET(request: NextRequest) {
         // one, and it is the name that belongs on printed paper (crawl #3).
         label: p.label,
         patientRef: p.ref,
+        practitioner: p.patientCode ? practitionerByCode.get(p.patientCode) ?? null : null,
         condition: latest?.condition ?? null,
         hrt: latest?.hrt_bpm ?? null,
         bandLow: latest?.band_low ?? null,
@@ -301,6 +323,19 @@ export async function GET(request: NextRequest) {
             .pop() ?? null,
       }
     })
+
+    // DEMO00: the fixtures carry no minted codes, so assignments are stamped
+    // here — they exist to make the "my patients" filter demonstrable.
+    if (code === 'DEMO00') {
+      const demoPrac: Record<string, string> = {
+        'demo-mt': 'Clinic owner',
+        'demo-rk': 'Clinic owner',
+        'demo-dp': 'Clinician 1',
+      }
+      for (const p of patients) {
+        if (p.patientRef && demoPrac[p.patientRef]) p.practitioner = demoPrac[p.patientRef]
+      }
+    }
 
     const clinicName = (await getClinic(code))?.clinicName ?? null
     // Review acknowledgements ride WITH the roster: the hub's escalation

@@ -76,6 +76,8 @@ type Patient = {
   clearanceRamp?: number | null
   flag?: string
   notes?: string
+  /** Treating practitioner (assignment from the minted registry). */
+  practitioner?: string | null
   /** DEMO only — which completed episode this row's reports render. */
   demoCase?: 'recovery' | 'adherence' | 'stalled'
 }
@@ -115,7 +117,7 @@ const PATIENTS: Patient[] = [
      context for the case to read, nothing that resembles a person. Each row's
      report opens its own episode via `demoCase`. */
   {
-    id: 'c-adherence', name: 'R.K. — 31F, recreational netball', age: 31,
+    id: 'c-adherence', name: 'R.K. — 31F, recreational netball', age: 31, practitioner: 'Clinic owner',
     sport: 'Netball', code: 'CEA-8812', demoCase: 'adherence',
     injuryDate: short(30), daysPost: 30, stage: { n: 4, label: 'Sub-symptom aerobic — plateaued' },
     hrt: 131, ...band(131), restSymptoms: 3, baseline: 'none',
@@ -145,7 +147,7 @@ const PATIENTS: Patient[] = [
     flag: 'Adherent on paper — 11 of 13 sessions HR-verified, but only 7 held inside the band and 4 drifted above it. Threshold has moved 7 bpm in four weeks.',
   },
   {
-    id: 'c-stalled', name: 'D.P. — 17M, school rugby', age: 17,
+    id: 'c-stalled', name: 'D.P. — 17M, school rugby', age: 17, practitioner: 'Clinician 1',
     sport: 'Rugby union', code: 'CEA-9034', demoCase: 'stalled',
     injuryDate: short(30), daysPost: 30, stage: { n: 4, label: 'Sub-symptom aerobic — flat since wk 3' },
     hrt: 142, ...band(142), restSymptoms: 3, baseline: 'captured',
@@ -175,7 +177,7 @@ const PATIENTS: Patient[] = [
     flag: 'Delivered exactly as prescribed — 13 of 13 verified, all in band, no flares — and the threshold has not moved since week three. Re-assess rather than progress.',
   },
   {
-    id: 'c-recovery', name: 'M.T. — 24M, community football', age: 24,
+    id: 'c-recovery', name: 'M.T. — 24M, community football', age: 24, practitioner: 'Clinic owner',
     sport: 'Football (AFL)', code: 'CEA-7729', demoCase: 'recovery',
     injuryDate: short(30), daysPost: 30, stage: { n: 6, label: 'Clearance review' },
     hrt: 155, ...band(155), restSymptoms: 0, baseline: 'captured',
@@ -204,7 +206,7 @@ const PATIENTS: Patient[] = [
   },
 
   {
-    id: 'p0', name: 'P.R. — 29F, football (soccer)', age: 29, sport: 'Football (soccer)', code: 'CEA-7104',
+    id: 'p0', name: 'P.R. — 29F, football (soccer)', age: 29, sport: 'Football (soccer)', code: 'CEA-7104', practitioner: 'Clinician 1',
     injuryDate: short(3), daysPost: 3, stage: { n: 1, label: 'Intake — symptom-limited' },
     hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 7, baseline: 'due',
     trend: [46, 43],
@@ -213,7 +215,7 @@ const PATIENTS: Patient[] = [
     flag: 'Referred 3 days post-injury. Symptom-limited at rest (7/10) — screen and schedule the graded test.',
   },
   {
-    id: 'p2', name: 'A.N. — 24F, netball', age: 24, sport: 'Netball', code: 'CEA-5193',
+    id: 'p2', name: 'A.N. — 24F, netball', age: 24, sport: 'Netball', code: 'CEA-5193', practitioner: 'Clinician 1',
     injuryDate: short(9), daysPost: 9, stage: { n: 2, label: 'Threshold test pending' },
     hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 6, baseline: 'due',
     trend: [44, 41, 38],
@@ -239,7 +241,7 @@ const PATIENTS: Patient[] = [
     flag: 'Measured HRt 128 bpm is below the 135 bpm prognostic cut-off — associated with slower recovery. Oversee dosing and re-assess more often.',
   },
   {
-    id: 'p1', name: 'L.C. — 17M, rugby union', age: 17, sport: 'Rugby union', code: 'CEA-4827',
+    id: 'p1', name: 'L.C. — 17M, rugby union', age: 17, sport: 'Rugby union', code: 'CEA-4827', practitioner: 'Clinic owner',
     injuryDate: short(28), daysPost: 28, stage: { n: 4, label: 'Sub-symptom aerobic (moderate)' },
     hrt: 148, ...band(148), restSymptoms: 2, baseline: 'captured', baselineDate: short(128),
     trend: [38, 31, 22, 14, 9, 5],
@@ -530,6 +532,7 @@ type ApiSession = {
 }
 
 type ApiPatient = {
+  practitioner?: string | null
   name?: string
   /** The REAL stored patient_label. `name` may carry the display-only "(2)"
    *  disambiguation suffix, which exists nowhere in the DB and must never reach
@@ -738,6 +741,7 @@ function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
   const sessions = (p.sessions ?? []).map(mapApiSession).reverse()
   const condition = (p.condition || '').trim()
   return {
+    practitioner: p.practitioner ?? null,
     id: `real-${patientKey}`,
     patientKey,
     name: p.name?.trim() || 'Unidentified',
@@ -1043,7 +1047,15 @@ export default function ClinicalHubPage() {
   }
 
   const isDemo = mode === 'demo'
-  const filtered = roster.filter((pt) => pt.name.toLowerCase().includes(query.toLowerCase()))
+  // "My patients" (owner 2026-08-11): when this device has nominated who is
+  // practising, one tap scopes the roster to THEIR assigned patients.
+  // Unassigned patients stay visible in "All" only — an assignment filter that
+  // hid the unassigned would make new patients vanish for everyone.
+  const [scopeMine, setScopeMine] = useState(false)
+  const scoped = scopeMine && practisingAs
+    ? roster.filter((pt) => pt.practitioner === practisingAs)
+    : roster
+  const filtered = scoped.filter((pt) => pt.name.toLowerCase().includes(query.toLowerCase()))
   const decorated = filtered.map((pt) => {
     const att = deriveAttention(pt)
     const key = att ? ackKeyOf(clinicCode, pt, att) : null
@@ -1230,6 +1242,27 @@ export default function ClinicalHubPage() {
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
               />
             </div>
+
+            {/* All ↔ mine — only meaningful once this device knows who you are */}
+            {practisingAs && (
+              <div className="flex gap-1 rounded-xl bg-black/[0.04] p-1">
+                {([[false, 'All patients'], [true, 'My patients']] as const).map(([mine, tag]) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setScopeMine(mine)}
+                    aria-pressed={scopeMine === mine}
+                    className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                      scopeMine === mine
+                        ? 'bg-white text-[var(--accent)] shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Escalation ladder: unacknowledged attention pins to the top */}
             {needsReview.length > 0 && (
@@ -1587,6 +1620,9 @@ function RosterCard({ pt, att, acked, active, onSelect }: {
         )}
         {att && acked && (
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/[0.03] text-muted-foreground border border-black/5">Reviewed</span>
+        )}
+        {pt.practitioner && (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/[0.04] text-muted-foreground border border-black/5">{pt.practitioner}</span>
         )}
         {pt.daysPost != null
           ? <span className="text-[11px] text-muted-foreground">{pt.daysPost}d post-injury</span>

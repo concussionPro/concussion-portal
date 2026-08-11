@@ -301,6 +301,23 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
 function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () => void }) {
   const [busy, setBusy] = useState(false)
   const [label, setLabel] = useState('')
+  // Treating practitioner — fed from the team list, defaulting to whoever this
+  // device nominated in the hub ("Practising as"). Their patients, their forms.
+  const [team, setTeam] = useState<Array<{ id: string; name: string }>>([])
+  const [practitioner, setPractitioner] = useState('')
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`sst_practising_as:${clinic.code}`)
+      if (saved) setPractitioner(saved)
+    } catch { /* private mode */ }
+    void fetch('/api/clinical-testing/team', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const members = Array.isArray(d?.members) ? d.members : []
+        setTeam(members.map((m: { id: string; name: string }) => ({ id: m.id, name: m.name })))
+      })
+      .catch(() => {})
+  }, [clinic.code])
   const [minted, setMinted] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -312,7 +329,7 @@ function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () =
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ clinicCode: clinic.code, viewKey: clinic.viewKey, label: label.trim() || null }),
+        body: JSON.stringify({ clinicCode: clinic.code, viewKey: clinic.viewKey, label: label.trim() || null, practitioner: practitioner || null }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data?.patientCode) throw new Error(data?.error || 'Could not create patient')
@@ -373,6 +390,22 @@ function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () =
           placeholder="Name or reference (for your list only)"
           className="min-w-[220px] flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm"
         />
+        {team.length > 0 && (
+          <select
+            value={practitioner}
+            onChange={(e) => setPractitioner(e.target.value)}
+            aria-label="Treating practitioner"
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-foreground"
+          >
+            <option value="">Practitioner — unassigned</option>
+            {team.map((m) => (
+              <option key={m.id} value={m.name}>{m.name}</option>
+            ))}
+            {practitioner && !team.some((m) => m.name === practitioner) && (
+              <option value={practitioner}>{practitioner}</option>
+            )}
+          </select>
+        )}
         <button
           type="button"
           onClick={() => void mint()}
