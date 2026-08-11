@@ -3,7 +3,8 @@ import { rateLimit } from '@/lib/rate-limit'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { isRegisteredClinic, verifyViewKey, getClinicUsage, getClinic, getClinicProfile, resolveActingClinician } from '@/lib/sst-trainer/clinic-registry'
 import { loadReportInput, renderSkin } from '@/lib/sst-trainer/reports/load'
-import { renderReportContentToHtml } from '@/lib/sst-trainer/reports/render'
+import { renderReportContentToHtml, type RenderReportOptions } from '@/lib/sst-trainer/reports/render'
+import { renderReportContentToPdf } from '@/lib/sst-trainer/reports/render-pdf'
 import { type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
 
 /**
@@ -128,7 +129,7 @@ export async function GET(request: NextRequest) {
     // doesn't travel when someone saves or forwards the PDF. Banner + DEMO
     // watermark, not 'DRAFT': a draft implies a real record awaiting sign-off.
     const isDemo = code === 'DEMO00'
-    const html = renderReportContentToHtml(content, {
+    const renderOpts: RenderReportOptions = {
       clinicName,
       letterhead: profile
         ? {
@@ -155,8 +156,77 @@ export async function GET(request: NextRequest) {
               watermarkText: isLapsedInclusion ? 'UNLICENSED' : 'TRIAL',
             }
           : {}),
+    }
+
+    // ?format=pdf → the same document as a downloadable A4 PDF (same banners,
+    // same watermark — the disclosure travels with the file).
+    if ((sp.get('format') || '').toLowerCase() === 'pdf') {
+      const pdf = renderReportContentToPdf(content, renderOpts)
+      const slug = `${skin}-${patientLabel.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'patient'}`
+      return new NextResponse(pdf, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${slug}.pdf"`,
+        },
+      })
+    }
+
+    const html = renderReportContentToHtml(content, renderOpts)
+    // DISPATCH TOOLBAR (owner, 2026-08-11): the document buttons opened this
+    // page and dead-ended — no way to send the form anywhere. Screen-only
+    // (display:none under print, and never part of the PDF): download the PDF,
+    // print, or email it (PDF attached) via /api/sst/report-email, which
+    // re-verifies the same code+key this URL carries.
+    const toolbar = `
+<div class="sst-toolbar">
+  <button type="button" onclick="location.href=location.href+(location.search?'&':'?')+'format=pdf'">Download PDF</button>
+  <button type="button" onclick="window.print()">Print</button>
+  <span class="mailgroup">
+    <input id="sst-mail-to" type="email" placeholder="doctor@clinic.com" />
+    <button type="button" id="sst-mail-send">Email report</button>
+  </span>
+  <span id="sst-mail-status"></span>
+</div>
+<style>
+  .sst-toolbar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: #f8fafc; border-bottom: 1px solid #e2e8f0; margin: -32px -22px 20px; padding: 10px 22px; }
+  .sst-toolbar button { font: 600 12px/1 -apple-system,'Segoe UI',sans-serif; color: #0d7377; background: #fff;
+    border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+  .sst-toolbar button:hover { background: #f0fdfa; }
+  .sst-toolbar #sst-mail-send { color: #fff; background: #0d7377; border-color: #0d7377; }
+  .sst-toolbar .mailgroup { display: inline-flex; gap: 6px; margin-left: auto; }
+  .sst-toolbar input { font: 12px/1 -apple-system,'Segoe UI',sans-serif; border: 1px solid #cbd5e1; border-radius: 8px;
+    padding: 7px 10px; min-width: 200px; }
+  .sst-toolbar #sst-mail-status { font: 600 11.5px/1.3 -apple-system,'Segoe UI',sans-serif; color: #475569; }
+  @media print { .sst-toolbar { display: none; } }
+</style>
+<script>
+(function () {
+  var btn = document.getElementById('sst-mail-send')
+  var input = document.getElementById('sst-mail-to')
+  var status = document.getElementById('sst-mail-status')
+  btn.addEventListener('click', function () {
+    var to = (input.value || '').trim()
+    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(to)) { status.textContent = 'Enter a valid email address.'; return }
+    btn.disabled = true
+    status.textContent = 'Sending…'
+    fetch('/api/sst/report-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qs: location.search, to: to }),
     })
-    return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d } }) })
+      .then(function (res) {
+        status.textContent = res.ok ? 'Sent — PDF attached.' : (res.d && res.d.error) || 'Could not send.'
+        btn.disabled = false
+      })
+      .catch(function () { status.textContent = 'Could not send.'; btn.disabled = false })
+  })
+})()
+</script>`
+    return new NextResponse(html.replace('</style></head><body>', '</style></head><body>' + toolbar), {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    })
   } catch (err) {
     console.error('SST report error:', err)
     return NextResponse.json({ error: 'Could not build report' }, { status: 500 })
