@@ -340,8 +340,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       setError(null)
 
       // Fire analytics in background (non-blocking)
-      trackEvent('checkout_start', { courseType, source: 'pricing_page', location: selectedLocation })
-        .catch(() => {})
+      trackEvent('checkout_start', {
+        courseType,
+        source: 'pricing_page',
+        location: selectedLocation,
+        // Whether the buyer CHOSE the city or it is the mount default — without
+        // this, checkout_start reports the default as if it were a preference
+        // (the audit trail behind the 2026-08-10 phantom-Sydney nomination).
+        locationExplicit,
+      }).catch(() => {})
 
       // Fire Google Ads conversion in background (non-blocking)
       const conversionValue = courseType === 'full-course' ? fullCoursePrice : onlinePrice

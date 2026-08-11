@@ -236,7 +236,14 @@ function CheckoutSuccessContent() {
             checkout. Asking an online-only buyer to commit to a practical-day
             city before taking their money cost 100% of the sales; asking here
             costs nothing and captures the same Ready-to-Train demand. */}
-        {isCrm && !isFullCourseType && !sessionData?.location && <CrmCityNomination />}
+        {/* BOTH streams (2026-08-11): a CCM online buyer who skipped the
+            optional picker at checkout — the correct default since the
+            phantom-Sydney fix — was never asked again, so their city demand
+            was lost entirely (kadynw825, Berwick VIC, nominated nothing).
+            Post-purchase is the right moment: the money is already through, so
+            the ask costs no conversion, and it writes to the same
+            Ready-to-Train register the launch threshold counts. */}
+        {!isFullCourseType && !sessionData?.location && <CrmCityNomination />}
 
         {/* Workshop info for full-course and workshop-upgrade */}
         {isFullCourseType && sessionData?.location && (() => {
