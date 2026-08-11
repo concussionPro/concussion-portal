@@ -7,6 +7,7 @@
 //
 // Status drives the page: each entry flips in-preparation → preprint →
 // under-review → published (add `url` when the DOI/preprint goes live).
+import { PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 // Claim discipline: methods/provenance & comfort framing, never efficacy/diagnosis.
 
 export type PubStatus = 'in-preparation' | 'preprint' | 'under-review' | 'published'
@@ -28,6 +29,21 @@ export interface Publication {
 }
 
 export const publications: Publication[] = [
+  {
+    id: 'sst-protocol-zenodo',
+    program: 'Concussion — exercise rehabilitation',
+    primary: true,
+    title:
+      'Clinician-Supervised Sub-Symptom-Threshold Aerobic Exercise Rehabilitation After Concussion: A Standardised Delivery and Measurement Protocol (v2)',
+    authors: 'Lewis Z.',
+    venue: 'Zenodo (open access, CC BY 4.0)',
+    venueType: 'Research report',
+    year: '2026',
+    status: 'published',
+    url: PROTOCOL_DOI_URL,
+    summary:
+      'The published protocol behind the SST platform: the graded threshold test, the sub-symptom training band, session verification against live heart rate, rest-day comparator, and graded return. Open method, citable DOI — the instrumentation is what clinics licence.',
+  },
   {
     id: 'sst-clinical-review',
     program: 'Concussion — exercise rehabilitation',

@@ -321,6 +321,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Public clinical calculator — the mid-consult search surface. robots.txt
     // carries a matching `Allow:` exception to the /tools/ block.
     {
+      url: `${baseUrl}/publications`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/scat-forms/voms`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/tools/bctt-calculator`,
       lastModified: SEO_SWEEP_LAST_MODIFIED,
       changeFrequency: 'monthly',

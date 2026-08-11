@@ -1,6 +1,5 @@
-// HIDDEN / INTERNAL — Research & Publications.
-// Kept hidden until the first real DOIs land: robots noindex+nofollow, NOT in
-// SiteNav, NOT in sitemap.ts. To reveal: remove the robots block + add to nav/sitemap.
+// PUBLIC — Research & Publications. Revealed 2026-08-11: the first real DOI
+// landed (protocol v2 on Zenodo). Listed in the footer + sitemap.
 // QUALITY OVER QUANTITY: lists only genuinely achievable outputs (peer-reviewed
 // journals + real-DOI reports). Data + statuses live in lib/publications.ts.
 // Compliance: research/education framing — methods/provenance & comfort, never
@@ -11,8 +10,7 @@ import { publications, programOrder, type Publication, type PubStatus, type Venu
 export const metadata = {
   title: 'Research & Publications — Concussion Education Australia',
   description:
-    'Peer-reviewed and open research on concussion exercise rehabilitation, webcam oculomotor measurement, and visual comfort. Internal preview.',
-  robots: { index: false, follow: false },
+    'Open-access and peer-review research on concussion exercise rehabilitation, oculomotor measurement, and visual comfort — including the published SST delivery protocol (Zenodo, CC BY).',
 }
 
 const STATUS: Record<PubStatus, { label: string; cls: string }> = {

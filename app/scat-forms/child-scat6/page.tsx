@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import ChildSCAT6Client from './Client'
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat-forms/child-scat6'
@@ -130,7 +131,8 @@ export default function ChildSCAT6Page() {
           </p>
         </div>
         <p className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500">
-          Reviewed by Zac Lewis — Osteopath (AHPRA), B.Clin.Sci, M.Ost.Med · Updated July 2026
+          Reviewed by Zac Lewis — Osteopath (AHPRA), B.Clin.Sci, M.Ost.Med · Updated July 2026{' '}· Rehab method published open-access:{' '}
+          <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-700">{PROTOCOL_DOI_LABEL}</a> (Zenodo, CC BY)
         </p>
       </section>
 

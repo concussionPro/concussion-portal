@@ -135,6 +135,28 @@ export default function SCATFormsPage() {
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors flex-shrink-0" />
           </Link>
+          {/* VOMS — guide + printable scoring sheet (2026-08-11: the
+              vestibular-ocular domain query the SCAT pages can't answer). */}
+          <Link
+            href="/scat-forms/voms"
+            className="glass glass-hover rounded-2xl p-6 flex items-center gap-5 group"
+          >
+            <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+              <FileText className="w-7 h-7 text-purple-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight">VOMS</h2>
+              <p className="text-sm text-muted-foreground mb-2">
+                Vestibular/Ocular Motor Screening — administration guide + printable scoring sheet
+              </p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> 5–10 min</span>
+                <span>7 items · 0–10 ratings</span>
+                <span>Printable</span>
+              </div>
+            </div>
+            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors flex-shrink-0" />
+          </Link>
         </div>
 
         {/* Crawlable definition block */}
