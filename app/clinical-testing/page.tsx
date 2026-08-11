@@ -326,7 +326,7 @@ function Shell() {
                     ${SST_TIER_FROM_AUD}<span className="text-[12px] font-semibold text-slate-500"> / month, from ({sstTierAllowance(SST_TIERS[0])}, unlimited clinicians) · AUD (NZD for NZ suppliers)</span>
                   </p>
                   <p className="m-0 mt-1 text-[12px] leading-snug text-slate-600">
-                    Both instruments, PMS filing (<a href="/integrations/cliniko" className="underline">Cliniko live</a> · Gensolve for NZ), org licence. Optional training
+                    Both instruments, PMS filing (<a href="/integrations/cliniko" className="underline">Cliniko</a> · Nookal · Gensolve for NZ), org licence. Optional training
                     seats across the allied team — physios, osteos and OTs (OA-endorsed) and exercise
                     physiologists ({CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA-accredited' : 'designed to ESSA CPD standards (accreditation pending)'}, {CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} CPD). Final commercials sized per organisation.
                   </p>
@@ -334,7 +334,7 @@ function Shell() {
                 <div className="flex flex-col items-start justify-center gap-2.5 p-5 bg-teal-50/60">
                   <p className="m-0 text-[13px] font-bold leading-snug text-slate-900">
                     Next: a 30-minute scoping call, then full onboarding — team trained and certificated,
-                    instruments live on your clinic code, your PMS connected (Cliniko live; Gensolve for NZ).
+                    instruments live on your clinic code, your PMS connected (Cliniko or Nookal; Gensolve for NZ).
                   </p>
                   <TrackedOutbound
                     href="https://cal.com/zac-lewis-so8zjs/30min"

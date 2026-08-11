@@ -11,6 +11,7 @@ import {
 } from '@/lib/sst-trainer/pms/tenant'
 import { deliverReport } from '@/lib/sst-trainer/pms/deliver'
 import { loadReportInput, renderSkin } from '@/lib/sst-trainer/reports/load'
+import { renderReportContentToPdf } from '@/lib/sst-trainer/reports/render-pdf'
 
 import { type Jurisdiction, type ReportSkinKind } from '@/lib/sst-trainer/reports/jurisdiction'
 
@@ -110,15 +111,28 @@ export async function POST(request: NextRequest) {
         body: ['FREE-TRIAL DOCUMENT — generated on the SST free trial. Subscribe from the clinic workspace to file reports without this notice.'],
       })
     }
+    // The PDF files ALONGSIDE the note (2026-08-11: filing wrote the note only
+    // — the very document the clinician signs never reached the PMS record;
+    // caught in the Nookal-cleanliness sweep, and it was true for Cliniko too).
+    // A failed attachment never fails the note — deliverReport's contract —
+    // and the response says which of the two actually landed.
+    const slug = `${skin}-${patient.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'patient'}`
+    const pdfBytes = new Uint8Array(renderReportContentToPdf(content))
     const result = await deliverReport({
       adapter: resolved.adapter,
       patientId: pmsPatientId,
       content,
       occurredAt: new Date().toISOString(),
+      pdf: { filename: `${slug}.pdf`, bytes: pdfBytes },
     })
     if (result.ok) {
       await markPmsOk(code)
-      return NextResponse.json({ ok: true, noteId: result.note.id ?? null })
+      return NextResponse.json({
+        ok: true,
+        noteId: result.note.id ?? null,
+        attachmentId: result.attachment?.ok ? (result.attachment.id ?? null) : null,
+        attachmentError: result.attachment && !result.attachment.ok ? result.attachment.error ?? 'attachment failed' : null,
+      })
     }
     // A refused write is a REAL failure, not a note in passing. Record it so
     // the clinic card stops showing a green connection, and hand the client an

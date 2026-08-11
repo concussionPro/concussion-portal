@@ -455,7 +455,7 @@ export function SstClinicCard({
         </p>
       </div>
 
-      {/* PMS plugin — connect the clinic's own Gensolve/Cliniko tenant */}
+      {/* PMS plugin — connect the clinic's own Cliniko/Nookal/Gensolve tenant */}
       {clinic && <PmsConnect code={clinic.code} viewKey={clinic.viewKey} demo={isDemoClinic} />}
 
       {/* email the link straight to a patient */}

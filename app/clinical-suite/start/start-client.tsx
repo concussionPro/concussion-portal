@@ -47,7 +47,7 @@ export function SstTrialStartPage() {
               ))}
             </ul>
             <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-slate-400">
-              Works standalone, and connects to Cliniko for patient matching and report filing.
+              Works standalone, and connects to Cliniko or Nookal for patient matching and report filing.
               Included with CCM / CRM course enrolment.
             </p>
           </div>

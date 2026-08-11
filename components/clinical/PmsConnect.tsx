@@ -6,7 +6,9 @@ import { Plug, CheckCircle2, Loader2, Unplug, AlertTriangle } from 'lucide-react
 /**
  * Per-clinic PMS connection card — "your team stays in Gensolve/Cliniko; SST
  * files the reports into it." Authorised by the clinic's code + viewKey (the
- * pair this surface already holds). Cliniko is fully live; Gensolve connects
+ * pair this surface already holds). Cliniko is fully live; Nookal ships with
+ * the same flow (live-tenant verification per the MSCC go-live protocol);
+ * Gensolve connects
  * and searches now, with report WRITES unlocking on first-partner validation
  * (the API explains this when asked to file).
  */

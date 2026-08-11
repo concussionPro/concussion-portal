@@ -5,7 +5,7 @@ import { Send, Loader2, CheckCircle2, X, Search, AlertTriangle } from 'lucide-re
 
 /** Adapter slugs → what a clinician calls the product. */
 const PMS_LABELS: Record<string, string> = {
-  cliniko: 'Cliniko', gensolve: 'Gensolve', pracsuite: 'PracSuite', coreplus: 'coreplus',
+  cliniko: 'Cliniko', nookal: 'Nookal', gensolve: 'Gensolve', pracsuite: 'PracSuite', coreplus: 'coreplus',
 }
 const pmsLabel = (slug: string) => PMS_LABELS[slug] ?? slug
 
@@ -32,8 +32,8 @@ export function PmsFileButton({ clinicCode, viewKey, patientName, patientRef = n
   /** DEMO00 showcase: full Cliniko filing flow, clearly labelled, writes nothing. */
   demo?: boolean
 }) {
-  // Demo defaults to Cliniko — the demo audience is AU clinics (MSCC is on
-  // Cliniko); Gensolve is the NZ rail and read as noise on every AU call.
+  // Demo defaults to Cliniko (the live-validated showcase integration);
+  // Nookal — MSCC's actual PMS — files identically through the same seam.
   const [pms, setPms] = useState<string | null>(demo ? 'cliniko' : null)
   // A connection the API could not verify (revoked key, rotated server secret).
   // The control stays visible — the clinician still needs to know filing exists
@@ -194,8 +194,16 @@ function FileModal({ auth, clinicCode, viewKey, patientName, patientRef = null, 
       // longer valid … reconnect, then file again") instead of the adapter's
       // raw "cliniko: HTTP 401" — and it is rendered as an error, not as an
       // amber note the same colour as the informational text beneath it.
+      // The route now files the PDF alongside the note and reports each
+      // outcome separately — a landed note with a failed attachment must say
+      // so, not read as a complete filing (2026-08-11 Nookal sweep).
       setResult(r.ok && d.ok
-        ? { ok: true, msg: `Filed to ${picked.name}'s record in ${pmsLabel(pms)}.` }
+        ? {
+            ok: true,
+            msg: d.attachmentError
+              ? `Note filed to ${picked.name}'s record in ${pmsLabel(pms)} — but the PDF attachment failed (${d.attachmentError}). The note carries the full report text.`
+              : `Filed to ${picked.name}'s record in ${pmsLabel(pms)} — note + PDF attachment.`,
+          }
         : { ok: false, msg: d.error || `${pmsLabel(pms)} refused the note — nothing was filed. Try again in a moment.` })
     } catch {
       // A dropped/timed-out request leaves the outcome UNKNOWN — the write may
