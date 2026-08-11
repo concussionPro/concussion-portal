@@ -253,8 +253,6 @@ function Shell() {
           {clinicCode && (
             <a
               href={`/clinical-hub?clinic=${encodeURIComponent(clinicCode)}${clinicViewKey ? `&k=${encodeURIComponent(clinicViewKey)}` : ''}`}
-              target="_blank"
-              rel="noopener noreferrer"
               className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-accent/30 bg-white px-5 py-4 no-underline shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-center gap-3.5 min-w-0">

@@ -862,9 +862,41 @@ export default function ClinicalHubPage() {
   const [selectedId, setSelectedId] = useState('c-adherence')
   // Session history is capped at the 6 most recent; a full episode expands.
   const [showAllSessions, setShowAllSessions] = useState(false)
+
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [clinicCode, setClinicCode] = useState('')
+
+  // ── WHO IS USING THIS DEVICE (owner 2026-08-11) ──────────────────────────
+  // The clinic code is shared; the PERSON isn't. Each clinician nominates
+  // themselves once per device; the choice is stamped onto every report this
+  // device opens (?clinician= — the report API's session-first rule already
+  // treats it as the fallback identity), so provider blocks carry the actual
+  // treating clinician instead of arriving blank.
+  const [team, setTeam] = useState<Array<{ id: string; name: string }>>([])
+  const [practisingAs, setPractisingAs] = useState<string>('')
+  useEffect(() => {
+    if (!clinicCode) return
+    try {
+      const saved = localStorage.getItem(`sst_practising_as:${clinicCode}`)
+      if (saved) setPractisingAs(saved)
+    } catch { /* private mode */ }
+    if (clinicCode === 'DEMO00') {
+      setTeam([{ id: 'demo-owner', name: 'Clinic owner' }, { id: 'demo-1', name: 'Clinician 1' }])
+      return
+    }
+    void fetch('/api/clinical-testing/team', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const members = Array.isArray(d?.members) ? d.members : []
+        setTeam(members.map((m: { id: string; name: string }) => ({ id: m.id, name: m.name })))
+      })
+      .catch(() => { /* keyed-link access has no session — free-text stays possible via reports */ })
+  }, [clinicCode])
+  const selectPractising = (name: string) => {
+    setPractisingAs(name)
+    try { localStorage.setItem(`sst_practising_as:${clinicCode}`, name) } catch { /* private mode */ }
+  }
   const [viewKey, setViewKey] = useState<string | null>(null)
   const [clinicName, setClinicName] = useState<string | null>(null)
   const [mode, setMode] = useState<'demo' | 'real'>('demo')
@@ -1105,11 +1137,33 @@ export default function ClinicalHubPage() {
               </p>
             </div>
           </div>
-          {isDemo && (
-            <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
-              <Plus className="w-4 h-4" /> Add patient
-            </button>
-          )}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Practising as — the shared clinic code doesn't know WHO you
+                are; this does. Stamped onto every report this device opens. */}
+            {(team.length > 0 || practisingAs) && (
+              <label className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                Practising as
+                <select
+                  value={practisingAs}
+                  onChange={(e) => selectPractising(e.target.value)}
+                  className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-foreground appearance-none pr-8 bg-no-repeat bg-[right_0.6rem_center] bg-[length:12px] bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%237d9598%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')]"
+                >
+                  <option value="">Choose your name…</option>
+                  {team.map((m) => (
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
+                  {practisingAs && !team.some((m) => m.name === practisingAs) && (
+                    <option value={practisingAs}>{practisingAs}</option>
+                  )}
+                </select>
+              </label>
+            )}
+            {isDemo && (
+              <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
+                <Plus className="w-4 h-4" /> Add patient
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Real-mode key / load states — never fetch-fail into fake data */}
@@ -1267,7 +1321,7 @@ export default function ClinicalHubPage() {
                       ] as const).map(([skin, label]) => (
                         <a
                           key={skin}
-                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(labelOf(p))}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}${p.demoCase ? `&case=${p.demoCase}` : ''}`}
+                          href={`/api/sst/report?code=${encodeURIComponent(isDemo ? 'DEMO00' : clinicCode)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}&patient=${encodeURIComponent(labelOf(p))}${refOf(p) ? `&ref=${encodeURIComponent(refOf(p) as string)}` : ''}&skin=${skin}${p.demoCase ? `&case=${p.demoCase}` : ''}${practisingAs ? `&clinician=${encodeURIComponent(practisingAs)}` : ''}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition"

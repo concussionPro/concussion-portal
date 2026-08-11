@@ -34,6 +34,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       // reading a plausible name on a shared screen cannot tell a fixture from a
       // patient, and should not have to.
       setMembers([{ id: 'demo-1', name: 'Clinician 1', email: null }])
+      // Plans meter ACTIVE PATIENTS, never clinicians — demo mirrors that.
       setSeats({ used: 2, allowance: null, tier: 'clinic', isOwner: true })
       return
     }
@@ -49,7 +50,16 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   useEffect(load, [load])
 
   const add = async () => {
-    if (demo || busy || !name.trim()) return
+    if (busy || !name.trim()) return
+    if (demo) {
+      // Demo is server-side read-only; the ADD still has to demonstrate. Local
+      // append, demo-labelled — it feeds the same practising-as dropdown.
+      setMembers((m) => [...m, { id: `demo-${Date.now()}`, name: name.trim(), email: email.trim() || null }])
+      setSeats((sPrev) => (sPrev ? { ...sPrev, used: sPrev.used + 1 } : sPrev))
+      setName(''); setEmail('')
+      setNotice('Added for this demo — not saved.')
+      return
+    }
     setBusy(true)
     setError(null)
     setNotice(null)
@@ -74,7 +84,11 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
   }
 
   const remove = async (id: string, memberName: string) => {
-    if (demo) return
+    if (demo) {
+      setMembers((m) => m.filter((x) => x.id !== id))
+      setSeats((sPrev) => (sPrev ? { ...sPrev, used: Math.max(1, sPrev.used - 1) } : sPrev))
+      return
+    }
     // One unguarded click revoked a colleague's login (getSstClinicByEmail
     // stops resolving them to this clinic) with no warning and no undo, and
     // the failure was swallowed whole — the row just reappeared on reload.
@@ -104,8 +118,8 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
         <p className="text-[12px] font-bold text-foreground">Practitioners</p>
         <span className="text-[11px] font-semibold text-muted-foreground">
           {seats.allowance === null
-            ? `${seats.used} practitioner${seats.used === 1 ? '' : 's'} · unlimited`
-            : `${seats.used} of ${seats.allowance} seat${seats.allowance === 1 ? '' : 's'}`}
+            ? `${seats.used} practitioner${seats.used === 1 ? '' : 's'} · unlimited on every plan`
+            : `${seats.used} practitioner${seats.used === 1 ? '' : 's'} · trial`}
           {/* only a KNOWN tier name gets the suffix — null/trial render nothing */}
           {seats.tier && TIER_NAMES[seats.tier] ? ` · ${TIER_NAMES[seats.tier]} plan` : null}
         </span>
@@ -113,7 +127,7 @@ export function SstTeamSection({ demo = false }: { demo?: boolean }) {
       <ul className="space-y-1.5">
         <li className="flex items-center justify-between text-[12.5px] text-slate-700">
           <span className="font-medium">{seats.isOwner ? 'You (clinic owner)' : 'Clinic owner'}</span>
-          <span className="text-[11px] text-muted-foreground">seat 1</span>
+          <span className="text-[11px] text-muted-foreground">owner</span>
         </li>
         {members.map((m) => (
           <li key={m.id} className="flex items-center justify-between text-[12.5px] text-slate-700">

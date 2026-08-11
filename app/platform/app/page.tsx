@@ -805,7 +805,15 @@ export default function PlatformAppPage({
             // in the synced payload — the override is never silent.
             const wasDirected = clinicianDirected
             setThresholdResult(result)
-            setLastTestAt(now)
+            // An INVALID result does not consume the one-test-per-day slot.
+            // The limit exists to stop repeated symptom provocation from real
+            // graded tests; an unreadable artefact (dropped sensor, typing
+            // slip) is the case the result screen explicitly says to re-test —
+            // and it was burning the slot, so "Re-test threshold" bounced off
+            // the daily gate and silently did nothing (owner 2026-08-11).
+            // Red flags never reach here: they set the red-flag LOCK, which
+            // canRetest checks before anything else.
+            if (result.interpretation !== 'invalid') setLastTestAt(now)
             setClinicianDirected(false)
             setThresholdHistory((prev) => [
               ...prev,
