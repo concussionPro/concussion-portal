@@ -99,7 +99,7 @@ export interface PmsAdapter {
 }
 
 /** Which PMS an adapter targets. Extend the union to add an integration. */
-export type PmsKind = 'cliniko' | 'gensolve' | 'pracsuite' | 'coreplus'
+export type PmsKind = 'cliniko' | 'gensolve' | 'pracsuite' | 'coreplus' | 'nookal'
 
 /**
  * Connection config. Region/shard is encoded differently per PMS (Cliniko folds
@@ -121,6 +121,7 @@ import { ClinikoAdapter } from './cliniko'
 import { GensolveAdapter } from './gensolve'
 import { PracsuiteAdapter } from './pracsuite'
 import { CoreplusAdapter } from './coreplus'
+import { NookalAdapter } from './nookal'
 
 /**
  * Adapter registry — the ONE place that knows the concrete adapters. A new PMS
@@ -139,6 +140,11 @@ export function getAdapter(kind: PmsKind, config: PmsAdapterConfig): PmsAdapter 
       return new PracsuiteAdapter(config)
     case 'coreplus':
       return new CoreplusAdapter(config)
+    // MSCC's PMS (owner, 2026-08-11 — deal moving forward). Unverified response
+    // shapes carry VERIFY markers in nookal.ts; go-live protocol is probe, then
+    // file one report to a TEST patient in their Nookal before real records.
+    case 'nookal':
+      return new NookalAdapter(config)
     default: {
       // Exhaustiveness guard — a new PmsKind without a case is a compile error.
       const _never: never = kind

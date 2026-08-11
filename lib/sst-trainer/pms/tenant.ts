@@ -20,7 +20,7 @@ import { sql } from '@/lib/db'
 import type { PmsAdapter, PmsAdapterConfig, PmsKind } from './adapter'
 import { getAdapter } from './adapter'
 
-const PMS_KINDS: PmsKind[] = ['cliniko', 'gensolve']
+const PMS_KINDS: PmsKind[] = ['cliniko', 'gensolve', 'nookal']
 
 function keyBytes(): Buffer {
   const secret = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET

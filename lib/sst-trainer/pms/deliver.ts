@@ -95,6 +95,12 @@ export function getPmsConfigFromEnv(kind: PmsKind): PmsAdapterConfig | null {
     if (!apiKey) return null
     return { apiKey, userAgent }
   }
+  if (kind === 'nookal') {
+    const apiKey = process.env.NOOKAL_API_KEY?.trim()
+    if (!apiKey) return null
+    const practitionerId = process.env.NOOKAL_PRACTITIONER_ID?.trim()
+    return { apiKey, userAgent, creds: practitionerId ? { practitionerId } : undefined }
+  }
   // gensolve
   const apiKey = process.env.GENSOLVE_API_KEY?.trim()
   if (!apiKey) return null

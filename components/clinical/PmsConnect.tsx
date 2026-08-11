@@ -21,7 +21,7 @@ type PmsStatus = {
 
 export function PmsConnect({ code, viewKey, demo = false }: { code: string; viewKey: string; demo?: boolean }) {
   const [status, setStatus] = useState<PmsStatus | null>(null)
-  const [kind, setKind] = useState<'cliniko' | 'gensolve'>('cliniko')
+  const [kind, setKind] = useState<'cliniko' | 'gensolve' | 'nookal'>('cliniko')
   const [apiKey, setApiKey] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
@@ -156,17 +156,18 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <select
             value={kind}
-            onChange={(e) => setKind(e.target.value as 'cliniko' | 'gensolve')}
+            onChange={(e) => setKind(e.target.value as 'cliniko' | 'gensolve' | 'nookal')}
             className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[13px]"
           >
             <option value="cliniko">Cliniko</option>
+            <option value="nookal">Nookal</option>
             <option value="gensolve">Gensolve</option>
           </select>
           <input
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder={`${kind === 'cliniko' ? 'Cliniko' : 'Gensolve'} API key`}
+            placeholder={`${kind === 'cliniko' ? 'Cliniko' : kind === 'nookal' ? 'Nookal' : 'Gensolve'} API key`}
             className="flex-1 min-w-[180px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px]"
           />
           <button
@@ -183,8 +184,9 @@ export function PmsConnect({ code, viewKey, demo = false }: { code: string; view
       {msg && <p className="text-[12px] text-slate-600 mt-2 m-0">{msg}</p>}
       <p className="text-[11px] text-muted-foreground/80 mt-2 m-0">
         The key is stored encrypted, used only to search patients and file reports your clinician
-        triggers, and can be disconnected any time. Gensolve: your key is generated per tenant in
-        GPM; connection verifies with a read-only search.
+        triggers, and can be disconnected any time. Nookal: your Practice Manager enables the API
+        key under Setup — that key is the only thing we need; cases and filing are handled for you.
+        Gensolve: your key is generated per tenant in GPM; connection verifies with a read-only search.
       </p>
     </div>
   )
