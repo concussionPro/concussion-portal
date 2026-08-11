@@ -324,10 +324,10 @@ export async function GET(request: NextRequest) {
   const infos = findings.filter(f => f.severity === 'info')
 
   let alertEmailFailed = false
-  if (findings.length > 0) {
-    const subject = alerts.length > 0
-      ? `CEA alert — ${alerts.length} issue${alerts.length > 1 ? 's' : ''} found`
-      : `CEA daily — ${infos.length} item${infos.length > 1 ? 's' : ''} to note`
+  // OWNER 2026-08-12: reminder emails are gone. Only real ALERTS email;
+  // info-grade findings stay in the JSON response / logs.
+  if (alerts.length > 0) {
+    const subject = `CEA alert — ${alerts.length} issue${alerts.length > 1 ? 's' : ''} found`
 
     try {
       // sendEmail returns false on failure (it never throws) — treat both

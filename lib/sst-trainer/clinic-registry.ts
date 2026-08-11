@@ -504,6 +504,10 @@ export async function ensureSstClinicsTable(): Promise<void> {
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'trial'`
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS tier TEXT`
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS profile JSONB`
+  // Acquisition channel — the Cliniko marketplace listing went LIVE 2026-08-12
+  // and "make sure we're tracking referrals from them" needs the channel ON
+  // the clinic, not just in a notification email nobody can query.
+  await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS source TEXT`
   // The INCLUDED platform year that comes with a course enrolment. Set when a
   // course purchase provisions the clinic; NULL for trials, for clinics on a
   // real subscription, and for comped/alumni clinics (which are open-ended by
@@ -595,7 +599,8 @@ export async function getSstClinicByEmail(email: string): Promise<SstClinic | nu
   try {
     const { rows } = await sql`
       SELECT code, clinic_name, contact_name, email, view_key, created_at, plan, tier,
-             (to_jsonb(c) ->> 'included_until') AS included_until
+             (to_jsonb(c) ->> 'included_until') AS included_until,
+             (to_jsonb(c) ->> 'source') AS source
       FROM sst_clinics c
       WHERE email = ${email.toLowerCase()}
       ORDER BY created_at ASC
@@ -685,6 +690,8 @@ export async function createSstClinic(args: {
   clinicName: string
   contactName: string
   email: string
+  /** Acquisition channel (?src= on the trial funnel, e.g. 'cliniko'). */
+  source?: string | null
 }): Promise<SstClinic> {
   const clinicName = args.clinicName.trim()
   const contactName = args.contactName.trim()
@@ -719,8 +726,8 @@ export async function createSstClinic(args: {
   // second code and viewKey for one clinician, splitting their patients across
   // a clinic they can see and one they cannot.
   const { rows: claimed } = await sql`
-    INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, created_at)
-    VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${createdAt})
+    INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, source, created_at)
+    VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${args.source?.trim().slice(0, 40) || null}, ${createdAt})
     ON CONFLICT DO NOTHING
     RETURNING code
   `
@@ -847,6 +854,7 @@ export async function listSstClinics(): Promise<SstClinic[]> {
       plan: r.plan || 'trial',
       tier: r.tier || null,
       includedUntil: r.included_until ?? null,
+      source: (r as { source?: string | null }).source ?? null,
     }))
   } catch {
     return []

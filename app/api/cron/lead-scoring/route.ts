@@ -346,9 +346,13 @@ export async function GET(request: NextRequest) {
   }
 
   // ── Step 7: Send briefing email ────
-  const subject = hotLeads.length > 0
-    ? `${hotLeads.length} hot lead${hotLeads.length > 1 ? 's' : ''} — CEA morning briefing`
-    : `CEA morning briefing — ${scoredLeads.length} leads scored`
+  // OWNER 2026-08-12: "the morning daily is useless" — routine briefings are
+  // gone. Scoring still runs (the admin dashboard reads it); an email leaves
+  // this cron ONLY when there is something to act on: a hot lead.
+  if (hotLeads.length === 0) {
+    return NextResponse.json({ ok: true, scored: scoredLeads.length, emailed: false })
+  }
+  const subject = `${hotLeads.length} hot lead${hotLeads.length > 1 ? 's' : ''} — act today`
 
   try {
     await sendEmail({

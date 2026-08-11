@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
               // across codes (2026-08-05 sweep #5; same guard as the portal path).
               (await adoptExistingClinicForEmail(cleanEmail)) ??
               (await createSstClinic({
+                source: cleanSource || null,
                 clinicName: cleanClinic,
                 contactName: cleanClinician,
                 email: cleanEmail,

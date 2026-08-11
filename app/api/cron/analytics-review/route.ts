@@ -77,13 +77,10 @@ export async function GET(request: NextRequest) {
       )
       .join('')
 
-    if (open.length > 0 || resolved > 0) {
+    if (open.length > 0) {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
-        subject:
-          open.length > 0
-            ? `CEA analytics — ${open.length} open work order${open.length > 1 ? 's' : ''} (${resolved} auto-resolved)`
-            : `CEA analytics — all clear, ${resolved} finding(s) auto-resolved`,
+        subject: `CEA analytics — ${open.length} open work order${open.length > 1 ? 's' : ''} (${resolved} auto-resolved)`,
         html: `
           <div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:640px;margin:0 auto;">
             <p style="font-size:13px;color:#475569;">Last 14 days: <strong>${purchases}</strong> purchases · <strong>${tours}</strong> demo tours · <strong>${cals}</strong> call bookings clicked · ${opened} new / ${refreshed} persisting / ${resolved} auto-resolved.</p>
