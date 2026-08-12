@@ -12,7 +12,7 @@ For two decades concussion was managed with rest until symptom-free. Randomised-
 
 The review's contribution is a synthesis of the SSTAE evidence and a structured analysis of the between-visit delivery gap, together with a disclosed-interest mapping of the existing digital tools against delivery requirements derived from the trial procedures. It is not new physiology and not first-to-digital, and the review states this explicitly.
 
-**Declaration.** I developed the SST Trainer software, which appears in Section 4.2 as one disclosed instance of the delivery requirements, not as the review's conclusion. The conflict and its mitigation are stated in the manuscript's Methods and Declarations and on the title page; no efficacy claim is made for the software. The manuscript is not under consideration elsewhere. A preprint of the submitted version has been posted to OSF Preprints; I will supply the DOI as soon as screening assigns it.
+**Declaration.** I developed the SST Trainer software, which appears in Section 4.2 as one disclosed instance of the delivery requirements, not as the review's conclusion. The conflict and its mitigation are stated in the manuscript's Methods and Declarations and on the title page; no efficacy claim is made for the software. The manuscript is not under consideration elsewhere. For completeness: a related self-archived practice document by the author (the delivery protocol itself; Zenodo, doi:10.5281/zenodo.21482633) exists; it is a clinical protocol, not a prior publication of this review. A preprint of the submitted version has been posted to OSF Preprints; I will supply the DOI as soon as screening assigns it.
 
 Thank you for your consideration.
 
