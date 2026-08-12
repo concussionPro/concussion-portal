@@ -29,6 +29,10 @@ export type SyncEventType =
   | 'threshold-red-flag'
   | 'test-aborted'
   | 'red-flag-cleared'
+  // NASA lean (orthostatic) test — POTS pathway. Rides sessionType 'threshold'
+  // for transport but is a DIFFERENT instrument: report + hub threshold
+  // histories must exclude it (see isThresholdEventRow exclusions).
+  | 'orthostatic-test'
   | 'session-completed'
   | 'session-symptom-stopped'
   | 'session-abandoned'

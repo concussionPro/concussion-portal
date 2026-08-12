@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyViewKey, normaliseClinicCode, DEMO_CLINIC_CODE } from '@/lib/sst-trainer/clinic-registry'
-import { createPatient, resolvePatient, recordIntake, closeEpisode, enrolSite } from '@/lib/sst-trainer/patient-registry'
+import { createPatient, resolvePatient, recordIntake, closeEpisode, enrolSite, setRtwStatus } from '@/lib/sst-trainer/patient-registry'
 import { isDemoUserId } from '@/lib/demo-session'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -152,6 +152,15 @@ export async function PUT(request: NextRequest) {
   }
   if (clinicCode === DEMO_CLINIC_CODE || isDemoUserId(clinicCode)) {
     return NextResponse.json({ error: 'Demo clinic is read-only' }, { status: 403 })
+  }
+
+  // Return-to-work status — the payer's endpoint (Clinical Framework P4).
+  // Clinician-asserted, so it lives on the viewKey-authed PUT, updatable at
+  // any point in the episode, not just at closure.
+  if (body?.action === 'rtw-status') {
+    const ok = await setRtwStatus(clinicCode, body?.patientCode, body?.rtwStatus)
+    if (!ok) return NextResponse.json({ error: 'Could not set RTW status' }, { status: 400 })
+    return NextResponse.json({ ok: true })
   }
 
   if (body?.action === 'enrol-site') {

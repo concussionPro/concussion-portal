@@ -293,7 +293,11 @@ export default function SstOnboarding({
             ? 'Ask your clinic to activate your spot'
             : 'Continue'
 
-  const condition: Condition = 'concussion'
+  // PATHWAY (2026-08-12, flag-gated): concussion stays the default; the
+  // POTS / long-COVID pathway is selectable when live. Language doctrine:
+  // "exertion-intolerance rehabilitation" with PEM safeguarding — NEVER
+  // "graded exercise therapy" (NICE NG206 withdrew GET for ME/CFS).
+  const [condition, setCondition] = useState<Condition>('concussion')
 
   return (
     <section className="flex flex-col gap-3.5 pt-1">
@@ -444,6 +448,37 @@ export default function SstOnboarding({
           <span className="text-[10.5px] leading-tight text-(--sst-ghost)">
             So your clinician knows it&rsquo;s you.
           </span>
+        </div>
+      )}
+
+      {/* pathway selector — flag-gated; concussion is and stays the default */}
+      {CONFIG.FEATURES.SST_POTS_PATHWAY_LIVE && (
+        <div className="flex flex-col gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
+            What are you recovering from?
+          </span>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {([
+              ['concussion', 'Concussion', 'Sub-symptom threshold exercise rehab'],
+              ['long-covid', 'POTS · Long COVID', 'Exertion-intolerance rehab with PEM safeguarding'],
+            ] as const).map(([id, label, sub]) => {
+              const on = condition === id
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setCondition(id)}
+                  className={`flex flex-col gap-0.5 rounded-[14px] border-[1.5px] px-3.5 py-3 text-left transition active:scale-[0.99] ${
+                    on ? 'border-(--sst-accent) bg-(--sst-accent-soft)' : 'border-(--sst-line) bg-(--sst-card)'
+                  }`}
+                >
+                  <span className="text-[14px] font-bold leading-tight text-(--sst-ink)">{label}</span>
+                  <span className="text-[10.5px] leading-snug text-(--sst-faint)">{sub}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 

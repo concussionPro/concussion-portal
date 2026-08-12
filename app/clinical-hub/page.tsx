@@ -78,6 +78,10 @@ type Patient = {
   notes?: string
   /** Treating practitioner (assignment from the minted registry). */
   practitioner?: string | null
+  /** Return-to-work status — the payer's endpoint (Clinical Framework P4). */
+  rtwStatus?: string | null
+  /** Minted registry code — required for clinician writes (RTW status). */
+  patientCode?: string | null
   /** DEMO only — which completed episode this row's reports render. */
   demoCase?: 'recovery' | 'adherence' | 'stalled'
 }
@@ -117,7 +121,7 @@ const PATIENTS: Patient[] = [
      context for the case to read, nothing that resembles a person. Each row's
      report opens its own episode via `demoCase`. */
   {
-    id: 'c-adherence', name: 'R.K. — 31F, recreational netball', age: 31, practitioner: 'Clinic owner',
+    id: 'c-adherence', name: 'R.K. — 31F, recreational netball', age: 31, practitioner: 'Clinic owner', rtwStatus: 'off-work',
     sport: 'Netball', code: 'CEA-8812', demoCase: 'adherence',
     injuryDate: short(30), daysPost: 30, stage: { n: 4, label: 'Sub-symptom aerobic — plateaued' },
     hrt: 131, ...band(131), restSymptoms: 3, baseline: 'none',
@@ -147,7 +151,7 @@ const PATIENTS: Patient[] = [
     flag: 'Adherent on paper — 11 of 13 sessions HR-verified, but only 7 held inside the band and 4 drifted above it. Threshold has moved 7 bpm in four weeks.',
   },
   {
-    id: 'c-stalled', name: 'D.P. — 17M, school rugby', age: 17, practitioner: 'Clinician 1',
+    id: 'c-stalled', name: 'D.P. — 17M, school rugby', age: 17, practitioner: 'Clinician 1', rtwStatus: 'graded-return',
     sport: 'Rugby union', code: 'CEA-9034', demoCase: 'stalled',
     injuryDate: short(30), daysPost: 30, stage: { n: 4, label: 'Sub-symptom aerobic — flat since wk 3' },
     hrt: 142, ...band(142), restSymptoms: 3, baseline: 'captured',
@@ -177,7 +181,7 @@ const PATIENTS: Patient[] = [
     flag: 'Delivered exactly as prescribed — 13 of 13 verified, all in band, no flares — and the threshold has not moved since week three. Re-assess rather than progress.',
   },
   {
-    id: 'c-recovery', name: 'M.T. — 24M, community football', age: 24, practitioner: 'Clinic owner',
+    id: 'c-recovery', name: 'M.T. — 24M, community football', age: 24, practitioner: 'Clinic owner', rtwStatus: 'at-work',
     sport: 'Football (AFL)', code: 'CEA-7729', demoCase: 'recovery',
     injuryDate: short(30), daysPost: 30, stage: { n: 6, label: 'Clearance review' },
     hrt: 155, ...band(155), restSymptoms: 0, baseline: 'captured',
@@ -533,6 +537,8 @@ type ApiSession = {
 
 type ApiPatient = {
   practitioner?: string | null
+  rtwStatus?: string | null
+  patientCode?: string | null
   name?: string
   /** The REAL stored patient_label. `name` may carry the display-only "(2)"
    *  disambiguation suffix, which exists nowhere in the DB and must never reach
@@ -742,6 +748,8 @@ function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
   const condition = (p.condition || '').trim()
   return {
     practitioner: p.practitioner ?? null,
+    rtwStatus: p.rtwStatus ?? null,
+    patientCode: p.patientCode ?? null,
     id: `real-${patientKey}`,
     patientKey,
     name: p.name?.trim() || 'Unidentified',
@@ -1328,6 +1336,40 @@ export default function ClinicalHubPage() {
                       {isDemo ? 'patient code' : 'clinic code'}{' '}
                       <span className="font-mono text-foreground">{p.code}</span>
                     </p>
+                    {(isDemo || p.patientCode) && (<>
+                    {/* RTW status — the payer's endpoint (Clinical Framework P4).
+                        Clinician-set, updatable any time via the viewKey-authed
+                        PUT; demo shows the fixture value read-only (writes are
+                        server-blocked there anyway). */}
+                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className="font-semibold text-muted-foreground/80">RTW:</span>
+                      <select
+                        value={p.rtwStatus ?? ''}
+                        disabled={isDemo}
+                        title={isDemo ? 'Demo — read-only' : 'Return-to-work status (saved to the patient record)'}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          if (!v) return
+                          updatePatient(p.id, { rtwStatus: v })
+                          void fetch('/api/sst/patient', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              clinicCode, viewKey, action: 'rtw-status',
+                              patientCode: p.patientCode, rtwStatus: v,
+                            }),
+                          }).catch(() => {})
+                        }}
+                        className="rounded-md border border-black/10 bg-white px-1.5 py-0.5 text-[11.5px] text-foreground disabled:opacity-70"
+                      >
+                        <option value="">— not set —</option>
+                        <option value="at-work">At work</option>
+                        <option value="graded-return">Graded return</option>
+                        <option value="off-work">Off work</option>
+                        <option value="not-in-workforce">Not in workforce</option>
+                      </select>
+                    </div>
+                    </>)}
                     {(p.injuryDate || p.daysPost != null || p.lastActivity) && (
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                         {p.injuryDate && <span className="inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Injured {p.injuryDate}</span>}

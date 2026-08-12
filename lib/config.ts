@@ -259,6 +259,11 @@ export const CONFIG = {
      * Flip to true the day the HREC approves. Nothing else needs to change.
      */
     SST_RESEARCH_CONSENT_LIVE: true,
+    // POTS / long-COVID exertion-intolerance pathway (owner, 2026-08-12):
+    // enables the condition selector + DSQ-PEM screening step + orthostatic
+    // (NASA lean) instrument. Enable quietly — no marketing copy changes ride
+    // this flag; concussion remains the default pathway everywhere.
+    SST_POTS_PATHWAY_LIVE: true,
     SHOW_COUNTDOWN: true,
     SHOW_SPOTS_REMAINING: true,
     SHOW_SOCIAL_PROOF: true,

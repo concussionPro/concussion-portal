@@ -101,7 +101,9 @@ const evTypeOf = (p: Record<string, unknown> | null): string =>
  *  pick the prescription, or read as the "latest" test. */
 const isThresholdEventRow = (r: Row): boolean => {
   const e = evTypeOf(r.payload)
-  return e === 'test-aborted' || e === 'red-flag-cleared'
+  // 'orthostatic-test' (NASA lean, POTS pathway) is a different instrument on
+  // the threshold transport — never part of the graded-test history.
+  return e === 'test-aborted' || e === 'red-flag-cleared' || e === 'orthostatic-test'
 }
 const VALID_INTERP = new Set(['physiologic', 'no-intolerance', 'red-flag', 'invalid'])
 const asInterp = (s: unknown): ThresholdResult['interpretation'] =>
@@ -495,6 +497,20 @@ export async function loadReportInput(
       }
     : null
 
+  // Clinician-set RTW status (registry) — the payer's endpoint, so the RTW
+  // summary must carry it when the patient is registry-keyed. Guarded: a
+  // pre-migration DB or label-only patient simply omits the row.
+  let rtwStatus: string | undefined
+  if (patientCode) {
+    try {
+      const { rows: pr } = await sql`
+        SELECT rtw_status FROM sst_clinic_patients
+        WHERE clinic_code = ${code.toUpperCase()} AND patient_code = ${patientCode}
+      `
+      if (pr[0]?.rtw_status) rtwStatus = String(pr[0].rtw_status)
+    } catch { /* pre-migration — omit */ }
+  }
+
   const patient: ReportPatient = {
     firstName: opts.patient?.firstName ?? patientLabel,
     lastName: opts.patient?.lastName ?? '',
@@ -502,6 +518,7 @@ export async function loadReportInput(
     ethnicity: opts.patient?.ethnicity,
     claimRef: opts.patient?.claimRef,
     diagnosis: opts.patient?.diagnosis,
+    rtwStatus,
   }
 
   return {

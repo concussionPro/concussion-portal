@@ -60,6 +60,8 @@ export interface ReportPatient {
   claimRef?: string
   /** Read-code / diagnosis label carried from the PMS condition (NZ S60..). */
   diagnosis?: string
+  /** Clinician-set return-to-work status (Clinical Framework P4 endpoint). */
+  rtwStatus?: string
 }
 
 /** A patient-stated rehab goal (drives the SMART-goal sections). */
@@ -517,6 +519,18 @@ export function rtpClearance(input: ReportInput): ReportContent {
 }
 
 /** Return-to-work summary (WorkCover-style) — capacity framed by measured tolerance. */
+
+/** Human label for the clinician-set RTW status codes. */
+function rtwLabel(code: string): string {
+  const map: Record<string, string> = {
+    'at-work': 'At work',
+    'graded-return': 'Graded return to work',
+    'off-work': 'Off work',
+    'not-in-workforce': 'Not in the workforce',
+  }
+  return map[code] ?? code
+}
+
 export function rtwSummary(input: ReportInput): ReportContent {
   const { verified, total } = verifiedShare(input.sessions)
   const outcome = testedOutcome(input)
@@ -531,6 +545,9 @@ export function rtwSummary(input: ReportInput): ReportContent {
           'Capacity statements below are informed by objectively measured exercise tolerance (heart-rate threshold on graded testing); they are not a diagnostic or fitness-for-duty determination, which remains the treating clinician’s judgement.',
         ],
         fields: [
+          ...(input.patient.rtwStatus
+            ? [{ label: 'Current return-to-work status', value: rtwLabel(input.patient.rtwStatus) }]
+            : []),
           { label: 'Current training band', value: bandText(input.prescription) },
           { label: 'Verified / total sessions', value: `${verified} / ${total}` },
         ],

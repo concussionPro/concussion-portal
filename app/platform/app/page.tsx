@@ -17,6 +17,7 @@ import {
   defaultState,
   loadState,
   savePatientStateDebounced,
+  type PemScreenStore,
   type PersistedSession,
   type PersistedTest,
   type WelcomeSelection,
@@ -41,6 +42,9 @@ import {
   type SyncEventType,
 } from '@/lib/sst-trainer/clinic-sync'
 import { daysSinceInjury } from '@/lib/sst-trainer/research'
+import { pemGate, requiresPemScreen, scorePemScreen } from '@/lib/sst-trainer/pem'
+import { PemScreenForm } from '@/components/sst-trainer/PemScreen'
+import OrthostaticTest, { type OrthostaticResult } from '@/components/sst-trainer/OrthostaticTest'
 import DailyCheckin from '@/components/sst-trainer/DailyCheckin'
 import { SstAppShell } from '@/components/platform/SstAppShell'
 import SstOnboarding, { type OnboardingResult } from '@/components/platform/SstOnboarding'
@@ -69,7 +73,7 @@ import SstPwaRegister from '@/components/platform/SstPwaRegister'
 // Gated + noindex by app/platform/layout.tsx; do not re-gate here.
 // ─────────────────────────────────────────────────────────────────────────────
 
-type AppStep = Step | 'checkin' | 'locked'
+type AppStep = Step | 'checkin' | 'locked' | 'pem' | 'pem-blocked' | 'ortho'
 
 const STEP_CAPTION: Record<AppStep, string> = {
   welcome: 'Welcome',
@@ -82,6 +86,9 @@ const STEP_CAPTION: Record<AppStep, string> = {
   progress: 'Progress',
   checkin: 'Quick check-in',
   locked: 'Medical review',
+  pem: 'PEM screen',
+  'pem-blocked': 'Not appropriate yet',
+  ortho: 'Orthostatic test',
 }
 
 const WEEK_MS = 604_800_000
@@ -197,6 +204,13 @@ export default function PlatformAppPage({
   // row with trained=true instead of re-asking the question.
   const [dailyCheckinOn, setDailyCheckinOn] = useState<string | null>(null)
   const [dailyCheckinScore, setDailyCheckinScore] = useState<number | null>(null)
+  // PEM screen (DSQ-PEM, Cotler 2018) — stored so a PEM-risk pathway is
+  // screened ONCE per episode, not on every open. The gate itself
+  // (lib/sst-trainer/pem.ts pemGate) fails closed: no screen = no band.
+  const [pemScreen, setPemScreen] = useState<PemScreenStore | null>(null)
+  // Most recent orthostatic (NASA lean) result — result screen only; the
+  // synced event is the durable record.
+  const [orthoResult, setOrthoResult] = useState<OrthostaticResult | null>(null)
 
   const installIdRef = useRef<string>('')
   const condition: Condition = welcome?.condition ?? 'concussion'
@@ -213,7 +227,7 @@ export default function PlatformAppPage({
           dataConsent: s.dataConsent,
           clinicCode: s.clinicCode,
           patientName: s.patientName,
-          condition: 'concussion', // the only live pathway today
+          condition: s.condition ?? 'concussion',
           patientCode: s.patientCode,
           injuryDate: s.injuryDate,
           ageBand: s.ageBand,
@@ -241,9 +255,24 @@ export default function PlatformAppPage({
       setCheckinSkippedOn(s.checkinSkippedOn)
       setDailyCheckinOn(s.dailyCheckinOn)
       setDailyCheckinScore(s.dailyCheckinScore)
+      setPemScreen(s.pemScreen ?? null)
 
+      // PEM interlock on rehydration: a PEM-risk pathway (long COVID / POTS)
+      // never lands on Home unscreened or screened-positive. Red-flag lock
+      // still outranks it — a warning sign is the more urgent hold.
+      const cond: Condition = s.condition ?? 'concussion'
+      const pemStatus = requiresPemScreen(cond)
+        ? scorePemScreen(s.pemScreen ?? null).status
+        : 'clear'
       if (s.redFlagLocked) {
         setStep('locked')
+      } else if (pemStatus === 'positive') {
+        setStep('pem-blocked')
+        setWelcomeBack(true)
+      } else if (pemStatus !== 'clear' && (s.clinicCode || s.patientName || s.prescription)) {
+        // past onboarding but never screened (or an invalid screen) — screen now
+        setStep('pem')
+        setWelcomeBack(true)
       } else if (s.prescription) {
         // Next-day check-in: on an open >=12h after a session with no answer
         // yet — UNLESS the patient already skipped it today (the skip persists
@@ -316,12 +345,14 @@ export default function PlatformAppPage({
       researchConsent: welcome?.researchConsent ?? false,
       dailyCheckinOn,
       dailyCheckinScore,
+      condition: welcome?.condition ?? 'concussion',
+      pemScreen,
     })
   }, [
     hydrated, welcome, clinicName, goal, goalLabel, selectedSymptomIds, restingSymptomScore,
     prescription, thresholdHistory, sessions, archivedSessions, verifiedSessions,
     progressionCheckpoint, decisionCheckpoint, lastRedFlagAt, redFlagLocked, redFlagClearedAt,
-    lastTestAt, lastRegressAt, checkinSkippedOn, dailyCheckinOn, dailyCheckinScore,
+    lastTestAt, lastRegressAt, checkinSkippedOn, dailyCheckinOn, dailyCheckinScore, pemScreen,
   ])
 
   // Per-clinic QR deep link (/sst-trainer?clinic=CODE) → pre-fill the clinic code
@@ -422,6 +453,10 @@ export default function PlatformAppPage({
         patientCode: welcome?.patientCode ?? null,
         // Derived on device at event time; the injury date itself never leaves.
         daysSinceInjury: welcome?.injuryDate ? daysSinceInjury(welcome.injuryDate, new Date()) : null,
+        // The server-side pemGate (app/api/sst/session) reads payload.pemScreen
+        // for PEM-risk conditions and refuses to store a band without a clear
+        // screen — so the screen must ride on every clinical event.
+        ...(pemScreen ? { pemScreen } : {}),
       },
     })
   }
@@ -652,7 +687,10 @@ export default function PlatformAppPage({
       stepIndex={stepIndex}
       totalSteps={STEP_ORDER.length}
       caption={STEP_CAPTION[step]}
-      showProgress={prescription === null && step !== 'locked' && step !== 'checkin'}
+      showProgress={
+        prescription === null &&
+        step !== 'locked' && step !== 'checkin' && step !== 'pem-blocked' && step !== 'ortho'
+      }
       bpm={feed.bpm}
       hrStatus={feed.status}
       onReconnect={() => setReconnectOpen(true)}
@@ -738,9 +776,124 @@ export default function PlatformAppPage({
                 }),
               }).catch(() => {})
             }
-            setStep('symptoms')
+            // PEM interlock: a PEM-risk pathway is screened BEFORE the symptom
+            // profile — the flow must never reach a threshold test unscreened.
+            if (requiresPemScreen(r.welcome.condition)) {
+              const status = scorePemScreen(pemScreen).status
+              if (status === 'positive') setStep('pem-blocked')
+              else if (status !== 'clear') setStep('pem')
+              else setStep('symptoms')
+            } else {
+              setStep('symptoms')
+            }
           }}
         />
+      )}
+
+      {/* ── PEM screen (DSQ-PEM) — required before any PEM-risk prescription ── */}
+      {step === 'pem' && (
+        <PemScreenForm
+          condition={condition}
+          onComplete={(screen) => {
+            const stored: PemScreenStore = {
+              items: screen.items.map((it) => ({ frequency: it.frequency, severity: it.severity })),
+              screenedAt: screen.screenedAt,
+              ...(screen.screenedBy ? { screenedBy: screen.screenedBy } : {}),
+            }
+            setPemScreen(stored)
+            const verdict = scorePemScreen(screen)
+            if (verdict.status === 'clear') {
+              setStep(prescription ? 'home' : 'symptoms')
+            } else {
+              setStep('pem-blocked')
+            }
+          }}
+          onCancel={() => setStep(prescription && !requiresPemScreen(condition) ? 'home' : 'welcome')}
+        />
+      )}
+
+      {/* ── PEM positive: graded exertion refused, pacing guidance instead ──── */}
+      {step === 'pem-blocked' && (() => {
+        const gate = pemGate(condition, pemScreen)
+        return (
+          <section className="flex min-h-[60vh] flex-col justify-center gap-4 pt-1">
+            <div className="rounded-[18px] border-2 border-(--sst-warn) bg-(--sst-warn-soft) px-4 py-4">
+              <p className="m-0 text-[17px] font-extrabold leading-snug text-(--sst-warn-ink)">
+                Graded exertion isn&rsquo;t appropriate right now
+              </p>
+              <p className="mt-2 text-[13px] leading-relaxed text-(--sst-warn-ink-2)">
+                {gate.message ||
+                  'Your screening indicates post-exertional malaise, so a heart-rate training band will not be set.'}
+              </p>
+              <p className="mt-2 text-[13px] leading-relaxed text-(--sst-warn-ink-2)">
+                {gate.guidance ||
+                  'Manage within an energy envelope — pacing and activity management, not a graded exertion target. Speak with your treating clinician about next steps.'}
+              </p>
+            </div>
+            <p className="m-0 rounded-[12px] bg-(--sst-surface-2) px-3.5 py-2.5 text-[11.5px] leading-snug text-(--sst-muted)">
+              This is a screening result, not a diagnosis — share it with your treating clinician,
+              who sets the next steps. When things settle, you can re-screen — the exertion pathway
+              opens only on a clear screen.
+            </p>
+            <SecondaryButton onClick={() => setStep('pem')} className="rounded-[16px] p-3.5">
+              Re-screen now
+            </SecondaryButton>
+          </section>
+        )
+      })()}
+
+      {/* ── orthostatic (NASA lean) test — POTS pathway measurement ─────────── */}
+      {step === 'ortho' && !orthoResult && (
+        <OrthostaticTest
+          liveHr={sessionFeed.bpm}
+          hrStatus={sessionFeed.status}
+          onCancel={() => setStep(prescription ? 'home' : 'welcome')}
+          onComplete={(result) => {
+            setOrthoResult(result)
+            // The synced event is the durable record. Excluded from the HRt
+            // trajectory server-side — a lean test is not a graded test.
+            syncEvent({
+              sessionType: 'threshold',
+              eventType: 'orthostatic-test',
+              payload: { ...result },
+            })
+          }}
+        />
+      )}
+      {step === 'ortho' && orthoResult && (
+        <section className="flex flex-col gap-4 pt-1">
+          <div className="flex flex-col gap-1.5">
+            <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-(--sst-ink)">
+              Orthostatic test recorded
+            </h1>
+            <p className="m-0 text-[12.5px] leading-snug text-(--sst-muted)">
+              Sent to your clinician. A screening measurement — not a diagnosis.
+            </p>
+          </div>
+          <div className="rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) px-4 py-3.5">
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <div>
+                <p className="m-0 text-[10px] font-bold uppercase tracking-[0.14em] text-(--sst-faint)">Lying</p>
+                <p className="m-0 text-[22px] font-extrabold text-(--sst-ink)">{orthoResult.supineBpm} <span className="text-[12px] font-semibold text-(--sst-muted)">bpm</span></p>
+              </div>
+              {orthoResult.readings.map((r) => (
+                <div key={r.atMin}>
+                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.14em] text-(--sst-faint)">{r.atMin} min standing</p>
+                  <p className="m-0 text-[22px] font-extrabold text-(--sst-ink)">{r.bpm} <span className="text-[12px] font-semibold text-(--sst-muted)">bpm</span></p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 border-t border-(--sst-line) pt-2.5 text-[12.5px] leading-snug text-(--sst-ink-2)">
+              Largest rise on standing: <strong>{orthoResult.maxDelta > 0 ? '+' : ''}{orthoResult.maxDelta} bpm</strong>.{' '}
+              {orthoResult.sustained
+                ? 'The rise was sustained at ≥30 bpm at both the 5 and 10-minute marks — the adult orthostatic criterion used in POTS assessment. Discuss this result with your clinician.'
+                : 'The rise was not sustained at ≥30 bpm across the 5 and 10-minute marks (the adult criterion; adolescents use 40 bpm). Your clinician sees the full readings.'}
+            </p>
+          </div>
+          <PrimaryButton onClick={() => { setOrthoResult(null); setStep(prescription ? 'home' : 'welcome') }}>
+            Done
+          </PrimaryButton>
+        </section>
       )}
 
       {step === 'symptoms' && (
@@ -951,6 +1104,22 @@ export default function PlatformAppPage({
           {directedRetestPrompt}
           {canDailyCheckin && (
             <DailyCheckin answeredScore={dailyCheckinAnswered} onSave={saveDailyCheckin} />
+          )}
+          {condition === 'long-covid' && (
+            <div className="flex items-center justify-between gap-3 rounded-[16px] border-[1.5px] border-(--sst-line) bg-(--sst-card) px-4 py-3">
+              <div className="min-w-0">
+                <p className="m-0 text-[13px] font-bold text-(--sst-ink)">Orthostatic test (NASA lean)</p>
+                <p className="m-0 mt-0.5 text-[11.5px] leading-snug text-(--sst-muted)">
+                  10-minute standing heart-rate measurement for your clinician.
+                </p>
+              </div>
+              <SecondaryButton
+                onClick={() => { setOrthoResult(null); setStep('ortho') }}
+                className="flex-none px-3.5 py-2.5 text-[12.5px]"
+              >
+                Start
+              </SecondaryButton>
+            </div>
           )}
           <HomeHub
             rx={prescription}

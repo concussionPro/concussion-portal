@@ -96,7 +96,9 @@ function demoFixtureRows(): Row[] {
  *  threshold-* eventType) stays eligible — that IS the test-pending state. */
 function isThresholdEventRow(r: Row): boolean {
   const e = typeof r.payload?.eventType === 'string' ? r.payload.eventType.toLowerCase() : ''
-  return e === 'test-aborted' || e === 'red-flag-cleared'
+  // 'orthostatic-test' = NASA lean measurement (POTS pathway) — a different
+  // instrument on the threshold transport, never the patient's graded test.
+  return e === 'test-aborted' || e === 'red-flag-cleared' || e === 'orthostatic-test'
 }
 
 /** DISTINCT recorded minutes in a stored stage table (0 when absent/unreadable). */
@@ -224,16 +226,24 @@ export async function GET(request: NextRequest) {
     // whole roster; the column is lazily migrated, so failure = no assignments,
     // never a broken roster.
     const practitionerByCode = new Map<string, string>()
+    const rtwByCode = new Map<string, string>()
     const codes = [...byPatient.values()].map((p) => p.patientCode).filter((c): c is string => !!c)
     if (codes.length) {
       try {
+        // rtw_status is lazily migrated (like practitioner); ensure it exists
+        // BEFORE selecting it, or this whole join — practitioner display
+        // included — silently degrades on a pre-migration DB.
+        await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS rtw_status TEXT`.catch(() => {})
         const { rows: pracRows } = await sql.query(
-          `SELECT patient_code, practitioner FROM sst_clinic_patients
+          `SELECT patient_code, practitioner, rtw_status FROM sst_clinic_patients
            WHERE clinic_code = $1 AND patient_code = ANY($2::text[])
-             AND practitioner IS NOT NULL`,
+             AND (practitioner IS NOT NULL OR rtw_status IS NOT NULL)`,
           [code, codes],
         )
-        for (const r of pracRows) practitionerByCode.set(String(r.patient_code), String(r.practitioner))
+        for (const r of pracRows) {
+          if (r.practitioner) practitionerByCode.set(String(r.patient_code), String(r.practitioner))
+          if (r.rtw_status) rtwByCode.set(String(r.patient_code), String(r.rtw_status))
+        }
       } catch { /* pre-migration DB — roster renders unassigned */ }
     }
 
@@ -257,6 +267,10 @@ export async function GET(request: NextRequest) {
         label: p.label,
         patientRef: p.ref,
         practitioner: p.patientCode ? practitionerByCode.get(p.patientCode) ?? null : null,
+        rtwStatus: p.patientCode ? rtwByCode.get(p.patientCode) ?? null : null,
+        // Minted registry key — the hub needs it to WRITE (RTW status, episode
+        // actions). Clinic-scoped, viewKey-authed surface: not a disclosure.
+        patientCode: p.patientCode,
         condition: latest?.condition ?? null,
         hrt: latest?.hrt_bpm ?? null,
         bandLow: latest?.band_low ?? null,

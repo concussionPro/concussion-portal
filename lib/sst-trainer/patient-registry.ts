@@ -555,6 +555,33 @@ export async function recordDailyCheckin(input: {
   }
 }
 
+/** Return-to-work status — the payer's endpoint, updatable any time by the
+ *  clinic (viewKey-authed route). Allowlisted; anything else is rejected. */
+export const RTW_STATUSES = ['at-work', 'graded-return', 'off-work', 'not-in-workforce'] as const
+export type RtwStatus = (typeof RTW_STATUSES)[number]
+
+export async function setRtwStatus(
+  rawClinicCode: unknown,
+  rawPatientCode: unknown,
+  status: unknown,
+): Promise<boolean> {
+  const clinicCode = normaliseClinicCode(rawClinicCode)
+  const patientCode = normalisePatientCode(rawPatientCode)
+  if (!clinicCode || !patientCode) return false
+  if (!(RTW_STATUSES as readonly string[]).includes(String(status))) return false
+  try {
+    await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS rtw_status TEXT`.catch(() => {})
+    const r = await sql`
+      UPDATE sst_clinic_patients SET rtw_status = ${String(status)}
+      WHERE clinic_code = ${clinicCode} AND patient_code = ${patientCode}
+    `
+    return (r as unknown as { rowCount?: number }).rowCount !== 0
+  } catch (err) {
+    console.error('[sst-rtw] update failed:', err)
+    return false
+  }
+}
+
 /**
  * EPISODE ENDPOINT — the terminus a trajectory needs.
  *

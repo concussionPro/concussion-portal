@@ -236,7 +236,10 @@ export async function POST(request: NextRequest) {
     const evType = typeof (payload as { eventType?: unknown }).eventType === 'string'
       ? String((payload as { eventType?: unknown }).eventType)
       : ''
-    const isEventRow = evType === 'test-aborted' || evType === 'red-flag-cleared'
+    // 'orthostatic-test' (NASA lean, POTS pathway) is a different instrument
+    // riding the threshold transport — same rule: never a graded test.
+    const isEventRow =
+      evType === 'test-aborted' || evType === 'red-flag-cleared' || evType === 'orthostatic-test'
     if (sessionType === 'threshold' && isEventRow) {
       payloadForStore.interpretation = 'invalid'
       delete payloadForStore.thresholdStage

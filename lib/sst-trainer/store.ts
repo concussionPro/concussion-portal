@@ -152,7 +152,28 @@ export interface PersistedState {
    */
   dailyCheckinOn: string | null
   dailyCheckinScore: number | null
+  /**
+   * PATHWAY (2026-08-12, POTS enablement): which condition this episode runs
+   * under. Was hardcoded 'concussion' at hydration; once the selector exists
+   * the choice must survive a relaunch or a POTS patient re-opens as a
+   * concussion patient with no PEM gate.
+   */
+  condition: Condition
+  /**
+   * DSQ-PEM screen (Cotler 2018) for PEM-risk pathways — kept so it rides
+   * every session sync (the server gate reads payload.pemScreen) and so the
+   * patient is never re-ambushed with a five-item form each launch.
+   */
+  pemScreen: PemScreenStore | null
   pendingSyncs: QueuedSync[]
+}
+
+/** Mirrors lib/sst-trainer/pem.ts PemScreen — duplicated shape, not imported,
+ *  to keep this store dependency-light; the server validates for real. */
+export interface PemScreenStore {
+  items: Array<{ frequency: number; severity: number }>
+  screenedAt: string
+  screenedBy?: string
 }
 
 // ── install id ───────────────────────────────────────────────────────────────
@@ -199,6 +220,8 @@ export function defaultState(): PersistedState {
     researchConsent: false,
     dailyCheckinOn: null,
     dailyCheckinScore: null,
+    condition: 'concussion',
+    pemScreen: null,
     pendingSyncs: [],
   }
 }

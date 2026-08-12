@@ -70,6 +70,13 @@ function fmtDate(d: string) {
 /** Collapse the app's namespaced eventTypes ('threshold-red-flag',
  *  'test-aborted', …) and bare interpretation values onto one vocabulary. */
 function pointKind(p: TrajectoryPoint): string {
+  // The write side forces interpretation 'invalid' on event rows, so for the
+  // event types that are NOT failed tests the eventType must win — otherwise an
+  // orthostatic (NASA lean) measurement labels as "invalid — not enough data".
+  const ev = (p.eventType ?? '').toLowerCase().trim()
+  if (ev === 'orthostatic-test') return 'orthostatic'
+  if (ev === 'red-flag-cleared') return 'red-flag-cleared'
+  if (ev === 'test-aborted') return 'aborted'
   const raw = (p.interpretation ?? p.eventType ?? '').toLowerCase().trim()
   if (raw === 'threshold-red-flag') return 'red-flag'
   if (raw === 'threshold-no-intolerance') return 'no-intolerance'
@@ -86,6 +93,7 @@ function nonMeasurableLabel(p: TrajectoryPoint): { label: string; cls: string } 
   if (kind === 'no-intolerance') return { label: 'no intolerance — exhaustion without provocation', cls: 'text-emerald-700 bg-emerald-50 border-emerald-200' }
   if (kind === 'aborted') return { label: 'test aborted', cls: 'text-amber-700 bg-amber-50 border-amber-200' }
   if (kind === 'invalid') return { label: 'invalid — not enough data', cls: 'text-slate-600 bg-slate-50 border-slate-200' }
+  if (kind === 'orthostatic') return { label: 'orthostatic (NASA lean) test recorded', cls: 'text-sky-700 bg-sky-50 border-sky-200' }
   return { label: 'no HRt recorded', cls: 'text-slate-600 bg-slate-50 border-slate-200' }
 }
 
