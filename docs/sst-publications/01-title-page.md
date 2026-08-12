@@ -12,7 +12,7 @@
 
 **Keywords:** concussion; mild traumatic brain injury; sub-symptom-threshold aerobic exercise; Buffalo Concussion Treadmill Test; heart-rate threshold; exercise intolerance; digital health; wearable
 
-**Word count:** approximately 3,600 (main text including Methods, excluding abstract, declarations and references); abstract approximately 270.
+**Word count:** approximately 3,500 (main text including Methods, excluding abstract, declarations and references); abstract approximately 270.
 
 **Competing interests:** The author (ZL) is the developer and founder of the SST Trainer software and of Concussion Education Australia, which is referenced in Section 4.2 of the review as one disclosed instance of the delivery requirements discussed. The mitigation steps are described in the manuscript's Methods. No other competing interests are declared.
 
