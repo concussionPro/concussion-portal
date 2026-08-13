@@ -2,7 +2,7 @@ Zac Lewis
 Concussion Education Australia
 z.lew87@gmail.com · ORCID 0009-0002-4267-0451
 
-12 August 2026
+14 August 2026
 
 Dear Editors,
 
@@ -14,7 +14,7 @@ The review's contribution is a synthesis of the SSTAE evidence and a structured 
 
 A narrative synthesis, rather than a systematic review, is the appropriate form here: the question spans heterogeneous evidence types — randomised trials, a consensus statement, device-accuracy studies and a commercial-landscape mapping — rather than a single answerable PICO question, and the trial evidence itself has already been systematically synthesised in work the review cites (Leddy et al., Br J Sports Med 2023). The intended audience is sport and exercise medicine clinicians, sports physiotherapists and rehabilitation providers who prescribe sub-symptom-threshold aerobic exercise.
 
-**Declaration.** I developed the SST Trainer software, which appears in Section 4.2 as one disclosed instance of the delivery requirements, not as the review's conclusion. The conflict and its mitigation are stated in the manuscript's Methods and Declarations and on the title page; no efficacy claim is made for the software. The manuscript is not under consideration elsewhere. For completeness: a related self-archived practice document by the author (the delivery protocol itself; Zenodo, doi:10.5281/zenodo.21482633) exists; it is a clinical protocol, not a prior publication of this review. A preprint of the submitted version has been submitted to SportRxiv; I will supply the DOI when its screening assigns one.
+**Declaration.** I developed the SST Trainer software, which appears in Section 4.2 as one disclosed instance of the delivery requirements, not as the review's conclusion. The conflict and its mitigation are stated in the manuscript's Methods and Declarations and on the title page; no efficacy claim is made for the software. The manuscript is not under consideration elsewhere. For completeness: a related self-archived practice document by the author (the delivery protocol itself; Zenodo, doi:10.5281/zenodo.21482633) exists; it is a clinical protocol, not a prior publication of this review. A preprint of this version has been deposited with SportRxiv; I will supply the DOI when its screening assigns one.
 
 Thank you for your consideration.
 

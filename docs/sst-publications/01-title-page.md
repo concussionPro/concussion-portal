@@ -2,7 +2,7 @@
 
 **Title:** Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a narrative review
 
-**Article type:** Review (narrative)
+**Article type:** Narrative review
 
 **Author:** Zac Lewis¹
 
