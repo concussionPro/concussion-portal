@@ -15,7 +15,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/require-admin'
 import { getStripe } from '@/lib/stripe'
-import { generateTaxInvoicePdf, invoiceNumberFromSession } from '@/lib/tax-invoice'
+import { generateTaxInvoicePdf, invoiceNumberFromSession, ccmInvoiceDescription } from '@/lib/tax-invoice'
+import { crmInvoiceDescription, type CrmTier } from '@/lib/crm-course'
 
 export const runtime = 'nodejs'
 
@@ -111,11 +112,22 @@ export async function GET(request: NextRequest) {
   const currency = (session.currency || 'aud').toUpperCase()
   const productType = session.metadata?.productType
   const courseType = session.metadata?.courseType || ''
+  const accessLevel = session.metadata?.accessLevel || ''
   const location = session.metadata?.location || ''
 
-  const description = productType === 'reference-book'
-    ? 'Concussion Clinical Mastery — Reference Text + Clinical Toolkit 2026 (256-page digital PDF, lifetime access)'
-    : `Concussion Education Australia — ${courseType || 'Online Course'}${location ? ` (workshop: ${location})` : ''}`
+  // Mirror the product-specific descriptions the purchase webhook writes, so a
+  // re-issued invoice reads identically to the original. The old fallback
+  // printed the raw internal courseType ("— online-only") on CCM re-issues.
+  let description: string
+  if (productType === 'reference-book') {
+    description = 'Concussion Clinical Mastery — Reference Text + Clinical Toolkit 2026 (256-page digital PDF, lifetime access)'
+  } else if (productType === 'crm-course' || productType === 'crm-upgrade') {
+    description = crmInvoiceDescription((session.metadata?.tier || 'online') as CrmTier, location || undefined)
+  } else if (productType === 'short-course' && session.metadata?.courseSlug) {
+    description = `Concussion Education Australia — online short course (${session.metadata.courseSlug})`
+  } else {
+    description = ccmInvoiceDescription(courseType, accessLevel, location || undefined)
+  }
 
   const issueDate = new Date()
   const invNumber = invoiceNumberFromSession(session.id, new Date((session.created || 0) * 1000))

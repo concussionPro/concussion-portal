@@ -28,6 +28,49 @@
  */
 
 import { jsPDF } from 'jspdf'
+import { CONFIG } from '@/lib/config'
+
+/**
+ * Invoice line-item description for a CCM-stream sale, derived from the
+ * checkout's courseType. SINGLE SOURCE for the webhook auto-attach AND the
+ * admin re-issue route — the admin route used to print the raw courseType
+ * ("Concussion Education Australia — online-only"), which is an internal
+ * label, not a product a buyer's employer can recognise (Sonya Moore's
+ * reimbursement invoice, 2026-08-13). CRM sales have their own equivalent in
+ * lib/crm-course.ts (crmInvoiceDescription) — keep the two styles aligned.
+ * CPD hours derive from CONFIG per the repo rule: never hardcode CPD numbers.
+ */
+export function ccmInvoiceDescription(
+  courseType: string,
+  accessLevel?: string,
+  workshopCity?: string | null,
+): string {
+  const cityLabel = workshopCity
+    ? (workshopCity === 'byron-bay'
+        ? 'Byron Bay'
+        : workshopCity.charAt(0).toUpperCase() + workshopCity.slice(1))
+    : ''
+  const city = cityLabel ? ` — ${cityLabel} workshop` : ''
+  const { ONLINE_CPD_POINTS, IN_PERSON_CPD_POINTS, TOTAL_CPD_POINTS } = CONFIG.COURSE
+  switch (courseType) {
+    case 'online-only':
+      return `Concussion Clinical Mastery (CCM) — Online course · ${ONLINE_CPD_POINTS} CPD hours · lifetime access`
+    case 'full-course':
+      return `Concussion Clinical Mastery (CCM) — Complete · ${ONLINE_CPD_POINTS} online CPD hours + full-day practical workshop${city} · ${TOTAL_CPD_POINTS} CPD hours total`
+    case 'workshop-upgrade':
+      return `Concussion Clinical Mastery (CCM) — Practical Day workshop upgrade${city} · ${IN_PERSON_CPD_POINTS} additional CPD hours`
+    case 'international-online':
+      // International sales are positioned without AU CPD-hour claims —
+      // mirror the checkout honesty gate (lib/stripe.ts): no CE/CPD currency.
+      return 'Clinical Concussion Course — International · online course · lifetime access'
+    case 'clinic-hub-pack':
+      return 'Concussion Hub Pack — full clinic team access'
+    default:
+      return accessLevel === 'full-course'
+        ? `Concussion Clinical Mastery (CCM) — Complete course${city} · ${TOTAL_CPD_POINTS} CPD hours total`
+        : `Concussion Clinical Mastery (CCM) — Online course · ${ONLINE_CPD_POINTS} CPD hours · lifetime access`
+  }
+}
 
 interface InvoiceLineItem {
   description: string

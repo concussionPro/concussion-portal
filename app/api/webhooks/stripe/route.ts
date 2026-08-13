@@ -759,7 +759,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // out (just without the attachment) and we log the failure for follow-up.
     let invoiceAttachment: { filename: string; content: Buffer } | undefined
     try {
-      const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
+      const { generateTaxInvoicePdf, invoiceNumberFromSession, ccmInvoiceDescription } = await import('@/lib/tax-invoice')
       const issueDate = new Date()
       const invNumber = invoiceNumberFromSession(session.id, issueDate)
       const pdf = generateTaxInvoicePdf({
@@ -767,7 +767,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         issueDate,
         buyer: { name: userName, email: customerEmail },
         lineItems: [{
-          description: labelForCourse(courseType, finalAccess) + (workshopCity ? ` — workshop: ${workshopCity}` : ''),
+          // Full product name + stream on the invoice line — employers
+          // reimburse "Concussion Clinical Mastery", not "online-only".
+          description: ccmInvoiceDescription(courseType, finalAccess, workshopCity),
           quantity: 1,
           unitPriceCents: session.amount_total || 0,
           totalCents: session.amount_total || 0,
