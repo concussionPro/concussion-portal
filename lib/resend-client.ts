@@ -77,6 +77,33 @@ export function htmlToText(html: string): string {
     .trim()
 }
 
+/**
+ * Subjects are PLAIN TEXT — mail clients never decode HTML entities there.
+ * "The one time I&rsquo;ll mention the course" went to the completer batch
+ * verbatim (queued 2026-08-09, flagged 2026-08-14). Templates must use real
+ * characters; this boundary decode makes a template mistake render correctly
+ * anyway, on every send path — immediate, scheduled and attachment sends all
+ * funnel through sendEmail/sendEmailWithAttachment. `&amp;` decodes LAST so
+ * an intentionally escaped entity (`&amp;rsquo;` = the literal text
+ * "&rsquo;") is never double-decoded.
+ */
+export function decodeSubjectEntities(subject: string): string {
+  return subject
+    .replace(/&rsquo;|&#8217;/g, '’')
+    .replace(/&lsquo;|&#8216;/g, '‘')
+    .replace(/&ldquo;|&#8220;/g, '“')
+    .replace(/&rdquo;|&#8221;/g, '”')
+    .replace(/&mdash;|&#8212;/g, '—')
+    .replace(/&ndash;|&#8211;/g, '–')
+    .replace(/&hellip;|&#8230;/g, '…')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+}
+
 interface EmailOptions {
   to: string
   subject: string
@@ -220,12 +247,13 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
   try {
     const encodedAttachments = encodeAttachments(options.attachments)
-    const normalisedTags = ensureSequenceTag(options.tags, options.subject)
+    const subject = decodeSubjectEntities(options.subject)
+    const normalisedTags = ensureSequenceTag(options.tags, subject)
     const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
       to: options.to,
-      subject: options.subject,
+      subject,
       html: options.html,
       // Never HTML-only — see htmlToText.
       text: options.text ?? htmlToText(options.html),
@@ -263,12 +291,13 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
 
   try {
     const encodedAttachments = encodeAttachments(options.attachments)!
-    const normalisedTags = ensureSequenceTag(options.tags, options.subject)
+    const subject = decodeSubjectEntities(options.subject)
+    const normalisedTags = ensureSequenceTag(options.tags, subject)
     const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
       to: options.to,
-      subject: options.subject,
+      subject,
       html: options.html,
       // Never HTML-only — see htmlToText.
       text: options.text ?? htmlToText(options.html),

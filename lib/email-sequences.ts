@@ -1301,7 +1301,7 @@ export const PDF_LEAD_SEQUENCE = [
   },
   {
     day: 45,
-    subject: 'The one time I&rsquo;ll mention the course',
+    subject: 'The one time I’ll mention the course',
     template: (name: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
       <p>You came for a form, and you&rsquo;ve had forms &mdash; no course pitch in any of that, deliberately.</p>
