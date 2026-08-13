@@ -1,8 +1,8 @@
 # Title page
 
-**Title:** Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery
+**Title:** Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a narrative review
 
-**Article type:** Narrative review
+**Article type:** Review (narrative)
 
 **Author:** Zac Lewis¹
 
@@ -12,7 +12,7 @@
 
 **Keywords:** concussion; mild traumatic brain injury; sub-symptom-threshold aerobic exercise; Buffalo Concussion Treadmill Test; heart-rate threshold; exercise intolerance; digital health; wearable
 
-**Word count:** approximately 3,950 (main text including Methods, excluding abstract, key messages, declarations and references); abstract approximately 270.
+**Word count:** approximately 4,000 (main text including Methods, excluding abstract, summary box, table, declarations and references); abstract approximately 240. One table.
 
 **Competing interests:** The author (ZL) is the founder of Concussion Education Australia and the developer of the SST Trainer software, which is referenced in Section 4.2 of the review as one disclosed instance of the delivery requirements discussed. The mitigation steps are described in the manuscript's Methods. No other competing interests are declared.
 
