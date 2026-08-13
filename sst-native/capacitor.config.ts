@@ -50,6 +50,14 @@ const config: CapacitorConfig = {
     // outside the app-bound webview (open external links in the system browser
     // from the web layer via @capacitor/browser or target=_blank).
     allowNavigation: ['portal.concussion-education-australia.com'],
+    // App Review 2.1(a) rejection 2026-08-12: "app loads to a blank white
+    // screen". A server.url shell with no fallback renders EXACTLY that on any
+    // failed/slow first load (Apple's review network is proxied and flaky, and
+    // none of it reproduces locally — sim + prod render fine). errorPath is
+    // Capacitor's native hook for webview load failure (fires from both
+    // didFail and didFailProvisionalNavigation): show the bundled branded
+    // retry page instead of a dead white webview, ever.
+    errorPath: 'error.html',
   },
   ios: {
     contentInset: 'always',
@@ -73,6 +81,20 @@ const config: CapacitorConfig = {
     // BluetoothLe.initialize() (androidNeverForLocation, display strings), so no
     // config block is needed here. iOS/Android permission strings live in
     // Info.plist / AndroidManifest — see README.
+    //
+    // SplashScreen: the submitted 1.0(1) binary had NO splash config, so the
+    // launch storyboard vanished into a white webview while the remote page
+    // fetched — on a slow network that IS the "blank white screen" App Review
+    // photographed. Hold the branded splash long enough for first paint on a
+    // slow link; auto-hide so a fast load never feels sluggish.
+    SplashScreen: {
+      launchShowDuration: 4000,
+      launchAutoHide: true,
+      backgroundColor: '#0f172a',
+      showSpinner: true,
+      spinnerColor: '#5eead4',
+      launchFadeOutDuration: 300,
+    },
   },
 }
 

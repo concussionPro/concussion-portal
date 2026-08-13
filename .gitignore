@@ -50,7 +50,11 @@ next-env.d.ts
 sst-native/node_modules/
 sst-native/ios/
 sst-native/android/
-sst-native/www/
+# www/ is generated EXCEPT error.html — the bundled offline/error fallback
+# (server.errorPath) is source, not build output; losing it regresses the
+# 2.1(a) blank-white-screen fix.
+sst-native/www/*
+!sst-native/www/error.html
 
 # SST watch — xcodegen output + build artifacts
 sst-watch/SSTWatch.xcodeproj/
