@@ -1,77 +1,62 @@
-# Paper 1 — Submission Pack
+# Paper 1 — Submission Pack (REBUILT 14 Aug 2026 — every venue claim verified against live sources this week)
 
-Manuscript: `01-clinical-review-SUBMISSION.md` / `.docx` (submission-clean, 4,632 words, narrative review).
+Manuscript: `01-clinical-review-SUBMISSION.md` / `.docx` — "Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a narrative review". ~4,000 words + Table 1, abstract 242 words, 34 references, Summary box in BMJ format.
+Companions: `01-cover-letter.md` / `01-title-page.md`. Clean docx set: `~/Desktop/Paper1_Submission/`.
 Author: Zac Lewis, Concussion Education Australia. ORCID 0009-0002-4267-0451.
 
-**Strategy (from `04-venues.md`): preprint NOW (free, days) → journal in parallel.**
-Paper 1 is a **narrative review** → NOT medRxiv/bioRxiv (they decline narrative reviews at screening).
+**HISTORY — why this pack was rebuilt.** The July pack targeted two dead venues: *Journal of Concussion* (SAGE) **ceased publication** (homepage: "This journal has now closed", verified 12 Aug 2026), and the **OSF Preprints generalist server suspended all new submissions indefinitely** (COS announcements, Aug/Oct 2025 — only discipline-specific community archives remain, none fitting sports medicine).
+
+**Strategy: preprint (SportRxiv) + journal (BMJ Open Sport & Exercise Medicine) IN PARALLEL. Do not wait for the preprint to "publish" before submitting to the journal.**
 
 ---
 
-## STEP 1 — OSF Preprints (do first; free; public + citable DOI in days)
+## STEP 1 — SportRxiv preprint (do first; free; DOI after 3–5 working-day screening)
 
-1. Create/sign in at osf.io → **Preprints** → "Add a preprint" → provider **OSF Preprints** (health-sciences).
-2. Upload `01-clinical-review-SUBMISSION.docx`.
-3. Title / abstract / keywords: copy from the manuscript head (already formatted).
-4. Discipline: Medicine and Health Sciences.
-5. **Conflict of interest — disclose prominently** (paste the standalone COI below into the COI field).
-6. License: CC-BY 4.0. No ethics statement needed (no human data — narrative review).
-7. Submit → screening pass → permanent DOI. Cite this DOI in Papers 2 & 3 and in clinic-facing material immediately.
+SportRxiv verified 14 Aug 2026: active, accepts **review articles** explicitly, free, non-profit (University of Ottawa Libraries), Crossref DOIs, default licence CC-BY 4.0. **It is NOT on OSF** — it runs independently.
 
-## STEP 2 — Journal of Concussion (SAGE, OA) in parallel
+1. Go to **sportrxiv.org** → create an account → Submit.
+2. Upload `Lewis_SSTAE_narrative_review.docx`. Type: review article. Licence CC-BY 4.0.
+3. Title/abstract/keywords: copy from the manuscript head.
+4. Declare the competing interest in any COI field (statement below).
+5. Submit → screening ~3–5 working days (their stated norm; not guaranteed) → DOI.
+6. **When the DOI arrives:** cite it in outreach, and supply it to BMJ OSEM during review (the cover letter already promises this).
 
-- Portal: SAGE Track / Journal of Concussion submission site.
-- Article type: **Narrative review**. Vancouver references (already in that style).
-- Attach: manuscript `.docx`, cover letter (below), title page, COI statement.
-- APC applies (open access) — budget for the SAGE OA fee.
-- Fallback if declined: *Frontiers in Neurology* (Neurotrauma) → Review/Perspective type.
+Rejected/eligibility surprise? Fallback: **Preprints.org** (fast, free, DOI; MDPI-backed). **medRxiv is NOT an option — it explicitly rejects narrative reviews** (verified on its About page).
 
----
+## STEP 2 — BMJ Open Sport & Exercise Medicine (in parallel with Step 1)
 
-## COVER LETTER (Journal of Concussion)
+Requirements below extracted from BMJ OSEM's own authors page (Wayback capture 13 Jun 2025 — the live page blocks robots; **spot-check the live page in your browser before uploading**). The manuscript already complies with every item marked ✅.
 
-> Dear Editors,
->
-> Please consider the enclosed narrative review, "Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery," for publication in *Journal of Concussion*.
->
-> For two decades concussion was managed with rest until symptom-free. Randomised-trial and physiological evidence has overturned that doctrine: concussion produces a measurable, exercise-provocable autonomic phenotype that is quantified by the Buffalo Concussion Treadmill Test to a heart-rate threshold, and prescribing aerobic exercise just below that threshold accelerates recovery and reduces persistent post-concussive symptoms — now endorsed by the 6th International Consensus Statement (Amsterdam 2022/2023). The review traces this paradigm shift, summarises the threshold-test and sub-symptom-threshold evidence with effect sizes where published, and names the *implementation gap* between an evidence-based prescription and its faithful between-visit delivery.
->
-> The contribution is deliberately narrow and construct-level: a *measured* (not age-predicted) heart-rate threshold combined with live verification-gated heart-rate-zone training and a serial clinician trajectory, delivered hardware-agnostically under clinician supervision. It is not new physiology and not first-to-digital, and the review states this explicitly.
->
-> **Declaration.** I developed the SST Trainer software, which appears in §4 as one disclosed illustrative instance of the delivery requirements, not as the review's conclusion. The conflict and its mitigation are stated in the manuscript and in the enclosed COI statement; no efficacy claim is made for the software. The manuscript is not under consideration elsewhere; a preprint is posted on OSF Preprints (DOI to follow).
->
-> Thank you for your consideration.
->
-> Zac Lewis
-> Osteopath; Founder, Concussion Education Australia
-> z.lew87@gmail.com · ORCID 0009-0002-4267-0451
+- Article type: **"Review"** — explicitly their narrative-review type. ✅ Title includes "a narrative review" (their stated rule). ✅
+- Limits: 4,000 words main text (excl. title page/abstract/tables/refs) ✅ (3,998) · abstract ≤250 unstructured ✅ (242) · ≤6 tables/figures ✅ (1) · ≤80 references ✅ (34).
+- **Summary box** after the abstract with their three exact headings ✅ (already formatted).
+- Peer review: **single anonymised** — reviewers see your identity; no blinding of the package needed.
+- ORCID: mandatory for the submitting author — connect 0009-0002-4267-0451 in their submission system when prompted.
+- **ICMJE COI disclosure form: required.** Download from icmje.org → disclose SST Trainer / CEA ownership → include in the upload bundle. (This is the one artefact not in the Desktop folder — it needs your entries.)
+- APC: **≥ £2,275 + VAT** for Reviews (mid-2025 figure; confirm current on their site). Discounts: BASEM member 25% / listed affiliations 15% / reviewed-for-BOSEM-in-12-months 25% (not combinable). Fee waivers must be requested **at initial submission**.
+- Preprint policy: BMJ explicitly welcomes not-for-profit preprint servers — SportRxiv qualifies; posting is not prior publication.
 
----
+Upload: manuscript docx + `title-page.docx` + `cover-letter.docx` + ICMJE form. The cover letter already (a) justifies narrative-over-systematic (their stated requirement for the Review type), (b) names the audience, (c) discloses the related Zenodo protocol (concept DOI 10.5281/zenodo.21482633 — resolves, verified), (d) references the SportRxiv deposit.
 
-## STANDALONE COI STATEMENT (paste into COI fields)
+Fallback if declined: *Frontiers in Neurology* (Neurotrauma), then *Brain Injury* — re-verify either is open and accepts narrative reviews before redrafting the letter.
 
-> The author (ZL) developed the SST Trainer software described in §4 of this review and is the founder of Concussion Education Australia, which develops it. To limit advocacy bias, the clinical evidence (§§1–3) is presented independently of any product; the delivery requirements (§4) are stated as condition-general design principles before any tool is named; existing tools, including the author's, are then located against those principles with their interest disclosed (§4.2); and no efficacy claim is made for the author's software. No external funding was received for this work.
+## Standalone COI statement (paste into any COI field)
 
-## DATA AVAILABILITY STATEMENT
+> The author (ZL) developed the SST Trainer software described in Section 4.2 of this review and is the founder of Concussion Education Australia, which develops it. To limit advocacy bias: the clinical evidence (Sections 1–3) is presented independently of any product; the delivery requirements (Section 4) are stated as product-independent design principles before any tool is named in the review's argument; existing tools, including the author's, are then located against those principles with the interest disclosed; and no efficacy claim is made for the author's software. No external funding was received for this work.
 
-> This is a narrative review. No new data were generated or analysed; all sources are cited in the reference list.
+## Data availability / Ethics (for portal forms)
 
-## ETHICS STATEMENT
+> Data: Not applicable — narrative review; no new data were generated or analysed; all sources are cited.
+> Ethics: Not applicable — review of published literature; no human participants or patient data.
 
-> Not applicable — narrative review of published literature, no human participants or patient data.
+## Before you upload (your two edits + checks)
 
-## METADATA (for the portal forms)
+1. **Affiliation city** — add to the manuscript header (line 5) and title page (currently "Concussion Education Australia, Australia").
+2. **Cover letter date** — currently 14 August 2026; refresh if submitting later.
+3. Click-check in a real browser (bot-blocked to tools, verified by API): the FDA K241737 reference URL, and BMJ OSEM's live author-guidelines page.
 
-- **Title:** Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery
-- **Keywords:** concussion; mild traumatic brain injury; sub-symptom-threshold aerobic exercise; Buffalo Concussion Treadmill Test; heart-rate threshold; exercise intolerance; digital health; wearable
-- **Article type:** Narrative review
-- **Corresponding author:** Zac Lewis, Concussion Education Australia, z.lew87@gmail.com, ORCID 0009-0002-4267-0451
-- **Suggested reviewers (optional):** researchers publishing on BCTT / SSTAE (Leddy, Haider, Willer group) — do not suggest anyone with a prior working relationship.
+## Papers 2 & 3 (unchanged, later)
 
----
-
-## What's left after this (Papers 2 & 3, unblocked but later)
-
-- **Paper 2 — Tools paper** (`02-tools-paper.md`, draft): venue JMIR mHealth, code CLOSED. Needs a finishing pass to submission state.
-- **Paper 3 — Protocol framework** (`03-protocol-framework.md`, draft): protocols.io deposit → JMIR Res Protoc.
-- **OUT OF SCOPE / gated:** any outcome/effectiveness study (needs primary data + the retrospective-vs-prospective HREC question in `04-venues.md` answered first).
+- Paper 2 — Tools paper (`02-tools-paper.md`, draft): venue JMIR mHealth; needs a finishing pass.
+- Paper 3 — Protocol framework (`03-protocol-framework.md`, draft): protocols.io deposit → JMIR Res Protoc.
+- Outcome/effectiveness studies remain gated on primary data + the HREC question (`04-venues.md`, `10-validation-study-design.md`).
