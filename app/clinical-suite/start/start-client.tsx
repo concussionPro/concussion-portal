@@ -50,6 +50,16 @@ export function SstTrialStartPage() {
               Works standalone, and connects to Cliniko or Nookal for patient matching and report filing.
               Included with CCM / CRM course enrolment.
             </p>
+            <p className="m-0 mt-1 text-[13.5px] leading-[1.5] text-slate-600">
+              Rather see it first?{' '}
+              <a
+                href="https://cal.com/zac-lewis-so8zjs/30min"
+                className="font-bold underline underline-offset-2"
+                style={{ color: ACCENT }}
+              >
+                Book a 30-minute walkthrough with the developer →
+              </a>
+            </p>
           </div>
           <div className="min-w-0 flex-1 basis-[420px]">
             <SstTrialStart source={src} />

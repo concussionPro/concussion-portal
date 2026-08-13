@@ -67,6 +67,14 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
   return <section className={`mx-auto max-w-[1180px] px-6 md:px-8 ${className}`}>{children}</section>
 }
 
+/** Zac's Cal.com booking link — the same event the outreach funnel uses.
+ *  GTM research 2026-08-13: the evidence-backed motion at this price point is
+ *  Jane's dual path — public pricing + self-serve trial AND a book-a-call
+ *  option side by side. Enquiry-only (hidden pricing) is the most-evidenced
+ *  buyer deterrent and would break the Cliniko/Nookal marketplace funnel,
+ *  whose listings land on /clinical-suite/start. */
+const CAL_WALKTHROUGH_URL = 'https://cal.com/zac-lewis-so8zjs/30min'
+
 function Cta({ variant = 'primary', href, children }: { variant?: 'primary' | 'ghost'; href: string; children: React.ReactNode }) {
   const primary = variant === 'primary'
   return (
@@ -123,7 +131,7 @@ function SstTab() {
     — start" and "Start with your clinic code", which an evaluator does not
     have. The clinician's actual try-it path is "Start free trial →" next to
     this. Label it for what it shows. */}
-<Cta variant="ghost" href="/sst-trainer?landing=1">See the patient app</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+<Cta variant="ghost" href={CAL_WALKTHROUGH_URL}>Book a walkthrough</Cta><Cta variant="ghost" href="/sst-trainer?landing=1">See the patient app</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="Buffalo-protocol graded test · their own wearable · files into your PMS" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
@@ -230,7 +238,7 @@ function BaselineTab() {
             any computer, report to your clinic inbox. When an injury happens mid-season, you’re the clinic
             holding their baseline, and the rehab that follows.
           </p>
-          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/clinical-suite/start">Start free trial →</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+          <div className="mt-1 flex flex-wrap gap-3"><Cta href="/pricing">Enrol to unlock the tools</Cta><Cta variant="ghost" href="/clinical-suite/start">Start free trial →</Cta><Cta variant="ghost" href={CAL_WALKTHROUGH_URL}>Book a walkthrough</Cta><Cta variant="ghost" href="/preseason">Try the athlete flow</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
           <FreeBadge note="One link per club · ~5 min per athlete · report to your clinic" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center">
@@ -330,7 +338,10 @@ function SharedPricing() {
                   "Get with the course" + a self-serve trial link — neither of
                   which is the path a league, payer or occ-rehab provider takes. */}
               {t.quoteOnly ? (
-                <a href="mailto:zac@concussion-education-australia.com?subject=SST%20Enterprise%20enquiry" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: '#fff', color: NAVY, border: '1.5px solid #cbd5e1' }}>Talk to us</a>
+                <>
+                  <a href={CAL_WALKTHROUGH_URL} className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: NAVY, color: '#fff' }}>Book a call</a>
+                  <a href="mailto:zac@concussion-education-australia.com?subject=SST%20Enterprise%20enquiry" className="mt-2 text-center text-[13px] font-bold underline-offset-2 hover:underline" style={{ color: ACCENT }}>or email us →</a>
+                </>
               ) : (
                 <>
                   <Link href="/pricing" className="mt-5 rounded-[12px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90" style={{ background: t.popular ? NAVY : '#fff', color: t.popular ? '#fff' : NAVY, border: t.popular ? 'none' : '1.5px solid #cbd5e1' }}>Get with the course</Link>
@@ -351,6 +362,28 @@ function SharedPricing() {
             lib/tax-invoice.ts, which breaks GST out of the total at 1/11) —
             "ex GST" implied a 10% surcharge that is never added at checkout. */}
         <p className="mt-5 text-center text-[12px] text-slate-400">Prices in AUD, inclusive of GST. Included with CCM / CRM enrolment; from A${SST_TIER_FROM_AUD}/mo standalone thereafter.</p>
+
+        {/* Dual-path rail (GTM research 2026-08-13): most clinicians won't buy a
+            clinical tool sight-unseen — but hiding pricing behind an enquiry
+            form is the bigger deterrent. So the trial stays self-serve and the
+            conversation is offered beside it, Jane-style, not instead of it. */}
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-[20px] border border-slate-200 bg-white p-7 shadow-[0_1px_3px_rgba(22,36,63,.06)]">
+          <div className="min-w-[260px] flex-1">
+            <h3 className="m-0 text-[19px] font-extrabold tracking-[-0.02em]" style={{ color: NAVY }}>Rather see it before you start?</h3>
+            <p className="m-0 mt-1.5 max-w-[560px] text-[14px] leading-[1.55] text-slate-600">
+              Book a 30-minute walkthrough with the developer — a live run of the threshold test, a home
+              session and the GP report against your own caseload type, plus your questions. No obligation,
+              and the free trial is still there afterwards.
+            </p>
+          </div>
+          <a
+            href={CAL_WALKTHROUGH_URL}
+            className="rounded-[13px] px-[26px] py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
+            style={{ background: NAVY }}
+          >
+            Book a walkthrough
+          </a>
+        </div>
       </Section>
 
       <Section className="pb-20">
