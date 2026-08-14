@@ -10,6 +10,14 @@ Author: Zac Lewis, Concussion Education Australia. ORCID 0009-0002-4267-0451.
 
 ---
 
+## STATUS 14 Aug 2026 — WHERE THINGS STAND
+
+- **SportRxiv: SUBMITTED** — submission #1022, in moderation (3–5 working days to DOI). Dashboard: sportrxiv.org author dashboard, account zlewis87.
+- **BMJ Open SEM: submitted IN ERROR (bmjsem-2026-003633), WITHDRAWAL REQUESTED 14 Aug** via Contact Journal → info.bmjsem@bmj.com. It never left "Awaiting EPA Processing"; no editor/reviewer involvement.
+- **NEXT ACTION (blocked until BOSEM confirms withdrawal, ~1–2 business days):** submit to **https://mc.manuscriptcentral.com/bjsm** — VERIFY /bjsm IN THE ADDRESS BAR. New account (per-journal), connect ORCID 0009-0002-4267-0451, type = Review. Upload: manuscript docx + title-page.docx + cover-letter.docx + mcqs.docx + Zac's ICMJE form. Field texts: abstract = the single Abstract paragraph from the manuscript; keywords = the 8 from the header; AI-use answer = "A large language model (Claude, Anthropic) was used as a tool in preparing the manuscript. Reason for use: efficiency in manuscript preparation by a sole author. Tasks performed: assistance with text drafting and editing, and checking citations against primary sources. All intellectual content, interpretation and conclusions are the author's; the author reviewed and verified all content and takes full responsibility for the work. The AI is not an author and is also disclosed in the manuscript's Declarations." Address: Concussion Education Australia, 2 Wordsworth St, Byron Bay, NSW 2481; phone +61 449 186 579.
+- Do NOT submit to BJSM before the BOSEM withdrawal confirmation (duplicate-submission rule, same publisher).
+- When the SportRxiv DOI arrives: it satisfies the cover letter's "will supply the DOI" promise — send it to BJSM during review.
+
 ## STEP 1 — SportRxiv preprint (do first; free; DOI after 3–5 working-day screening)
 
 SportRxiv verified 14 Aug 2026: active, accepts **review articles** explicitly, free, non-profit (University of Ottawa Libraries), Crossref DOIs, default licence CC-BY 4.0. **It is NOT on OSF** — it runs independently.
