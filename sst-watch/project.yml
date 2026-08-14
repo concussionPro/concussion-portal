@@ -34,6 +34,8 @@ targets:
         # companion iPhone app exactly.
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        # HTTPS-only — auto-answers the App Store export-compliance question.
+        ITSAppUsesNonExemptEncryption: false
         WKApplication: true
         # Embedded companion of the SST Trainer iPhone app (single App Store
         # listing, Apple ID 6792171738) that still RUNS STANDALONE on the
