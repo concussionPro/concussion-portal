@@ -1,12 +1,12 @@
-# Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a Narrative review
+# Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a Narrative Review
 
 **Running head:** SSTAE for concussion: digital delivery
 
 **Zac Lewis, B.Clin.Sci., M.Ost.Med.**¹
 
-¹ Concussion Education Australia, Australia. ORCID: 0009-0002-4267-0451.
+¹ Concussion Education Australia, Byron Bay, NSW, Australia. ORCID: 0009-0002-4267-0451.
 
-**Corresponding author:** Zac Lewis, Concussion Education Australia. Email: zac@concussion-education-australia.com
+**Corresponding author:** Zac Lewis, Concussion Education Australia, 2 Wordsworth St, Byron Bay, NSW 2481, Australia. Email: zac@concussion-education-australia.com
 
 **Article type:** Narrative review
 

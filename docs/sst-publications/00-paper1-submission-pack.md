@@ -23,7 +23,13 @@ SportRxiv verified 14 Aug 2026: active, accepts **review articles** explicitly, 
 
 Rejected/eligibility surprise? Fallback: **Preprints.org** (fast, free, DOI; MDPI-backed). **medRxiv is NOT an option — it explicitly rejects narrative reviews** (verified on its About page).
 
-## STEP 2 — BMJ Open Sport & Exercise Medicine (in parallel with Step 1)
+## STEP 2 — British Journal of Sports Medicine (in parallel with Step 1; VENUE DECIDED 14 Aug: max reputation, zero cost)
+
+**BJSM is the flagship (subscription journal — no submission, page or APC charges on the standard route).** It formally considers unsolicited narrative reviews; same BMJ house rules as below; plus **5 MCQs (drafted: `01-mcqs.md` / mcqs.docx on the Desktop)**. Submit via BJSM's ScholarOne with: manuscript docx + title page + cover letter (addressed to BJSM) + MCQs + ICMJE form. Phone for the portal: +61 449 186 579. **If rejected: DECLINE the transfer offer to BMJ Open Sport & Exercise Medicine (that's the paid sibling, APC £2,460) and go to the fallback below.**
+
+**FALLBACK (in order):** 1) *The Physician and Sportsmedicine* (T&F — verbatim "no submission fees or page charges", accepts unsolicited evidence-based reviews 3,000–6,000 words; email the editorial office the topic first as they request). 2) *Physical Therapy in Sport* (Elsevier — unsolicited 4,000-word Review Papers, no fees on subscription route). 3) *Brain Injury* (T&F — zero fees verbatim, open Review category ~5,000 words). CSMR proposal email is a parallel-later option (ACSM journal, best topical precedent) — never while under review elsewhere.
+
+### Former target (superseded): BMJ Open Sport & Exercise Medicine
 
 Requirements verified against the LIVE authors page (Zac pasted it 14 Aug 2026) — Review type, limits, Summary-box headings, cover-letter justification, ICMJE form, single-anonymised model all confirmed verbatim. The manuscript also now carries the live page's Patient-and-Public-Involvement and Equity-Diversity-Inclusion statements in Methods, and the title matches their exact required string ('a Narrative review').
 
