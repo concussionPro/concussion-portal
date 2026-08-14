@@ -4,11 +4,13 @@
 
 **Article type:** Narrative review
 
-**Author:** Zac Lewis¹
+**Author:** Zac Lewis, B.Clin.Sci., M.Ost.Med.¹
 
 ¹ Concussion Education Australia, Australia
 
-**Corresponding author:** Zac Lewis, Concussion Education Australia. Email: z.lew87@gmail.com. ORCID: 0009-0002-4267-0451.
+**Corresponding author:** Zac Lewis, Concussion Education Australia. Email: zac@concussion-education-australia.com. ORCID: 0009-0002-4267-0451.
+
+**Running head:** SSTAE for concussion: digital delivery
 
 **Keywords:** concussion; mild traumatic brain injury; sub-symptom-threshold aerobic exercise; Buffalo Concussion Treadmill Test; heart-rate threshold; exercise intolerance; digital health; wearable
 

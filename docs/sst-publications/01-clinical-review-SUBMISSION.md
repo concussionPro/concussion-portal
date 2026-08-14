@@ -4,7 +4,7 @@
 
 ¹ Concussion Education Australia, Australia. ORCID: 0009-0002-4267-0451.
 
-**Corresponding author:** Zac Lewis, Concussion Education Australia. Email: z.lew87@gmail.com
+**Corresponding author:** Zac Lewis, Concussion Education Australia. Email: zac@concussion-education-australia.com
 
 **Article type:** Narrative review
 
