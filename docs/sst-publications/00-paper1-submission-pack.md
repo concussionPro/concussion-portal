@@ -6,7 +6,7 @@ Author: Zac Lewis, Concussion Education Australia. ORCID 0009-0002-4267-0451.
 
 **HISTORY — why this pack was rebuilt.** The July pack targeted two dead venues: *Journal of Concussion* (SAGE) **ceased publication** (homepage: "This journal has now closed", verified 12 Aug 2026), and the **OSF Preprints generalist server suspended all new submissions indefinitely** (COS announcements, Aug/Oct 2025 — only discipline-specific community archives remain, none fitting sports medicine).
 
-**Strategy: preprint (SportRxiv) + journal (BMJ Open Sport & Exercise Medicine) IN PARALLEL. Do not wait for the preprint to "publish" before submitting to the journal.**
+**Strategy: preprint (SportRxiv) + journal (BMJ Open Sport & Exercise Medicine) IN PARALLEL. The preprint is OPTIONAL — BMJ welcomes but does not require it; its sole purpose is a citable DOI during the months of review. Skipping it is fine: remove the preprint sentence from the cover letter if so.**
 
 ---
 
@@ -25,7 +25,7 @@ Rejected/eligibility surprise? Fallback: **Preprints.org** (fast, free, DOI; MDP
 
 ## STEP 2 — BMJ Open Sport & Exercise Medicine (in parallel with Step 1)
 
-Requirements below extracted from BMJ OSEM's own authors page (Wayback capture 13 Jun 2025 — the live page blocks robots; **spot-check the live page in your browser before uploading**). The manuscript already complies with every item marked ✅.
+Requirements verified against the LIVE authors page (Zac pasted it 14 Aug 2026) — Review type, limits, Summary-box headings, cover-letter justification, ICMJE form, single-anonymised model all confirmed verbatim. The manuscript also now carries the live page's Patient-and-Public-Involvement and Equity-Diversity-Inclusion statements in Methods, and the title matches their exact required string ('a Narrative review').
 
 - Article type: **"Review"** — explicitly their narrative-review type. ✅ Title includes "a narrative review" (their stated rule). ✅
 - Limits: 4,000 words main text (excl. title page/abstract/tables/refs) ✅ (3,998) · abstract ≤250 unstructured ✅ (242) · ≤6 tables/figures ✅ (1) · ≤80 references ✅ (34).
@@ -33,7 +33,7 @@ Requirements below extracted from BMJ OSEM's own authors page (Wayback capture 1
 - Peer review: **single anonymised** — reviewers see your identity; no blinding of the package needed.
 - ORCID: mandatory for the submitting author — connect 0009-0002-4267-0451 in their submission system when prompted.
 - **ICMJE COI disclosure form: required.** Download from icmje.org → disclose SST Trainer / CEA ownership → include in the upload bundle. (This is the one artefact not in the Desktop folder — it needs your entries.)
-- APC: **≥ £2,275 + VAT** for Reviews (mid-2025 figure; confirm current on their site). Discounts: BASEM member 25% / listed affiliations 15% / reviewed-for-BOSEM-in-12-months 25% (not combinable). Fee waivers must be requested **at initial submission**.
+- APC: **£2,460 + VAT** for Reviews (live page, 14 Aug 2026). **Zac qualifies for the 15% affiliation discount — Sports Medicine Australia is on the list and he is SMA member 179899; claim it at submission** (BASEM 25% / reviewer-within-12-months 25% are the alternatives; not combinable). Waivers must be requested at initial submission.
 - Preprint policy: BMJ explicitly welcomes not-for-profit preprint servers — SportRxiv qualifies; posting is not prior publication.
 
 Upload: manuscript docx + `title-page.docx` + `cover-letter.docx` + ICMJE form. The cover letter already (a) justifies narrative-over-systematic (their stated requirement for the Review type), (b) names the audience, (c) discloses the related Zenodo protocol (concept DOI 10.5281/zenodo.21482633 — resolves, verified), (d) references the SportRxiv deposit.

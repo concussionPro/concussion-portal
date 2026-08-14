@@ -6,7 +6,7 @@ z.lew87@gmail.com · ORCID 0009-0002-4267-0451
 
 Dear Editors,
 
-Please consider the enclosed review, "Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a narrative review", for publication in *BMJ Open Sport & Exercise Medicine*.
+Please consider the enclosed review, "Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a Narrative review", for publication in *BMJ Open Sport & Exercise Medicine*.
 
 For two decades concussion was managed with rest until symptom-free. Randomised-trial and physiological evidence has overturned that doctrine: concussion produces a measurable, exercise-provocable autonomic phenotype that is quantified by the Buffalo Concussion Treadmill Test to a heart-rate threshold, and prescribing aerobic exercise just below that threshold (sub-symptom-threshold aerobic exercise, SSTAE) accelerates recovery and reduces persistent post-concussive symptoms — now endorsed by the 6th International Consensus Statement (Amsterdam 2022/2023). The review traces this paradigm shift, summarises the threshold-test and sub-symptom-threshold evidence with effect sizes where published, and names the *implementation gap* between an evidence-based prescription and its faithful between-visit delivery.
 

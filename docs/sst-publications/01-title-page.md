@@ -1,6 +1,6 @@
 # Title page
 
-**Title:** Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a narrative review
+**Title:** Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a Narrative review
 
 **Article type:** Narrative review
 
