@@ -188,7 +188,7 @@ Concussion management has completed a genuine paradigm shift: from rest-until-sy
 
 **Author contributions.** ZL is the sole author: ZL conceived the review, directed and verified the literature search, and wrote and revised the manuscript.
 
-**Use of artificial intelligence.** In line with ICMJE guidance, the author discloses that a large language model (Claude, Anthropic) was used under the author's direction to assist with drafting and editing the text and with checking citations against primary sources. The author critically reviewed and verified all content and takes full responsibility for the integrity and accuracy of the work. The model does not meet authorship criteria and is not listed as an author.
+**Use of artificial intelligence.** A large language model (Claude, Anthropic) was used as a tool to assist with text drafting, editing and reference verification. All intellectual content, interpretation and conclusions are the author's; the author reviewed and verified all content and takes full responsibility for the work. The model is not an author.
 
 ## References
 
