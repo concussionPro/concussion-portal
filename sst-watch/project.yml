@@ -6,8 +6,11 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    # MUST track the iPhone app (sst-native/ios): an embedded watch app's
+    # short version has to MATCH the companion's or App Store upload
+    # validation rejects the binary. iPhone is 1.0 (2).
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "3"
     SWIFT_VERSION: "5.9"
 targets:
   SSTWatch:
@@ -25,9 +28,20 @@ targets:
     info:
       path: Sources/Info.plist
       properties:
+        # Resolve at BUILD time from the target settings — xcodegen otherwise
+        # freezes CFBundleVersion at "1" in the static plist, and App Store
+        # validation requires the embedded watch app's versions to match the
+        # companion iPhone app exactly.
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         WKApplication: true
-        # Standalone watch app, no iPhone companion — required for install.
-        WKWatchOnly: true
+        # Embedded companion of the SST Trainer iPhone app (single App Store
+        # listing, Apple ID 6792171738) that still RUNS STANDALONE on the
+        # watch — sessions never require the phone to be present. This is the
+        # submission shape decided 2026-08-14; WKWatchOnly (separate listing)
+        # was the pre-submission dev configuration.
+        WKCompanionAppBundleIdentifier: au.com.concussioneducation.sst
+        WKRunsIndependentlyOfCompanionApp: true
         NSHealthShareUsageDescription: "SST Trainer reads your heart rate during the graded test and training sessions to pace your recovery to your measured threshold."
         NSHealthUpdateUsageDescription: "SST Trainer records your training sessions as workouts."
         WKBackgroundModes:
