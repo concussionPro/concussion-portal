@@ -50,8 +50,18 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   // is the nav that audience will arrive under. Keep EP readers in the EP
   // stream; everyone else is unaffected.
   const onCrmSurface =
-    pathname === '/concussion-rehab-mastery' || pathname.startsWith('/ep-course')
-  const enrolHref = onCrmSurface ? '/concussion-rehab-mastery#pricing-cards' : CONFIG.SHOP_URL
+    pathname === '/concussion-rehab-mastery' ||
+    pathname.startsWith('/ep-course') ||
+    // /cata sells the CRM to Canadian ATs. Without this, its nav "Enrol" went
+    // to /pricing, which the CA geo-redirect bounces straight back to /cata's
+    // top — a loop that looked like a dead button (owner sweep 2026-08-15).
+    pathname === '/cata'
+  const enrolHref =
+    pathname === '/cata'
+      ? '/cata#pricing-cards'
+      : onCrmSurface
+      ? '/concussion-rehab-mastery#pricing-cards'
+      : CONFIG.SHOP_URL
 
   // Auth-aware nav: detect login state
   const [auth, setAuth] = useState<AuthState>(null)

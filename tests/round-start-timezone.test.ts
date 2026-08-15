@@ -25,8 +25,9 @@ describe('roundStartInstant resolves to Australian Eastern midnight', () => {
     expect(roundStartInstant('sydney')!.toISOString()).toBe('2026-03-07T13:00:00.000Z')
   })
 
-  it('AEDT date (+11): melbourne 2026-01-01 = 2025-12-31T13:00Z', () => {
-    expect(roundStartInstant('melbourne')!.toISOString()).toBe('2025-12-31T13:00:00.000Z')
+  it('AEST date (+10): melbourne 2026-06-14 (Round 4 opened) = 2026-06-13T14:00Z', () => {
+    expect(CONFIG.WORKSHOP.ROUND_START.melbourne).toBe('2026-06-14')
+    expect(roundStartInstant('melbourne')!.toISOString()).toBe('2026-06-13T14:00:00.000Z')
   })
 
   it('is NOT UTC midnight — that was the bug', () => {

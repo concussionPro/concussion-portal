@@ -67,6 +67,9 @@ function CanceledBanner() {
 function PricingContent({ hideNav }: { hideNav?: boolean }) {
   // FAQ accordion — allow multiple open
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
+  // Time anchor for is-the-round-live checks — a lazy useState (not Date.now()
+  // in render) so server and client render the same value (HomeClient pattern).
+  const [renderedAt] = useState(() => Date.now())
   const toggleFaq = (i: number, question: string) => {
     setOpenFaqs(prev => {
       const next = new Set(prev)
@@ -468,13 +471,39 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Status + caption DERIVED from CONFIG.LOCATIONS, never hardcoded
+                (date-bearing-copy rule; same derivation as HomeClient). This
+                array previously hardcoded "Delivered · Jun 2026" and kept
+                saying it after Round 4 (Nov 7 2026) was confirmed in config —
+                caught on the owner's screenshot, not by any gate (2026-08-15). */}
             {([
-              { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
-              { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
-              { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
-            ] as const).map((loc) => (
-              <LocationInterestCard key={loc.city} {...loc} />
-            ))}
+              { citySlug: 'melbourne', img: '/locations/melbourne.webp' },
+              { citySlug: 'sydney', img: '/locations/sydney.jpg' },
+              { citySlug: 'byron-bay', img: '/locations/byron-bay.jpg' },
+            ] as const).map(({ citySlug, img }) => {
+              const loc = Object.values(CONFIG.LOCATIONS).find((l) => l.slug === citySlug)!
+              const isLive =
+                loc.status === 'confirmed' && !!loc.dateObj && loc.dateObj.getTime() > renderedAt
+              const delivered = loc.status === 'completed' || (loc.hasRunWorkshop && !isLive)
+              return (
+                <LocationInterestCard
+                  key={citySlug}
+                  city={loc.city}
+                  citySlug={citySlug}
+                  img={img}
+                  status={isLive ? loc.date : delivered ? 'Delivered · next round open' : 'Registering interest'}
+                  dotClass={isLive ? 'bg-emerald-500' : delivered ? 'bg-slate-400' : 'bg-orange-500 animate-pulse'}
+                  statusTextClass={isLive ? 'text-emerald-700' : delivered ? 'text-slate-600' : 'text-orange-700'}
+                  caption={
+                    isLive
+                      ? `Secure your ${loc.city} seat`
+                      : delivered
+                        ? `Register for the next ${loc.city} round`
+                        : `Be first to know when ${loc.city}'s date is confirmed`
+                  }
+                />
+              )
+            })}
           </div>
         </div>
 

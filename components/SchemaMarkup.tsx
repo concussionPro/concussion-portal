@@ -11,8 +11,23 @@ import { CONFIG } from '@/lib/config'
  * for all current workshop cities.
  */
 function toAESTOffsetISO(date: Date): string {
-  const shifted = new Date(date.getTime() + 10 * 60 * 60 * 1000)
-  return shifted.toISOString().replace(/\.\d{3}Z$/, '+10:00')
+  // Australia's east coast flips AEST (+10) / AEDT (+11, Oct–Apr). A fixed
+  // +10 rendered the Nov 7 2026 round as starting 07:00 local (right instant,
+  // wrong wall time) — resolve the real offset for the instant from the tz
+  // database instead. Fallback stays +10 if Intl can't answer.
+  const raw = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Melbourne',
+    timeZoneName: 'longOffset',
+  })
+    .formatToParts(date)
+    .find((p) => p.type === 'timeZoneName')?.value
+  const m = raw?.match(/([+-])(\d{2}):(\d{2})/)
+  const offset = m ? `${m[1]}${m[2]}:${m[3]}` : '+10:00'
+  const offsetMs = m
+    ? (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 3600_000 + Number(m[3]) * 60_000)
+    : 10 * 3600_000
+  const shifted = new Date(date.getTime() + offsetMs)
+  return shifted.toISOString().replace(/\.\d{3}Z$/, offset)
 }
 
 /** Minimal location shape the schema builders need (structural subset of

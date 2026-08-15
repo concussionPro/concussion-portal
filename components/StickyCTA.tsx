@@ -57,6 +57,12 @@ const EXCLUDED_PATHS = [
   // pricing page. /clinical-suite/start is the paid-trial signup form — a
   // fixed bottom bar sits over its submit button on a 375px viewport.
   '/clinical-suite',
+// International audience pages (2026-08-15, owner: "clean everything for cata
+  // traffic"): the bar advertises the AU product — 16 CPD hours, AUD pricing —
+  // to visitors who are geo-priced and CPD-credited differently. Every intl
+  // surface carries its own price card; no AU cross-sell chrome on any of them.
+  '/cata', '/canada', '/acsm', '/uk', '/pricing-international', '/international',
+  '/cep-uk', '/hpcsa', '/csep', '/cimspa',
 ]
 
 export function StickyCTA() {

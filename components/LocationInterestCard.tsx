@@ -214,7 +214,7 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
                 required
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (error) setError('') }}
-                placeholder="Email me the date"
+                placeholder={hasLiveDate ? 'Email me the details' : 'Email me the date'}
                 className="flex-1 min-w-0 rounded-xl border border-white/25 bg-white/10 backdrop-blur px-3 py-2 text-sm text-white placeholder:text-white/55 focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-white/50"
               />
               <button

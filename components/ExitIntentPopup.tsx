@@ -38,6 +38,11 @@ const EXCLUDED_PREFIXES = [
   // prospect clinic. A course-signup interrupt there pitches the wrong product
   // to the wrong audience at the worst possible moment.
   '/clinical-testing', '/clinical-hub', '/demo', '/mscc-demo',
+  // International audience pages (2026-08-15): the popup captures for the free
+  // AU SCAT course — wrong product framing for geo-priced intl visitors, and
+  // /cata is a single-card sales page where an interrupt competes with it.
+  '/cata', '/canada', '/acsm', '/uk', '/pricing-international', '/international',
+  '/cep-uk', '/hpcsa', '/csep', '/cimspa',
 ]
 
 export function ExitIntentPopup() {

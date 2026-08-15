@@ -92,6 +92,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.75,
     },
     {
+      // CATA Approved Provider landing (live 2026-08-15) — /canada 308s here.
+      url: `${baseUrl}/cata`,
+      lastModified: new Date('2026-08-15'),
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    },
+    {
       url: `${baseUrl}/cimspa`,
       lastModified: ESSA_LIVE_LAST_MODIFIED,
       changeFrequency: 'monthly',

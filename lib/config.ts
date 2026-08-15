@@ -122,12 +122,13 @@ export const CONFIG = {
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
-      date: 'Saturday 13 June 2026',
-      dateObj: new Date('2026-06-13T08:00:00+10:00') as Date | null,
-      // 'completed' (2026-06-15): workshop RAN on 13 June (its third Melbourne
-      // round, after Oct 25 2025 and Feb 7 2026). Paid attendees are alumni —
-      // full-course + workshop_location='melbourne'. Warm base for Level 2.
-      status: 'completed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      // ROUND 4 (owner 2026-08-15: "we will run melbourne nov 7") — Rydges
+      // Melbourne, Terrace Rooms, 07:45–16:30, booking ref 85AO2D1RHT.
+      // Proposal signed-off by owner; deposit/contract with the venue pending —
+      // if the venue falls through, revert status BEFORE any date-bearing send.
+      date: 'Saturday 7 November 2026',
+      dateObj: new Date('2026-11-07T08:00:00+11:00') as Date | null, // AEDT
+      status: 'confirmed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
       hasRunWorkshop: true, // ran Melbourne Oct 25 '25, Feb 7 '26, Jun 13 '26
     },
   },
@@ -162,7 +163,9 @@ export const CONFIG = {
     // roundStartInstant() / roundStartSqlInstant() below, never `new Date(str)`
     // and never by handing the bare string to Postgres.
     ROUND_START: {
-      melbourne: '2026-01-01',
+      // Round 4 (Nov 7) opened 2026-08-15 — scope counts to after the Jun 13
+      // round so its alumni don't consume Round-4 seats/threshold.
+      melbourne: '2026-06-14',
       // Sydney ran 7 Mar 2026, Byron Bay ran 22 Nov 2025 — scope each next round
       // to AFTER its last completed round so past alumni don't consume next-round
       // seats/threshold. Bump these when the next Syd/BB dates are announced.

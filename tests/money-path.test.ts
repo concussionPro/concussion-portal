@@ -26,6 +26,14 @@ const created: CreatedSession[] = []
 /** Promotion codes the fake Stripe account "has". Empty = lookup misses. */
 let knownPromotionCodes: string[] = []
 
+// A confirmed, future-dated round (Melbourne Nov 7 2026) makes checkout call
+// getEnrollmentCount for the sold-out check — a real DB query. Mock it to an
+// open room; capacity behaviour has its own coverage.
+vi.mock('@/lib/users', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/users')>()),
+  getEnrollmentCount: vi.fn(async () => 0),
+}))
+
 vi.mock('stripe', () => {
   class FakeStripe {
     checkout = {
