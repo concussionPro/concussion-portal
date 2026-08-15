@@ -30,6 +30,7 @@ export default function EpLeadCapture({
   heading = 'The EP\u2019s Concussion Rehab Starter',
   blurb = 'The measured-threshold prescription workflow \u2014 Buffalo test \u2192 heart-rate threshold \u2192 sub-symptom-threshold dose \u2014 plus a plain-English scope guide showing exactly where the exercise-physiology lane starts and stops. Emailed to you, free.',
   footnote = 'One email with the resource, then the occasional EP-relevant update. No spam. Unsubscribe in one click, anytime.',
+  heroBlurb = 'The EP’s Concussion Rehab Starter — the measured-threshold prescription workflow + scope guide, emailed to you.',
   emailPlaceholder = 'you@clinic.com.au',
 }: {
   variant?: Variant
@@ -38,6 +39,8 @@ export default function EpLeadCapture({
   heading?: string
   blurb?: string
   footnote?: string
+  /** Compact magnet line the HERO variant shows (the full variant uses heading+blurb). */
+  heroBlurb?: string
   emailPlaceholder?: string
   /** Optional next action on the success card. Only pass it where the
    *  destination is genuinely correct for that page — the accreditation-review
@@ -127,7 +130,7 @@ export default function EpLeadCapture({
             with no way to tell. This wording is accurate whether this request
             triggered the send or an earlier one did. */}
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-          The EP&rsquo;s Concussion Rehab Starter — the measured-threshold prescription workflow
+          {heading} — the measured-threshold prescription workflow
           and scope guide — goes to <strong className="text-foreground">{email.trim()}</strong>.
           If you&rsquo;ve requested it before, it&rsquo;s the same email already in your inbox.
           Can&rsquo;t find it? Check spam, add zac@concussion-education-australia.com to your
@@ -160,8 +163,7 @@ export default function EpLeadCapture({
               Not ready to enrol? Take the workflow first — free.
             </p>
             <p className="text-[12.5px] leading-snug text-muted-foreground">
-              The EP&rsquo;s Concussion Rehab Starter — the measured-threshold prescription
-              workflow + scope guide, emailed to you.
+              {heroBlurb}
             </p>
           </div>
         </div>

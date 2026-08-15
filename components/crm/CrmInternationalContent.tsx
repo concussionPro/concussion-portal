@@ -1,7 +1,7 @@
 'use client'
 
 import { PROTOCOL_DOI, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -11,7 +11,8 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
-import { CONFIG, SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
+import { CONFIG } from '@/lib/config'
+import { buildIntlFaqs, PLATFORM_MONTHLY_AUD } from '@/components/crm/intl-faqs'
 import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 
 /**
@@ -32,48 +33,75 @@ import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
  * "published". No EP authored the course.
  */
 
-/**
- * What the bundled platform costs once the included first year ends. The
- * webhook attaches the REAL single-clinician SST subscription
- * (STRIPE_SST_SINGLE_PRICE_ID) at the 12-month mark, so this copy must track
- * that tier's amount from CONFIG — never a literal that can drift away from
- * what the card is actually charged.
- */
-const PLATFORM_MONTHLY_AUD = SST_INCLUDED_TIER.monthlyAud
-
 export interface IntlPriceView {
   display: string // e.g. "£275"
   code: string // e.g. "GBP"
 }
 
-// ESSA accreditation is gated on CONFIG.FEATURES.ESSA_ACCREDITED, same
-// discipline as CrmPricingContent's buildFaqs — the FAQ text is a function of
-// the flag rather than a hardcoded claim.
-const buildIntlFaqs = (essaAccredited: boolean): { q: string; a: string }[] => [
-  {
-    q: 'Is this a course or a platform?',
-    a: 'Both — always sold as one. Enrolment includes the working instruments you deliver concussion rehab with: the SST Trainer app (graded test → HR-threshold prescription → monitored home sessions), the BCTT calculator and the full Clinical Toolkit. The platform is never available without the training — running HR-threshold prescriptions on brain-injured patients without concussion education isn’t safe.',
-  },
-  {
-    q: 'What accreditation does it carry?',
-    a: `The course is built to ACSM CEC standards, but CEA holds no ACSM Approved-Provider status and is not currently pursuing one — so no ACSM CECs are offered. The course is ${essaAccredited ? `ESSA-accredited — ${CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points for the online course` : 'built to ESSA CPD standards (accreditation pending)'} — independently reviewed by two ESSA-appointed reviewers. We don’t claim credits or accreditation we don’t yet hold; your certificate states ${CONFIG.COURSE.ONLINE_CPD_POINTS} hours of assessed learning, and each accreditation is added the day it’s confirmed.`,
-  },
-  {
-    q: 'Is there an ongoing cost?',
-    a: `The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$${PLATFORM_MONTHLY_AUD}/month (the Starter rate — ${sstTierAllowance(SST_INCLUDED_TIER).toLowerCase()}, unlimited clinicians); it starts automatically at the 12-month mark and you can cancel anytime.`,
-  },
-  {
-    q: 'What’s the refund policy?',
-    a: 'A 7-day full refund applies if you’ve accessed less than 25% of the modules. Refunds process in 5–10 business days to the original payment method. Full terms are published at /terms.',
-  },
-]
+/**
+ * Audience copy overrides — every field defaults to the EP/international
+ * strings below, so existing call sites render unchanged (the EpLeadCapture
+ * copy-override pattern). /cata passes the athletic-therapist set; a future
+ * body-scoped page passes its own. Structure and design never change per
+ * audience — only the words (owner: "IT IS THE SAME AS CRM BUT FOR THE
+ * CANADIAN MARKET AND AT'S").
+ */
+export interface IntlAudienceCopy {
+  badgeText?: string
+  heroTitle?: ReactNode
+  heroBlurb?: string
+  strapText?: string
+  /** Hero stat tile for CPD/CEU value, e.g. { big: '3.2', small: ' CEUs', label: 'CATA enhanced rate' } */
+  cpdTile?: { big: string; small: string; label: string }
+  cardChip?: string
+  cardCpdChip?: string
+  cardTitle?: string
+  cardSubtitle?: string
+  /** First bullet of the pricing card (the modules line). */
+  moduleBullet?: string
+  valueIntroBlurb?: string
+  scopeStrip?: string
+  /** Replaces the "Built to ACSM CEC & ESSA CPD standards" banner wholesale. */
+  standardsBand?: ReactNode
+  /** Replaces the amber continuing-education honesty block wholesale. */
+  ceStatusNote?: ReactNode
+  /** The ACSM editorial-quote block is EP-specific; hide for other audiences. */
+  showAcsmQuote?: boolean
+  certFooterLine?: string
+  /** Sub-line of the bottom enrol block ("The EP-scoped course + …"). */
+  enrolBlurb?: string
+  faqs?: { q: string; a: string }[]
+  leadCapture?: {
+    location?: string
+    kicker?: string
+    heading?: string
+    blurb?: string
+    footnote?: string
+    heroBlurb?: string
+    emailPlaceholder?: string
+  }
+  stickyCpdLabel?: string
+}
 
-export default function CrmInternationalContent({ price, live = false, hideNav = false }: { price: IntlPriceView; live?: boolean; hideNav?: boolean }) {
+export default function CrmInternationalContent({
+  price,
+  live = false,
+  hideNav = false,
+  audience = {},
+}: {
+  price: IntlPriceView
+  live?: boolean
+  hideNav?: boolean
+  audience?: IntlAudienceCopy
+}) {
   const essaAccredited = CONFIG.FEATURES.ESSA_ACCREDITED
   const essaBadgeLine = essaAccredited
     ? `ESSA-accredited · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours`
     : 'Designed to ESSA CPD standards · accreditation pending'
-  const INTL_FAQS = buildIntlFaqs(essaAccredited)
+  const INTL_FAQS = audience.faqs ?? buildIntlFaqs(essaAccredited)
+  const cpdTile = audience.cpdTile ?? { big: '8', small: 'hrs', label: 'Assessed CPD' }
+  const showAcsmQuote = audience.showAcsmQuote ?? true
+  const certFooterLine = audience.certFooterLine ?? `Built to ACSM CEC standards · ${essaBadgeLine}`
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
 
   // Live checkout (only when `live`): POST to the geo-priced international
@@ -136,18 +164,20 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
         <div className="text-center mb-8">
           <div className="badge mb-5 inline-flex">
             <Award className="w-3.5 h-3.5 mr-1.5" />
-            International · For Exercise Physiologists &amp; Clinical Exercise Physiologists
+            {audience.badgeText ?? 'International · For Exercise Physiologists & Clinical Exercise Physiologists'}
           </div>
 
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Concussion rehab is <span className="text-gradient">exercise medicine</span>.
-            <br className="hidden sm:block" /> Which makes it yours.
+            {audience.heroTitle ?? (
+              <>
+                Concussion rehab is <span className="text-gradient">exercise medicine</span>.
+                <br className="hidden sm:block" /> Which makes it yours.
+              </>
+            )}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed
-            treatment for concussion — a graded aerobic prescription, squarely in the EP scope.
-            This is the course that makes you the clinician who delivers it, with the working
-            tools to start Monday.
+            {audience.heroBlurb ??
+              'Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed treatment for concussion — a graded aerobic prescription, squarely in the EP scope. This is the course that makes you the clinician who delivers it, with the working tools to start Monday.'}
           </p>
 
           {/* Skill chips — same as AU */}
@@ -173,8 +203,8 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           {/* Punch stat bento — same tiles, internationalised: 8 hrs, never 14 */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
             <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">8<span className="text-base font-semibold">hrs</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Assessed CPD</p>
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">{cpdTile.big}<span className="text-base font-semibold">{cpdTile.small}</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">{cpdTile.label}</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
               <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
@@ -204,9 +234,8 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
 
           {/* One-line strap — same as AU */}
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
-            A new, referral-worthy service line — physicians, physios and clinics need someone to
-            deliver measured exercise rehab. 8 CPD hours online, self-paced, delivered entirely
-            from wherever you practise.
+            {audience.strapText ??
+              'A new, referral-worthy service line — physicians, physios and clinics need someone to deliver measured exercise rehab. 8 CPD hours online, self-paced, delivered entirely from wherever you practise.'}
           </p>
 
           {/* Primary hero CTA — same as AU */}
@@ -220,10 +249,21 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
             </a>
           </div>
 
-          <EpLeadCapture variant="hero" location="international-hero" />
+          <EpLeadCapture
+            variant="hero"
+            location={audience.leadCapture?.location ?? 'international-hero'}
+            kicker={audience.leadCapture?.kicker}
+            heading={audience.leadCapture?.heading}
+            blurb={audience.leadCapture?.blurb}
+            footnote={audience.leadCapture?.footnote}
+            heroBlurb={audience.leadCapture?.heroBlurb}
+            emailPlaceholder={audience.leadCapture?.emailPlaceholder}
+          />
         </div>
 
-        {/* Standards block — same banner design as AU; pending-honest copy */}
+        {/* Standards block — same banner design as AU; pending-honest copy.
+            Audience pages replace it wholesale (e.g. /cata's CATA band). */}
+        {audience.standardsBand ?? (
         <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
           <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
           <div className="text-left">
@@ -238,6 +278,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
             </p>
           </div>
         </div>
+        )}
 
         {/* Live workshop training photo — same as AU, provenance framing */}
         <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
@@ -279,10 +320,8 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
             Walk out and deliver it <span className="text-gradient">Monday</span>
           </h2>
           <p className="text-base text-muted-foreground">
-            You don&rsquo;t just learn the protocol — you leave with the instruments to run it.
-            Every enrolment includes the working clinical platform: the Sub-Symptom-Threshold (SST)
-            Trainer app, the BCTT calculator (heart-rate threshold &rarr; prescription) and the full
-            Clinical Toolkit — all built around the exercise-physiology scope of practice.
+            {audience.valueIntroBlurb ??
+              'You don’t just learn the protocol — you leave with the instruments to run it. Every enrolment includes the working clinical platform: the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator (heart-rate threshold → prescription) and the full Clinical Toolkit — all built around the exercise-physiology scope of practice.'}
           </p>
         </div>
 
@@ -296,10 +335,10 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
                     <BookOpen className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
                   </div>
                   <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                    International
+                    {audience.cardChip ?? 'International'}
                   </span>
                   <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                    8 CPD hrs
+                    {audience.cardCpdChip ?? '8 CPD hrs'}
                   </span>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -311,8 +350,8 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CRM International</h3>
-              <p className="text-[12px] text-slate-500 mb-2 font-medium">The EP-scoped course + the clinical platform — certify entirely online</p>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{audience.cardTitle ?? 'CRM International'}</h3>
+              <p className="text-[12px] text-slate-500 mb-2 font-medium">{audience.cardSubtitle ?? 'The EP-scoped course + the clinical platform — certify entirely online'}</p>
               <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
                 8 modules at your own pace, plus the working clinical tools to open a new
                 referral-worthy service line — delivered wholly online, wherever you practise.
@@ -320,7 +359,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
 
               <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
                 {[
-                  '8 EP-scoped modules · 8 CPD hours',
+                  audience.moduleBullet ?? '8 EP-scoped modules · 8 CPD hours',
                   'SST Trainer — test → prescription → monitoring',
                   'BCTT calculator + full Clinical Toolkit',
                   'SSTAE templates + phenotype library',
@@ -426,7 +465,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           </span>
           <span className="hidden sm:inline text-slate-300">·</span>
           <span className="inline-flex items-center gap-1.5">
-            <ClipboardList className="w-4 h-4 text-blue-600" /> Built to the EP scope of practice
+            <ClipboardList className="w-4 h-4 text-blue-600" /> {audience.scopeStrip ?? 'Built to the EP scope of practice'}
           </span>
           <span className="hidden sm:inline text-slate-300">·</span>
           <span className="inline-flex items-center gap-1.5">
@@ -434,7 +473,9 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           </span>
         </div>
 
-        {/* ACSM's own call — fair use of a public position, NOT endorsement */}
+        {/* ACSM's own call — fair use of a public position, NOT endorsement.
+            EP-specific; audience pages for other professions hide it. */}
+        {showAcsmQuote && (
         <div className="max-w-3xl mx-auto mb-8 glass rounded-2xl p-6 md:p-8">
           <Quote className="w-6 h-6 text-accent mb-3" strokeWidth={2} />
           <p className="text-[15px] md:text-[16px] leading-relaxed text-foreground font-medium">
@@ -452,6 +493,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
             2025). Cited as a published position; CRM is not endorsed by or affiliated with ACSM.
           </p>
         </div>
+        )}
 
         {/* Published protocol — the citable method behind the course */}
         <div className="max-w-3xl mx-auto mb-6 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
@@ -468,7 +510,9 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
           </p>
         </div>
 
-        {/* Accreditation honesty — mirrors the ESSA-pending discipline */}
+        {/* Accreditation honesty — mirrors the ESSA-pending discipline.
+            Audience pages replace it with their own body's status wholesale. */}
+        {audience.ceStatusNote ?? (
         <div className="max-w-3xl mx-auto mb-8 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4">
           <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" strokeWidth={2} />
           <p className="text-[13.5px] text-amber-900 leading-relaxed">
@@ -481,6 +525,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
             accreditation we don&rsquo;t hold — this page updates the day any new one is confirmed.
           </p>
         </div>
+        )}
 
         {/* Meet Your Instructor — same as AU */}
         <div className="max-w-3xl mx-auto mb-8">
@@ -560,7 +605,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               </a>
             )}
             <p className="text-xs text-muted-foreground mt-4">
-              Built to ACSM CEC standards · {essaBadgeLine}
+              {certFooterLine}
             </p>
           </div>
         </div>
@@ -574,7 +619,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
               Enrol in Concussion Rehab Mastery
             </h2>
             <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
-              The EP-scoped course + the working clinical platform, delivered wholly online.
+              {audience.enrolBlurb ?? 'The EP-scoped course + the working clinical platform, delivered wholly online.'}
               {' '}Your first year on the platform is included; secure checkout in your region&rsquo;s
               currency, 7-day money-back guarantee.
             </p>
@@ -608,7 +653,7 @@ export default function CrmInternationalContent({ price, live = false, hideNav =
       >
         <div className="backdrop-blur-lg bg-background/90 border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-foreground">
-            {price.display} · 8 CPD
+            {price.display} · {audience.stickyCpdLabel ?? '8 CPD'}
           </span>
           {live ? (
             <button
