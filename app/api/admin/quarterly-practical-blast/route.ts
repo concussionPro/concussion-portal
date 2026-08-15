@@ -130,6 +130,37 @@ async function run(request: NextRequest, willSend: boolean) {
   const bookLink = `${base}/pricing`
   const onlineLink = `${base}/pricing`
 
+  // TEST MODE: ?testTo=<email> sends exactly ONE fully-rendered sample (real
+  // nominate links for that address, real unsubscribe link, the same
+  // List-Unsubscribe headers the live send carries) with a [TEST] subject.
+  // No audience build, no audit rows, no confirm flag — admin auth only.
+  const testTo = request.nextUrl.searchParams.get('testTo')?.trim().toLowerCase()
+  if (testTo) {
+    const token = generateUnsubscribeToken(testTo)
+    const unsubscribeUrl = `${base}/api/unsubscribe?email=${encodeURIComponent(testTo)}&token=${token}`
+    const html = QUARTERLY_PRACTICAL_BLAST
+      .template(
+        'Zac', bookLink, onlineLink,
+        {
+          sydney: nominateClickUrl(testTo, 'sydney'),
+          byron: nominateClickUrl(testTo, 'byron-bay'),
+        },
+        MEL_DATE_LABEL,
+      )
+      .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+    const ok = await sendEmail({
+      to: testTo,
+      subject: `[TEST] ${QUARTERLY_PRACTICAL_BLAST.subject}`,
+      html,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@concussion-education-australia.com>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+      tags: [{ name: 'sequence', value: 'quarterly-practical-blast-test' }],
+    })
+    return NextResponse.json({ test: true, to: testTo, sent: ok === true || ok !== false })
+  }
+
   const all = await audience()
 
   // Suppression is checked for EVERY recipient before anything is sent, and an

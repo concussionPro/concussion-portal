@@ -1766,6 +1766,7 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     <p><strong>Q4 practical days are locking in now &mdash; Melbourne first.</strong></p>
     <div class="callout">
       <strong>Melbourne &mdash; ${melDateLabel}</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places, first come first served<br>
+      Rydges Melbourne (CBD) &mdash; fully catered, same venue as the June round.<br>
       SCAT6 and VOMS, phenotype rehab, and graded exertional rehab protocols.
     </div>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take the Melbourne seat &mdash; A$${CONFIG.COURSE.PRICE_EARLY_BIRD}</a></center>
