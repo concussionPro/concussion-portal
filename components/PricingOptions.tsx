@@ -757,7 +757,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
 
           {/* 2-col feature bento */}
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5">
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5 text-left">
             {[
               '8 modules · 8 CPD',
               'VOMS, BESS & SCAT6',
@@ -876,21 +876,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             Same 8 online modules as CCM Online, plus a full-day hands-on workshop — one shared room for all disciplines: physios, osteos and exercise professionals. Practice SCAT6, VOMS &amp; BESS with expert feedback.
           </p>
 
-          {/* Visual anchor — the room itself. The Online card carries the course
-              screenshot; this card carries the day (owner 2026-08-15: cards were
-              "extremely boring, plain with text"). */}
-          <div className="relative rounded-xl overflow-hidden border border-amber-100 mt-4 mb-3 h-[120px]">
-            <Image
-              src="/workshop-training.jpg"
-              alt="Hands-on practical day — supervised assessment on real subjects"
-              fill
-              sizes="(min-width: 1024px) 340px, 100vw"
-              className="object-cover object-center transition-transform duration-500 hover:scale-[1.04]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" aria-hidden="true" />
-            <p className="absolute bottom-1.5 left-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300">The practical day</p>
-          </div>
-
           {/* CPD split bar — 8 online + 8 hands-on = 16, seen not read */}
           <div className="mb-4">
             <div className="flex h-2 overflow-hidden rounded-full">
@@ -943,7 +928,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           )}
 
           {/* 2-col feature grid */}
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4">
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4 text-left">
             {[
               'Everything in Online',
               'Full-day workshop',
