@@ -64,12 +64,13 @@ describe('isWorkshopAlumnus — round scoping', () => {
   })
 
   it('a completed city keeps its past-round buyers as alumni (Melbourne)', () => {
-    // Melbourne ran Jun 13 2026; Round 4 counting opens at ROUND_START
-    // 2026-06-14 — whoever bought BEFORE that attended a past round.
+    // Melbourne ran Jun 13 2026. For a completed city with a known PAST date,
+    // the alumni cutoff is the workshop date ITSELF (roundCutoffMs) — whoever
+    // registered before that day was in the room.
     expect(CONFIG.LOCATIONS.MELBOURNE.status).toBe('completed')
     expect(CONFIG.LOCATIONS.MELBOURNE.hasRunWorkshop).toBe(true)
     const registeredAt = new Date(
-      new Date(CONFIG.WORKSHOP.ROUND_START.melbourne).getTime() - 86400000,
+      CONFIG.LOCATIONS.MELBOURNE.dateObj!.getTime() - 86400000,
     ).toISOString()
     expect(
       isWorkshopAlumnus(
