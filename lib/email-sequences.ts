@@ -1736,12 +1736,17 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
  */
 export const QUARTERLY_PRACTICAL_BLAST = {
   subject: (melDateLabel: string) => `Hands-on concussion day — Melbourne, ${melDateLabel}`,
-  preheader: 'Rydges CBD, fully catered, 12 seats · Sydney and Byron Bay next',
+  preheader: 'Before it goes public this week — 12 seats, Rydges CBD, catered lunch',
   /**
-   * VOICE = Zac's own July 8 float note: plain statements, no aphorisms, no
-   * "service line" marketing language, nothing about past rounds. One primary
-   * CTA (seat), city nominations second, online last. 12 seats is the real
-   * capacity; Sydney/Byron are pencilled, never promised; figures from CONFIG.
+   * Owner-directed copy (2026-08-15): plain voice; "catered lunch" never
+   * "fully catered"; PRE-RELEASE frame (they're on the list, the date goes
+   * public this week — all TRUE: the site shows it only once the venue is
+   * locked); online modules = current evidence-based assessment line (his
+   * words); conversion components = real testimonial (verbatim from /pricing),
+   * single primary CTA, P.S. restating the offer. CTAs land on LIVE pages:
+   * seat → /pricing?location=melbourne#pricing-cards (city pre-selected),
+   * nominate links record the city then land on that city's pricing.
+   * No fake scarcity: 12 seats real; June never claimed sold out.
    */
   template: (
     name: string,
@@ -1751,10 +1756,15 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     melDateLabel: string,
   ) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p>The next hands-on day is locked in: <strong>Melbourne, ${melDateLabel}</strong>, at Rydges in the CBD. Fully catered, ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats.</p>
-    <p>The day is supervised practice on real subjects &mdash; SCAT6, VOMS, BESS, cervical assessment, and graded exertional testing through to the exercise prescription.</p>
-    <p>Early-bird is A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} and includes the full online course and clinical toolkit &mdash; ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours all up.</p>
+    <p>You&rsquo;re on the list, so you&rsquo;re hearing this before it goes public: the next hands-on day is locked in &mdash; <strong>Melbourne, ${melDateLabel}</strong>, at Rydges in the CBD. Catered lunch, ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats.</p>
+    <p>The day is supervised practice on real subjects &mdash; SCAT6, VOMS, BESS, cervical assessment, and graded exertional testing through to the exercise prescription. Before the day you complete the online modules: the most up-to-date, evidence-based assessment and management of concussion, so the room time is all hands-on.</p>
+    <p>Early-bird is A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} for the complete course &mdash; the day plus all ${CONFIG.COURSE.TOTAL_MODULES} online modules and the clinical toolkit (${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours).</p>
+    <div class="callout" style="font-style:italic;">
+      &ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.&rdquo;
+      <span style="font-style:normal;">&mdash; Dean, University Clinical Educator, QLD</span>
+    </div>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take a Melbourne seat</a></center>
+    <p>The date goes live on the site this week &mdash; there are ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats, so if you want one, take it before it opens up.</p>
     <p><strong>If Melbourne doesn&rsquo;t work:</strong> Sydney is pencilled for late November, Byron Bay for late October or December. One click and I&rsquo;ll put you on the list for your city &mdash; dates get booked on those numbers.</p>
     <center>
       <a href="${nominate.sydney}" class="cta-btn" style="margin:0 6px 8px 0;">Put me down for Sydney</a>
@@ -1762,6 +1772,7 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     </center>
     <p>Want to start now either way? The online course is A$${CONFIG.COURSE.PRICE_ONLINE} (${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours) and any hands-on day can be added later. <a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}">Start online &rarr;</a></p>
     <div class="sig">Zac</div>
+    <p style="font-size:12.5px;color:#667;">P.S. &mdash; ${melDateLabel}, Rydges Melbourne, ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats, A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird. It goes public this week.</p>
   `),
 }
 

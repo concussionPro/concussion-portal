@@ -29,15 +29,15 @@ const CAD = intlPriceForCountry('CA').display
 //     role; the sell is owning the REHAB arm — never remedial framing.
 // ─────────────────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'Concussion Rehab Mastery — for Certified Athletic Therapists | CATA Approved Provider',
+  title: 'Concussion Clinical Mastery — for Certified Athletic Therapists | CATA Approved Provider',
   description:
-    `You make the sideline call — this is the course for owning the recovery: measured heart-rate-threshold concussion rehabilitation, from graded testing to return to play. CATA Approved Provider; enhanced-rate CEUs for CATA members. ${CAD}.`,
+    `You make the sideline call — this is the course for the whole pathway: SCAT6/VOMS/BESS assessment, acute management, phenotype rehab and graded return to play. CATA Approved Provider; enhanced-rate CEUs for CATA members. ${CAD}.`,
   keywords:
-    'CATA CEU concussion, athletic therapist concussion course, CAT(C) continuing education, concussion rehabilitation course Canada, sub-symptom threshold aerobic exercise, Buffalo concussion treadmill test, return to play',
+    'CATA CEU concussion, athletic therapist concussion course, CAT(C) continuing education, SCAT6 course Canada, concussion assessment course, concussion rehabilitation course Canada, return to play',
   openGraph: {
-    title: 'Concussion Rehab Mastery — for Certified Athletic Therapists',
+    title: 'Concussion Clinical Mastery — for Certified Athletic Therapists',
     description:
-      'The consensus made measured, heart-rate-threshold exercise rehabilitation first-line concussion care. The AT-scoped course, plus the tools to deliver it. CATA Approved Provider 2025–2027.',
+      'The full concussion pathway for athletic therapists — assessment to return to play — plus the working clinical tools to deliver it. CATA Approved Provider 2025–2027.',
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/cata',
   },

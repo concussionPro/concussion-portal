@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
 
 async function run(request: NextRequest, willSend: boolean) {
   const base = CONFIG.APP_URL
-  const bookLink = `${base}/pricing`
-  const onlineLink = `${base}/pricing`
+  const bookLink = `${base}/pricing?location=melbourne#pricing-cards`
+  const onlineLink = `${base}/pricing#pricing-cards`
 
   // TEST MODE: ?testTo=<email> sends exactly ONE fully-rendered sample (real
   // nominate links for that address, real unsubscribe link, the same

@@ -6,23 +6,22 @@ import { ShieldCheck } from 'lucide-react'
 import { detectCountry } from '@/lib/geo'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 import { CONFIG } from '@/lib/config'
-import CrmInternationalContent from '@/components/crm/CrmInternationalContent'
-import { buildIntlFaqs } from '@/components/crm/intl-faqs'
+import CcmInternationalContent from '@/components/ccm/CcmInternationalContent'
+import { CCM_INTL_FAQS } from '@/components/ccm/ccm-intl-faqs'
+import CourseShowcase from '@/components/ccm/CourseShowcase'
 import { InternationalCourseSchema } from '@/components/international/InternationalCourseSchema'
 
 /**
  * /cata — the CATA Approved Provider landing for Certified Athletic
- * Therapists (see layout.tsx for the approval record and honesty gates).
+ * Therapists. SELLS CCM (owner 2026-08-15, verified in module data: ATs run
+ * sideline SCAT and acute assessment — CCM Modules 2–3 are the assessment
+ * stream; CRM is EP-built and routes AROUND assessment scope. "CCM FOR
+ * CANADIAN AT'S"). Same mapping as UK physios on /uk.
  *
- * IT IS THE SAME PAGE AS CRM (owner, verbatim): a thin shell over
- * CrmInternationalContent — the international CRM landing /uk and
- * /pricing-international already render — with only the audience copy
- * swapped for ATs and the standards/CE blocks replaced by CATA's. The
- * design, sections and live geo-priced checkout are the shared component's.
- *
- * AT framing: never remedial and never scope-expansion — ATs already own
- * the acute sideline call AND the rehab room; the consensus moved the
- * recovery phase onto skills they already hold.
+ * Thin shell over CcmInternationalContent — the component /uk and the intl
+ * tabs render — with AT audience copy, the CATA band replacing the OA band,
+ * and heroFlow (title → training photo → price card; owner-ordered). The
+ * checkout is the live geo-priced `international-online` (grants CCM online).
  */
 
 const BADGE_PATH = '/logos/cata-approved-provider-2025-2027-en.png'
@@ -37,9 +36,6 @@ export default async function CataLandingPage() {
   const ceus = (CONFIG.COURSE.ONLINE_CPD_POINTS * 0.4).toFixed(1)
   const hasBadge = existsSync(join(process.cwd(), 'public', BADGE_PATH))
 
-  // The CATA band replaces the shared component's ACSM/ESSA standards banner —
-  // same visual design, this body's facts. Badge artwork renders only when the
-  // supplied PNG exists on disk (badge rules: official artwork, unaltered).
   const standardsBand = (
     <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
       {cataApproved && hasBadge ? (
@@ -58,56 +54,42 @@ export default async function CataLandingPage() {
           {cataApproved ? 'Approved Provider' : 'Independently reviewed'}
         </p>
         <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">
-          {cataApproved ? `CATA Approved Provider ${term}` : 'Built to ESSA CPD standards'}
+          {cataApproved ? `CATA Approved Provider ${term}` : 'Endorsed CPD'}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
           {cataApproved
-            ? `${ceus} CEUs for CATA members at the enhanced rate — 0.4 CEUs per contact hour × ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours`
-            : `${CONFIG.COURSE.ONLINE_CPD_POINTS} hours of assessed online learning`}
+            ? `${ceus} CEUs for CATA members at the enhanced rate (0.4 × ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours) · also endorsed by Osteopathy Australia`
+            : `${CONFIG.COURSE.ONLINE_CPD_POINTS} hours of assessed online learning · endorsed by Osteopathy Australia`}
         </p>
       </div>
     </div>
   )
 
-  const ceStatusNote = (
-    <div className="max-w-3xl mx-auto mb-8 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4">
+  const scopeNote = (
+    <div className="max-w-3xl mx-auto mt-8 mb-8 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4">
       <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" strokeWidth={2} />
       <p className="text-[13.5px] text-amber-900 leading-relaxed">
-        <strong>Continuing-education status:</strong>{' '}
-        {cataApproved ? (
-          <>
-            Concussion Education Australia is a <strong>CATA Approved Provider ({term})</strong> —
-            the online course carries {ceus} CEUs for CATA members at the enhanced
-            Approved-Provider rate of 0.4 CEUs per contact hour.
-          </>
-        ) : (
-          <>CATA Approved-Provider status is not currently held — no CATA CEUs are offered.</>
-        )}{' '}
-        The course is also accredited by Exercise &amp; Sports Science Australia (ESSA), carrying{' '}
-        {CONFIG.COURSE.ONLINE_CPD_POINTS} ESSA CPD points online, following independent review by
-        two ESSA-appointed reviewers. We don&rsquo;t claim accreditation we don&rsquo;t hold —
-        this page updates the day anything changes.
+        <strong>Within scope.</strong> The course covers concussion assessment and management on the
+        skills athletic therapy already holds — sideline recognition, clinical assessment, graded
+        return to play and reconditioning. Formal diagnosis and return-to-play clearance where red
+        flags are present remain with the treating physician — the course teaches when and how to
+        refer.
       </p>
     </div>
   )
 
-  // Platform-cost / refund / course-or-platform answers come from the shared
-  // FAQ builder so the copy tracks CONFIG (the platform monthly rate must never
-  // fork from what the card is charged). Only the audience-specific Qs are new.
-  const sharedFaqs = buildIntlFaqs(CONFIG.FEATURES.ESSA_ACCREDITED)
-  const pick = (q: string) => sharedFaqs.filter((f) => f.q === q)
+  const pick = (q: string) => CCM_INTL_FAQS.filter((f) => f.q === q)
   const faqs = [
     {
       q: 'How many CATA CEUs does it carry?',
       a: cataApproved
-        ? `Concussion Education Australia is a CATA Approved Provider (${term}). The online course is ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours, carrying ${ceus} CEUs for CATA members at the enhanced Approved-Provider rate of 0.4 CEUs per contact hour. Your certificate states the contact hours for your CEU reporting.`
+        ? `Concussion Education Australia is a CATA Approved Provider (${term}). The online course is ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours, carrying ${ceus} CEUs for CATA members at the enhanced Approved-Provider rate of 0.4 CEUs per contact hour. Your certificate states the contact hours for your CEU reporting. The course is also endorsed by Osteopathy Australia.`
         : `CATA Approved-Provider status is not currently held. Your certificate states ${CONFIG.COURSE.ONLINE_CPD_POINTS} hours of assessed learning.`,
     },
     {
-      q: 'Is concussion rehab within the athletic-therapy scope?',
-      a: 'Yes. Athletic therapists already own recognition, removal and reconditioning. What the consensus added is the middle: recovery is now a measured, graded exercise programme — assessment, prescription and progression, on the field-side and clinic skills you already hold. You implement and progress the rehabilitation; you do not diagnose or grant medical clearance.',
+      q: 'Is this within the athletic-therapy scope?',
+      a: 'Yes — it is built around it. ATs already own sideline recognition, assessment and reconditioning; the course takes the same pathway to guideline standard: SCAT6/VOMS/BESS assessment, acute management, graded return to play and phenotype-based rehabilitation. Formal diagnosis and red-flag clearance stay with the treating physician, and the course teaches exactly when and how to refer.',
     },
-    ...pick('Is this a course or a platform?'),
     ...pick('Is there an ongoing cost?'),
     {
       q: 'What currency am I charged in?',
@@ -119,66 +101,39 @@ export default async function CataLandingPage() {
   return (
     <>
       <InternationalCourseSchema
-        name={'Concussion Rehab Mastery — for Certified Athletic Therapists'}
+        name={'Concussion Clinical Mastery — for Certified Athletic Therapists'}
         description={
-          'An 8-module online course teaching athletic therapists to deliver measured heart-rate-threshold concussion rehabilitation: graded exercise testing, sub-symptom-threshold prescription, phenotype-specific rehab and graded return to play.'
+          'An 8-module online course for athletic therapists covering the full concussion pathway: sideline recognition, SCAT6/VOMS/BESS assessment, acute management, phenotype-based rehabilitation including measured sub-symptom-threshold exercise, and graded return to play.'
         }
         country="CA"
         path="/cata"
         roles={['Athletic Therapist', 'Certified Athletic Therapist']}
       />
-      <CrmInternationalContent
+      <CcmInternationalContent
         price={{ display: price.display, code: price.code }}
-        live
         audience={{
           badgeText: 'Canada · For Certified Athletic Therapists — CAT(C)',
-          heroTitle: (
-            <>
-              You make the sideline call.
-              <br className="hidden sm:block" /> The consensus put{' '}
-              <span className="text-gradient">the recovery</span> on your bench too.
-            </>
-          ),
           heroBlurb:
-            'Concussion Rehab Mastery completes the loop — from the removal decision you already own to measured, heart-rate-threshold rehabilitation and a defensible return to play — with the working clinical tools to deliver it.',
-          strapText: cataApproved
-            ? `A new, referral-worthy service line — physicians, physios and teams need someone to deliver measured exercise rehab. ${ceus} CATA CEUs at the enhanced Approved-Provider rate, self-paced, delivered entirely from wherever you practise.`
-            : `A new, referral-worthy service line — physicians, physios and teams need someone to deliver measured exercise rehab. ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, self-paced, delivered entirely from wherever you practise.`,
-          cpdTile: cataApproved
+            'You make the sideline call, run the assessment and deliver the reconditioning — this is the course that takes the whole pathway to guideline standard, with the working clinical tools to start Monday. Diagnosis and clearance for red flags stay with the physician; you own the rest.',
+          endorseTile: cataApproved
             ? { big: ceus, small: ' CEUs', label: 'CATA enhanced rate' }
             : undefined,
+          standardsBand,
+          heroFlow: true,
+          heroMedia: <CourseShowcase />,
           cardChip: 'Canada',
           cardCpdChip: cataApproved ? `${ceus} CATA CEUs` : '8 CPD hrs',
-          cardTitle: 'CRM — Canada',
-          cardSubtitle: 'The concussion-rehab course + the clinical platform — certify entirely online',
+          cardTitle: 'CCM — Canada',
           moduleBullet: cataApproved
-            ? `8 online modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours · ${ceus} CATA CEUs`
-            : `8 online modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours`,
-          valueIntroBlurb:
-            'You don’t just learn the protocol — you leave with the instruments to run it. Every enrolment includes the working clinical platform: the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator (heart-rate threshold → prescription) and the full Clinical Toolkit — measured exercise rehabilitation on the assessment and reconditioning skills athletic therapy already owns.',
-          scopeStrip: 'Within the athletic-therapy scope of practice',
-          standardsBand,
-          ceStatusNote,
-          showAcsmQuote: false,
-          certFooterLine: cataApproved
-            ? `CATA Approved Provider ${term} · ${ceus} CEUs at the enhanced rate · also ESSA-accredited (Australia)`
-            : undefined,
-          enrolBlurb: 'The concussion-rehab course + the working clinical platform, delivered wholly online.',
+            ? `8 clinical modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours · ${ceus} CATA CEUs`
+            : `8 clinical modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours`,
+          trustChip: cataApproved ? 'CATA Approved Provider' : 'OA-Endorsed',
+          scopeNote,
           faqs,
-          leadCapture: {
-            location: 'cata-hero',
-            kicker: 'Free for Athletic Therapists',
-            heading: 'The AT’s Concussion Rehab Starter',
-            blurb:
-              'The measured-threshold rehabilitation workflow — graded test → heart-rate threshold → sub-symptom-threshold dose → return to play — mapped to the athletic therapist’s scope. Emailed to you, free.',
-            heroBlurb:
-              'The AT’s Concussion Rehab Starter — the measured-threshold rehabilitation workflow + scope guide, emailed to you.',
-            footnote:
-              'One email with the resource, then the occasional update relevant to athletic therapists. No spam. Unsubscribe in one click, anytime.',
-            emailPlaceholder: 'you@clinic.ca',
-          },
+          certFooterLine: cataApproved
+            ? `CATA Approved Provider ${term} · ${ceus} CEUs at the enhanced rate · also endorsed by Osteopathy Australia`
+            : undefined,
           stickyCpdLabel: cataApproved ? `${ceus} CATA CEUs` : '8 CPD',
-          priceCardInHero: true,
         }}
       />
     </>

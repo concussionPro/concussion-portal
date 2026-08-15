@@ -1,7 +1,7 @@
 'use client'
 
 import { PROTOCOL_DOI, PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -13,6 +13,7 @@ import { trackEvent } from '@/lib/analytics'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 import { SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
+import { CCM_INTL_FAQS } from '@/components/ccm/ccm-intl-faqs'
 
 /** The bundled platform's year-2 rate = the tier a course enrolment INCLUDES,
  *  which is what the webhook attaches. Never a literal, and never a `.find()`
@@ -44,29 +45,6 @@ export interface IntlPriceView {
   display: string // e.g. "£275"
   code: string // e.g. "GBP"
 }
-
-const INTL_FAQS: { q: string; a: string }[] = [
-  {
-    q: 'Who is this course for?',
-    a: 'Physiotherapists, osteopaths and chiropractors — the clinicians who screen, assess and manage concussion (sports, MSK and first-contact practitioners especially). It covers the full pathway you work in: recognition, SCAT6/VOMS/BESS assessment, graded return-to-play and phenotype-based rehabilitation. Exercise physiologists who deliver rehab-only should take Concussion Rehab Mastery instead.',
-  },
-  {
-    q: 'Does it cover diagnosis — is that in my scope?',
-    a: 'The course teaches concussion assessment and management within physiotherapy/allied-health scope: screening, sideline recognition, clinical assessment, graded return-to-play and rehabilitation. Formal diagnosis and return-to-play clearance where red flags are present remain with the treating medical practitioner — the course teaches exactly when and how to refer.',
-  },
-  {
-    q: 'What accreditation does it carry?',
-    a: 'Concussion Clinical Mastery is endorsed by Osteopathy Australia. Your certificate states 8 hours of assessed CPD. UK and other overseas CPD is self-directed/self-recorded — the 8 assessed hours count toward your annual requirement.',
-  },
-  {
-    q: 'Is there an ongoing cost?',
-    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + SCAT6 baseline testing) is included free for your first year. After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (' + sstTierAllowance(STARTER_TIER).toLowerCase() + '; clinicians are unlimited on every tier); it starts automatically at the 12-month mark and you can cancel anytime.',
-  },
-  {
-    q: 'What’s the refund policy?',
-    a: 'A 7-day full refund applies if you’ve accessed less than 25% of the modules. Refunds process in 5–10 business days to the original payment method. Full terms are published at /terms.',
-  },
-]
 
 /**
  * Low-commitment capture — the missing middle step (2026-07-30 UK-lane audit:
@@ -174,9 +152,43 @@ function SyllabusCapture({ uk, price }: { uk: boolean; price: IntlPriceView }) {
   )
 }
 
-export default function CcmInternationalContent({ price, hideNav = false, uk = false }: { price: IntlPriceView; hideNav?: boolean;
+/**
+ * Audience copy overrides — same pattern as CrmInternationalContent's
+ * IntlAudienceCopy: every field defaults to the existing strings so /uk and
+ * /pricing-international render unchanged; /cata passes the athletic-therapist
+ * set. Structure never changes per audience — only words and block order.
+ */
+export interface CcmAudienceCopy {
+  badgeText?: string
+  heroBlurb?: string
+  /** Third bento tile (default OA-endorsed / CSP-listed). */
+  endorseTile?: { big: string; small: string; label: string }
+  /** Replaces the OA/CSP standards band wholesale. */
+  standardsBand?: ReactNode
+  /** Render hero media + pricing card directly under the hero (owner:
+   *  "title then [image] then price card"), skipping their default slots. */
+  heroFlow?: boolean
+  /** Replaces the live-training photo (online-only audiences get a showcase
+   *  of the ONLINE course, not an AU workshop room — owner 2026-08-15). */
+  heroMedia?: ReactNode
+  cardChip?: string
+  cardCpdChip?: string
+  cardTitle?: string
+  moduleBullet?: string
+  trustChip?: string
+  /** Replaces the amber within-scope note wholesale. */
+  scopeNote?: ReactNode
+  faqs?: { q: string; a: string }[]
+  certFooterLine?: string
+  stickyCpdLabel?: string
+}
+
+export default function CcmInternationalContent({ price, hideNav = false, uk = false, audience = {} }: { price: IntlPriceView; hideNav?: boolean;
   /** /uk (CSP directory arrivals): acknowledge the listing + lead with UK CPD relevance. */
-  uk?: boolean }) {
+  uk?: boolean; audience?: CcmAudienceCopy }) {
+  const FAQS = audience.faqs ?? CCM_INTL_FAQS
+  const heroFlow = audience.heroFlow ?? false
+  const endorseTile = audience.endorseTile ?? (uk ? { big: 'CSP', small: '', label: 'Directory listed' } : { big: 'OA', small: '', label: 'Endorsed' })
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
   const [enrolling, setEnrolling] = useState(false)
   const [enrolError, setEnrolError] = useState<string | null>(null)
@@ -229,82 +241,133 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
     return () => observer.disconnect()
   }, [])
 
-  return (
-    <div className="min-h-screen bg-background">
-      {!hideNav && <SiteNav />}
-      <InstrumentKeyframes />
-
-      <div className="max-w-6xl mx-auto px-6 pb-12 md:pb-20 pt-[120px]">
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="badge mb-5 inline-flex">
-            <Award className="w-3.5 h-3.5 mr-1.5" />
-            {uk ? <>For UK Physiotherapists — as listed in the CSP course directory</> : <>International · For Physiotherapists, Osteopaths &amp; Chiropractors</>}
-          </div>
-
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Concussion is <span className="text-gradient">your scope</span>.
-            <br className="hidden sm:block" /> Master the whole pathway.
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            You screen, assess, manage and rehabilitate concussion every week — this is the course
-            that makes you the clinician who does it to guideline standard, with the working tools
-            to start Monday. Diagnosis and clearance for red flags stay with medical; you own the rest.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
-            {[
-              'SCAT6 / SCOAT6',
-              'VOMS & BESS',
-              'Sideline recognition',
-              'Graded return-to-play',
-              'Phenotype rehab',
-              'Red-flag referral',
-            ].map((skill) => (
-              <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/8 border border-accent/15 text-[11.5px] sm:text-xs font-semibold text-accent whitespace-nowrap">
-                <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />
-                {skill}
-              </span>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
-            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">8<span className="text-base font-semibold">hrs</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Assessed CPD</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">{uk ? 'CSP' : 'OA'}</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">{uk ? 'Directory listed' : 'Endorsed'}</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
-              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">7<span className="text-base font-semibold">day</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
-            </div>
-          </div>
-
-          <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
-            8 CPD hours online, self-paced, delivered entirely from wherever you practise — plus the
-            clinical tools to put it into practice with patients from day one.
-          </p>
-
-          <div className="mt-5 flex justify-center">
-            <a href="#pricing-cards" className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm">
-              See enrolment options
-              <ArrowRight className="w-4 h-4" />
-            </a>
+  const trainingPhoto = (
+    <>
+        {/* Training photo */}
+        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
+          <Image
+            src="/workshop-training.jpg"
+            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
+            width={1200}
+            height={675}
+            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Clinician-built, clinician-taught</p>
+            <h3 className="text-base sm:text-xl font-bold leading-tight">The same training delivered hands-on to clinical teams across Australia.</h3>
+            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
+              Recognition &rarr; SCAT6/VOMS/BESS assessment &rarr; graded return-to-play &rarr; phenotype rehab — the
+              online course is the same clinical method, taught by the same clinician, self-paced from wherever you practise.
+            </p>
           </div>
         </div>
+    </>
+  )
 
+  const pricingSection = (
+    <>
+        {/* Pricing card */}
+        <div id="pricing-cards" className="mt-6">
+          <div className="max-w-xl mx-auto pt-2">
+            <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50 flex-shrink-0">
+                    <Stethoscope className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
+                  </div>
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">{audience.cardChip ?? 'International'}</span>
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">{audience.cardCpdChip ?? '8 CPD hrs'}</span>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="flex items-baseline gap-1 justify-end">
+                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">{price.display}</span>
+                    <span className="text-[11px] text-[var(--muted-foreground)]">{price.code}</span>
+                  </div>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">course + first year on the platform</p>
+                </div>
+              </div>
+
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{audience.cardTitle ?? 'CCM International'}</h3>
+              <p className="text-[12px] text-slate-500 mb-2 font-medium">The full clinical course + the tools — certify entirely online</p>
+              <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+                8 modules at your own pace, plus the working clinical tools to screen, monitor and
+                rehabilitate concussion — delivered wholly online, wherever you practise.
+              </p>
+
+              <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
+                {[
+                  audience.moduleBullet ?? '8 clinical modules · 8 CPD hours',
+                  'SCAT6 baseline & serial testing tool',
+                  'SST Trainer — test → prescription → monitoring',
+                  'BCTT calculator + full Clinical Toolkit',
+                  'VOMS/BESS guides + phenotype rehab library',
+                  'Certificate on 75% pass · lifetime access',
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-1.5 text-[12.5px]">
+                    <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <span className="text-[var(--muted-foreground)]">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="rounded-xl bg-teal-50/60 border border-teal-200 px-4 py-3 mb-4">
+                <p className="text-[12.5px] text-slate-700 leading-relaxed">
+                  <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
+                  The clinical platform (SST Trainer + baseline testing) is <strong>included free for your
+                  first year</strong>, then <strong>A${PLATFORM_MONTHLY_AUD}/month</strong> to keep it — starts automatically
+                  at 12 months, cancel anytime.
+                </p>
+              </div>
+
+              <div className="mt-auto">
+                <button
+                  type="button"
+                  onClick={handleEnrol}
+                  disabled={enrolling}
+                  className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+                  {!enrolling && <ArrowRight className="w-4 h-4" />}
+                </button>
+                {enrolError && <p className="text-[11px] text-center text-red-600 mt-2">{enrolError}</p>}
+                <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
+                  Prices shown in your region&rsquo;s currency · secure checkout · 7-day money-back guarantee
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
+            {['7-Day Guarantee', 'Lifetime Access', 'Clinical Tools Included', 'Certificate Included', audience.trustChip ?? 'OA-Endorsed'].map((item) => (
+              <div key={item} className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+    </>
+  )
+
+  const defaultScopeNote = (
+    <>
+        {/* Scope honesty */}
+        <div className="max-w-3xl mx-auto mt-8 mb-8 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4">
+          <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" strokeWidth={2} />
+          <p className="text-[13.5px] text-amber-900 leading-relaxed">
+            <strong>Within scope.</strong> The course covers concussion assessment and management within
+            physiotherapy/allied-health scope of practice. Diagnosis and return-to-play clearance where
+            red flags are present remain with the treating medical practitioner — the course teaches when
+            and how to refer.
+          </p>
+        </div>
+    </>
+  )
+
+  const defaultStandardsBand = (
+    <>
         {/* Standards / endorsement. For /uk the authority stack is FLIPPED
             (2026-07-30 UK-lane audit: every CSP session was read-and-leave —
             an Australian osteopathy endorsement is a foreign, other-profession
@@ -383,27 +446,95 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             </div>
           </a>
         )}
+    </>
+  )
 
-        {/* Training photo */}
-        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
-          <Image
-            src="/workshop-training.jpg"
-            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
-            width={1200}
-            height={675}
-            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
-            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Clinician-built, clinician-taught</p>
-            <h3 className="text-base sm:text-xl font-bold leading-tight">The same training delivered hands-on to clinical teams across Australia.</h3>
-            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
-              Recognition &rarr; SCAT6/VOMS/BESS assessment &rarr; graded return-to-play &rarr; phenotype rehab — the
-              online course is the same clinical method, taught by the same clinician, self-paced from wherever you practise.
-            </p>
+  return (
+    <div className="min-h-screen bg-background">
+      {!hideNav && <SiteNav />}
+      <InstrumentKeyframes />
+
+      <div className="max-w-6xl mx-auto px-6 pb-12 md:pb-20 pt-[120px]">
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="badge mb-5 inline-flex">
+            <Award className="w-3.5 h-3.5 mr-1.5" />
+            {audience.badgeText ?? (uk ? 'For UK Physiotherapists — as listed in the CSP course directory' : 'International · For Physiotherapists, Osteopaths & Chiropractors')}
           </div>
+
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+            Concussion is <span className="text-gradient">your scope</span>.
+            <br className="hidden sm:block" /> Master the whole pathway.
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {audience.heroBlurb ??
+              'You screen, assess, manage and rehabilitate concussion every week — this is the course that makes you the clinician who does it to guideline standard, with the working tools to start Monday. Diagnosis and clearance for red flags stay with medical; you own the rest.'}
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
+            {[
+              'SCAT6 / SCOAT6',
+              'VOMS & BESS',
+              'Sideline recognition',
+              'Graded return-to-play',
+              'Phenotype rehab',
+              'Red-flag referral',
+            ].map((skill) => (
+              <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/8 border border-accent/15 text-[11.5px] sm:text-xs font-semibold text-accent whitespace-nowrap">
+                <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />
+                {skill}
+              </span>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
+            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">8<span className="text-base font-semibold">hrs</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Assessed CPD</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">{endorseTile.big}<span className="text-base font-semibold">{endorseTile.small}</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">{endorseTile.label}</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
+              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">7<span className="text-base font-semibold">day</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
+            8 CPD hours online, self-paced, delivered entirely from wherever you practise — plus the
+            clinical tools to put it into practice with patients from day one.
+          </p>
+
+          {!heroFlow && (
+            <div className="mt-5 flex justify-center">
+              <a href="#pricing-cards" className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm">
+                See enrolment options
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+          )}
+          {heroFlow && (
+            <div className="text-left mt-8">
+              {audience.heroMedia ?? trainingPhoto}
+              {pricingSection}
+            </div>
+          )}
         </div>
+
+        {audience.standardsBand ?? defaultStandardsBand}
+
+        {!heroFlow && trainingPhoto}
 
         {/* Employer callout */}
         <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
@@ -430,86 +561,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           </p>
         </div>
 
-        {/* Pricing card */}
-        <div id="pricing-cards" className="mt-6">
-          <div className="max-w-xl mx-auto pt-2">
-            <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50 flex-shrink-0">
-                    <Stethoscope className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
-                  </div>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">International</span>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">8 CPD hrs</span>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">{price.display}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">{price.code}</span>
-                  </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">course + first year on the platform</p>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM International</h3>
-              <p className="text-[12px] text-slate-500 mb-2 font-medium">The full clinical course + the tools — certify entirely online</p>
-              <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-                8 modules at your own pace, plus the working clinical tools to screen, monitor and
-                rehabilitate concussion — delivered wholly online, wherever you practise.
-              </p>
-
-              <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
-                {[
-                  '8 clinical modules · 8 CPD hours',
-                  'SCAT6 baseline & serial testing tool',
-                  'SST Trainer — test → prescription → monitoring',
-                  'BCTT calculator + full Clinical Toolkit',
-                  'VOMS/BESS guides + phenotype rehab library',
-                  'Certificate on 75% pass · lifetime access',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[12.5px]">
-                    <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                    <span className="text-[var(--muted-foreground)]">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="rounded-xl bg-teal-50/60 border border-teal-200 px-4 py-3 mb-4">
-                <p className="text-[12.5px] text-slate-700 leading-relaxed">
-                  <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
-                  The clinical platform (SST Trainer + baseline testing) is <strong>included free for your
-                  first year</strong>, then <strong>A${PLATFORM_MONTHLY_AUD}/month</strong> to keep it — starts automatically
-                  at 12 months, cancel anytime.
-                </p>
-              </div>
-
-              <div className="mt-auto">
-                <button
-                  type="button"
-                  onClick={handleEnrol}
-                  disabled={enrolling}
-                  className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
-                  {!enrolling && <ArrowRight className="w-4 h-4" />}
-                </button>
-                {enrolError && <p className="text-[11px] text-center text-red-600 mt-2">{enrolError}</p>}
-                <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2">
-                  Prices shown in your region&rsquo;s currency · secure checkout · 7-day money-back guarantee
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-            {['7-Day Guarantee', 'Lifetime Access', 'Clinical Tools Included', 'Certificate Included', 'OA-Endorsed'].map((item) => (
-              <div key={item} className="flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
+        {!heroFlow && pricingSection}
 
         {/* Instrument visuals */}
         <div className="max-w-4xl mx-auto mt-10 mb-2">
@@ -570,16 +622,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           </div>
         </div>
 
-        {/* Scope honesty */}
-        <div className="max-w-3xl mx-auto mt-8 mb-8 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4">
-          <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" strokeWidth={2} />
-          <p className="text-[13.5px] text-amber-900 leading-relaxed">
-            <strong>Within scope.</strong> The course covers concussion assessment and management within
-            physiotherapy/allied-health scope of practice. Diagnosis and return-to-play clearance where
-            red flags are present remain with the treating medical practitioner — the course teaches when
-            and how to refer.
-          </p>
-        </div>
+        {audience.scopeNote ?? defaultScopeNote}
 
         {/* Evidence base + published protocol — the citable method behind the tools */}
         <div className="max-w-3xl mx-auto mb-8 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
@@ -624,7 +667,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
         <div id="faq" className="max-w-2xl mx-auto mt-16 md:mt-20">
           <h2 className="text-2xl font-bold text-center mb-8 text-foreground">Common Questions</h2>
           <div className="space-y-3">
-            {INTL_FAQS.map((item, i) => (
+            {FAQS.map((item, i) => (
               <div key={i} className="glass rounded-xl overflow-hidden">
                 <button type="button" onClick={() => toggleFaq(i)} className="w-full flex items-center justify-between px-5 py-4 text-left gap-3" aria-expanded={openFaqs.has(i)}>
                   <span className="font-semibold text-sm text-foreground">{item.q}</span>
@@ -644,7 +687,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
               {!enrolling && <ArrowRight className="w-5 h-5" />}
             </button>
-            <p className="text-xs text-muted-foreground mt-4">Endorsed by Osteopathy Australia · 8 CPD hours · lifetime access</p>
+            <p className="text-xs text-muted-foreground mt-4">{audience.certFooterLine ?? 'Endorsed by Osteopathy Australia · 8 CPD hours · lifetime access'}</p>
           </div>
         </div>
 
@@ -653,7 +696,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
       {/* Sticky mobile CTA */}
       <div className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300 ${showStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="backdrop-blur-lg bg-background/90 border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-foreground">{price.display} · 8 CPD</span>
+          <span className="text-sm font-semibold text-foreground">{price.display} · {audience.stickyCpdLabel ?? '8 CPD'}</span>
           <button type="button" onClick={handleEnrol} disabled={enrolling} className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed">
             {enrolling ? 'Starting…' : 'Enrol'}
             {!enrolling && <ArrowRight className="w-3.5 h-3.5" />}
