@@ -48,11 +48,34 @@ async function audience(): Promise<Recipient[]> {
   const out: Recipient[] = []
   const seen = new Set<string>()
 
+  // PAID EXCLUSIONS, applied to EVERY segment — the header always claimed
+  // "anyone who already owns the full course" was excluded, but nothing
+  // enforced it and five June-round alumni sat in the interest register
+  // (found on the owner's full-list audit, 2026-08-15). Full-course owners
+  // either attended a round (alumni) or are personally managed (Ring 1);
+  // online-only owners get the same pitch at their real UPGRADE price in
+  // their own ring — this blast's CTA quotes the full-course number.
+  // bailey@: attended the June Melbourne round; the Jun-16 purchase record
+  // postdates the room (owner: "he DID attend that mel course").
+  const paid = new Set<string>(['bailey@reformhealth.com.au'])
+  try {
+    const { rows } = await sql<{ email: string }>`
+      SELECT LOWER(email) AS email FROM users
+      WHERE access_level IN ('full-course', 'online-only')
+    `
+    rows.forEach((r) => paid.add(r.email))
+  } catch {
+    // If the exclusion list cannot load, sending would risk pitching seats
+    // to people who already hold them — fail closed on the whole audience.
+    throw new Error('paid-exclusion query failed — refusing to build audience')
+  }
+
   const push = (email: string | null, name: string | null, registered: boolean, city: string | null = null) => {
     const e = (email || '').trim().toLowerCase()
     if (!e || seen.has(e)) return
     // Partner and internal addresses are never campaign recipients.
     if (e.includes('embodia') || e.endsWith('@concussion-education-australia.com')) return
+    if (paid.has(e)) return
     seen.add(e)
     out.push({ email: e, name: (name || '').trim(), registered, city })
   }
