@@ -78,7 +78,11 @@ describe('CRM buyers land on their own course, never the free SCAT funnel', () =
 
   it('the public nav sends a CRM owner to /ep-course under "My Course"', () => {
     const src = read('components/SiteNav.tsx')
-    expect(src).toMatch(/auth\.ownsCrm \? '\/ep-course' : '\/scat-course'/)
+    // 2026-08-15 (owner): non-CRM preview users get the /learning portal under
+    // "Dashboard" instead of being dumped on the free SCAT page — the CRM
+    // owner's route to THEIR course is unchanged.
+    expect(src).toMatch(/if \(auth\.ownsCrm\) \{\s*\n\s*navItems\.push\(\{ label: 'My Course', path: '\/ep-course'/)
+    expect(src).toMatch(/navItems\.push\(\{ label: 'Dashboard', path: '\/learning'/)
   })
 
   it('the welcome modal does not push CRM owners into free module 101', () => {

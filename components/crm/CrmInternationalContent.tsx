@@ -81,6 +81,10 @@ export interface IntlAudienceCopy {
     emailPlaceholder?: string
   }
   stickyCpdLabel?: string
+  /** Render the pricing card IN the hero (replacing the enrol CTA + hero lead
+   *  capture, which are redundant next to it — owner 2026-08-15 on /cata:
+   *  "these are redundant just show price card"). */
+  priceCardInHero?: boolean
 }
 
 export default function CrmInternationalContent({
@@ -102,6 +106,7 @@ export default function CrmInternationalContent({
   const cpdTile = audience.cpdTile ?? { big: '8', small: 'hrs', label: 'Assessed CPD' }
   const showAcsmQuote = audience.showAcsmQuote ?? true
   const certFooterLine = audience.certFooterLine ?? `Built to ACSM CEC standards · ${essaBadgeLine}`
+  const priceCardInHero = audience.priceCardInHero ?? false
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
 
   // Live checkout (only when `live`): POST to the geo-priced international
@@ -153,178 +158,10 @@ export default function CrmInternationalContent({
     return () => observer.disconnect()
   }, [])
 
-  return (
-    <div className="min-h-screen bg-background">
-      {!hideNav && <SiteNav />}
-      <InstrumentKeyframes />
-
-      <div className="max-w-6xl mx-auto px-6 pb-12 md:pb-20 pt-[120px]">
-
-        {/* Page Header — same as AU */}
-        <div className="text-center mb-8">
-          <div className="badge mb-5 inline-flex">
-            <Award className="w-3.5 h-3.5 mr-1.5" />
-            {audience.badgeText ?? 'International · For Exercise Physiologists & Clinical Exercise Physiologists'}
-          </div>
-
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            {audience.heroTitle ?? (
-              <>
-                Concussion rehab is <span className="text-gradient">exercise medicine</span>.
-                <br className="hidden sm:block" /> Which makes it yours.
-              </>
-            )}
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {audience.heroBlurb ??
-              'Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed treatment for concussion — a graded aerobic prescription, squarely in the EP scope. This is the course that makes you the clinician who delivers it, with the working tools to start Monday.'}
-          </p>
-
-          {/* Skill chips — same as AU */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
-            {[
-              'BCTT & HRt',
-              'Sub-threshold Rx',
-              'Graded return-to-activity',
-              'Phenotype reconditioning',
-              'Symptom-titrated dosing',
-              'Red-flag triage',
-            ].map((skill) => (
-              <span
-                key={skill}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/8 border border-accent/15 text-[11.5px] sm:text-xs font-semibold text-accent whitespace-nowrap"
-              >
-                <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />
-                {skill}
-              </span>
-            ))}
-          </div>
-
-          {/* Punch stat bento — same tiles, internationalised: 8 hrs, never 14 */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
-            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">{cpdTile.big}<span className="text-base font-semibold">{cpdTile.small}</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">{cpdTile.label}</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
-              {/* CRM_REFERENCE_COUNT, never a literal and never the CCM number.
-                  This tile shipped REFERENCE_COUNT (144) — the size of the CCM
-                  Reference Repository — on a page selling Concussion Rehab
-                  Mastery, whose own evidence base is CRM_REFERENCE_COUNT
-                  distinct works. The comment that used to sit here told editors
-                  "136" was a stale variant to kill; on this page 136 was the
-                  CRM's own citation total, so that instruction entrenched a
-                  ~2.3x overstatement on an international selling surface. */}
-              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">{CRM_REFERENCE_COUNT}</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">References</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
-              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
-            </div>
-          </div>
-
-          {/* One-line strap — same as AU */}
-          <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
-            {audience.strapText ??
-              'A new, referral-worthy service line — physicians, physios and clinics need someone to deliver measured exercise rehab. 8 CPD hours online, self-paced, delivered entirely from wherever you practise.'}
-          </p>
-
-          {/* Primary hero CTA — same as AU */}
-          <div className="mt-5 flex justify-center">
-            <a
-              href="#pricing-cards"
-              className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
-            >
-              See enrolment options
-              <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
-
-          <EpLeadCapture
-            variant="hero"
-            location={audience.leadCapture?.location ?? 'international-hero'}
-            kicker={audience.leadCapture?.kicker}
-            heading={audience.leadCapture?.heading}
-            blurb={audience.leadCapture?.blurb}
-            footnote={audience.leadCapture?.footnote}
-            heroBlurb={audience.leadCapture?.heroBlurb}
-            emailPlaceholder={audience.leadCapture?.emailPlaceholder}
-          />
-        </div>
-
-        {/* Standards block — same banner design as AU; pending-honest copy.
-            Audience pages replace it wholesale (e.g. /cata's CATA band). */}
-        {audience.standardsBand ?? (
-        <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
-          <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
-          <div className="text-left">
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">
-              Independently reviewed
-            </p>
-            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">
-              Built to ACSM CEC &amp; ESSA CPD standards
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Built to ACSM CEC standards · {essaBadgeLine}
-            </p>
-          </div>
-        </div>
-        )}
-
-        {/* Live workshop training photo — same as AU, provenance framing */}
-        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
-          <Image
-            src="/workshop-training.jpg"
-            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
-            width={1200}
-            height={675}
-            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
-            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Clinician-built, clinician-taught</p>
-            <h3 className="text-base sm:text-xl font-bold leading-tight">
-              The same training program delivered hands-on to clinical teams across Australia.
-            </h3>
-            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
-              Assessment &rarr; measured HR threshold &rarr; in-scope exercise prescription — the
-              online course is the same clinical method, taught by the same clinician, self-paced
-              from wherever you practise.
-            </p>
-          </div>
-        </div>
-
-        {/* Employer-reimbursement callout — same as AU */}
-        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
-          <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-foreground">Most practitioners pay $0 out of pocket</p>
-            <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice with payment · certificate on completion.</p>
-          </div>
-        </div>
-
-        {/* Value intro — same as AU */}
-        <div className="text-center max-w-2xl mx-auto mb-2">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-3">Built for you</p>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-            Walk out and deliver it <span className="text-gradient">Monday</span>
-          </h2>
-          <p className="text-base text-muted-foreground">
-            {audience.valueIntroBlurb ??
-              'You don’t just learn the protocol — you leave with the instruments to run it. Every enrolment includes the working clinical platform: the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator (heart-rate threshold → prescription) and the full Clinical Toolkit — all built around the exercise-physiology scope of practice.'}
-          </p>
-        </div>
-
+  // The pricing card + trust row, extracted so it can render either in the
+  // hero (priceCardInHero) or at its default mid-page position — never both.
+  const pricingSection = (
+    <>
         {/* Pricing — same card design as AU (single international tier, geo-priced) */}
         <div id="pricing-cards" className="mt-6">
           <div className="max-w-xl mx-auto pt-2">
@@ -412,6 +249,188 @@ export default function CrmInternationalContent({
             ))}
           </div>
         </div>
+    </>
+  )
+
+  return (
+    <div className="min-h-screen bg-background">
+      {!hideNav && <SiteNav />}
+      <InstrumentKeyframes />
+
+      <div className="max-w-6xl mx-auto px-6 pb-12 md:pb-20 pt-[120px]">
+
+        {/* Page Header — same as AU */}
+        <div className="text-center mb-8">
+          <div className="badge mb-5 inline-flex">
+            <Award className="w-3.5 h-3.5 mr-1.5" />
+            {audience.badgeText ?? 'International · For Exercise Physiologists & Clinical Exercise Physiologists'}
+          </div>
+
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+            {audience.heroTitle ?? (
+              <>
+                Concussion rehab is <span className="text-gradient">exercise medicine</span>.
+                <br className="hidden sm:block" /> Which makes it yours.
+              </>
+            )}
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {audience.heroBlurb ??
+              'Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed treatment for concussion — a graded aerobic prescription, squarely in the EP scope. This is the course that makes you the clinician who delivers it, with the working tools to start Monday.'}
+          </p>
+
+          {/* Skill chips — same as AU */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
+            {[
+              'BCTT & HRt',
+              'Sub-threshold Rx',
+              'Graded return-to-activity',
+              'Phenotype reconditioning',
+              'Symptom-titrated dosing',
+              'Red-flag triage',
+            ].map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/8 border border-accent/15 text-[11.5px] sm:text-xs font-semibold text-accent whitespace-nowrap"
+              >
+                <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />
+                {skill}
+              </span>
+            ))}
+          </div>
+
+          {/* Punch stat bento — same tiles, internationalised: 8 hrs, never 14 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
+            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">{cpdTile.big}<span className="text-base font-semibold">{cpdTile.small}</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">{cpdTile.label}</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
+              {/* CRM_REFERENCE_COUNT, never a literal and never the CCM number.
+                  This tile shipped REFERENCE_COUNT (144) — the size of the CCM
+                  Reference Repository — on a page selling Concussion Rehab
+                  Mastery, whose own evidence base is CRM_REFERENCE_COUNT
+                  distinct works. The comment that used to sit here told editors
+                  "136" was a stale variant to kill; on this page 136 was the
+                  CRM's own citation total, so that instruction entrenched a
+                  ~2.3x overstatement on an international selling surface. */}
+              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">{CRM_REFERENCE_COUNT}</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">References</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
+              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
+            </div>
+          </div>
+
+          {/* One-line strap — same as AU */}
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
+            {audience.strapText ??
+              'A new, referral-worthy service line — physicians, physios and clinics need someone to deliver measured exercise rehab. 8 CPD hours online, self-paced, delivered entirely from wherever you practise.'}
+          </p>
+
+          {priceCardInHero ? (
+            <div className="text-left">{pricingSection}</div>
+          ) : (
+            <>
+              {/* Primary hero CTA — same as AU */}
+              <div className="mt-5 flex justify-center">
+                <a
+                  href="#pricing-cards"
+                  className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
+                >
+                  See enrolment options
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
+
+              <EpLeadCapture
+                variant="hero"
+                location={audience.leadCapture?.location ?? 'international-hero'}
+                kicker={audience.leadCapture?.kicker}
+                heading={audience.leadCapture?.heading}
+                blurb={audience.leadCapture?.blurb}
+                footnote={audience.leadCapture?.footnote}
+                heroBlurb={audience.leadCapture?.heroBlurb}
+                emailPlaceholder={audience.leadCapture?.emailPlaceholder}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Standards block — same banner design as AU; pending-honest copy.
+            Audience pages replace it wholesale (e.g. /cata's CATA band). */}
+        {audience.standardsBand ?? (
+        <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
+          <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
+          <div className="text-left">
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">
+              Independently reviewed
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">
+              Built to ACSM CEC &amp; ESSA CPD standards
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Built to ACSM CEC standards · {essaBadgeLine}
+            </p>
+          </div>
+        </div>
+        )}
+
+        {/* Live workshop training photo — same as AU, provenance framing */}
+        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
+          <Image
+            src="/workshop-training.jpg"
+            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
+            width={1200}
+            height={675}
+            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Clinician-built, clinician-taught</p>
+            <h3 className="text-base sm:text-xl font-bold leading-tight">
+              The same training program delivered hands-on to clinical teams across Australia.
+            </h3>
+            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
+              Assessment &rarr; measured HR threshold &rarr; in-scope exercise prescription — the
+              online course is the same clinical method, taught by the same clinician, self-paced
+              from wherever you practise.
+            </p>
+          </div>
+        </div>
+
+        {/* Employer-reimbursement callout — same as AU */}
+        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+          <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Most practitioners pay $0 out of pocket</p>
+            <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice with payment · certificate on completion.</p>
+          </div>
+        </div>
+
+        {/* Value intro — same as AU */}
+        <div className="text-center max-w-2xl mx-auto mb-2">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-3">Built for you</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
+            Walk out and deliver it <span className="text-gradient">Monday</span>
+          </h2>
+          <p className="text-base text-muted-foreground">
+            {audience.valueIntroBlurb ??
+              'You don’t just learn the protocol — you leave with the instruments to run it. Every enrolment includes the working clinical platform: the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator (heart-rate threshold → prescription) and the full Clinical Toolkit — all built around the exercise-physiology scope of practice.'}
+          </p>
+        </div>
+
+        {!priceCardInHero && pricingSection}
 
         {/* SST instrument visual — the platform proof (CRM = rehab-only, no baseline) */}
         <div className="max-w-xl mx-auto mt-10 mb-2">

@@ -178,6 +178,7 @@ export default async function CataLandingPage() {
             emailPlaceholder: 'you@clinic.ca',
           },
           stickyCpdLabel: cataApproved ? `${ceus} CATA CEUs` : '8 CPD',
+          priceCardInHero: true,
         }}
       />
     </>

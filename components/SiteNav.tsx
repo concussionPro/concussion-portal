@@ -95,11 +95,16 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   } else if (auth.accessLevel === 'preview') {
     // A CRM buyer is 'preview' on the CCM ladder but a paying customer of the
     // EP stream — "My Course" must be THEIR course, not the free SCAT one.
-    navItems.push({
-      label: 'My Course',
-      path: auth.ownsCrm ? '/ep-course' : '/scat-course',
-      accent: false,
-    })
+    // Everyone else logged-in gets the learning-portal dashboard (owner
+    // 2026-08-15: "logged in version does not give learning portal dash
+    // option" — "My Course" dumped preview users on the free SCAT page with no
+    // route to /learning, the all-streams portal that shows their free courses
+    // and the locked paid modules).
+    if (auth.ownsCrm) {
+      navItems.push({ label: 'My Course', path: '/ep-course', accent: false })
+    } else {
+      navItems.push({ label: 'Dashboard', path: '/learning', accent: false })
+    }
   } else {
     navItems.push({ label: 'Dashboard', path: '/dashboard', accent: false })
   }
@@ -192,7 +197,12 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
                 key={item.path}
                 href={item.path}
                 aria-current={pathname === item.path ? 'page' : undefined}
-                className={`text-[13px] font-medium px-3 py-2 rounded-md transition-colors ${
+                // inline-flex items-center: the row's items stretch to the tallest
+                // child (the Enrol pill), and block anchors TOP-align their text in
+                // that box while the Logout <button> centres its — so "Logout" sat
+                // ~4px lower than every link (owner screenshot 2026-08-15). Centring
+                // the links puts every label on the button's (correct) midline.
+                className={`inline-flex items-center text-[13px] font-medium px-3 py-2 rounded-md transition-colors ${
                   pathname === item.path
                     ? 'text-[var(--accent)] bg-[rgba(13,115,119,0.06)]'
                     : item.accent
