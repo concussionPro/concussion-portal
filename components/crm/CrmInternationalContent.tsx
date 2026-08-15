@@ -366,25 +366,6 @@ export default function CrmInternationalContent({
           )}
         </div>
 
-        {/* Standards block — same banner design as AU; pending-honest copy.
-            Audience pages replace it wholesale (e.g. /cata's CATA band). */}
-        {audience.standardsBand ?? (
-        <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
-          <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
-          <div className="text-left">
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">
-              Independently reviewed
-            </p>
-            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">
-              Built to ACSM CEC &amp; ESSA CPD standards
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Built to ACSM CEC standards · {essaBadgeLine}
-            </p>
-          </div>
-        </div>
-        )}
-
         {/* Live workshop training photo — same as AU, provenance framing */}
         <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
           <Image
@@ -408,6 +389,25 @@ export default function CrmInternationalContent({
             </p>
           </div>
         </div>
+
+        {/* Standards block — same banner design as AU; pending-honest copy.
+            Audience pages replace it wholesale (e.g. /cata's CATA band). */}
+        {audience.standardsBand ?? (
+        <div className="max-w-3xl mx-auto mb-6 flex items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 px-5 py-4">
+          <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10 text-accent flex-shrink-0" strokeWidth={1.75} />
+          <div className="text-left">
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">
+              Independently reviewed
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">
+              Built to ACSM CEC &amp; ESSA CPD standards
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Built to ACSM CEC standards · {essaBadgeLine}
+            </p>
+          </div>
+        </div>
+        )}
 
         {/* Employer-reimbursement callout — same as AU */}
         <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
