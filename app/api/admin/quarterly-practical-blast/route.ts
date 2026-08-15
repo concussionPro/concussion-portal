@@ -35,7 +35,7 @@ import { EmailScheduler } from '@/lib/email-scheduler'
  */
 
 // Bump this to re-arm. Firing requires it verbatim, so a stale flag fails safe.
-const CONFIRM_FLAG = 'quarterly-practical-melbourne-2026-10-31'
+const CONFIRM_FLAG = 'quarterly-practical-melbourne-2026-11-07'
 
 type Recipient = { email: string; name: string; registered: boolean; city: string | null }
 
@@ -48,9 +48,20 @@ async function audience(): Promise<Recipient[]> {
     if (!e || seen.has(e)) return
     // Partner and internal addresses are never campaign recipients.
     if (e.includes('embodia') || e.endsWith('@concussion-education-australia.com')) return
+    if (melbourneInterest.has(e)) return
     seen.add(e)
     out.push({ email: e, name: (name || '').trim(), registered, city })
   }
+
+  // 0. Melbourne interest registrants get the DEDICATED confirmed-date email
+  //    (workshop-date-float, confirmed:true) — never this blast on top of it.
+  const melbourneInterest = new Set<string>()
+  try {
+    const { rows } = await sql<{ email: string }>`
+      SELECT DISTINCT LOWER(email) AS email FROM workshop_interest WHERE city = 'melbourne'
+    `
+    rows.forEach((r) => melbourneInterest.add(r.email))
+  } catch { /* table absent → nothing to exclude */ }
 
   // 1. Registered interest — the segment the opening line is literally about.
   try {
@@ -65,12 +76,19 @@ async function audience(): Promise<Recipient[]> {
     rows.forEach((r) => push(r.email, r.name, true, r.city))
   } catch { /* table absent → segment simply empty */ }
 
-  // 2. Free-course completers and online-only owners who have NOT bought the
-  //    practical. They never registered interest, so they get the other opening.
+  // 2. Free users from the LAST 60 DAYS (owner 2026-08-15: "scope outreach to
+  //    warm list and recent users (60 days)") plus ALL online-only owners —
+  //    they are paying customers whose real remaining offer is this day.
+  //    Stale free signups are the cohort whose complaints cost deliverability.
   const { rows: users } = await sql<{ email: string; name: string | null }>`
     SELECT email, name FROM users
-    WHERE access_level IN ('preview', 'online-only')
-      AND nurture_unsubscribed = false
+    WHERE nurture_unsubscribed = false
+      AND email NOT LIKE 'z.lew87+%'
+      AND COALESCE(is_test, false) = false
+      AND (
+        access_level = 'online-only'
+        OR (access_level = 'preview' AND created_at >= NOW() - INTERVAL '60 days')
+      )
   `
   users.forEach((u) => push(u.email, u.name, false))
 

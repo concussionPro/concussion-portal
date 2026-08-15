@@ -45,6 +45,10 @@ interface FloatParams {
   venueLine: string
   extraEmails: string[]
   excludeEmails: string[]
+  /** true = the date is LOCKED (venue contracted): "confirmed" language.
+   *  false/absent = the original float: "looking at potentially running".
+   *  Never send confirmed:true before the venue is actually secured. */
+  confirmed: boolean
 }
 
 /** Greeting only when the register's name field starts with something that
@@ -66,7 +70,11 @@ function buildText(params: FloatParams, greeting: string): string {
 
 Just reaching out as you're on the register for the next available course.
 
-We're looking at potentially running a ${cityLabel} date on ${params.dateLabel}.
+${
+    params.confirmed
+      ? `${cityLabel} is locked in for ${params.dateLabel}.`
+      : `We're looking at potentially running a ${cityLabel} date on ${params.dateLabel}.`
+  }
 
 ${params.venueLine}
 
@@ -151,7 +159,9 @@ async function run(params: FloatParams, dryRun: boolean) {
   }
   const targets = await collectTargets(params)
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  const subject = `Concussion training ${CITY_LABELS[params.city]} — proposed date`
+  const subject = params.confirmed
+    ? `Concussion training ${CITY_LABELS[params.city]} — date confirmed`
+    : `Concussion training ${CITY_LABELS[params.city]} — proposed date`
   const slug = dateSlug(`${params.city}-${params.dateLabel}`)
 
   const sent: string[] = []
@@ -227,6 +237,7 @@ function parseParams(src: { get: (k: string) => string | null } | Record<string,
     venueLine: String(get('venueLine') || 'It will be in the CBD, run from 8am-4pm with a catered 1hr lunch.'),
     extraEmails: list(get('extraEmails')),
     excludeEmails: list(get('excludeEmails')),
+    confirmed: get('confirmed') === true || get('confirmed') === 'true',
   }
 }
 

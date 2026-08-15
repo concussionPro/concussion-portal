@@ -1747,17 +1747,16 @@ export const QUARTERLY_PRACTICAL_BLAST = {
    */
   template: (name: string, bookLink: string, onlineLink: string, sydneyUrl: string, byronUrl: string) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p><strong>The practical days are running in Q4.</strong> Melbourne is dated; Sydney and Byron Bay follow in November.</p>
+    <p><strong>The Melbourne practical day is locked in.</strong> Sydney and Byron Bay launch as their rooms fill.</p>
     <div class="callout">
-      <strong>Melbourne &mdash; Saturday 31 October</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
+      <strong>Melbourne &mdash; ${CONFIG.LOCATIONS.MELBOURNE.date}</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
       SCAT6 and VOMS, phenotype rehab, and graded exertional rehab protocols.
     </div>
-    <p>Enrol now, before the dates go public.</p>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take the Melbourne seat &mdash; A$${CONFIG.COURSE.PRICE_EARLY_BIRD}</a></center>
-    <p><strong>Melbourne doesn&rsquo;t work?</strong> One click and I&rsquo;ll hold you a place on the November day you want. Dates are set once I have the numbers.</p>
+    <p><strong>Melbourne doesn&rsquo;t work?</strong> One click and you&rsquo;re first in line for the next Sydney or Byron Bay day &mdash; dates are set once I have the numbers.</p>
     <center>
-      <a href="${sydneyUrl}" class="cta-btn" style="margin:0 6px 8px 0;">Sydney &mdash; November</a>
-      <a href="${byronUrl}" class="cta-btn" style="margin:0 0 8px 6px;">Byron Bay &mdash; November</a>
+      <a href="${sydneyUrl}" class="cta-btn" style="margin:0 6px 8px 0;">Sydney &mdash; next round</a>
+      <a href="${byronUrl}" class="cta-btn" style="margin:0 0 8px 6px;">Byron Bay &mdash; next round</a>
     </center>
     <p><strong>Or start online.</strong> A$${CONFIG.COURSE.PRICE_ONLINE}, ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours (up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the day). The upgrade never expires and works at any of the three.</p>
     <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online</a></center>
