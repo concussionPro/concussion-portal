@@ -7,12 +7,14 @@ import { intlPriceForCountry } from '@/lib/international-pricing'
 const USD = intlPriceForCountry(null).display
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /canada — the CATA Approved Provider listing landing page.
+// /cata — the CATA Approved Provider listing landing page (house convention:
+// audience pages are named for the BODY — /acsm, /csep, /cep-uk).
 //
 // CATA approval GRANTED 2026-08-14 (letter from Pete Dewar, Director of
 // Operations), term 2025–2027. The member-facing CATA Approved Provider
-// Listing links here; the listing link carries ?src=cata so the channel is
-// attributable (same measurement pattern as the Cliniko marketplace listing).
+// Listing links the BARE domain (owner 2026-08-15); middleware geo-routes
+// CA visitors here from / and /pricing — the same model as GB → /uk. Channel
+// measurement = CA-geo page views on this route.
 //
 // HONESTY GATES:
 //   • CEU claims derive from CONFIG (0.4 CEUs/contact hour × ONLINE_CPD_POINTS)
@@ -35,10 +37,10 @@ export const metadata: Metadata = {
     description:
       'The consensus made measured, heart-rate-threshold exercise rehabilitation first-line concussion care. The AT-scoped course, plus the tools to deliver it. CATA Approved Provider 2025–2027.',
     type: 'website',
-    url: 'https://portal.concussion-education-australia.com/canada',
+    url: 'https://portal.concussion-education-australia.com/cata',
   },
   alternates: {
-    canonical: 'https://portal.concussion-education-australia.com/canada',
+    canonical: 'https://portal.concussion-education-australia.com/cata',
   },
 }
 

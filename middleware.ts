@@ -329,14 +329,17 @@ export async function middleware(request: NextRequest) {
   // (owner 2026-07-30: CSP visitors clicking Home from /uk were scrolling AU
   // workshop locations — international is online-only; they must never see AU
   // cities/pricing.) Bots stay for SEO; logged-in users stay (they chose AU);
-  // GB gets the CSP-aware /uk, other known-intl gets /pricing-international.
+  // GB gets the CSP-aware /uk, CA gets the CATA-aware /cata (owner 2026-08-15:
+  // the CATA listing links the BARE domain — geo does the routing, exactly like
+  // the /uk model), other known-intl gets /pricing-international.
   if (pathname === '/') {
     const country = detectCountry(request.headers)
     const ua = request.headers.get('user-agent') || ''
     const hasSession = !!request.cookies.get('session')?.value
     if (!hasSession && !BOT_UA_PATTERN.test(ua) && isInternational(country)) {
       const intlUrl = request.nextUrl.clone()
-      intlUrl.pathname = country === 'GB' ? '/uk' : '/pricing-international'
+      intlUrl.pathname =
+        country === 'GB' ? '/uk' : country === 'CA' ? '/cata' : '/pricing-international'
       return NextResponse.redirect(intlUrl, 302)
     }
   }
@@ -352,7 +355,9 @@ export async function middleware(request: NextRequest) {
     // cf-ipcountry header never traps AU buyers on USD pricing.
     if (!BOT_UA_PATTERN.test(ua) && isInternational(country)) {
       const intlUrl = request.nextUrl.clone()
-      intlUrl.pathname = '/pricing-international'
+      // Country-specific audience pages take precedence over the generic
+      // international pricing page (same model as the homepage redirect above).
+      intlUrl.pathname = country === 'CA' ? '/cata' : '/pricing-international'
       return NextResponse.redirect(intlUrl, 302)
     }
   }

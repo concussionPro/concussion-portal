@@ -339,7 +339,7 @@ export const CONFIG = {
     // GRANTED 2026-08-14 (approval letter, Pete Dewar, Director of Operations),
     // term 2025–2027. Courses designated under the program earn the ENHANCED
     // rate of 0.4 CEUs per contact hour for CATA members — the CEU figure on
-    // /canada derives from ONLINE_CPD_POINTS × 0.4, never a hardcoded number.
+    // /cata derives from ONLINE_CPD_POINTS × 0.4, never a hardcoded number.
     // Badge usage: supplied artwork only, unaltered; display only while status
     // is current (expires end 2027 unless renewed).
     CATA_APPROVED: true,
