@@ -708,7 +708,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
         {/* ── CCM Online — online component of CCM (displays second) ── */}
         <div
-          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-2"
+          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-2 transition-all duration-300 hover:shadow-xl hover:shadow-teal-900/10 hover:-translate-y-0.5"
           style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}
         >
           {/* Header row: badge left, price right */}
@@ -836,7 +836,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
 
         {/* ── CCM Complete — online + workshop, MOST POPULAR (displays first) ── */}
-        <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-1" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
+        <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-1 shadow-lg shadow-teal-900/[0.07] transition-all duration-300 hover:shadow-2xl hover:shadow-teal-900/15 hover:-translate-y-1" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
@@ -875,6 +875,34 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
             Same 8 online modules as CCM Online, plus a full-day hands-on workshop — one shared room for all disciplines: physios, osteos and exercise professionals. Practice SCAT6, VOMS &amp; BESS with expert feedback.
           </p>
+
+          {/* Visual anchor — the room itself. The Online card carries the course
+              screenshot; this card carries the day (owner 2026-08-15: cards were
+              "extremely boring, plain with text"). */}
+          <div className="relative rounded-xl overflow-hidden border border-amber-100 mt-4 mb-3 h-[120px]">
+            <Image
+              src="/workshop-training.jpg"
+              alt="Hands-on practical day — supervised assessment on real subjects"
+              fill
+              sizes="(min-width: 1024px) 340px, 100vw"
+              className="object-cover object-center transition-transform duration-500 hover:scale-[1.04]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" aria-hidden="true" />
+            <p className="absolute bottom-1.5 left-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300">The practical day</p>
+          </div>
+
+          {/* CPD split bar — 8 online + 8 hands-on = 16, seen not read */}
+          <div className="mb-4">
+            <div className="flex h-2 overflow-hidden rounded-full">
+              <div className="w-1/2 bg-teal-500" />
+              <div className="w-1/2 bg-amber-400" />
+            </div>
+            <div className="mt-1 flex justify-between text-[10px] font-semibold text-[var(--muted-foreground)]">
+              <span className="text-teal-700">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD online</span>
+              <span className="font-bold text-[var(--foreground)]">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD total</span>
+              <span className="text-amber-600">{CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD hands-on</span>
+            </div>
+          </div>
 
           {/* Melbourne workshop mini-tile — thumbnail + date */}
           {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
