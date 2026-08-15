@@ -1735,20 +1735,13 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
  * "14 CPD hours" survived the 2026-07-30 re-rate into live sends.
  */
 export const QUARTERLY_PRACTICAL_BLAST = {
-  /** Date in the subject — the most concrete thing we have; "Your" because
-   *  the register segment literally asked for this email. 6–10 words. */
-  subject: (melDateLabel: string) => `Your hands-on concussion day — Melbourne, ${melDateLabel}`,
-  /** Preheader complement (route may use it): venue + CPD + next cities. */
-  preheader: 'Rydges CBD, fully catered · 16 CPD with the day · Sydney and Byron next',
+  subject: (melDateLabel: string) => `Hands-on concussion day — Melbourne, ${melDateLabel}`,
+  preheader: 'Rydges CBD, fully catered, 12 seats · Sydney and Byron Bay next',
   /**
-   * AIDA for a WARM list (email-write skill; frameworks ref missing → base
-   * AIDA): Attention = the date they registered for; Interest = what your
-   * hands do in the room; Desire = protocol-knower → clinician-who-has-done-it
-   * + 16 CPD; Action = ONE primary button, city nominations as the secondary
-   * pair, online as a tertiary text-style CTA.
-   * HONESTY: 12 seats is the real capacity; June did NOT sell out so nothing
-   * implies it; "first come first served" phrasing banned (owner); Sydney and
-   * Byron are pencilled, never promised. Figures all CONFIG-derived.
+   * VOICE = Zac's own July 8 float note: plain statements, no aphorisms, no
+   * "service line" marketing language, nothing about past rounds. One primary
+   * CTA (seat), city nominations second, online last. 12 seats is the real
+   * capacity; Sydney/Byron are pencilled, never promised; figures from CONFIG.
    */
   template: (
     name: string,
@@ -1758,21 +1751,17 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     melDateLabel: string,
   ) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p>The next hands-on concussion day runs <strong>Saturday ${melDateLabel.replace(/^Saturday /, '')} at Rydges Melbourne</strong> (CBD) &mdash; fully catered, the same room as the June day.</p>
-    <p>Twelve seats. You spend the day with your hands on real subjects &mdash; SCAT6, VOMS, BESS and cervical assessment, then graded exertional testing through to writing the exercise prescription &mdash; with feedback on your technique as you go.</p>
-    <p>It&rsquo;s the difference between knowing the protocol and being the clinician who&rsquo;s done it.</p>
-    <div class="callout">
-      <strong>Melbourne &mdash; ${melDateLabel}</strong> &middot; A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird<br>
-      The full course: the practical day + all ${CONFIG.COURSE.TOTAL_MODULES} online modules + the clinical toolkit &mdash; ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
-    </div>
+    <p>The next hands-on day is locked in: <strong>Melbourne, ${melDateLabel}</strong>, at Rydges in the CBD. Fully catered, ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats.</p>
+    <p>The day is supervised practice on real subjects &mdash; SCAT6, VOMS, BESS, cervical assessment, and graded exertional testing through to the exercise prescription.</p>
+    <p>Early-bird is A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} and includes the full online course and clinical toolkit &mdash; ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours all up.</p>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take a Melbourne seat</a></center>
-    <p><strong>Can&rsquo;t get to Melbourne?</strong> Sydney is pencilled for late November, Byron Bay for late October or December. One click puts you on the list that decides which room gets booked &mdash; and you&rsquo;ll hear first when your city locks:</p>
+    <p><strong>If Melbourne doesn&rsquo;t work:</strong> Sydney is pencilled for late November, Byron Bay for late October or December. One click and I&rsquo;ll put you on the list for your city &mdash; dates get booked on those numbers.</p>
     <center>
       <a href="${nominate.sydney}" class="cta-btn" style="margin:0 6px 8px 0;">Put me down for Sydney</a>
       <a href="${nominate.byron}" class="cta-btn" style="margin:0 0 8px 6px;">Put me down for Byron Bay</a>
     </center>
-    <p>Prefer to start online? The ${CONFIG.COURSE.TOTAL_MODULES} modules are A$${CONFIG.COURSE.PRICE_ONLINE} (${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours) and you can add any hands-on day later &mdash; the upgrade never expires. <a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}">Start online &rarr;</a></p>
-    <div class="sig">Zac<br>Osteopath &middot; Founder, Concussion Education Australia</div>
+    <p>Want to start now either way? The online course is A$${CONFIG.COURSE.PRICE_ONLINE} (${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours) and any hands-on day can be added later. <a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}">Start online &rarr;</a></p>
+    <div class="sig">Zac</div>
   `),
 }
 
