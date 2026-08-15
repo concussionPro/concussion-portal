@@ -175,7 +175,7 @@ export default function CourseShowcase({
         </div>
 
         {/* Stage — clickable: exploring the preview routes to the free trial */}
-        <Link href={trialHref} aria-label="Preview Module 1 free" className="relative block h-[240px] sm:h-[300px] md:h-[360px] bg-slate-950">
+        <Link href={trialHref} aria-label="Preview Module 1 free" className="relative block h-[320px] sm:h-[420px] md:h-[520px] bg-slate-950">
           {SLIDES.map((s, i) => (
             <div
               key={s.key}

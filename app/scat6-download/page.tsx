@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
 import {
   Brain,
   Mail,
@@ -590,6 +591,13 @@ export default function SCAT6DownloadPage() {
             Reviewed by Zac Lewis — Osteopath (AHPRA), B.Clin.Sci, M.Ost.Med · Updated July 2026
           </p>
         </div>
+
+        {/* Ladder bridge — /scat6-download is the top organic page (108
+            sessions/30d) and had ZERO routes to a money page (the open
+            analytics finding "Organic Search sends visitors who never touch a
+            money page"). Same component /scat-forms uses; free-to-read trial
+            first, never another email wall. */}
+        <AfterTheAssessment className="mt-6" />
 
         {/* ── Crawlable Q&A — mirrored exactly in the FAQPage JSON-LD ── */}
         <div className="mt-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-7 shadow-lg shadow-slate-200/40">

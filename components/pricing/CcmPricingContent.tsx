@@ -446,6 +446,20 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
         </div>
 
 
+        {/* Decision-moment proof — one verbatim testimonial + risk reversal
+            DIRECTLY under the cards (clean-data 30d: 95 sessions saw the cards,
+            11 started checkout; the fuller strip sits screens below). */}
+        <div className="max-w-3xl mx-auto mt-4 mb-2 text-center">
+          <p className="text-[13.5px] italic text-slate-600 leading-relaxed">
+            &ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly
+            applicable to concussion diagnosis and management in real-world settings.&rdquo;
+            <span className="not-italic font-semibold text-slate-700"> — Dean, University Clinical Educator, QLD</span>
+          </p>
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            7-day money-back guarantee · lifetime access · tax invoice for reimbursement
+          </p>
+        </div>
+
         {/* LOCATION BENTOS — moved directly under the pricing cards
             (owner 2026-08-07: "move the location bentos here"). They were
             ~8 sections further down, so someone deciding on the Complete
