@@ -23,9 +23,22 @@ export default function EpLeadCapture({
   location = 'unknown',
   nextHref,
   nextLabel,
+  // Audience copy overrides (default = the original EP strings, so every
+  // existing call site renders unchanged). /canada passes AT-scoped copy —
+  // the CATA page must never say "EP" (2026-08-15).
+  kicker = 'Free for EPs',
+  heading = 'The EP\u2019s Concussion Rehab Starter',
+  blurb = 'The measured-threshold prescription workflow \u2014 Buffalo test \u2192 heart-rate threshold \u2192 sub-symptom-threshold dose \u2014 plus a plain-English scope guide showing exactly where the exercise-physiology lane starts and stops. Emailed to you, free.',
+  footnote = 'One email with the resource, then the occasional EP-relevant update. No spam. Unsubscribe in one click, anytime.',
+  emailPlaceholder = 'you@clinic.com.au',
 }: {
   variant?: Variant
   location?: string
+  kicker?: string
+  heading?: string
+  blurb?: string
+  footnote?: string
+  emailPlaceholder?: string
   /** Optional next action on the success card. Only pass it where the
    *  destination is genuinely correct for that page — the accreditation-review
    *  surfaces (/hpcsa, /csep, /cep-uk, /cases) deliberately carry no enrol
@@ -157,7 +170,7 @@ export default function EpLeadCapture({
             type="email"
             required
             aria-label="Email address"
-            placeholder="you@clinic.com.au"
+            placeholder={emailPlaceholder}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
@@ -186,14 +199,12 @@ export default function EpLeadCapture({
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-100 to-emerald-50 border border-teal-200/60">
           <Download className="h-5 w-5 text-accent" strokeWidth={1.9} />
         </div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-2">Free for EPs</p>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-2">{kicker}</p>
         <h3 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
-          The EP&rsquo;s Concussion Rehab Starter
+          {heading}
         </h3>
         <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
-          The measured-threshold prescription workflow — Buffalo test &rarr; heart-rate threshold
-          &rarr; sub-symptom-threshold dose — plus a plain-English scope guide showing exactly where
-          the exercise-physiology lane starts and stops. Emailed to you, free.
+          {blurb}
         </p>
       </div>
 
@@ -211,7 +222,7 @@ export default function EpLeadCapture({
             type="email"
             required
             aria-label="Email address"
-            placeholder="you@clinic.com.au"
+            placeholder={emailPlaceholder}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
@@ -227,8 +238,7 @@ export default function EpLeadCapture({
         </button>
         {error ? <p className="text-center text-xs font-medium text-red-600">{error}</p> : null}
         <p className="text-center text-[11.5px] leading-relaxed text-muted-foreground">
-          One email with the resource, then the occasional EP-relevant update. No spam.
-          Unsubscribe in one click, anytime.
+          {footnote}
         </p>
       </form>
     </div>

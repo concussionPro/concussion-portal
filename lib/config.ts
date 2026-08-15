@@ -335,6 +335,15 @@ export const CONFIG = {
     ACSM_ACCREDITED: false,
     /** CECs named in the ACSM approval letter. Null until one exists. */
     ACSM_CEC_HOURS: null as number | null,
+    // CATA (Canadian Athletic Therapists Association) Approved Provider —
+    // GRANTED 2026-08-14 (approval letter, Pete Dewar, Director of Operations),
+    // term 2025–2027. Courses designated under the program earn the ENHANCED
+    // rate of 0.4 CEUs per contact hour for CATA members — the CEU figure on
+    // /canada derives from ONLINE_CPD_POINTS × 0.4, never a hardcoded number.
+    // Badge usage: supplied artwork only, unaltered; display only while status
+    // is current (expires end 2027 unless renewed).
+    CATA_APPROVED: true,
+    CATA_TERM: '2025–2027',
     // HPCSA (South Africa) CEU accreditation of the CRM. FALSE until the
     // accreditation number is issued. HARD COMPLIANCE GATE: since 1 Nov 2024 no
     // SA practitioner may enrol in a CPD activity before it is accredited, the
