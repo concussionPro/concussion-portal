@@ -150,7 +150,7 @@ async function run(request: NextRequest, willSend: boolean) {
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
     const ok = await sendEmail({
       to: testTo,
-      subject: `[TEST] ${QUARTERLY_PRACTICAL_BLAST.subject}`,
+      subject: `[TEST] ${QUARTERLY_PRACTICAL_BLAST.subject(MEL_DATE_LABEL)}`,
       html,
       headers: {
         'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@concussion-education-australia.com>`,
@@ -181,7 +181,7 @@ async function run(request: NextRequest, willSend: boolean) {
     return NextResponse.json({
       dryRun: true,
       note: `NO EMAILS SENT. To fire: POST ?confirm=${CONFIRM_FLAG}`,
-      subject: QUARTERLY_PRACTICAL_BLAST.subject,
+      subject: QUARTERLY_PRACTICAL_BLAST.subject(MEL_DATE_LABEL),
       audience: {
         total: eligible.length,
         registeredInterest: eligible.filter((r) => r.registered).length,
@@ -240,7 +240,7 @@ async function run(request: NextRequest, willSend: boolean) {
     const ok = await sendEmail({
       to: r.email,
       scheduledAt: scheduler.next(r.email),
-      subject: QUARTERLY_PRACTICAL_BLAST.subject,
+      subject: QUARTERLY_PRACTICAL_BLAST.subject(MEL_DATE_LABEL),
       html,
       headers: {
         'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@concussion-education-australia.com>`,

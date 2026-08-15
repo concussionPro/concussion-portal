@@ -43,7 +43,7 @@ export default async function BlastPreviewPage() {
           Email preview · nothing is sent from this page
         </p>
         <h1 style={{ margin: '4px 0 10px', fontSize: 24, fontWeight: 700, color: '#16282b', fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
-          {QUARTERLY_PRACTICAL_BLAST.subject}
+          {QUARTERLY_PRACTICAL_BLAST.subject('Saturday 7 November')}
         </h1>
 
         <p style={{ margin: '0 0 14px', padding: '10px 13px', borderRadius: 9, border: '1px solid #e0c3ad', background: '#fbf0e8', color: '#6b3a1c', fontSize: 13, lineHeight: 1.55, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
