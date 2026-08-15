@@ -28,7 +28,10 @@ const BASE_NAV_ITEMS = [
   { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Clinical Tools', path: '/clinical-suite', accent: false },
-  { label: 'Blog', path: '/blog', accent: false },
+  // Blog removed from the primary nav (owner nav review 2026-08-15): /blog is
+  // absent from the top-14 pages by 30-day sessions while holding a slot on
+  // the money path; it stays in the footer Resources list and in-content
+  // links, so discovery and SEO paths are unchanged.
 ]
 
 // ownsCrm rides along because a CRM (EP) buyer's accessLevel is 'preview' —

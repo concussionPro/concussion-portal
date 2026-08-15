@@ -6,6 +6,11 @@ import { Check } from 'lucide-react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { SstWatchVisual, BaselineLaptopVisual } from '@/components/clinical/InstrumentVisuals'
+import { RedFlagDecisionAnimated } from '@/components/course/ep-infographics/RedFlagDecisionAnimated'
+import { GradedReturnToSportAnimated } from '@/components/course/ep-infographics/GradedReturnToSportAnimated'
+import { PhenotypeMapAnimated } from '@/components/course/ep-infographics/PhenotypeMapAnimated'
+import { BcttProtocol } from '@/components/course/ep-infographics/BcttProtocol'
+import { ConcussionSymptomClusters } from '@/components/course/ep-infographics/ConcussionSymptomClusters'
 
 /**
  * Loom-style auto-advancing showcase of the ONLINE course — for audience pages
@@ -66,10 +71,15 @@ function QuizSlide({ active }: { active: boolean }) {
   )
 }
 
-function InfographicSlide({ src, alt }: { src: string; alt: string }) {
+/** LIVE course infographic — the real SVG/DOM component the course renders,
+ *  not a PNG export (owner: "still not zoomed enough. do not degrade quality"
+ *  — the 924px exports upscale soft; the components are sharp at any size).
+ *  Top-aligned at reading width; tall cards crop at the stage edge, which is
+ *  a teaser's job. */
+function LiveInfographicSlide({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-white p-3">
-      <Image src={src} alt={alt} fill className="object-contain p-2" />
+    <div className="h-full w-full overflow-hidden bg-slate-50">
+      <div className="mx-auto w-[880px] max-w-[96%] pt-3">{children}</div>
     </div>
   )
 }
@@ -104,18 +114,17 @@ const SLIDES: { key: string; caption: string; render: (active: boolean) => React
       <Image src="/ccm-online-preview.png" alt="Inside the online course — module lesson view" fill className="object-cover" style={{ objectPosition: '50% 18%' }} />
     ),
   },
-  { key: 'scat6', caption: 'The SCAT6 family — which tool, when', render: () => <InfographicSlide src="/infographics/scat6-family.png" alt="SCAT6 assessment family infographic" /> },
-  { key: 'voms', caption: 'The VOMS battery, step by step', render: () => <InfographicSlide src="/infographics/voms-battery.png" alt="VOMS battery infographic" /> },
+
   {
     key: 'quiz',
     caption: 'Checkpoint quizzes as you go — certificate at 75%',
     render: (active) => <QuizSlide active={active} />,
   },
-  { key: 'redflag', caption: 'Red-flag decisions — when it is not a concussion', render: () => <InfographicSlide src="/infographics/red-flag-decision.png" alt="Red flag decision infographic" /> },
-  { key: 'clusters', caption: 'Symptom clusters → phenotype-based rehab', render: () => <InfographicSlide src="/infographics/concussion-symptom-clusters.png" alt="Concussion symptom clusters infographic" /> },
-  { key: 'phenotype', caption: 'The phenotype map — target what you find', render: () => <InfographicSlide src="/infographics/phenotype-map.png" alt="Concussion phenotype map infographic" /> },
-  { key: 'rtp', caption: 'Graded return to sport — the full progression', render: () => <InfographicSlide src="/infographics/graded-return-to-sport.png" alt="Graded return-to-sport infographic" /> },
-  { key: 'bctt', caption: 'The BCTT — test to threshold to prescription', render: () => <InfographicSlide src="/infographics/bctt-protocol.png" alt="Buffalo Concussion Treadmill Test protocol infographic" /> },
+  { key: 'redflag', caption: 'Red-flag decisions — when it is not a concussion', render: () => <LiveInfographicSlide><RedFlagDecisionAnimated /></LiveInfographicSlide> },
+  { key: 'clusters', caption: 'Symptom clusters → phenotype-based rehab', render: () => <LiveInfographicSlide><ConcussionSymptomClusters /></LiveInfographicSlide> },
+  { key: 'phenotype', caption: 'The phenotype map — target what you find', render: () => <LiveInfographicSlide><PhenotypeMapAnimated /></LiveInfographicSlide> },
+  { key: 'rtp', caption: 'Graded return to sport — the full progression', render: () => <LiveInfographicSlide><GradedReturnToSportAnimated /></LiveInfographicSlide> },
+  { key: 'bctt', caption: 'The BCTT — test to threshold to prescription', render: () => <LiveInfographicSlide><BcttProtocol /></LiveInfographicSlide> },
   { key: 'clip', caption: 'The SST Trainer in action — included with enrolment', render: (active) => <ClipSlide active={active} /> },
   {
     key: 'baseline',
