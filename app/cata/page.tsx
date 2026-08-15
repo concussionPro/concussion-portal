@@ -119,8 +119,9 @@ export default async function CataLandingPage() {
             ? { big: ceus, small: ' CEUs', label: 'CATA enhanced rate' }
             : undefined,
           standardsBand,
+          standardsBandTop: true,
           heroFlow: true,
-          heroMedia: <CourseShowcase />,
+          heroMedia: <CourseShowcase enrolHref="#pricing-cards" trialHref="/preview" />,
           cardChip: 'Canada',
           cardCpdChip: cataApproved ? `${ceus} CATA CEUs` : '8 CPD hrs',
           cardTitle: 'CCM — Canada',
@@ -129,6 +130,13 @@ export default async function CataLandingPage() {
             : `8 clinical modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} contact hours`,
           trustChip: cataApproved ? 'CATA Approved Provider' : 'OA-Endorsed',
           scopeNote,
+          belowFoldNote: (
+            <p className="max-w-3xl mx-auto mb-8 text-center text-[12px] text-muted-foreground leading-relaxed">
+              Provider credentials: Concussion Education Australia&rsquo;s programs are endorsed by
+              Osteopathy Australia (this course), and its exercise-physiology stream is accredited by
+              Exercise &amp; Sports Science Australia (ESSA) — Australia&rsquo;s peak professional bodies.
+            </p>
+          ),
           faqs,
           certFooterLine: cataApproved
             ? `CATA Approved Provider ${term} · ${ceus} CEUs at the enhanced rate · also endorsed by Osteopathy Australia`

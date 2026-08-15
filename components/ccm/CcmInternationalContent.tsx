@@ -14,6 +14,7 @@ import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/com
 import { REFERENCE_COUNT } from '@/data/reference-count'
 import { SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 import { CCM_INTL_FAQS } from '@/components/ccm/ccm-intl-faqs'
+import CourseShowcase from '@/components/ccm/CourseShowcase'
 
 /** The bundled platform's year-2 rate = the tier a course enrolment INCLUDES,
  *  which is what the webhook attaches. Never a literal, and never a `.find()`
@@ -165,6 +166,9 @@ export interface CcmAudienceCopy {
   endorseTile?: { big: string; small: string; label: string }
   /** Replaces the OA/CSP standards band wholesale. */
   standardsBand?: ReactNode
+  /** Render the standards band at the VERY TOP of the page (owner 2026-08-15:
+   *  the CATA band on /cata goes "TOP OF PAGE OBVIOUSLY"). */
+  standardsBandTop?: boolean
   /** Render hero media + pricing card directly under the hero (owner:
    *  "title then [image] then price card"), skipping their default slots. */
   heroFlow?: boolean
@@ -178,6 +182,9 @@ export interface CcmAudienceCopy {
   trustChip?: string
   /** Replaces the amber within-scope note wholesale. */
   scopeNote?: ReactNode
+  /** Quiet provider-credentials note below the fold (after the evidence
+   *  block) — e.g. /cata's OA + ESSA line. */
+  belowFoldNote?: ReactNode
   faqs?: { q: string; a: string }[]
   certFooterLine?: string
   stickyCpdLabel?: string
@@ -456,6 +463,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
 
       <div className="max-w-6xl mx-auto px-6 pb-12 md:pb-20 pt-[120px]">
 
+        {audience.standardsBandTop && (audience.standardsBand ?? defaultStandardsBand)}
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="badge mb-5 inline-flex">
@@ -532,7 +541,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           )}
         </div>
 
-        {audience.standardsBand ?? defaultStandardsBand}
+        {!audience.standardsBandTop && (audience.standardsBand ?? defaultStandardsBand)}
 
         {!heroFlow && trainingPhoto}
 
@@ -562,6 +571,14 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
         </div>
 
         {!heroFlow && pricingSection}
+
+        {/* Course showcase — see inside (skipped when the page already renders
+            it as heroMedia, e.g. /cata). */}
+        {!audience.heroMedia && (
+          <div className="max-w-4xl mx-auto mt-10 mb-2">
+            <CourseShowcase />
+          </div>
+        )}
 
         {/* Instrument visuals */}
         <div className="max-w-4xl mx-auto mt-10 mb-2">
@@ -638,6 +655,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             </a>.
           </p>
         </div>
+
+        {audience.belowFoldNote}
 
         {/* Instructor */}
         <div className="max-w-3xl mx-auto mb-8">

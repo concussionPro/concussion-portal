@@ -28,6 +28,7 @@ import { createFAQSchema } from '@/lib/schema-markup'
 import { CONFIG, upgradePriceFor, SST_TIERS, SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { trackEvent } from '@/lib/analytics'
+import CourseShowcase from '@/components/ccm/CourseShowcase'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -174,7 +175,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
   const faqs: FaqItem[] = [
     {
       q: 'Can I upgrade from online-only to the full course later?',
-      a: `Yes — self-serve from your dashboard. You pay the difference between your online course and the Complete Course ($${upgradePriceFor(null)} at the current rate), and nominate your workshop city at checkout.`,
+      a: `Yes — self-serve from your dashboard. You pay the difference between your online course and the Complete Course ($${upgradePriceFor(null)} at the current rate), and nominate your workshop city at checkout. The practical day is open to ALL clinicians — you train alongside physios, osteos and exercise professionals for full multidisciplinary integration.`,
     },
     {
       q: 'When do I get access to the online modules?',
@@ -304,17 +305,6 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           tabs already give the top offset, so drop the fixed-nav padding. */}
       <div className={`stream-body max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
 
-        {/* PRICE FIRST. Moved to the top of the body 2026-08-07.
-            Owner, after three partial fixes: "ABOVE THE FUCKING FOLD. NO
-            FUCKING SCROLL." Measured before this: CCM cards at 672px and CRM
-            cards ~8 sections down, so on the tabbed /pricing page an EP
-            switching streams still had to scroll to find a number.
-            Everything that was above the cards is now below them. Nothing
-            was deleted. */}
-        <div id="pricing-cards">
-          <PricingOptions variant="full" />
-        </div>
-
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
 
@@ -440,9 +430,19 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
             <strong className="font-bold">Start online, add the in-person day whenever you like.</strong>{' '}
             <span className="text-muted-foreground">
-              Online buyers upgrade later for the difference (${upgradePriceFor(null)}) — no deadline, and your city&apos;s date is chosen when it launches.
+              Online buyers upgrade later for the difference (${upgradePriceFor(null)}) — no deadline, and your city&apos;s date is chosen when it launches. The practical day is one shared room for every discipline: train alongside physios, osteos and exercise professionals for full multidisciplinary integration.
             </span>
           </p>
+        </div>
+
+
+        {/* CARDS directly under the title block (owner 2026-08-15, with
+            screenshots: "streams tabs → CCM title → price cards" — the
+            2026-08-07 cards-first order put naked prices above any context
+            and read as broken on /courses). Title block is compact, so the
+            cards still land within the first scroll. */}
+        <div id="pricing-cards">
+          <PricingOptions variant="full" />
         </div>
 
 
@@ -538,6 +538,16 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             Training a team? See team pricing
             <span aria-hidden="true">↓</span>
           </a>
+        </div>
+
+        {/* Course showcase — what the online course looks like (owner
+            2026-08-15: embed where it boosts clicks to enrol). */}
+        <div className="max-w-4xl mx-auto mt-10 mb-6">
+          <div className="text-center mb-4">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-1">See inside</p>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">What the online course looks like</h2>
+          </div>
+          <CourseShowcase />
         </div>
 
         {/* Try-before-you-buy — owner 2026-07-10: pricing must link through to a

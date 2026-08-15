@@ -27,6 +27,7 @@ import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { createFAQSchema } from '@/lib/schema-markup'
+import CourseShowcase from '@/components/ccm/CourseShowcase'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — pricing/landing content.
@@ -147,13 +148,120 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           nav + tabs already provide the top offset, so drop the fixed-nav pad. */}
       <div className={`stream-body max-w-6xl mx-auto px-6 pb-12 md:pb-20 ${hideNav ? 'pt-6' : 'pt-[120px]'}`}>
 
-        {/* PRICE FIRST. Moved to the top of the body 2026-08-07.
-            Owner, after three partial fixes: "ABOVE THE FUCKING FOLD. NO
-            FUCKING SCROLL." Measured before this: CCM cards at 672px and CRM
-            cards ~8 sections down, so on the tabbed /pricing page an EP
-            switching streams still had to scroll to find a number.
-            Everything that was above the cards is now below them. Nothing
-            was deleted. */}
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <div className="badge mb-5 inline-flex">
+            <Award className="w-3.5 h-3.5 mr-1.5" />
+            For Accredited Exercise Physiologists &amp; Exercise Scientists
+          </div>
+
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+            Concussion rehab is <span className="text-gradient">exercise medicine</span>.
+            <br className="hidden sm:block" /> Which makes it yours.
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed
+            treatment for concussion — a graded aerobic prescription, squarely in the EP scope.
+            This is the course that makes you the clinician who delivers it, with the working
+            tools to start Monday.
+          </p>
+
+          {/* Skill chips — the EP's actual clinical capabilities, scannable */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
+            {[
+              'BCTT & HRt',
+              'Sub-threshold Rx',
+              'Graded return-to-activity',
+              'Phenotype reconditioning',
+              'Symptom-titrated dosing',
+              'Red-flag triage',
+            ].map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/8 border border-accent/15 text-[11.5px] sm:text-xs font-semibold text-accent whitespace-nowrap"
+              >
+                <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />
+                {skill}
+              </span>
+            ))}
+          </div>
+
+          {/* Punch stat bento */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
+            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">16<span className="text-base font-semibold">hrs</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD with day</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">1<span className="text-base font-semibold">day</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Hands-on practical</p>
+            </div>
+            {/* SST tile — the platform IS the differentiator; it was absent from
+                the hero entirely (Zac 2026-07-27: "sst trainer is buried").
+                Replaced the ∞/lifetime tile — lifetime access still appears in
+                the pricing-card bullets. */}
+            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">SST</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Trainer app incl.</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
+              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
+            </div>
+          </div>
+
+          {/* Evidence strip — claim, proof, tool in one line ABOVE the ~50%
+              scroll stall (2026-08-03: ESSA traffic read the first-line claim
+              in the hero but the receipts sat at the bottom of the page). */}
+          <div className="max-w-3xl mx-auto mt-5 rounded-xl border border-teal-200 bg-teal-50/50 px-4 py-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[12.5px]">
+            <span className="font-semibold text-foreground">First-line treatment per the Amsterdam 2023 consensus</span>
+            <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
+              Published protocol — {PROTOCOL_DOI_LABEL}
+            </a>
+            <span className="text-muted-foreground">Delivered &amp; documented by SST Trainer — included</span>
+          </div>
+
+          {/* One-line "why EPs" strap under the stats */}
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
+            A new, referral-worthy service line — GPs, physios and clinics need someone to deliver
+            measured exercise rehab. {accredited
+              ? '8 CPD points is roughly half your annual ESSA Further-Education requirement, done online and self-paced.'
+              : '8 CPD hours online, self-paced — ESSA CPD-point mapping pending accreditation.'}
+          </p>
+
+          {/* Primary hero CTA */}
+          <div className="mt-5 flex justify-center">
+            <a
+              href="#pricing-cards"
+              className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
+            >
+              See enrolment options
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+
+          {/* Email capture — the not-ready-to-buy majority. Secondary to the
+              enrol CTA above; the same magnet repeats near the page bottom. */}
+          <EpLeadCapture variant="hero" location="hero" nextHref="#pricing-cards" nextLabel="See the course & pricing" />
+
+          {/* Practical-day cities — surfaced at the TOP (owner 2026-07-27:
+              "locations are buried… too much scroll"). Cities derive from
+              CONFIG.LOCATIONS; no dates are named here, so the date-copy rule
+              is satisfied while the geography is instantly visible. */}
+          <p className="mt-4 text-[13px] text-muted-foreground">
+            <span className="font-semibold text-foreground">Practical-day cities:</span>{' '}
+            {Object.values(CONFIG.LOCATIONS).map((l) => l.city).join(' · ')} —{' '}
+            <a href="#pricing-cards" className="font-semibold text-accent underline">nominate yours at enrolment</a>
+          </p>
+        </div>
+
+
+        {/* CARDS directly under the title block (owner 2026-08-15:
+            "streams tabs → title → price cards", same as CCM). */}
         <div id="pricing-cards" className="mt-6">
           <div className="grid md:grid-cols-2 gap-5 pt-2 max-w-4xl mx-auto items-stretch">
 
@@ -315,117 +423,6 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           </div>
         </div>
 
-        {/* Page Header */}
-        <div className="text-center mb-8">
-          <div className="badge mb-5 inline-flex">
-            <Award className="w-3.5 h-3.5 mr-1.5" />
-            For Accredited Exercise Physiologists &amp; Exercise Scientists
-          </div>
-
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Concussion rehab is <span className="text-gradient">exercise medicine</span>.
-            <br className="hidden sm:block" /> Which makes it yours.
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed
-            treatment for concussion — a graded aerobic prescription, squarely in the EP scope.
-            This is the course that makes you the clinician who delivers it, with the working
-            tools to start Monday.
-          </p>
-
-          {/* Skill chips — the EP's actual clinical capabilities, scannable */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
-            {[
-              'BCTT & HRt',
-              'Sub-threshold Rx',
-              'Graded return-to-activity',
-              'Phenotype reconditioning',
-              'Symptom-titrated dosing',
-              'Red-flag triage',
-            ].map((skill) => (
-              <span
-                key={skill}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/8 border border-accent/15 text-[11.5px] sm:text-xs font-semibold text-accent whitespace-nowrap"
-              >
-                <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />
-                {skill}
-              </span>
-            ))}
-          </div>
-
-          {/* Punch stat bento */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
-            <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">16<span className="text-base font-semibold">hrs</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD with day</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">1<span className="text-base font-semibold">day</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Hands-on practical</p>
-            </div>
-            {/* SST tile — the platform IS the differentiator; it was absent from
-                the hero entirely (Zac 2026-07-27: "sst trainer is buried").
-                Replaced the ∞/lifetime tile — lifetime access still appears in
-                the pricing-card bullets. */}
-            <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">SST</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Trainer app incl.</p>
-            </div>
-            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
-              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
-            </div>
-          </div>
-
-          {/* Evidence strip — claim, proof, tool in one line ABOVE the ~50%
-              scroll stall (2026-08-03: ESSA traffic read the first-line claim
-              in the hero but the receipts sat at the bottom of the page). */}
-          <div className="max-w-3xl mx-auto mt-5 rounded-xl border border-teal-200 bg-teal-50/50 px-4 py-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[12.5px]">
-            <span className="font-semibold text-foreground">First-line treatment per the Amsterdam 2023 consensus</span>
-            <a href={PROTOCOL_DOI_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
-              Published protocol — {PROTOCOL_DOI_LABEL}
-            </a>
-            <span className="text-muted-foreground">Delivered &amp; documented by SST Trainer — included</span>
-          </div>
-
-          {/* One-line "why EPs" strap under the stats */}
-          <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-5">
-            A new, referral-worthy service line — GPs, physios and clinics need someone to deliver
-            measured exercise rehab. {accredited
-              ? '8 CPD points is roughly half your annual ESSA Further-Education requirement, done online and self-paced.'
-              : '8 CPD hours online, self-paced — ESSA CPD-point mapping pending accreditation.'}
-          </p>
-
-          {/* Primary hero CTA */}
-          <div className="mt-5 flex justify-center">
-            <a
-              href="#pricing-cards"
-              className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
-            >
-              See enrolment options
-              <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
-
-          {/* Email capture — the not-ready-to-buy majority. Secondary to the
-              enrol CTA above; the same magnet repeats near the page bottom. */}
-          <EpLeadCapture variant="hero" location="hero" nextHref="#pricing-cards" nextLabel="See the course & pricing" />
-
-          {/* Practical-day cities — surfaced at the TOP (owner 2026-07-27:
-              "locations are buried… too much scroll"). Cities derive from
-              CONFIG.LOCATIONS; no dates are named here, so the date-copy rule
-              is satisfied while the geography is instantly visible. */}
-          <p className="mt-4 text-[13px] text-muted-foreground">
-            <span className="font-semibold text-foreground">Practical-day cities:</span>{' '}
-            {Object.values(CONFIG.LOCATIONS).map((l) => l.city).join(' · ')} —{' '}
-            <a href="#pricing-cards" className="font-semibold text-accent underline">nominate yours at enrolment</a>
-          </p>
-        </div>
-
 
         {/* The practical day — under the title (owner 2026-08-11). Shared. */}
         <PracticalDayPhoto stream="crm" />
@@ -460,6 +457,11 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             clinicians unlimited on every tier) — you&rsquo;re prompted, never auto-charged, and the
             course itself is yours for life.
           </p>
+        </div>
+
+        {/* Course showcase — see inside the online course (owner 2026-08-15). */}
+        <div className="max-w-4xl mx-auto mt-8 mb-2">
+          <CourseShowcase />
         </div>
 
         {/* ── SST + Baseline instrument visuals — the platform proof. Hidden when

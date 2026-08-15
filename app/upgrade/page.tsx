@@ -148,7 +148,9 @@ function UpgradeContent() {
             Add the hands-on workshop
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-            You&apos;ve completed the theory. Now master the practical skills with expert-supervised training.
+            You&apos;ve completed the theory. Now master the practical skills with expert-supervised
+            training — one shared room for every discipline: train alongside physios, osteos and
+            exercise professionals for full multidisciplinary integration.
           </p>
         </div>
 

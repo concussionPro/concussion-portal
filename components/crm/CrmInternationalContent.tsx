@@ -14,6 +14,7 @@ import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/Instr
 import { CONFIG } from '@/lib/config'
 import { buildIntlFaqs, PLATFORM_MONTHLY_AUD } from '@/components/crm/intl-faqs'
 import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
+import CourseShowcase from '@/components/ccm/CourseShowcase'
 
 /**
  * CRM (Concussion Rehab Mastery) — INTERNATIONAL landing.
@@ -443,6 +444,11 @@ export default function CrmInternationalContent({
         </div>
 
         {!priceCardInHero && pricingSection}
+
+        {/* Course showcase — see inside the online course (owner 2026-08-15). */}
+        <div className="max-w-xl mx-auto mt-10 mb-2">
+          <CourseShowcase />
+        </div>
 
         {/* SST instrument visual — the platform proof (CRM = rehab-only, no baseline) */}
         <div className="max-w-xl mx-auto mt-10 mb-2">

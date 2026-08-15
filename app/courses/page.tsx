@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import CourseStreamsClient from '@/components/courses/CourseStreamsClient'
-import CourseShowcase from '@/components/ccm/CourseShowcase'
 import { COURSES, findProvider, getEffectiveStatus, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
@@ -61,18 +60,6 @@ export default async function CoursesIndexPage({
   return (
     <>
       <CourseStreamsClient initial={initialStream} />
-
-      {/* ── Course showcase — what the online course actually looks like
-             (owner 2026-08-15: "improve online sales by showing the content
-             slideshow to all browsers … maybe on the /courses page"). Real
-             assets only: course screenshot, quiz format, infographics, SST. ── */}
-      <div className="max-w-5xl mx-auto px-6 pb-4">
-        <div className="text-center mb-4">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-1">See inside</p>
-          <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">What the online course looks like</h2>
-        </div>
-        <CourseShowcase />
-      </div>
 
       {/* ── Short-course marketplace strip ─────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 pb-20">

@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Check } from 'lucide-react'
-import { SstWatchVisual } from '@/components/clinical/InstrumentVisuals'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+import { SstWatchVisual, BaselineLaptopVisual } from '@/components/clinical/InstrumentVisuals'
 
 /**
  * Loom-style auto-advancing showcase of the ONLINE course — for audience pages
@@ -18,7 +20,7 @@ import { SstWatchVisual } from '@/components/clinical/InstrumentVisuals'
  * fabricated.
  */
 
-const SLIDE_MS = 4500
+const SLIDE_MS = 2250
 
 const QUIZ_OPTIONS = [
   { label: 'Voluntary exhaustion with no symptom change', correct: false },
@@ -30,7 +32,7 @@ function QuizSlide({ active }: { active: boolean }) {
   const [revealed, setRevealed] = useState(false)
   useEffect(() => {
     if (!active) { setRevealed(false); return }
-    const id = setTimeout(() => setRevealed(true), 1400)
+    const id = setTimeout(() => setRevealed(true), 700)
     return () => clearTimeout(id)
   }, [active])
   return (
@@ -64,6 +66,34 @@ function QuizSlide({ active }: { active: boolean }) {
   )
 }
 
+function InfographicSlide({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-white p-3">
+      <Image src={src} alt={alt} fill className="object-contain p-2" />
+    </div>
+  )
+}
+
+function ClipSlide({ active }: { active: boolean }) {
+  const ref = useRef<HTMLVideoElement | null>(null)
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    if (active) { v.currentTime = 0; v.play().catch(() => {}) } else { v.pause() }
+  }, [active])
+  return (
+    <video
+      ref={ref}
+      src="/sst-demo.mp4"
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      className="h-full w-full object-contain bg-slate-950"
+    />
+  )
+}
+
 const SLIDES: { key: string; caption: string; render: (active: boolean) => React.ReactNode }[] = [
   {
     key: 'course',
@@ -74,32 +104,31 @@ const SLIDES: { key: string; caption: string; render: (active: boolean) => React
       <Image src="/ccm-online-preview.png" alt="Inside the online course — module lesson view" fill className="object-cover" style={{ objectPosition: '50% 18%' }} />
     ),
   },
+  { key: 'scat6', caption: 'The SCAT6 family — which tool, when', render: () => <InfographicSlide src="/infographics/scat6-family.png" alt="SCAT6 assessment family infographic" /> },
+  { key: 'voms', caption: 'The VOMS battery, step by step', render: () => <InfographicSlide src="/infographics/voms-battery.png" alt="VOMS battery infographic" /> },
   {
     key: 'quiz',
     caption: 'Checkpoint quizzes as you go — certificate at 75%',
     render: (active) => <QuizSlide active={active} />,
   },
+  { key: 'redflag', caption: 'Red-flag decisions — when it is not a concussion', render: () => <InfographicSlide src="/infographics/red-flag-decision.png" alt="Red flag decision infographic" /> },
+  { key: 'clusters', caption: 'Symptom clusters → phenotype-based rehab', render: () => <InfographicSlide src="/infographics/concussion-symptom-clusters.png" alt="Concussion symptom clusters infographic" /> },
+  { key: 'phenotype', caption: 'The phenotype map — target what you find', render: () => <InfographicSlide src="/infographics/phenotype-map.png" alt="Concussion phenotype map infographic" /> },
+  { key: 'rtp', caption: 'Graded return to sport — the full progression', render: () => <InfographicSlide src="/infographics/graded-return-to-sport.png" alt="Graded return-to-sport infographic" /> },
+  { key: 'bctt', caption: 'The BCTT — test to threshold to prescription', render: () => <InfographicSlide src="/infographics/bctt-protocol.png" alt="Buffalo Concussion Treadmill Test protocol infographic" /> },
+  { key: 'clip', caption: 'The SST Trainer in action — included with enrolment', render: (active) => <ClipSlide active={active} /> },
   {
-    key: 'infographic-rtp',
-    caption: 'Clinical infographics you keep — graded return to sport',
+    key: 'baseline',
+    caption: 'SCAT6 baseline testing — one link per club, any computer',
     render: () => (
-      <div className="flex h-full w-full items-center justify-center bg-white p-3">
-        <Image src="/infographics/graded-return-to-sport.png" alt="Graded return-to-sport infographic from the course" fill className="object-contain p-2" />
-      </div>
-    ),
-  },
-  {
-    key: 'infographic-bctt',
-    caption: 'The BCTT protocol — test to threshold to prescription',
-    render: () => (
-      <div className="flex h-full w-full items-center justify-center bg-white p-3">
-        <Image src="/infographics/bctt-protocol.png" alt="Buffalo Concussion Treadmill Test protocol infographic" fill className="object-contain p-2" />
+      <div className="h-full w-full [&>*]:h-full">
+        <BaselineLaptopVisual />
       </div>
     ),
   },
   {
     key: 'sst',
-    caption: 'The SST Trainer — included with enrolment',
+    caption: 'Live heart-rate training on the wearable they own',
     render: () => (
       <div className="h-full w-full [&>*]:h-full">
         <SstWatchVisual />
@@ -108,7 +137,16 @@ const SLIDES: { key: string; caption: string; render: (active: boolean) => React
   },
 ]
 
-export default function CourseShowcase() {
+
+export default function CourseShowcase({
+  enrolHref = '#pricing-cards',
+  trialHref = '/preview',
+}: {
+  /** Where a click on the showcase stage / Enrol button lands. */
+  enrolHref?: string
+  /** The free test-drive (Module 1, no signup). */
+  trialHref?: string
+} = {}) {
   const [idx, setIdx] = useState(0)
   const [paused, setPaused] = useState(false)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -136,8 +174,8 @@ export default function CourseShowcase() {
           </span>
         </div>
 
-        {/* Stage */}
-        <div className="relative h-[240px] sm:h-[300px] md:h-[360px] bg-slate-950">
+        {/* Stage — clickable: exploring the preview routes to the free trial */}
+        <Link href={trialHref} aria-label="Preview Module 1 free" className="relative block h-[240px] sm:h-[300px] md:h-[360px] bg-slate-950">
           {SLIDES.map((s, i) => (
             <div
               key={s.key}
@@ -147,13 +185,23 @@ export default function CourseShowcase() {
               {s.render(i === idx)}
             </div>
           ))}
-        </div>
+        </Link>
 
         {/* Caption + segment progress */}
         <div className="px-4 py-3">
-          <p className="text-[12.5px] sm:text-[13.5px] font-semibold text-slate-200 mb-2.5">
-            {SLIDES[idx].caption}
-          </p>
+          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[12.5px] sm:text-[13.5px] font-semibold text-slate-200 m-0">
+              {SLIDES[idx].caption}
+            </p>
+            <span className="flex items-center gap-2">
+              <Link href={trialHref} className="inline-flex items-center gap-1 rounded-lg border border-white/25 px-3 py-1.5 text-[12px] font-bold text-slate-100 hover:bg-white/10 transition-colors">
+                Preview free
+              </Link>
+              <Link href={enrolHref} className="inline-flex items-center gap-1 rounded-lg bg-teal-500 px-3 py-1.5 text-[12px] font-bold text-white hover:bg-teal-400 transition-colors">
+                Enrol <ArrowRight className="h-3 w-3" />
+              </Link>
+            </span>
+          </div>
           <div className="flex gap-1.5">
             {SLIDES.map((s, i) => (
               <button

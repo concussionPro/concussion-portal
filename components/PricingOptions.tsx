@@ -873,7 +873,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM Complete</h3>
           <p className="text-[12px] text-slate-500 mb-2 font-medium">Full Concussion Clinical Mastery — online modules + hands-on workshop</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Same 8 online modules as CCM Online, plus a full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
+            Same 8 online modules as CCM Online, plus a full-day hands-on workshop — one shared room for all disciplines: physios, osteos and exercise professionals. Practice SCAT6, VOMS &amp; BESS with expert feedback.
           </p>
 
           {/* Melbourne workshop mini-tile — thumbnail + date */}
