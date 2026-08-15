@@ -122,13 +122,16 @@ export const CONFIG = {
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
-      // ROUND 4 (owner 2026-08-15: "we will run melbourne nov 7") — Rydges
-      // Melbourne, Terrace Rooms, 07:45–16:30, booking ref 85AO2D1RHT.
-      // Proposal signed-off by owner; deposit/contract with the venue pending —
-      // if the venue falls through, revert status BEFORE any date-bearing send.
-      date: 'Saturday 7 November 2026',
-      dateObj: new Date('2026-11-07T08:00:00+11:00') as Date | null, // AEDT
-      status: 'confirmed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      date: 'Saturday 13 June 2026',
+      dateObj: new Date('2026-06-13T08:00:00+10:00') as Date | null,
+      // 'completed' (2026-06-15): workshop RAN on 13 June (its third Melbourne
+      // round). NOV 7 2026 IS NOT CONFIRMED (owner 2026-08-15: "i have not
+      // confirmed mel 7. pull it from the site immediately") — a Rydges
+      // proposal exists (ref 85AO2D1RHT) but no deposit/contract. The date is
+      // being FLOATED to the warm list first; it goes public here ONLY when
+      // Zac says the venue is locked. Round-4 counting still scopes from
+      // WORKSHOP.ROUND_START.melbourne (2026-06-14).
+      status: 'completed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
       hasRunWorkshop: true, // ran Melbourne Oct 25 '25, Feb 7 '26, Jun 13 '26
     },
   },

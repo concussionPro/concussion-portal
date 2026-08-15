@@ -63,10 +63,10 @@ describe('isWorkshopAlumnus — round scoping', () => {
     ).toBe(false)
   })
 
-  it('a hasRunWorkshop city keeps its past-round buyers as alumni while the NEXT round is confirmed (Melbourne)', () => {
-    // Melbourne ran Jun 13 2026 and Round 4 is confirmed for Nov 7 2026 —
-    // whoever bought BEFORE the Round-4 window opened attended a past round.
-    expect(CONFIG.LOCATIONS.MELBOURNE.status).toBe('confirmed')
+  it('a completed city keeps its past-round buyers as alumni (Melbourne)', () => {
+    // Melbourne ran Jun 13 2026; Round 4 counting opens at ROUND_START
+    // 2026-06-14 — whoever bought BEFORE that attended a past round.
+    expect(CONFIG.LOCATIONS.MELBOURNE.status).toBe('completed')
     expect(CONFIG.LOCATIONS.MELBOURNE.hasRunWorkshop).toBe(true)
     const registeredAt = new Date(
       new Date(CONFIG.WORKSHOP.ROUND_START.melbourne).getTime() - 86400000,

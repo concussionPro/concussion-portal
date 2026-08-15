@@ -365,11 +365,10 @@ describe('buildCourseSchema (homepage/pricing Course markup)', () => {
     expect(s.offers.priceCurrency).toBe('AUD')
   })
 
-  it('emits exactly the confirmed future round under live CONFIG — Melbourne Nov 7, everything else collecting', () => {
-    const s = buildCourseSchema() as { hasCourseInstance: Array<{ name: string; startDate: string }> }
-    expect(s.hasCourseInstance.length).toBe(1)
-    expect(s.hasCourseInstance[0].name).toBe('Melbourne Session')
-    expect(s.hasCourseInstance[0].startDate).toBe('2026-11-07T08:00:00+11:00')
+  it('emits NO dated instances under live CONFIG — Melbourne is completed, everything else is collecting', () => {
+    const s = buildCourseSchema() as { hasCourseInstance?: unknown[] }
+    // Completed/collecting cities must never surface as scheduled instances.
+    expect(s.hasCourseInstance).toBeUndefined()
   })
 
   it('only emits instances for confirmed FUTURE-dated cities, with local-offset startDate', () => {
@@ -390,12 +389,10 @@ describe('buildEventSchema (workshop EducationEvent markup)', () => {
     expect(buildEventSchema('SYDNEY')).toBeNull()
   })
 
-  it('emits the live confirmed round, and null once a round is completed', () => {
-    // Live CONFIG: Melbourne Round 4 confirmed for Nov 7 2026.
-    const live = buildEventSchema('MELBOURNE') as { startDate: string } | null
-    expect(live).not.toBeNull()
-    expect(live!.startDate).toBe('2026-11-07T08:00:00+11:00')
-    // A completed round must never resurface as a scheduled event, even dated.
+  it('returns null for a completed round — Melbourne June 2026 must not resurface as a scheduled event', () => {
+    // Live CONFIG: Melbourne status 'completed' with a past dateObj.
+    expect(buildEventSchema('MELBOURNE')).toBeNull()
+    // And explicitly: even a future-dated entry emits nothing once completed.
     expect(buildEventSchema('MELBOURNE', { ...FUTURE_MELBOURNE, status: 'completed' })).toBeNull()
   })
 
