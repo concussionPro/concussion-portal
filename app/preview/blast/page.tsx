@@ -30,8 +30,11 @@ export default async function BlastPreviewPage() {
   const link = `${CONFIG.APP_URL}/pricing`
 
   const demo = (c: string) => `${CONFIG.APP_URL}/api/workshop/nominate-click?e=demo&t=demo&city=${c}`
-  const html = QUARTERLY_PRACTICAL_BLAST.template('Sarah', link, link, demo('sydney'), demo('byron-bay'))
-    .replaceAll('{{unsubscribe_url}}', '#unsubscribe-example')
+  const html = QUARTERLY_PRACTICAL_BLAST.template(
+    'Sarah', link, link,
+    { sydney: demo('sydney'), byron: demo('byron-bay'), adelaide: demo('adelaide'), wa: demo('wa') },
+    'Saturday 7 November',
+  ).replaceAll('{{unsubscribe_url}}', '#unsubscribe-example')
 
   return (
     <main style={{ minHeight: '100vh', background: '#f4f8f8', padding: '28px 16px' }}>

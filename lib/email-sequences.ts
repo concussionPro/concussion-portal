@@ -1745,18 +1745,36 @@ export const QUARTERLY_PRACTICAL_BLAST = {
    *   records the city and lands them on /pricing for it — the click IS the
    *   count, which is the entire purpose of the send.
    */
-  template: (name: string, bookLink: string, onlineLink: string, sydneyUrl: string, byronUrl: string) => emailShell(`
+  /**
+   * @param melDateLabel The FLOATED Melbourne date (e.g. "Saturday 7 November").
+   *   Passed by the route, NOT read from CONFIG.LOCATIONS — the date is being
+   *   offered to the warm list to gauge numbers BEFORE the venue is contracted
+   *   and before it goes public on the site (owner 2026-08-15: "i have not
+   *   confirmed mel 7 … we will run outreach to warm list FIRST").
+   * @param nominate One-click SIGNED nomination links per city. The click
+   *   records the city and lands on /pricing for it — the click IS the count
+   *   the owner reads to decide which Q4 locations actually run.
+   */
+  template: (
+    name: string,
+    bookLink: string,
+    onlineLink: string,
+    nominate: { sydney: string; byron: string; adelaide: string; wa: string },
+    melDateLabel: string,
+  ) => emailShell(`
     <p>Hi ${greetingName(name)},</p>
-    <p><strong>The Melbourne practical day is locked in.</strong> Sydney and Byron Bay launch as their rooms fill.</p>
+    <p><strong>Q4 practical days are locking in now &mdash; Melbourne first.</strong></p>
     <div class="callout">
-      <strong>Melbourne &mdash; ${CONFIG.LOCATIONS.MELBOURNE.date}</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
+      <strong>Melbourne &mdash; ${melDateLabel}</strong> &middot; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places<br>
       SCAT6 and VOMS, phenotype rehab, and graded exertional rehab protocols.
     </div>
     <center><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" class="cta-btn">Take the Melbourne seat &mdash; A$${CONFIG.COURSE.PRICE_EARLY_BIRD}</a></center>
-    <p><strong>Melbourne doesn&rsquo;t work?</strong> One click and you&rsquo;re first in line for the next Sydney or Byron Bay day &mdash; dates are set once I have the numbers.</p>
+    <p><strong>Melbourne doesn&rsquo;t work?</strong> Nominate your preferred location &mdash; one click puts your city in the Q4 count, and dates are set on the numbers.</p>
     <center>
-      <a href="${sydneyUrl}" class="cta-btn" style="margin:0 6px 8px 0;">Sydney &mdash; next round</a>
-      <a href="${byronUrl}" class="cta-btn" style="margin:0 0 8px 6px;">Byron Bay &mdash; next round</a>
+      <a href="${nominate.sydney}" class="cta-btn" style="margin:0 6px 8px 0;">Sydney</a>
+      <a href="${nominate.byron}" class="cta-btn" style="margin:0 6px 8px 0;">Byron Bay</a>
+      <a href="${nominate.adelaide}" class="cta-btn" style="margin:0 6px 8px 0;">Adelaide</a>
+      <a href="${nominate.wa}" class="cta-btn" style="margin:0 0 8px 6px;">Perth</a>
     </center>
     <p><strong>Or start online.</strong> A$${CONFIG.COURSE.PRICE_ONLINE}, ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours (up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} with the day). The upgrade never expires and works at any of the three.</p>
     <center><a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" class="cta-btn">Start online</a></center>

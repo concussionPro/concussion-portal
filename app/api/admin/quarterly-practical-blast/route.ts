@@ -37,6 +37,11 @@ import { EmailScheduler } from '@/lib/email-scheduler'
 // Bump this to re-arm. Firing requires it verbatim, so a stale flag fails safe.
 const CONFIRM_FLAG = 'quarterly-practical-melbourne-2026-11-07'
 
+// The FLOATED Melbourne date. Deliberately NOT read from CONFIG.LOCATIONS —
+// the date is offered to the warm list to gauge numbers BEFORE the Rydges
+// contract is signed and before it appears anywhere public (owner 2026-08-15).
+const MEL_DATE_LABEL = 'Saturday 7 November'
+
 type Recipient = { email: string; name: string; registered: boolean; city: string | null }
 
 async function audience(): Promise<Recipient[]> {
@@ -150,8 +155,13 @@ async function run(request: NextRequest, willSend: boolean) {
       }, {}),
       previewHtml: QUARTERLY_PRACTICAL_BLAST.template(
         'Sample', bookLink, onlineLink,
-        nominateClickUrl('sample@example.com', 'sydney'),
-        nominateClickUrl('sample@example.com', 'byron-bay'),
+        {
+          sydney: nominateClickUrl('sample@example.com', 'sydney'),
+          byron: nominateClickUrl('sample@example.com', 'byron-bay'),
+          adelaide: nominateClickUrl('sample@example.com', 'adelaide'),
+          wa: nominateClickUrl('sample@example.com', 'wa'),
+        },
+        MEL_DATE_LABEL,
       ),
     })
   }
@@ -180,8 +190,13 @@ async function run(request: NextRequest, willSend: boolean) {
     const html = QUARTERLY_PRACTICAL_BLAST
       .template(
         r.name, bookLink, onlineLink,
-        nominateClickUrl(r.email, 'sydney'),
-        nominateClickUrl(r.email, 'byron-bay'),
+        {
+          sydney: nominateClickUrl(r.email, 'sydney'),
+          byron: nominateClickUrl(r.email, 'byron-bay'),
+          adelaide: nominateClickUrl(r.email, 'adelaide'),
+          wa: nominateClickUrl(r.email, 'wa'),
+        },
+        MEL_DATE_LABEL,
       )
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
