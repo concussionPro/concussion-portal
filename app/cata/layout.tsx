@@ -4,7 +4,9 @@ import { intlPriceForCountry } from '@/lib/international-pricing'
 // USD anchor from the SAME table the page body and the Stripe charge use
 // (lib/international-pricing) — the snippet quotes the anchor, never a stale
 // literal.
-const USD = intlPriceForCountry(null).display
+// Metadata is static, so it quotes the CANADIAN price — the page targets
+// CATA members and a CA visitor is charged CAD (lib/international-pricing).
+const CAD = intlPriceForCountry('CA').display
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /cata — the CATA Approved Provider listing landing page (house convention:
@@ -29,7 +31,7 @@ const USD = intlPriceForCountry(null).display
 export const metadata: Metadata = {
   title: 'Concussion Rehab Mastery — for Certified Athletic Therapists | CATA Approved Provider',
   description:
-    `You make the sideline call — this is the course for owning the recovery: measured heart-rate-threshold concussion rehabilitation, from graded testing to return to play. CATA Approved Provider; enhanced-rate CEUs for CATA members. ${USD}.`,
+    `You make the sideline call — this is the course for owning the recovery: measured heart-rate-threshold concussion rehabilitation, from graded testing to return to play. CATA Approved Provider; enhanced-rate CEUs for CATA members. ${CAD}.`,
   keywords:
     'CATA CEU concussion, athletic therapist concussion course, CAT(C) continuing education, concussion rehabilitation course Canada, sub-symptom threshold aerobic exercise, Buffalo concussion treadmill test, return to play',
   openGraph: {

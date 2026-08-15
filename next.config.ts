@@ -56,6 +56,9 @@ const nextConfig: NextConfig = {
         destination: '/pricing-international',
         permanent: true,
       },
+      // /canada briefly shipped (2026-08-15) before the rename to the
+      // body-named convention (/acsm, /csep → /cata). Never link /canada.
+      { source: '/canada', destination: '/cata', permanent: true },
       // Squarespace path redirects — catch traffic when SS pages redirect to portal domain
       { source: '/shop', destination: '/pricing', permanent: false },
       { source: '/concussion-course', destination: '/pricing', permanent: false },
