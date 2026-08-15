@@ -208,15 +208,18 @@ function PricingTabs() {
           The body's own duplicate h1 and its lead paragraph are hidden, since
           the title above replaces them. */}
       <style>{`
-        /* ORDER, and it is the whole layout of this page:
+        /* TWO PAGES, TWO JOBS (owner 2026-08-15): /courses DESCRIBES —
+           authority, testimonials, showcase, photo — in source order and
+           routes here; /pricing's primary job is PRICING AND STREAMS, so this
+           flex-order layer lifts photo → cards → locations to the top of the
+           embed regardless of the content-first source order both bodies now
+           share. Do not delete this layer again: source order serves /courses,
+           THIS layer serves /pricing.
              1 title (drawn at page level, above)
              2 workshop photo — the single strongest proof the day is real
              3 price cards
              4 locations
-             5 everything else
-           Owner 2026-08-10: photo under the title and above the cards, then
-           locations. The photo used to inherit order 5 from its wrapper and
-           landed BELOW the locations, buried under a team-inquiry panel. */
+             5 everything else */
         .pricing-embed .stream-body { display: flex; flex-direction: column; }
         .pricing-embed .stream-body > * { order: 5; }
         .pricing-embed .stream-body > #workshop-photo { order: 2; }

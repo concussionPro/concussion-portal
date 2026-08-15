@@ -436,6 +436,13 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
         </div>
 
 
+        {/* The practical day — under the title, above the cards (owner
+            2026-08-10/11). MUST be a direct child of .stream-body: the
+            /pricing embed orders children by id, and nested inside the hero it
+            is display:none'd by the nth-child hider — which is exactly how it
+            vanished from the CCM tab. Shared component; see PracticalDayPhoto. */}
+        <PracticalDayPhoto stream="ccm" />
+
         {/* CARDS directly under the title block (owner 2026-08-15, with
             screenshots: "streams tabs → CCM title → price cards" — the
             2026-08-07 cards-first order put naked prices above any context
@@ -633,15 +640,6 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             </div>
           </div>
         </div>
-
-        {/* The practical day — under the title, above the cards (owner
-            2026-08-10/11). MUST be a direct child of .stream-body: the
-            /pricing embed orders children by id, and nested inside the hero it
-            is display:none'd by the nth-child hider — which is exactly how it
-            vanished from the CCM tab. Shared component; see PracticalDayPhoto. */}
-        <PracticalDayPhoto stream="ccm" />
-
-
 
         {/* Compare Plans — analytical decision support IMMEDIATELY after
             pricing cards (NNG/Baymard research: comparison tables next to

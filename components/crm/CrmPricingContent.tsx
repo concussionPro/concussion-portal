@@ -233,32 +233,17 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               : '8 CPD hours online, self-paced — ESSA CPD-point mapping pending accreditation.'}
           </p>
 
-          {/* Primary hero CTA */}
-          <div className="mt-5 flex justify-center">
-            <a
-              href="#pricing-cards"
-              className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
-            >
-              See enrolment options
-              <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
-
-          {/* Email capture — the not-ready-to-buy majority. Secondary to the
-              enrol CTA above; the same magnet repeats near the page bottom. */}
-          <EpLeadCapture variant="hero" location="hero" nextHref="#pricing-cards" nextLabel="See the course & pricing" />
-
-          {/* Practical-day cities — surfaced at the TOP (owner 2026-07-27:
-              "locations are buried… too much scroll"). Cities derive from
-              CONFIG.LOCATIONS; no dates are named here, so the date-copy rule
-              is satisfied while the geography is instantly visible. */}
-          <p className="mt-4 text-[13px] text-muted-foreground">
-            <span className="font-semibold text-foreground">Practical-day cities:</span>{' '}
-            {Object.values(CONFIG.LOCATIONS).map((l) => l.city).join(' · ')} —{' '}
-            <a href="#pricing-cards" className="font-semibold text-accent underline">nominate yours at enrolment</a>
-          </p>
+          {/* Hero CTA button, hero email capture and the cities line were
+              stranded junk once the cards moved directly below the title
+              (owner 2026-08-15: "look at this garbage mess") — the cards ARE
+              the CTA one scroll-line down, the under-pricing capture already
+              exists inside the cards block, and the city pickers live on the
+              cards themselves. */}
         </div>
 
+
+        {/* The practical day — under the title (owner 2026-08-11). Shared. */}
+        <PracticalDayPhoto stream="crm" />
 
         {/* CARDS directly under the title block (owner 2026-08-15:
             "streams tabs → title → price cards", same as CCM). */}
@@ -423,9 +408,6 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
           </div>
         </div>
 
-
-        {/* The practical day — under the title (owner 2026-08-11). Shared. */}
-        <PracticalDayPhoto stream="crm" />
 
         {/* Value intro + instruments — MOVED directly under the hero (2026-07-27,
             Zac: "sst trainer is buried. it is a huge part of their training").
