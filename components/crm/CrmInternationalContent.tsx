@@ -158,6 +158,37 @@ export default function CrmInternationalContent({
     return () => observer.disconnect()
   }, [])
 
+  // The live-training photo: above the PRICE CARD when the card is in the
+  // hero (owner 2026-08-15: 'training image needs to be above the price
+  // card'), at its usual below-hero spot otherwise.
+  const trainingPhoto = (
+    <>
+        {/* Live workshop training photo — same as AU, provenance framing */}
+        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
+          <Image
+            src="/workshop-training.jpg"
+            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
+            width={1200}
+            height={675}
+            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Clinician-built, clinician-taught</p>
+            <h3 className="text-base sm:text-xl font-bold leading-tight">
+              The same training program delivered hands-on to clinical teams across Australia.
+            </h3>
+            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
+              Assessment &rarr; measured HR threshold &rarr; in-scope exercise prescription — the
+              online course is the same clinical method, taught by the same clinician, self-paced
+              from wherever you practise.
+            </p>
+          </div>
+        </div>
+    </>
+  )
+
   // The pricing card + trust row, extracted so it can render either in the
   // hero (priceCardInHero) or at its default mid-page position — never both.
   const pricingSection = (
@@ -338,7 +369,10 @@ export default function CrmInternationalContent({
           </p>
 
           {priceCardInHero ? (
-            <div className="text-left">{pricingSection}</div>
+            <div className="text-left">
+              <div className="mt-8">{trainingPhoto}</div>
+              {pricingSection}
+            </div>
           ) : (
             <>
               {/* Primary hero CTA — same as AU */}
@@ -366,29 +400,7 @@ export default function CrmInternationalContent({
           )}
         </div>
 
-        {/* Live workshop training photo — same as AU, provenance framing */}
-        <div className="max-w-4xl mx-auto mb-6 rounded-2xl overflow-hidden relative shadow-lg">
-          <Image
-            src="/workshop-training.jpg"
-            alt="Zac Lewis training a team of clinicians — hands-on concussion examination practice"
-            width={1200}
-            height={675}
-            className="w-full h-[220px] sm:h-[280px] md:h-[340px] object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
-            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Clinician-built, clinician-taught</p>
-            <h3 className="text-base sm:text-xl font-bold leading-tight">
-              The same training program delivered hands-on to clinical teams across Australia.
-            </h3>
-            <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
-              Assessment &rarr; measured HR threshold &rarr; in-scope exercise prescription — the
-              online course is the same clinical method, taught by the same clinician, self-paced
-              from wherever you practise.
-            </p>
-          </div>
-        </div>
+        {!priceCardInHero && trainingPhoto}
 
         {/* Standards block — same banner design as AU; pending-honest copy.
             Audience pages replace it wholesale (e.g. /cata's CATA band). */}
