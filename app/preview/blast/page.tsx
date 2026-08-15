@@ -32,7 +32,7 @@ export default async function BlastPreviewPage() {
   const demo = (c: string) => `${CONFIG.APP_URL}/api/workshop/nominate-click?e=demo&t=demo&city=${c}`
   const html = QUARTERLY_PRACTICAL_BLAST.template(
     'Sarah', link, link,
-    { sydney: demo('sydney'), byron: demo('byron-bay'), adelaide: demo('adelaide'), wa: demo('wa') },
+    { sydney: demo('sydney'), byron: demo('byron-bay') },
     'Saturday 7 November',
   ).replaceAll('{{unsubscribe_url}}', '#unsubscribe-example')
 
