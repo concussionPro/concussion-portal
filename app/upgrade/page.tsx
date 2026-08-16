@@ -34,13 +34,13 @@ function UpgradeContent() {
   const upgradePrice = upgradePriceFor(selectedLocation || undefined)
   const upgradeEarlyBird = isEarlyBirdForLocation(selectedLocation || undefined)
 
-  // Auth guard
+  // Auth guard. ANONYMOUS visitors are NOT bounced to /login any more —
+  // measured 2026-08-16: 5 of 6 blast upgrade-clickers arrived logged out,
+  // hit the login wall, and exited without seeing a single word of value.
+  // They now see the explanatory state below; owners use its login link.
   useEffect(() => {
     if (isLoading) return
-    if (!user) {
-      router.replace('/login?redirect=/upgrade')
-      return
-    }
+    if (!user) return
     // Bounced for BOTH real Complete buyers (already hold the day) and Clinic
     // Hub Pack seats — deliberately. This page sells the SOLO online→Complete
     // difference (upgradePriceFor). A hub seat's practical day is the clinic
@@ -101,9 +101,9 @@ function UpgradeContent() {
     }
   }
 
-  // Preview (free) users get the explanatory state — 5 real blast clickers
-  // in 2h were silently bounced before this existed.
-  if (user && user.accessLevel === 'preview') {
+  // Preview (free) AND anonymous visitors get the explanatory state — the
+  // blast measured both cohorts dying here (silent bounce / login wall).
+  if ((!isLoading && !user) || (user && user.accessLevel === 'preview')) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="max-w-xl w-full rounded-2xl border-2 border-teal-200 bg-teal-50/50 p-7 text-center">
@@ -120,6 +120,14 @@ function UpgradeContent() {
               Start online — upgrade later
             </Link>
           </div>
+          {!user && (
+            <p className="mt-4 text-[13px] text-muted-foreground">
+              Already own the online course?{' '}
+              <Link href="/login?redirect=/upgrade" className="text-teal-700 font-semibold underline">
+                Log in to upgrade for the difference
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     )

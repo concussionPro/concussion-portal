@@ -63,7 +63,9 @@ export async function GET(request: NextRequest) {
   const city = CITIES[slug]
 
   const dest = new URL(
-    city ? `/pricing?location=${slug}#pricing-cards` : '/pricing',
+    city
+      ? `/pricing?location=${slug}&utm_source=email&utm_medium=email&utm_campaign=quarterly_blast_v1&utm_content=nominate_${slug}#pricing-cards`
+      : '/pricing',
     CONFIG.APP_URL,
   )
 
