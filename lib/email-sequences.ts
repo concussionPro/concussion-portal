@@ -1813,6 +1813,22 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     </div>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">Or start online now — A$${CONFIG.COURSE.PRICE_ONLINE}, ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours; add any hands-on day later. <a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" style="color:#0d9488;font-weight:600;">Start online &rarr;</a></p>
     <p style="margin:18px 0 0;font-size:15px;color:#1e293b;">Zac</p>
+    <!-- Authority badges — BOTTOM placement (owner; and the evidence-backed
+         slot for professional-education email: credentials close the
+         legitimacy question for readers who scrolled to evaluate, without
+         interrupting the pitch). Absolute URLs; alt text carries the claim
+         when images are blocked. Claims stay course-scoped: OA endorses CCM,
+         ESSA accredits the EP stream. -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 0;border-top:1px solid #f1f5f9;">
+      <tr><td align="center" style="padding:16px 0 4px;">
+        <img src="https://portal.concussion-education-australia.com/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" height="46" style="height:46px;width:auto;vertical-align:middle;margin:0 12px;" />
+        <img src="https://portal.concussion-education-australia.com/essa-accredited-pd.png" alt="ESSA Accredited Professional Development" height="40" style="height:40px;width:auto;vertical-align:middle;margin:0 12px;" />
+      </td></tr>
+      <tr><td align="center" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:11px;line-height:1.5;color:#94a3b8;padding:2px 0 0;">
+        Concussion Clinical Mastery is endorsed by Osteopathy Australia<br>
+        Concussion Rehab Mastery (exercise physiology) is ESSA-accredited
+      </td></tr>
+    </table>
   `),
 }
 
