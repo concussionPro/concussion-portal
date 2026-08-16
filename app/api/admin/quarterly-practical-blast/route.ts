@@ -247,7 +247,17 @@ async function run(request: NextRequest, willSend: boolean) {
   const scheduler = new EmailScheduler()
   let sent = 0
   const failed: string[] = []
-  for (const r of eligible) {
+  let skippedAlreadySent = 0
+  // STAGGERED WAVES (owner 2026-08-16: "ensure we dont blast all 90 at
+  // once"): deterministic order (interest register first, then by email),
+  // capped per run by ?batchSize (default 30). The audit key is the SEND
+  // GATE — a claimed key means that recipient is done, so re-running the
+  // confirm POST sends only the NEXT unsent wave, never duplicates.
+  const batchSize = Math.max(1, Math.min(200, parseInt(request.nextUrl.searchParams.get('batchSize') || '30', 10) || 30))
+  const ordered = [...eligible].sort((a, b) =>
+    a.registered !== b.registered ? (a.registered ? -1 : 1) : a.email.localeCompare(b.email))
+  for (const r of ordered) {
+    if (sent >= batchSize) break
     const token = generateUnsubscribeToken(r.email)
     const unsubscribeUrl = `${base}/api/unsubscribe?email=${encodeURIComponent(r.email)}&token=${token}`
     const html = QUARTERLY_PRACTICAL_BLAST
@@ -262,11 +272,20 @@ async function run(request: NextRequest, willSend: boolean) {
       )
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-    // Campaign audit — the /admin/q4-campaign tracker counts sends from
-    // these keys; ON CONFLICT keeps re-runs from double-counting.
+    // Audit key = the send gate AND the tracker's count. Claim before send;
+    // no row returned → already sent in a prior wave → skip. On send failure
+    // the claim is released so the next wave retries.
+    const auditKey = 'q4-mel-nov7:' + (r.registered ? 'registered' : 'other') + ':' + r.email
+    let claimed = false
     try {
-      await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${'q4-mel-nov7:' + (r.registered ? 'registered' : 'other') + ':' + r.email}, NOW()) ON CONFLICT DO NOTHING`
-    } catch { /* counting must never block a send */ }
+      const { rowCount } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT DO NOTHING`
+      claimed = (rowCount ?? 0) > 0
+    } catch {
+      // Can't verify the claim → don't risk a duplicate; skip this recipient.
+      skippedAlreadySent++
+      continue
+    }
+    if (!claimed) { skippedAlreadySent++; continue }
     const ok = await sendEmail({
       to: r.email,
       scheduledAt: scheduler.next(r.email),
@@ -288,7 +307,11 @@ async function run(request: NextRequest, willSend: boolean) {
   return NextResponse.json({
     dryRun: false,
     sent,
+    batchSize,
+    skippedAlreadySent,
+    remainingAfterThisWave: Math.max(0, ordered.length - skippedAlreadySent - sent),
     failed: failed.length,
+    failedEmails: failed,
     suppressedOrErrored: skipped.length,
   })
 }

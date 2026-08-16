@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Check, Loader2, MapPin, Users, Utensils } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
@@ -24,6 +24,25 @@ const VENUE = 'Rydges Melbourne — Exhibition Street, CBD'
 export default function MelbourneNov7Page() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Live round-scoped seat count (same /api/city-progress the cards use).
+  // The pre-release path has no hard cap at checkout (Melbourne isn't
+  // status='confirmed'), so the HONESTY control at volume is here: show real
+  // seats remaining and flip to a next-round state when the room is full —
+  // extra buyers legally roll to the next round (nomination model), but
+  // nobody is sold a "Nov 7 seat" the page knows is gone.
+  const [seatsLeft, setSeatsLeft] = useState<number | null>(null)
+  useEffect(() => {
+    fetch('/api/city-progress')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const mel = d?.cities?.find?.((c: { slug: string }) => c.slug === 'melbourne')
+        if (mel && typeof mel.enrolled === 'number') {
+          setSeatsLeft(Math.max(0, CONFIG.WORKSHOP.CAPACITY_PER_COURSE - mel.enrolled))
+        }
+      })
+      .catch(() => null)
+  }, [])
+  const soldOut = seatsLeft === 0
 
   const enrol = async () => {
     if (loading) return
@@ -83,7 +102,7 @@ export default function MelbourneNov7Page() {
           </div>
 
           <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted-foreground mb-4">
-            <span className="inline-flex items-center gap-1.5"><Users className="w-4 h-4 text-accent" /> {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places max · mixed cohort</span>
+            <span className="inline-flex items-center gap-1.5"><Users className="w-4 h-4 text-accent" /> {seatsLeft !== null && seatsLeft < CONFIG.WORKSHOP.CAPACITY_PER_COURSE ? `${seatsLeft} of ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places left` : `${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places max`} · mixed cohort</span>
             <span className="inline-flex items-center gap-1.5"><Utensils className="w-4 h-4 text-accent" /> Catered</span>
           </div>
 
@@ -101,13 +120,19 @@ export default function MelbourneNov7Page() {
             ))}
           </ul>
 
+          {soldOut && (
+            <p className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[13px] text-amber-900">
+              This room is full. Enrolling now secures your seat at the next Melbourne round —
+              your early-bird rate is locked and your payment carries in full.
+            </p>
+          )}
           <button
             type="button"
             onClick={enrol}
             disabled={loading}
             className="btn-primary w-full py-3.5 px-5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm disabled:opacity-60"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Take a Melbourne seat — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} <ArrowRight className="w-4 h-4" /></>}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{soldOut ? 'Secure the next Melbourne round' : 'Take a Melbourne seat'} — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} <ArrowRight className="w-4 h-4" /></>}
           </button>
           {error && <p className="text-xs text-red-600 mt-2 text-center">{error}</p>}
           <p className="text-[11px] text-muted-foreground mt-2 text-center">
