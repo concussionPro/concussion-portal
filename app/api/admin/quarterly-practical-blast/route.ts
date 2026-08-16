@@ -127,7 +127,8 @@ export async function POST(request: NextRequest) {
 
 async function run(request: NextRequest, willSend: boolean) {
   const base = CONFIG.APP_URL
-  const bookLink = `${base}/pricing?location=melbourne#pricing-cards`
+  // Pre-release date card + direct checkout (owner: never generic /pricing)
+  const bookLink = `${base}/melbourne-nov7`
   const onlineLink = `${base}/pricing#pricing-cards`
 
   // TEST MODE: ?testTo=<email> sends exactly ONE fully-rendered sample (real
