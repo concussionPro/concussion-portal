@@ -60,6 +60,45 @@ export async function GET(request: NextRequest) {
   } catch { out.nominationDetail = []; out.suspectDetail = [] }
 
   try {
+    // Every campaign click session with its full nav shape, classified.
+    // A human landing generates a stream of events over minutes (page views,
+    // card-in-view, stream switches, checkout starts); a scanner detonation
+    // generates exactly one 0-second hit — and often walks multiple links
+    // from the same email within the same second. The verdict encodes that:
+    //   scanner  — ≤1 event and <5s, or its IP hit ≥2 distinct email links
+    //   human    — ≥3 events over ≥10s
+    //   unclear  — anything between
+    const { rows: sess } = await sql`
+      WITH s AS (
+        SELECT session_id, MIN(ip) AS ip, MIN(country) AS country,
+               MIN(created_at) AS first_ev,
+               EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at)))::int AS dur_s,
+               COUNT(*)::int AS events,
+               COUNT(DISTINCT path)::int AS pages,
+               ARRAY_AGG(DISTINCT substring(search FROM 'utm_content=([a-z_-]+)')) AS links,
+               MIN(user_email) AS user_email
+        FROM analytics_events
+        WHERE search LIKE '%quarterly_blast_v1%' AND created_at >= '2026-08-16'
+        GROUP BY session_id
+      ), ip_links AS (
+        SELECT ip, COUNT(DISTINCT substring(search FROM 'utm_content=([a-z_-]+)'))::int AS n
+        FROM analytics_events
+        WHERE search LIKE '%quarterly_blast_v1%' AND created_at >= '2026-08-16'
+        GROUP BY ip
+      )
+      SELECT s.*, COALESCE(il.n, 1) AS ip_distinct_links,
+        CASE
+          WHEN COALESCE(il.n, 1) >= 2 THEN 'scanner'
+          WHEN s.events <= 1 AND s.dur_s < 5 THEN 'scanner'
+          WHEN s.events >= 3 AND s.dur_s >= 10 THEN 'human'
+          ELSE 'unclear'
+        END AS verdict
+      FROM s LEFT JOIN ip_links il ON il.ip = s.ip
+      ORDER BY s.first_ev DESC`
+    out.clickSessions = sess
+  } catch { out.clickSessions = [] }
+
+  try {
     // Per-CTA engagement WITHOUT Resend tracking (open/click tracking is off
     // for deliverability): every email CTA lands on our domain carrying
     // utm_content, so clicks are page_views with that marker; nominate

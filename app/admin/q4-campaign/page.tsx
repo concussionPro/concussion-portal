@@ -29,6 +29,7 @@ export default function Q4CampaignPage() {
   const cta = data?.ctaClicks as { book_melbourne: number; upgrade: number; start_online: number } | null
   const nominators = (data?.nominationDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
   const suspects = (data?.suspectDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
+  const clicks = (data?.clickSessions as { first_ev: string; ip: string; country: string | null; dur_s: number; events: number; pages: number; links: (string | null)[]; user_email: string | null; ip_distinct_links: number; verdict: 'scanner' | 'human' | 'unclear' }[] | undefined) ?? []
   const attributed = data?.attributedPurchases as { buyers: number; revenue_aud: number } | null
 
   return (
@@ -139,6 +140,47 @@ export default function Q4CampaignPage() {
                         <td className="px-3 py-1.5">{n.name || '—'}</td>
                         <td className="px-3 py-1.5 text-slate-500">{new Date(n.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
                         <td className={`px-3 py-1.5 font-semibold ${n.country === 'AU' ? 'text-emerald-700' : n.country ? 'text-amber-600' : 'text-slate-400'}`}>{n.country ?? 'unverified'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+          {clicks.length > 0 && (
+            <section>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-1">
+                Every email click, classified by what it did after landing
+              </h2>
+              <p className="text-xs text-muted-foreground mb-3">
+                Human = multiple events over real dwell time. Scanner = one 0-second hit, or the
+                same IP walking several of the email&apos;s links. Only human rows are engagement.
+              </p>
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+                <table className="w-full text-[12.5px]">
+                  <thead className="bg-slate-50">
+                    <tr className="text-left text-slate-600">
+                      <th className="px-3 py-2">Landed</th>
+                      <th className="px-3 py-2">Link</th>
+                      <th className="px-3 py-2">Who</th>
+                      <th className="px-3 py-2">Country</th>
+                      <th className="px-3 py-2">Dwell</th>
+                      <th className="px-3 py-2">Events</th>
+                      <th className="px-3 py-2">Verdict</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clicks.map((c, i) => (
+                      <tr key={i} className={`border-t border-slate-100 ${c.verdict === 'scanner' ? 'text-slate-400' : ''}`}>
+                        <td className="px-3 py-1.5">{new Date(c.first_ev).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td className="px-3 py-1.5">{(c.links || []).filter(Boolean).join(', ') || '—'}</td>
+                        <td className="px-3 py-1.5">{c.user_email || c.ip}</td>
+                        <td className="px-3 py-1.5">{c.country ?? '—'}</td>
+                        <td className="px-3 py-1.5">{c.dur_s}s</td>
+                        <td className="px-3 py-1.5">{c.events}</td>
+                        <td className={`px-3 py-1.5 font-bold ${c.verdict === 'human' ? 'text-emerald-700' : c.verdict === 'scanner' ? 'text-slate-400' : 'text-amber-600'}`}>
+                          {c.verdict}{c.ip_distinct_links >= 2 ? ' (multi-link IP)' : ''}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
