@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useCallback, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { getOrCreateSessionId, getVisitorContext, getIdentity } from '@/lib/analytics';
+import { getOrCreateSessionId, getVisitorContext, getIdentity, setIdentity } from '@/lib/analytics';
 import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from '@/lib/google-ads';
 
 // ---------------------------------------------------------------------------
@@ -230,6 +230,14 @@ function useScrollDepthTracking(pathname: string): void {
 function AnalyticsTracker(): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Identity pickup from email links (2026-08-16): one-click campaign links
+  // (nominate-click redirect) append ?email= so the WHOLE landing session is
+  // attributed to the person, not an IP. Same identity store auth-verify uses.
+  useEffect(() => {
+    const e = searchParams?.get('email');
+    if (e && e.includes('@')) setIdentity(e);
+  }, [searchParams]);
   const previousPathRef = useRef<string | null>(null);
 
   // Track scroll depth on key conversion pages

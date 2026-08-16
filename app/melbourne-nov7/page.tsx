@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Check, Loader2, MapPin, Users, Utensils } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
+import { trackEvent } from '@/lib/analytics'
 
 /**
  * /melbourne-nov7 — PRE-RELEASE landing for the Round-4 Melbourne practical
@@ -48,6 +49,7 @@ export default function MelbourneNov7Page() {
     if (loading) return
     setLoading(true)
     setError(null)
+    trackEvent('checkout_start', { courseType: 'full-course', location: 'melbourne', source: 'melbourne-nov7' })
     try {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
