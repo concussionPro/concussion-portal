@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG, workshopPriceFor } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { OrganicOfferStrip } from '@/components/OrganicOfferStrip'
 
 export const metadata: Metadata = {
   title: 'AIS Concussion and Brain Health Position Statement 2024: Key Takeaways for Clinicians',
@@ -61,6 +62,12 @@ export default function AISPositionStatementPage() {
 
         {/* Article Content */}
         <div className="max-w-4xl mx-auto px-4 py-12">
+
+          {/* Organic-entry offer route — this post is the #1 organic landing
+              page and sessions were dying without ever seeing an offer. */}
+          <div className="mb-8">
+            <OrganicOfferStrip src="blog-ais-strip" />
+          </div>
 
           {/* Introduction */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">

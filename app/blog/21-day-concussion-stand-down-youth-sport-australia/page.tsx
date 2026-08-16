@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG, workshopPriceFor } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { OrganicOfferStrip } from '@/components/OrganicOfferStrip'
 
 export const metadata: Metadata = {
   title: '21-Day Concussion Stand-Down in Youth Sport: What Every Australian Clinician Should Know',
@@ -61,6 +62,12 @@ export default function StandDownPage() {
 
         {/* Article Content */}
         <div className="max-w-4xl mx-auto px-4 py-12">
+
+          {/* Organic-entry offer route — #2 organic landing page; see the
+              matching strip on the AIS position-statement post. */}
+          <div className="mb-8">
+            <OrganicOfferStrip src="blog-21day-strip" />
+          </div>
 
           {/* Introduction */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">

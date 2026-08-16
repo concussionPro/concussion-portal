@@ -8,7 +8,7 @@ import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import { isOwnerEmail } from '@/lib/owner'
-import { clearIdentity } from '@/lib/analytics'
+import { clearIdentity, trackEvent } from '@/lib/analytics'
 import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import Link from 'next/link'
@@ -365,6 +365,19 @@ export function Sidebar() {
               <p className="text-[11px] text-muted-foreground leading-snug m-0">
                 Explore freely — nothing you do here is saved.
               </p>
+              {/* The tour's exit ramp (analytics work order 2026-08-17: 36
+                  tour entries, 0 bookings — the tour ended nowhere). The
+                  sidebar is on every workspace page, so this is the one
+                  persistent affordance a touring prospect always has. */}
+              <a
+                href="https://cal.com/zac-lewis-so8zjs/30min"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent('demo_book_walkthrough_click', { placement: 'sidebar' })}
+                className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent text-white text-xs font-bold px-3 py-2 hover:bg-accent/90 transition-colors"
+              >
+                Book a walkthrough with Zac
+              </a>
             </div>
           ) : user ? (
             <div className="glass-premium rounded-xl p-3">

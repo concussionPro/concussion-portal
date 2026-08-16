@@ -99,6 +99,46 @@ export default async function ConcussionRehabMasteryPage() {
         />
       )}
       <CrmPricingContent />
+
+      {/* EXIT-POINT OFFER (analytics work order 2026-08-17): this page is
+          where money-path sessions die — 21 pricing-surface visitors in 14
+          days exited here with no money action, i.e. they read to the bottom
+          and left. The page previously ENDED on FAQ with no next step in
+          sight. This end-cap restates the offer at the exact point of exit
+          and hands over the two actions: jump back to the pricing cards, or
+          start in the free preview. Prices/points derive from CONFIG. */}
+      <div className="bg-[#0d7377]">
+        <div className="max-w-3xl mx-auto px-6 py-12 text-center">
+          <p className="m-0 text-xs font-bold uppercase tracking-[0.16em] text-teal-200">
+            Concussion Rehab Mastery
+          </p>
+          <h2 className="mt-2 mb-0 text-2xl md:text-3xl font-bold text-white">
+            {CONFIG.COURSE.TOTAL_MODULES} online modules ·{' '}
+            {LIVE
+              ? `${CONFIG.ESSA_ACCREDITATION.ONLINE_POINTS} ESSA CPD points`
+              : `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours`}{' '}
+            · ${CONFIG.COURSE.PRICE_ONLINE}
+          </h2>
+          <p className="mt-3 mb-0 text-[15px] text-teal-100 max-w-xl mx-auto">
+            Measured-threshold exercise prescription in EP scope, delivered and documented by SST
+            Trainer — start online today, add the in-person practical day whenever it suits.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="#pricing-cards"
+              className="inline-flex items-center rounded-full bg-white text-[#0d7377] text-sm font-bold px-7 py-3 hover:bg-teal-50 transition-colors"
+            >
+              See pricing &amp; enrol
+            </a>
+            <a
+              href="/preview?course=crm"
+              className="inline-flex items-center rounded-full border border-white/50 text-white text-sm font-bold px-7 py-3 hover:bg-white/10 transition-colors"
+            >
+              Preview the course free
+            </a>
+          </div>
+        </div>
+      </div>
     </>
   )
 }

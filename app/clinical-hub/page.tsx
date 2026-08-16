@@ -1619,6 +1619,39 @@ export default function ClinicalHubPage() {
 
             {/* Baseline & serial testing (SCAT6/SCOAT6) — FIXTURE data, demo mode only */}
             {isDemo && BASELINES[p.id] && <BaselinePanel base={BASELINES[p.id]} />}
+
+            {/* The tour's exit ramp, placed AFTER the sample reports — the
+                exact point a touring prospect finishes evaluating (analytics
+                work order 2026-08-17: 36 tour entries, 0 bookings; the tour
+                ended nowhere). Demo mode only: a real clinic's own caseload
+                is not a sales surface. */}
+            {isDemo && (
+              <div className="glass-premium rounded-2xl p-5 sm:p-6 text-center">
+                <p className="m-0 text-sm font-bold text-foreground">
+                  Want this running on your own caseload?
+                </p>
+                <p className="mt-1 mb-0 text-[12.5px] text-muted-foreground max-w-md mx-auto">
+                  Book 20 minutes with Zac — he&apos;ll walk your setup and run a first patient
+                  with you, or start the free 3-patient trial yourself.
+                </p>
+                <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2.5">
+                  <a
+                    href="https://cal.com/zac-lewis-so8zjs/30min"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-full bg-[var(--accent)] text-white text-xs font-bold px-5 py-2.5 hover:opacity-90 transition-opacity"
+                  >
+                    Book a walkthrough
+                  </a>
+                  <a
+                    href="/clinical-suite/start?src=hub-demo"
+                    className="inline-flex items-center rounded-full border border-[var(--accent)]/40 text-[var(--accent)] text-xs font-bold px-5 py-2.5 hover:bg-[var(--accent)]/[0.06] transition-colors"
+                  >
+                    Start the free trial
+                  </a>
+                </div>
+              </div>
+            )}
           </section>
           )}
         </div>
