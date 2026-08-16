@@ -1734,6 +1734,43 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
  * Every figure derives from CONFIG. A literal price or CPD number here is how
  * "14 CPD hours" survived the 2026-07-30 re-rate into live sends.
  */
+
+/**
+ * Fully-INLINE shell for the Q4 blast (owner 2026-08-16: paragraphs and
+ * ALIGNMENT still broken — emailShell centres/pads via classed <style>, which
+ * some Gmail renderings strip, collapsing the container to unpadded full
+ * width. Table-based, every style inline, zero class dependence.)
+ */
+function blastShell(content: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;">
+        <tr><td style="height:6px;background:#0d9488;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="padding:30px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;text-align:left;">
+${content}
+        </td></tr>
+        <tr><td style="padding:20px 28px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;line-height:1.7;color:#94a3b8;text-align:center;border-top:1px solid #f1f5f9;">
+          Concussion Education Australia${footerCredential('ccm')}<br>
+          Melbourne, VIC, Australia<br>
+          <a href="https://portal.concussion-education-australia.com?utm_source=email&utm_medium=email&utm_campaign=footer" style="color:#94a3b8;">portal.concussion-education-australia.com</a><br>
+          <a href="{{unsubscribe_url}}" style="color:#94a3b8;font-size:11px;">Unsubscribe from this sequence</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 export const QUARTERLY_PRACTICAL_BLAST = {
   subject: (melDateLabel: string) => `Hands-on concussion day — Melbourne, ${melDateLabel}`,
   preheader: 'Rydges on Exhibition St · mixed cohort · catered · 12 places max',
@@ -1751,7 +1788,7 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     nominate: { sydney: string; byron: string },
     melDateLabel: string,
     registered: boolean,
-  ) => emailShell(`
+  ) => blastShell(`
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">Hi ${greetingName(name)},</p>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">${registered ? 'Thanks for registering for course announcements — our' : 'Our'} next Melbourne training date is <strong>${melDateLabel}</strong> at the Rydges hotel on Exhibition Street — one room, mixed cohort: physios, osteos and exercise professionals training together. Catered, ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places max.</p>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">Supervised practice on real subjects: SCAT6, VOMS, BESS, cervical assessment, and graded exertional testing through to the exercise prescription.</p>

@@ -36,6 +36,21 @@ export async function GET(request: NextRequest) {
   } catch { out.cityNominations = [] }
 
   try {
+    // Per-CTA engagement WITHOUT Resend tracking (open/click tracking is off
+    // for deliverability): every email CTA lands on our domain carrying
+    // utm_content, so clicks are page_views with that marker; nominate
+    // buttons are counted server-side at the click itself.
+    const { rows: ctas } = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE search LIKE '%book_melbourne%')::int AS book_melbourne,
+        COUNT(*) FILTER (WHERE search LIKE '%utm_content=upgrade%')::int AS upgrade,
+        COUNT(*) FILTER (WHERE search LIKE '%start_online%')::int AS start_online
+      FROM analytics_events
+      WHERE search LIKE '%quarterly_blast_v1%' AND created_at >= '2026-08-14'`
+    out.ctaClicks = ctas[0]
+  } catch { out.ctaClicks = null }
+
+  try {
     const { rows } = await sql`
       SELECT COUNT(DISTINCT session_id)::int AS sessions,
              COUNT(*) FILTER (WHERE event_type = 'checkout_start')::int AS checkout_starts,

@@ -26,6 +26,7 @@ export default function Q4CampaignPage() {
   const sends = (data?.blastSends as { segment: string; n: number }[] | undefined) ?? []
   const cities = (data?.cityNominations as { city: string; nominations: number }[] | undefined) ?? []
   const traffic = data?.campaignTraffic as { sessions: number; checkout_starts: number; purchases: number } | null
+  const cta = data?.ctaClicks as { book_melbourne: number; upgrade: number; start_online: number } | null
   const attributed = data?.attributedPurchases as { buyers: number; revenue_aud: number } | null
 
   return (
@@ -48,11 +49,11 @@ export default function Q4CampaignPage() {
           </p>
           <a href="/preview/blast" className="mt-2 inline-block text-sm font-semibold text-amber-900 underline">Preview the email →</a>
           {Array.isArray(plan.recipients) && (
-            <details className="mt-3">
-              <summary className="cursor-pointer text-sm font-semibold text-amber-900">
+            <div className="mt-3">
+              <p className="text-sm font-semibold text-amber-900 mb-2">
                 Full recipient list ({(plan.recipients as unknown[]).length})
-              </summary>
-              <div className="mt-2 max-h-96 overflow-y-auto rounded-lg border border-amber-200 bg-white">
+              </p>
+              <div className="max-h-[480px] overflow-y-auto rounded-lg border border-amber-200 bg-white">
                 <table className="w-full text-[12.5px]">
                   <thead className="sticky top-0 bg-amber-50">
                     <tr className="text-left text-amber-900">
@@ -74,7 +75,7 @@ export default function Q4CampaignPage() {
                   </tbody>
                 </table>
               </div>
-            </details>
+            </div>
           )}
         </section>
       )}
@@ -109,6 +110,23 @@ export default function Q4CampaignPage() {
             </div>
           </section>
           <section>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-3">
+              Email CTA clicks (tracked on-site — Resend tracking is off)
+            </h2>
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{cta?.book_melbourne ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Take a Melbourne seat</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{cta?.upgrade ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Upgrade ($693)</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{cta?.start_online ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Start online</p>
+              </div>
+            </div>
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-3">Traffic & revenue</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="rounded-xl border border-slate-200 bg-white p-4">
