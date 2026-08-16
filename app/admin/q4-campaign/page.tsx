@@ -27,7 +27,7 @@ export default function Q4CampaignPage() {
   const cities = (data?.cityNominations as { city: string; nominations: number }[] | undefined) ?? []
   const traffic = data?.campaignTraffic as { sessions: number; checkout_starts: number; purchases: number } | null
   const cta = data?.ctaClicks as { book_melbourne: number; upgrade: number; start_online: number } | null
-  const nominators = (data?.nominationDetail as { city: string; email: string; name: string; created_at: string }[] | undefined) ?? []
+  const nominators = (data?.nominationDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
   const attributed = data?.attributedPurchases as { buyers: number; revenue_aud: number } | null
 
   return (
@@ -123,6 +123,7 @@ export default function Q4CampaignPage() {
                       <th className="px-3 py-2">Email</th>
                       <th className="px-3 py-2">Name</th>
                       <th className="px-3 py-2">Clicked</th>
+                      <th className="px-3 py-2">Country</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -132,6 +133,7 @@ export default function Q4CampaignPage() {
                         <td className="px-3 py-1.5"><a className="text-teal-700 underline" href={`mailto:${n.email}`}>{n.email}</a></td>
                         <td className="px-3 py-1.5">{n.name || '—'}</td>
                         <td className="px-3 py-1.5 text-slate-500">{new Date(n.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td className={`px-3 py-1.5 font-semibold ${n.country === 'AU' ? 'text-emerald-700' : n.country ? 'text-amber-600' : 'text-slate-400'}`}>{n.country ?? 'unverified'}</td>
                       </tr>
                     ))}
                   </tbody>

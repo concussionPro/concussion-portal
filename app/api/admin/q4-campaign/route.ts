@@ -40,7 +40,10 @@ export async function GET(request: NextRequest) {
     // The nominators themselves — the owner messages these people directly.
     const { rows } = await sql`
       SELECT LOWER(REPLACE(wi.city, ' ', '-')) AS city, wi.email, wi.created_at,
-             COALESCE(NULLIF(u.name, ''), NULLIF(wi.name, ''), '') AS name
+             COALESCE(NULLIF(u.name, ''), NULLIF(wi.name, ''), '') AS name,
+             (SELECT a.country FROM analytics_events a
+               WHERE LOWER(a.user_email) = LOWER(wi.email) AND a.country IS NOT NULL
+               ORDER BY a.created_at DESC LIMIT 1) AS country
       FROM workshop_interest wi
       LEFT JOIN users u ON LOWER(u.email) = LOWER(wi.email)
       WHERE wi.source = 'q4-blast-click'
