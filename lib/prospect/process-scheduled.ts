@@ -850,9 +850,13 @@ export async function processScheduledSends(
     // out, the claimed log row must NEVER be deleted (deleting it after a
     // post-send bookkeeping failure would re-queue an already-delivered
     // email on the next run).
-    // Schedule this send at runStart + cursor (first email ~now, each later
-    // one 7-10 min after the previous), then advance the cursor for the next.
-    const scheduledAtIso = new Date(runStart + staggerCursorMs).toISOString()
+    // Schedule this send at runStart + 2min + cursor, each later one 7-10 min
+    // after the previous. The 2-minute floor is load-bearing: Resend rejects
+    // any scheduled_at that is not strictly in the future (422), and the
+    // first slot used to be runStart itself — already the past by the time
+    // the API call landed. That single validation killed the head of every
+    // run from 2026-08-12 and the engine went dark for 5 days.
+    const scheduledAtIso = new Date(runStart + 120_000 + staggerCursorMs).toISOString()
     const gap = STAGGER_MIN_MS + Math.random() * (STAGGER_MAX_MS - STAGGER_MIN_MS)
     staggerCursorMs += gap
 
