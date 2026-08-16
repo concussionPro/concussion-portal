@@ -51,10 +51,10 @@ function UpgradeContent() {
       router.replace('/dashboard')
       return
     }
-    if (user.accessLevel === 'preview') {
-      router.replace('/pricing')
-      return
-    }
+    // preview users are NOT redirected any more — the Q4 blast's upgrade
+    // link put real clickers here (5 in the first 2h, all silently bounced
+    // to /pricing, owner: "the upgrade click just routes to /pricing").
+    // They see an explanatory state with both real next steps instead.
   }, [user, isLoading, router])
 
   const handleCheckout = async () => {
