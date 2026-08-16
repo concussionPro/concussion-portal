@@ -34,6 +34,7 @@ export default async function BlastPreviewPage() {
     'Sarah', link, link,
     { sydney: demo('sydney'), byron: demo('byron-bay') },
     'Saturday 7 November',
+    true,
   ).replaceAll('{{unsubscribe_url}}', '#unsubscribe-example')
 
   return (

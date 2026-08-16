@@ -146,6 +146,7 @@ async function run(request: NextRequest, willSend: boolean) {
           byron: nominateClickUrl(testTo, 'byron-bay'),
         },
         MEL_DATE_LABEL,
+        true,
       )
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
     const ok = await sendEmail({
@@ -201,6 +202,7 @@ async function run(request: NextRequest, willSend: boolean) {
           byron: nominateClickUrl('sample@example.com', 'byron-bay'),
         },
         MEL_DATE_LABEL,
+        true,
       ),
     })
   }
@@ -234,6 +236,7 @@ async function run(request: NextRequest, willSend: boolean) {
           byron: nominateClickUrl(r.email, 'byron-bay'),
         },
         MEL_DATE_LABEL,
+        r.registered,
       )
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
