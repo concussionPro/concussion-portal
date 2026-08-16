@@ -178,7 +178,11 @@ jobs:
           #   mine is ancestor of live -> superseded by a newer push, fine
           #   live is ancestor of mine -> PRODUCTION IS BEHIND -> fail
           echo "expecting $EXPECTED or a descendant"
-          for i in $(seq 1 60); do
+          # 114 x 10s = 19 min — the loop previously covered only 10 of the
+          # job's 20 minutes, so a burst of pushes whose deploys queued past
+          # 10 minutes failed a healthy production (third false-alarm mode in
+          # this job; 2026-08-16 failure email).
+          for i in $(seq 1 114); do
             body="$(curl -fsS --max-time 15 "$URL" || true)"
             got="$(printf '%s' "$body" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).build?.sha??"")}catch{console.log("")}})')"
             if [ -n "$got" ]; then
