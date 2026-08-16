@@ -8,8 +8,13 @@ import { isAdminRequest } from '@/lib/require-admin'
  * us to track this q4 blast"). Aggregates, per lane:
  *  - sends: email_audit_log keys `q4-mel-nov7:<segment>:<email>` written by
  *    the quarterly-practical-blast send loop
- *  - nominations: workshop_interest rows written by the one-click city
- *    buttons (source 'q4-blast-click') — the Sydney/Byron demand counts
+ *  - nominations: workshop_interest rows with source 'q4-blast-confirmed' —
+ *    written ONLY by the on-page Confirm tap. The original one-click rows
+ *    ('q4-blast-click', quarantined to 'q4-blast-click-suspect' 2026-08-16)
+ *    were Microsoft Defender link detonations, not humans — every one came
+ *    from an M365 corporate/gov/school domain and most source IPs also hit
+ *    the /upgrade link within seconds. They are reported separately and
+ *    count toward NOTHING.
  *  - traffic: analytics_events carrying utm_campaign=quarterly_blast_v1
  *  - purchases: course_purchases from blast-audited emails after first send
  * Read-only; every number is zero until the blast fires.
@@ -32,24 +37,27 @@ export async function GET(request: NextRequest) {
     const { rows } = await sql`
       SELECT LOWER(REPLACE(city, ' ', '-')) AS city, COUNT(*)::int AS nominations
       FROM workshop_interest
-      WHERE source = 'q4-blast-click' GROUP BY 1 ORDER BY 2 DESC`
+      WHERE source = 'q4-blast-confirmed' GROUP BY 1 ORDER BY 2 DESC`
     out.cityNominations = rows
   } catch { out.cityNominations = [] }
 
   try {
     // The nominators themselves — the owner messages these people directly.
+    // Confirmed (human tap on the landing page) and suspect (scanner
+    // detonation) are returned as separate lists, never merged.
     const { rows } = await sql`
-      SELECT LOWER(REPLACE(wi.city, ' ', '-')) AS city, wi.email, wi.created_at,
+      SELECT LOWER(REPLACE(wi.city, ' ', '-')) AS city, wi.email, wi.created_at, wi.source,
              COALESCE(NULLIF(u.name, ''), NULLIF(wi.name, ''), '') AS name,
              (SELECT a.country FROM analytics_events a
                WHERE LOWER(a.user_email) = LOWER(wi.email) AND a.country IS NOT NULL
                ORDER BY a.created_at DESC LIMIT 1) AS country
       FROM workshop_interest wi
       LEFT JOIN users u ON LOWER(u.email) = LOWER(wi.email)
-      WHERE wi.source = 'q4-blast-click'
+      WHERE wi.source IN ('q4-blast-confirmed', 'q4-blast-click-suspect')
       ORDER BY wi.created_at DESC`
-    out.nominationDetail = rows
-  } catch { out.nominationDetail = [] }
+    out.nominationDetail = rows.filter((r) => r.source === 'q4-blast-confirmed')
+    out.suspectDetail = rows.filter((r) => r.source === 'q4-blast-click-suspect')
+  } catch { out.nominationDetail = []; out.suspectDetail = [] }
 
   try {
     // Per-CTA engagement WITHOUT Resend tracking (open/click tracking is off

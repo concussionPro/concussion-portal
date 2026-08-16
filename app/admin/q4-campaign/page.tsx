@@ -28,6 +28,7 @@ export default function Q4CampaignPage() {
   const traffic = data?.campaignTraffic as { sessions: number; checkout_starts: number; purchases: number } | null
   const cta = data?.ctaClicks as { book_melbourne: number; upgrade: number; start_online: number } | null
   const nominators = (data?.nominationDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
+  const suspects = (data?.suspectDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
   const attributed = data?.attributedPurchases as { buyers: number; revenue_aud: number } | null
 
   return (
@@ -96,8 +97,12 @@ export default function Q4CampaignPage() {
           </section>
           <section>
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-3">
-              City nominations — the run/no-run numbers
+              Confirmed city nominations — the run/no-run numbers
             </h2>
+            <p className="text-xs text-muted-foreground -mt-2 mb-3">
+              Counts only on-page Confirm taps. Raw email clicks proved to be mail-scanner
+              detonations and are quarantined below — they count toward nothing.
+            </p>
             <div className="grid grid-cols-2 gap-3">
               {['sydney', 'byron-bay'].map((slug) => {
                 const row = cities.find((c) => c.city === slug)
@@ -113,7 +118,7 @@ export default function Q4CampaignPage() {
           {nominators.length > 0 && (
             <section>
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-3">
-                Nominators — message these people directly
+                Confirmed nominators — message these people directly
               </h2>
               <div className="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
                 <table className="w-full text-[13px]">
@@ -141,10 +146,48 @@ export default function Q4CampaignPage() {
               </div>
             </section>
           )}
+          {suspects.length > 0 && (
+            <section>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400 mb-1">
+                Quarantined — scanner detonations, NOT nominations
+              </h2>
+              <p className="text-xs text-muted-foreground mb-3">
+                These clicks came from Microsoft 365 mail-security sandboxes (Azure IPs, multiple
+                links per email hit within seconds). Do not message or count them. If any of these
+                people confirm on the landing page later, they move up automatically.
+              </p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/60 overflow-hidden mb-8 opacity-70">
+                <table className="w-full text-[13px]">
+                  <thead className="bg-slate-100">
+                    <tr className="text-left text-slate-500">
+                      <th className="px-3 py-2">City</th>
+                      <th className="px-3 py-2">Email</th>
+                      <th className="px-3 py-2">Detonated</th>
+                      <th className="px-3 py-2">Country</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {suspects.map((n) => (
+                      <tr key={n.email + n.city} className="border-t border-slate-100 text-slate-500">
+                        <td className="px-3 py-1.5">{n.city}</td>
+                        <td className="px-3 py-1.5">{n.email}</td>
+                        <td className="px-3 py-1.5">{new Date(n.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td className="px-3 py-1.5">{n.country ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
           <section>
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-3">
               Email CTA clicks (tracked on-site — Resend tracking is off)
             </h2>
+            <p className="text-xs text-muted-foreground -mt-2 mb-3">
+              Raw landings — scanner detonations are NOT filtered out of these, so treat them as a
+              ceiling, not humans. Only the confirmed nominations above are verified people.
+            </p>
             <div className="grid grid-cols-3 gap-3 mb-8">
               <div className="rounded-xl border border-slate-200 bg-white p-4">
                 <p className="text-2xl font-bold text-foreground">{cta?.book_melbourne ?? 0}</p>

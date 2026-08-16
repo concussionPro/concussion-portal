@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { GraduationCap, HeartPulse, ArrowRight, Check } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
+import NominateConfirmBanner from '@/components/pricing/NominateConfirmBanner'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
@@ -97,6 +98,13 @@ function PricingTabs() {
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
+
+      {/* Email nomination confirm step — renders only when the URL carries a
+          signed pending payload from nominate-click. The nomination records
+          on THIS tap, never on the email click (scanner detonation lesson,
+          2026-08-16). Sits above everything so the person who clicked
+          "Register for Byron Bay" meets the confirm before the pricing. */}
+      <NominateConfirmBanner />
 
       <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-2">
         <div className="text-center mb-5">

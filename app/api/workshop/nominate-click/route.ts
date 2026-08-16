@@ -1,50 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { isPrefetchRequest } from '@/lib/prefetch-guard'
 
 /**
- * ONE-CLICK CITY NOMINATION FROM AN EMAIL.
+ * CITY-NOMINATION LINK FROM AN EMAIL — REDIRECT ONLY, NEVER A WRITE.
  *
  * GET /api/workshop/nominate-click?e=<email>&t=<token>&city=<slug>
- *   → records the nomination, then redirects to /pricing for that city.
+ *   → redirects to /pricing with a signed pending-nomination payload; the
+ *     nomination is recorded ONLY when the person taps Confirm on the page
+ *     (POST /api/workshop/nominate-confirm).
  *
- * WHY A GET. /api/workshop/nominate is POST and expects a JSON body with the
- * name — fine from a signed-in dashboard, impossible from an email button. The
- * whole point of this campaign is to turn "I'll wait for the Sydney one" into a
- * countable action, and an action that requires filling in a form is one most
- * people will not take.
+ * WHY THE GET NO LONGER WRITES (2026-08-16, the Q4 blast post-mortem). The
+ * first version recorded the nomination on this GET, guarded by a scanner
+ * user-agent list and a prefetch check. That guard FAILED in production:
+ * Microsoft Defender / SafeLinks detonates every link in an inbound email
+ * from Azure egress IPs using a real headless Chromium with a PLAIN Chrome
+ * user-agent — nothing in the UA says scanner, it executes JS, and it follows
+ * multiple links per email within seconds. Every one of the 8 "Byron Bay
+ * nominations" the blast produced came from a corporate/gov/school Microsoft
+ * 365 domain, 6 of the 8 source IPs also hit the /upgrade link within 90
+ * seconds of the "nomination" (no human clicks upgrade AND register-Byron
+ * simultaneously), and ZERO of the ~55 personal-mailbox recipients
+ * "nominated". The run/no-run number the campaign existed to produce was
+ * 100% scanner noise that looked exactly like success.
  *
- * SIGNED, because a GET that writes must not be forgeable. The token is the
- * same HMAC used for one-click unsubscribe, so a link can only be minted by us
- * and a nomination cannot be stuffed for someone else's address.
+ * The only guard that holds against a full-browser detonation is a HUMAN
+ * ACTION ON THE LANDING PAGE: the click lands on /pricing, a banner offers
+ * one-tap confirmation, and only that in-page POST writes. A sandbox that
+ * follows the redirect sees a normal page and records nothing.
  *
- * SCANNERS AND PREFETCHERS ARE THE MAIN THREAT HERE, and it is not a security
- * one — it is a data one. Corporate mail security (Mimecast, Proofpoint,
- * Barracuda, Microsoft SafeLinks) FETCHES EVERY LINK in an inbound email inside
- * its sandbox. This endpoint writes on GET, so without a guard every protected
- * recipient would register a Sydney AND a Byron Bay nomination the moment the
- * mail landed, before a human saw it.
- *
- * That would not merely add noise — it would destroy the only number this
- * campaign exists to produce, and it would look like success while doing it.
- *
- * So: known scanner user-agents and prefetch requests are redirected WITHOUT
- * writing. Both still reach /pricing, so a scanner that follows the redirect
- * sees a normal page and the link is not flagged.
- *
- * It redirects rather than returning JSON: the click should land the person on
- * the page where they can buy, not on a blank success message.
+ * The UA/prefetch check is kept only to keep known scanners out of the
+ * analytics trail — it is no longer load-bearing for data integrity.
  */
 
 export const dynamic = 'force-dynamic'
 
-/**
- * Same list the demo-tour entry uses. These agents follow links automatically
- * from inside inbound mail; a hit from one is not a person expressing a
- * preference.
- */
 const SCANNER_UA = /bot|crawler|spider|headless|safelinks|mimecast|proofpoint|barracuda|googleimageproxy|expanse|urlscan|preview|scan/i
 
 const CITIES: Record<string, string> = {
@@ -61,41 +52,28 @@ export async function GET(request: NextRequest) {
   const token = sp.get('t') || ''
   const slug = (sp.get('city') || '').trim().toLowerCase()
   const city = CITIES[slug]
+  const valid = !!email && !!city && token === generateUnsubscribeToken(email)
 
+  // The pending-nomination payload rides the redirect. Same HMAC the link
+  // itself carried, so the confirm POST can be verified server-side and a
+  // nomination cannot be stuffed for someone else's address.
   const dest = new URL(
-    city
-      ? `/pricing?location=${slug}&utm_source=email&utm_medium=email&utm_campaign=quarterly_blast_v1&utm_content=nominate_${slug}&email=${encodeURIComponent(email)}#pricing-cards`
+    valid
+      // No #pricing-cards hash: the confirm banner is at the top, and the
+      // hash's auto-scroll was also firing pricing_cards_in_view with no
+      // human involved — it polluted the behavioral evidence last round.
+      ? `/pricing?location=${slug}&utm_source=email&utm_medium=email&utm_campaign=quarterly_blast_v1&utm_content=nominate_${slug}&email=${encodeURIComponent(email)}&nominate=${slug}&ne=${encodeURIComponent(email)}&nt=${token}`
       : '/pricing',
     CONFIG.APP_URL,
   )
 
-  // Fetched by a mail-security sandbox or a link prefetcher, not a person.
-  // Redirect normally so nothing looks broken, but record nothing.
   const ua = request.headers.get('user-agent') || ''
   if (SCANNER_UA.test(ua) || isPrefetchRequest(request)) {
-    console.log(`[nominate-click] scanner/prefetch ignored (${slug || 'no city'})`)
-    return NextResponse.redirect(dest, { status: 302 })
+    console.log(`[nominate-click] scanner/prefetch (${slug || 'no city'})`)
+    return NextResponse.redirect(new URL('/pricing', CONFIG.APP_URL), { status: 302 })
   }
 
-  if (!email || !city || token !== generateUnsubscribeToken(email)) {
-    // Never explain WHY to the browser — a signed-link failure that describes
-    // itself is a probing aid. Send them to the page they were going to anyway.
-    console.warn('[nominate-click] rejected', { hasEmail: !!email, city: slug })
-    return NextResponse.redirect(dest, { status: 302 })
-  }
-
-  try {
-    await sql`
-      INSERT INTO workshop_interest (email, name, city, source)
-      VALUES (${email}, ${''}, ${slug}, 'q4-blast-click')
-      ON CONFLICT (email, city) DO NOTHING
-    `
-    console.log(`[nominate-click] ${city} recorded`)
-  } catch (err) {
-    // A failed write must not cost the click — they still reach the page.
-    console.error('[nominate-click] write failed:', err)
-  }
-
+  if (!valid) console.warn('[nominate-click] rejected', { hasEmail: !!email, city: slug })
   return NextResponse.redirect(dest, { status: 302 })
 }
 

@@ -42,6 +42,7 @@ export async function GET() {
     const { rows: interestRows } = await sql<{ city: string; count: number }>`
       SELECT city, COUNT(*)::int AS count
       FROM workshop_interest
+      WHERE COALESCE(source, '') NOT LIKE '%suspect%'
       GROUP BY city
     `
     const interestedByCity = new Map(interestRows.map((r) => [r.city, Number(r.count)]))

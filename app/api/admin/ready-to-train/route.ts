@@ -237,6 +237,8 @@ export async function GET(request: NextRequest) {
         WHERE LOWER(cp.user_email) = LOWER(wi.email)
           AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
       )
+      -- Scanner-detonated email clicks quarantined 2026-08-16 — not demand.
+      AND COALESCE(wi.source, '') NOT LIKE '%suspect%'
       ORDER BY wi.city, wi.created_at DESC
     `
 
