@@ -37,10 +37,19 @@ export class EmailScheduler {
   private domainNext = new Map<string, number>()
   private globalNext: number
   private readonly startMs: number
+  private readonly globalSpacingMs: number
+  private readonly domainSpacingMs: number
 
-  constructor(startMs: number = Date.now()) {
+  constructor(
+    startMs: number = Date.now(),
+    // Overridable per lane (owner 2026-08-16: 30s "not large enough" for the
+    // Q4 blast) — defaults unchanged for every existing caller.
+    opts: { globalSpacingMs?: number; domainSpacingMs?: number } = {},
+  ) {
     this.startMs = startMs
     this.globalNext = startMs
+    this.globalSpacingMs = opts.globalSpacingMs ?? GLOBAL_SPACING_MS
+    this.domainSpacingMs = opts.domainSpacingMs ?? DOMAIN_SPACING_MS
   }
 
   /** Returns an ISO datetime string for the `scheduled_at` field of a Resend send. */
@@ -62,8 +71,8 @@ export class EmailScheduler {
     if (scheduled < now + 5_000) scheduled = now + 5_000
 
     // Advance both pointers past this send
-    this.globalNext = base + GLOBAL_SPACING_MS
-    this.domainNext.set(domain, base + DOMAIN_SPACING_MS)
+    this.globalNext = base + this.globalSpacingMs
+    this.domainNext.set(domain, base + this.domainSpacingMs)
 
     return new Date(scheduled).toISOString()
   }

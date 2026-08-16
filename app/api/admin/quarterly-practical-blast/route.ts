@@ -244,7 +244,10 @@ async function run(request: NextRequest, willSend: boolean) {
   //
   // The list is small enough that neither is urgent, and both are how a domain
   // reputation is kept rather than repaired.
-  const scheduler = new EmailScheduler()
+  // ?gapSeconds= sets the average gap between sends (default 120s for this
+  // campaign — owner: 30s not large enough). Same-domain minimum = 2.5x gap.
+  const gapSeconds = Math.max(30, Math.min(600, parseInt(request.nextUrl.searchParams.get('gapSeconds') || '120', 10) || 120))
+  const scheduler = new EmailScheduler(Date.now(), { globalSpacingMs: gapSeconds * 1000, domainSpacingMs: gapSeconds * 2500 })
   let sent = 0
   const failed: string[] = []
   let skippedAlreadySent = 0
@@ -308,6 +311,7 @@ async function run(request: NextRequest, willSend: boolean) {
     dryRun: false,
     sent,
     batchSize,
+    gapSeconds,
     skippedAlreadySent,
     remainingAfterThisWave: Math.max(0, ordered.length - skippedAlreadySent - sent),
     failed: failed.length,
