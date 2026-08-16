@@ -30,8 +30,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const { rows } = await sql`
-      SELECT city, COUNT(*)::int AS nominations FROM workshop_interest
-      WHERE source = 'q4-blast-click' GROUP BY city ORDER BY 2 DESC`
+      SELECT LOWER(REPLACE(city, ' ', '-')) AS city, COUNT(*)::int AS nominations
+      FROM workshop_interest
+      WHERE source = 'q4-blast-click' GROUP BY 1 ORDER BY 2 DESC`
     out.cityNominations = rows
   } catch { out.cityNominations = [] }
 

@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
   try {
     await sql`
       INSERT INTO workshop_interest (email, name, city, source)
-      VALUES (${email}, ${''}, ${city}, 'q4-blast-click')
+      VALUES (${email}, ${''}, ${slug}, 'q4-blast-click')
       ON CONFLICT (email, city) DO NOTHING
     `
     console.log(`[nominate-click] ${city} recorded`)
