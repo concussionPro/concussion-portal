@@ -101,6 +101,30 @@ function UpgradeContent() {
     }
   }
 
+  // Preview (free) users get the explanatory state — 5 real blast clickers
+  // in 2h were silently bounced before this existed.
+  if (user && user.accessLevel === 'preview') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="max-w-xl w-full rounded-2xl border-2 border-teal-200 bg-teal-50/50 p-7 text-center">
+          <p className="text-lg font-bold text-foreground mb-2">The ${upgradePriceFor('melbourne')} upgrade is for CCM Online owners</p>
+          <p className="text-sm text-muted-foreground mb-5">
+            It covers the difference between the online course and the Complete course. You&rsquo;re
+            not enrolled in the online course yet — two ways in:
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Link href="/melbourne-nov7" className="btn-primary px-5 py-3 rounded-xl text-sm font-semibold">
+              Take the Melbourne seat — full course
+            </Link>
+            <Link href="/pricing#pricing-cards" className="px-5 py-3 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-foreground hover:bg-slate-50">
+              Start online — upgrade later
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (isLoading || !user || user.accessLevel !== 'online-only') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
