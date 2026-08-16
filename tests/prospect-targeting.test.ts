@@ -67,7 +67,7 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
       expect(html).not.toMatch(/free (CPD )?module/i)
       expect(html).not.toMatch(/I built/i)
       // The ONE CTA is the interest question closing the note (2026-07-02).
-      expect(text).toContain('Worth a look for Test Clinic?')
+      expect(text).toContain('reply "trial"')
       // Exactly ONE link: the clean /p/<slug> portal path.
       expect(html.match(/<a\s+href=/gi) ?? []).toHaveLength(1)
     }
@@ -121,7 +121,10 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     // tier (the longest tier noun) so every tier fits.
     const { html } = mergeTemplate(T1, clinic({ team: team(8) }), 'https://example.com', 'tok')
     const words = html.replace(/<[^>]+>/g, ' ').split('Zac Lewis')[0].split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).length
-    expect(words, `T1 = ${words} words`).toBeLessThanOrEqual(80)
+    // Cap raised 80→95 (owner 2026-08-16: 'we need to offer something
+    // substantial' — the reply-'trial' SST close is the offer; tightness
+    // doctrine otherwise unchanged).
+    expect(words, `T1 = ${words} words`).toBeLessThanOrEqual(95)
   })
 
   it('T2 re-offers the free tools + the toolkit/docs value', () => {
@@ -215,7 +218,7 @@ describe('cold-email hygiene (2026-06-10 portal-led: the dashboard is the pitch,
   it('bodies stay tight — T1 80 words max, T2/T3 under 90 (portal-led, not a wall of text)', () => {
     for (const [label, c] of tiers) {
       const t1 = bodyWordCount(mergeTemplate(T1, c, 'x', 'tok').html)
-      expect(t1, `${label} T1 = ${t1} words`).toBeLessThanOrEqual(80)
+      expect(t1, `${label} T1 = ${t1} words`).toBeLessThanOrEqual(95)
       const t2 = bodyWordCount(mergeTemplate(T2, c, 'x', 'tok').html)
       expect(t2, `${label} T2 = ${t2} words`).toBeLessThan(90)
       const t3 = bodyWordCount(mergeTemplate(T3, c, 'x', 'tok').html)

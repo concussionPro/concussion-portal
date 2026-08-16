@@ -409,7 +409,7 @@ export function mergeTemplate(
     // portals — the ask converts nothing. The working INSTRUMENT is the one
     // attachment nobody else can make, and "reply 'trial'" keeps the
     // replies-only metric the engine runs on.
-    `<p>And if you'd rather judge it with a patient in front of you: reply "trial" and I'll switch on the SST Trainer for ${safeShortName} — a 3-patient run of the measured heart-rate rehab platform. No card, nothing to install.</p>`,
+    `<p>Or reply "trial" and I'll switch on a 3-patient run of our measured heart-rate rehab platform for ${safeShortName}. No card.</p>`,
   ].join('\n')
 
   // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean
