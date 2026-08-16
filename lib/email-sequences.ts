@@ -1808,8 +1808,8 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     <p style="margin:0 0 16px;padding:12px 14px;background:#f8fafc;border-radius:8px;font-size:14px;line-height:1.6;color:#334155;font-style:italic;">&ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.&rdquo; <span style="font-style:normal;">&mdash; Dean, University Clinical Educator, QLD</span></p>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;"><strong>If Melbourne doesn&rsquo;t work:</strong> nominate either Sydney or Byron Bay — both running in Q4.</p>
     <div style="text-align:center;margin:0 0 16px;">
-      <a href="${nominate.sydney}" style="display:inline-block;padding:12px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin:0 4px 8px;">Put me down for Sydney</a>
-      <a href="${nominate.byron}" style="display:inline-block;padding:12px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin:0 4px 8px;">Put me down for Byron Bay</a>
+      <a href="${nominate.sydney}" style="display:inline-block;padding:12px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin:0 4px 8px;">Register for Sydney</a>
+      <a href="${nominate.byron}" style="display:inline-block;padding:12px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin:0 4px 8px;">Register for Byron Bay</a>
     </div>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">Or start online now — A$${CONFIG.COURSE.PRICE_ONLINE}, ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours; add any hands-on day later. <a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" style="color:#0d9488;font-weight:600;">Start online &rarr;</a></p>
     <p style="margin:18px 0 0;font-size:15px;color:#1e293b;">Zac</p>
@@ -1825,8 +1825,7 @@ export const QUARTERLY_PRACTICAL_BLAST = {
         <img src="https://portal.concussion-education-australia.com/essa-accredited-pd.png" alt="ESSA Accredited Professional Development" height="40" style="height:40px;width:auto;vertical-align:middle;margin:0 12px;" />
       </td></tr>
       <tr><td align="center" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:11px;line-height:1.5;color:#94a3b8;padding:2px 0 0;">
-        Concussion Clinical Mastery is endorsed by Osteopathy Australia<br>
-        Concussion Rehab Mastery (exercise physiology) is ESSA-accredited
+        Concussion Clinical Mastery and Concussion Rehab Mastery are officially endorsed and accredited by Osteopathy Australia and ESSA respectively
       </td></tr>
     </table>
   `),
