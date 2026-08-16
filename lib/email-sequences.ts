@@ -1775,7 +1775,9 @@ export const QUARTERLY_PRACTICAL_BLAST = {
   // Course name leads (owner 2026-08-16: 'needs to say concussion clinical
   // mastery somewhere in title') — mobile truncation still shows it.
   subject: (melDateLabel: string) => `Concussion Clinical Mastery — hands-on day, Melbourne ${melDateLabel.replace('Saturday ', 'Sat ')}`,
-  preheader: 'Rydges on Exhibition St · mixed cohort · catered · 12 places max',
+  // Preheader carries the second audience (16 of 23 register recipients
+  // registered OTHER cities — a Melbourne-only preview loses their opens).
+  preheader: 'Rydges on Exhibition St · catered · 12 places · Sydney & Byron Bay next',
   /**
    * EVERY style is INLINE (owner: "you did not fix the paragraph spacing" —
    * emailShell's <style> block is stripped by some Gmail renderings, so
@@ -1805,6 +1807,7 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">Early-bird is <strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</strong> until <strong>24 October</strong>, then A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}. The date goes public this week — secure your seat now:</p>
     <div style="text-align:center;margin:0 0 16px;"><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;padding:15px 20px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:16px;text-align:center;">Take a Melbourne seat</a></div>
     <p style="margin:0 0 10px;font-size:13px;line-height:1.5;color:#64748b;text-align:center;">Tax invoice issued with payment — ready for employer reimbursement.</p>
+    <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#64748b;text-align:center;">Not in Melbourne? Sydney and Byron Bay registration is below.</p>
     <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;text-align:center;">Already bought either online course — CCM or CRM? Both streams complete this <strong>same</strong> in-person day. <a href="${utm(onlineLink.replace('/pricing#pricing-cards', '/upgrade'), 'quarterly_blast_v1', 'upgrade')}" style="color:#0d9488;font-weight:600;">Upgrade for A$${upgradePriceFor('melbourne')} — your online payment counts in full &rarr;</a></p>
     <p style="margin:0 0 16px;padding:12px 14px;background:#f8fafc;border-radius:8px;font-size:14px;line-height:1.6;color:#334155;font-style:italic;">&ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.&rdquo; <span style="font-style:normal;">&mdash; Dean Hardy, University Clinical Educator, QLD</span></p>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;"><strong>If Melbourne doesn&rsquo;t work:</strong> nominate either Sydney or Byron Bay — both running in Q4.</p>
