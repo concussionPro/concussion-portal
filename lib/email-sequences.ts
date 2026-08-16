@@ -1772,7 +1772,9 @@ ${content}
 }
 
 export const QUARTERLY_PRACTICAL_BLAST = {
-  subject: (melDateLabel: string) => `Hands-on concussion day — Melbourne, ${melDateLabel}`,
+  // Course name leads (owner 2026-08-16: 'needs to say concussion clinical
+  // mastery somewhere in title') — mobile truncation still shows it.
+  subject: (melDateLabel: string) => `Concussion Clinical Mastery — hands-on day, Melbourne ${melDateLabel.replace('Saturday ', 'Sat ')}`,
   preheader: 'Rydges on Exhibition St · mixed cohort · catered · 12 places max',
   /**
    * EVERY style is INLINE (owner: "you did not fix the paragraph spacing" —
