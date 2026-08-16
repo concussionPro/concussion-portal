@@ -31,9 +31,12 @@ export interface CityProgress {
 
 export async function GET() {
   try {
-    const locations = Object.values(CONFIG.LOCATIONS).filter(
-      (loc) => loc.status !== 'completed'
-    )
+    // 'completed' cities used to be dropped, but a completed city collecting
+    // its NEXT round still sells round-scoped seats (ROUND_START) — Melbourne's
+    // pre-release landing reads its seat count from here, and exclusion left
+    // that counter blind (found in the 2026-08-16 pre-fire sweep). Round
+    // scoping in getEnrollmentCount makes the count correct for every status.
+    const locations = Object.values(CONFIG.LOCATIONS)
 
     // One grouped query for interest counts (public aggregate only)
     const { rows: interestRows } = await sql<{ city: string; count: number }>`
