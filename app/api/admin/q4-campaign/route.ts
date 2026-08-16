@@ -37,6 +37,18 @@ export async function GET(request: NextRequest) {
   } catch { out.cityNominations = [] }
 
   try {
+    // The nominators themselves — the owner messages these people directly.
+    const { rows } = await sql`
+      SELECT LOWER(REPLACE(wi.city, ' ', '-')) AS city, wi.email, wi.created_at,
+             COALESCE(NULLIF(u.name, ''), NULLIF(wi.name, ''), '') AS name
+      FROM workshop_interest wi
+      LEFT JOIN users u ON LOWER(u.email) = LOWER(wi.email)
+      WHERE wi.source = 'q4-blast-click'
+      ORDER BY wi.created_at DESC`
+    out.nominationDetail = rows
+  } catch { out.nominationDetail = [] }
+
+  try {
     // Per-CTA engagement WITHOUT Resend tracking (open/click tracking is off
     // for deliverability): every email CTA lands on our domain carrying
     // utm_content, so clicks are page_views with that marker; nominate

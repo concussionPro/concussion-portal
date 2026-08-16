@@ -27,6 +27,7 @@ export default function Q4CampaignPage() {
   const cities = (data?.cityNominations as { city: string; nominations: number }[] | undefined) ?? []
   const traffic = data?.campaignTraffic as { sessions: number; checkout_starts: number; purchases: number } | null
   const cta = data?.ctaClicks as { book_melbourne: number; upgrade: number; start_online: number } | null
+  const nominators = (data?.nominationDetail as { city: string; email: string; name: string; created_at: string }[] | undefined) ?? []
   const attributed = data?.attributedPurchases as { buyers: number; revenue_aud: number } | null
 
   return (
@@ -109,6 +110,35 @@ export default function Q4CampaignPage() {
               })}
             </div>
           </section>
+          {nominators.length > 0 && (
+            <section>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-3">
+                Nominators — message these people directly
+              </h2>
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden mb-8">
+                <table className="w-full text-[13px]">
+                  <thead className="bg-slate-50">
+                    <tr className="text-left text-slate-600">
+                      <th className="px-3 py-2">City</th>
+                      <th className="px-3 py-2">Email</th>
+                      <th className="px-3 py-2">Name</th>
+                      <th className="px-3 py-2">Clicked</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nominators.map((n) => (
+                      <tr key={n.email + n.city} className="border-t border-slate-100">
+                        <td className="px-3 py-1.5 font-semibold">{n.city}</td>
+                        <td className="px-3 py-1.5"><a className="text-teal-700 underline" href={`mailto:${n.email}`}>{n.email}</a></td>
+                        <td className="px-3 py-1.5">{n.name || '—'}</td>
+                        <td className="px-3 py-1.5 text-slate-500">{new Date(n.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
           <section>
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-3">
               Email CTA clicks (tracked on-site — Resend tracking is off)
