@@ -107,7 +107,25 @@ async function audience(): Promise<Recipient[]> {
   `
   users.forEach((u) => push(u.email, u.name, false))
 
-  return out
+  // GEO FILTER (owner 2026-08-16: "any uk address is pointless") — this is an
+  // AU-workshop pitch. Two signals, either excludes:
+  //  1. clearly-foreign email TLDs/domains
+  //  2. the recipient's latest known analytics country != AU
+  // Unknown-geo generic addresses (gmail etc. with no analytics row) stay in.
+  const FOREIGN_TLD = /\.(uk|ca|us|ie|za|in|nl|de|fr|sg|hk|ae)$|\.(ac|co|org|gov|nhs)\.uk$|\.edu$|k12/i
+  const tldFiltered = out.filter((r) => !FOREIGN_TLD.test(r.email))
+  let geoExcluded = new Set<string>()
+  try {
+    const emails = tldFiltered.map((r) => r.email)
+    const { rows } = await sql<{ email: string; country: string }>`
+      SELECT DISTINCT ON (LOWER(user_email)) LOWER(user_email) AS email, country
+      FROM analytics_events
+      WHERE LOWER(user_email) IN (SELECT jsonb_array_elements_text(${JSON.stringify(emails)}::jsonb))
+        AND country IS NOT NULL AND country <> ''
+      ORDER BY LOWER(user_email), created_at DESC`
+    for (const r of rows) if (r.country !== 'AU') geoExcluded.add(r.email)
+  } catch { /* geo unknown → keep (TLD filter already ran) */ }
+  return tldFiltered.filter((r) => !geoExcluded.has(r.email))
 }
 
 export async function GET(request: NextRequest) {

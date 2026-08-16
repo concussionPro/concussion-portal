@@ -1789,19 +1789,27 @@ export const QUARTERLY_PRACTICAL_BLAST = {
     melDateLabel: string,
     registered: boolean,
   ) => blastShell(`
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">Hi ${greetingName(name)},</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">${registered ? 'Thanks for registering for course announcements — our' : 'Our'} next Melbourne training date is <strong>${melDateLabel}</strong> at the Rydges hotel on Exhibition Street — one room, mixed cohort: physios, osteos and exercise professionals training together. Catered, ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places max.</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">Supervised practice on real subjects: SCAT6, VOMS, BESS, cervical assessment, and graded exertional testing through to the exercise prescription.</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">Early-bird is A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} — the day plus the full online course and clinical toolkit (${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours). <strong>The date goes public this week — secure your seat now:</strong></p>
-    <div style="text-align:center;margin:0 0 16px;"><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" style="display:inline-block;padding:14px 28px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">Take a Melbourne seat</a></div>
-    <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#475569;">Already bought the online course? <a href="${utm(onlineLink.replace('/pricing#pricing-cards', '/upgrade'), 'quarterly_blast_v1', 'upgrade')}" style="color:#0d9488;font-weight:600;">Upgrade to the day for A$${upgradePriceFor('melbourne')} — your online payment counts in full &rarr;</a></p>
-    <p style="margin:0 0 16px;padding:12px 14px;background:#f0fdfa;border-left:3px solid #0d9488;font-size:14px;line-height:1.6;color:#334155;font-style:italic;">&ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.&rdquo; <span style="font-style:normal;">&mdash; Dean, University Clinical Educator, QLD</span></p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;"><strong>If Melbourne doesn&rsquo;t work:</strong> Sydney is pencilled for late November, Byron Bay for late October or December. One click puts you on your city&rsquo;s list — dates get booked on those numbers.</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">Hi ${greetingName(name)},</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">${registered ? 'Thanks for registering for course announcements — our' : 'Our'} next Melbourne training date is locked in:</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;background:#f0fdfa;border-left:3px solid #0d9488;border-radius:0 8px 8px 0;">
+      <tr><td style="padding:14px 16px;">
+        <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#0f172a;">${melDateLabel} &middot; Rydges Melbourne, Exhibition Street</p>
+        <p style="padding:7px 0 7px 0;font-size:15px;line-height:1.5;color:#1e293b;">&#10003;&nbsp; <strong>Fully catered</strong> — lunch, morning tea and barista coffee all day, included</p>
+        <p style="padding:7px 0 7px 0;font-size:15px;line-height:1.5;color:#1e293b;">&#10003;&nbsp; <strong>${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places</strong> — one room, mixed cohort: physios, osteos and exercise professionals</p>
+        <p style="padding:7px 0 7px 0;font-size:15px;line-height:1.5;color:#1e293b;">&#10003;&nbsp; <strong>${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours</strong> — the day plus the full online course and clinical toolkit</p>
+      </td></tr>
+    </table>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">The day is supervised practice on real subjects: SCAT6, VOMS, BESS, cervical assessment, and graded exertional testing through to the exercise prescription.</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">Early-bird is <strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</strong>. The date goes public this week — secure your seat now:</p>
+    <div style="text-align:center;margin:0 0 16px;"><a href="${utm(bookLink, 'quarterly_blast_v1', 'book_melbourne')}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;padding:15px 20px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:16px;text-align:center;">Take a Melbourne seat</a></div>
+    <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;text-align:center;">Already bought the online course? <a href="${utm(onlineLink.replace('/pricing#pricing-cards', '/upgrade'), 'quarterly_blast_v1', 'upgrade')}" style="color:#0d9488;font-weight:600;">Upgrade to the day for A$${upgradePriceFor('melbourne')} &rarr;</a></p>
+    <p style="margin:0 0 16px;padding:12px 14px;background:#f8fafc;border-radius:8px;font-size:14px;line-height:1.6;color:#334155;font-style:italic;">&ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.&rdquo; <span style="font-style:normal;">&mdash; Dean, University Clinical Educator, QLD</span></p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;"><strong>If Melbourne doesn&rsquo;t work:</strong> Sydney is pencilled for late November, Byron Bay for late October or December. One click puts you on your city&rsquo;s list — dates get booked on those numbers.</p>
     <div style="text-align:center;margin:0 0 16px;">
-      <a href="${nominate.sydney}" style="display:inline-block;padding:11px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:13px;margin:0 6px 8px 0;">Put me down for Sydney</a>
-      <a href="${nominate.byron}" style="display:inline-block;padding:11px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:13px;margin:0 0 8px 6px;">Put me down for Byron Bay</a>
+      <a href="${nominate.sydney}" style="display:inline-block;padding:12px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin:0 4px 8px;">Put me down for Sydney</a>
+      <a href="${nominate.byron}" style="display:inline-block;padding:12px 18px;background:#0d9488;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin:0 4px 8px;">Put me down for Byron Bay</a>
     </div>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1e293b;">Or start online now — A$${CONFIG.COURSE.PRICE_ONLINE}, ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours; add any hands-on day later. <a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" style="color:#0d9488;font-weight:600;">Start online &rarr;</a></p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1e293b;">Or start online now — A$${CONFIG.COURSE.PRICE_ONLINE}, ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours; add any hands-on day later. <a href="${utm(onlineLink, 'quarterly_blast_v1', 'start_online')}" style="color:#0d9488;font-weight:600;">Start online &rarr;</a></p>
     <p style="margin:18px 0 0;font-size:15px;color:#1e293b;">Zac</p>
   `),
 }
