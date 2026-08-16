@@ -70,9 +70,12 @@ export class EmailScheduler {
     // Floor at "now + 5s" — Resend rejects send times in the past
     if (scheduled < now + 5_000) scheduled = now + 5_000
 
-    // Advance both pointers past this send
-    this.globalNext = base + this.globalSpacingMs
-    this.domainNext.set(domain, base + this.domainSpacingMs)
+    // Advance both pointers past this send. Each GAP is a fresh random draw
+    // in [0.5x, 1.5x] of the configured spacing (owner 2026-08-16: "gaps also
+    // have to be random durations not the same") — same mean, no fixed cadence
+    // for a filter to fingerprint. Applies to every lane; means unchanged.
+    this.globalNext = base + this.globalSpacingMs * (0.5 + Math.random())
+    this.domainNext.set(domain, base + this.domainSpacingMs * (0.5 + Math.random()))
 
     return new Date(scheduled).toISOString()
   }
