@@ -8,12 +8,19 @@ import { useEffect, useState } from 'react'
  */
 export default function Q4CampaignPage() {
   const [data, setData] = useState<Record<string, unknown> | null>(null)
+  const [plan, setPlan] = useState<Record<string, unknown> | null>(null)
   const [err, setErr] = useState<string | null>(null)
   useEffect(() => {
     fetch('/api/admin/q4-campaign', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(setData)
       .catch((e) => setErr(String(e)))
+    // Dry-run audience preview from the blast route itself — the PLANNED
+    // campaign is visible before anything fires (owner: "its empty").
+    fetch('/api/admin/quarterly-practical-blast', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setPlan)
+      .catch(() => null)
   }, [])
 
   const sends = (data?.blastSends as { segment: string; n: number }[] | undefined) ?? []
@@ -30,6 +37,18 @@ export default function Q4CampaignPage() {
       </p>
       {err && <p className="text-sm text-red-600">{err}</p>}
       {!data && !err && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {plan != null && (
+        <section className="mb-8 rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-5">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-amber-800 mb-2">Planned blast (dry-run, nothing sent)</h2>
+          <p className="text-sm text-amber-900">
+            Audience {String((plan.audience as Record<string, unknown> | undefined)?.total ?? '—')} ·
+            interest register {String((plan.audience as Record<string, unknown> | undefined)?.registeredInterest ?? '—')} ·
+            recent free users {String((plan.audience as Record<string, unknown> | undefined)?.otherSegment ?? '—')} ·
+            suppressed {String((plan.audience as Record<string, unknown> | undefined)?.suppressedOrErrored ?? '—')}
+          </p>
+          <a href="/preview/blast" className="mt-2 inline-block text-sm font-semibold text-amber-900 underline">Preview the email →</a>
+        </section>
+      )}
       {data && (
         <div className="space-y-8">
           <section>
