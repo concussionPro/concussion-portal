@@ -403,7 +403,13 @@ export function mergeTemplate(
   const t1Body = [
     `<p>${hook} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
     `<p>I've put a concussion kit together for your clinic — fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial of the OA-endorsed CPD course, with the ${t1TierNoun} alongside: ${FREE_LINK}</p>`,
-    `<p>Worth a look for ${safeShortName}?</p>`,
+    // THE SUBSTANTIAL OFFER (owner 2026-08-16: "im sick of sending cold b2b
+    // with zero results. we need to offer something substantial"). 2,480 sends
+    // of kit-and-course produced ~0 tracked replies while 89 clinics toured
+    // portals — the ask converts nothing. The working INSTRUMENT is the one
+    // attachment nobody else can make, and "reply 'trial'" keeps the
+    // replies-only metric the engine runs on.
+    `<p>And if you'd rather judge it with a patient in front of you: reply "trial" and I'll switch on the SST Trainer for ${safeShortName} — a 3-patient run of the measured heart-rate rehab platform. No card, nothing to install.</p>`,
   ].join('\n')
 
   // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean
