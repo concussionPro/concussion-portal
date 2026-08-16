@@ -191,6 +191,9 @@ async function run(request: NextRequest, willSend: boolean) {
         suppressedOrErrored: skipped.length,
       },
       sample: eligible.slice(0, 8).map((r) => ({ email: r.email, registered: r.registered, city: r.city })),
+      // FULL recipient list (owner 2026-08-16: the Q4 tracker "needs to show
+      // the actual outreach list so i can check") — dry-run only, admin-only.
+      recipients: eligible.map((r) => ({ email: r.email, name: r.name, registered: r.registered, city: r.city })),
       byCity: eligible.reduce<Record<string, number>>((acc, r) => {
         const k = r.city || '(no city)'
         acc[k] = (acc[k] ?? 0) + 1

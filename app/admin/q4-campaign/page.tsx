@@ -47,6 +47,35 @@ export default function Q4CampaignPage() {
             suppressed {String((plan.audience as Record<string, unknown> | undefined)?.suppressedOrErrored ?? '—')}
           </p>
           <a href="/preview/blast" className="mt-2 inline-block text-sm font-semibold text-amber-900 underline">Preview the email →</a>
+          {Array.isArray(plan.recipients) && (
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-semibold text-amber-900">
+                Full recipient list ({(plan.recipients as unknown[]).length})
+              </summary>
+              <div className="mt-2 max-h-96 overflow-y-auto rounded-lg border border-amber-200 bg-white">
+                <table className="w-full text-[12.5px]">
+                  <thead className="sticky top-0 bg-amber-50">
+                    <tr className="text-left text-amber-900">
+                      <th className="px-3 py-1.5">Email</th>
+                      <th className="px-3 py-1.5">Name</th>
+                      <th className="px-3 py-1.5">Segment</th>
+                      <th className="px-3 py-1.5">City reg.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(plan.recipients as { email: string; name: string; registered: boolean; city: string | null }[]).map((r) => (
+                      <tr key={r.email} className="border-t border-slate-100">
+                        <td className="px-3 py-1">{r.email}</td>
+                        <td className="px-3 py-1">{r.name}</td>
+                        <td className="px-3 py-1">{r.registered ? 'register' : 'free-60d'}</td>
+                        <td className="px-3 py-1">{r.city ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )}
         </section>
       )}
       {data && (
