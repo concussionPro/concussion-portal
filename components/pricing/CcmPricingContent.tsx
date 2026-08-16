@@ -242,7 +242,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       quote: "An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.",
-      name: 'Dean',
+      name: 'Dean Hardy',
       role: 'University Clinical Educator, QLD',
       initials: 'D',
     },
@@ -460,7 +460,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           <p className="text-[13.5px] italic text-slate-600 leading-relaxed">
             &ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly
             applicable to concussion diagnosis and management in real-world settings.&rdquo;
-            <span className="not-italic font-semibold text-slate-700"> — Dean, University Clinical Educator, QLD</span>
+            <span className="not-italic font-semibold text-slate-700"> — Dean Hardy, University Clinical Educator, QLD</span>
           </p>
           <p className="mt-2 text-[12px] text-muted-foreground">
             7-day money-back guarantee · lifetime access · tax invoice for reimbursement
