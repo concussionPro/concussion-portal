@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Mail, MailOpen, Users, ClipboardList, UserPlus, LogOut, Upload, Handshake, GraduationCap, Wrench } from 'lucide-react'
+import { BarChart3, Mail, MailOpen, Users, ClipboardList, UserPlus, LogOut, Upload, Handshake, GraduationCap, Wrench , Megaphone } from 'lucide-react'
 
 const NAV_LINKS = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/emails', label: 'Emails', icon: Mail },
   { href: '/admin/email-analytics', label: 'Email Engagement', icon: MailOpen },
   { href: '/admin/ready-to-train', label: 'Ready to Train', icon: Users },
+  { href: '/admin/q4-campaign', label: 'Q4 Campaign', icon: Megaphone },
   { href: '/admin/preseason', label: 'Preseason', icon: ClipboardList },
   { href: '/admin/tools', label: 'Tools', icon: Wrench },
   { href: '/admin/create-user', label: 'Create User', icon: UserPlus },

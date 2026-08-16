@@ -240,6 +240,11 @@ async function run(request: NextRequest, willSend: boolean) {
       )
       .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
+    // Campaign audit — the /admin/q4-campaign tracker counts sends from
+    // these keys; ON CONFLICT keeps re-runs from double-counting.
+    try {
+      await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${'q4-mel-nov7:' + (r.registered ? 'registered' : 'other') + ':' + r.email}, NOW()) ON CONFLICT DO NOTHING`
+    } catch { /* counting must never block a send */ }
     const ok = await sendEmail({
       to: r.email,
       scheduledAt: scheduler.next(r.email),
