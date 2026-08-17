@@ -1301,7 +1301,13 @@ export const PDF_LEAD_SEQUENCE = [
   },
   {
     day: 45,
-    subject: 'The one time I’ll mention the course',
+    // Subject names the reader's value like every other subject in this
+    // sequence ("The red flags worth…", "The test that makes…"). The
+    // original — "The one time I'll mention the course" — led with the
+    // sender's self-consciousness, which belongs in the body's one-time
+    // framing, never in the subject line (owner, 2026-08-17: "terrible
+    // subject").
+    subject: 'The training behind the forms you’re using',
     template: (name: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
       <p>You came for a form, and you&rsquo;ve had forms &mdash; no course pitch in any of that, deliberately.</p>
