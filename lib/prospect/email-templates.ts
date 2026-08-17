@@ -509,7 +509,7 @@ export function mergeTemplate(
       : hint === 'pricing'
         ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply.</p>`
         : `<p>And if you ever want the full course, ${priceLine}.</p>`
-  const t3Close = `<p>No problem either way — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+  const t3Close = `<p>Reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
   const t3Body = [
     `<p>Last one from me. The SCAT6/SCOAT6 forms, baseline tool and CPD module are at ${FREE_LINK} whenever you want them.</p>`,
     t3SecondPara,

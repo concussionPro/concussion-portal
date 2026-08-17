@@ -175,7 +175,7 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
 
   it("T3 carries the breakup line (reply 'later' / STOP)", () => {
     const { text } = mergeTemplate(T3, clinic({}), 'https://example.com', 'tok')
-    expect(text).toContain("reply 'later' and I'll check back next season")
+    expect(text).toContain("later' and I'll check back next season")
     expect(text).toContain("STOP and I won't email again")
   })
 })
@@ -380,8 +380,8 @@ describe('intent-aware follow-ups (Zac 2026-06-14: T2/T3 adapt to what they view
     expect(text).toMatch(/talk through the options for Test Clinic/i)
     // The breakup close is its own short paragraph (2026-07-02), never buried
     // at the tail of the price sentence.
-    expect(html).toContain("<p>No problem either way — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>")
-    expect(text).toContain("reply 'later' and I'll check back next season")
+    expect(html).toContain("<p>Reply 'later' and I'll check back next season, or STOP and I won't email again.</p>")
+    expect(text).toContain("later' and I'll check back next season")
     expect(text).toContain("STOP and I won't email again")
     // Still the config-derived price, still one link, still hygienic.
     expect(text).toContain('A$1,497')
@@ -399,7 +399,7 @@ describe('intent-aware follow-ups (Zac 2026-06-14: T2/T3 adapt to what they view
     const nonSampler = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok')
     expect(nonSampler.html).toMatch(/Module 1/i)
     for (const variant of [generic.html, nonSampler.html]) {
-      expect(variant).toContain("<p>No problem either way — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>")
+      expect(variant).toContain("<p>Reply 'later' and I'll check back next season, or STOP and I won't email again.</p>")
     }
   })
 

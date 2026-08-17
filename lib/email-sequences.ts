@@ -253,7 +253,7 @@ export const POST_PURCHASE_SEQUENCE = [
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
-      <p>Just checking in — have you had a chance to get started?</p>
+      <p>If you haven't started yet, Module 1 is the place to begin.</p>
       <p>The first 3 modules cover the clinical foundations:</p>
       <ol>
         <li><strong>Module 1:</strong> Concussion neuroscience and pathophysiology</li>
@@ -262,7 +262,7 @@ export const POST_PURCHASE_SEQUENCE = [
       </ol>
       <p>Each module takes about 60–90 minutes. By the end of Module 3, you'll have a solid clinical framework for concussion recognition, diagnosis, and acute management.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day3', 'continue_course')}" class="cta-btn">Open Module 1: Concussion Neuroscience</a></center>
-      <p class="ps">P.S. Your course has lifetime access — no pressure, but momentum matters. Clinicians who finish within the first two weeks report the highest confidence gains.</p>
+      <p class="ps">P.S. Your course has lifetime access, but momentum matters — clinicians who finish within the first two weeks report the highest confidence gains.</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -627,7 +627,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     subject: 'Your concussion CPD options — final summary',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
-      <p>Last email in this series — your options for the full course, in one place:</p>
+      <p>Your options for the full course, in one place:</p>
       <ul>
         <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access — the full workflow beyond the SCAT6: VOMS, BESS, staged return-to-play, phenotype-based rehab.</li>
         <li><strong>Complete Course (${completeCoursePrice()}):</strong> everything online, plus a hands-on full-day workshop — ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.${completeCourseCaveat()}</li>
@@ -1031,7 +1031,7 @@ export const FREE_USER_REENGAGEMENT = {
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${greetingName(name)},</h2>
     <p>You signed up for the SCAT6 Mastery course a week ago but haven't started yet.</p>
-    <p>No pressure — Module 1 takes about 20 minutes and you can pick up where you left off any time.</p>
+    <p>Module 1 takes about 20 minutes, and you can pick up where you left off any time.</p>
     <div class="callout">
       <strong>What's waiting for you:</strong><br><br>
       &#8226; 3 modules covering SCAT6 and SCOAT6 essentials<br>
@@ -1223,7 +1223,7 @@ export const PDF_LEAD_TOOLS = {
     <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/scat-forms`, 'pdf_lead_tools_d7', 'web_scat_forms')}" class="cta-btn">Open the web SCAT6</a></center>
     <p><strong>One thing worth knowing if you cover a club or school.</strong> A SCAT6 taken after a head knock is far more useful when you can compare it to that athlete&rsquo;s own normal. You can send your squad one link and have them complete a pre-season baseline themselves in about five minutes each &mdash; the reports come back to you.</p>
     <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/preseason`, 'pdf_lead_tools_d7', 'preseason_baseline')}" class="cta-btn">See how clubs run baselines</a></center>
-    <p>If the PDF was all you needed, that&rsquo;s genuinely fine &mdash; no follow-up required. And if there&rsquo;s a form or a workflow you wish existed, reply and tell me; I build these because I needed them in my own clinic.</p>
+    <p>If there&rsquo;s a form or a workflow you wish existed, reply and tell me &mdash; I build these because I needed them in my own clinic.</p>
     <div class="sig">Zac</div>
   `),
 }
@@ -1311,9 +1311,8 @@ export const PDF_LEAD_SEQUENCE = [
     template: (name: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
       <p>You came for a form, and you&rsquo;ve had forms &mdash; no course pitch in any of that, deliberately.</p>
-      <p>This is the one email where I mention it, and then I&rsquo;ll leave it alone.</p>
       <p>If concussion is something you see often enough that you want it properly handled rather than looked up each time, the training behind these tools is <strong>Concussion Clinical Mastery</strong>: ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online, self-paced, endorsed by Osteopathy Australia, from A$${CONFIG.COURSE.PRICE_ONLINE}. There&rsquo;s a separate ESSA-accredited stream for exercise physiologists.</p>
-      <p>If it isn&rsquo;t, that&rsquo;s genuinely fine. The forms and the baseline tool stay free and you can keep using them without ever hearing from me about the course again.</p>
+      <p>Either way, the forms and the baseline tool stay free.</p>
       <center><a href="${utm(`${CONFIG.SEO.SITE_URL}/courses`, 'pdf_lead_d45', 'course_once')}" class="cta-btn">See what&rsquo;s in it</a></center>
       <div class="sig">Zac</div>
     `),
@@ -1438,7 +1437,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
     subject: "Last reminder — your A$100 credit is still there",
     template: (name: string, pricingLink: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
-      <p>Five weeks since you picked up the reference text. Final note from me on the upgrade path, then I'll leave you alone.</p>
+      <p>Five weeks since you picked up the reference text &mdash; final note on the upgrade path.</p>
       <p>Your A$100 Reference+Toolkit credit is still auto-applied if you ever decide to pick up the course — log in with this email, the discount appears at checkout.</p>
       ${nextWorkshopCallout()}
       <center><a href="${utm(pricingLink, 'ref_upgrade_d35', 'last_reminder')}" class="cta-btn">See Course Options</a></center>
@@ -2019,7 +2018,7 @@ export const CRM_POST_PURCHASE_SEQUENCE = [
     accessLevels: ['crm'] as const,
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
-      <p>Just checking in — have you had a chance to get started?</p>
+      <p>If you haven't started yet, Module 1 is the place to begin.</p>
       <p>The first three modules build the EP's clinical foundation:</p>
       <ol>
         <li><strong>Module 1:</strong> Concussion for the Exercise Physiologist — the neurometabolic cascade and why exercise is now first-line</li>
@@ -2253,7 +2252,7 @@ export const EP_NURTURE_SEQUENCE = [
       <p>Last note from me on this.</p>
       <p>Concussion rehab is quietly becoming a referral-worthy service line. GPs and clinics have patients who need graded aerobic rehab and often no one obvious to send them to. The EP who can confidently take that referral becomes the person they call.</p>
       <p>That's the real opportunity here &mdash; not just the CPD, but a service you can offer that most practices can't. The course gives you the protocol, the tools and the documentation to be that EP. ${essaCpdLine()}.</p>
-      <p>No pressure, and no more emails from me on this after today. If the timing's right, everything's here:</p>
+      <p>If the timing's right, everything's here:</p>
       <center><a href="${utm(courseLink, 'ep_nurture_day21', 'service_line')}" class="cta-btn">Have a look</a></center>
       <div class="sig">
         Zac Lewis<br>
