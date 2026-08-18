@@ -32,6 +32,50 @@ export function getResend(): Resend | null {
 const FROM_EMAIL = 'zac@concussion-education-australia.com'
 const FROM_NAME = 'Concussion Education Australia'
 
+/**
+ * BULK/MARKETING SENDS RIDE THE mail. SUBDOMAIN (2026-08-18).
+ *
+ * Every automated marketing send used to go out as zac@ on the ROOT domain —
+ * the same identity Zac's personal 1:1 mail uses. Months of low-engagement
+ * automated volume is what teaches Gmail/Outlook to junk the domain, and
+ * every personal email pays that tax (root-cause of the 08-18 deliverability
+ * incident: info@ → junk at a plain Gmail recipient, auth all passing).
+ *
+ * The split: marketing/nurture/drip sequences send from the verified
+ * mail. subdomain, so bulk reputation accrues there; the root domain carries
+ * only transactional + human mail, which is what rebuilds its reputation.
+ * Replies still go to the root address (replyTo below never changes), so
+ * reply detection and Zac's inbox are unaffected.
+ *
+ * Routing key = the `sequence` tag every send already carries. UNKNOWN or
+ * untagged sequences stay on ROOT deliberately: a mis-routed marketing email
+ * from root is the status quo, while a mis-routed magic link from the bulk
+ * subdomain confuses a paying customer. Fail toward root.
+ */
+const BULK_FROM_EMAIL = 'zac@mail.concussion-education-australia.com'
+
+const BULK_SEQUENCES = new Set([
+  'scat-mastery', 'scat-mastery-test', 'scat-module1-ladder',
+  'scat-completer-followup', 'scat-completion-upsell',
+  'reengagement', 'onboarding-nudge', 'referral-nudge', 'discount-reward',
+  'cpd-options-recap', 'cpd-breakdown',
+  'byron-workshop', 'melbourne-workshop', 'melbourne-push',
+  'melbourne-eb-last-call', 'early-bird', 'workshop-momentum',
+  'quarterly-practical-blast', 'quarterly-practical-blast-test',
+  'nomination-campaign', 'preseason', 'scat-resource', 'ready-to-train',
+  'ai-course', 'ai-safety-checklist', 'concussion-hub', 'pdf-lead',
+  'ppcs-waitlist', 'online-upgrade',
+])
+
+// Cold/partner engine lanes, present and future, regardless of exact slug.
+const BULK_SEQUENCE_PATTERNS = [/^cold-/, /outreach/, /^prospect/, /^partner-/]
+
+function fromEmailForTags(tags: Array<{ name: string; value: string }>): string {
+  const seq = tags.find((t) => t.name === 'sequence')?.value ?? ''
+  const isBulk = BULK_SEQUENCES.has(seq) || BULK_SEQUENCE_PATTERNS.some((re) => re.test(seq))
+  return isBulk ? BULK_FROM_EMAIL : FROM_EMAIL
+}
+
 
 /**
  * PLAIN-TEXT ALTERNATIVE, derived from the HTML.
@@ -250,7 +294,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     const subject = decodeSubjectEntities(options.subject)
     const normalisedTags = ensureSequenceTag(options.tags, subject)
     const result = await getResend()!.emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: `${FROM_NAME} <${fromEmailForTags(normalisedTags)}>`,
       replyTo: FROM_EMAIL,
       to: options.to,
       subject,
@@ -294,7 +338,7 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
     const subject = decodeSubjectEntities(options.subject)
     const normalisedTags = ensureSequenceTag(options.tags, subject)
     const result = await getResend()!.emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: `${FROM_NAME} <${fromEmailForTags(normalisedTags)}>`,
       replyTo: FROM_EMAIL,
       to: options.to,
       subject,
