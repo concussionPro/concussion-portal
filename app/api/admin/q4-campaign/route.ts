@@ -142,13 +142,19 @@ export async function GET(request: NextRequest) {
   // purchase_complete, surfaced with the stitched email for manual follow-up.
   const MAIL_START = '2026-08-18'
 
+  // The 1:1 emails carry CLEAN BARE LINKS (no utm — personal-note doctrine), so
+  // campaign traffic is keyed on the PAGES, not params: /melbourne-nov7 is
+  // noindex and email-only, so any visit since MAIL_START is campaign traffic.
+  // Blast-era visits stay separable (they carried quarterly_blast_v1 utm).
   try {
     const { rows } = await sql`
       SELECT
-        COUNT(*) FILTER (WHERE search LIKE '%utm_content=train%' AND search NOT LIKE '%train_upgrade%')::int AS train,
-        COUNT(*) FILTER (WHERE search LIKE '%utm_content=train_upgrade%')::int AS train_upgrade
+        COUNT(DISTINCT session_id) FILTER (WHERE path = '/melbourne-nov7')::int AS train,
+        COUNT(DISTINCT session_id) FILTER (WHERE path = '/ep-course/dashboard')::int AS train_upgrade
       FROM analytics_events
-      WHERE search LIKE '%q4_mail_v1%' AND created_at >= ${MAIL_START}`
+      WHERE created_at >= ${MAIL_START}
+        AND path IN ('/melbourne-nov7', '/ep-course/dashboard')
+        AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%'`
     out.mailCtaClicks = rows[0]
   } catch { out.mailCtaClicks = null }
 
@@ -159,9 +165,10 @@ export async function GET(request: NextRequest) {
              COUNT(*) FILTER (WHERE event_type = 'purchase_complete')::int AS purchases
       FROM analytics_events
       WHERE created_at >= ${MAIL_START}
-        AND (COALESCE(search, '') LIKE '%q4_mail_v1%'
-             OR event_data::text LIKE '%q4_mail_v1%'
-             OR event_data::text LIKE '%melbourne-nov7%')`
+        AND session_id IN (
+          SELECT DISTINCT session_id FROM analytics_events
+          WHERE path = '/melbourne-nov7' AND created_at >= ${MAIL_START}
+            AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%')`
     out.mailTraffic = rows[0]
   } catch { out.mailTraffic = null }
 
@@ -175,7 +182,11 @@ export async function GET(request: NextRequest) {
                COUNT(DISTINCT path)::int AS pages,
                MIN(user_email) AS user_email
         FROM analytics_events
-        WHERE search LIKE '%q4_mail_v1%' AND created_at >= ${MAIL_START}
+        WHERE created_at >= ${MAIL_START}
+          AND session_id IN (
+            SELECT DISTINCT session_id FROM analytics_events
+            WHERE path = '/melbourne-nov7' AND created_at >= ${MAIL_START}
+              AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%')
         GROUP BY session_id)
       SELECT s.*,
         CASE
