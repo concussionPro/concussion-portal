@@ -140,7 +140,23 @@ export async function GET(request: NextRequest) {
   // clicks = on-domain page_views carrying utm (no Resend tracking); verdicts
   // reuse the scanner heuristics; abandons = checkout_start sessions with no
   // purchase_complete, surfaced with the stitched email for manual follow-up.
-  const MAIL_START = '2026-08-18'
+  const MAIL_START = '2026-08-18 07:50'  // first 1:1 send 17:52 AEST — earlier same-day traffic is page QA, not campaign
+
+  // Known mail-scanner IPs: any IP that walked 2+ distinct blast links (the
+  // Defender-detonation fingerprint). Excluded from every 1:1 metric so a
+  // scanner can never fake a click, a session, or an abandon again.
+  let scannerIps: string[] = []
+  try {
+    const { rows } = await sql`
+      SELECT ip FROM analytics_events
+      WHERE search LIKE '%quarterly_blast_v1%' AND ip IS NOT NULL
+      GROUP BY ip
+      HAVING COUNT(DISTINCT substring(search FROM 'utm_content=([a-z_-]+)')) >= 2
+          OR (COUNT(*) = 1 AND MAX(created_at) - MIN(created_at) = INTERVAL '0')`
+    scannerIps = rows.map((r) => String(r.ip))
+  } catch { scannerIps = [] }
+  // @vercel/postgres params take primitives only — pass the set as a text[] literal.
+  const scannerArr = '{' + scannerIps.map((s) => s.replace(/[{},"\\]/g, '')).join(',') + '}'
 
   try {
     // Real sends-so-far: each Mac Mail send writes an audit row
@@ -166,7 +182,8 @@ export async function GET(request: NextRequest) {
       FROM analytics_events
       WHERE created_at >= ${MAIL_START}
         AND path IN ('/melbourne-nov7', '/ep-course/dashboard')
-        AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%'`
+        AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%'
+        AND (ip IS NULL OR NOT (ip = ANY(${scannerArr}::text[])))`
     out.mailCtaClicks = rows[0]
   } catch { out.mailCtaClicks = null }
 
@@ -180,7 +197,8 @@ export async function GET(request: NextRequest) {
         AND session_id IN (
           SELECT DISTINCT session_id FROM analytics_events
           WHERE path = '/melbourne-nov7' AND created_at >= ${MAIL_START}
-            AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%')`
+            AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%'
+            AND (ip IS NULL OR NOT (ip = ANY(${scannerArr}::text[]))))`
     out.mailTraffic = rows[0]
   } catch { out.mailTraffic = null }
 
@@ -198,7 +216,8 @@ export async function GET(request: NextRequest) {
           AND session_id IN (
             SELECT DISTINCT session_id FROM analytics_events
             WHERE path = '/melbourne-nov7' AND created_at >= ${MAIL_START}
-              AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%')
+              AND COALESCE(search, '') NOT LIKE '%quarterly_blast_v1%'
+              AND (ip IS NULL OR NOT (ip = ANY(${scannerArr}::text[]))))
         GROUP BY session_id)
       SELECT s.*,
         CASE
@@ -220,6 +239,7 @@ export async function GET(request: NextRequest) {
         FROM analytics_events
         WHERE event_type = 'checkout_start' AND created_at >= ${MAIL_START}
           AND (COALESCE(search, '') LIKE '%q4_mail_v1%' OR event_data::text LIKE '%melbourne-nov7%')
+          AND (ip IS NULL OR NOT (ip = ANY(${scannerArr}::text[])))
         GROUP BY session_id)
       SELECT cs.session_id, cs.started_at, cs.user_email, cs.ip
       FROM cs
