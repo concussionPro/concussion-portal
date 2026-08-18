@@ -84,6 +84,21 @@ export default function MelbourneNov7Page() {
           Melbourne hands-on day
         </h1>
 
+        {/* Live training photo — real shot from a previous practical day */}
+        <div className="mb-8 -mx-2 md:-mx-6">
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/workshop-training.jpg"
+              alt="Clinicians practising cranial-nerve assessment on a real subject at a Concussion Clinical Mastery practical day"
+              className="w-full h-auto block"
+            />
+            <p className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent text-white text-[12px] px-4 pt-8 pb-3">
+              Supervised assessment practice on real subjects — a previous CCM practical day
+            </p>
+          </div>
+        </div>
+
         {/* The date card */}
         <div className="card card-visible rounded-2xl p-6 md:p-7" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
           <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
@@ -104,7 +119,7 @@ export default function MelbourneNov7Page() {
           </div>
 
           <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted-foreground mb-4">
-            <span className="inline-flex items-center gap-1.5"><Users className="w-4 h-4 text-accent" /> {seatsLeft !== null && seatsLeft < CONFIG.WORKSHOP.CAPACITY_PER_COURSE ? `${seatsLeft} of ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places left` : `${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places max`} · mixed cohort</span>
+            <span className="inline-flex items-center gap-1.5"><Users className="w-4 h-4 text-accent" /> {seatsLeft !== null && seatsLeft < CONFIG.WORKSHOP.CAPACITY_PER_COURSE ? `${seatsLeft} of ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats left — capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE}` : `Capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats`} · mixed cohort</span>
             <span className="inline-flex items-center gap-1.5"><Utensils className="w-4 h-4 text-accent" /> Catered</span>
           </div>
 
