@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Check, Loader2, MapPin, Users, Utensils } from 'lucide-react'
+import { ArrowRight, BookOpen, Check, Loader2, MapPin, Users, Utensils } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
@@ -84,20 +85,8 @@ export default function MelbourneNov7Page() {
           Melbourne hands-on day
         </h1>
 
-        {/* Live training photo — real shot from a previous practical day */}
-        <div className="mb-8 -mx-2 md:-mx-6">
-          <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/workshop-training.jpg"
-              alt="Clinicians practising cranial-nerve assessment on a real subject at a Concussion Clinical Mastery practical day"
-              className="w-full h-auto block"
-            />
-            <p className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent text-white text-[12px] px-4 pt-8 pb-3">
-              Supervised assessment practice on real subjects — a previous CCM practical day
-            </p>
-          </div>
-        </div>
+        {/* The portal's practical-day media card — same component as /pricing */}
+        <PracticalDayPhoto stream="ccm" />
 
         {/* The date card */}
         <div className="card card-visible rounded-2xl p-6 md:p-7" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
@@ -109,18 +98,42 @@ export default function MelbourneNov7Page() {
               </p>
             </div>
             <div className="text-right">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-amber-100 border border-amber-300 text-amber-900 rounded-full px-2.5 py-0.5 mb-1">
+                Early-bird until 24 October
+              </span>
               <div className="flex items-baseline gap-1 justify-end">
-                <span className="text-[11px] text-muted-foreground line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                <span className="text-2xl font-bold text-foreground tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
+                <span className="text-3xl font-bold text-foreground tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
                 <span className="text-[11px] text-muted-foreground">AUD</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">early-bird · complete course</p>
+              <p className="text-[11px] text-muted-foreground">then ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} · complete course</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted-foreground mb-4">
-            <span className="inline-flex items-center gap-1.5"><Users className="w-4 h-4 text-accent" /> {seatsLeft !== null && seatsLeft < CONFIG.WORKSHOP.CAPACITY_PER_COURSE ? `${seatsLeft} of ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats left — capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE}` : `Capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats`} · mixed cohort</span>
-            <span className="inline-flex items-center gap-1.5"><Utensils className="w-4 h-4 text-accent" /> Catered</span>
+          {/* THE SALES DRIVERS — owner: never hidden, never muted */}
+          <div className="grid gap-2 mb-4">
+            <div className="flex items-center gap-2.5 rounded-xl bg-teal-50 border border-teal-200 px-3.5 py-2.5">
+              <Users className="w-5 h-5 text-teal-700 flex-shrink-0" />
+              <p className="text-[14px] font-bold text-slate-900">
+                {seatsLeft !== null && seatsLeft < CONFIG.WORKSHOP.CAPACITY_PER_COURSE
+                  ? `${seatsLeft} of ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats left — capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE}`
+                  : `Capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats`}
+                <span className="font-medium text-slate-600"> — CCM and CRM streams train together, one multidisciplinary room</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-xl bg-teal-50 border border-teal-200 px-3.5 py-2.5">
+              <Utensils className="w-5 h-5 text-teal-700 flex-shrink-0" />
+              <p className="text-[14px] font-bold text-slate-900">
+                Fully catered
+                <span className="font-medium text-slate-600"> — lunch, morning tea and barista coffee all day, included</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-xl bg-teal-50 border border-teal-200 px-3.5 py-2.5">
+              <BookOpen className="w-5 h-5 text-teal-700 flex-shrink-0" />
+              <p className="text-[14px] font-bold text-slate-900">
+                High-quality practical handbook
+                <span className="font-medium text-slate-600"> — included with the day</span>
+              </p>
+            </div>
           </div>
 
           <ul className="space-y-1.5 mb-5">
