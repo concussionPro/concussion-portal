@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
   const token = sp.get('t') || ''
   const valid = !!email && token === generateUnsubscribeToken(email)
 
-  let dest = `/pricing?location=melbourne&${UTM}&utm_content=train`
+  // The specific date page, never generic /pricing (approved-template rule;
+  // owner 2026-08-18: "the url just goes to the plain pricing page wtf").
+  // Sydney/Byron interest is handled by REPLY in this campaign, not on-page.
+  let dest = `/melbourne-nov7?${UTM}&utm_content=train`
 
   if (valid) {
     try {
@@ -55,10 +58,10 @@ export async function GET(request: NextRequest) {
       if (upgrader) {
         dest = `/upgrade?${UTM}&utm_content=train_upgrade`
       } else {
-        dest = `/pricing?location=melbourne&${UTM}&utm_content=train&email=${encodeURIComponent(email)}`
+        dest = `/melbourne-nov7?${UTM}&utm_content=train&email=${encodeURIComponent(email)}`
       }
     } catch {
-      // DB hiccup → anonymous pricing route; never a broken link in an email.
+      // DB hiccup → anonymous date-page route; never a broken link in an email.
     }
   }
 
