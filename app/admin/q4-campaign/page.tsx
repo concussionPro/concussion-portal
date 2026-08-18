@@ -30,6 +30,7 @@ export default function Q4CampaignPage() {
   const nominators = (data?.nominationDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
   const suspects = (data?.suspectDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
   const clicks = (data?.clickSessions as { first_ev: string; ip: string; country: string | null; dur_s: number; events: number; pages: number; links: (string | null)[]; user_email: string | null; ip_distinct_links: number; verdict: 'scanner' | 'human' | 'unclear' }[] | undefined) ?? []
+  const mailSends = data?.mailSends as { total: number; upgrade: number; registered: number; other: number } | null
   const mailCta = data?.mailCtaClicks as { train: number; train_upgrade: number } | null
   const mailTraffic = data?.mailTraffic as { sessions: number; checkout_starts: number; purchases: number } | null
   const mailClicks = (data?.mailClickSessions as { session_id: string; first_ev: string; ip: string; country: string | null; dur_s: number; events: number; pages: number; user_email: string | null; verdict: 'scanner' | 'human' | 'unclear' }[] | undefined) ?? []
@@ -40,14 +41,18 @@ export default function Q4CampaignPage() {
     <div className="max-w-4xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold text-foreground mb-1">Q4 course-registration campaign</h1>
       <p className="text-sm text-muted-foreground mb-8">
-        Melbourne Sat 7 Nov blast · one-click Sydney/Byron nominations · attributed revenue. All
-        zeros until the blast fires.
+        LIVE: Mac Mail 1:1 round (from 18 Aug) — 84 personal sends from zac@, staggered.
+        The 16 Aug Resend blast is collapsed below as history.
       </p>
       {err && <p className="text-sm text-red-600">{err}</p>}
       {!data && !err && <p className="text-sm text-muted-foreground">Loading…</p>}
       {plan != null && (
-        <section className="mb-8 rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-5">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-amber-800 mb-2">Planned blast (dry-run, nothing sent)</h2>
+        <details className="mb-8">
+          <summary className="cursor-pointer text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
+            16 Aug Resend blast — audience snapshot (historical, superseded by the 1:1 round)
+          </summary>
+        <section className="mt-3 rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-5">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-amber-800 mb-2">Blast audience as planned (fired 16 Aug)</h2>
           <p className="text-sm text-amber-900">
             Audience {String((plan.audience as Record<string, unknown> | undefined)?.total ?? '—')} ·
             interest register {String((plan.audience as Record<string, unknown> | undefined)?.registeredInterest ?? '—')} ·
@@ -85,6 +90,7 @@ export default function Q4CampaignPage() {
             </div>
           )}
         </section>
+        </details>
       )}
       {data && (
         <div className="space-y-8">
@@ -271,13 +277,17 @@ export default function Q4CampaignPage() {
 
           <section className="mt-10 rounded-2xl border-2 border-teal-200 bg-teal-50/40 p-5">
             <h2 className="text-sm font-bold uppercase tracking-wide text-teal-800 mb-1">
-              Mac Mail 1:1 round (q4_mail_v1 — from 18 Aug)
+              Mac Mail 1:1 round — LIVE (from 18 Aug)
             </h2>
             <p className="text-xs text-muted-foreground mb-4">
-              84 personal sends from zac@ · clicks are on-site landings with the campaign utm ·
+              Personal sends from zac@ (clean bare links — traffic keyed on the email-only pages) ·
               abandons below are the follow-up list.
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-5">
+              <div className="rounded-xl border-2 border-teal-300 bg-white p-4">
+                <p className="text-2xl font-bold text-teal-800">{mailSends?.total ?? 0}<span className="text-sm font-semibold text-muted-foreground">/84</span></p>
+                <p className="text-xs text-muted-foreground">Sent so far</p>
+              </div>
               <div className="rounded-xl border border-slate-200 bg-white p-4">
                 <p className="text-2xl font-bold text-foreground">{mailCta?.train ?? 0}</p>
                 <p className="text-xs text-muted-foreground">Seat-link clicks</p>

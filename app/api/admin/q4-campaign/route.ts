@@ -142,6 +142,18 @@ export async function GET(request: NextRequest) {
   // purchase_complete, surfaced with the stitched email for manual follow-up.
   const MAIL_START = '2026-08-18'
 
+  try {
+    // Real sends-so-far: each Mac Mail send writes an audit row
+    // (q4-mail-v1:<variant>:<email>) — the portal's only view into Mail.app.
+    const { rows } = await sql`
+      SELECT COUNT(*)::int AS total,
+             COUNT(*) FILTER (WHERE audit_key LIKE 'q4-mail-v1:upgrade:%')::int AS upgrade,
+             COUNT(*) FILTER (WHERE audit_key LIKE 'q4-mail-v1:registered:%')::int AS registered,
+             COUNT(*) FILTER (WHERE audit_key LIKE 'q4-mail-v1:other:%')::int AS other
+      FROM email_audit_log WHERE audit_key LIKE 'q4-mail-v1:%'`
+    out.mailSends = rows[0]
+  } catch { out.mailSends = null }
+
   // The 1:1 emails carry CLEAN BARE LINKS (no utm — personal-note doctrine), so
   // campaign traffic is keyed on the PAGES, not params: /melbourne-nov7 is
   // noindex and email-only, so any visit since MAIL_START is campaign traffic.
