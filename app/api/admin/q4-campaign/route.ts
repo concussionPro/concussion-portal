@@ -134,5 +134,82 @@ export async function GET(request: NextRequest) {
     out.attributedPurchases = rows[0]
   } catch { out.attributedPurchases = null }
 
+  // ---- Mac Mail 1:1 round (q4_mail_v1, from 2026-08-18) ---------------------
+  // Owner: "mel7 data must show up clean in /analytics — clicks, user nav,
+  // log checkout abandons for follow up." Same patterns as the blast section:
+  // clicks = on-domain page_views carrying utm (no Resend tracking); verdicts
+  // reuse the scanner heuristics; abandons = checkout_start sessions with no
+  // purchase_complete, surfaced with the stitched email for manual follow-up.
+  const MAIL_START = '2026-08-18'
+
+  try {
+    const { rows } = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE search LIKE '%utm_content=train%' AND search NOT LIKE '%train_upgrade%')::int AS train,
+        COUNT(*) FILTER (WHERE search LIKE '%utm_content=train_upgrade%')::int AS train_upgrade
+      FROM analytics_events
+      WHERE search LIKE '%q4_mail_v1%' AND created_at >= ${MAIL_START}`
+    out.mailCtaClicks = rows[0]
+  } catch { out.mailCtaClicks = null }
+
+  try {
+    const { rows } = await sql`
+      SELECT COUNT(DISTINCT session_id)::int AS sessions,
+             COUNT(*) FILTER (WHERE event_type = 'checkout_start')::int AS checkout_starts,
+             COUNT(*) FILTER (WHERE event_type = 'purchase_complete')::int AS purchases
+      FROM analytics_events
+      WHERE created_at >= ${MAIL_START}
+        AND (COALESCE(search, '') LIKE '%q4_mail_v1%'
+             OR event_data::text LIKE '%q4_mail_v1%'
+             OR event_data::text LIKE '%melbourne-nov7%')`
+    out.mailTraffic = rows[0]
+  } catch { out.mailTraffic = null }
+
+  try {
+    const { rows: sess } = await sql`
+      WITH s AS (
+        SELECT session_id, MIN(ip) AS ip, MIN(country) AS country,
+               MIN(created_at) AS first_ev,
+               EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at)))::int AS dur_s,
+               COUNT(*)::int AS events,
+               COUNT(DISTINCT path)::int AS pages,
+               MIN(user_email) AS user_email
+        FROM analytics_events
+        WHERE search LIKE '%q4_mail_v1%' AND created_at >= ${MAIL_START}
+        GROUP BY session_id)
+      SELECT s.*,
+        CASE
+          WHEN s.events <= 1 AND s.dur_s < 5 THEN 'scanner'
+          WHEN s.events >= 3 AND s.dur_s >= 10 THEN 'human'
+          ELSE 'unclear'
+        END AS verdict
+      FROM s ORDER BY s.first_ev DESC LIMIT 100`
+    out.mailClickSessions = sess
+  } catch { out.mailClickSessions = [] }
+
+  try {
+    // ABANDONS FOR FOLLOW-UP: campaign sessions that started checkout and never
+    // completed. Email comes from identity stitching; anonymous abandons still
+    // listed (ip/time) so the Stripe recovery emails can be cross-checked.
+    const { rows: abandons } = await sql`
+      WITH cs AS (
+        SELECT session_id, MIN(created_at) AS started_at, MIN(user_email) AS user_email, MIN(ip) AS ip
+        FROM analytics_events
+        WHERE event_type = 'checkout_start' AND created_at >= ${MAIL_START}
+          AND (COALESCE(search, '') LIKE '%q4_mail_v1%' OR event_data::text LIKE '%melbourne-nov7%')
+        GROUP BY session_id)
+      SELECT cs.session_id, cs.started_at, cs.user_email, cs.ip
+      FROM cs
+      WHERE NOT EXISTS (
+        SELECT 1 FROM analytics_events p
+        WHERE p.session_id = cs.session_id AND p.event_type = 'purchase_complete')
+      AND NOT EXISTS (
+        SELECT 1 FROM course_purchases cp
+        WHERE cs.user_email IS NOT NULL AND LOWER(cp.user_email) = LOWER(cs.user_email)
+          AND cp.purchased_at >= cs.started_at)
+      ORDER BY cs.started_at DESC LIMIT 50`
+    out.mailAbandons = abandons
+  } catch { out.mailAbandons = [] }
+
   return NextResponse.json(out)
 }

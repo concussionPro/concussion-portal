@@ -30,6 +30,10 @@ export default function Q4CampaignPage() {
   const nominators = (data?.nominationDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
   const suspects = (data?.suspectDetail as { city: string; email: string; name: string; created_at: string; country: string | null }[] | undefined) ?? []
   const clicks = (data?.clickSessions as { first_ev: string; ip: string; country: string | null; dur_s: number; events: number; pages: number; links: (string | null)[]; user_email: string | null; ip_distinct_links: number; verdict: 'scanner' | 'human' | 'unclear' }[] | undefined) ?? []
+  const mailCta = data?.mailCtaClicks as { train: number; train_upgrade: number } | null
+  const mailTraffic = data?.mailTraffic as { sessions: number; checkout_starts: number; purchases: number } | null
+  const mailClicks = (data?.mailClickSessions as { session_id: string; first_ev: string; ip: string; country: string | null; dur_s: number; events: number; pages: number; user_email: string | null; verdict: 'scanner' | 'human' | 'unclear' }[] | undefined) ?? []
+  const mailAbandons = (data?.mailAbandons as { session_id: string; started_at: string; user_email: string | null; ip: string }[] | undefined) ?? []
   const attributed = data?.attributedPurchases as { buyers: number; revenue_aud: number } | null
 
   return (
@@ -263,6 +267,87 @@ export default function Q4CampaignPage() {
                 <p className="text-xs text-muted-foreground">Attributed revenue</p>
               </div>
             </div>
+          </section>
+
+          <section className="mt-10 rounded-2xl border-2 border-teal-200 bg-teal-50/40 p-5">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-teal-800 mb-1">
+              Mac Mail 1:1 round (q4_mail_v1 — from 18 Aug)
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              84 personal sends from zac@ · clicks are on-site landings with the campaign utm ·
+              abandons below are the follow-up list.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{mailCta?.train ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Seat-link clicks</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{mailCta?.train_upgrade ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Upgrade-link clicks</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{mailTraffic?.sessions ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Sessions</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{mailTraffic?.checkout_starts ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Checkout starts</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-2xl font-bold text-foreground">{mailTraffic?.purchases ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Purchases</p>
+              </div>
+            </div>
+
+            <h3 className="text-xs font-bold uppercase tracking-wide text-red-700 mb-2">
+              Checkout abandons — follow up (no purchase after checkout_start)
+            </h3>
+            {mailAbandons.length === 0 ? (
+              <p className="text-xs text-muted-foreground mb-5">None yet.</p>
+            ) : (
+              <table className="w-full text-xs mb-5">
+                <thead><tr className="text-left text-muted-foreground">
+                  <th className="py-1 pr-3">Started</th><th className="py-1 pr-3">Email</th><th className="py-1">IP</th>
+                </tr></thead>
+                <tbody>
+                  {mailAbandons.map((a) => (
+                    <tr key={a.session_id} className="border-t border-slate-200">
+                      <td className="py-1.5 pr-3 whitespace-nowrap">{new Date(a.started_at).toLocaleString('en-AU')}</td>
+                      <td className="py-1.5 pr-3 font-semibold text-foreground">{a.user_email || <span className="text-muted-foreground font-normal">anonymous</span>}</td>
+                      <td className="py-1.5 text-muted-foreground">{a.ip}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
+              Click sessions (nav depth · human/scanner verdict)
+            </h3>
+            {mailClicks.length === 0 ? (
+              <p className="text-xs text-muted-foreground">None yet.</p>
+            ) : (
+              <table className="w-full text-xs">
+                <thead><tr className="text-left text-muted-foreground">
+                  <th className="py-1 pr-3">First seen</th><th className="py-1 pr-3">Who</th>
+                  <th className="py-1 pr-3">Events</th><th className="py-1 pr-3">Pages</th>
+                  <th className="py-1 pr-3">Duration</th><th className="py-1">Verdict</th>
+                </tr></thead>
+                <tbody>
+                  {mailClicks.map((c) => (
+                    <tr key={c.session_id + c.first_ev} className="border-t border-slate-200">
+                      <td className="py-1.5 pr-3 whitespace-nowrap">{new Date(c.first_ev).toLocaleString('en-AU')}</td>
+                      <td className="py-1.5 pr-3 font-semibold text-foreground">{c.user_email || c.ip}{c.country ? ` (${c.country})` : ''}</td>
+                      <td className="py-1.5 pr-3">{c.events}</td>
+                      <td className="py-1.5 pr-3">{c.pages}</td>
+                      <td className="py-1.5 pr-3">{c.dur_s}s</td>
+                      <td className={`py-1.5 font-bold ${c.verdict === 'human' ? 'text-teal-700' : c.verdict === 'scanner' ? 'text-red-600' : 'text-amber-600'}`}>{c.verdict}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </section>
         </div>
       )}

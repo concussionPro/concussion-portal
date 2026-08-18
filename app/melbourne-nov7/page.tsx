@@ -82,7 +82,7 @@ export default function MelbourneNov7Page() {
           Pre-release — announced to the list before it goes public
         </p>
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-8">
-          Melbourne hands-on day
+          Melbourne practical skills training
         </h1>
 
         {/* The portal's practical-day media card — same component as /pricing */}
@@ -174,7 +174,7 @@ export default function MelbourneNov7Page() {
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 text-center">
           <p className="text-sm font-bold text-foreground mb-1">Already bought the online course?</p>
           <p className="text-[13px] text-muted-foreground mb-3">
-            Upgrade to the hands-on day for the difference — ${upgradePriceFor('melbourne')} — your online payment counts in full.
+            Upgrade to the practical skills training for the difference — ${upgradePriceFor('melbourne')} — your online payment counts in full.
           </p>
           <Link
             href="/upgrade"
@@ -188,6 +188,22 @@ export default function MelbourneNov7Page() {
           Can&rsquo;t make Melbourne? Reply to the email and nominate Sydney or Byron Bay — dates
           are set on the numbers.
         </p>
+
+        {/* Endorsement badges — bottom placement per the approved campaign pattern */}
+        <div className="mt-10 pt-8 border-t border-slate-200 text-center">
+          <p className="text-[13px] font-semibold text-foreground mb-4">
+            {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours — available to all allied health clinicians
+          </p>
+          <div className="flex items-center justify-center gap-6 mb-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" className="h-12 w-auto" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/essa-accredited-pd.png" alt="Accredited by ESSA" className="h-9 w-auto" />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            CCM and CRM are officially endorsed and accredited by Osteopathy Australia and ESSA respectively.
+          </p>
+        </div>
       </main>
     </div>
   )
