@@ -30,8 +30,8 @@ const STREAMS = {
     body: 'SCAT6, VOMS, BESS, cervical and cranial-nerve assessment with expert feedback \u2014 then turning each screen into a graded exercise prescription. OSCE-assessed competency.',
   },
   crm: {
-    src: '/crm-practical-visual.jpg',
-    alt: 'Graded exertion session delivered live on the patient\u2019s own watch \u2014 threshold band and minutes on screen',
+    src: '/workshop-training.jpg',
+    alt: 'The multidisciplinary practical day \u2014 supervised training on real subjects',
     eyebrow: 'The practical day',
     headline: 'Prescribe \u2192 deliver, supervised \u2014 graded exertional rehab protocols, hands-on.',
     body: 'Graded exertion testing on real subjects, threshold-band prescription, session delivery and progression rules \u2014 squarely in EP scope. OSCE-assessed competency.',

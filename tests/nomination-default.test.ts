@@ -44,7 +44,13 @@ describe('default workshop-city nomination', () => {
       .filter((l) => CRON_COVERED_STATUSES.includes(l.status))
       .map((l) => l.slug)
     expect(open.map((l) => l.slug)).toEqual(declared)
-    expect(defaultNominationCity()).toBe(declared[0] ?? null)
+    // Default preference (2026-08-20): a confirmed FUTURE-dated round outranks
+    // declaration order — the untouched buyer lands on the live date, never an
+    // earlier-declared collecting city (the phantom-Sydney default).
+    const liveDated = Object.values(CONFIG.LOCATIONS).find(
+      (l) => l.status === 'confirmed' && !!l.dateObj && l.dateObj.getTime() > Date.now(),
+    )
+    expect(defaultNominationCity()).toBe(liveDated?.slug ?? declared[0] ?? null)
   })
 
   it('excludes completed and closed cities (regression: Melbourne)', () => {

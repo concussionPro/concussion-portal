@@ -579,7 +579,14 @@ export function openNominationLocations(): LocationConfig[] {
  * choice rather than nominate silently.
  */
 export function defaultNominationCity(): string | null {
-  return openNominationLocations()[0]?.slug ?? null
+  const open = openNominationLocations()
+  // A confirmed, future-dated round outranks declaration order: the buyer who
+  // touches nothing should land on the LIVE date, not an earlier-declared
+  // collecting city (the phantom-Sydney default, caught again 2026-08-20).
+  const live = open.find(
+    (loc) => loc.status === 'confirmed' && !!loc.dateObj && loc.dateObj.getTime() > Date.now(),
+  )
+  return live?.slug ?? open[0]?.slug ?? null
 }
 
 /**

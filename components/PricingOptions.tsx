@@ -79,6 +79,10 @@ interface CityProgress {
 
 export interface PricingOptionsProps {
   variant?: 'full' | 'compact'
+  /** Which stream's copy, features and checkout the cards run. The VISUAL
+   *  bento is identical for both — owner: BOTH STREAMS ATTEND THE SAME
+   *  PRACTICAL DAY, and the cards must never drift apart again. */
+  stream?: 'ccm' | 'crm'
 }
 
 // ─── Workshop interest form ──────────────────────────────────────────────────
@@ -241,7 +245,8 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
+export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOptionsProps) {
+  const crm = stream === 'crm'
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -316,10 +321,11 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // no live scheduled date; $1,400 only inside the final window of a
   // scheduled round). Server (lib/stripe.ts) is the source of truth at checkout.
   const BUNDLE_DISCOUNT = CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD
-  const onlinePrice = bookOwner ? CONFIG.COURSE.PRICE_ONLINE - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_ONLINE
+  const bundleApplies = !crm && bookOwner
+  const onlinePrice = bundleApplies ? CONFIG.COURSE.PRICE_ONLINE - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_ONLINE
   const earlyBird = isEarlyBirdForLocation(selectedLocation)
   const fullCourseBase = workshopPriceFor(selectedLocation)
-  const fullCoursePrice = bookOwner ? fullCourseBase - BUNDLE_DISCOUNT : fullCourseBase
+  const fullCoursePrice = bundleApplies ? fullCourseBase - BUNDLE_DISCOUNT : fullCourseBase
   const hasLiveDate = cityHasLiveDate(selectedLocation)
   // Momentum line for the selected city — renders ONLY when the true enrolled
   // count is genuinely motivating (>= MOMENTUM_MIN_ENROLLED). Never zeros,
@@ -355,11 +361,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       trackLeadConversion(ENROL_CLICK_LABEL, conversionValue)
         .catch(() => {})
 
-      const res = await fetch('/api/create-checkout', {
+      const res = await fetch(crm ? '/api/crm/checkout' : '/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
+        body: JSON.stringify(crm ? {
+          tier: courseType === 'full-course' ? 'complete' : 'online',
+          ...(selectedLocation ? { location: selectedLocation } : {}),
+          ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
+          attribution: getAttribution(),
+        } : {
           courseType,
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
           // Online-only: send the city ONLY if the buyer picked one. An
@@ -425,7 +436,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
 
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">CCM Online</h3>
-            <p className="text-[10px] text-slate-500 mb-3">Online component of Concussion Clinical Mastery — no workshop</p>
+            <p className="text-[10px] text-slate-500 mb-3">{crm ? 'Online component of Concussion Rehab Mastery — no workshop' : 'Online component of Concussion Clinical Mastery — no workshop'}</p>
 
             <div className="mb-3">
               {bookOwner && (
@@ -738,17 +749,19 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM Online</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">Online component of Concussion Clinical Mastery — no workshop</p>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{crm ? 'CRM Online' : 'CCM Online'}</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Online component of Concussion Rehab Mastery — no workshop' : 'Online component of Concussion Clinical Mastery — no workshop'}</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Same 8 modules as the full CCM, at your own pace. Your payment counts toward the Complete course — upgrade for ${upgradePriceFor()}{' '}when your city&rsquo;s date is announced, and you&rsquo;re on the list for a seat before it goes public.
+            {crm
+              ? <>The EP-scoped course with the working clinical tools, at your own pace. Your payment counts toward the Complete course — upgrade for ${upgradePriceFor()} any time.</>
+              : <>Same 8 modules as the full CCM, at your own pace. Your payment counts toward the Complete course — upgrade for ${upgradePriceFor()}{' '}when your city&rsquo;s date is announced, and you&rsquo;re on the list for a seat before it goes public.</>}
           </p>
 
           {/* Visual: CCM Online course preview screenshot */}
           <div className="relative rounded-xl overflow-hidden border border-teal-100 mb-4 h-[120px] bg-white">
             <Image
-              src="/ccm-online-preview.png"
-              alt="CCM Online course preview interface"
+              src={crm ? "/online-course-preview.jpg" : "/ccm-online-preview.png"}
+              alt={crm ? "CRM Online course preview" : "CCM Online course preview interface"}
               fill
               sizes="(min-width: 1024px) 340px, 100vw"
               className="object-cover object-top"
@@ -870,10 +883,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM Complete</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">Full Concussion Clinical Mastery — online modules + hands-on workshop</p>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{crm ? 'CRM Complete' : 'CCM Complete'}</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Full Concussion Rehab Mastery — online modules + the practical skills training' : 'Full Concussion Clinical Mastery — online modules + hands-on workshop'}</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Same 8 online modules as CCM Online, plus a full-day hands-on workshop — one shared room for all disciplines: physios, osteos and exercise professionals. Practice SCAT6, VOMS &amp; BESS with expert feedback.
+            {crm
+              ? 'Everything in CRM Online, plus the same full-day practical every clinician attends — one multidisciplinary room. Graded exertion testing and prescription hands-on, assessment observed for depth.'
+              : 'Same 8 online modules as CCM Online, plus a full-day hands-on workshop — one shared room for all disciplines: physios, osteos and exercise professionals. Practice SCAT6, VOMS & BESS with expert feedback.'}
           </p>
 
           {/* CPD split bar — 8 online + 8 hands-on = 16, seen not read */}
@@ -929,14 +944,21 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           {/* 2-col feature grid */}
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4 text-left">
-            {[
+            {(crm ? [
+              'Everything in Online',
+              'Full-day practical workshop',
+              'Graded exertion, hands-on',
+              '1:1 expert feedback',
+              '16 CPD (8 online + 8 in-person)',
+              'AU locations',
+            ] : [
               'Everything in Online',
               'Full-day workshop',
               'SCAT6, VOMS, BESS',
               '1:1 expert feedback',
               '16 CPD (8 online + 8 in-person)',
               'AU locations',
-            ].map((feature, i) => (
+            ]).map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">
                 <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
