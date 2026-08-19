@@ -210,6 +210,20 @@ jobs:
                 exit 0
               fi
             fi
+            # FOURTH false-alarm mode (2026-08-20 failure email, seven-push
+            # burst): superseded by a newer push whose deploy has NOT finished
+            # yet. Production can't serve my SHA (Vercel superseded the build)
+            # and doesn't serve a descendant YET — the old logic waits the full
+            # window and cries wolf. If main has moved past this commit, the
+            # NEWER run owns the production assertion; this one's is moot.
+            remote_head="$(git ls-remote --quiet origin refs/heads/main | cut -f1)"
+            if [ -n "$remote_head" ] && [ "$remote_head" != "$EXPECTED" ]; then
+              git fetch --quiet origin main 2>/dev/null || true
+              if git merge-base --is-ancestor "$EXPECTED" "$remote_head" 2>/dev/null; then
+                echo "superseded pre-deploy: main is ${remote_head:0:8}, which contains ${EXPECTED:0:8} — the newer push's run owns the check"
+                exit 0
+              fi
+            fi
             [ $((i % 6)) -eq 0 ] && echo "  ${i}0s — serving ${got:-<no sha>}"
             sleep 10
           done
