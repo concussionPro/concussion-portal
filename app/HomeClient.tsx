@@ -204,8 +204,12 @@ export default function HomeClient() {
               <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
                 Where the <span className="text-gradient">practical day</span> runs
               </h2>
+              <p className="text-base md:text-lg font-bold text-[var(--foreground)] mb-2">
+                Melbourne — {CONFIG.LOCATIONS.MELBOURNE.date} — enrolling now
+              </p>
               <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-lg mx-auto">
-                The in-person day — VOMS, BESS, vestibular &amp; cervical assessment on real cases — runs in major cities as demand opens. Register and you&apos;ll be first to know when your city&apos;s date is confirmed.
+                Sydney and Byron Bay Q4 dates are announced soon — register interest below and
+                you&apos;re first to know when your city&apos;s date is confirmed.
               </p>
             </div>
 

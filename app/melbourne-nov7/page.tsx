@@ -79,7 +79,7 @@ export default function MelbourneNov7Page() {
       <SiteNav />
       <main className="max-w-2xl mx-auto px-6 pt-[120px] pb-20">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent text-center mb-3">
-          Pre-release — announced to the list before it goes public
+          Melbourne Round 4 — enrolling now
         </p>
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-8">
           Melbourne practical skills training

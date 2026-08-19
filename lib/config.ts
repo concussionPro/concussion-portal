@@ -122,16 +122,16 @@ export const CONFIG = {
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
-      date: 'Saturday 13 June 2026',
-      dateObj: new Date('2026-06-13T08:00:00+10:00') as Date | null,
-      // 'completed' (2026-06-15): workshop RAN on 13 June (its third Melbourne
-      // round). NOV 7 2026 IS NOT CONFIRMED (owner 2026-08-15: "i have not
-      // confirmed mel 7. pull it from the site immediately") — a Rydges
-      // proposal exists (ref 85AO2D1RHT) but no deposit/contract. The date is
-      // being FLOATED to the warm list first; it goes public here ONLY when
-      // Zac says the venue is locked. Round-4 counting still scopes from
-      // WORKSHOP.ROUND_START.melbourne (2026-06-14).
-      status: 'completed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      date: 'Saturday 7 November 2026',
+      // +11:00 — Melbourne is on AEDT in November (DST starts first Sunday of
+      // October); the config's other literals are +10 winter dates.
+      dateObj: new Date('2026-11-07T08:00:00+11:00') as Date | null,
+      // ROUND 4 PUBLIC (owner 2026-08-19: "have melbourne nov 7 live on the
+      // portal from now" — ESSA member blast lands 20 Aug). Rydges Melbourne,
+      // Exhibition St (proposal ref 85AO2D1RHT). Early-bird boundary derives
+      // as date − EARLY_BIRD_DAYS_BEFORE = 24 October. Round-4 enrolment
+      // counting scopes from WORKSHOP.ROUND_START.melbourne (2026-06-14).
+      status: 'confirmed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
       hasRunWorkshop: true, // ran Melbourne Oct 25 '25, Feb 7 '26, Jun 13 '26
     },
   },
