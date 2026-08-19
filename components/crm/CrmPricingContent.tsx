@@ -55,6 +55,14 @@ interface FaqItem {
   a: string
 }
 
+/** The next confirmed, future-dated practical day — copy derives from CONFIG
+ *  (date-bearing-copy rule) and degrades to register-interest automatically
+ *  when no round is confirmed. */
+const nextConfirmedRound = () =>
+  Object.values(CONFIG.LOCATIONS).find(
+    (l) => l.status === 'confirmed' && l.dateObj && l.dateObj.getTime() > Date.now(),
+  ) ?? null
+
 const buildFaqs = (accredited: boolean): FaqItem[] => [
   {
     q: 'Is it ESSA accredited?',
@@ -74,7 +82,10 @@ const buildFaqs = (accredited: boolean): FaqItem[] => [
   },
   {
     q: 'Do I need the in-person practical day?',
-    a: 'The online course is complete and standalone — you finish at your own pace and sit the assessment entirely online. The complete package adds the same full-day practical workshop every clinician takes (supervised SCAT6, VOMS, BESS and cervicogenic assessment), in the same room as osteopaths, physiotherapists and GPs, with an OSCE competency check. There’s no fixed EP date yet — register your interest and we’ll place you in the next workshop in your region.',
+    a: 'The online course is complete and standalone — you finish at your own pace and sit the assessment entirely online. The complete package adds the same full-day practical workshop every clinician takes (supervised SCAT6, VOMS, BESS and cervicogenic assessment), in the same room as osteopaths, physiotherapists and GPs, with an OSCE competency check.' +
+      (nextConfirmedRound()
+        ? ` The next confirmed practical day is ${nextConfirmedRound()!.city} — ${nextConfirmedRound()!.date} — and EPs train in that same room. Somewhere else? Register your interest and we’ll place you in your region’s next date.`
+        : ' There’s no fixed EP date yet — register your interest and we’ll place you in the next workshop in your region.') + '',
   },
   {
     q: 'Is concussion rehab within my scope?',
@@ -625,8 +636,10 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 attend — and that&rsquo;s the advantage. You practise the assessments alongside the very
                 disciplines you refer to and receive from, learn exactly where the EP&rsquo;s lane starts and
                 stops, and build the referral relationships that make concussion care actually work — leaving
-                with a feel for how the whole team manages a case, not just your part of it. There&rsquo;s no
-                fixed EP date yet; register your interest and we&rsquo;ll place you in the next workshop in your region.
+                with a feel for how the whole team manages a case, not just your part of it.{' '}
+                {nextConfirmedRound()
+                  ? `The next confirmed practical day is ${nextConfirmedRound()!.city} — ${nextConfirmedRound()!.date}. Somewhere else? Register your interest and we'll place you in your region's next date.`
+                  : `There's no fixed EP date yet; register your interest and we'll place you in the next workshop in your region.`}
               </p>
             </div>
             <CrmWorkshopInterest />

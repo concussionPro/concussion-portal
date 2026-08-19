@@ -365,10 +365,12 @@ describe('buildCourseSchema (homepage/pricing Course markup)', () => {
     expect(s.offers.priceCurrency).toBe('AUD')
   })
 
-  it('emits NO dated instances under live CONFIG — Melbourne is completed, everything else is collecting', () => {
-    const s = buildCourseSchema() as { hasCourseInstance?: unknown[] }
-    // Completed/collecting cities must never surface as scheduled instances.
-    expect(s.hasCourseInstance).toBeUndefined()
+  it('emits exactly ONE dated instance under live CONFIG — Melbourne Round 4 (7 Nov 2026) is confirmed', () => {
+    // Truth change 2026-08-19: Melbourne went public as 'confirmed'. Collecting
+    // cities must still never surface; the confirmed round MUST.
+    const s = buildCourseSchema() as { hasCourseInstance?: Array<{ startDate: string }> }
+    expect(s.hasCourseInstance).toHaveLength(1)
+    expect(s.hasCourseInstance![0].startDate.startsWith('2026-11-07')).toBe(true)
   })
 
   it('only emits instances for confirmed FUTURE-dated cities, with local-offset startDate', () => {
@@ -389,10 +391,13 @@ describe('buildEventSchema (workshop EducationEvent markup)', () => {
     expect(buildEventSchema('SYDNEY')).toBeNull()
   })
 
-  it('returns null for a completed round — Melbourne June 2026 must not resurface as a scheduled event', () => {
-    // Live CONFIG: Melbourne status 'completed' with a past dateObj.
-    expect(buildEventSchema('MELBOURNE')).toBeNull()
-    // And explicitly: even a future-dated entry emits nothing once completed.
+  it('emits the live confirmed round, and a completed round must never resurface', () => {
+    // Truth change 2026-08-19: live Melbourne is 'confirmed' for 7 Nov 2026.
+    const live = buildEventSchema('MELBOURNE') as { startDate: string } | null
+    expect(live).not.toBeNull()
+    expect(live!.startDate.startsWith('2026-11-07')).toBe(true)
+    // The original protection stands, on a fixture: even a future-dated entry
+    // emits nothing once completed.
     expect(buildEventSchema('MELBOURNE', { ...FUTURE_MELBOURNE, status: 'completed' })).toBeNull()
   })
 

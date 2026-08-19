@@ -63,15 +63,15 @@ describe('isWorkshopAlumnus — round scoping', () => {
     ).toBe(false)
   })
 
-  it('a completed city keeps its past-round buyers as alumni (Melbourne)', () => {
-    // Melbourne ran Jun 13 2026. For a completed city with a known PAST date,
-    // the alumni cutoff is the workshop date ITSELF (roundCutoffMs) — whoever
-    // registered before that day was in the room.
-    expect(CONFIG.LOCATIONS.MELBOURNE.status).toBe('completed')
+  it('a city keeps its past-round buyers as alumni across the next-round transition (Melbourne)', () => {
+    // Melbourne ran Jun 13 2026 and is now 'confirmed' for Round 4 (7 Nov,
+    // truth change 2026-08-19). With a FUTURE dateObj the cutoff falls back to
+    // ROUND_START (14 Jun) — a June-round attendee must STAY an alumnus even
+    // while the next round is selling. This is the assertion that protects the
+    // 25 alumni's entitlements across every future round flip.
+    expect(CONFIG.LOCATIONS.MELBOURNE.status).toBe('confirmed')
     expect(CONFIG.LOCATIONS.MELBOURNE.hasRunWorkshop).toBe(true)
-    const registeredAt = new Date(
-      CONFIG.LOCATIONS.MELBOURNE.dateObj!.getTime() - 86400000,
-    ).toISOString()
+    const registeredAt = '2026-06-12T00:00:00+10:00' // in the room on 13 June
     expect(
       isWorkshopAlumnus(
         { accessLevel: 'full-course', workshopLocation: 'melbourne', registeredAt },
