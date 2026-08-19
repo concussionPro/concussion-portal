@@ -21,6 +21,7 @@ import {
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
+import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import CrmCheckoutButton from '@/components/crm/CrmCheckoutButton'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
@@ -351,6 +352,13 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                 Everything in Online — the course and all the tools — plus a supervised practical day. 16 CPD hours{accredited ? ' covers most of your annual ESSA requirement.' : ' in total (ESSA accreditation pending).'}
               </p>
 
+              {/* SAME practical day as CCM (owner: BOTH STREAMS ATTEND THE SAME
+                  PRACTICAL DAY) — the confirmed-date strip renders whenever a
+                  round is live, exactly like the CCM card. */}
+              <div className="mb-4">
+                <MelbourneWorkshopCallout variant="banner" source="crm-pricing-card" />
+              </div>
+
               <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 mb-5">
                 {[
                   'Everything in Online — course + all tools',
@@ -641,6 +649,9 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
                   ? `The next confirmed practical day is ${nextConfirmedRound()!.city} — ${nextConfirmedRound()!.date}. Somewhere else? Register your interest and we'll place you in your region's next date.`
                   : `There's no fixed EP date yet; register your interest and we'll place you in the next workshop in your region.`}
               </p>
+            </div>
+            <div className="mb-6">
+              <MelbourneWorkshopCallout source="crm-team-block" />
             </div>
             <CrmWorkshopInterest />
           </div>
