@@ -41,7 +41,7 @@ export default function Q4CampaignPage() {
     <div className="max-w-4xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold text-foreground mb-1">Q4 course-registration campaign</h1>
       <p className="text-sm text-muted-foreground mb-8">
-        LIVE: Mac Mail 1:1 round (from 18 Aug) — 84 personal sends from zac@, staggered.
+        LIVE: Mac Mail 1:1 round (from 18 Aug) — 88 personal sends from zac@, staggered.
         The 16 Aug Resend blast is collapsed below as history.
       </p>
       {err && <p className="text-sm text-red-600">{err}</p>}
@@ -285,7 +285,7 @@ export default function Q4CampaignPage() {
             </p>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-5">
               <div className="rounded-xl border-2 border-teal-300 bg-white p-4">
-                <p className="text-2xl font-bold text-teal-800">{mailSends?.total ?? 0}<span className="text-sm font-semibold text-muted-foreground">/84</span></p>
+                <p className="text-2xl font-bold text-teal-800">{mailSends?.total ?? 0}<span className="text-sm font-semibold text-muted-foreground">/88</span></p>
                 <p className="text-xs text-muted-foreground">Sent so far</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-4">
