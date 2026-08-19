@@ -256,7 +256,14 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
 
 
         {/* The practical day — under the title (owner 2026-08-11). Shared. */}
-        <PracticalDayPhoto stream="crm" />
+        {/* The course slideshow leads (owner 2026-08-20: "move the slideshow up
+            instead of the static photo — landscape"). Replaces the static
+            practical-day band. The #workshop-photo id claims the /pricing
+            embed's order-2 top slot — without it the flex-order layer sinks
+            any unlabeled child to the bottom of the page. */}
+        <div id="workshop-photo">
+          <CourseShowcase title="Concussion Rehab Mastery — course preview" />
+        </div>
 
         {/* CARDS directly under the title block (owner 2026-08-15:
             "streams tabs → title → price cards", same as CCM). */}
@@ -315,11 +322,6 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             clinicians unlimited on every tier) — you&rsquo;re prompted, never auto-charged, and the
             course itself is yours for life.
           </p>
-        </div>
-
-        {/* Course showcase — see inside the online course (owner 2026-08-15). */}
-        <div className="max-w-4xl mx-auto mt-8 mb-2">
-          <CourseShowcase />
         </div>
 
         {/* ── SST + Baseline instrument visuals — the platform proof. Hidden when

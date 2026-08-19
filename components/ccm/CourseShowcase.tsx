@@ -150,11 +150,14 @@ const SLIDES: { key: string; caption: string; render: (active: boolean) => React
 export default function CourseShowcase({
   enrolHref = '#pricing-cards',
   trialHref = '/preview',
+  title = 'Concussion Clinical Mastery — course preview',
 }: {
   /** Where a click on the showcase stage / Enrol button lands. */
   enrolHref?: string
   /** The free test-drive (Module 1, no signup). */
   trialHref?: string
+  /** Frame title — stream-specific (CRM passes its own). */
+  title?: string
 } = {}) {
   const [idx, setIdx] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -179,7 +182,7 @@ export default function CourseShowcase({
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
           <span className="ml-3 text-[11px] font-semibold text-slate-400 truncate">
-            Concussion Clinical Mastery — course preview
+            {title}
           </span>
         </div>
 
