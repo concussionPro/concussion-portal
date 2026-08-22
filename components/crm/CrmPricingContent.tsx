@@ -17,12 +17,14 @@ import {
   ClipboardList,
   LineChart,
   HeartPulse,
+  Star,
 } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
 import { PricingOptions } from '@/components/PricingOptions'
+import { TESTIMONIALS } from '@/lib/testimonials'
 import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import CrmCheckoutButton from '@/components/crm/CrmCheckoutButton'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
@@ -272,6 +274,48 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
               (owner: BOTH STREAMS ATTEND THE SAME PRACTICAL DAY; the cards must
               be identical and can never drift again). */}
           <PricingOptions variant="full" stream="crm" />
+
+          {/* SOCIAL PROOF — the CRM tab previously carried NONE, so an ESSA
+              member landed on a $1,190 price with nothing behind it. Five
+              testimonials is where the measured lift peaks for high-priced
+              products (Spiegel/Northwestern: +380% purchase likelihood at high
+              price points, sharp diminishing returns after five).
+
+              These attendees are physios, osteos and a clinic owner, and their
+              disciplines are shown as-is. That is deliberate and honest: an EP
+              can see at a glance these are not EP testimonials — and because
+              every stream sits the SAME practical day, cross-discipline praise
+              is evidence for the multidisciplinary-room claim rather than a
+              substitute for EP proof. Replace with EP voices as CRM alumni
+              accumulate; never relabel these. */}
+          <div className="mt-8">
+            <p className="text-center text-[11px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-3">
+              From the room you&rsquo;ll train in
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {TESTIMONIALS.map((t) => (
+                <div key={`crm-${t.name}`} className="glass rounded-xl p-5">
+                  <div className="flex gap-0.5 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-4 italic">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
+                      {t.initials}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--foreground)]">{t.name}</div>
+                      <div className="text-xs text-[var(--muted-foreground)]">{t.role}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Quick signup — directly under the payment cards (owner
               2026-07-27): the not-ready-to-decide majority gets a one-field

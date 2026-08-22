@@ -29,6 +29,7 @@ import { CONFIG, upgradePriceFor, SST_TIERS, SST_INCLUDED_TIER, sstTierAllowance
 import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { trackEvent } from '@/lib/analytics'
 import CourseShowcase from '@/components/ccm/CourseShowcase'
+import { TESTIMONIALS } from '@/lib/testimonials'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -233,38 +234,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     answer: f.a + (f.link ? ` ${f.link.text}.` : ''),
   }))
 
-  const testimonials = [
-    {
-      quote: 'Before this training, our approach to concussion cases was uncertain. Now, my team has the confidence and proven skills to diagnose and manage them with clarity.',
-      name: 'Andy',
-      role: 'Clinic Owner, NSW',
-      initials: 'A',
-    },
-    {
-      quote: "An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.",
-      name: 'Dean Hardy',
-      role: 'University Clinical Educator, QLD',
-      initials: 'D',
-    },
-    {
-      quote: 'Incredibly thorough and well structured. The hands-on component was invaluable — I left feeling genuinely confident in my concussion assessments.',
-      name: 'Amelia',
-      role: 'Physiotherapist',
-      initials: 'A',
-    },
-    {
-      quote: 'Well organised — content explained in a way that was relevant and memorable. Changed how I approach concussion in clinic.',
-      name: 'Alex',
-      role: 'Osteopath, Melbourne',
-      initials: 'A',
-    },
-    {
-      quote: 'A must for any health professional managing concussion. Relevant, applicable and easy to absorb.',
-      name: 'Sarah',
-      role: 'Physiotherapist',
-      initials: 'S',
-    },
-  ]
+  const testimonials = TESTIMONIALS
 
   const TestimonialCard = ({ t }: { t: typeof testimonials[number] }) => (
     <div className="glass rounded-xl p-5">
@@ -700,8 +670,12 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             comparison table. Research-backed order: analytical (compare)
             then emotional (others succeeded), both adjacent to price. */}
         <div className="max-w-4xl mx-auto mt-8 mb-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {testimonials.slice(0, 3).map(t => (
+          {/* ALL FIVE render here. Truncating to three left two real
+              testimonials unused, and five is where the measured lift peaks
+              for high-priced products (Spiegel/Northwestern) — see
+              lib/testimonials.ts. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {testimonials.map(t => (
               <TestimonialCard key={`pricing-${t.name}`} t={t} />
             ))}
           </div>
