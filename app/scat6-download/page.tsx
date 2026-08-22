@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+import { CONFIG, CPD_YEAR_END_LABEL } from '@/lib/config'
 
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat6-download'
@@ -374,18 +375,39 @@ export default function SCAT6DownloadPage() {
                       <BookOpen className="w-4 h-4 text-[#5b9aa6]" />
                     </div>
                     <div>
+                      {/* THE HANDOVER, REPOINTED (2026-08-22).
+                          This box fires at the single warmest moment the site
+                          owns: they have just given an email and are logged in.
+                          It used to hand that moment to the free SCAT course —
+                          which has converted 0 of 46 signups to paid, and which
+                          the freemium literature predicts (a COMPLETE free
+                          version substitutes for the paid one; NYT metering
+                          +31% subs, n=29.7M; removing a free unlock +20.98%).
+                          It now leads with the paid course's real content and
+                          the CPD arithmetic that actually drives clinician
+                          purchases, with the free course kept as the secondary
+                          option rather than the headline. */}
                       <p className="text-sm font-semibold text-slate-900 mb-0.5">
-                        Now learn to score what you just downloaded
+                        The form gives you a score. Now what?
                       </p>
                       <p className="text-xs text-slate-600 mb-3 leading-snug">
-                        Your free ~1-hour SCAT6 Mastery course is unlocked — you&apos;re logged in, start right now.
+                        Scoring is the easy half — the decision is what the score means and what you
+                        do on Monday. Read the real course content free, no signup:{' '}
+                        {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours covers most of your year, and the
+                        CPD year closes {CPD_YEAR_END_LABEL}.
                       </p>
                       <Link
-                        href="/modules/101"
+                        href="/preview?utm_source=scat6_download&utm_medium=internal&utm_campaign=post_download"
                         className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#5b9aa6] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#4a8a96]"
                       >
-                        Start Module 1 now
+                        See what the course covers
                         <ChevronRight className="w-4 h-4" />
+                      </Link>
+                      <Link
+                        href="/modules/101"
+                        className="mt-2 block text-[11px] font-semibold text-slate-500 hover:text-[#5b9aa6] transition-colors"
+                      >
+                        Or start the free 1-hour SCAT6 course →
                       </Link>
                     </div>
                   </div>

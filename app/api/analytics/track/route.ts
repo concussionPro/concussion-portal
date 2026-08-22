@@ -46,6 +46,11 @@ function isAllowedOrigin(request: NextRequest): boolean {
   }
 }
 
+/** Non-declaring crawlers, blocked by IP — see the note at the filter below. */
+const BLOCKED_IPS = new Set<string>([
+  '157.211.44.47', // Sydney; 2,312 events / 304 sessions, 6 weeks, zero logins
+]);
+
 const BOT_PATTERNS = [
   // Email-security link scanners + previewers (2026-07-30: cold rounds made
   // Singapore/US sandbox detonations the top GA 'city' — they execute JS):
@@ -162,6 +167,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } catch { /* fall through to normal handling */ }
 
   if (BOT_PATTERNS.some(p => ua.includes(p))) {
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  // HEADLESS CRAWLERS THAT LIE ABOUT THEIR USER-AGENT (2026-08-22).
+  //
+  // BOT_PATTERNS only catches self-declaring bots. One client presenting a
+  // normal desktop Chrome UA had logged 2,312 events / 304 sessions from a
+  // single IP over six weeks — 16.6% of the entire event store, including 347
+  // hits on /pricing — while never once logging in, never buying, and never
+  // touching a page a human browses in that pattern. It inflated the
+  // pricing-funnel denominator by ~20% and made every conversion rate a lie.
+  //
+  // Blocked by IP because that is the only stable signal it emits. Keep this
+  // list SHORT and evidence-based: an IP earns a place here only after it has
+  // been checked for a login, a purchase and an admin visit (a real clinic
+  // behind NAT will have at least one).
+  const clientIp = (
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    ''
+  ).trim();
+  if (clientIp && BLOCKED_IPS.has(clientIp)) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
