@@ -435,6 +435,40 @@ export type LocationStatus = 'collecting' | 'confirmed' | 'closed' | 'completed'
  *  - 'confirmed' with a past date (admin hasn't flipped to completed yet):
  *    TRUE — the purchase is a nomination for the next round.
  */
+/**
+ * THE AHPRA CPD YEAR — the strongest honest purchase trigger we have.
+ *
+ * For the November-renewing professions this course sells to (physiotherapy,
+ * osteopathy, chiropractic) the CPD year runs 1 December – 30 November and
+ * registration renewal falls due 30 November. Annual minimums verified at the
+ * Boards 2026-08-22: physiotherapy 20 hours, osteopathy 25 hours. At
+ * TOTAL_CPD_POINTS = 16 this course covers most of either in one enrolment.
+ *
+ * WHY IT LIVES IN CONFIG: the deadline is a real, externally-set date, so the
+ * copy that references it must never be hardcoded (date-bearing-copy rule) and
+ * must roll to the next year automatically the day it passes. This is NOT
+ * scarcity marketing — it is a published regulatory deadline, which is exactly
+ * why it may be stated plainly.
+ */
+export const CPD_YEAR_END_LABEL = '30 November'
+export const CPD_HOURS_PHYSIO = 20
+export const CPD_HOURS_OSTEO = 25
+
+/** The next 30 November (this year's if still ahead, else next year's). */
+export function cpdYearEnd(now: Date = new Date()): Date {
+  const y = now.getFullYear()
+  // 30 Nov, end of day, Australian Eastern.
+  const thisYear = new Date(`${y}-11-30T23:59:59+11:00`)
+  return now.getTime() <= thisYear.getTime()
+    ? thisYear
+    : new Date(`${y + 1}-11-30T23:59:59+11:00`)
+}
+
+/** Whole days from now until the CPD year closes (never negative). */
+export function daysUntilCpdYearEnd(now: Date = new Date()): number {
+  return Math.max(0, Math.ceil((cpdYearEnd(now).getTime() - now.getTime()) / 86400000))
+}
+
 export function isEarlyBirdForLocation(locationSlug?: string | null): boolean {
   const loc = locationSlug
     ? Object.values(CONFIG.LOCATIONS).find((l) => l.slug === locationSlug)

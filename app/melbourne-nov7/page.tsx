@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, BookOpen, Check, Loader2, MapPin, Users, Utensils } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
-import { CONFIG, upgradePriceFor } from '@/lib/config'
+import { CONFIG, upgradePriceFor, cpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -168,6 +168,26 @@ export default function MelbourneNov7Page() {
           <p className="text-[11px] text-muted-foreground mt-2 text-center">
             Secure Stripe checkout · 7-day money-back guarantee · tax invoice with payment
           </p>
+
+          {/* THE CPD DEADLINE — the single strongest documented purchase trigger
+              for clinicians is licence-renewal compliance, not content. This is
+              a published regulatory date (Physiotherapy/Osteopathy Boards: CPD
+              year 1 Dec – 30 Nov, renewal due 30 Nov), so it can be stated
+              plainly without touching the no-fake-scarcity rule. */}
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3">
+            <p className="text-[13px] font-bold text-amber-900">
+              {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours — most of your year, in one course
+            </p>
+            <p className="text-[12px] text-amber-900/85 mt-0.5 leading-snug">
+              Physiotherapists need {CPD_HOURS_PHYSIO} hours a year and osteopaths {CPD_HOURS_OSTEO};
+              the CPD year closes {CPD_YEAR_END_LABEL}. This day sits{' '}
+              {Math.max(
+                0,
+                Math.round((cpdYearEnd().getTime() - (CONFIG.LOCATIONS.MELBOURNE.dateObj?.getTime() ?? 0)) / 86400000),
+              )}{' '}
+              days before that deadline — and your certificate is issued on the day.
+            </p>
+          </div>
         </div>
 
         {/* Already-online upgrade */}

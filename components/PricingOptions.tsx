@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocation, upgradePriceFor, workshopPriceFor } from '@/lib/config'
+import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocation, upgradePriceFor, workshopPriceFor, daysUntilCpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 
@@ -625,6 +625,24 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 Start the online modules today. Your {cityLabel(selectedLocation)} workshop date launches when your city fills — minimum {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo; notice, early-bird rate locked in.
               </p>
             )}
+            {/* THE CPD DEADLINE. Licence-renewal compliance is the dominant
+                documented trigger for clinician CPD purchases — ahead of course
+                content — so the annual requirement and its closing date belong
+                on the money card. Both figures are the Boards' published
+                minimums (physio 20/yr, osteo 25/yr; CPD year 1 Dec – 30 Nov),
+                and the countdown derives from config so it can never go stale
+                or need a copy edit in December. A real regulatory deadline is
+                not scarcity marketing. */}
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2">
+              <p className="text-[11.5px] font-bold text-amber-900 leading-snug">
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours — most of your year in one course
+              </p>
+              <p className="text-[10.5px] text-amber-900/80 leading-snug mt-0.5">
+                Physios need {CPD_HOURS_PHYSIO}/yr, osteopaths {CPD_HOURS_OSTEO}. The CPD year closes{' '}
+                {CPD_YEAR_END_LABEL} — {daysUntilCpdYearEnd()} days away.
+              </p>
+            </div>
+
             <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
               &ldquo;Hands on component was invaluable&rdquo; — Amelia
             </p>
@@ -880,6 +898,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
               </div>
               <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
+              <p className="text-[10px] text-[var(--muted-foreground)]">incl. GST · tax invoice issued</p>
             </div>
           </div>
 
@@ -1009,6 +1028,25 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </>
             )}
           </button>
+
+              {/* THE CPD DEADLINE (full variant — the card /pricing actually
+              renders). Licence-renewal compliance is the dominant documented
+              trigger for clinician CPD purchases, ahead of course content,
+              so the annual requirement and its closing date belong on the
+              money card. Figures are the Boards' published minimums (physio
+              20/yr, osteo 25/yr; CPD year 1 Dec – 30 Nov) and the countdown
+              derives from config, so it can never go stale or need a copy
+              edit in December. A published regulatory deadline is not
+              scarcity marketing. */}
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2">
+            <p className="text-[12px] font-bold text-amber-900 leading-snug">
+              {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours — most of your year in one course
+            </p>
+            <p className="text-[11px] text-amber-900/80 leading-snug mt-0.5">
+              Physiotherapists need {CPD_HOURS_PHYSIO} hours a year, osteopaths {CPD_HOURS_OSTEO}.
+              The CPD year closes {CPD_YEAR_END_LABEL} — {daysUntilCpdYearEnd()} days away.
+            </p>
+          </div>
 
           {!hasLiveDate && (
             <>
