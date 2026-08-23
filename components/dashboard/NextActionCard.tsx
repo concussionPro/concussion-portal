@@ -511,17 +511,34 @@ export function NextActionCard() {
 
   /* ── Next Module ────────────────────────────── */
 
-  // Workshop upgrade nudge for online-only users at 25/50/75% milestones
-  const showWorkshopNudge = accessLevel === 'online-only' && progressPercentage >= 25
+  // Workshop upgrade nudge for online-only users.
+  //
+  // WAS GATED AT >=25% COURSE PROGRESS, AND THAT WAS THE BUG (2026-08-24).
+  // Zero upgrades have ever been purchased. The reason is visible in the data:
+  // of ten online owners, three have never logged in at all and several sit at
+  // 0% — so the single offer that turns a $497 customer into a $1,190 one was
+  // hidden behind a milestone most of them will never reach. Course progress is
+  // not the trigger for wanting hands-on training; having bought the theory is.
+  //
+  // It also never named the workshop DATE. A confirmed date is the thing that
+  // converts an abstract "add the workshop someday" into a decision — the 22
+  // people who bought the complete course historically all bought against a
+  // live date. So when a round is confirmed and still ahead, say so here.
+  const liveRound = Object.values(CONFIG.LOCATIONS).find(
+    (l) => l.status === 'confirmed' && l.dateObj && l.dateObj.getTime() > Date.now(),
+  )
+  const showWorkshopNudge = accessLevel === 'online-only'
   const workshopNudge = (() => {
     if (!showWorkshopNudge) return null
-    const price = upgradePriceFor()
-    const milestone = progressPercentage >= 75 ? 75 : progressPercentage >= 50 ? 50 : 25
-    const message = milestone >= 75
+    const price = upgradePriceFor(liveRound?.slug ?? null)
+    const milestone = progressPercentage >= 75 ? 75 : progressPercentage >= 50 ? 50 : progressPercentage >= 25 ? 25 : 0
+    const message = liveRound
+      ? `${liveRound.city} is confirmed for ${liveRound.date} — practise SCAT6, VOMS and BESS on real subjects with expert feedback. Your online payment counts in full.`
+      : milestone >= 75
       ? "You're nearly done — lock in hands-on skills while the theory is fresh."
       : milestone >= 50
       ? 'Halfway through the theory. The workshop turns this knowledge into clinical confidence.'
-      : 'Great start. Add the workshop to practise SCAT6, VOMS & BESS with expert feedback.'
+      : 'Add the workshop to practise SCAT6, VOMS & BESS with expert feedback — your online payment counts in full.'
     return { price, message, milestone }
   })()
 
@@ -609,7 +626,8 @@ export function NextActionCard() {
         </div>
       </motion.div>
 
-      {/* Workshop upgrade nudge — online-only users at 25/50/75% */}
+      {/* Workshop upgrade nudge — EVERY online-only owner, not just those
+          past a progress milestone. Names the confirmed date when one exists. */}
       {workshopNudge && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}

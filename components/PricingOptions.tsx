@@ -1048,6 +1048,26 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </p>
           </div>
 
+          {/* THE LIGHTER ACTION, NEXT TO THE HEAVY ONE (2026-08-24).
+              Two separate visitors picked Byron Bay, hit "Enrol Now — $1,190",
+              went to Stripe and left — and neither registered interest, because
+              at the moment of hesitation the only affordance beside the price
+              was a $1,190 commitment. The interest form lived further down the
+              page and on the homepage, i.e. nowhere near the decision.
+              A city with no scheduled date is exactly where a buyer is most
+              likely to stall, so the low-commitment option belongs adjacent to
+              the high-commitment one — not as a competing CTA above it. */}
+          {!hasLiveDate && (
+            <details className="mt-2.5 group">
+              <summary className="cursor-pointer text-[11px] font-semibold text-[var(--accent)] hover:underline list-none">
+                Not ready to enrol? Tell me when {cityLabel(selectedLocation)} gets a date →
+              </summary>
+              <div className="mt-2">
+                <WorkshopInterestForm citySlug={selectedLocation} variant="compact" />
+              </div>
+            </details>
+          )}
+
           {!hasLiveDate && (
             <>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-2.5 leading-snug">
