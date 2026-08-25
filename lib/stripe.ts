@@ -258,9 +258,19 @@ export async function createCourseCheckoutSession({
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `Concussion Education Australia — Complete Course (${locationLabel})`
-    productDescription = workshopScheduled
+    // THE DEADLINE BELONGS ON THE PAYMENT PAGE (2026-08-25). Seven of eight
+    // abandoned checkouts in one week were this product: real buyers clicked
+    // through knowing the price, met a Stripe page with no reason to pay TODAY
+    // rather than "after payday", and left. The pricing card names the
+    // early-bird boundary; the final screen didn't. Derives from CONFIG so it
+    // can never claim a closed rate (isEarlyBird is the same flag that sets
+    // the charge — display and price cannot disagree).
+    const earlyBirdNote = isEarlyBird
+      ? ` · EARLY-BIRD RATE — $${(COURSE_PRICING.FULL_COURSE_REGULAR / 100).toLocaleString()} after the early-bird window closes`
+      : ''
+    productDescription = (workshopScheduled
       ? `8 online modules + full-day in-person workshop (${locationLabel}) · 16 CPD hours · AHPRA aligned · All materials included`
-      : `8 online modules (start today) + full-day in-person workshop (${locationLabel} — date launches as your city fills, min ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice) · 16 CPD hours · AHPRA aligned`
+      : `8 online modules (start today) + full-day in-person workshop (${locationLabel} — date launches as your city fills, min ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice) · 16 CPD hours · AHPRA aligned`) + earlyBirdNote
   }
 
   // Hub Pack base price already includes 5 seats — never let a promo code stack
