@@ -247,14 +247,6 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
 
 export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOptionsProps) {
   const crm = stream === 'crm'
-  // EMAIL BEFORE THE REDIRECT (2026-08-25). Every abandoned Stripe session
-  // this week expired with customer_email NULL — the recovery sequence exists
-  // but had nobody to write to, including a Perth buyer who opened two $1,190
-  // checkouts in one evening. Anonymous buyers now give an email on the way
-  // through (framed as the tax-invoice address, which it genuinely is); the
-  // server prefers any authenticated session email over this value.
-  const [buyerEmail, setBuyerEmail] = useState('')
-  const [emailGate, setEmailGate] = useState<null | 'online-only' | 'full-course'>(null)
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -349,16 +341,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       setError('Please choose your workshop city.')
       return
     }
-    // Anonymous visitors supply an email first — one field, one extra click.
-    if (!buyerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
-      if (emailGate !== courseType) {
-        setEmailGate(courseType)
-        setError(null)
-        return
-      }
-      setError('Enter the email for your tax invoice to continue.')
-      return
-    }
     try {
       setLoading(courseType)
       setError(null)
@@ -385,13 +367,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
         credentials: 'include',
         body: JSON.stringify(crm ? {
           tier: courseType === 'full-course' ? 'complete' : 'online',
-          email: buyerEmail || undefined,
           ...(selectedLocation ? { location: selectedLocation } : {}),
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
           attribution: getAttribution(),
         } : {
           courseType,
-          email: buyerEmail || undefined,
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
           // Online-only: send the city ONLY if the buyer picked one. An
           // untouched default is not a nomination — see locationExplicit.
@@ -487,14 +467,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               ))}
             </ul>
 
-            {emailGate === 'online-only' && (
-              <div className="mb-2">
-                <input type="email" autoFocus value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleCheckout('online-only') }}
-                  placeholder="Email for your tax invoice"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-[var(--accent)] focus:outline-none" />
-              </div>
-            )}
             <button
               onClick={() => handleCheckout('online-only')}
               disabled={loading !== null}
@@ -635,14 +607,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </div>
             </div>
 
-            {emailGate === 'full-course' && (
-              <div className="mb-2">
-                <input type="email" autoFocus value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleCheckout('full-course') }}
-                  placeholder="Email for your tax invoice"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-[var(--accent)] focus:outline-none" />
-              </div>
-            )}
             <button
               onClick={() => handleCheckout('full-course')}
               disabled={loading !== null}
@@ -879,22 +843,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </p>
           </div>
 
-          {emailGate === 'online-only' && (
-            <div className="mb-2">
-              <input
-                type="email"
-                autoFocus
-                value={buyerEmail}
-                onChange={(e) => setBuyerEmail(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCheckout('online-only') }}
-                placeholder="Email for your tax invoice"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-[var(--accent)] focus:outline-none"
-              />
-              <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
-                Your tax invoice and checkout link go here — then straight to secure payment.
-              </p>
-            </div>
-          )}
           <button
             onClick={() => handleCheckout('online-only')}
             disabled={loading !== null}
@@ -1066,22 +1014,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </div>
           </div>
 
-          {emailGate === 'full-course' && (
-            <div className="mb-2">
-              <input
-                type="email"
-                autoFocus
-                value={buyerEmail}
-                onChange={(e) => setBuyerEmail(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCheckout('full-course') }}
-                placeholder="Email for your tax invoice"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-[var(--accent)] focus:outline-none"
-              />
-              <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
-                Your tax invoice and checkout link go here — then straight to secure payment.
-              </p>
-            </div>
-          )}
           <button
             onClick={() => handleCheckout('full-course')}
             disabled={loading !== null}

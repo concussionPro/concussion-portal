@@ -26,10 +26,6 @@ const VENUE = 'Rydges Melbourne — Exhibition Street, CBD'
 export default function MelbourneNov7Page() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Email before the redirect — see PricingOptions: recovery emails need an
-  // address, and every abandoned session from this page had none.
-  const [buyerEmail, setBuyerEmail] = useState('')
-  const [emailGate, setEmailGate] = useState(false)
   // Live round-scoped seat count (same /api/city-progress the cards use).
   // The pre-release path has no hard cap at checkout (Melbourne isn't
   // status='confirmed'), so the HONESTY control at volume is here: show real
@@ -52,11 +48,6 @@ export default function MelbourneNov7Page() {
 
   const enrol = async () => {
     if (loading) return
-    if (!buyerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
-      if (!emailGate) { setEmailGate(true); setError(null); return }
-      setError('Enter the email for your tax invoice to continue.')
-      return
-    }
     setLoading(true)
     setError(null)
     trackEvent('checkout_start', { courseType: 'full-course', location: 'melbourne', source: 'melbourne-nov7' })
@@ -67,7 +58,6 @@ export default function MelbourneNov7Page() {
         body: JSON.stringify({
           courseType: 'full-course',
           location: 'melbourne',
-          email: buyerEmail || undefined,
           utm: { source: 'email', medium: 'email', campaign: 'quarterly_blast_v1' },
         }),
       })
@@ -165,22 +155,6 @@ export default function MelbourneNov7Page() {
               This room is full. Enrolling now secures your seat at the next Melbourne round —
               your early-bird rate is locked and your payment carries in full.
             </p>
-          )}
-          {emailGate && (
-            <div className="mb-2">
-              <input
-                type="email"
-                autoFocus
-                value={buyerEmail}
-                onChange={(e) => setBuyerEmail(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') enrol() }}
-                placeholder="Email for your tax invoice"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-accent focus:outline-none"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Your tax invoice and checkout link go here — then straight to secure payment.
-              </p>
-            </div>
           )}
           <button
             type="button"
