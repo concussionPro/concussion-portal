@@ -45,6 +45,10 @@ const STREAMS: Array<{
   code: string
   name: string
   audience: string
+  /** Plain statement of WHO MAY ENROL — the endorsement chips were being read
+   *  as an eligibility list. Per-stream so neither course claims the other's
+   *  accreditation (tests/factual-claims-lock). */
+  openTo: string
   icon: typeof GraduationCap
   endorse: string
   blurb: string
@@ -56,6 +60,7 @@ const STREAMS: Array<{
     code: 'CCM',
     name: 'Concussion Clinical Mastery',
     audience: 'Physios, osteos, chiros & GPs',
+    openTo: 'Open to every AHPRA-registered clinician — physiotherapists, osteopaths, chiropractors, GPs and nurses. CPD hours are claimable under any Board’s standard.',
     icon: GraduationCap,
     endorse: 'Osteopathy Australia endorsed',
     blurb: 'Assess, diagnose and manage concussion — SCAT6, VOMS and BESS, return-to-play and phenotype rehab.',
@@ -67,6 +72,7 @@ const STREAMS: Array<{
     code: 'CRM',
     name: 'Concussion Rehab Mastery',
     audience: 'Exercise physiologists',
+    openTo: 'Built for exercise physiologists and exercise scientists — ESSA-accredited, and the practical day is shared with the physios, osteos and GPs on the clinical stream.',
     icon: HeartPulse,
     endorse: CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA accredited' : 'Built to ESSA CPD standards',
     blurb: 'Prescribe the exercise rehab that moves recovery — measured-threshold aerobic training, in EP scope.',
@@ -198,6 +204,13 @@ function PricingTabs() {
                 body's hero wrapper, which — with the title now drawn at page
                 level — left them floating mid-page between the trust icons and
                 the price, attached to nothing. */}
+            {/* WHO IT IS FOR (owner 2026-09-01: "unclear this is for ALL ahpra
+                registered clinicians not just OA and ESSA"). The endorsement chips
+                on the stream tabs were reading as an eligibility list. Enrolment is
+                open to any registered practitioner — say it before the credentials.
+                Per-stream text so CCM never claims ESSA and CRM never claims OA
+                (tests/factual-claims-lock enforces this). */}
+            <p className="text-[14.5px] font-semibold text-foreground max-w-2xl mx-auto mt-3">{st.openTo}</p>
             <p className="text-[12px] text-muted-foreground max-w-2xl mx-auto mt-3">{st.credential}</p>
             <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-3">
               {st.chips.map((c) => (

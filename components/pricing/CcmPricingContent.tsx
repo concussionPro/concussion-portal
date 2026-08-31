@@ -324,7 +324,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               {/* GEO citation pattern (2026-08-03 work order): clear claim +
                   named source + date on the money page, for AI-assistant
                   citation and E-E-A-T. */}
-              <p className="text-[12px] text-muted-foreground max-w-2xl mx-auto mt-2">
+              <p className="text-[12px] text-muted-foreground max-w-2xl mx-auto mt-5">
                 Curriculum aligned to the Amsterdam International Consensus on Concussion in Sport (2023)
                 and the SCAT6/SCOAT6 standard &middot; taught by Zac Lewis, Osteopath &middot; protocol published
                 open-access:{' '}
@@ -334,7 +334,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               </p>
               {/* Skill chips — inline pills, no text-block. Captures the
                   6 actual clinical capabilities in scannable visual form. */}
-              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-6">
                 {[
                   'Phenotype rehab',
                   'Cranial nerve',
@@ -533,13 +533,23 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
 
         {/* Course showcase — what the online course looks like (owner
             2026-08-15: embed where it boosts clicks to enrol). */}
-        <div className="max-w-4xl mx-auto mt-10 mb-6">
-          <div className="text-center mb-4">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-1">See inside</p>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">What the online course looks like</h2>
+        {/* COLLAPSED 2026-09-01 (owner: "too much scroll and text", "not
+            optimized for quick glance"). The full interactive tour — module
+            views, phenotype map, RTS stages, BCTT chart — is a /courses
+            experience; on the money page it pushed the decision content far
+            below the fold. Kept one tap away for the minority who want to see
+            inside before paying, closed by default for everyone else. */}
+        <details className="max-w-4xl mx-auto mt-8 mb-6 group">
+          <summary className="cursor-pointer list-none text-center rounded-xl border border-accent/25 bg-accent/[0.05] px-4 py-3 hover:bg-accent/[0.09] transition-colors">
+            <span className="text-sm font-bold text-accent">See inside the online course</span>
+            <span className="text-[12px] text-muted-foreground block mt-0.5">
+              Module views, the phenotype map, return-to-sport stages and the BCTT walkthrough
+            </span>
+          </summary>
+          <div className="mt-4">
+            <CourseShowcase />
           </div>
-          <CourseShowcase />
-        </div>
+        </details>
 
         {/* Try-before-you-buy — owner 2026-07-10: pricing must link through to a
             test module, PROMINENTLY. /preview = real Module 1 content, no signup. */}

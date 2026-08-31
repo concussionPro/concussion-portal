@@ -126,7 +126,15 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
   }
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden bg-slate-950 shadow-[0_10px_36px_-10px_rgba(15,23,42,0.35)] transition-all duration-300 hover:shadow-[0_20px_56px_-12px_rgba(15,23,42,0.5)] hover:-translate-y-0.5">
+    // A CONFIRMED CITY MUST NOT LOOK LIKE A WAITLIST (owner 2026-09-01: "they
+    // all look the same"). The one city with a real, bookable date gets an
+    // accent ring, a lifted shadow and a brighter photo; cities still
+    // collecting are visually quieter. Glanceable hierarchy, no new copy.
+    <div className={`group relative rounded-2xl overflow-hidden bg-slate-950 transition-all duration-300 hover:-translate-y-0.5 ${
+      hasLiveDate
+        ? 'ring-[3px] ring-accent shadow-[0_18px_50px_-12px_rgba(13,115,119,0.55)] hover:shadow-[0_26px_66px_-12px_rgba(13,115,119,0.7)]'
+        : 'opacity-[0.94] shadow-[0_10px_36px_-10px_rgba(15,23,42,0.35)] hover:shadow-[0_20px_56px_-12px_rgba(15,23,42,0.5)] hover:opacity-100'
+    }`}>
       {/* Full-bleed city photograph */}
       <Image
         src={img}
@@ -139,9 +147,11 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-slate-950/10" aria-hidden="true" />
 
       {/* Status pill */}
-      <div className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
-        <span className={`inline-flex h-1.5 w-1.5 rounded-full ${dotClass}`} aria-hidden="true" />
-        <span className={`text-[10px] font-bold uppercase tracking-wide ${statusTextClass}`}>{status}</span>
+      <div className={`absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 backdrop-blur rounded-full shadow-sm ${
+        hasLiveDate ? 'bg-accent px-3 py-1.5' : 'bg-white/95 px-2.5 py-1'
+      }`}>
+        <span className={`inline-flex rounded-full ${hasLiveDate ? 'h-2 w-2 bg-white animate-pulse' : `h-1.5 w-1.5 ${dotClass}`}`} aria-hidden="true" />
+        <span className={`font-bold uppercase tracking-wide ${hasLiveDate ? 'text-[11px] text-white' : `text-[10px] ${statusTextClass}`}`}>{status}</span>
       </div>
 
       {/* Overlay content */}
