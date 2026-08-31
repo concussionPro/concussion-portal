@@ -148,7 +148,7 @@ jobs:
     needs: gate
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
 
     steps:
       # Full history: the check below asks whether the live commit is an
@@ -178,11 +178,18 @@ jobs:
           #   mine is ancestor of live -> superseded by a newer push, fine
           #   live is ancestor of mine -> PRODUCTION IS BEHIND -> fail
           echo "expecting $EXPECTED or a descendant"
-          # 114 x 10s = 19 min — the loop previously covered only 10 of the
-          # job's 20 minutes, so a burst of pushes whose deploys queued past
-          # 10 minutes failed a healthy production (third false-alarm mode in
-          # this job; 2026-08-16 failure email).
-          for i in $(seq 1 114); do
+          # 210 x 10s = 35 min, inside a 40-minute job.
+          #
+          # FIFTH false-alarm mode (2026-09-01): the deploy SUCCEEDED and
+          # production served the commit — just later than the 19-minute
+          # window allowed, so the watchdog failed a healthy deploy. Vercel
+          # queue time is not something this repo controls, and a monitor
+          # whose threshold is tighter than real deploy latency trains the
+          # owner to ignore it. Widened to comfortably exceed observed
+          # worst-case while still catching a genuinely stuck production
+          # (the 2026-08-24 missed-webhook case took >90 min and would
+          # still fail correctly).
+          for i in $(seq 1 210); do
             body="$(curl -fsS --max-time 15 "$URL" || true)"
             got="$(printf '%s' "$body" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).build?.sha??"")}catch{console.log("")}})')"
             if [ -n "$got" ]; then
