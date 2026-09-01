@@ -32,7 +32,7 @@ const HOME_STREAMS: Array<{
 }> = [
   {
     id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery',
-    audience: 'Physiotherapists & allied health', icon: GraduationCap, href: '/pricing',
+    audience: 'All AHPRA & allied health clinicians', icon: GraduationCap, href: '/pricing',
     endorseImg: '/osteopathy-australia-endorsed.png',
     endorseOrg: 'Osteopathy Australia',
     endorseHref: 'https://osteopathy.org.au/Web/Web/cpd/endorsed-courses.aspx?hkey=3c85c306-c65a-4a5d-90f1-782a78dedd86',
@@ -184,9 +184,10 @@ export default function HomeClient() {
                 selling point for both. */}
             {showCrm && (
               <p className="mt-6 text-center text-[12.5px] leading-relaxed text-[var(--muted-foreground)]">
-                <span className="font-semibold text-[var(--foreground)]">Separate online streams — one shared practical day.</span>{' '}
-                Osteos, physios and exercise physiologists train the hands-on day together, on real cases — the same
-                multidisciplinary team a concussion patient actually moves through.
+                <span className="font-semibold text-[var(--foreground)]">Open to every AHPRA-registered and allied health clinician.</span>{' '}
+                Physiotherapists, osteopaths, chiropractors, GPs, nurses and exercise physiologists all enrol — the
+                endorsements below are who formally endorsed each stream, not who may take it. Separate online
+                streams, one shared practical day: everyone trains the hands-on day together, on real cases.
               </p>
             )}
           </div>

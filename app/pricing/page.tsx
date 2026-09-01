@@ -59,7 +59,7 @@ const STREAMS: Array<{
     id: 'ccm',
     code: 'CCM',
     name: 'Concussion Clinical Mastery',
-    audience: 'Physios, osteos, chiros & GPs',
+    audience: 'All AHPRA & allied health clinicians',
     openTo: 'Open to every AHPRA-registered clinician — physiotherapists, osteopaths, chiropractors, GPs and nurses. CPD hours are claimable under any Board’s standard.',
     icon: GraduationCap,
     endorse: 'Osteopathy Australia endorsed',

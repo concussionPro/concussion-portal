@@ -21,7 +21,7 @@ import { trackEvent } from '@/lib/analytics'
 type Stream = 'ccm' | 'crm'
 
 const STREAMS: Array<{ id: Stream; code: string; name: string; audience: string; icon: typeof GraduationCap; badgeImg: string; badgeAlt: string; badgeClass: string }> = [
-  { id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery', audience: 'Physiotherapists & allied health', icon: GraduationCap, badgeImg: '/osteopathy-australia-endorsed.png', badgeAlt: 'Endorsed by Osteopathy Australia', badgeClass: 'h-12' },
+  { id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery', audience: 'All AHPRA & allied health clinicians', icon: GraduationCap, badgeImg: '/osteopathy-australia-endorsed.png', badgeAlt: 'Endorsed by Osteopathy Australia', badgeClass: 'h-12' },
   { id: 'crm', code: 'CRM', name: 'Concussion Rehab Mastery', audience: 'Exercise physiologists', icon: HeartPulse, badgeImg: '/essa-accredited-pd.png', badgeAlt: 'Accredited by ESSA', badgeClass: 'h-9' },
 ]
 
