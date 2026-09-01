@@ -234,7 +234,25 @@ jobs:
             [ $((i % 6)) -eq 0 ] && echo "  ${i}0s — serving ${got:-<no sha>}"
             sleep 10
           done
-          echo "::error::production never reached $EXPECTED or a descendant — it is serving ${got:-<unknown>}, which does NOT contain this commit. The deploy failed or never ran, so production is PINNED to an older build including any security fix in this commit. Check the Vercel deployment log."
+          # DISTINGUISH "PRODUCTION IS BEHIND" FROM "CI COULD NOT REACH IT".
+          #
+          # 2026-09-01: this job failed for 35 minutes on a deploy that was
+          # READY 67 seconds after the push and was serving the right commit
+          # to every other client. The runner simply never got a response —
+          # portal.concussion-education-australia.com sits behind Cloudflare,
+          # whose bot protection treats GitHub's datacenter ranges very
+          # differently from a browser. An unreachable endpoint is NOT
+          # evidence that production is stale, and failing the build on it is
+          # how a monitor loses its credibility (this was the sixth
+          # false-alarm mode).
+          #
+          # So: fail ONLY when we actually got a health response AND it shows
+          # production behind this commit. Never-reached is a warning.
+          if [ -z "$got" ]; then
+            echo "::warning::could not read $URL from this runner in 35 minutes (no response body). Cloudflare bot protection on datacenter IPs is the known cause; production could not be verified from CI. NOT failing the build — verify manually with: curl -s $URL"
+            exit 0
+          fi
+          echo "::error::production never reached $EXPECTED or a descendant — it is serving ${got}, which does NOT contain this commit. The deploy failed or never ran, so production is PINNED to an older build including any security fix in this commit. Check the Vercel deployment log."
           exit 1
 
       # THE PAYWALL, TESTED AS A STRANGER SEES IT.
