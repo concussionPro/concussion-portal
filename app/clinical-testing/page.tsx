@@ -78,6 +78,12 @@ function Shell() {
   const { user, isLoading } = useSession()
   const access = useClinicalAccess()
   const isPreview = !user || user.accessLevel === 'preview'
+  // The demo tour's ONE job is to prove the product — and 42 tours in the last
+  // 30 days continued to exactly NOTHING (loop sweep 2026-09-03; also the
+  // dashboard's standing work order "the tour ends nowhere"). A prospect
+  // convinced by the workspace had no next step INSIDE it. Demo viewers get a
+  // persistent exit ramp: start the real trial, or book the walkthrough.
+  const isDemoViewer = !!user?.isDemo
   // The clinic code namespaces the clinic profile (unique per clinic).
   // undefined = still resolving; null = no clinic yet; string = the code.
   // The tri-state matters: the profile card must NOT render before a clinic
@@ -102,6 +108,23 @@ function Shell() {
   if (isLoading || access === 'loading') {
     return (
       <div className="flex min-h-screen dashboard-bg">
+        {isDemoViewer && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-700 to-teal-600 text-white px-4 py-2.5 shadow-[0_-6px_20px_rgba(0,0,0,0.15)]">
+            <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[13px] font-semibold">
+                You&apos;re in the live demo workspace — everything here works with your own patients from day one.
+              </p>
+              <div className="flex items-center gap-2">
+                <a href="/clinical-suite/start?src=demo-tour" className="rounded-lg bg-white px-3.5 py-1.5 text-[12.5px] font-bold text-teal-800 hover:bg-teal-50">
+                  Start free — 3 patients
+                </a>
+                <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener" className="rounded-lg border border-white/60 px-3.5 py-1.5 text-[12.5px] font-bold text-white hover:bg-white/10">
+                  Book a walkthrough
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         <Sidebar />
         <main className="flex-1 ml-0 md:ml-64 p-8">
           <p className="text-sm text-muted-foreground">Loading…</p>
@@ -119,6 +142,23 @@ function Shell() {
     if (typeof window !== 'undefined') window.location.replace('/demo/clinic')
     return (
       <div className="flex min-h-screen dashboard-bg">
+        {isDemoViewer && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-700 to-teal-600 text-white px-4 py-2.5 shadow-[0_-6px_20px_rgba(0,0,0,0.15)]">
+            <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[13px] font-semibold">
+                You&apos;re in the live demo workspace — everything here works with your own patients from day one.
+              </p>
+              <div className="flex items-center gap-2">
+                <a href="/clinical-suite/start?src=demo-tour" className="rounded-lg bg-white px-3.5 py-1.5 text-[12.5px] font-bold text-teal-800 hover:bg-teal-50">
+                  Start free — 3 patients
+                </a>
+                <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener" className="rounded-lg border border-white/60 px-3.5 py-1.5 text-[12.5px] font-bold text-white hover:bg-white/10">
+                  Book a walkthrough
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         <Sidebar />
         <main className="flex-1 ml-0 md:ml-64 p-8">
           <p className="text-sm text-muted-foreground">Opening the demo workspace…</p>
@@ -136,6 +176,23 @@ function Shell() {
   if (access === 'locked') {
     return (
       <div className="flex min-h-screen dashboard-bg">
+        {isDemoViewer && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-700 to-teal-600 text-white px-4 py-2.5 shadow-[0_-6px_20px_rgba(0,0,0,0.15)]">
+            <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[13px] font-semibold">
+                You&apos;re in the live demo workspace — everything here works with your own patients from day one.
+              </p>
+              <div className="flex items-center gap-2">
+                <a href="/clinical-suite/start?src=demo-tour" className="rounded-lg bg-white px-3.5 py-1.5 text-[12.5px] font-bold text-teal-800 hover:bg-teal-50">
+                  Start free — 3 patients
+                </a>
+                <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener" className="rounded-lg border border-white/60 px-3.5 py-1.5 text-[12.5px] font-bold text-white hover:bg-white/10">
+                  Book a walkthrough
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         <Sidebar />
         <main className="flex-1 ml-0 md:ml-64 p-6 sm:p-8">
           <div className="max-w-2xl mx-auto">
@@ -196,6 +253,23 @@ function Shell() {
 
   return (
     <div className="flex min-h-screen dashboard-bg">
+        {isDemoViewer && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-700 to-teal-600 text-white px-4 py-2.5 shadow-[0_-6px_20px_rgba(0,0,0,0.15)]">
+            <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[13px] font-semibold">
+                You&apos;re in the live demo workspace — everything here works with your own patients from day one.
+              </p>
+              <div className="flex items-center gap-2">
+                <a href="/clinical-suite/start?src=demo-tour" className="rounded-lg bg-white px-3.5 py-1.5 text-[12.5px] font-bold text-teal-800 hover:bg-teal-50">
+                  Start free — 3 patients
+                </a>
+                <a href="https://cal.com/zac-lewis-so8zjs/30min" target="_blank" rel="noopener" className="rounded-lg border border-white/60 px-3.5 py-1.5 text-[12.5px] font-bold text-white hover:bg-white/10">
+                  Book a walkthrough
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       <style>{`
         @keyframes ct-trace { from { stroke-dashoffset: 640 } to { stroke-dashoffset: 0 } }
         @keyframes ct-pulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
