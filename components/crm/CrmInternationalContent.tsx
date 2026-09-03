@@ -382,7 +382,7 @@ export default function CrmInternationalContent({
                   href="#pricing-cards"
                   className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
                 >
-                  See enrolment options — from {price.display}
+                  See enrolment options
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>

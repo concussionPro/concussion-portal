@@ -556,7 +556,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           {!heroFlow && (
             <div className="mt-5 flex justify-center">
               <a href="#pricing-cards" className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm">
-                See enrolment options — from {price.display}
+                See enrolment options
                 <ArrowRight className="w-4 h-4" />
               </a>
             </div>
