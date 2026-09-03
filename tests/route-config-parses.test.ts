@@ -59,7 +59,11 @@ function literalsIn(block: string): string[] {
 
 function middlewareMatchers(): string[] {
   const src = readFileSync(join(ROOT, 'middleware.ts'), 'utf8')
-  const block = /matcher:\s*\[([\s\S]*?)\]/.exec(src)
+  // Match to the array's CLOSING bracket (on its own line), not the first ']'
+  // in the text — matcher entries may legitimately contain character classes
+  // like '/([dD][oO][cC][sS].*)' (the case-insensitive docs gate, 2026-09-03),
+  // and the naive form truncated extraction at the first ']' inside one.
+  const block = /matcher:\s*\[([\s\S]*?)\n\s*\]/.exec(src)
   if (!block) throw new Error('middleware.ts: no `matcher: [...]` found — has the export been renamed?')
   return literalsIn(block[1]).filter(Boolean)
 }
