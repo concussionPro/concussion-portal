@@ -384,10 +384,17 @@ export async function middleware(request: NextRequest) {
     })
   }
 
-  // Handle /docs/ file access (PDFs and ZIPs)
-  if (assetPath.startsWith('/docs/')) {
+  // Handle /docs/ file access (PDFs and ZIPs). Compare LOWERCASED — the
+  // matcher now admits any casing, and Vercel's file layer would happily
+  // serve /DOCS/x; the gate must treat them all as the same directory.
+  if (assetPath.toLowerCase().startsWith('/docs')) {
+    // Normalize the DIRECTORY casing before set membership — the sets hold
+    // exact '/docs/File.ext' strings, so '/DOCS/File.ext' would match nothing
+    // and fail closed (safe but wrong for a legitimate buyer using a cased
+    // link). Only the directory is normalized; filename casing is preserved.
+    const docPath = assetPath.replace(/^\/[dD][oO][cC][sS]\//, '/docs/')
     // Public docs — always allow
-    if (isPublicDoc(assetPath)) {
+    if (isPublicDoc(docPath)) {
       return NextResponse.next()
     }
 
@@ -396,7 +403,7 @@ export async function middleware(request: NextRequest) {
     // offered to a clinician mid-assessment: the denial has to be a page they
     // can act on, and the login round-trip has to come back to the file
     // (/api/auth/verify allows AUTH_DOCS as a preview landing target).
-    if (isAuthDoc(assetPath)) {
+    if (isAuthDoc(docPath)) {
       const sessionToken = request.cookies.get('session')?.value
       if (sessionToken) {
         const session = await verifySessionEdge(sessionToken)
@@ -417,7 +424,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Paid docs — verify session and access level (served via CDN, bypasses serverless body limit)
-    if (isPaidDoc(assetPath)) {
+    if (isPaidDoc(docPath)) {
       const sessionToken = request.cookies.get('session')?.value
       const session = sessionToken ? await verifySessionEdge(sessionToken) : null
       if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
@@ -580,7 +587,14 @@ export const config = {
     // above — a two-parameter path-to-regexp pattern ('/docs:suffix(-|_)?:rest*')
     // is rejected at BUILD time with 'Must have text between two parameters',
     // which failed the deploy and left the bypass open for 11 minutes.
-    '/(docs.*)',
+    // CASE-INSENSITIVE, and this is load-bearing (2026-09-03, CI catch):
+    // Vercel resolves static files case-INsensitively, but this matcher was
+    // case-sensitive — so /DOCS/RehabFlow.png and /Docs/... served the raw
+    // paid files (200 image/png / application/pdf, the full 6MB course
+    // reference included) while /docs/... correctly returned 401. Middleware
+    // that never runs cannot gate anything: the matcher must catch every
+    // casing Vercel's file layer would resolve.
+    '/([dD][oO][cC][sS].*)',
     '/resources/:path*',
     '/api/:path*',
     '/admin/:path*',
