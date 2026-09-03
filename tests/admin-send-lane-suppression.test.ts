@@ -223,6 +223,11 @@ const MAY_MAIL_SUPPRESSED: Record<string, string> = {
 
   // --- transactional: access, money, clinical ---
   'app/api/admin/create-user/route.ts': 'transactional — operator-created account + its login link',
+  // Buyer explicitly types their own address to receive their own Stripe
+  // checkout URL (hospital-network redirect rescue, 2026-09-03). Strictly a
+  // self-service transactional send: one recipient, one checkout.stripe.com
+  // link, no marketing content — the same class as a receipt.
+  'app/api/checkout-link-email/route.ts': 'transactional — buyer self-requests their own checkout link',
   'app/api/admin/resend-purchase-welcome/route.ts': 'transactional — replaces a paid buyer’s magic link',
   'app/api/admin/tax-invoice/send/route.ts': 'transactional — ATO tax invoice for a completed purchase',
   'app/api/clinical-testing/clinic/route.ts': 'transactional — clinic provisioning + access code',

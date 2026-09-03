@@ -16,6 +16,7 @@ import Image from 'next/image'
 import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocation, upgradePriceFor, workshopPriceFor, daysUntilCpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
+import { CheckoutRescue } from '@/components/CheckoutRescue'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
@@ -443,18 +444,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     return (
       <div className="space-y-4">
       {stuckCheckoutUrl && (
-        <div className="max-w-3xl mx-auto mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3">
-          <p className="text-sm font-bold text-amber-900 mb-1">Checkout didn&apos;t open?</p>
-          <p className="text-[13px] text-amber-900/85 mb-2">
-            Some clinic and hospital networks block payment pages. Your secure checkout is ready — open it directly:
-          </p>
-          <a href={stuckCheckoutUrl} target="_blank" rel="noopener"
-             className="inline-block rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-white">
-            Open secure checkout →
-          </a>
-          <p className="text-[11px] text-amber-900/70 mt-2">
-            Still blocked? It works from a phone on mobile data — or reply to any of our emails and we&apos;ll send the link.
-          </p>
+        <div className="max-w-3xl mx-auto mb-4">
+          <CheckoutRescue url={stuckCheckoutUrl} />
         </div>
       )}
         {error && (
@@ -760,18 +751,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       )}
 
       {stuckCheckoutUrl && (
-        <div className="max-w-3xl mx-auto mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3">
-          <p className="text-sm font-bold text-amber-900 mb-1">Checkout didn&apos;t open?</p>
-          <p className="text-[13px] text-amber-900/85 mb-2">
-            Some clinic and hospital networks block payment pages. Your secure checkout is ready — open it directly:
-          </p>
-          <a href={stuckCheckoutUrl} target="_blank" rel="noopener"
-             className="inline-block rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-white">
-            Open secure checkout →
-          </a>
-          <p className="text-[11px] text-amber-900/70 mt-2">
-            Still blocked? It works from a phone on mobile data — or reply to any of our emails and we&apos;ll send the link.
-          </p>
+        <div className="max-w-3xl mx-auto mb-4">
+          <CheckoutRescue url={stuckCheckoutUrl} />
         </div>
       )}
       {/* Global error */}

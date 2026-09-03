@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, BookOpen, Check, Loader2, MapPin, Users, Utensils } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
+import { CheckoutRescue } from '@/components/CheckoutRescue'
 import { CONFIG, upgradePriceFor, cpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
@@ -180,10 +181,8 @@ export default function MelbourneNov7Page() {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{soldOut ? 'Secure the next Melbourne round' : 'Take a Melbourne seat'} — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} <ArrowRight className="w-4 h-4" /></>}
           </button>
           {stuckCheckoutUrl && (
-            <div className="mt-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3">
-              <p className="text-sm font-bold text-amber-900 mb-1">Checkout didn&apos;t open?</p>
-              <p className="text-[13px] text-amber-900/85 mb-2">Some clinic and hospital networks block payment pages. Open it directly:</p>
-              <a href={stuckCheckoutUrl} target="_blank" rel="noopener" className="inline-block rounded-lg bg-accent px-4 py-2 text-sm font-bold text-white">Open secure checkout →</a>
+            <div className="mt-3">
+              <CheckoutRescue url={stuckCheckoutUrl} />
             </div>
           )}
           {error && <p className="text-xs text-red-600 mt-2 text-center">{error}</p>}
