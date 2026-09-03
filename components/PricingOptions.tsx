@@ -247,6 +247,24 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
 
 export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOptionsProps) {
   const crm = stream === 'crm'
+  // Set only when a checkout redirect was ordered but this page is still
+  // alive shortly afterwards — i.e. the browser/network refused the
+  // navigation (corporate proxies blocking stripe.com do exactly this).
+  const [stuckCheckoutUrl, setStuckCheckoutUrl] = useState<string | null>(null)
+  // A blocked navigation usually lands on a browser error page and the buyer
+  // presses Back — the page reloads and in-memory state is gone. Persist the
+  // minted URL so the rescue panel is waiting when they return (observed:
+  // one buyer created 11 sessions in 3 minutes doing exactly this loop).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('cea-checkout-pending')
+      if (raw) {
+        const { url, t } = JSON.parse(raw)
+        if (url && Date.now() - t < 10 * 60 * 1000) setStuckCheckoutUrl(url)
+        else sessionStorage.removeItem('cea-checkout-pending')
+      }
+    } catch { /* storage unavailable — same-page timer still covers us */ }
+  }, [])
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -400,7 +418,15 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       const data = await res.json().catch(() => ({ success: false, error: 'Unexpected server response' }))
 
       if (data.success && data.url) {
+        try { sessionStorage.setItem('cea-checkout-pending', JSON.stringify({ url: data.url, t: Date.now() })) } catch {}
         window.location.href = data.url
+        // If we're still here in 2.5s the redirect was blocked — give the
+        // buyer the raw link (new tab beats proxy interception) instead of
+        // letting them rage-click Enrol into a pile of dead sessions.
+        setTimeout(() => {
+          setStuckCheckoutUrl(data.url)
+          setLoading(null)
+        }, 2500)
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
         setLoading(null)
@@ -416,6 +442,21 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   if (isCompact) {
     return (
       <div className="space-y-4">
+      {stuckCheckoutUrl && (
+        <div className="max-w-3xl mx-auto mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-bold text-amber-900 mb-1">Checkout didn&apos;t open?</p>
+          <p className="text-[13px] text-amber-900/85 mb-2">
+            Some clinic and hospital networks block payment pages. Your secure checkout is ready — open it directly:
+          </p>
+          <a href={stuckCheckoutUrl} target="_blank" rel="noopener"
+             className="inline-block rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-white">
+            Open secure checkout →
+          </a>
+          <p className="text-[11px] text-amber-900/70 mt-2">
+            Still blocked? It works from a phone on mobile data — or reply to any of our emails and we&apos;ll send the link.
+          </p>
+        </div>
+      )}
         {error && (
           <div role="alert" aria-live="assertive" className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800">
             <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -718,6 +759,21 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
         </div>
       )}
 
+      {stuckCheckoutUrl && (
+        <div className="max-w-3xl mx-auto mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-bold text-amber-900 mb-1">Checkout didn&apos;t open?</p>
+          <p className="text-[13px] text-amber-900/85 mb-2">
+            Some clinic and hospital networks block payment pages. Your secure checkout is ready — open it directly:
+          </p>
+          <a href={stuckCheckoutUrl} target="_blank" rel="noopener"
+             className="inline-block rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-white">
+            Open secure checkout →
+          </a>
+          <p className="text-[11px] text-amber-900/70 mt-2">
+            Still blocked? It works from a phone on mobile data — or reply to any of our emails and we&apos;ll send the link.
+          </p>
+        </div>
+      )}
       {/* Global error */}
       {error && (
         <div role="alert" aria-live="assertive" className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">

@@ -26,6 +26,19 @@ const VENUE = 'Rydges Melbourne — Exhibition Street, CBD'
 export default function MelbourneNov7Page() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Redirect-blocked fallback — see PricingOptions: renders only if the page
+  // survives the navigation order (proxy blocked stripe.com).
+  const [stuckCheckoutUrl, setStuckCheckoutUrl] = useState<string | null>(null)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('cea-checkout-pending')
+      if (raw) {
+        const { url, t } = JSON.parse(raw)
+        if (url && Date.now() - t < 10 * 60 * 1000) setStuckCheckoutUrl(url)
+        else sessionStorage.removeItem('cea-checkout-pending')
+      }
+    } catch {}
+  }, [])
   // Live round-scoped seat count (same /api/city-progress the cards use).
   // The pre-release path has no hard cap at checkout (Melbourne isn't
   // status='confirmed'), so the HONESTY control at volume is here: show real
@@ -67,7 +80,9 @@ export default function MelbourneNov7Page() {
         setLoading(false)
         return
       }
+      try { sessionStorage.setItem('cea-checkout-pending', JSON.stringify({ url: data.url, t: Date.now() })) } catch {}
       window.location.href = data.url
+      setTimeout(() => { setStuckCheckoutUrl(data.url); setLoading(false) }, 2500)
     } catch {
       setError('Network error — please try again.')
       setLoading(false)
@@ -164,6 +179,13 @@ export default function MelbourneNov7Page() {
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{soldOut ? 'Secure the next Melbourne round' : 'Take a Melbourne seat'} — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} <ArrowRight className="w-4 h-4" /></>}
           </button>
+          {stuckCheckoutUrl && (
+            <div className="mt-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3">
+              <p className="text-sm font-bold text-amber-900 mb-1">Checkout didn&apos;t open?</p>
+              <p className="text-[13px] text-amber-900/85 mb-2">Some clinic and hospital networks block payment pages. Open it directly:</p>
+              <a href={stuckCheckoutUrl} target="_blank" rel="noopener" className="inline-block rounded-lg bg-accent px-4 py-2 text-sm font-bold text-white">Open secure checkout →</a>
+            </div>
+          )}
           {error && <p className="text-xs text-red-600 mt-2 text-center">{error}</p>}
           <p className="text-[11px] text-muted-foreground mt-2 text-center">
             Secure Stripe checkout · 7-day money-back guarantee · tax invoice with payment
