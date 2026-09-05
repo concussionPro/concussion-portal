@@ -276,7 +276,32 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     setEmail: setCheckoutEmail,
     sessionEmail: checkoutSessionEmail,
     resolved: resolvedCheckoutEmail,
+    needsField: checkoutNeedsField,
   } = useCheckoutEmail()
+
+  const softEmailBlocks = (courseType: 'online-only' | 'full-course' | 'secure-seat') => {
+    // CCM always; CRM complete/secure; CRM online stays optional.
+    const required = !crm || courseType === 'full-course' || courseType === 'secure-seat'
+    return required && checkoutNeedsField && !resolvedCheckoutEmail
+  }
+
+  const focusCheckoutEmail = (inputId: string) => {
+    if (typeof document === 'undefined') return
+    const el = document.getElementById(inputId) as HTMLInputElement | null
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.focus()
+  }
+
+  const emailInputIdFor = (
+    courseType: 'online-only' | 'full-course' | 'secure-seat',
+    compact: boolean,
+  ) => {
+    const prefix = compact ? 'checkout-email-compact' : 'checkout-email'
+    if (courseType === 'online-only') return `${prefix}-online`
+    if (courseType === 'full-course') return `${prefix}-complete`
+    return `${prefix}-secure`
+  }
 
   const isCompact = variant === 'compact'
 
@@ -378,6 +403,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     const crmNeedsEmail = courseType === 'full-course' || courseType === 'secure-seat'
     if ((!crm || crmNeedsEmail) && !resolvedCheckoutEmail) {
       setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      focusCheckoutEmail(emailInputIdFor(courseType, isCompact))
       return
     }
     try {
@@ -476,15 +502,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <CheckoutRescue url={stuckCheckoutUrl} />
         </div>
       )}
-      <CheckoutEmailField
-        email={checkoutEmail}
-        setEmail={setCheckoutEmail}
-        sessionEmail={checkoutSessionEmail}
-        disabled={loading !== null}
-        inputId="checkout-email-compact"
-        className="mb-3"
-        placeholder="Email for your receipt & enrolment"
-      />
         {error && (
           <div role="alert" aria-live="assertive" className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800">
             <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -536,9 +553,18 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               ))}
             </ul>
 
+            <CheckoutEmailField
+              email={checkoutEmail}
+              setEmail={setCheckoutEmail}
+              sessionEmail={checkoutSessionEmail}
+              disabled={loading !== null}
+              inputId="checkout-email-compact-online"
+              className="mb-3"
+              placeholder="Email for your receipt & enrolment"
+            />
             <button
               onClick={() => handleCheckout('online-only')}
-              disabled={loading !== null}
+              disabled={loading !== null || softEmailBlocks('online-only')}
               className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading === 'online-only' ? (
@@ -676,9 +702,18 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </div>
             </div>
 
+            <CheckoutEmailField
+              email={checkoutEmail}
+              setEmail={setCheckoutEmail}
+              sessionEmail={checkoutSessionEmail}
+              disabled={loading !== null}
+              inputId="checkout-email-compact-complete"
+              className="mb-3"
+              placeholder="Email for your receipt & enrolment"
+            />
             <button
               onClick={() => handleCheckout('full-course')}
-              disabled={loading !== null}
+              disabled={loading !== null || softEmailBlocks('full-course')}
               className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading === 'full-course' ? (
@@ -774,10 +809,19 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 </span>
               </div>
             )}
+            <CheckoutEmailField
+              email={checkoutEmail}
+              setEmail={setCheckoutEmail}
+              sessionEmail={checkoutSessionEmail}
+              disabled={loading !== null}
+              inputId="checkout-email-compact-secure"
+              className="mb-3"
+              placeholder="Email for your receipt & enrolment"
+            />
             <button
               type="button"
               onClick={() => handleCheckout('secure-seat')}
-              disabled={loading !== null}
+              disabled={loading !== null || softEmailBlocks('secure-seat')}
               className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading === 'secure-seat' ? (
@@ -797,10 +841,21 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           ${CONFIG.COURSE.PRICE_ONLINE}{' '}gets you all 8 modules and the clinical platform now — and every
           dollar counts toward the Complete course when your city&rsquo;s workshop date launches.
         </p>
+        <div className="max-w-sm mx-auto mb-3 text-left">
+          <CheckoutEmailField
+            email={checkoutEmail}
+            setEmail={setCheckoutEmail}
+            sessionEmail={checkoutSessionEmail}
+            disabled={loading !== null}
+            inputId="checkout-email-compact-exit"
+            placeholder="Email for your receipt & enrolment"
+          />
+        </div>
         <button
           type="button"
           onClick={() => handleCheckout('online-only')}
-          className="btn-primary inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm"
+          disabled={loading !== null || softEmailBlocks('online-only')}
+          className="btn-primary inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Enrol online — ${CONFIG.COURSE.PRICE_ONLINE}
           <ArrowRight className="w-4 h-4" />
@@ -862,16 +917,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <CheckoutRescue url={stuckCheckoutUrl} />
         </div>
       )}
-      <div className="max-w-md mx-auto mb-6">
-        <CheckoutEmailField
-          email={checkoutEmail}
-          setEmail={setCheckoutEmail}
-          sessionEmail={checkoutSessionEmail}
-          disabled={loading !== null}
-          inputId="checkout-email-full"
-          placeholder="Email for your receipt & enrolment"
-        />
-      </div>
       {/* Global error */}
       {error && (
         <div role="alert" aria-live="assertive" className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -998,9 +1043,18 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </p>
           </div>
 
+          <CheckoutEmailField
+            email={checkoutEmail}
+            setEmail={setCheckoutEmail}
+            sessionEmail={checkoutSessionEmail}
+            disabled={loading !== null}
+            inputId="checkout-email-online"
+            className="mb-3"
+            placeholder="Email for your receipt & enrolment"
+          />
           <button
             onClick={() => handleCheckout('online-only')}
-            disabled={loading !== null}
+            disabled={loading !== null || softEmailBlocks('online-only')}
             className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
           >
             {loading === 'online-only' ? (
@@ -1169,9 +1223,18 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </div>
           </div>
 
+          <CheckoutEmailField
+            email={checkoutEmail}
+            setEmail={setCheckoutEmail}
+            sessionEmail={checkoutSessionEmail}
+            disabled={loading !== null}
+            inputId="checkout-email-complete"
+            className="mb-3"
+            placeholder="Email for your receipt & enrolment"
+          />
           <button
             onClick={() => handleCheckout('full-course')}
-            disabled={loading !== null}
+            disabled={loading !== null || softEmailBlocks('full-course')}
             className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
           >
             {loading === 'full-course' ? (
@@ -1327,11 +1390,20 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             ))}
           </div>
 
+          <CheckoutEmailField
+            email={checkoutEmail}
+            setEmail={setCheckoutEmail}
+            sessionEmail={checkoutSessionEmail}
+            disabled={loading !== null}
+            inputId="checkout-email-secure"
+            className="mb-3 mt-auto"
+            placeholder="Email for your receipt & enrolment"
+          />
           <button
             type="button"
             onClick={() => handleCheckout('secure-seat')}
-            disabled={loading !== null}
-            className="mt-auto btn-primary w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled={loading !== null || softEmailBlocks('secure-seat')}
+            className="btn-primary w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading === 'secure-seat' ? (
               <Loader2 className="w-4 h-4 animate-spin" />

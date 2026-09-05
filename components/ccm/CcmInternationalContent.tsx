@@ -208,7 +208,18 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
     setEmail: setCheckoutEmail,
     sessionEmail: checkoutSessionEmail,
     resolved: resolvedCheckoutEmail,
+    needsField: checkoutNeedsField,
   } = useCheckoutEmail()
+
+  const softEmailBlocks = checkoutNeedsField && !resolvedCheckoutEmail
+
+  const focusIntlCheckoutEmail = (inputId = 'ccm-intl-checkout-email') => {
+    if (typeof document === 'undefined') return
+    const el = document.getElementById(inputId) as HTMLInputElement | null
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.focus()
+  }
 
   // CCM international checkout is LIVE (not gated) — `international-online` grants
   // online-only = the CCM 8-module course. Currency is resolved server-side.
@@ -216,6 +227,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
     if (enrolling) return
     if (!resolvedCheckoutEmail) {
       setEnrolError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      focusIntlCheckoutEmail('ccm-intl-checkout-email')
       return
     }
     setEnrolling(true)
@@ -360,7 +372,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 <button
                   type="button"
                   onClick={handleEnrol}
-                  disabled={enrolling}
+                  disabled={enrolling || softEmailBlocks}
                   className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
@@ -759,10 +771,21 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           </div>
 
           <div className="text-center mt-10">
-            <button type="button" onClick={handleEnrol} disabled={enrolling} className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+            <div className="max-w-sm mx-auto mb-3 text-left">
+              <CheckoutEmailField
+                email={checkoutEmail}
+                setEmail={setCheckoutEmail}
+                sessionEmail={checkoutSessionEmail}
+                disabled={enrolling}
+                inputId="ccm-intl-checkout-email-faq"
+                placeholder={uk ? 'you@nhs.net' : 'your@email.com'}
+              />
+            </div>
+            <button type="button" onClick={handleEnrol} disabled={enrolling || softEmailBlocks} className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
               {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
               {!enrolling && <ArrowRight className="w-5 h-5" />}
             </button>
+            {enrolError && <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>}
             <p className="text-xs text-muted-foreground mt-4">{audience.certFooterLine ?? 'Endorsed by Osteopathy Australia · 8 CPD hours · lifetime access'}</p>
           </div>
         </div>
@@ -796,10 +819,20 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               ))}
             </ul>
             <div className="text-center">
+              <div className="max-w-sm mx-auto mb-3 text-left">
+                <CheckoutEmailField
+                  email={checkoutEmail}
+                  setEmail={setCheckoutEmail}
+                  sessionEmail={checkoutSessionEmail}
+                  disabled={enrolling}
+                  inputId="ccm-intl-checkout-email-exit"
+                  placeholder={uk ? 'you@nhs.net' : 'your@email.com'}
+                />
+              </div>
               <button
                 type="button"
                 onClick={handleEnrol}
-                disabled={enrolling}
+                disabled={enrolling || softEmailBlocks}
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
@@ -820,7 +853,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
       <div className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300 ${showStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="backdrop-blur-lg bg-background/90 border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-foreground">{price.display} · {audience.stickyCpdLabel ?? '8 CPD'}</span>
-          <button type="button" onClick={handleEnrol} disabled={enrolling} className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed">
+          <button type="button" onClick={handleEnrol} disabled={enrolling || softEmailBlocks} className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed">
             {enrolling ? 'Starting…' : 'Enrol'}
             {!enrolling && <ArrowRight className="w-3.5 h-3.5" />}
           </button>

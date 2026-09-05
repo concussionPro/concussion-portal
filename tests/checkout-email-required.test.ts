@@ -77,4 +77,19 @@ describe('/api/create-checkout email gate', () => {
       expect(src.includes("email: resolvedCheckoutEmail") || src.includes('email: resolvedCheckoutEmail') || src.includes('resolvedCheckoutEmail ? { email')).toBe(true)
     }
   })
+
+  it('PricingOptions puts soft email on Online and Complete cards (not only Secure)', () => {
+    const src = readFileSync(join(process.cwd(), 'components/PricingOptions.tsx'), 'utf8')
+    expect(src.includes('checkout-email-online')).toBe(true)
+    expect(src.includes('checkout-email-complete')).toBe(true)
+    expect(src.includes('checkout-email-secure')).toBe(true)
+    expect(src.includes("softEmailBlocks('online-only')")).toBe(true)
+    expect(src.includes("softEmailBlocks('full-course')")).toBe(true)
+  })
+
+  it('intl exit/FAQ Enrol CTAs also carry soft email fields', () => {
+    const src = readFileSync(join(process.cwd(), 'components/ccm/CcmInternationalContent.tsx'), 'utf8')
+    expect(src.includes('ccm-intl-checkout-email-faq')).toBe(true)
+    expect(src.includes('ccm-intl-checkout-email-exit')).toBe(true)
+  })
 })
