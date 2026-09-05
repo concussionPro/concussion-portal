@@ -233,8 +233,8 @@ export const POST_PURCHASE_SEQUENCE = [
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Welcome aboard, ${greetingName(name)}!</h2>
-      <p>Your Concussion Management course is ready and waiting. Students who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
-      <p>Module 1 takes about 75 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
+      <p>Your <strong>Concussion Clinical Mastery</strong> course is ready — endorsed by Osteopathy Australia, with ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours across 8 modules.</p>
+      <p>Module 1 takes about 75 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on. Starting while the enrolment is fresh usually makes the rest easier.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
       <div class="callout">
         <strong>Quick tip:</strong> Each module builds on the previous one. Complete them in order for the best learning experience.
@@ -262,7 +262,7 @@ export const POST_PURCHASE_SEQUENCE = [
       </ol>
       <p>Each module takes about 60–90 minutes. By the end of Module 3, you'll have a solid clinical framework for concussion recognition, diagnosis, and acute management.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day3', 'continue_course')}" class="cta-btn">Open Module 1: Concussion Neuroscience</a></center>
-      <p class="ps">P.S. Your course has lifetime access, but momentum matters — clinicians who finish within the first two weeks report the highest confidence gains.</p>
+      <p class="ps">P.S. Lifetime access — no deadline. Work through it at clinic pace; the certificate generates when you finish all 8 modules.</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -314,8 +314,8 @@ export const POST_PURCHASE_SEQUENCE = [
       <h2>Hi ${greetingName(name)},</h2>
       <p>Quick reminder: once you complete all 8 modules, your <strong>8 CPD hour certificate</strong> is automatically generated and ready to download from your dashboard.</p>
       <p>Each module takes 45-60 minutes. Most clinicians finish over a few sittings — and you have lifetime access, so there's no deadline.</p>
-      <p>But if you're close, finishing this week means the material is fresh and ready to apply in clinic.</p>
-      <center><a href="${utm(loginLink, 'post_purchase_day21', 'finish_course')}" class="cta-btn">Finish Your Course</a></center>
+      <p>Whenever you finish, the material is there to use in clinic the same week — no expiry on access.</p>
+      <center><a href="${utm(loginLink, 'post_purchase_day21', 'finish_course')}" class="cta-btn">Continue your modules</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -349,6 +349,8 @@ export const POST_PURCHASE_SEQUENCE = [
  */
 export const ABANDONED_CHECKOUT_SEQUENCE = [
   // Email 1 — 1 hour after abandonment
+  // Quiet rescue: auth + help, no scarcity / "complete checkout" pressure.
+  // Audience = AHPRA clinicians who convert on board-safety + clinical fit.
   {
     hoursAfter: 1,
     subject: 'You left something behind',
@@ -357,17 +359,18 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
     // /pricing for sessions created before recovery was enabled.
     template: (name: string, recoveryUrl?: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
-      <p>Looks like you started enrolling in the Concussion Management course but didn't finish.</p>
-      <p>No worries — your spot is still available. If you ran into a technical issue or had questions, just reply to this email.</p>
-      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_1h', 'complete_enrolment')}" class="cta-btn">Complete Your Enrolment</a></center>
+      <p>You started enrolling in <strong>Concussion Clinical Mastery</strong> and didn't finish — that happens. If checkout glitched or you want a quick clinical question answered first, just reply.</p>
+      <p>When you're ready, you can pick enrolment back up here:</p>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_1h', 'resume_enrolment')}" class="cta-btn">Return to enrolment</a></center>
       <div class="callout">
-        <strong>What you'll get:</strong><br><br>
-        &#8226; 8 online modules with lifetime access<br>
-        &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} with workshop)<br>
-        &#8226; Clinical Toolkit: referral templates, RTP forms, clearance letters<br>
-        &#8226; Endorsed by Osteopathy Australia
+        <strong>In short:</strong><br><br>
+        &#8226; Curriculum aligned to the Amsterdam 2023 consensus and SCAT6 / SCOAT6 standard<br>
+        &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online (${CONFIG.COURSE.TOTAL_CPD_POINTS} with the practical day) — claimable under your Board's usual CPD rules<br>
+        &#8226; Endorsed by Osteopathy Australia · open to AHPRA-registered clinicians<br>
+        &#8226; Clinical Toolkit (referral, RTP, clearance) + lifetime module access<br>
+        &#8226; Tax invoice + 7-day money-back
       </div>
-      <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+      <div class="sig">Zac Lewis<br>Osteopath · Concussion Education Australia</div>
     `),
   },
   // Email 2 — 24 hours after abandonment
@@ -376,15 +379,15 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
     subject: 'Still thinking it over?',
     template: (name: string, recoveryUrl?: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
-      <p>I wanted to follow up in case you had questions about the course.</p>
-      <p>Here's what clinicians ask most often:</p>
-      <p><strong>"Is this relevant for physios/GPs/exercise physiologists?"</strong><br>
-      Yes — the curriculum covers SCAT6, VOMS, BESS, and return-to-play protocols used across all allied health disciplines. It's endorsed by Osteopathy Australia but designed for any clinician managing concussion.</p>
-      <p><strong>"How long does it take?"</strong><br>
-      The 8 online modules take approximately 8 hours total. Most clinicians complete them across a few sittings. You have lifetime access, so there's no rush.</p>
-      <p><strong>"What if I want to add the workshop later?"</strong><br>
-      Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and upgrade to include the hands-on workshop later — you'll only pay the difference.</p>
-      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_24h', 'view_options')}" class="cta-btn">View Course Options</a></center>
+      <p>No chase — just the questions clinicians usually ask before they enrol.</p>
+      <p><strong>"Is this for my discipline?"</strong><br>
+      CCM is built for physiotherapists, osteopaths, chiropractors and other AHPRA clinicians managing concussion. Exercise physiologists are on the separate ESSA-aligned Concussion Rehab Mastery stream.</p>
+      <p><strong>"Is the clinical content current?"</strong><br>
+      Yes — SCAT6, VOMS, BESS, staged return-to-play, and phenotype rehab, taught against the Amsterdam 2023 consensus.</p>
+      <p><strong>"How long, and can I add the practical day later?"</strong><br>
+      About ${CONFIG.COURSE.ONLINE_CPD_POINTS} hours online, self-paced, lifetime access. Online is $${CONFIG.COURSE.PRICE_ONLINE}; you can add the catered practical day later and only pay the difference.</p>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_24h', 'view_options')}" class="cta-btn">View course options</a></center>
+      <p class="ps">Tax invoice and CPD certificate are included for reimbursement.</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -394,17 +397,17 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
     subject: 'Concussion Clinical Mastery — the details, in one place',
     template: (name: string, recoveryUrl?: string) => emailShell(`
       <h2>Hi ${greetingName(name)},</h2>
-      <p>You started enrolling but didn't finish. Here's the course, laid out plainly:</p>
+      <p>Last note from me on enrolment — the course, plainly:</p>
       <ul>
-        <li><strong>What it covers:</strong> recognition and red flags, VOMS and BESS, staged return-to-play, and rehab matched to the concussion phenotype.</li>
-        <li><strong>Format:</strong> 8 online modules, 8 CPD hours, endorsed by Osteopathy Australia. Lifetime access, self-paced.</li>
-        <li><strong>Cost:</strong> $${CONFIG.COURSE.PRICE_ONLINE} online. Add the hands-on workshop any time — you only pay the difference.</li>
-        <li><strong>Reimbursement:</strong> tax invoice + CPD certificate included; most clinicians pay $0 out of pocket.</li>
-        <li><strong>Guarantee:</strong> 7-day money-back, no questions.</li>
+        <li><strong>What it covers:</strong> red flags, SCAT6 / VOMS / BESS, staged return-to-play, and rehab matched to concussion phenotype.</li>
+        <li><strong>Authority:</strong> endorsed by Osteopathy Australia; CPD hours claimable under usual Board rules; Amsterdam 2023–aligned.</li>
+        <li><strong>Format:</strong> 8 online modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · lifetime access · self-paced.</li>
+        <li><strong>Cost:</strong> $${CONFIG.COURSE.PRICE_ONLINE} online. Practical day later if you want it — difference only.</li>
+        <li><strong>Money hygiene:</strong> tax invoice + CPD certificate · 7-day money-back.</li>
       </ul>
-      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'resume')}" class="cta-btn">Finish enrolling</a></center>
-      <p class="ps">P.S. The SCAT6 tools and free course are yours to keep regardless.</p>
-      <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'resume')}" class="cta-btn">Resume enrolment</a></center>
+      <p class="ps">Any free SCAT tools you already have stay yours either way. Reply anytime if a colleague question would help you decide.</p>
+      <div class="sig">Zac Lewis<br>Osteopath · Concussion Education Australia</div>
     `),
   },
 ]
