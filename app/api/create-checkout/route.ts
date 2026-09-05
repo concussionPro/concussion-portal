@@ -49,11 +49,15 @@ export async function POST(request: NextRequest) {
     }
     let { courseType, location, email, preferredCity, promoCode, utm, attribution, clinicianCount, clinicName } = parsed.data
 
-    // P1 2026-09-05: AU market cookie locks AUD checkout. Overseas travellers
-    // who opted into Australia/NZ pricing must never mint international-online
-    // (USD/GBP/…) — that was charging US$~371 against an A$497 card.
+    // P1/P2 2026-09-05: AU market cookie OR home geo locks AUD Online checkout.
+    // Overseas travellers on Australia/NZ pricing (and AU/NZ IPs) must never mint
+    // international-online (USD/GBP/…) — that was charging US$~371 vs A$497.
     const market = readMarketOverride(request.cookies)
-    if (market === 'au' && courseType === 'international-online') {
+    const visitorCountry = detectCountry(request.headers)
+    const forceAudOnline =
+      market === 'au' ||
+      (market !== 'intl' && (visitorCountry === 'AU' || visitorCountry === 'NZ'))
+    if (forceAudOnline && courseType === 'international-online') {
       courseType = 'online-only'
     }
 

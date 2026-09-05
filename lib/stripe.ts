@@ -390,6 +390,12 @@ export async function createCourseCheckoutSession({
     }
   }
 
+  // AUD presentment lock: Stripe Adaptive Pricing (account-level) was converting
+  // A$497 Online checkouts to ~US$371 for overseas-looking browsers even when
+  // cea_market=au / AU pricing. Force the charged currency to be the displayed
+  // one for home-market (AUD) sessions; intl sessions keep adaptive off too so
+  // fixed per-market amounts in lib/international-pricing stay authoritative.
+  const isAudCheckout = currency === 'aud'
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour (gives BNPL users time)
@@ -397,6 +403,9 @@ export async function createCourseCheckoutSession({
     // Shows Apple Pay, Google Pay, Link, cards, Afterpay, Klarna as appropriate.
     // Requires: (1) payment methods enabled in Stripe Dashboard, (2) Apple Pay
     // domain verification file at /.well-known/apple-developer-merchantid-domain-association
+    adaptive_pricing: { enabled: false },
+    // Stripe has no en-AU locale — 'en' + adaptive_pricing off keeps AUD presentment.
+    ...(isAudCheckout ? { locale: 'en' as const } : {}),
     line_items: lineItems,
     customer_email: customerEmail || undefined,
     // Stripe-hosted cart recovery: expired sessions carry a recovery URL that
@@ -496,6 +505,8 @@ export async function createCrmCheckoutSession({
   return getStripe().checkout.sessions.create({
     mode: 'payment',
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+    adaptive_pricing: { enabled: false },
+    locale: 'en',
     line_items: [
       {
         price_data: {
@@ -589,6 +600,7 @@ export async function createCrmInternationalCheckoutSession({
   return getStripe().checkout.sessions.create({
     mode: 'payment',
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+    adaptive_pricing: { enabled: false },
     // Always create a customer + save the card off-session so the annual renewal
     // subscription can be attached and charged from year 2.
     customer_creation: 'always',

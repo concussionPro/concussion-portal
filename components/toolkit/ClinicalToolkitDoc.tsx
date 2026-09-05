@@ -381,7 +381,8 @@ const NON_MERGE_TOKENS = new Set(['braces', 'curly_braces'])
 
 function ParsedText({ text }: { text: string }) {
   const parts: React.ReactNode[] = []
-  const regex = /\{([a-z_]+)\}/g
+  // Digits required: scat6_symptom_severity / scat6_total (a-z_ only left raw braces in UI)
+  const regex = /\{([a-z][a-z0-9_]*)\}/g
   let lastIndex = 0
   let match: RegExpExecArray | null
 

@@ -25,7 +25,7 @@ const FLAGSHIP_COURSE: CourseModuleDescriptor = {
   moduleBasePath: '/modules',
   passMarkPercent: 75,
   showResources: true,
-  supportsDemoViewer: false,
+  supportsDemoViewer: true,
   hasScatModules: true,
   showCertificateCta: true,
   headerModuleNumber: 'data',

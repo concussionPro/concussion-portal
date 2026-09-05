@@ -439,6 +439,7 @@ function SyncStatusLine({ syncState }: { syncState: string }) {
   const config = {
     syncing: { icon: Loader2, text: 'Syncing...', color: 'text-blue-500', spin: true },
     synced: { icon: CheckCircle2, text: 'Saved to cloud', color: 'text-emerald-500', spin: false },
+    demo: { icon: AlertCircle, text: 'Demo — progress not saved', color: 'text-amber-600', spin: false },
     error: { icon: AlertCircle, text: 'Sync error', color: 'text-amber-500', spin: false },
     offline: { icon: WifiOff, text: 'Offline', color: 'text-slate-400', spin: false },
   }[syncState]

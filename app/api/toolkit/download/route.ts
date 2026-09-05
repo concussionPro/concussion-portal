@@ -203,7 +203,8 @@ function fillableHint(): string {
 const NON_MERGE_TOKENS = new Set(['braces', 'curly_braces'])
 
 function parseFields(text: string): string {
-  return escapeHtml(text).replace(/\{([a-z_]+)\}/g, (_, name: string) => {
+  // Digits required: scat6_* tokens (a-z_ only left raw braces in HTML export)
+  return escapeHtml(text).replace(/\{([a-z][a-z0-9_]*)\}/g, (_, name: string) => {
     if (NON_MERGE_TOKENS.has(name)) return 'placeholders'
     return `<span class="field" contenteditable="true" spellcheck="false" data-ph="${name.replace(/_/g, ' ')}"></span>`
   })

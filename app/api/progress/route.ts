@@ -4,6 +4,7 @@ import { sql } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { progressSchema } from '@/lib/schemas'
 import { isDemoUserId } from '@/lib/demo-session'
+import { DEMO_KEY } from '@/lib/demo-key'
 import { userOwnsCrm } from '@/lib/crm-course'
 import { getCurrentAccessLevel } from '@/lib/users'
 import { hasRealProgress, retainStoredProgress } from '@/lib/progress-merge'
@@ -142,7 +143,11 @@ export async function POST(request: NextRequest) {
     // save (in-page progress works for the visit) without persisting —
     // demo ids have no users row and rows would be shared across every
     // prospect. Also what keeps the sidebar sync line clean.
-    if (isDemoUserId(sessionData.userId)) {
+    const demoKey =
+      request.cookies.get('demo_key')?.value ||
+      request.headers.get('x-demo-key') ||
+      ''
+    if (isDemoUserId(sessionData.userId) || demoKey === DEMO_KEY) {
       return NextResponse.json({ success: true, demo: true })
     }
 
