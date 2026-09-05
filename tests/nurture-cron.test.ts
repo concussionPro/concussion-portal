@@ -109,6 +109,11 @@ vi.mock('@/lib/email-sequences', () => ({
     { day: 0, subject: 'SCAT Day 0', template: tpl },
     { day: 3, subject: 'SCAT Day 3', template: tpl },
     { day: 7, subject: 'SCAT Day 7', template: tpl },
+    // Days 0, 7 and 10 each have their OWN branch in the route (day-0 delivery,
+    // day-7 progress routing, day-10 engagement), so none of them reach the
+    // generic per-step sender. Day 14 does, and is not in the 2026-09-05 pause
+    // set — it is the step the machinery tests below drive.
+    { day: 14, subject: 'SCAT Day 14', template: tpl },
   ],
   POST_PURCHASE_SEQUENCE: [
     { day: 1, subject: 'PP Day 1', accessLevels: ['online-only', 'full-course'], template: tpl },
@@ -191,20 +196,26 @@ describe('send-nurture-emails cron', () => {
     delete process.env.VERCEL_PROJECT_PRODUCTION_URL
   })
 
+  // These three cover the SEND MACHINERY — counting, audit rollback, per-step
+  // dedupe keys — and used day 3 until 2026-09-05, when Zac paused the cold
+  // free-resource monetization steps (PAUSED_SCAT_MASTERY_DAYS = 3, 10, 28, 42).
+  // Moved to day 14 — still live, and the lowest step that reaches the GENERIC
+  // per-step sender — rather than weakened: the machinery is what these assert,
+  // and it has to stay covered for the lanes that still send.
   it('counts a successful send and writes no audit rollback', async () => {
-    loadUsersMock.mockResolvedValue([previewUser()])
+    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(14) })])
 
     const res = await GET(makeRequest())
     const body = await res.json()
 
     expect(body.emailsSent).toBe(1)
     expect(sendEmailMock).toHaveBeenCalledTimes(1)
-    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'SCAT Day 3' })
+    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'SCAT Day 14' })
     expect(sqlCalls('DELETE FROM email_audit_log')).toHaveLength(0)
   })
 
   it('rolls back the audit row and does not count a failed send', async () => {
-    loadUsersMock.mockResolvedValue([previewUser()])
+    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(14) })])
     sendEmailMock.mockResolvedValue(false)
 
     const res = await GET(makeRequest())
@@ -213,23 +224,36 @@ describe('send-nurture-emails cron', () => {
     expect(body.emailsSent).toBe(0)
     const rollbacks = sqlCalls('DELETE FROM email_audit_log WHERE audit_key')
     expect(rollbacks).toHaveLength(1)
-    expect(rollbacks[0].values).toContain('scat_day3_u1')
+    expect(rollbacks[0].values).toContain('scat_day14_u1')
   })
 
   it('catch-up window sends a missed step (audit key stays per-step)', async () => {
-    // Day-3 email missed; user is now 4 days old → still inside the window
-    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(4) })])
+    // Day-14 email missed; user is now 15 days old → still inside the window
+    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(15) })])
 
     const res = await GET(makeRequest())
     const body = await res.json()
 
     expect(body.emailsSent).toBe(1)
-    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'SCAT Day 3' })
+    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'SCAT Day 14' })
     // Dedupe key is the STEP day, not the calendar day
     const inserts = sqlCalls('INSERT INTO email_audit_log').filter((c) =>
       c.values.some((v) => String(v).startsWith('scat_day'))
     )
-    expect(inserts[0].values).toContain('scat_day3_u1')
+    expect(inserts[0].values).toContain('scat_day14_u1')
+  })
+
+  it('does not send the paused cold free-resource steps', async () => {
+    // The pause itself, locked. Without this, restoring day 3 to the drip is a
+    // silent one-line change — and the reason it went is that free-resource
+    // collectors are 0-for-106 while the domain wears the volume.
+    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(3) })])
+
+    const res = await GET(makeRequest())
+    const body = await res.json()
+
+    expect(body.emailsSent).toBe(0)
+    expect(sendEmailMock).not.toHaveBeenCalled()
   })
 
   it('sends workshop prep to a nurture-unsubscribed attendee (operational email)', async () => {

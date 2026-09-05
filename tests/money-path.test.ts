@@ -16,6 +16,11 @@ type CreatedSession = {
   mode: string
   line_items: Array<{ price_data?: { unit_amount?: number; currency?: string }; price?: string; quantity?: number }>
   allow_promotion_codes?: boolean
+  // Sent on every session lib/stripe.ts creates. Declared here because the
+  // AUD-presentment guard below asserts on it: with adaptive pricing ON,
+  // Stripe rewrites A$497 into the buyer's local currency and display stops
+  // matching charge — which is the whole thing that rule exists to catch.
+  adaptive_pricing?: { enabled: boolean }
   discounts?: unknown
   metadata?: Record<string, string>
   success_url?: string
