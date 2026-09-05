@@ -397,6 +397,17 @@ export default function HomeClient() {
                       Free SCAT Forms
                     </Link>
                   </div>
+                  {/* Paid paths — free block used to bury Online / SST */}
+                  <p className="mt-3 text-[12.5px] text-[var(--muted-foreground)]">
+                    Ready for clinic now?{' '}
+                    <Link href="/pricing" className="font-semibold text-[var(--accent)] underline underline-offset-2">
+                      Enrol Online · from A${CONFIG.COURSE.PRICE_ONLINE}
+                    </Link>
+                    {' · '}
+                    <Link href="/clinical-suite" className="font-semibold text-[var(--accent)] underline underline-offset-2">
+                      SST Clinical Testing
+                    </Link>
+                  </p>
                   {/* Second free course (module 104) — built + live at
                       /concussion-update but never surfaced publicly until
                       2026-08-04; homepage showed SCAT6 only. */}

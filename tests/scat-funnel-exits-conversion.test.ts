@@ -11,7 +11,6 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(src).toContain('href="/upgrade"')
     expect(src).toContain('Pay the difference')
     expect(src).toContain("context === 'module-8'")
-    // Online enrol still exists for free SCAT path
     expect(src).toContain('Enrol Online')
   })
 
@@ -21,7 +20,6 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(src).toContain('context="scat-complete"')
     expect(src).toContain('context="module-8"')
     expect(src).toContain('ownsOnline')
-    // Must not send Online owners to full-price Complete on /pricing from the invite
     expect(src).not.toMatch(/module_8_online_only[\s\S]{0,400}\/pricing#pricing-cards/)
     expect(src).toContain('Online finish without certificate CTA')
   })
@@ -31,7 +29,6 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(src).toContain('ScatFunnelExits')
     expect(src).toContain('context="scat-mastery"')
   })
-})
 
   it('scat-mastery keeps clinic-day engagement AFTER dual exits (not above)', () => {
     const src = readFileSync(join(root, 'app/scat-mastery/page.tsx'), 'utf8')
@@ -39,8 +36,38 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     const engage = src.indexOf('Use it this week')
     expect(exits).toBeGreaterThan(-1)
     expect(engage).toBeGreaterThan(exits)
-    // Must not resurrect CCHC banner JSX above exits (comment mentions OK)
     expect(src).not.toMatch(/Also free · second course[\s\S]{0,80}Concussion Care Has Changed/)
     expect(src).not.toMatch(/bg-gradient-to-br from-\[#0d5c63\][\s\S]{0,200}Also free/)
   })
 
+  it('AfterTheAssessment: free mastery + Online + SST dual exit', () => {
+    const src = readFileSync(join(root, 'components/scat-forms/AfterTheAssessment.tsx'), 'utf8')
+    expect(src).toContain('href="/scat-mastery"')
+    expect(src).toContain('Start free course')
+    expect(src).toContain('Enrol Online')
+    expect(src).toContain('href="/pricing"')
+    expect(src).toContain('href="/clinical-suite"')
+    expect(src).toContain('See SST Clinical Testing')
+  })
+
+  it('SCAT form Clients land completers on AfterTheAssessment (not mastery-only)', () => {
+    for (const rel of [
+      'app/scat-forms/scat6/Client.tsx',
+      'app/scat-forms/child-scat6/Client.tsx',
+      'app/scat-forms/scoat6/Client.tsx',
+    ]) {
+      const src = readFileSync(join(root, rel), 'utf8')
+      expect(src).toContain("from '@/components/scat-forms/AfterTheAssessment'")
+      expect(src).toContain('<AfterTheAssessment')
+      expect(src).not.toContain('Want to master the SCAT6?')
+      expect(src).not.toContain('Want to master the SCOAT6?')
+    }
+  })
+
+  it('OrganicOfferStrip routes to Enrol Online (not buried /courses hub)', () => {
+    const src = readFileSync(join(root, 'components/OrganicOfferStrip.tsx'), 'utf8')
+    expect(src).toContain('/pricing?src=')
+    expect(src).toContain('Enrol Online')
+    expect(src).not.toContain('/courses?src=')
+  })
+})

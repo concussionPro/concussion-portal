@@ -114,7 +114,7 @@ function UpgradeContent() {
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Link href="/pricing#pricing-cards" className="btn-primary px-5 py-3 rounded-xl text-sm font-semibold">
-              Start Online — upgrade later
+              Enrol Online from A${CONFIG.COURSE.PRICE_ONLINE} — upgrade later
             </Link>
             <Link href="/melbourne-nov7" className="px-5 py-3 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-foreground hover:bg-slate-50">
               Melbourne Nov 7 — Complete seat

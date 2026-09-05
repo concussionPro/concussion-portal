@@ -15,6 +15,7 @@ import { getAllCalculatedScores, CHILD_SCAT6_MAX } from '../shared/utils/child-s
 import { exportChildSCAT6ToFlatPDF } from '../shared/utils/child-scat6-pdf-flat'
 import { WORD_LISTS } from '../shared/constants/wordLists'
 import { EmailGateModal } from '@/components/scat-forms/EmailGateModal'
+import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
 
 const SectionHeader = ({
   id,
@@ -1150,15 +1151,8 @@ export default function ChildSCAT6Client() {
               placeholder="Enter any additional clinical observations, notes, or follow-up plans..."
             />
           </SectionHeader>
-
-          {/* SCAT6 Mastery Upsell */}
-          <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-xl text-center">
-            <p className="text-sm font-semibold text-slate-900 mb-1">Want to master the SCAT6 tools?</p>
-            <p className="text-xs text-slate-600 mb-3">Free course: learn proper administration, scoring, and interpretation of the SCAT6 and SCOAT6.</p>
-            <Link href="/scat-mastery" className="inline-block px-4 py-2 bg-[#5b9aa6] text-white text-sm font-semibold rounded-lg hover:bg-[#4a8a96] transition-colors">
-              Start Free SCAT6 Mastery Course →
-            </Link>
-          </div>
+          {/* Post-form exit: free mastery + Online / SST dual path */}
+          <AfterTheAssessment className="mt-6" />
         </div>
       </div>
     </div>

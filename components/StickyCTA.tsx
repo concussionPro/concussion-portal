@@ -143,6 +143,13 @@ export function StickyCTA() {
                 Enrol Online — A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
+              <Link
+                href="/clinical-suite"
+                onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_soft_sticky_sst' })}
+                className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/10 transition-all"
+              >
+                Or SST
+              </Link>
               <button
                 onClick={handleScatDismiss}
                 className="p-1.5 text-white/40 hover:text-white/70 transition-colors"

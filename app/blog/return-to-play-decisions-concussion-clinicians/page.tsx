@@ -3,6 +3,7 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, CheckCircle, ClipboardList, Brain, Activity, Layers, Monitor } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { OrganicOfferStrip } from '@/components/OrganicOfferStrip'
 import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
@@ -63,6 +64,10 @@ export default function ReturnToPlayPage() {
 
         {/* Article Content */}
         <div className="max-w-4xl mx-auto px-4 py-12">
+
+          <div className="mb-8">
+            <OrganicOfferStrip src="blog-rtp-strip" />
+          </div>
 
           {/* Introduction */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">

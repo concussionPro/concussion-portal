@@ -1,12 +1,15 @@
 import Link from 'next/link'
-import { ArrowRight, Activity, GraduationCap } from 'lucide-react'
+import { ArrowRight, Activity, GraduationCap, BookOpen } from 'lucide-react'
 import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
 
 /**
- * "After the assessment" — equal-weight dual exit for free SCAT tool traffic.
+ * "After the assessment" — free-SCAT form / download exit.
  *
- * 1) Learn full clinical competency → /pricing (Online front door / Unlock seat / Complete)
- * 2) Apply protocol in clinic → /clinical-suite (SST standalone)
+ * Soft path: free SCAT6 Mastery (scat-mastery) — where form traffic should land
+ * when they want training without buying yet.
+ * Equal-weight paid dual exit:
+ *  1) Learn full clinical competency → /pricing (Online front door)
+ *  2) Apply protocol in clinic → /clinical-suite (SST standalone)
  *
  * Course and SST stay on separate surfaces — do not merge prices into one CTA.
  */
@@ -31,7 +34,31 @@ export function AfterTheAssessment({ className = '' }: { className?: string }) {
         ready to return to contact. Those are the decisions that carry the medico-legal weight.
       </p>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      {/* Soft free path — high-traffic form completers often want training before paid */}
+      <Link
+        href="/scat-mastery"
+        className="group mt-5 flex flex-col rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/90 to-white p-4 transition-colors hover:border-emerald-300 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+      >
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-800">
+            Free first · SCAT mastery
+          </p>
+          <span className="mt-0.5 inline-flex items-center gap-2 text-[13px] font-bold text-slate-900">
+            <BookOpen className="h-4 w-4 text-emerald-700" strokeWidth={2} />
+            Master SCAT6 &amp; SCOAT6 in ~1 hour
+          </span>
+          <span className="mt-1 block text-[12.5px] leading-snug text-slate-600">
+            Proper administration, scoring, interpretation, and documentation — then A$
+            {CONFIG.COURSE.SCAT_DISCOUNT_AUD} off Online with code {CONFIG.COURSE.PROMO_CODE}.
+          </span>
+        </div>
+        <span className="mt-3 inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-emerald-800 sm:mt-0">
+          Start free course{' '}
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </Link>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <Link
           href="/pricing"
           className="group flex flex-col rounded-xl border-2 border-teal-300/80 bg-gradient-to-br from-teal-50/90 to-white p-4 transition-colors hover:border-teal-400"
@@ -44,12 +71,12 @@ export function AfterTheAssessment({ className = '' }: { className?: string }) {
             Learn full clinical competency
           </span>
           <span className="mt-1 text-[12.5px] leading-snug text-slate-600">
-            Enrol Online first (front door). Then unlock your seat (A$
-            {CONFIG.COURSE.PRICE_SECURE_SEAT}) toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}
-            -seat gate — or Complete. Date opens when demand is met.
+            Enrol Online first (front door) from A${CONFIG.COURSE.PRICE_ONLINE}. Then unlock your
+            seat (A${CONFIG.COURSE.PRICE_SECURE_SEAT}) toward the{' '}
+            {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate — or Complete.
           </span>
           <span className="mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-[#0d7377]">
-            Enrol Online / Unlock seat{' '}
+            Enrol Online{' '}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </span>
         </Link>
@@ -77,7 +104,11 @@ export function AfterTheAssessment({ className = '' }: { className?: string }) {
       </div>
 
       <p className="mt-4 text-[12px] text-slate-500">
-        Course pricing on{' '}
+        Free mastery on{' '}
+        <Link href="/scat-mastery" className="font-semibold text-[#5b9aa6] underline underline-offset-2">
+          /scat-mastery
+        </Link>
+        ; course pricing on{' '}
         <Link href="/pricing" className="font-semibold text-[#5b9aa6] underline underline-offset-2">
           /pricing
         </Link>

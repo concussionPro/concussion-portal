@@ -3,6 +3,7 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, CheckCircle, BarChart3, Scale, AlertTriangle, ClipboardList, Footprints } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { OrganicOfferStrip } from '@/components/OrganicOfferStrip'
 import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
@@ -63,6 +64,10 @@ export default function BESSBalanceTestingPage() {
 
         {/* Article Content */}
         <div className="max-w-4xl mx-auto px-4 py-12">
+
+          <div className="mb-8">
+            <OrganicOfferStrip src="blog-bess-strip" />
+          </div>
 
           {/* Introduction */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">

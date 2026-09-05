@@ -3,6 +3,7 @@ import { createBlogPostSchema, createFAQSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, CheckCircle, ClipboardCheck, Brain, Activity, AlertTriangle, BarChart3, Users, Monitor, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { OrganicOfferStrip } from '@/components/OrganicOfferStrip'
 import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
@@ -88,6 +89,10 @@ export default function PreSeasonBaselineTestingPage() {
 
         {/* Article Content */}
         <div className="max-w-4xl mx-auto px-4 py-12">
+
+          <div className="mb-8">
+            <OrganicOfferStrip src="blog-preseason-strip" />
+          </div>
 
           {/* Introduction: Why Baselines Matter */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">

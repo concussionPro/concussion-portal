@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { OrganicOfferStrip } from '@/components/OrganicOfferStrip'
 
 export const metadata: Metadata = {
   title: 'How to Use the SCAT6 for Concussion Management: A Clinician\'s Guide',
@@ -63,6 +64,11 @@ export default function HowToUseSCAT6Page() {
 
         {/* Article Content */}
         <div className="max-w-4xl mx-auto px-4 py-12">
+
+          {/* Organic-entry offer — SCAT how-to is high intent; route to mastery / Online */}
+          <div className="mb-8">
+            <OrganicOfferStrip src="blog-scat6-guide-strip" />
+          </div>
 
           {/* What is the SCAT6 */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">
