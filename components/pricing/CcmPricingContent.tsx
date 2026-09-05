@@ -191,7 +191,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: "How are workshop dates confirmed?",
-      a: "We run workshops as demand in each city opens up — Melbourne's first round ran in June 2026, and the next rounds launch city-by-city. Drop your details on the interest list for your preferred city — you'll get 6 weeks' notice when the date is locked in. Registered participants choose their preferred date first.",
+      a: "Money before calendar: enrol Complete (online unlocks now) with date TBD. The catered practical day is confirmed when " + CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD + " paid clinicians in your city have committed — free EOI does not count. You get at least " + CONFIG.WORKSHOP.LEAD_TIME_WEEKS + " weeks' notice; the venue is booked only after the cohort fills. Online-only buyers can upgrade for the difference whenever they are ready.",
     },
     {
       q: 'How much time does the course take?',
@@ -398,9 +398,9 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             the upgrade, so the number here can never drift from the real one. */}
         <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
           <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-            <strong className="font-bold">Start online, add the in-person day whenever you like.</strong>{' '}
+            <strong className="font-bold">Money before calendar — enrol Complete with date TBD.</strong>{' '}
             <span className="text-muted-foreground">
-              Online buyers upgrade later for the difference (${upgradePriceFor(null)}) — no deadline, and your city&apos;s date is chosen when it launches. The practical day is one shared room for every discipline: train alongside physios, osteos and exercise professionals for full multidisciplinary integration.
+              Online modules unlock immediately. The catered practical day is confirmed when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit (break-even), with at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice — venue booked only then. Prefer to start content only? Online is available; Complete buyers never wait on a free EOI list.
             </span>
           </p>
         </div>
@@ -457,8 +457,9 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               Where the practical day runs
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg mx-auto mt-2">
-              Buy the Complete Course any time — you nominate your city at checkout, and the
-              date launches once your city hits its threshold. At least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}{' '}weeks&apos; notice.
+              Enrol Complete any time — online unlocks now, date TBD. Nominate your city; the
+              day confirms when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits land, with at least{' '}
+              {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -634,7 +635,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                   <tr className="border-b border-slate-200 bg-slate-50">
                     <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
                     <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6] bg-[rgba(13,115,119,0.04)]">Online</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-700">+ Workshop</th>
+                    <th className="text-center py-3 px-4 font-semibold text-slate-700">Complete</th>
                   </tr>
                 </thead>
                 <tbody>

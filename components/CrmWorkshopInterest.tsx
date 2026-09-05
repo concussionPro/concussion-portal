@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { CONFIG } from '@/lib/config'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — in-person workshop interest form.
@@ -151,6 +153,15 @@ export default function CrmWorkshopInterest() {
     'mb-2 block text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]'
 
   return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+        <p className="text-sm font-bold text-slate-900 mb-1">Secure your seat</p>
+        <p className="text-xs text-slate-600 mb-3">
+          A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit for the shared practical day — preferred city on checkout. Counts toward the cohort gate.
+        </p>
+        <SecureSeatCheckout defaultCity={city as 'sydney' | 'melbourne' | 'byron-bay' | 'adelaide' | 'wa'} lockCity variant="button" source="crm_workshop_interest" />
+      </div>
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Or free notify-me (secondary)</p>
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
@@ -273,5 +284,6 @@ export default function CrmWorkshopInterest() {
         alone — the workshop is optional.
       </p>
     </form>
+    </div>
   )
 }

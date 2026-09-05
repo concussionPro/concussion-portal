@@ -20,6 +20,7 @@ import { SectionTypeBadge, estimateReadingTime } from '@/components/course/Secti
 import { useModuleData, type CourseKey, type InitialModuleData } from '@/hooks/useModuleData'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { CONFIG } from '@/lib/config'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 import type { QuizQuestion, Section } from '@/data/modules'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
@@ -1050,14 +1051,25 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 </div>
               </div>
 
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-3 w-full max-w-lg mx-auto">
                 <Link
                   href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
                   onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_all_complete', from: 'preview', promo: CONFIG.COURSE.PROMO_CODE })}
-                  className="px-8 py-3.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+                  className="w-full px-8 py-3.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2"
                 >
-                  Claim ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} Off — View Full Course
+                  Claim ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} Off — Enrol Online
                   <ArrowRight className="w-4 h-4" />
+                </Link>
+                <div className="w-full rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-left">
+                  <p className="text-xs font-bold text-amber-900 mb-2">Or secure your seat for the catered day</p>
+                  <SecureSeatCheckout variant="button" source="scat_all_complete" />
+                </div>
+                <Link
+                  href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}#pricing-cards`}
+                  onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_all_complete_complete', from: 'preview' })}
+                  className="text-sm font-semibold text-teal-700 hover:underline"
+                >
+                  Enrol Complete (date TBD) →
                 </Link>
                 <button
                   onClick={() => router.push(backHref)}
@@ -1154,6 +1166,10 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                   // a dead end (2026-08-05 parity).
                   if (!hasNext && !isSCATModule && showCertificateCta) {
                     const isEpCourse = course === 'ep'
+                    // Online-only finish: invite Secure your seat / Complete for the
+                    // catered day (16 CPD). Skip if already full-course / committed.
+                    const showPracticalInvite =
+                      !isEpCourse && accessLevel === 'online-only'
                     return (
                       <>
                         <button
@@ -1165,6 +1181,23 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                             : `Claim your ${CONFIG.COURSE.ONLINE_CPD_POINTS}-CPD certificate`}
                           <ArrowRight className="w-4 h-4" />
                         </button>
+                        {showPracticalInvite && (
+                          <div className="mt-4 w-full max-w-md mx-auto rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-left">
+                            <p className="text-sm font-bold text-slate-900 mb-1">
+                              Add the catered practical day ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD)
+                            </p>
+                            <p className="text-xs text-slate-600 mb-3">
+                              Secure your seat (A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable) or upgrade to Complete — date TBD until {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits.
+                            </p>
+                            <SecureSeatCheckout variant="button" source="module_8_online_only" />
+                            <Link
+                              href="/pricing#pricing-cards"
+                              className="mt-2 inline-flex text-xs font-semibold text-teal-700 hover:underline"
+                            >
+                              Or enrol Complete →
+                            </Link>
+                          </div>
+                        )}
                         <button
                           onClick={() => router.push(backHref)}
                           className="text-xs font-semibold text-slate-500 hover:text-slate-700"
@@ -1280,19 +1313,27 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               )}
               {/* Sync status indicator */}
               <div className="ml-auto flex-shrink-0">
-                {syncState === 'syncing' && (
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                {isDemoViewer ? (
+                  <span className="text-xs text-amber-600" title="Demo sessions are read-only — quiz answers are not persisted">
+                    Demo — progress not saved
                   </span>
-                )}
-                {syncState === 'synced' && (
-                  <span className="text-xs text-teal-500">Saved</span>
-                )}
-                {syncState === 'error' && (
-                  <span className="text-xs text-red-500">Save failed</span>
-                )}
-                {syncState === 'offline' && (
-                  <span className="text-xs text-amber-500">Offline</span>
+                ) : (
+                  <>
+                    {syncState === 'syncing' && (
+                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                      </span>
+                    )}
+                    {syncState === 'synced' && (
+                      <span className="text-xs text-teal-500">Saved</span>
+                    )}
+                    {syncState === 'error' && (
+                      <span className="text-xs text-red-500">Save failed</span>
+                    )}
+                    {syncState === 'offline' && (
+                      <span className="text-xs text-amber-500">Offline</span>
+                    )}
+                  </>
                 )}
               </div>
             </div>

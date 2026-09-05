@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight, Loader2, Mail } from 'lucide-react'
 import Image from 'next/image'
 import { CONFIG } from '@/lib/config'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
 import { trackInterestRegistration } from '@/lib/analytics'
@@ -252,7 +253,7 @@ export default function InPersonTrainingPage() {
                       <p className="text-sm text-muted-foreground">
                         {location.status === 'confirmed' && location.date
                           ? location.date
-                          : 'Date to be confirmed — register your interest below'}
+                          : 'Date TBD — secure your seat below (or free notify-me)'}
                       </p>
                     </div>
                   </div>
@@ -275,6 +276,16 @@ export default function InPersonTrainingPage() {
               </Link>
             </p>
 
+            {/* PRIMARY: Secure your seat (owner 2026-09-05) */}
+            <div className="mb-4">
+              <SecureSeatCheckout
+                defaultCity={interestCity as 'sydney' | 'melbourne' | 'byron-bay' | 'adelaide' | 'wa'}
+                variant="card"
+                source="in_person"
+              />
+            </div>
+
+            {/* SECONDARY: free notify-me */}
             {/* City interest email capture */}
             <div className="mt-6 pt-6 border-t border-border/30">
               {interestSuccess ? (

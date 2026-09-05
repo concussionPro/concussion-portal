@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { trackEvent } from '@/lib/analytics'
+import { CONFIG } from '@/lib/config'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 
 /**
  * Public interest capture for a practical-day city.
@@ -68,11 +70,23 @@ export default function ReadyToTrainInterest({
   }
 
   return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+        <p className="text-sm font-bold text-foreground mb-1">Secure your seat</p>
+        <p className="text-[13px] text-muted-foreground mb-3">
+          A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit — preferred city on checkout.
+          Counts toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate. Free notify does not.
+        </p>
+        <SecureSeatCheckout
+          defaultCity={(city || cities[0]?.slug || 'melbourne') as 'melbourne' | 'sydney' | 'byron-bay' | 'adelaide' | 'wa'}
+          variant="button"
+          source="ready_to_train"
+        />
+      </div>
     <form onSubmit={submit} className="rounded-xl border border-border p-5">
-      <p className="text-sm font-bold text-foreground mb-1">Tell us your city</p>
+      <p className="text-sm font-bold text-foreground mb-1">Prefer a free reminder?</p>
       <p className="text-[13px] text-muted-foreground mb-4">
-        No payment, no obligation — it tells us where to run the next one, and you’ll be first to
-        know when it’s set.
+        Notify me only — secondary. Does not count toward launching a date.
       </p>
       <div className="grid sm:grid-cols-2 gap-2 mb-2">
         <input
@@ -110,5 +124,6 @@ export default function ReadyToTrainInterest({
         {state === 'saving' ? 'Saving…' : 'Tell me when it’s scheduled'}
       </button>
     </form>
+    </div>
   )
 }

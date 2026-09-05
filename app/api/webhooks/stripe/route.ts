@@ -36,6 +36,7 @@ function labelForCourse(courseType: string, accessLevel: string): string {
     case 'workshop-upgrade': return 'Workshop Upgrade'
     case 'clinic-hub-pack': return 'Concussion Hub Pack — full clinic team access'
     case 'international-online': return 'Online Course (International)'
+    case 'secure-seat': return 'Secure your seat (refundable deposit)'
     default: return accessLevel === 'full-course' ? 'Complete Course' : 'Online Course'
   }
 }
@@ -114,6 +115,132 @@ function workshopCityLabel(slug: string): string {
  * Best-effort: never fail a fulfilment (and trigger endless Stripe retries)
  * over an internal notification.
  */
+async function handleSecureSeatDeposit(
+  session: Stripe.Checkout.Session,
+  customerEmail: string,
+  customerName: string,
+): Promise<void> {
+  const location = session.metadata?.location || session.metadata?.preferredCity || ''
+  const currency = (session.currency || 'aud').toUpperCase()
+  const amount = (session.amount_total || 0) / 100
+  const cityLabel = location ? workshopCityLabel(location) : 'TBD'
+  console.log(
+    `[secure-seat] deposit: ${redact(customerEmail)} — ${cityLabel} — $${amount} ${currency}`,
+  )
+
+  const existingUser = await findUserByEmail(customerEmail)
+  if (existingUser) {
+    // Never downgrade paid access. Only stamp workshop_location when missing or
+    // when they are still preview (deposit is their soft commit).
+    if (location) {
+      try {
+        await sql`
+          UPDATE users
+          SET workshop_location = ${location},
+              workshop_location_set_at = NOW()
+          WHERE LOWER(email) = ${customerEmail.toLowerCase()}
+            AND (
+              workshop_location IS NULL
+              OR workshop_location = ''
+              OR access_level = 'preview'
+            )
+        `
+      } catch (err) {
+        console.error('[secure-seat] failed to set workshop_location:', err)
+      }
+    }
+  } else {
+    await createUser({
+      email: customerEmail,
+      name: customerName,
+      accessLevel: 'preview',
+      stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
+      workshopLocation: location || undefined,
+      signupSource: 'purchase',
+    })
+  }
+
+  try {
+    await recordCoursePurchase({
+      email: customerEmail,
+      courseSlug: 'ccm-secure-seat',
+      stripeSessionId: session.id,
+      amount: Math.round(amount),
+      currency,
+    })
+  } catch (err) {
+    console.error(`[secure-seat] recordCoursePurchase failed for ${redact(customerEmail)}:`, err)
+    throw err // Stripe retry — deposit must land in the ledger
+  }
+
+  if (location) {
+    await alertIfThresholdReached(location)
+  }
+
+  try {
+    await logAnalyticsEvent(
+      'purchase_complete',
+      {
+        courseType: 'secure-seat',
+        amount,
+        currency,
+        transactionId: session.id,
+        accessLevel: 'secure-seat',
+        location: location || null,
+      },
+      customerEmail,
+    )
+  } catch (err) {
+    console.error('[secure-seat] analytics failed:', err)
+  }
+
+  // Buyer confirmation — soft commit, not course access
+  try {
+    await sendEmail({
+      to: customerEmail,
+      subject: `Seat secured — ${cityLabel} practical day (A$${Math.round(amount)} deposit)`,
+      html: `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;padding:40px 20px;">
+          <h2 style="font-size:20px;font-weight:700;color:#0f172a;margin:0 0 12px;">Your seat is secured</h2>
+          <p style="font-size:15px;color:#475569;line-height:1.6;">
+            Thanks ${escapeHtml(customerName.split(' ')[0] || 'there')} — we have your
+            <strong>A$${Math.round(amount)} refundable deposit</strong> for the
+            <strong>${escapeHtml(cityLabel)}</strong> catered practical day.
+          </p>
+          <p style="font-size:15px;color:#475569;line-height:1.6;">
+            This counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-clinician cohort.
+            When the date opens, your deposit credits toward Complete. If the cohort does not
+            form, you get a full refund. This deposit does <strong>not</strong> unlock the
+            online modules — enrol Online or Complete when you are ready to start learning.
+          </p>
+          <p style="margin:24px 0;">
+            <a href="${CONFIG.SEO.SITE_URL}/pricing"
+               style="display:inline-block;background:#0d7377;color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:10px;">
+              View Online &amp; Complete options
+            </a>
+          </p>
+          <p style="font-size:13px;color:#94a3b8;">Questions? Reply to this email.</p>
+        </div>`,
+      tags: [{ name: 'type', value: 'secure-seat-confirm' }],
+    })
+  } catch (err) {
+    console.error('[secure-seat] buyer email failed:', err)
+  }
+
+  try {
+    await sendEmail({
+      to: CONFIG.CONTACT_EMAIL,
+      subject: `Secure-seat deposit: ${cityLabel} — ${currency} $${amount.toFixed(2)}`,
+      html: `<p><strong>${escapeHtml(customerName)}</strong> (${escapeHtml(customerEmail)}) paid A$${amount.toFixed(2)} to secure a ${escapeHtml(cityLabel)} seat.</p>
+        <p>Counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate. No course access granted.</p>
+        <p>Session: <code>${escapeHtml(session.id)}</code></p>`,
+      tags: [{ name: 'type', value: 'secure-seat-admin' }],
+    })
+  } catch (err) {
+    console.error('[secure-seat] admin email failed:', err)
+  }
+}
+
 async function alertIfThresholdReached(workshopCity: string): Promise<void> {
   try {
     const { getEnrollmentCount } = await import('@/lib/users')
@@ -531,6 +658,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // CRM-specific invoice + /ep-course welcome. Returns early.
   if (session.metadata?.productType === 'crm-course' || session.metadata?.productType === 'crm-upgrade') {
     await handleCrmPurchase(session, customerEmail, customerName)
+    return
+  }
+
+  // Secure your seat — A$100 refundable deposit (owner 2026-09-05).
+  // Does NOT unlock online modules. Soft-commit toward the 12-seat cohort:
+  // record course_purchases slug ccm-secure-seat, nominate workshop_location,
+  // keep access_level as preview (or leave existing paid levels untouched).
+  if (session.metadata?.courseType === 'secure-seat') {
+    await handleSecureSeatDeposit(session, customerEmail, customerName)
     return
   }
 

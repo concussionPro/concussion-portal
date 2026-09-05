@@ -7,7 +7,7 @@ import { getClientIp } from '@/lib/get-client-ip'
 import { createCheckoutSchema } from '@/lib/schemas'
 import { isBookOwner } from '@/lib/users'
 import { isDemoEmail } from '@/lib/demo-session'
-import { detectCountry } from '@/lib/geo'
+import { detectCountry, readMarketOverride } from '@/lib/geo'
 import { CONFIG } from '@/lib/config'
 import { hubAddonContact } from '@/lib/hub-addon-contact'
 
@@ -47,7 +47,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    const { courseType, location, email, preferredCity, promoCode, utm, attribution, clinicianCount, clinicName } = parsed.data
+    let { courseType, location, email, preferredCity, promoCode, utm, attribution, clinicianCount, clinicName } = parsed.data
+
+    // P1 2026-09-05: AU market cookie locks AUD checkout. Overseas travellers
+    // who opted into Australia/NZ pricing must never mint international-online
+    // (USD/GBP/…) — that was charging US$~371 against an A$497 card.
+    const market = readMarketOverride(request.cookies)
+    if (market === 'au' && courseType === 'international-online') {
+      courseType = 'online-only'
+    }
 
     // Defense in depth: schema covers enum already, but keep the guard so a schema
     // drift doesn't accidentally open up new course types without a code review.
@@ -160,6 +168,8 @@ export async function POST(request: NextRequest) {
     let cancelUrl: string
     if (courseType === 'workshop-upgrade') {
       cancelUrl = `${baseUrl}/upgrade?canceled=true`
+    } else if (courseType === 'secure-seat') {
+      cancelUrl = `${baseUrl}/pricing?canceled=true`
     } else if (courseType === 'international-online') {
       cancelUrl = `${baseUrl}/pricing-international?canceled=true`
     } else if (courseType === 'clinic-hub-pack') {
@@ -209,7 +219,7 @@ export async function POST(request: NextRequest) {
       // Pass the nominated city for every in-person-bearing type (the schema
       // now requires one). clinic-workshop-upgrade is 400-blocked above until
       // its webhook fulfilment exists — re-add it here when that unblocks.
-      location: (courseType === 'full-course' || courseType === 'workshop-upgrade')
+      location: (courseType === 'full-course' || courseType === 'workshop-upgrade' || courseType === 'secure-seat')
         ? location
         : undefined,
       preferredCity: courseType === 'online-only' ? preferredCity : undefined,

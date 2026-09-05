@@ -42,6 +42,14 @@ export const CONFIG = {
     // that is never charged. Use isEarlyBirdForLocation()/workshopPriceFor().
     PRICE_REGULAR: 1400,
     PRICE_EARLY_BIRD: 1190,
+    // Secure your seat — refundable A$100 deposit (owner 2026-09-05).
+    // REPLACES free location EOI. Counts toward CONFIRMATION_THRESHOLD (12)
+    // alongside full Complete purchases. Credit toward Complete when the date
+    // opens; refund if the cohort does not form. Charged via Stripe Checkout
+    // price_data (COURSE_PRICING.SECURE_SEAT) — no separate Stripe Price id yet.
+    // Zac: create a Stripe Price / Product when you want Dashboard analytics
+    // against a fixed Price id; until then price_data is the source of truth.
+    PRICE_SECURE_SEAT: 100,
     // SCAT6 completion code — dollar amount must match the Stripe coupon.
     SCAT_DISCOUNT_AUD: 50,
     // Reference+Toolkit ("book") owner credit, applied server-side at checkout
@@ -151,8 +159,12 @@ export const CONFIG = {
     // true once a venue is booked and CONFIG.LOCATIONS carries them. Surfaces
     // state the cadence from here, and name a date only when one is confirmed.
     RUNS_PER_QUARTER: 1,
-    CONFIRMATION_THRESHOLD: 8,    // paid registrants needed to confirm a date
-    LEAD_TIME_WEEKS: 6,           // weeks of notice after threshold hit
+    // Owner 2026-09-05: catered-day break-even = 12 seats. Confirm the date
+    // (and only then book the venue) when ≥12 PAID Complete commits — not free
+    // EOI, not soft interest. Money-before-calendar.
+    CONFIRMATION_THRESHOLD: 12,   // paid registrants needed to confirm a date
+    // Owner 2026-09-05: 3–4 weeks' notice once the cohort hits threshold.
+    LEAD_TIME_WEEKS: 4,           // weeks of notice after threshold hit
     // Early bird ($1,190) closes this many days before a CONFIRMED workshop
     // date — the final window is charged at PRICE_REGULAR ($1,400). For
     // cities with no launched date (collecting / completed awaiting next

@@ -352,11 +352,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   const selectedProgress = cityProgress[selectedLocation]
   const showMomentum = !!selectedProgress && selectedProgress.enrolled >= MOMENTUM_MIN_ENROLLED
 
-  const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
+  const handleCheckout = async (courseType: 'online-only' | 'full-course' | 'secure-seat') => {
     // Only reachable when no city is open (defaultNominationCity() === null).
-    // lib/schemas rejects a full-course without a location, so ask for one
+    // lib/schemas rejects a full-course / secure-seat without a location, so ask for one
     // instead of letting the buyer hit a generic "Invalid request."
-    if (courseType === 'full-course' && !selectedLocation) {
+    if ((courseType === 'full-course' || courseType === 'secure-seat') && !selectedLocation) {
       setError('Please choose your workshop city.')
       return
     }
@@ -376,7 +376,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       }).catch(() => {})
 
       // Fire Google Ads conversion in background (non-blocking)
-      const conversionValue = courseType === 'full-course' ? fullCoursePrice : onlinePrice
+      const conversionValue = courseType === 'full-course'
+        ? fullCoursePrice
+        : courseType === 'secure-seat'
+          ? CONFIG.COURSE.PRICE_SECURE_SEAT
+          : onlinePrice
       trackLeadConversion(ENROL_CLICK_LABEL, conversionValue)
         .catch(() => {})
 
@@ -391,7 +395,9 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           attribution: getAttribution(),
         } : {
           courseType,
-          ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
+          ...((courseType === 'full-course' || courseType === 'secure-seat') && selectedLocation
+            ? { location: selectedLocation }
+            : {}),
           // Online-only: send the city ONLY if the buyer picked one. An
           // untouched default is not a nomination — see locationExplicit.
           ...(courseType === 'online-only' && selectedLocation && locationExplicit
@@ -455,7 +461,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </div>
         )}
 
-        <div className="grid sm:grid-cols-2 gap-6 pt-5 max-w-3xl mx-auto">
+        <div className="grid sm:grid-cols-3 gap-5 pt-5 max-w-5xl mx-auto">
           {/* CCM Online - Compact (online component of CCM) */}
           <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}>
             <div className="flex items-center gap-2.5 mb-3">
@@ -463,12 +469,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                Online tier
+                {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · Start today
               </span>
             </div>
 
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Online</h3>
-            <p className="text-[10px] text-slate-500 mb-3">{crm ? 'Concussion Rehab Mastery — online, no workshop' : 'Concussion Clinical Mastery — online, no workshop'}</p>
+            <p className="text-[10px] text-slate-500 mb-3">{crm ? `For exercise physiologists · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today` : `For physiotherapists, osteopaths & allied health · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today`}</p>
 
             <div className="mb-3">
               {bookOwner && (
@@ -487,10 +493,10 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
 
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
-                'Same 8 online modules as the full CCM',
+                `${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today`,
                 'Own pace — no deadlines',
                 'Clinical Toolkit & resources',
-                'Everything you pay counts toward the Complete course — upgrade for just the difference when your city\u2019s date launches',
+                `Complete includes Online — upgrade later for $${upgradePriceFor()} (the difference)`,
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -526,12 +532,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 Most Popular
               </span>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                + Workshop
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD
               </span>
             </div>
 
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Online + workshop</h3>
-            <p className="text-[10px] text-slate-500 mb-3">{crm ? 'Concussion Rehab Mastery — online modules + practical day' : 'Concussion Clinical Mastery — online modules + hands-on workshop'}</p>
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Complete</h3>
+            <p className="text-[10px] text-slate-500 mb-3">{crm ? `Online + catered practical day · ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD` : `Online + catered practical day · ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD`}</p>
 
             <div className="mb-4">
               {(earlyBird || bookOwner) && (
@@ -591,9 +597,9 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
 
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
-                'Everything in Online, plus:',
-                'Full-day workshop (8 CPD hours)',
-                'Hands-on oculomotor + cranial nerve exam',
+                'Includes everything in Online',
+                `Full-day catered practical day (+${CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD)`,
+                'Hands-on VOMS, BESS & real cases',
                 CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
                   ? 'More AU cities added when demand hits'
                   : 'Choose your preferred AU location',
@@ -654,7 +660,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
 
             {!hasLiveDate && (
               <p className="text-[10px] text-[var(--muted-foreground)] mt-2 leading-snug">
-                Start the online modules today. Your {cityLabel(selectedLocation)} workshop date launches when your city fills — minimum {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo; notice, early-bird rate locked in.
+                Online unlocks now · {cityLabel(selectedLocation)} day TBD until {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits · {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice · early-bird locked in.
               </p>
             )}
             {/* THE CPD DEADLINE. Licence-renewal compliance is the dominant
@@ -680,6 +686,69 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </p>
 
           </div>
+
+          {/* ── Secure your seat — compact soft commit (owner 2026-09-05) ── */}
+          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '1.5px', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center border border-amber-200/50">
+                <Bell className="w-4 h-4 text-amber-600" strokeWidth={2} />
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Secure your seat</h3>
+            <p className="text-[10px] text-slate-500 mb-3">Soft commit · counts toward {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} · date TBD</p>
+            <div className="mb-3">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_SECURE_SEAT}</span>
+                <span className="text-[10px] text-slate-400">AUD</span>
+              </div>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">Refundable · credited to Complete when date opens</p>
+            </div>
+            <ul className="space-y-1.5 mb-4 flex-1">
+              {[
+                'Preferred city on checkout',
+                `Counts toward ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate`,
+                'Full refund if cohort does not form',
+                'Does not unlock online modules',
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs">
+                  <Check className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={3} />
+                  <span className="text-[var(--muted-foreground)]">{f}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {CITY_OPTIONS.map((city) => (
+                <button
+                  key={city.slug}
+                  type="button"
+                  onClick={() => { setSelectedLocation(city.slug); setLocationExplicit(true) }}
+                  className={`text-[10px] font-semibold px-2 py-1 rounded-full border transition-colors ${
+                    selectedLocation === city.slug
+                      ? 'bg-amber-100 border-amber-300 text-amber-900'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-amber-200'
+                  }`}
+                  aria-pressed={selectedLocation === city.slug}
+                >
+                  {city.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => handleCheckout('secure-seat')}
+              disabled={loading !== null}
+              className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {loading === 'secure-seat' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                `Secure your seat — $${CONFIG.COURSE.PRICE_SECURE_SEAT}`
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Exit-point restate (2026-08-03 work order: 22 money-path sessions/14d
@@ -699,7 +768,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <ArrowRight className="w-4 h-4" />
         </button>
         <p className="text-[12px] text-muted-foreground mt-3">
-          Or register interest for your city above — a date launches when it hits critical mass.
+          Or secure your seat above (A$100 refundable) — a date launches when it hits critical mass.
         </p>
       </div>
 
@@ -766,13 +835,14 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       {/* Pricing Cards — 3 equal-sized bento tiles. items-stretch forces
           all three cells to the same height so cards match regardless of
           content length. */}
-      {/* Tile order: Complete (flagship anchor) first, Online second, AI add-on
-          last — the price ladder reads top-down, never a $99 SKU anchoring the
-          flagship. Order is set with CSS order utilities; DOM order below is
-          Online → Complete → AI for edit-diff stability. */}
-      <div className="grid md:grid-cols-2 gap-6 pt-5 items-stretch max-w-4xl mx-auto">
+      {/* Tile order: Complete first — money-before-calendar (owner 2026-09-05).
+          Many buyers refuse Online until a day exists; Complete sells DATE TBD
+          with cohort confirmation, not a date picker and not free EOI.
+          Online remains the lighter path for clinicians happy to start content now.
+          DOM order Online → Complete; CSS order puts Complete first. */}
+      <div className="grid md:grid-cols-3 gap-5 pt-5 items-stretch max-w-6xl mx-auto">
 
-        {/* ── CCM Online — online component of CCM (displays second) ── */}
+        {/* ── Online — 8 CPD, start today (displays second) ── */}
         <div
           className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-2 transition-all duration-300 hover:shadow-xl hover:shadow-teal-900/10 hover:-translate-y-0.5"
           style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}
@@ -784,7 +854,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 <BookOpen className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
               </div>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                Online tier
+                {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · Start today
               </span>
             </div>
             <div className="text-right flex-shrink-0">
@@ -805,11 +875,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </div>
 
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Online</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Concussion Rehab Mastery — online, no workshop' : 'Concussion Clinical Mastery — online, no workshop'}</p>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? `For exercise physiologists · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today` : `For physiotherapists, osteopaths & allied health · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today`}</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
             {crm
-              ? <>The EP-scoped course with the working clinical tools, at your own pace. Your payment counts toward the Complete course — upgrade for ${upgradePriceFor()} any time.</>
-              : <>Same 8 modules as the full CCM, at your own pace. Your payment counts toward the Complete course — upgrade for ${upgradePriceFor()}{' '}when your city&rsquo;s date is announced, and you&rsquo;re on the list for a seat before it goes public.</>}
+              ? <>{CONFIG.COURSE.TOTAL_MODULES} modules with the working clinical tools — start today at your own pace. Complete includes Online; upgrade later for ${upgradePriceFor()} (just the difference).</>
+              : <>{CONFIG.COURSE.TOTAL_MODULES} modules · start today. Complete includes Online — upgrade later for ${upgradePriceFor()}{' '}when you&rsquo;re ready for the catered practical day, and you&rsquo;re on the list for a seat before it goes public.</>}
           </p>
 
           {/* Visual: CCM Online course preview screenshot */}
@@ -827,12 +897,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           {/* 2-col feature bento */}
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5 text-left">
             {[
-              '8 modules · 8 CPD',
+              `${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD`,
               'VOMS, BESS & SCAT6',
-              'Pathophysiology',
+              'Start today · own pace',
               'Clinical Toolkit',
               'Lifetime access',
-              `Upgrade $${upgradePriceFor()} anytime`,
+              `Upgrade later · $${upgradePriceFor()}`,
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">
                 <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
@@ -850,7 +920,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               buyer picks, and if they pick they can see what they picked. */}
           <div className="mb-3">
             <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">
-              Workshop city <span className="font-medium normal-case tracking-normal opacity-70">— optional, for when you upgrade</span>
+              Preferred city <span className="font-medium normal-case tracking-normal opacity-70">— optional; Complete is what funds the day</span>
             </p>
             <div className="flex flex-wrap gap-1">
               {CITY_OPTIONS.map((city) => (
@@ -903,7 +973,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </Link>
         </div>
 
-        {/* ── CCM Complete — online + workshop, MOST POPULAR (displays first) ── */}
+        {/* ── Complete — online + catered practical day (displays first) ── */}
         <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-1 shadow-lg shadow-teal-900/[0.07] transition-all duration-300 hover:shadow-2xl hover:shadow-teal-900/15 hover:-translate-y-1" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
@@ -915,7 +985,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 Most Popular
               </span>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                + Workshop
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD
               </span>
             </div>
             <div className="text-right flex-shrink-0">
@@ -939,12 +1009,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Online + workshop</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Concussion Rehab Mastery — online modules + the practical skills training' : 'Concussion Clinical Mastery — online modules + hands-on workshop'}</p>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Complete</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">{`Online + catered practical day · ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD`}</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
             {crm
-              ? 'Everything in CRM Online, plus the same full-day practical every clinician attends — one multidisciplinary room. Graded exertion testing and prescription hands-on, assessment observed for depth.'
-              : 'Same 8 online modules as CCM Online, plus a full-day hands-on workshop — one shared room for all disciplines: physios, osteos and exercise professionals. Practice SCAT6, VOMS & BESS with expert feedback.'}
+              ? <>Includes Online (unlocks now) plus the catered practical day — date confirmed when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit, with {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice. Not a free waitlist: your seat funds the day.</>
+              : <>Includes Online (unlocks now) plus the catered practical day — date TBD until {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits, then {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice before the day. Hands-on SCAT6, VOMS &amp; BESS. Money before calendar — not &ldquo;buy Online and hope&rdquo;.</>}
           </p>
 
           {/* CPD split bar — 8 online + 8 hands-on = 16, seen not read */}
@@ -1001,18 +1071,18 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           {/* 2-col feature grid */}
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4 text-left">
             {(crm ? [
-              'Everything in Online',
-              'Full-day practical workshop',
+              'Includes Online',
+              'Catered practical day',
               'Graded exertion, hands-on',
               '1:1 expert feedback',
-              '16 CPD (8 online + 8 in-person)',
+              `${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD (${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} day)`,
               'AU locations',
             ] : [
-              'Everything in Online',
-              'Full-day workshop',
-              'SCAT6, VOMS, BESS',
+              'Includes Online',
+              'Catered practical day',
+              'VOMS, BESS & real cases',
               '1:1 expert feedback',
-              '16 CPD (8 online + 8 in-person)',
+              `${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD (${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} day)`,
               'AU locations',
             ]).map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">
@@ -1027,7 +1097,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               an ops mess. Every city is buyable (nomination model): no live
               date = early-bird nomination, date launches when the city fills. */}
           <div className="mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">Your workshop city</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">Your city <span className="font-medium normal-case tracking-normal opacity-70">— date TBD when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commit</span></p>
             <div className="flex flex-wrap gap-1">
               {CITY_OPTIONS.map((city) => (
                 <button
@@ -1097,7 +1167,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           {!hasLiveDate && (
             <details className="mt-2.5 group">
               <summary className="cursor-pointer text-[11px] font-semibold text-[var(--accent)] hover:underline list-none">
-                Not ready to enrol? Tell me when {cityLabel(selectedLocation)} gets a date →
+                Prefer a free reminder? Notify me when {cityLabel(selectedLocation)} gets a date →
               </summary>
               <div className="mt-2">
                 <WorkshopInterestForm citySlug={selectedLocation} variant="compact" />
@@ -1108,13 +1178,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           {!hasLiveDate && (
             <>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-2.5 leading-snug">
-                <strong className="text-[var(--foreground)]">Start the 8 online modules today</strong> —
-                full online access is immediate; only the workshop day waits for a date.
-                Your {cityLabel(selectedLocation)} workshop
-                date launches when your city fills — minimum {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo;
-                notice, and your ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
-                rate is locked in. Standard price ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies
-                only in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a scheduled workshop.
+                <strong className="text-[var(--foreground)]">Date TBD — money before calendar.</strong>{' '}
+                Enrol Complete now: online unlocks today; your {cityLabel(selectedLocation)} practical day
+                confirms when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit (catered-day
+                break-even), with at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo; notice. Venue booked
+                only then. Early-bird ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} locked in. Free EOI
+                does not launch a day.
               </p>
               {showMomentum && selectedProgress && (
                 <div className="mt-2 flex">
@@ -1135,6 +1204,91 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                   inside a price. */}
             </>
           )}
+        </div>
+
+        {/* ── Secure your seat — full soft commit (owner 2026-09-05) ──
+            Third path card: Online | Complete | Secure your seat.
+            CSS order-3; money-before-calendar deposit replaces free EOI. */}
+        <div
+          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-3 transition-all duration-300 hover:shadow-xl hover:shadow-amber-900/10 hover:-translate-y-0.5"
+          style={{ borderWidth: '1.5px', borderColor: 'rgba(245, 158, 11, 0.35)' }}
+        >
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center border border-amber-200/50 flex-shrink-0">
+                <Bell className="w-4.5 h-4.5 text-amber-600" strokeWidth={2} />
+              </div>
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                Soft commit
+              </span>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <div className="flex items-baseline gap-1 justify-end">
+                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_SECURE_SEAT}</span>
+                <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+              </div>
+              <p className="text-[10px] text-[var(--muted-foreground)]">refundable deposit</p>
+            </div>
+          </div>
+
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Secure your seat</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">
+            Preferred city on checkout · counts toward {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}
+          </p>
+          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+            Put A${CONFIG.COURSE.PRICE_SECURE_SEAT} down for your city. It counts toward the catered-day
+            cohort gate. Credit toward Complete when the date opens; full refund if the cohort
+            does not form. Does not unlock online modules.
+          </p>
+
+          <ul className="grid grid-cols-1 gap-y-1.5 mb-5 text-left">
+            {[
+              'Preferred city / region on checkout',
+              `Counts toward ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits`,
+              'Credited to Complete when date opens',
+              'Full refund if cohort does not form',
+            ].map((feature, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[12px]">
+                <Check className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-[var(--muted-foreground)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {CITY_OPTIONS.map((city) => (
+              <button
+                key={city.slug}
+                type="button"
+                onClick={() => { setSelectedLocation(city.slug); setLocationExplicit(true) }}
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                  selectedLocation === city.slug
+                    ? 'bg-amber-100 border-amber-300 text-amber-900'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-amber-200'
+                }`}
+                aria-pressed={selectedLocation === city.slug}
+              >
+                {city.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleCheckout('secure-seat')}
+            disabled={loading !== null}
+            className="mt-auto btn-primary w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {loading === 'secure-seat' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>Secure your seat — ${CONFIG.COURSE.PRICE_SECURE_SEAT} <ArrowRight className="w-4 h-4" /></>
+            )}
+          </button>
+          <PaymentMethodsStrip />
+          <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center">
+            Free notify-me stays secondary below — deposits launch dates; EOI does not.
+          </p>
         </div>
 
       </div>

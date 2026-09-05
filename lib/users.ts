@@ -534,8 +534,47 @@ function toAttendee(r: PracticalDayAttendeeRow): PracticalDayAttendee {
 // Count paid seats at a location's practical day — feeds
 // CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD. Both streams count: the day is
 // shared, so a CRM seat fills the room exactly like a CCM one.
+//
+// Owner 2026-09-05: Secure your seat (A$100 refundable deposit) ALSO counts
+// toward the gate — money-before-calendar soft commits, not free EOI. They are
+// NOT practical-day attendees yet (no Complete purchase), so they stay out of
+// practicalDayAttendees() / the day roster and only move the threshold here.
 export async function getEnrollmentCount(location: string): Promise<number> {
-  return (await practicalDayAttendees(location)).length
+  const attendees = await practicalDayAttendees(location)
+  const deposits = await countSecureSeatDeposits(location)
+  return attendees.length + deposits
+}
+
+/** Paid Secure-your-seat deposits nominated to `location` (current round). */
+export async function countSecureSeatDeposits(location: string): Promise<number> {
+  await ensureCoursePurchasesTable()
+  const roundStart = roundStartSqlInstant(location)
+  const slug = 'ccm-secure-seat'
+  const { rows } = roundStart
+    ? await sql<{ n: number }>`
+        SELECT COUNT(DISTINCT LOWER(u.email))::int AS n
+        FROM users u
+        INNER JOIN course_purchases cp
+          ON LOWER(cp.user_email) = LOWER(u.email)
+         AND cp.course_slug = ${slug}
+        WHERE u.workshop_location = ${location}
+          AND COALESCE(cp.purchased_at, u.workshop_location_set_at, u.created_at) >= ${roundStart}
+          AND u.is_test IS NOT TRUE
+          AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}
+          AND u.access_level <> 'full-course'
+      `
+    : await sql<{ n: number }>`
+        SELECT COUNT(DISTINCT LOWER(u.email))::int AS n
+        FROM users u
+        INNER JOIN course_purchases cp
+          ON LOWER(cp.user_email) = LOWER(u.email)
+         AND cp.course_slug = ${slug}
+        WHERE u.workshop_location = ${location}
+          AND u.is_test IS NOT TRUE
+          AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}
+          AND u.access_level <> 'full-course'
+      `
+  return Number(rows[0]?.n ?? 0)
 }
 
 // The registrant roster for a location (admin dashboard). Same helper as the

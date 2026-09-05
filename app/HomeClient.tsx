@@ -209,7 +209,7 @@ export default function HomeClient() {
                 Melbourne — {CONFIG.LOCATIONS.MELBOURNE.date} — enrolling now
               </p>
               <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-lg mx-auto">
-                Sydney and Byron Bay Q4 dates are announced soon — register interest below and
+                Sydney and Byron Bay Q4 dates confirm when the cohort fills — secure your seat below and
                 you&apos;re first to know when your city&apos;s date is confirmed.
               </p>
             </div>
@@ -236,14 +236,14 @@ export default function HomeClient() {
                     city={loc.city}
                     citySlug={citySlug}
                     img={img}
-                    status={isLive ? loc.date : delivered ? 'Delivered · next round open' : 'Registering interest'}
+                    status={isLive ? loc.date : delivered ? 'Delivered · next round open' : 'Secure your seat'}
                     dotClass={isLive ? 'bg-emerald-500' : delivered ? 'bg-slate-400' : 'bg-orange-500 animate-pulse'}
                     statusTextClass={isLive ? 'text-emerald-700' : delivered ? 'text-slate-600' : 'text-orange-700'}
                     caption={
                       isLive
                         ? `Secure your ${loc.city} seat`
                         : delivered
-                          ? `Register for the next ${loc.city} round`
+                          ? `Secure a seat for the next ${loc.city} round`
                           : `Be first to know when ${loc.city}'s date is confirmed`
                     }
                   />

@@ -35,3 +35,10 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+
+
+## Secure your seat (A$100 deposit)
+
+Checkout uses Stripe `price_data` from `CONFIG.COURSE.PRICE_SECURE_SEAT` / `COURSE_PRICING.SECURE_SEAT` — no Dashboard Price id is required for checkout to work.
+
+**Optional (Zac):** create a Stripe Product + Price (A$100 AUD, one-time) named "Secure your seat" if you want Dashboard analytics against a fixed Price id. Wire the id into env later; until then `price_data` is the source of truth. Deposit fulfilment is webhook `courseType=secure-seat` → `ccm-secure-seat` purchase row + city nomination (no course access).

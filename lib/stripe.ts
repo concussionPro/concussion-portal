@@ -56,6 +56,8 @@ export const COURSE_PRICING = {
   INTERNATIONAL_ONLINE: CONFIG.COURSE.PRICE_INTERNATIONAL * 100,
   WORKSHOP_UPGRADE_EARLY: (CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE) * 100,
   WORKSHOP_UPGRADE_REGULAR: (CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE) * 100,
+  // Secure your seat — refundable deposit; price_data, no Stripe Price id yet.
+  SECURE_SEAT: CONFIG.COURSE.PRICE_SECURE_SEAT * 100,
   // Clinic Hub Pack — 5 online seats + branded docs + admin pack ($1,500).
   // Targeted at clinic owners via cold B2B outreach.
   CLINIC_HUB_PACK: CONFIG.COURSE.PRICE_CLINIC_HUB_PACK * 100,
@@ -104,6 +106,7 @@ export const VALID_COURSE_TYPES = [
   'clinic-hub-pack',
   'clinic-hub-extra-seat',
   'clinic-workshop-upgrade',
+  'secure-seat',
 ] as const
 export type CourseType = typeof VALID_COURSE_TYPES[number]
 
@@ -166,7 +169,7 @@ export async function createCourseCheckoutSession({
   // The ONLY refusal is a sold-out live round (honesty: they'd expect that
   // exact date).
   let workshopScheduled = false // a confirmed, future-dated round exists for `location`
-  if (courseType === 'full-course' || courseType === 'workshop-upgrade') {
+  if (courseType === 'full-course' || courseType === 'workshop-upgrade' || courseType === 'secure-seat') {
     const workshopConfig = location
       ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
       : null
@@ -253,6 +256,15 @@ export async function createCourseCheckoutSession({
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `Concussion Hub Pack — Workshop Upgrade (${locationLabel})`
     productDescription = `Adds in-person workshop attendance for 1 nominated clinician (${locationLabel}) · ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} additional CPD hours · Hands-on credentials · Clinic Hub Pack add-on`
+  } else if (courseType === 'secure-seat') {
+    // Refundable A$100 deposit — counts toward the 12-seat gate. Does NOT unlock
+    // online modules (that is Online / Complete). Credit toward Complete when
+    // the date opens; refund if the cohort does not form (owner 2026-09-05).
+    unitAmount = COURSE_PRICING.SECURE_SEAT
+    currency = 'aud'
+    const locationLabel = location ? formatLocation(location) : 'TBD'
+    productName = `Secure your seat — ${locationLabel} practical day`
+    productDescription = `Refundable A$${CONFIG.COURSE.PRICE_SECURE_SEAT} deposit toward the catered practical day (${locationLabel}). Counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-clinician cohort. Credit toward Complete when the date opens; full refund if the cohort does not form. Does not include online modules.`
   } else {
     unitAmount = isEarlyBird ? COURSE_PRICING.FULL_COURSE_EARLY : COURSE_PRICING.FULL_COURSE_REGULAR
     currency = 'aud'
@@ -402,7 +414,7 @@ export async function createCourseCheckoutSession({
       // time) — feeds the Ready-to-Train pipeline in admin.
       workshopScheduled: workshopScheduled ? 'true' : 'false',
       preferredCity: preferredCity || '',
-      accessLevel: COURSE_ACCESS_MAP[courseType],
+      accessLevel: courseType === 'secure-seat' ? 'secure-seat' : COURSE_ACCESS_MAP[courseType],
       isEarlyBird: isEarlyBird ? 'true' : 'false',
       currency,
       source: 'portal',
@@ -434,9 +446,12 @@ export async function createCourseCheckoutSession({
     phone_number_collection: { enabled: true },
     custom_text: {
       submit: {
-        message: courseType === 'full-course' || courseType === 'workshop-upgrade'
-          ? getCheckoutSubmitMessage(location)
-          : "You'll receive a login link by email after purchase to start learning immediately.",
+        message:
+          courseType === 'full-course' || courseType === 'workshop-upgrade'
+            ? getCheckoutSubmitMessage(location)
+            : courseType === 'secure-seat'
+              ? `Refundable A$${CONFIG.COURSE.PRICE_SECURE_SEAT} deposit toward the ${location ? formatLocation(location) : 'practical'} day. Counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-clinician cohort. Credit to Complete when the date opens; full refund if the cohort does not form. Does not unlock online modules.`
+              : "You'll receive a login link by email after purchase to start learning immediately.",
       },
     },
   })

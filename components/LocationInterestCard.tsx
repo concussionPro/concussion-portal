@@ -6,13 +6,9 @@ import Link from 'next/link'
 import { Check, ArrowRight, Loader2 } from 'lucide-react'
 import { trackInterestRegistration } from '@/lib/analytics'
 import { CONFIG } from '@/lib/config'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 
 // ─── City momentum (real counts only, shared across all cards) ──────────────
-//
-// One module-level fetch shared by every card instance. A low count is
-// anti-social-proof, so the numeric line renders ONLY when the true enrolled
-// count is >= MOMENTUM_MIN_ENROLLED. No zeros, no interest-count fallback,
-// nothing fabricated. Silent failure — the card works fine without it.
 const MOMENTUM_MIN_ENROLLED = 5
 
 interface CityProgress {
@@ -32,14 +28,6 @@ function fetchCityProgress(): Promise<CityProgress[]> {
   return cityProgressPromise
 }
 
-/**
- * True when this city has a CONFIRMED, future-dated round.
- *
- * The CTA label depends on it: with no date on the board, "Enrol from $497 —
- * early-bird locked" promises a seat at an event that does not exist yet. What
- * the buyer is actually doing is registering interest in the next round and
- * starting the online course — so that is what the button says.
- */
 function cityHasLiveDate(slug: string): boolean {
   const config = Object.values(CONFIG.LOCATIONS).find((loc) => loc.slug === slug)
   return (
@@ -61,11 +49,11 @@ export type LocationCardProps = {
 }
 
 /**
- * Homepage workshop-location card: editorial city shot with a status pill,
- * and an inline email capture directly beneath the image that registers
- * interest for THAT city (posts to /api/register-interest). Email-only for
- * low friction — a display name is derived from the address so the admin
- * interest list still has a label.
+ * Homepage / pricing workshop-location card.
+ *
+ * Owner 2026-09-05: primary CTA is Secure your seat (A$100 refundable deposit)
+ * — NOT free EOI. Notify-me stays secondary. Live-dated cities keep Enrol Complete
+ * as an alternate path into #pricing-cards.
  */
 export function LocationInterestCard({ city, citySlug, img, status, dotClass, statusTextClass, caption }: LocationCardProps) {
   const [email, setEmail] = useState('')
@@ -86,6 +74,7 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
 
   const showMomentum = !!progress && progress.enrolled >= MOMENTUM_MIN_ENROLLED
   const hasLiveDate = cityHasLiveDate(citySlug)
+  const deposit = CONFIG.COURSE.PRICE_SECURE_SEAT
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -98,22 +87,17 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
     setLoading(true)
     setError('')
     try {
-      // This form has NO name field, so the name is derived from the address.
-      // /api/register-interest rejects anything under 2 characters with
-      // "Name is required (max 100 characters)" — an error about a field the
-      // visitor was never shown, on an address as ordinary as a@clinic.com.au.
-      // Pad short local parts rather than sending a value the route will bounce.
       const localPart = clean.split('@')[0].slice(0, 60)
       const derivedName = localPart.length >= 2 ? localPart : 'Interested'
       const res = await fetch('/api/register-interest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: clean, name: derivedName, city: citySlug, source: 'pricing_page' }),
+        body: JSON.stringify({ email: clean, name: derivedName, city: citySlug, source: 'pricing_page_notify' }),
       })
       const data = await res.json()
       if (data.success) {
         trackInterestRegistration(citySlug, clean)
-        setMessage(data.message || `You're on the ${city} list — we'll email you when the date is confirmed.`)
+        setMessage(data.message || `You're on the ${city} notify list — we'll email you when the date is confirmed.`)
         setDone(true)
       } else {
         setError(data.error || 'Something went wrong.')
@@ -126,16 +110,11 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
   }
 
   return (
-    // A CONFIRMED CITY MUST NOT LOOK LIKE A WAITLIST (owner 2026-09-01: "they
-    // all look the same"). The one city with a real, bookable date gets an
-    // accent ring, a lifted shadow and a brighter photo; cities still
-    // collecting are visually quieter. Glanceable hierarchy, no new copy.
     <div className={`group relative rounded-2xl overflow-hidden bg-slate-950 transition-all duration-300 hover:-translate-y-0.5 ${
       hasLiveDate
         ? 'ring-[3px] ring-accent shadow-[0_18px_50px_-12px_rgba(13,115,119,0.55)] hover:shadow-[0_26px_66px_-12px_rgba(13,115,119,0.7)]'
         : 'opacity-[0.94] shadow-[0_10px_36px_-10px_rgba(15,23,42,0.35)] hover:shadow-[0_20px_56px_-12px_rgba(15,23,42,0.5)] hover:opacity-100'
     }`}>
-      {/* Full-bleed city photograph */}
       <Image
         src={img}
         alt={`${city} — Concussion Clinical Mastery workshop location`}
@@ -143,10 +122,8 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         sizes="(min-width: 640px) 340px, 100vw"
         className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
       />
-      {/* Cinematic scrim — readable overlay content, photo stays the hero */}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-slate-950/10" aria-hidden="true" />
 
-      {/* Status pill */}
       <div className={`absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 backdrop-blur rounded-full shadow-sm ${
         hasLiveDate ? 'bg-accent px-3 py-1.5' : 'bg-white/95 px-2.5 py-1'
       }`}>
@@ -154,8 +131,7 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         <span className={`font-bold uppercase tracking-wide ${hasLiveDate ? 'text-[11px] text-white' : `text-[10px] ${statusTextClass}`}`}>{status}</span>
       </div>
 
-      {/* Overlay content */}
-      <div className="relative flex flex-col justify-end min-h-[430px] p-4 pt-40">
+      <div className="relative flex flex-col justify-end min-h-[480px] p-4 pt-40">
         <h3 className="text-white text-2xl md:text-[1.75rem] font-bold tracking-tight leading-none [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
           {city}
         </h3>
@@ -166,47 +142,35 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 border border-emerald-300/30 backdrop-blur px-2.5 py-1">
               <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
               <span className="text-[11px] font-semibold text-emerald-100 leading-snug">
-                {progress.enrolled} of {progress.threshold} enrolled — date launches at {progress.threshold}
+                {progress.enrolled} of {progress.threshold} committed — date launches at {progress.threshold}
               </span>
             </span>
           </div>
         )}
 
-        {/* Primary action: enrol (tier-neutral — /pricing shows the online
-            $497 → workshop-upgrade ladder for this city). */}
-        <Link
-          // #pricing-cards, NOT bare /pricing. This card renders on /pricing
-          // itself (CcmPricingContent #workshop-locations) as well as on the
-          // homepage, so a plain `/pricing?location=…` is a same-page
-          // navigation there: nothing changes and the browser simply jumps to
-          // the top, which is what the button appeared to do. The anchor works
-          // in both places — navigate-and-scroll from home, scroll-in-place on
-          // /pricing.
-          href={`/pricing?location=${citySlug}#pricing-cards`}
-          // The visible label carries no city, and this card is rendered once
-          // PER CITY — so the homepage ships three links whose accessible name
-          // is byte-identical ("Enrol from $497 — early-bird locked") pointing
-          // at three different destinations (byron-bay, melbourne, sydney).
-          // Sighted users read the city from the card; a screen reader
-          // announces three indistinguishable links, and a link list shows
-          // three duplicates with no way to tell which city is which.
-          //
-          // Same class as the "Unlock — A$497" pair on /learning, found in the
-          // same sweep (2026-08-06, master clean register E pass 2): a label
-          // that is unambiguous only because of layout, repeated across items.
-          aria-label={
-            hasLiveDate
-              ? `Enrol in ${city} from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`
-              : `Register interest in ${city} and start online from $${CONFIG.COURSE.PRICE_ONLINE}`
-          }
-          className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--accent)] px-3 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-[#0b6165]"
-        >
-          {hasLiveDate
-            ? `Enrol from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`
-            : `Register interest — start online from $${CONFIG.COURSE.PRICE_ONLINE}`}
-          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-        </Link>
+        {/* PRIMARY: Secure your seat (replaces free EOI) */}
+        <div className="mt-3.5 rounded-xl bg-white/95 p-2.5 shadow-lg">
+          <SecureSeatCheckout
+            defaultCity={citySlug}
+            lockCity
+            variant="button"
+            source={`location_card_${citySlug}`}
+          />
+        </div>
 
+        {/* Alternate: Complete enrol when a live date exists */}
+        {hasLiveDate && (
+          <Link
+            href={`/pricing?location=${citySlug}#pricing-cards`}
+            aria-label={`Enrol Complete in ${city} from $${CONFIG.COURSE.PRICE_ONLINE}`}
+            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/40 bg-white/10 backdrop-blur px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-white/20"
+          >
+            Or enrol Complete — early-bird locked
+            <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+          </Link>
+        )}
+
+        {/* SECONDARY: notify-me only */}
         {done ? (
           <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-emerald-400/15 border border-emerald-300/30 backdrop-blur p-3">
             <Check className="w-4 h-4 text-emerald-300 flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -214,6 +178,9 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
           </div>
         ) : (
           <form onSubmit={submit} className="mt-2.5">
+            <p className="mb-1.5 text-[11px] font-medium text-white/70">
+              Prefer a free reminder? Notify me when {city} confirms (secondary).
+            </p>
             <div className="flex gap-2">
               <label htmlFor={`loc-email-${citySlug}`} className="sr-only">Email for {city} workshop updates</label>
               <input
@@ -224,21 +191,24 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
                 required
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (error) setError('') }}
-                placeholder={hasLiveDate ? 'Email me the details' : 'Email me the date'}
+                placeholder="Email me the date"
                 className="flex-1 min-w-0 rounded-xl border border-white/25 bg-white/10 backdrop-blur px-3 py-2 text-sm text-white placeholder:text-white/55 focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-white/50"
               />
               <button
                 type="submit"
                 disabled={loading}
                 aria-label={`Notify me about the ${city} workshop`}
-                className="inline-flex items-center justify-center gap-1 rounded-xl bg-white/95 px-3 py-2 text-sm font-bold text-slate-900 shadow-sm transition-colors hover:bg-white disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-1 rounded-xl bg-white/80 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-white disabled:opacity-60"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <>Notify me <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" /></>}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <>Notify me</>}
               </button>
             </div>
             {error && <p className="mt-1.5 text-[12px] text-red-300 leading-snug">{error}</p>}
           </form>
         )}
+        <p className="mt-2 text-[10px] text-white/50 leading-snug">
+          A${deposit} refundable deposit counts toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate — free notify does not.
+        </p>
       </div>
     </div>
   )

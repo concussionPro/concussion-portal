@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Loader2, Check, MapPin, Users } from 'lucide-react'
 import { trackInterestRegistration } from '@/lib/analytics'
+import { CONFIG } from '@/lib/config'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 
 type CitySlug = 'sydney' | 'adelaide' | 'wa'
 type Selection = CitySlug | 'team'
@@ -86,13 +88,25 @@ export function OtherCityInterest() {
         </p>
       </div>
       <p className="text-sm font-semibold text-slate-900 leading-snug mb-0.5">
-        {isTeam ? 'Inquire about in-house team training' : 'Register interest for your city'}
+        {isTeam ? 'Inquire about in-house team training' : 'Secure your seat for your city'}
       </p>
       <p className="text-[12px] text-slate-600 leading-snug mb-3">
         {isTeam
           ? 'In-house training for clinics, sports orgs, and hospital networks. Pricing scoped privately on a short call.'
-          : `We run ${cityLabel} workshops as demand opens up — register and you'll be the first to know when the next date is confirmed.`}
+          : `Put A$${CONFIG.COURSE.PRICE_SECURE_SEAT} down for ${cityLabel} — counts toward the cohort gate. Free notify-me stays secondary below.`}
       </p>
+
+      {!isTeam && (
+        <div className="mb-3">
+          <SecureSeatCheckout
+            defaultCity={selection as 'sydney' | 'adelaide' | 'wa'}
+            lockCity
+            variant="button"
+            source="other_city_interest"
+          />
+          <p className="mt-2 text-[11px] text-slate-500 text-center">Or free notify-me (does not count toward the seat gate):</p>
+        </div>
+      )}
 
       {done ? (
         <div className="flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3">

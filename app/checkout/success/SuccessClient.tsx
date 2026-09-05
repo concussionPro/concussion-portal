@@ -153,20 +153,29 @@ function CheckoutSuccessContent() {
   // this flag rather than duplicated into a second success page.
   const isCrm = sessionData?.stream === 'crm'
   const crmTier = sessionData?.tier || 'online'
+  const isSecureSeat = !isCrm && sessionData?.courseType === 'secure-seat'
   const isFullCourseType = isCrm
     ? crmTier === 'complete' || crmTier === 'upgrade'
     : sessionData?.courseType === 'full-course' || sessionData?.courseType === 'workshop-upgrade'
   // "Upgrade" purchases already own the online course — send them to the hub,
   // not into module 1.
   const isUpgradeType = isCrm ? crmTier === 'upgrade' : sessionData?.courseType === 'workshop-upgrade'
-  const startHref = isCrm ? '/ep-course/dashboard' : isUpgradeType ? '/dashboard' : '/modules/1'
-  const startLabel = isCrm
-    ? isUpgradeType
-      ? 'Go to your course'
-      : 'Start Module 1'
-    : isUpgradeType
-      ? 'Go to Dashboard'
-      : 'Start Module 1'
+  const startHref = isSecureSeat
+    ? '/pricing'
+    : isCrm
+      ? '/ep-course/dashboard'
+      : isUpgradeType
+        ? '/dashboard'
+        : '/modules/1'
+  const startLabel = isSecureSeat
+    ? 'View Online & Complete options'
+    : isCrm
+      ? isUpgradeType
+        ? 'Go to your course'
+        : 'Start Module 1'
+      : isUpgradeType
+        ? 'Go to Dashboard'
+        : 'Start Module 1'
   const cpdHours = isCrm
     ? isFullCourseType
       ? CONFIG.COURSE.CRM_TOTAL_CPD_POINTS
@@ -204,9 +213,11 @@ function CheckoutSuccessContent() {
               ? isFullCourseType
                 ? 'Concussion Rehab Mastery — your online modules are open now, and your practical day seat is reserved.'
                 : 'You now have lifetime access to all 8 Concussion Rehab Mastery modules.'
-              : isFullCourseType
-                ? 'Your concussion management training starts now.'
-                : 'You now have lifetime access to all 8 modules.'}
+              : isSecureSeat
+                ? `Seat secured — A$${CONFIG.COURSE.PRICE_SECURE_SEAT} deposit counts toward your city cohort. Online modules are not unlocked yet.`
+                : isFullCourseType
+                  ? 'Your concussion management training starts now.'
+                  : 'You now have lifetime access to all 8 modules.'}
           </p>
           {loggedIn ? (
             <Link

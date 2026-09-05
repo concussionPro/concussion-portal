@@ -23,6 +23,8 @@ export const courseTypeSchema = z.enum([
   // UI yet — provisioned manually post-purchase; see HubPackBuyCard for the base.)
   'clinic-hub-extra-seat',
   'clinic-workshop-upgrade',
+  // Secure your seat — A$100 refundable deposit (replaces free EOI).
+  'secure-seat',
 ])
 
 // UTM payload — accept loose string map, cap size
@@ -63,7 +65,8 @@ export const createCheckoutSchema = z
     const needsLocation =
       val.courseType === 'full-course' ||
       val.courseType === 'workshop-upgrade' ||
-      val.courseType === 'clinic-workshop-upgrade'
+      val.courseType === 'clinic-workshop-upgrade' ||
+      val.courseType === 'secure-seat'
     if (needsLocation && !val.location) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
