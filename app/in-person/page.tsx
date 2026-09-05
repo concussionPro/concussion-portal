@@ -56,18 +56,32 @@ export default function InPersonTrainingPage() {
         <SiteNav />
 
         <div className="max-w-4xl mx-auto px-6 pt-[120px] pb-16">
-          {/* Hero */}
-          <div className="text-center mb-12">
+          {/* Hero — Unlock seat is primary HERE (practical-day page). Online stays primary on /pricing. */}
+          <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-4">
               <Award className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-accent">8 CPD hours - AHPRA Aligned · Limited Spots</span>
+              <span className="text-sm font-semibold text-accent">8 CPD hours - AHPRA Aligned · Demand-gated cohorts</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
               Master Clinical Assessment <span className="text-gradient">You Can&apos;t Learn Online</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6">
               <strong className="text-foreground">Theory isn&apos;t enough.</strong> This intensive hands-on workshop gives you the clinical confidence to accurately assess, phenotype, and manage concussions from day one.
             </p>
+            <div className="max-w-lg mx-auto text-left">
+              <SecureSeatCheckout
+                defaultCity={interestCity as 'sydney' | 'melbourne' | 'byron-bay' | 'adelaide' | 'wa'}
+                variant="hero"
+                source="in_person_hero"
+              />
+              <p className="mt-3 text-center text-[12px] text-muted-foreground">
+                Prefer modules first?{' '}
+                <Link href="/pricing" className="font-semibold text-accent hover:underline">
+                  Enrol Online (A${CONFIG.COURSE.PRICE_ONLINE})
+                </Link>
+                {' '}— $0 opex path; add the practical day when your city unlocks.
+              </p>
+            </div>
           </div>
 
           {/* Workshop Photo */}
@@ -276,16 +290,7 @@ export default function InPersonTrainingPage() {
               </Link>
             </p>
 
-            {/* PRIMARY: Secure your seat (owner 2026-09-05) */}
-            <div className="mb-4">
-              <SecureSeatCheckout
-                defaultCity={interestCity as 'sydney' | 'melbourne' | 'byron-bay' | 'adelaide' | 'wa'}
-                variant="card"
-                source="in_person"
-              />
-            </div>
-
-            {/* SECONDARY: free notify-me */}
+            {/* Unlock seat lives in hero — secondary here is free notify-me only */}
             {/* City interest email capture */}
             <div className="mt-6 pt-6 border-t border-border/30">
               {interestSuccess ? (

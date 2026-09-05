@@ -295,7 +295,10 @@ export function CourseModulePage({
   // Demo / ESSA-review viewers share an ephemeral synthetic session — their quiz
   // answers must never persist or restore, so the review always sees blank quizzes.
   // (Only honoured for courses with supportsDemoViewer; stays false otherwise.)
-  const [isDemoViewer, setIsDemoViewer] = useState(supportsDemoViewer ? !!initialAuth?.isDemo : false)
+  // Always honour isDemo from session/auth — supportsDemoViewer only gates
+  // demo-specific UX affordances historically; hiding the banner caused red
+  // "Save failed" on flagship quiz when Progress API returned demo:true.
+  const [isDemoViewer, setIsDemoViewer] = useState(!!initialAuth?.isDemo)
 
   // Check authentication first
   useEffect(() => {
@@ -317,7 +320,7 @@ export function CourseModulePage({
             }
             setIsAuthenticated(true)
             if (data.user.email) setUserEmail(data.user.email)
-            if (supportsDemoViewer) setIsDemoViewer(!!data.user.isDemo)
+            setIsDemoViewer(!!data.user.isDemo)
             setCheckingAuth(false)
             return
           }
@@ -1184,12 +1187,12 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                         {showPracticalInvite && (
                           <div className="mt-4 w-full max-w-md mx-auto rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-left">
                             <p className="text-sm font-bold text-slate-900 mb-1">
-                              Add the catered practical day ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD)
+                              Unlock your seat — add the catered day ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD)
                             </p>
                             <p className="text-xs text-slate-600 mb-3">
-                              Secure your seat (A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable) or upgrade to Complete — date TBD until {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits.
+                              You finished Online. Unlock a seat (A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable) toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate that opens your city&apos;s date — or enrol Complete. No fake calendar: the day runs when demand is met.
                             </p>
-                            <SecureSeatCheckout variant="button" source="module_8_online_only" />
+                            <SecureSeatCheckout variant="button" source="module_8_online_only" forOnlineUpgrade />
                             <Link
                               href="/pricing#pricing-cards"
                               className="mt-2 inline-flex text-xs font-semibold text-teal-700 hover:underline"
@@ -1313,7 +1316,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               )}
               {/* Sync status indicator */}
               <div className="ml-auto flex-shrink-0">
-                {isDemoViewer ? (
+                {isDemoViewer || syncState === 'demo' ? (
                   <span className="text-xs text-amber-600" title="Demo sessions are read-only — quiz answers are not persisted">
                     Demo — progress not saved
                   </span>

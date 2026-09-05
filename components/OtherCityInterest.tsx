@@ -88,7 +88,7 @@ export function OtherCityInterest() {
         </p>
       </div>
       <p className="text-sm font-semibold text-slate-900 leading-snug mb-0.5">
-        {isTeam ? 'Inquire about in-house team training' : 'Secure your seat for your city'}
+        {isTeam ? 'Inquire about in-house team training' : 'Unlock your seat for your city'}
       </p>
       <p className="text-[12px] text-slate-600 leading-snug mb-3">
         {isTeam

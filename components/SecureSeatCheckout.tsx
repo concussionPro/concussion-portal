@@ -1,10 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, Check, Loader2, MapPin, Shield } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { trackEvent, getAttribution } from '@/lib/analytics'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
+import {
+  buildSecureSeatUrgency,
+  fetchCityProgressRows,
+  pickFocusCitySlug,
+  type CityProgressRow,
+} from '@/lib/secure-seat-urgency'
 
 const CITY_OPTIONS = [
   { slug: 'melbourne', label: 'Melbourne' },
@@ -22,23 +28,28 @@ export interface SecureSeatCheckoutProps {
   /** Hide the city picker when the parent already fixed the city. */
   lockCity?: boolean
   /** Visual density. */
-  variant?: 'card' | 'inline' | 'button'
+  variant?: 'card' | 'inline' | 'button' | 'hero'
   /** Analytics source tag. */
   source?: string
+  /** Frame copy for Online → practical upgrade (Module 8 / learning). */
+  forOnlineUpgrade?: boolean
   className?: string
 }
 
 /**
- * Secure your seat — A$100 refundable deposit toward the catered practical day.
+ * Unlock your seat — A$100 refundable deposit toward the catered practical day.
  * REPLACES free location EOI as the primary soft-commit CTA (owner 2026-09-05).
  * Counts toward the 12-seat cohort gate; credit to Complete when the date opens;
  * full refund if the cohort does not form. Does NOT unlock online modules.
+ *
+ * Urgency is HONEST scarcity from /api/city-progress — never fake timers or invented counts.
  */
 export function SecureSeatCheckout({
   defaultCity,
   lockCity = false,
   variant = 'card',
   source = 'secure_seat_cta',
+  forOnlineUpgrade = false,
   className = '',
 }: SecureSeatCheckoutProps) {
   const initial =
@@ -49,10 +60,53 @@ export function SecureSeatCheckout({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [stuckUrl, setStuckUrl] = useState<string | null>(null)
+  const [progressRow, setProgressRow] = useState<CityProgressRow | null | undefined>(undefined)
+
+  useEffect(() => {
+    if (defaultCity && CITY_OPTIONS.some((c) => c.slug === defaultCity)) {
+      setCity(defaultCity as SecureSeatCity)
+    }
+  }, [defaultCity])
+
+  // Prefer live/highest-progress city once when parent did not lock a city.
+  useEffect(() => {
+    if (lockCity || defaultCity) return
+    let cancelled = false
+    fetchCityProgressRows().then((rows) => {
+      if (cancelled) return
+      const focus = pickFocusCitySlug(rows)
+      if (CITY_OPTIONS.some((c) => c.slug === focus)) {
+        setCity(focus as SecureSeatCity)
+      }
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot focus
+  }, [lockCity, defaultCity])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchCityProgressRows().then((rows) => {
+      if (cancelled) return
+      setProgressRow(rows.find((r) => r.slug === city) ?? null)
+    })
+    return () => { cancelled = true }
+  }, [city])
 
   const price = CONFIG.COURSE.PRICE_SECURE_SEAT
   const threshold = CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD
   const cityLabel = CITY_OPTIONS.find((c) => c.slug === city)?.label ?? city
+
+  const urgency = useMemo(() => {
+    const known = progressRow !== undefined && progressRow !== null
+    return buildSecureSeatUrgency({
+      cityLabel,
+      enrolled: progressRow?.enrolled,
+      threshold: progressRow?.threshold ?? threshold,
+      progressKnown: known,
+      priceAud: price,
+      forOnlineUpgrade,
+    })
+  }, [cityLabel, progressRow, threshold, price, forOnlineUpgrade])
 
   async function startCheckout() {
     if (loading) return
@@ -95,6 +149,17 @@ export function SecureSeatCheckout({
     }
   }
 
+  const ProgressBadge = urgency.progressLine ? (
+    <div className="flex">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
+        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+        <span className="text-[11px] font-semibold text-emerald-800 leading-snug">
+          {urgency.progressLine}
+        </span>
+      </span>
+    </div>
+  ) : null
+
   if (variant === 'button') {
     return (
       <div className={className}>
@@ -114,6 +179,7 @@ export function SecureSeatCheckout({
             </select>
           </label>
         )}
+        {ProgressBadge && <div className="mb-2">{ProgressBadge}</div>}
         <button
           type="button"
           onClick={startCheckout}
@@ -121,7 +187,7 @@ export function SecureSeatCheckout({
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-bold text-white shadow-lg transition-colors hover:bg-[#0b6165] disabled:opacity-60"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-            <>Secure your seat — A${price} <ArrowRight className="h-4 w-4" /></>
+            <>{urgency.ctaLabel} <ArrowRight className="h-4 w-4" /></>
           )}
         </button>
         <p className="mt-1.5 text-center text-[11px] text-slate-500">
@@ -135,6 +201,7 @@ export function SecureSeatCheckout({
     return (
       <div className={`rounded-xl border border-amber-200/80 bg-amber-50/60 p-4 ${className}`}>
         {stuckUrl && <div className="mb-3"><CheckoutRescue url={stuckUrl} /></div>}
+        {ProgressBadge && <div className="mb-2">{ProgressBadge}</div>}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           {!lockCity && (
             <label className="flex-1 text-xs font-semibold text-slate-700">
@@ -157,22 +224,25 @@ export function SecureSeatCheckout({
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0b6165] disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-              <>Secure your seat — A${price} <ArrowRight className="h-4 w-4" /></>
+              <>{urgency.ctaLabel} <ArrowRight className="h-4 w-4" /></>
             )}
           </button>
         </div>
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         <p className="mt-2 text-[11px] leading-snug text-slate-600">
-          Refundable deposit · counts toward the {threshold}-seat cohort · credited to Complete when the date opens · full refund if the cohort does not form.
+          {urgency.socialLine}
         </p>
       </div>
     )
   }
 
-  // Default: card
+  // hero + default card — same content; hero is slightly larger for page tops
+  const isHero = variant === 'hero'
   return (
     <div
-      className={`rounded-2xl border-2 border-amber-300/70 bg-gradient-to-br from-amber-50 via-white to-teal-50/40 p-5 md:p-6 shadow-sm ${className}`}
+      className={`rounded-2xl border-2 border-amber-300/70 bg-gradient-to-br from-amber-50 via-white to-teal-50/40 shadow-sm ${
+        isHero ? 'p-5 md:p-7' : 'p-5 md:p-6'
+      } ${className}`}
     >
       {stuckUrl && <div className="mb-3"><CheckoutRescue url={stuckUrl} /></div>}
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -183,11 +253,12 @@ export function SecureSeatCheckout({
           <Shield className="h-3 w-3 text-[var(--accent)]" /> A${price} refundable
         </span>
       </div>
-      <h3 className="text-lg font-bold tracking-tight text-slate-900">Secure your seat</h3>
-      <p className="mt-1 text-sm leading-relaxed text-slate-600">
-        Put A${price} down for your preferred city. It counts toward the {threshold}-clinician
-        demand gate — money before calendar. Credit toward Complete when the date opens; full
-        refund if the cohort does not form.
+      <h3 className={`font-bold tracking-tight text-slate-900 ${isHero ? 'text-xl md:text-2xl' : 'text-lg'}`}>
+        {isHero ? urgency.headline : urgency.headlineShort}
+      </h3>
+      {ProgressBadge && <div className="mt-2.5">{ProgressBadge}</div>}
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+        {urgency.body}
       </p>
       <ul className="mt-3 space-y-1.5">
         {[
@@ -225,11 +296,11 @@ export function SecureSeatCheckout({
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
-          <>Secure your seat — A${price} <ArrowRight className="h-4 w-4" /></>
+          <>{urgency.ctaLabel} <ArrowRight className="h-4 w-4" /></>
         )}
       </button>
       <p className="mt-2 text-center text-[11px] text-slate-500">
-        Stripe checkout · refundable · {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice once confirmed
+        {urgency.socialLine} · Stripe · {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice once confirmed
       </p>
     </div>
   )

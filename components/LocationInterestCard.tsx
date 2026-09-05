@@ -7,10 +7,9 @@ import { Check, ArrowRight, Loader2 } from 'lucide-react'
 import { trackInterestRegistration } from '@/lib/analytics'
 import { CONFIG } from '@/lib/config'
 import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
+import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
 
 // ─── City momentum (real counts only, shared across all cards) ──────────────
-const MOMENTUM_MIN_ENROLLED = 5
-
 interface CityProgress {
   slug: string
   enrolled: number
@@ -72,9 +71,15 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
     return () => { cancelled = true }
   }, [citySlug])
 
-  const showMomentum = !!progress && progress.enrolled >= MOMENTUM_MIN_ENROLLED
   const hasLiveDate = cityHasLiveDate(citySlug)
   const deposit = CONFIG.COURSE.PRICE_SECURE_SEAT
+  const seatUrgency = buildSecureSeatUrgency({
+    cityLabel: city,
+    enrolled: progress?.enrolled,
+    threshold: progress?.threshold ?? CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD,
+    progressKnown: !!progress,
+    priceAud: deposit,
+  })
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -137,12 +142,12 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         </h3>
         <p className="mt-1.5 text-[12.5px] text-white/75 leading-snug">{caption}</p>
 
-        {showMomentum && progress && (
+        {seatUrgency.progressLine && (
           <div className="mt-2.5 flex">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 border border-emerald-300/30 backdrop-blur px-2.5 py-1">
               <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
               <span className="text-[11px] font-semibold text-emerald-100 leading-snug">
-                {progress.enrolled} of {progress.threshold} committed — date launches at {progress.threshold}
+                {seatUrgency.progressLine}
               </span>
             </span>
           </div>

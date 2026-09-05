@@ -8,7 +8,7 @@ import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 export interface ScatFunnelExitsProps {
   /** Where this promo sits (analytics / copy tweaks). */
   context?: 'scat-mastery' | 'scat-complete' | 'scat-mid' | 'after-assessment' | 'module-8'
-  /** Hide Secure your seat / Complete when already committed. */
+  /** Hide Unlock your seat / Complete when already committed. */
   alreadyCommitted?: boolean
   /** Show SCAT promo code line (completers). */
   showPromo?: boolean
@@ -17,7 +17,7 @@ export interface ScatFunnelExitsProps {
 
 /**
  * Equal-weight dual exit after free SCAT value (owner 2026-09-05 — push SST harder):
- *  1) Learn full clinical competency — Online | Secure your seat | Complete
+ *  1) Learn full clinical competency — Online (front door) | Unlock your seat | Complete
  *  2) Apply your protocol with SST — /clinical-suite (Baseline shares the suite licence)
  *
  * Two separate surfaces — never mash course A$ and SST A$/mo into one card.

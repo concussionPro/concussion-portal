@@ -245,9 +245,10 @@ function PricingTabs() {
              5 everything else */
         .pricing-embed .stream-body { display: flex; flex-direction: column; }
         .pricing-embed .stream-body > * { order: 5; }
-        .pricing-embed .stream-body > #workshop-photo { order: 2; }
-        .pricing-embed .stream-body > #pricing-cards { order: 3; }
-        .pricing-embed .stream-body > #workshop-locations { order: 4; }
+        .pricing-embed .stream-body > #secure-seat-hero { order: 2; }
+        .pricing-embed .stream-body > #workshop-photo { order: 3; }
+        .pricing-embed .stream-body > #pricing-cards { order: 4; }
+        .pricing-embed .stream-body > #workshop-locations { order: 5; }
         /* The hero wrapper still holds the h1, subtitle, credential, chips and
            upgrade note that the page-level title now replaces. */
         .pricing-embed .stream-body > .text-center.mb-8 > :nth-child(-n+5) { display: none; }

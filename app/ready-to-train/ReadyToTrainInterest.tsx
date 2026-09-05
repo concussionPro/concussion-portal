@@ -72,7 +72,7 @@ export default function ReadyToTrainInterest({
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
-        <p className="text-sm font-bold text-foreground mb-1">Secure your seat</p>
+        <p className="text-sm font-bold text-foreground mb-1">Unlock your seat</p>
         <p className="text-[13px] text-muted-foreground mb-3">
           A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit — preferred city on checkout.
           Counts toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate. Free notify does not.

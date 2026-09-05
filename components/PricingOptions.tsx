@@ -17,6 +17,7 @@ import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocati
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
+import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
@@ -351,6 +352,13 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   // never interest counts, never fabricated.
   const selectedProgress = cityProgress[selectedLocation]
   const showMomentum = !!selectedProgress && selectedProgress.enrolled >= MOMENTUM_MIN_ENROLLED
+  const seatUrgency = buildSecureSeatUrgency({
+    cityLabel: cityLabel(selectedLocation || 'melbourne'),
+    enrolled: selectedProgress?.enrolled,
+    threshold: selectedProgress?.threshold ?? CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD,
+    progressKnown: !!selectedProgress,
+    priceAud: CONFIG.COURSE.PRICE_SECURE_SEAT,
+  })
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course' | 'secure-seat') => {
     // Only reachable when no city is open (defaultNominationCity() === null).
@@ -697,8 +705,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable
               </span>
             </div>
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Secure your seat</h3>
-            <p className="text-[10px] text-slate-500 mb-3">Soft commit · counts toward {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} · date TBD</p>
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Unlock your seat</h3>
+            <p className="text-[10px] text-slate-500 mb-3">Soft commit · open the date at {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} · Online remains the front door</p>
             <div className="mb-3">
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_SECURE_SEAT}</span>
@@ -736,6 +744,13 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 </button>
               ))}
             </div>
+            {seatUrgency.progressLine && (
+              <div className="mb-2 flex">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5">
+                  <span className="text-[10px] font-semibold text-emerald-800 leading-snug">{seatUrgency.progressLine}</span>
+                </span>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => handleCheckout('secure-seat')}
@@ -745,7 +760,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               {loading === 'secure-seat' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Secure your seat — $${CONFIG.COURSE.PRICE_SECURE_SEAT}`
+                seatUrgency.ctaLabel
               )}
             </button>
           </div>
@@ -1190,7 +1205,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
                     <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
                     <span className="text-[11px] font-semibold text-emerald-800 leading-snug">
-                      {selectedProgress.enrolled} of {selectedProgress.threshold} enrolled in {cityLabel(selectedLocation)} — the date launches at {selectedProgress.threshold}.
+                      {selectedProgress.enrolled} of {selectedProgress.threshold} seats secured in {cityLabel(selectedLocation)} — unlock yours to open the date.
                     </span>
                   </span>
                 </div>
@@ -1231,14 +1246,20 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Secure your seat</h3>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{seatUrgency.headlineShort}</h3>
           <p className="text-[12px] text-slate-500 mb-2 font-medium">
-            Preferred city on checkout · counts toward {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}
+            Preferred city on checkout · open the date at {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}
           </p>
+          {seatUrgency.progressLine && (
+            <div className="mb-3 flex">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
+                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+                <span className="text-[11px] font-semibold text-emerald-800 leading-snug">{seatUrgency.progressLine}</span>
+              </span>
+            </div>
+          )}
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Put A${CONFIG.COURSE.PRICE_SECURE_SEAT} down for your city. It counts toward the catered-day
-            cohort gate. Credit toward Complete when the date opens; full refund if the cohort
-            does not form. Does not unlock online modules.
+            {seatUrgency.body}
           </p>
 
           <ul className="grid grid-cols-1 gap-y-1.5 mb-5 text-left">
@@ -1282,7 +1303,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             {loading === 'secure-seat' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <>Secure your seat — ${CONFIG.COURSE.PRICE_SECURE_SEAT} <ArrowRight className="w-4 h-4" /></>
+              <>{seatUrgency.ctaLabel} <ArrowRight className="w-4 h-4" /></>
             )}
           </button>
           <PaymentMethodsStrip />

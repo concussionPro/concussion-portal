@@ -59,7 +59,7 @@ export default async function VoteThanksPage({
           href="/pricing?utm_source=vote-thanks&utm_medium=web&utm_campaign=nov-dates-2026"
           className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors"
         >
-          {isNone ? 'See the online course' : 'Secure your seat — early-bird'}
+          {isNone ? 'See the online course' : 'Unlock your seat — early-bird'}
           <ArrowRight className="w-4 h-4" />
         </Link>
         <p className="mt-5 text-xs text-slate-400">

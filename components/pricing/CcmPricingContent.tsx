@@ -27,6 +27,7 @@ import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
 import { CONFIG, upgradePriceFor, SST_TIERS, SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 import { trackEvent } from '@/lib/analytics'
 import CourseShowcase from '@/components/ccm/CourseShowcase'
 import { TESTIMONIALS } from '@/lib/testimonials'
@@ -398,13 +399,36 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             the upgrade, so the number here can never drift from the real one. */}
         <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
           <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-            <strong className="font-bold">Money before calendar — enrol Complete with date TBD.</strong>{' '}
+            <strong className="font-bold">Money before calendar — enrol Online today (primary).</strong>{' '}
             <span className="text-muted-foreground">
-              Online modules unlock immediately. The catered practical day is confirmed when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit (break-even), with at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice — venue booked only then. Prefer to start content only? Online is available; Complete buyers never wait on a free EOI list.
+              Online is the $0-opex path — modules unlock immediately. The catered practical day stays demand-gated: confirmed when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit, with at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice. Unlock your seat is a refundable soft commit toward that gate — not a substitute for Online.
             </span>
           </p>
         </div>
 
+        {/* Hero money strip — Online PRIMARY, Unlock seat SECONDARY (unit economics 2026-09-05).
+            Must be a direct .stream-body child so /pricing embed can order it early. */}
+        <div id="secure-seat-hero" className="max-w-3xl mx-auto mb-6 grid gap-3 md:grid-cols-[1.15fr_0.85fr] items-stretch">
+          <a
+            href="#pricing-cards"
+            className="flex flex-col justify-center rounded-2xl border-2 border-[var(--accent)] bg-gradient-to-br from-teal-50 via-white to-white p-5 shadow-md hover:shadow-lg transition-shadow text-left"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">Primary · start today</p>
+            <p className="mt-1 text-lg font-bold text-slate-900 tracking-tight">Enrol Online — A${CONFIG.COURSE.PRICE_ONLINE}</p>
+            <p className="mt-1.5 text-[13px] leading-snug text-slate-600">
+              {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · lifetime access · modules unlock now. Highest margin path — no venue opex until a city cohort fills.
+            </p>
+            <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--accent)]">
+              See Online pricing <ArrowRight className="w-4 h-4" />
+            </span>
+          </a>
+          <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-3 flex flex-col justify-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-800 mb-2 px-1">
+              Secondary · unlock the catered day
+            </p>
+            <SecureSeatCheckout variant="button" source="pricing_hero_secondary" />
+          </div>
+        </div>
 
         {/* The practical day — under the title, above the cards (owner
             2026-08-10/11). MUST be a direct child of .stream-body: the

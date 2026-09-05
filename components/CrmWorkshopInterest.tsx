@@ -155,9 +155,9 @@ export default function CrmWorkshopInterest() {
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
-        <p className="text-sm font-bold text-slate-900 mb-1">Secure your seat</p>
+        <p className="text-sm font-bold text-slate-900 mb-1">Unlock your seat</p>
         <p className="text-xs text-slate-600 mb-3">
-          A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit for the shared practical day — preferred city on checkout. Counts toward the cohort gate.
+          A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate that opens the catered day — preferred city on checkout. Date opens when demand is met.
         </p>
         <SecureSeatCheckout defaultCity={city as 'sydney' | 'melbourne' | 'byron-bay' | 'adelaide' | 'wa'} lockCity variant="button" source="crm_workshop_interest" />
       </div>
