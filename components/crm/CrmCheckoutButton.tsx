@@ -58,18 +58,10 @@ export default function CrmCheckoutButton({
   // is one line: set this back to `true` and restore the API's unconditional
   // check.
   const needsCity = tier !== 'online'
-  // The email is only ever a Stripe pre-fill — Stripe Checkout collects it on
-  // the next screen — EXCEPT on 'upgrade', where the server has to find the
-  // buyer's existing CRM Online purchase before it will price a $693 add-on.
-  //
-  // Asking for it on the other two tiers was the second half of the same
-  // defect as the city nomination: an extra screen, demanding a field the
-  // transaction does not need, between a decided buyer and the payment page.
-  // The CCM stream has never done this (components/PricingOptions.tsx posts
-  // straight to /api/create-checkout and redirects), and CCM is the stream
-  // that converts. 'online' now needs nothing at all, so it goes to Stripe on
-  // the first click, like its label says.
-  const needsEmail = tier === 'upgrade'
+  // Soft email on every tier — stamps customer_email for abandoned-checkout
+  // rescue (same doctrine as CCM PricingOptions). Upgrade additionally uses
+  // the address to locate the existing CRM Online purchase.
+  const needsEmail = true
   const needsAnything = needsCity || needsEmail
 
   // Pending ESSA → interest capture only, never a live checkout.
@@ -84,7 +76,11 @@ export default function CrmCheckoutButton({
   async function start() {
     setError(null)
     if (needsEmail && (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) {
-      setError('Enter the email you enrolled with.')
+      setError(
+        tier === 'upgrade'
+          ? 'Enter the email you enrolled with.'
+          : 'Enter your email so we can send your enrolment link if checkout is interrupted.',
+      )
       return
     }
     if (needsCity && !city) { setError('Nominate your city — it sets where the practical day launches.'); return }
@@ -119,7 +115,7 @@ export default function CrmCheckoutButton({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           tier,
-          email: email || undefined,
+          email,
           location: city || undefined,
           ...(Object.keys(utm).length ? { utm } : {}),
           attribution: getAttribution(),
@@ -167,13 +163,12 @@ export default function CrmCheckoutButton({
   return (
     <div className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left">
       <p className="text-[13px] font-bold text-slate-800 mb-2">
-        {needsEmail
+        {tier === 'upgrade'
           ? 'The email you enrolled with — so we can find your CRM Online purchase'
-          : 'Where should the practical day run?'}
+          : needsCity
+            ? 'Email + city so we can enrol you and set practical-day demand'
+            : 'Email for your receipt & enrolment link'}
       </p>
-      {/* Email ONLY on the upgrade tier, where the server needs it to verify the
-          existing purchase. Everywhere else Stripe collects it on the next
-          screen, so asking twice is pure drop-off. */}
       {needsEmail && (
         <input
           type="email"

@@ -4,7 +4,9 @@ import { join } from 'path'
 import {
   CHECKOUT_EMAIL_REQUIRED_MESSAGE,
   CHECKOUT_EMAIL_REQUIRED_TYPES,
+  CRM_CHECKOUT_EMAIL_REQUIRED_TIERS,
   isCheckoutEmailRequired,
+  isCrmCheckoutEmailRequired,
   resolveCheckoutCustomerEmail,
 } from '@/lib/checkout-email'
 
@@ -91,5 +93,40 @@ describe('/api/create-checkout email gate', () => {
     const src = readFileSync(join(process.cwd(), 'components/ccm/CcmInternationalContent.tsx'), 'utf8')
     expect(src.includes('ccm-intl-checkout-email-faq')).toBe(true)
     expect(src.includes('ccm-intl-checkout-email-exit')).toBe(true)
+  })
+})
+
+describe('CRM checkout email gate', () => {
+  it('requires soft email for CRM online/complete/upgrade', () => {
+    for (const tier of CRM_CHECKOUT_EMAIL_REQUIRED_TIERS) {
+      expect(isCrmCheckoutEmailRequired(tier)).toBe(true)
+    }
+    expect(isCrmCheckoutEmailRequired('nope')).toBe(false)
+  })
+
+  it('CRM checkout APIs resolve email before minting Stripe', () => {
+    for (const file of [
+      'app/api/crm/checkout/route.ts',
+      'app/api/crm/checkout-international/route.ts',
+    ]) {
+      const src = readFileSync(join(process.cwd(), file), 'utf8')
+      expect(src.includes('resolveCheckoutCustomerEmail')).toBe(true)
+      expect(src.includes('status: 400')).toBe(true)
+    }
+  })
+
+  it('CRM pricing CTAs soft-require email (PricingOptions + CrmCheckoutButton + intl)', () => {
+    const pricing = readFileSync(join(process.cwd(), 'components/PricingOptions.tsx'), 'utf8')
+    expect(pricing.includes('softEmailBlocks')).toBe(true)
+    expect(pricing.includes('CRM online stays optional')).toBe(false)
+    expect(pricing.includes('email: resolvedCheckoutEmail')).toBe(true)
+
+    const btn = readFileSync(join(process.cwd(), 'components/crm/CrmCheckoutButton.tsx'), 'utf8')
+    expect(btn.includes('const needsEmail = true')).toBe(true)
+
+    const intl = readFileSync(join(process.cwd(), 'components/crm/CrmInternationalContent.tsx'), 'utf8')
+    expect(intl.includes('useCheckoutEmail')).toBe(true)
+    expect(intl.includes('crm-intl-checkout-email')).toBe(true)
+    expect(intl.includes('resolvedCheckoutEmail')).toBe(true)
   })
 })

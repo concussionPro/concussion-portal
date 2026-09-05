@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import {
   CHECKOUT_EMAIL_REQUIRED_MESSAGE,
   isCheckoutEmailRequired,
+  isCrmCheckoutEmailRequired,
   resolveCheckoutCustomerEmail,
 } from '@/lib/checkout-email'
 
@@ -45,5 +46,17 @@ describe('soft checkout email gate', () => {
     const src = readFileSync(join(REPO, 'app/api/create-checkout/route.ts'), 'utf8')
     expect(src).toMatch(/resolveCheckoutCustomerEmail/)
     expect(src).toMatch(/isCheckoutEmailRequired/)
+  })
+
+  it('requires soft email for CRM online/complete/upgrade', () => {
+    expect(isCrmCheckoutEmailRequired('online')).toBe(true)
+    expect(isCrmCheckoutEmailRequired('complete')).toBe(true)
+    expect(isCrmCheckoutEmailRequired('upgrade')).toBe(true)
+  })
+
+  it('CRM checkout route wires the soft gate before minting Stripe', () => {
+    const src = readFileSync(join(REPO, 'app/api/crm/checkout/route.ts'), 'utf8')
+    expect(src).toMatch(/resolveCheckoutCustomerEmail/)
+    expect(src).toMatch(/isCrmCheckoutEmailRequired/)
   })
 })

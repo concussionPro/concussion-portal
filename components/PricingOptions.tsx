@@ -182,9 +182,10 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   } = useCheckoutEmail()
 
   const softEmailBlocks = (courseType: 'online-only' | 'full-course' | 'secure-seat') => {
-    // CCM always; CRM complete/secure; CRM online stays optional.
-    const required = !crm || courseType === 'full-course' || courseType === 'secure-seat'
-    return required && checkoutEmailLoaded && checkoutNeedsField && !resolvedCheckoutEmail
+    // Soft email on every Online / Complete / Secure CTA — CCM and CRM alike —
+    // so Stripe sessions stamp customer_email for abandoned-checkout rescue.
+    void courseType
+    return checkoutEmailLoaded && checkoutNeedsField && !resolvedCheckoutEmail
   }
 
   const focusCheckoutEmail = (inputId: string) => {
@@ -305,9 +306,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       setError('Please choose your workshop city.')
       return
     }
-    // Soft email: CCM always; CRM complete/secure same shared field; CRM online optional.
-    const crmNeedsEmail = courseType === 'full-course' || courseType === 'secure-seat'
-    if ((!crm || crmNeedsEmail) && !resolvedCheckoutEmail) {
+    // Soft email: CCM + CRM Online/Complete/Secure — required for abandon rescue.
+    if (!resolvedCheckoutEmail) {
       setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
       focusCheckoutEmail(opts?.emailInputId ?? emailInputIdFor(courseType, isCompact))
       return
@@ -343,7 +343,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
         body: JSON.stringify(crm ? {
           tier: courseType === 'full-course' ? 'complete' : 'online',
           ...(selectedLocation ? { location: selectedLocation } : {}),
-          ...(resolvedCheckoutEmail ? { email: resolvedCheckoutEmail } : {}),
+          email: resolvedCheckoutEmail,
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
           attribution: getAttribution(),
         } : {

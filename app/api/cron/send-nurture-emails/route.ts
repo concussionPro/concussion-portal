@@ -15,7 +15,8 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
-import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { isCrmAbandonedCourseType } from '@/lib/abandoned-checkout'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
 import { holdsPracticalDaySeat } from '@/lib/practical-day-seat'
@@ -1460,20 +1461,28 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
 
   for (const checkout of rows) {
     const hoursSinceAbandoned = (now - new Date(checkout.abandoned_at).getTime()) / (1000 * 60 * 60)
-    const nextEmail = ABANDONED_CHECKOUT_SEQUENCE[checkout.emails_sent]
+    const abandonSeq = isCrmAbandonedCourseType(String(checkout.course_type || ''))
+      ? CRM_ABANDONED_CHECKOUT_SEQUENCE
+      : ABANDONED_CHECKOUT_SEQUENCE
+    const sequenceTag = isCrmAbandonedCourseType(String(checkout.course_type || ''))
+      ? 'crm-abandoned-checkout'
+      : 'abandoned-checkout'
+    // Both sequences are length-matched; use per-row seq for the step + completion mark.
+    if (checkout.emails_sent >= abandonSeq.length) continue
+    const nextEmail = abandonSeq[checkout.emails_sent]
 
     if (hoursSinceAbandoned >= nextEmail.hoursAfter) {
       // Global suppression check — abandoned checkouts often have NO users
       // row, so the users.nurture_unsubscribed check below can't catch a
       // bounced/complained address. email_suppression can.
       if (suppressedEmails.has(String(checkout.email || '').toLowerCase())) {
-        await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
+        await sql`UPDATE abandoned_checkouts SET emails_sent = ${abandonSeq.length} WHERE id = ${checkout.id}`
         console.log(`[Abandoned] Skipped ${redact(checkout.email)} — suppressed`)
         continue
       }
 
       if (isNonDeliverableRecipient(String(checkout.email || ''))) {
-        await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
+        await sql`UPDATE abandoned_checkouts SET emails_sent = ${abandonSeq.length} WHERE id = ${checkout.id}`
         console.log(`[Abandoned] Skipped ${redact(checkout.email)} — non-deliverable recipient`)
         continue
       }
@@ -1485,7 +1494,7 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
         `
         if (userRows.length > 0 && userRows[0].nurture_unsubscribed) {
           // Mark as fully sent so we stop processing
-          await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
+          await sql`UPDATE abandoned_checkouts SET emails_sent = ${abandonSeq.length} WHERE id = ${checkout.id}`
           console.log(`[Abandoned] Skipped ${redact(checkout.email)} — unsubscribed`)
           continue
         }
@@ -1535,7 +1544,7 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
           subject: nextEmail.subject,
           html,
           tags: [
-            { name: 'sequence', value: 'abandoned-checkout' },
+            { name: 'sequence', value: sequenceTag },
             { name: 'email-number', value: String(checkout.emails_sent + 1) },
           ],
           headers: {

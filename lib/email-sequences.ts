@@ -418,6 +418,70 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
  * Sent to full-course students before their workshop date.
  * Helps reduce no-shows and builds anticipation.
  */
+
+/**
+ * Abandoned checkout recovery — CRM (Concussion Rehab Mastery / EP stream).
+ * Same quiet rescue cadence as ABANDONED_CHECKOUT_SEQUENCE, but names the EP
+ * course, ESSA framing, and /concussion-rehab-mastery return path. Length MUST
+ * match the CCM sequence so abandoned_checkouts.emails_sent advances cleanly.
+ */
+export const CRM_ABANDONED_CHECKOUT_SEQUENCE = [
+  {
+    hoursAfter: 1,
+    subject: 'You left something behind',
+    template: (name: string, recoveryUrl?: string) => emailShell(`
+      <h2>Hi ${greetingName(name)},</h2>
+      <p>You started enrolling in <strong>Concussion Rehab Mastery</strong> and didn't finish — that happens. If checkout glitched or you want a quick clinical question answered first, just reply.</p>
+      <p>When you're ready, you can pick enrolment back up here:</p>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/concussion-rehab-mastery', 'crm_abandoned_1h', 'resume_enrolment')}" class="cta-btn">Return to enrolment</a></center>
+      <div class="callout">
+        <strong>In short:</strong><br><br>
+        &#8226; EP-scoped concussion rehab — sub-symptom-threshold exercise as first-line care<br>
+        &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours online (${CONFIG.COURSE.CRM_TOTAL_CPD_POINTS} with the practical day)<br>
+        &#8226; ESSA-accredited PD · built for AEPs / AES clinicians<br>
+        &#8226; Clinical tools + lifetime module access<br>
+        &#8226; Tax invoice + 7-day money-back
+      </div>
+      <div class="sig">Zac Lewis<br>Osteopath · Concussion Education Australia</div>
+    `, undefined, 'ep'),
+  },
+  {
+    hoursAfter: 24,
+    subject: 'Still thinking it over?',
+    template: (name: string, recoveryUrl?: string) => emailShell(`
+      <h2>Hi ${greetingName(name)},</h2>
+      <p>No chase — just the questions exercise physiologists usually ask before they enrol.</p>
+      <p><strong>"Is this in my scope?"</strong><br>
+      Yes — CRM is the ESSA-aligned stream for AEPs/AES. Physiotherapists, osteopaths and chiropractors sit on the separate Concussion Clinical Mastery stream.</p>
+      <p><strong>"What will I actually run on Monday?"</strong><br>
+      BCTT / bike threshold testing, sub-symptom-threshold aerobic Rx, phenotype-matched exercise, and graded return to activity.</p>
+      <p><strong>"How long, and can I add the practical day later?"</strong><br>
+      About ${CONFIG.COURSE.ONLINE_CPD_POINTS} hours online, self-paced, lifetime access. Online is $${CONFIG.COURSE.PRICE_ONLINE}; you can add the shared practical day later and only pay the difference.</p>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/concussion-rehab-mastery', 'crm_abandoned_24h', 'view_options')}" class="cta-btn">View course options</a></center>
+      <p class="ps">Tax invoice and CPD certificate are included for reimbursement.</p>
+      <div class="sig">Zac</div>
+    `, undefined, 'ep'),
+  },
+  {
+    hoursAfter: 72,
+    subject: 'Concussion Rehab Mastery — the details, in one place',
+    template: (name: string, recoveryUrl?: string) => emailShell(`
+      <h2>Hi ${greetingName(name)},</h2>
+      <p>Last note from me on enrolment — the course, plainly:</p>
+      <ul>
+        <li><strong>What it covers:</strong> EP-scoped recognition, BCTT/HRt, sub-threshold aerobic rehab, phenotype exercise, graded return.</li>
+        <li><strong>Authority:</strong> ESSA-accredited PD; CPD hours claimable under usual ESSA rules.</li>
+        <li><strong>Format:</strong> 8 online modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · lifetime access · self-paced.</li>
+        <li><strong>Cost:</strong> $${CONFIG.COURSE.PRICE_ONLINE} online. Practical day later if you want it — difference only.</li>
+        <li><strong>Money hygiene:</strong> tax invoice + CPD certificate · 7-day money-back.</li>
+      </ul>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/concussion-rehab-mastery', 'crm_abandoned_72h', 'resume')}" class="cta-btn">Resume enrolment</a></center>
+      <p class="ps">Reply anytime if a colleague question would help you decide.</p>
+      <div class="sig">Zac Lewis<br>Osteopath · Concussion Education Australia</div>
+    `, undefined, 'ep'),
+  },
+]
+
 export const PRE_WORKSHOP_SEQUENCE = [
   // 7 days before workshop
   {

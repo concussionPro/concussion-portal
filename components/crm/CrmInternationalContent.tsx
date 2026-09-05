@@ -16,6 +16,7 @@ import { buildIntlFaqs, PLATFORM_MONTHLY_AUD } from '@/components/crm/intl-faqs'
 import { AustraliaPricingLink } from '@/components/MarketPricingSwitch'
 import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 import CourseShowcase from '@/components/ccm/CourseShowcase'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 
 /**
  * CRM (Concussion Rehab Mastery) — INTERNATIONAL landing.
@@ -116,15 +117,34 @@ export default function CrmInternationalContent({
   // are resolved server-side there — the client sends nothing price-bearing.
   const [enrolling, setEnrolling] = useState(false)
   const [enrolError, setEnrolError] = useState<string | null>(null)
-  const handleEnrol = async () => {
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail,
+    resolved: resolvedCheckoutEmail,
+    needsField: checkoutNeedsField,
+  } = useCheckoutEmail()
+  const softEmailBlocks = checkoutNeedsField && !resolvedCheckoutEmail
+  const focusCrmIntlCheckoutEmail = (inputId = 'crm-intl-checkout-email') => {
+    try {
+      document.getElementById(inputId)?.focus()
+      document.getElementById(inputId)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    } catch { /* ignore */ }
+  }
+  const handleEnrol = async (focusEmailId?: string) => {
     if (enrolling) return
+    if (!resolvedCheckoutEmail) {
+      setEnrolError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      focusCrmIntlCheckoutEmail(focusEmailId || 'crm-intl-checkout-email')
+      return
+    }
     setEnrolling(true)
     setEnrolError(null)
     try {
       const res = await fetch('/api/crm/checkout-international', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ email: resolvedCheckoutEmail }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data?.url) {
@@ -253,10 +273,18 @@ export default function CrmInternationalContent({
               </div>
 
               <div className="mt-auto">
+                <CheckoutEmailField
+                  email={checkoutEmail}
+                  setEmail={setCheckoutEmail}
+                  sessionEmail={sessionEmail}
+                  disabled={enrolling}
+                  inputId="crm-intl-checkout-email"
+                  className="mb-3"
+                />
                 <button
                   type="button"
-                  onClick={handleEnrol}
-                  disabled={enrolling}
+                  onClick={() => handleEnrol('crm-intl-checkout-email')}
+                  disabled={enrolling || softEmailBlocks}
                   className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
@@ -627,8 +655,8 @@ export default function CrmInternationalContent({
             {live ? (
               <button
                 type="button"
-                onClick={handleEnrol}
-                disabled={enrolling}
+                onClick={() => handleEnrol()}
+                disabled={enrolling || softEmailBlocks}
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
@@ -681,8 +709,8 @@ export default function CrmInternationalContent({
             <div className="text-center">
               <button
                 type="button"
-                onClick={handleEnrol}
-                disabled={enrolling}
+                onClick={() => handleEnrol()}
+                disabled={enrolling || softEmailBlocks}
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
@@ -714,8 +742,8 @@ export default function CrmInternationalContent({
           {live ? (
             <button
               type="button"
-              onClick={handleEnrol}
-              disabled={enrolling}
+              onClick={() => handleEnrol('crm-intl-checkout-email')}
+              disabled={enrolling || softEmailBlocks}
               className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {enrolling ? 'Starting…' : 'Enrol'}

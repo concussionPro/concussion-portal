@@ -5,6 +5,7 @@ import { CONFIG } from '@/lib/config'
 import { detectCountry } from '@/lib/geo'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
+import { resolveCheckoutCustomerEmail } from '@/lib/checkout-email'
 
 /**
  * POST /api/crm/checkout-international — International CRM (Concussion Rehab
@@ -21,8 +22,8 @@ import { getClientIp } from '@/lib/get-client-ip'
  * uses, so display and charge always match.
  */
 const schema = z.object({
-  // Optional — Stripe collects the email on the checkout page when absent. When
-  // supplied it pre-fills checkout (and makes abandoned-cart recovery possible).
+  // Soft-required — without customer_email, checkout.session.expired rescue
+  // has nobody to email (same doctrine as CCM + domestic CRM).
   email: z.string().trim().toLowerCase().email().max(254).optional(),
   utm: z.record(z.string(), z.string()).optional(),
   attribution: z.record(z.string(), z.string()).optional(),
@@ -56,6 +57,12 @@ export async function POST(request: NextRequest) {
   }
   const { email, utm, attribution } = parsed.data
 
+  const resolved = resolveCheckoutCustomerEmail(undefined, email)
+  if (!resolved.ok) {
+    return NextResponse.json({ error: resolved.error }, { status: 400 })
+  }
+  const customerEmail = resolved.email
+
   // Country derived from the request headers (cf-ipcountry) — never trusted from
   // the client. Drives the local charge currency.
   const country = detectCountry(request.headers)
@@ -86,7 +93,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await createCrmInternationalCheckoutSession({
       country,
-      customerEmail: email,
+      customerEmail,
       successUrl,
       cancelUrl,
       utm,

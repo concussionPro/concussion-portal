@@ -13,7 +13,12 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
-import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
+import { ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
+import {
+  abandonedCourseTypeFromMetadata,
+  isCrmAbandonedCourseType,
+  skipsAbandonedCheckoutRescue,
+} from '@/lib/abandoned-checkout'
 import { recordCoursePurchase } from '@/lib/course-purchases'
 import { revokeCourseCertificates } from '@/lib/course-certificates'
 import { enrolUser as enrolAiCourseUser, unenrolUser as unenrolAiCourseUser } from '@/lib/ai-course/access'
@@ -58,10 +63,9 @@ function safeJson(s: string): unknown {
 
 /**
  * True when checkout-session / payment-intent metadata identifies a NON-CCM
- * product. The abandoned/failed-payment recovery emails are written for the
- * CCM flagship ("Concussion Management course", /pricing CTA, module count) —
- * sending that copy for an SST subscription, CRM, short-course, book or Hub
- * Pack checkout is the wrong product entirely, so those lanes skip.
+ * product. Used by payment-failed recovery (CCM-specific copy). Abandoned
+ * checkout rescue uses skipsAbandonedCheckoutRescue() instead — CRM is
+ * eligible there via CRM_ABANDONED_CHECKOUT_SEQUENCE.
  */
 function isNonCcmProduct(md: Stripe.Metadata | Record<string, string> | null | undefined): boolean {
   if (!md) return false
@@ -1901,14 +1905,16 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     return
   }
 
-  // Non-CCM products get no recovery sequence — the copy is CCM-specific.
-  if (isNonCcmProduct(session.metadata)) {
-    console.log(`Skipping abandoned-checkout recovery for non-CCM session ${session.id} (${session.metadata?.productType || session.metadata?.product || session.metadata?.courseType})`)
+  // SST / Hub Pack / book / short-course stay out — wrong product. CRM now
+  // enters rescue with CRM_ABANDONED_CHECKOUT_SEQUENCE (soft email gate stamps
+  // customer_email on mint).
+  if (skipsAbandonedCheckoutRescue(session.metadata)) {
+    console.log(`Skipping abandoned-checkout recovery for non-recoverable session ${session.id} (${session.metadata?.productType || session.metadata?.product || session.metadata?.courseType || session.metadata?.stream})`)
     return
   }
 
   const name = session.customer_details?.name || ''
-  const courseType = session.metadata?.courseType || 'unknown'
+  const courseType = abandonedCourseTypeFromMetadata(session.metadata)
   const amount = (session.amount_total || 0) / 100
   // Stripe-hosted recovery link (after_expiration.recovery enabled at session
   // creation) — re-opens the exact abandoned checkout, valid 30 days.
@@ -1987,7 +1993,11 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       }
     } catch { /* user may not exist yet — proceed */ }
 
-    const firstEmail = ABANDONED_CHECKOUT_SEQUENCE[0]
+    const abandonSeq = isCrmAbandonedCourseType(courseType)
+      ? CRM_ABANDONED_CHECKOUT_SEQUENCE
+      : ABANDONED_CHECKOUT_SEQUENCE
+    const firstEmail = abandonSeq[0]
+    const sequenceTag = isCrmAbandonedCourseType(courseType) ? 'crm-abandoned-checkout' : 'abandoned-checkout'
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const unsubToken = generateUnsubscribeToken(email)
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
@@ -1997,15 +2007,15 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     // emails_sent at 0 so the daily cron retries step 1.
     if (isNonDeliverableRecipient(email)) {
       await sql`
-        UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${claimedCheckoutId}
+        UPDATE abandoned_checkouts SET emails_sent = ${abandonSeq.length} WHERE id = ${claimedCheckoutId}
       `
-      console.log(`[Abandoned] Skipped ${redact(email)} — non-deliverable recipient (emails_sent=${ABANDONED_CHECKOUT_SEQUENCE.length})`)
+      console.log(`[Abandoned] Skipped ${redact(email)} — non-deliverable recipient (emails_sent=${abandonSeq.length})`)
       return
     }
 
     if (unsubscribed) {
       await sql`
-        UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${claimedCheckoutId}
+        UPDATE abandoned_checkouts SET emails_sent = ${abandonSeq.length} WHERE id = ${claimedCheckoutId}
       `
       console.log(`[Abandoned] Skipped email for ${redact(email)} — unsubscribed`)
       return
@@ -2019,7 +2029,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       subject: firstEmail.subject,
       html,
       tags: [
-        { name: 'sequence', value: 'abandoned-checkout' },
+        { name: 'sequence', value: sequenceTag },
         { name: 'email-number', value: '1' },
       ],
       headers: {

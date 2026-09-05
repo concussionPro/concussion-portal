@@ -46,3 +46,12 @@ export function resolveCheckoutCustomerEmail(
   }
   return { ok: true, email: parsed.data }
 }
+
+/** CRM tiers that mint via /api/crm/checkout — soft email required for rescue. */
+export const CRM_CHECKOUT_EMAIL_REQUIRED_TIERS = ['online', 'complete', 'upgrade'] as const
+
+export type CrmCheckoutEmailRequiredTier = (typeof CRM_CHECKOUT_EMAIL_REQUIRED_TIERS)[number]
+
+export function isCrmCheckoutEmailRequired(tier: string): boolean {
+  return (CRM_CHECKOUT_EMAIL_REQUIRED_TIERS as readonly string[]).includes(tier)
+}
