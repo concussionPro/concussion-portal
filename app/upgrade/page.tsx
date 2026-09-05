@@ -47,7 +47,7 @@ function UpgradeContent() {
     // add-on at CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE per clinician, a
     // different product with no self-serve checkout; their route to it is the
     // dashboard/sidebar add-on card, not this checkout.
-    if (user.accessLevel === 'full-course') {
+    if (user.accessLevel === 'full-course' && !user.isDemo) {
       router.replace('/dashboard')
       return
     }
@@ -133,10 +133,37 @@ function UpgradeContent() {
     )
   }
 
-  if (isLoading || !user || user.accessLevel !== 'online-only') {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      </div>
+    )
+  }
+
+  // Demo / full-course / other non-online tiers: explain instead of infinite
+  // spinner or a silent /dashboard bounce (P1 2026-09-05).
+  if (user.accessLevel !== 'online-only') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="max-w-xl w-full rounded-2xl border border-slate-200 bg-white p-7 text-center">
+          <p className="text-lg font-bold text-foreground mb-2">
+            {user.isDemo ? 'Demo preview — upgrade checkout is for Online owners' : 'Upgrade is for Online course owners'}
+          </p>
+          <p className="text-sm text-muted-foreground mb-5">
+            {user.isDemo
+              ? 'Demo sessions are read-only. Enrol in Online, then return here to pay the Complete difference and pick a city for the practical day.'
+              : 'You already have Complete access (or a seat that does not use this self-serve upgrade). Head back to your dashboard for next steps.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Link href="/dashboard" className="btn-primary px-5 py-3 rounded-xl text-sm font-semibold">
+              Back to dashboard
+            </Link>
+            <Link href="/pricing#pricing-cards" className="px-5 py-3 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-foreground hover:bg-slate-50">
+              View pricing
+            </Link>
+          </div>
+        </div>
       </div>
     )
   }

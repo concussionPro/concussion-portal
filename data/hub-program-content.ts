@@ -1334,7 +1334,7 @@ export const ADMIN_COURSE_MODULES: AdminCourseModule[] = [
       {
         heading: 'How to merge patient data',
         body: [
-          'Each template has merge fields in {curly_braces}. Replace each one with the actual patient or context value before sending.',
+          'Each template has merge fields in curly braces. Replace each one with the actual patient or context value before sending.',
           'Never leave a {curly_brace} unfilled — it signals AI/templated content and looks unprofessional.',
           'Always run a final read-through before sending — the human eye catches missed fields and tonal issues that automated checks miss.',
         ],

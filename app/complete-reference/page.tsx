@@ -47,28 +47,45 @@ export default function CompleteReferencePage() {
 
   const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course' || bookOwner
 
-  // Fetch PDF as blob to avoid iframe/CDN issues with large files
+  // Fetch PDF as blob to avoid iframe/CDN issues with large files.
+  // P1 2026-09-05: a hung fetch left the viewer on "Loading…" forever — abort
+  // after 20s and always keep the authenticated download buttons usable.
   useEffect(() => {
     if (!hasAccess || pdfBlobUrl) return
 
+    let cancelled = false
+    let objectUrl: string | null = null
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 20000)
+
     setPdfLoading(true)
-    fetch(pdfUrl, { credentials: 'include' })
+    setPdfLoadError(false)
+
+    fetch(pdfUrl, { credentials: 'include', signal: controller.signal })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.blob()
       })
       .then(blob => {
-        const url = URL.createObjectURL(blob)
-        setPdfBlobUrl(url)
+        if (cancelled) return
+        objectUrl = URL.createObjectURL(blob)
+        setPdfBlobUrl(objectUrl)
       })
       .catch(err => {
+        if (cancelled) return
         console.error('PDF fetch failed:', err)
         setPdfLoadError(true)
       })
-      .finally(() => setPdfLoading(false))
+      .finally(() => {
+        window.clearTimeout(timeout)
+        if (!cancelled) setPdfLoading(false)
+      })
 
     return () => {
-      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
+      cancelled = true
+      window.clearTimeout(timeout)
+      controller.abort()
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasAccess])
@@ -193,9 +210,31 @@ export default function CompleteReferencePage() {
                 {/* PDF Viewer with error handling */}
                 <div className="glass rounded-xl p-2">
                   {pdfLoading ? (
-                    <div className="w-full rounded-lg bg-white flex flex-col items-center justify-center py-16" style={{ minHeight: '600px' }}>
+                    <div className="w-full rounded-lg bg-white flex flex-col items-center justify-center py-16 px-4" style={{ minHeight: '600px' }}>
                       <div className="inline-block w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4" />
-                      <p className="text-sm text-muted-foreground">Loading PDF...</p>
+                      <p className="text-sm text-muted-foreground mb-4">Loading PDF preview…</p>
+                      <p className="text-xs text-slate-500 mb-4 text-center max-w-md">
+                        Large file — if this hangs, use Download PDF or View in New Tab above (authenticated).
+                      </p>
+                      <div className="flex gap-3">
+                        <a
+                          href={pdfUrl}
+                          download="CCM_Complete_Reference_2026.pdf"
+                          className="px-5 py-2.5 bg-[#5b9aa6] text-white rounded-lg font-semibold text-sm hover:bg-[#4a8a96] transition-colors flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download PDF
+                        </a>
+                        <a
+                          href={pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-200 transition-colors flex items-center gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Open in New Tab
+                        </a>
+                      </div>
                     </div>
                   ) : pdfBlobUrl && !pdfLoadError ? (
                     <iframe

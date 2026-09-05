@@ -463,9 +463,18 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         hasPendingSaveRef.current = false
         retryAttemptRef.current = 0
-        setSyncState('synced')
-        if (syncClearRef.current) clearTimeout(syncClearRef.current)
-        syncClearRef.current = setTimeout(() => setSyncState('idle'), 3000)
+        // Demo/review sessions acknowledge the POST with { demo: true } and
+        // deliberately do not persist — surface idle, not a fake "Saved".
+        let demo = false
+        try {
+          const data = await response.clone().json()
+          demo = !!data?.demo
+        } catch { /* non-JSON ok body */ }
+        setSyncState(demo ? 'idle' : 'synced')
+        if (!demo) {
+          if (syncClearRef.current) clearTimeout(syncClearRef.current)
+          syncClearRef.current = setTimeout(() => setSyncState('idle'), 3000)
+        }
         return
       }
       // Not ok — keep the pending flag so pagehide can still beacon it out.

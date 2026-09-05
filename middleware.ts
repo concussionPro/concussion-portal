@@ -321,6 +321,10 @@ export async function middleware(request: NextRequest) {
   // Cookie `cea_market` wins over cf-ipcountry so AU travellers / VPN users can
   // lock AUD pricing, and intl visitors can opt into USD/GBP surfaces. Strip the
   // param and 302 so the URL stays clean for sharing.
+  //
+  // P1 2026-09-05: `/pricing?market=au` must STAY on AU pricing (never bounce
+  // to `/` or an intl surface). Only overseas surfaces are rewritten to
+  // `/pricing`; `/` keeps the AU homepage lock; `/pricing` keeps AUD cards.
   {
     const sp = request.nextUrl.searchParams
     const raw = (sp.get('market') || '').toLowerCase()
@@ -332,11 +336,25 @@ export async function middleware(request: NextRequest) {
       const dest = request.nextUrl.clone()
       dest.searchParams.delete('market')
       dest.searchParams.delete('au')
+      const p = request.nextUrl.pathname
       if (market === 'au') {
-        dest.pathname = '/pricing'
+        const overseasSurface =
+          p === '/pricing-international' ||
+          p === '/uk' ||
+          p === '/cata' ||
+          p === '/international'
+        if (overseasSurface) {
+          dest.pathname = '/pricing'
+        } else if (p === '/pricing' || p === '/') {
+          // Stay put — cookie alone locks AUD geo. Forcing `/pricing` from `/`
+          // looked like a "redirect to home failed" in audits when a later
+          // client nav hit `/`; forcing `/` from `/pricing` was the P1.
+          dest.pathname = p
+        } else {
+          dest.pathname = '/pricing'
+        }
       } else {
         // Keep country-specific surfaces if the visitor already landed on one.
-        const p = request.nextUrl.pathname
         dest.pathname = p === '/uk' || p === '/cata' ? p : '/pricing-international'
       }
       const res = NextResponse.redirect(dest, 302)

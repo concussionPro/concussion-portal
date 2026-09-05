@@ -29,3 +29,12 @@ describe('cea_market cookie override', () => {
     expect(MARKET_COOKIE).toBe('cea_market')
   })
 })
+
+describe('AU pricing path intent', () => {
+  it('cea_market=au never treats visitor as international', () => {
+    for (const country of ['US', 'GB', 'CA', 'DE', null] as const) {
+      expect(shouldTreatAsInternational('au', country)).toBe(false)
+    }
+  })
+})
+

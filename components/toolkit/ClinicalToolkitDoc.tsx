@@ -340,7 +340,7 @@ function PreIssueChecklist() {
       </p>
       <ul className="space-y-1.5 text-[12px] text-foreground">
         {[
-          'Every field completed — no blanks or {braces} left in.',
+          'Every field completed — no blanks or leftover placeholders left in.',
           'Reviewed, signed and dated by the treating clinician.',
           'Patient / guardian consent obtained to share with this recipient.',
           'A signed copy retained in the patient record.',
@@ -376,6 +376,9 @@ function SectionRenderer({ heading, body }: { heading?: string; body: string[] }
  * Parses {field_name} placeholders in the text and renders Fld inputs in their place.
  * Everything else is rendered as plain text.
  */
+/** Instructional tokens that must NEVER become fillable fields or print as {braces}. */
+const NON_MERGE_TOKENS = new Set(['braces', 'curly_braces'])
+
 function ParsedText({ text }: { text: string }) {
   const parts: React.ReactNode[] = []
   const regex = /\{([a-z_]+)\}/g
@@ -387,13 +390,17 @@ function ParsedText({ text }: { text: string }) {
       parts.push(text.slice(lastIndex, match.index))
     }
     const name = match[1]
-    parts.push(
-      <Fld
-        key={`${name}-${match.index}`}
-        name={name}
-        placeholder={name.replace(/_/g, ' ')}
-      />
-    )
+    if (NON_MERGE_TOKENS.has(name)) {
+      parts.push('placeholders')
+    } else {
+      parts.push(
+        <Fld
+          key={`${name}-${match.index}`}
+          name={name}
+          placeholder={name.replace(/_/g, ' ')}
+        />
+      )
+    }
     lastIndex = match.index + match[0].length
   }
   if (lastIndex < text.length) {
@@ -431,13 +438,16 @@ function SignOffBlock() {
 }
 
 function ComplianceFooter({ items }: { items: string[] }) {
+  // Designer notes are authoring guidance — never patient-facing, and they
+  // historically leaked literal {curly_braces} / {scat6_*} tokens into export.
+  const visible = items.filter((item) => !/^designer note:/i.test(item.trim()))
   return (
     <div className="mt-6 rounded-lg bg-slate-900 text-slate-100 p-4 sm:p-5 print:bg-slate-100 print:text-slate-700 print:border print:border-slate-300">
       <p className="text-[9px] uppercase tracking-[0.14em] font-bold text-accent mb-2">
         Compliance &amp; disclaimer
       </p>
       <div className="space-y-1.5 text-[11.5px] leading-relaxed">
-        {items.map((item, i) => (
+        {visible.map((item, i) => (
           <p key={i}>
             <ParsedText text={item} />
           </p>

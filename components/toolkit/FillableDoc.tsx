@@ -113,6 +113,7 @@ export function FillableDoc({
           Cmd/Ctrl+P is suppressed too, not just the toolbar button. */}
       {!previewMode && requireSignoff && !signoff && <UnsignedPrintBlock />}
       <div
+        data-fillable-root="true"
         data-preview-mode={previewMode ? 'true' : 'false'}
         className={previewMode ? 'select-none' : undefined}
       >
@@ -161,7 +162,7 @@ function PreviewPrintBlock() {
 
 /** The compliance checklist a clinician must confirm before a document exports. */
 const SIGNOFF_CHECKLIST = [
-  'Every field is completed — no blanks or {braces} remain in the document.',
+  'Every field is completed — no blanks or leftover placeholders remain in the document.',
   'I have reviewed the content and confirm it is clinically accurate.',
   'Patient / guardian consent has been obtained to share it with the named recipient.',
   'A signed copy will be retained in the patient record.',
@@ -171,11 +172,43 @@ function Toolbar() {
   const ctx = useContext(FillableContext)!
   const [reviewing, setReviewing] = useState(false)
 
-  const doExport = () => window.print()
+  const [exportBlockReason, setExportBlockReason] = useState<string | null>(null)
+
+  /** Block PDF export when literal {merge_tokens} remain unresolved in the doc. */
+  const doExport = () => {
+    if (typeof document === 'undefined') return
+    const root = document.querySelector('[data-fillable-root="true"]') || document.body
+    // Walk text nodes only — input placeholders use plain labels, not {tokens}.
+    const unresolved = new Set<string>()
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    let node: Node | null = walker.nextNode()
+    const tokenRe = /\{[a-z_][a-z0-9_]*\}/gi
+    while (node) {
+      const text = node.textContent || ''
+      const matches = text.match(tokenRe)
+      if (matches) matches.forEach((m) => unresolved.add(m))
+      node = walker.nextNode()
+    }
+    if (unresolved.size > 0) {
+      const sample = Array.from(unresolved).slice(0, 4).join(', ')
+      setExportBlockReason(
+        `Export blocked — unresolved placeholders remain (${sample}). Fill the highlighted fields (or remove leftover {tokens}) before Save as PDF.`,
+      )
+      return
+    }
+    setExportBlockReason(null)
+    window.print()
+  }
 
   return (
     <>
-      <div className="print:hidden fixed bottom-6 right-6 z-50 flex items-center gap-2">
+      <div data-fillable-chrome="true" className="print:hidden fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        {exportBlockReason && (
+          <div className="max-w-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug px-3 py-2 shadow-md">
+            {exportBlockReason}
+          </div>
+        )}
+        <div className="flex items-center gap-2">
         <button
           onClick={ctx.clearAll}
           className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold shadow-md hover:bg-slate-50 transition-colors"
@@ -223,6 +256,7 @@ function Toolbar() {
             Review &amp; sign to export
           </button>
         )}
+        </div>
       </div>
 
       {reviewing && (

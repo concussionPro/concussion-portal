@@ -200,11 +200,17 @@ function fillableHint(): string {
 // contenteditable span the clinic clicks and types into directly in the
 // browser, then prints to PDF (or prints blank and completes by hand). The
 // field-name shows as a greyed prompt that disappears as soon as they type.
+const NON_MERGE_TOKENS = new Set(['braces', 'curly_braces'])
+
 function parseFields(text: string): string {
-  return escapeHtml(text).replace(
-    /\{([a-z_]+)\}/g,
-    (_, name) => `<span class="field" contenteditable="true" spellcheck="false" data-ph="${name.replace(/_/g, ' ')}"></span>`,
-  )
+  return escapeHtml(text).replace(/\{([a-z_]+)\}/g, (_, name: string) => {
+    if (NON_MERGE_TOKENS.has(name)) return 'placeholders'
+    return `<span class="field" contenteditable="true" spellcheck="false" data-ph="${name.replace(/_/g, ' ')}"></span>`
+  })
+}
+
+function patientFacingFooter(items: string[]): string[] {
+  return items.filter((item) => !/^designer note:/i.test(item.trim()))
 }
 
 function renderClinicalHTML(t: DischargeTemplate): string {
@@ -222,7 +228,7 @@ ${fillableHint()}
 <div class="checklist">
   <div class="ct">Before you issue — clinician checklist</div>
   <ul>
-    <li>Every field completed — no blanks or {braces} left in.</li>
+    <li>Every field completed — no blanks or leftover placeholders left in.</li>
     <li>Reviewed, signed and dated by the treating clinician.</li>
     <li>Patient / guardian consent obtained to share with this recipient.</li>
     <li>A signed copy retained in the patient record.</li>
@@ -236,7 +242,7 @@ ${t.sections.map((s) => `${s.heading ? `<h2>${parseFields(s.heading)}</h2>` : ''
 </div>
 <div class="compliance">
   <div class="ct">Compliance &amp; disclaimer</div>
-  ${t.complianceFooter.map((line) => `<p>${parseFields(line)}</p>`).join('')}
+  ${patientFacingFooter(t.complianceFooter).map((line) => `<p>${parseFields(line)}</p>`).join('')}
 </div>
 `
   return doc(t.title, body)
