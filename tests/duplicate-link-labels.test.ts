@@ -40,15 +40,15 @@ const ROOT = join(__dirname, '..')
 const REPEATED_CTAS = [
   {
     file: 'components/LocationInterestCard.tsx',
-    what: 'the per-city enrol button on the homepage',
-    // The visible label is CONDITIONAL since 2026-08-10: a city with no
-    // confirmed future date is registering interest, not enrolling into a day
-    // that does not exist. Both branches are price-bearing and both repeat
-    // once per city, so both need the aria-label — the guard matches whichever
-    // ships rather than pinning one wording.
-    visible: /(Enrol from|Register interest — start online from) \$\$\{CONFIG\.COURSE\.PRICE_ONLINE\}/,
-    // The accessible name must name the city, on EITHER branch.
-    aria: /aria-label=\{[\s\S]{0,200}?(Enrol in|Register interest in) \$\{city\}/,
+    what: 'the per-city Complete-enrol link on the homepage',
+    // Re-derived 2026-09-06. The owner made "Secure your seat" the primary CTA
+    // on 2026-09-05, which demoted this link to the live-dated-city alternate
+    // and moved the price out of the visible label into the accessible name.
+    // The guard still applies: this renders once per city and every instance
+    // reads identically, so only the aria-label says which city it enrols into.
+    visible: /Or enrol Complete — early-bird locked/,
+    // The accessible name must name the city AND carry the price it commits to.
+    aria: /aria-label=\{`Enrol Complete in \$\{city\} from \$\$\{CONFIG\.COURSE\.PRICE_ONLINE\}/,
   },
   {
     file: 'app/learning/page.tsx',
@@ -80,14 +80,14 @@ describe('repeated calls to action name what they act on', () => {
   }
 
   it('the guard can fail', () => {
-    // Proven against the exact shape that shipped: the visible label present,
-    // no aria-label anywhere.
-    const shipped = '`Enrol from $${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked`'
+    // Proven against the exact shape that would regress: the visible label
+    // present, no aria-label anywhere.
+    const shipped = 'Or enrol Complete — early-bird locked'
     expect(REPEATED_CTAS[0].visible.test(shipped)).toBe(true)
     expect(REPEATED_CTAS[0].aria.test(shipped)).toBe(false)
-    // The register-interest branch is guarded on the same terms.
-    const interest = '`Register interest — start online from $${CONFIG.COURSE.PRICE_ONLINE}`'
-    expect(REPEATED_CTAS[0].visible.test(interest)).toBe(true)
-    expect(REPEATED_CTAS[0].aria.test(interest)).toBe(false)
+    // A city-less accessible name does not satisfy it either — that is the
+    // whole defect: three identically named links in a screen-reader link list.
+    const cityless = 'aria-label={`Enrol Complete from $${CONFIG.COURSE.PRICE_ONLINE}`}'
+    expect(REPEATED_CTAS[0].aria.test(cityless)).toBe(false)
   })
 })
