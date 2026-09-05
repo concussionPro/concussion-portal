@@ -284,6 +284,13 @@ export async function GET(request: Request) {
     // 'sst-clinic', 'cpd-tracker', 'purchase', 'admin', 'alumni*' → none.
     const SCAT_DRIP_SOURCES = new Set(['free-course', 'squarespace', 'scat-export', 'preseason'])
 
+    // 2026-09-05 Zac confirm: PAUSE cold free-resource SCAT monetization drip.
+    // Evidence: 0/4 joinable buyers got classic SCAT nurture before pay; free-resource
+    // collectors historically 0-for-106. Keep Module activation / paid-student nudges.
+    // Paused: $50 discount, SCAT6/SCOAT6, red flags, training-behind-forms, CPD-options final.
+    const PAUSED_SCAT_MASTERY_DAYS = new Set([3, 10, 28, 42])
+    const PAUSED_PDF_LEAD_DAYS = new Set([3, 14, 45])
+
     // Stagger nurture sends across ~30-45 min with per-domain throttling so
     // the daily batch doesn't read as a marketing blast to inbox providers.
     // Resend holds each send until its scheduledAt timestamp.
@@ -378,6 +385,20 @@ export async function GET(request: Request) {
       const sequence = camePdfHunting ? PDF_LEAD_SEQUENCE : SCAT_MASTERY_SEQUENCE
       const email = findCatchUp(sequence, daysSinceSignup)
       if (!email) continue
+
+      // Cold free-resource monetization pause (Zac 2026-09-05) — skip listed days.
+      if (camePdfHunting && PAUSED_PDF_LEAD_DAYS.has(email.day)) {
+        console.log(
+          `[Nurture] PDF-lead day ${email.day} PAUSED (cold free-resource cut) → ${redact(user.email)}`,
+        )
+        continue
+      }
+      if (!camePdfHunting && PAUSED_SCAT_MASTERY_DAYS.has(email.day)) {
+        console.log(
+          `[Nurture] scat-mastery day ${email.day} PAUSED (cold free-resource cut) → ${redact(user.email)}`,
+        )
+        continue
+      }
 
       // The PDF-lead track is self-contained: its templates take (name) only,
       // and the day-7 progress routing below is about course modules, which
@@ -510,10 +531,15 @@ export async function GET(request: Request) {
         // ('free-course') keep the existing copy, and they DO engage: 28 of 29
         // open a module.
         const camePdfHunting = user.signupSource === 'squarespace' || user.signupSource === 'scat-export'
-        const variant = camePdfHunting ? 'pdf_lead_tools' : ghoster ? 'reengagement' : 'logged_in_no_progress'
-        const tpl = camePdfHunting
-          ? PDF_LEAD_TOOLS
-          : ghoster ? FREE_USER_REENGAGEMENT : FREE_LOGGED_IN_NO_PROGRESS
+        // FREE_USER_REENGAGEMENT subject is SCAT6-vs-SCOAT6 cold copy — paused 2026-09-05.
+        if (ghoster && !camePdfHunting) {
+          console.log(
+            `[Nurture] Day 7 reengagement PAUSED (SCAT6/SCOAT6 cold cut) → ${redact(user.email)}`,
+          )
+          continue
+        }
+        const variant = camePdfHunting ? 'pdf_lead_tools' : 'logged_in_no_progress'
+        const tpl = camePdfHunting ? PDF_LEAD_TOOLS : FREE_LOGGED_IN_NO_PROGRESS
         const auditKey = `scat_day7_${variant}_${user.id}`
         const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (inserted === 0) continue
