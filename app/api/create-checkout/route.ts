@@ -7,7 +7,7 @@ import { getClientIp } from '@/lib/get-client-ip'
 import { createCheckoutSchema } from '@/lib/schemas'
 import { isBookOwner } from '@/lib/users'
 import { isDemoEmail } from '@/lib/demo-session'
-import { detectCountry, readMarketOverride } from '@/lib/geo'
+import { detectCountry, readMarketOverride, shouldForceAudOnlineSku } from '@/lib/geo'
 import { CONFIG } from '@/lib/config'
 import { hubAddonContact } from '@/lib/hub-addon-contact'
 
@@ -49,15 +49,14 @@ export async function POST(request: NextRequest) {
     }
     let { courseType, location, email, preferredCity, promoCode, utm, attribution, clinicianCount, clinicName } = parsed.data
 
-    // P1/P2 2026-09-05: AU market cookie OR home geo locks AUD Online checkout.
-    // Overseas travellers on Australia/NZ pricing (and AU/NZ IPs) must never mint
-    // international-online (USD/GBP/…) — that was charging US$~371 vs A$497.
+    // AU market lock: remap international-online → online-only ONLY when the
+    // visitor is truly on the AU market (cea_market=au / AU geo). Online is sold
+    // worldwide — do NOT force AUD onto intl / NZ / unknown geo. The A$497→US$
+    // presentment bug is fixed by adaptive_pricing off on AUD sessions in
+    // lib/stripe.ts, not by remapping every overseas checkout.
     const market = readMarketOverride(request.cookies)
     const visitorCountry = detectCountry(request.headers)
-    const forceAudOnline =
-      market === 'au' ||
-      (market !== 'intl' && (visitorCountry === 'AU' || visitorCountry === 'NZ'))
-    if (forceAudOnline && courseType === 'international-online') {
+    if (shouldForceAudOnlineSku(market, visitorCountry) && courseType === 'international-online') {
       courseType = 'online-only'
     }
 

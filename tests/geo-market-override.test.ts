@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   parseMarketCookie,
   shouldTreatAsInternational,
+  shouldForceAudOnlineSku,
   MARKET_COOKIE,
 } from '../lib/geo'
 
@@ -38,3 +39,28 @@ describe('AU pricing path intent', () => {
   })
 })
 
+describe('shouldForceAudOnlineSku (checkout remap)', () => {
+  it('forces AUD Online for true AU market only', () => {
+    // Explicit AU cookie — even on overseas IP
+    expect(shouldForceAudOnlineSku('au', 'US')).toBe(true)
+    expect(shouldForceAudOnlineSku('au', 'GB')).toBe(true)
+    expect(shouldForceAudOnlineSku('au', null)).toBe(true)
+    // AU geo without intl override
+    expect(shouldForceAudOnlineSku(null, 'AU')).toBe(true)
+  })
+
+  it('never forces AUD onto international / worldwide Online sales', () => {
+    // Explicit intl cookie wins even on AU IP
+    expect(shouldForceAudOnlineSku('intl', 'AU')).toBe(false)
+    expect(shouldForceAudOnlineSku('intl', 'US')).toBe(false)
+    // Overseas geo → keep international-online SKU
+    expect(shouldForceAudOnlineSku(null, 'US')).toBe(false)
+    expect(shouldForceAudOnlineSku(null, 'GB')).toBe(false)
+    expect(shouldForceAudOnlineSku(null, 'CA')).toBe(false)
+    expect(shouldForceAudOnlineSku(null, 'DE')).toBe(false)
+    // NZ is NOT remapped — NZD lives on the intl path (AU/NZ geo was too broad)
+    expect(shouldForceAudOnlineSku(null, 'NZ')).toBe(false)
+    // Unknown geo — do not guess AUD
+    expect(shouldForceAudOnlineSku(null, null)).toBe(false)
+  })
+})

@@ -75,3 +75,24 @@ export function shouldTreatAsInternational(
   return isInternational(country)
 }
 
+/**
+ * Should checkout remap `international-online` → AUD `online-only`?
+ *
+ * Online is sold worldwide (CATA etc.): international visitors must keep the
+ * intl SKU and native currency from lib/international-pricing. Remap ONLY when
+ * the market is truly AU:
+ *   - cea_market=au (explicit override / ?market=au)
+ *   - AU geo when the visitor has not opted into intl
+ *
+ * Do NOT remap on NZ alone (NZD lives on the intl path) or on every session —
+ * that forced AUD onto the world. Adaptive Pricing lock for A$ presentment is
+ * separate (lib/stripe.ts) and must not depend on this remap.
+ */
+export function shouldForceAudOnlineSku(
+  market: MarketOverride | null,
+  country: CountryCode | null,
+): boolean {
+  if (market === 'intl') return false
+  if (market === 'au') return true
+  return country === 'AU'
+}

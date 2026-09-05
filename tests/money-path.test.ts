@@ -152,6 +152,16 @@ describe('charged amount == the amount the page derives from CONFIG', () => {
     expect(last().line_items[0].price_data?.unit_amount).toBe(CONFIG.COURSE.PRICE_ONLINE * 100)
   })
 
+  it('keeps adaptive_pricing off so AUD and fixed intl currencies are not rewritten', async () => {
+    const { createCourseCheckoutSession } = await import('@/lib/stripe')
+    await createCourseCheckoutSession({ courseType: 'online-only', ...urls })
+    expect(last().adaptive_pricing).toEqual({ enabled: false })
+    expect(last().line_items[0].price_data?.currency).toBe('aud')
+    await createCourseCheckoutSession({ courseType: 'international-online', country: 'GB', ...urls })
+    expect(last().adaptive_pricing).toEqual({ enabled: false })
+    expect(last().line_items[0].price_data?.currency).toBe('gbp')
+  })
+
   it('international charges the local-currency price the page displays', async () => {
     const { createCourseCheckoutSession } = await import('@/lib/stripe')
     const { intlPriceForCountry } = await import('@/lib/international-pricing')
