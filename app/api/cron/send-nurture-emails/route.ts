@@ -14,7 +14,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
-import { sendEmail } from '@/lib/resend-client'
+import { sendEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
 import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
@@ -210,7 +210,7 @@ export async function GET(request: Request) {
     // Global suppression list (hard bounces / complaints / manual opt-outs).
     // MASTER BLACKLIST (2026-07-02): gates EVERY lane in this cron — the users
     // array is filtered against it once below, and the per-lane checks
-    // (section 3 transactional, abandoned-checkout section 5) stay as
+    // (section 3 transactional, abandoned-checkout section 0) stay as
     // belt-and-braces. FAIL CLOSED: if the table can't be read we abort the
     // run rather than proceed with an empty set (which would email suppressed
     // addresses). Unsubs are zero-tolerance.
@@ -288,6 +288,20 @@ export async function GET(request: Request) {
     // the daily batch doesn't read as a marketing blast to inbox providers.
     // Resend holds each send until its scheduledAt timestamp.
     const scheduler = new EmailScheduler()
+
+    // ── 0. Abandoned Checkout Recovery (FIRST) ──
+    // Cart rescue is time-sensitive and tiny (usually 0–few rows). Running it
+    // after hundreds of SCAT/pdf-lead Resend calls risked starving it when the
+    // route neared maxDuration. Own scheduler so spacing is not already at the
+    // 4h cap from earlier lanes.
+    try {
+      const abandonedScheduler = new EmailScheduler()
+      const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl, abandonedScheduler, suppressedEmails)
+      emailsSent += abandonedEmailsSent
+    } catch (err) {
+      console.error('Abandoned checkout processing error:', err)
+      errors.push(`Abandoned checkout: ${err}`)
+    }
 
     // ── 1. SCAT6 Mastery Nurture Sequence (preview users) ──
     // Routes Day 7 and Day 10 to variant emails based on user activity/progress
@@ -920,16 +934,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── 5. Abandoned Checkout Recovery Emails ──
-    try {
-      const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl, scheduler, suppressedEmails)
-      emailsSent += abandonedEmailsSent
-    } catch (err) {
-      // Log but don't fail the entire cron — other sequences already sent
-      console.error('Abandoned checkout processing error:', err)
-      errors.push(`Abandoned checkout: ${err}`)
-    }
-
     // ── Online-only / full-course user sequences (upgrade nudge + re-engagement) ──
     for (const user of users) {
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
@@ -1439,6 +1443,12 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
       if (suppressedEmails.has(String(checkout.email || '').toLowerCase())) {
         await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
         console.log(`[Abandoned] Skipped ${redact(checkout.email)} — suppressed`)
+        continue
+      }
+
+      if (isNonDeliverableRecipient(String(checkout.email || ''))) {
+        await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
+        console.log(`[Abandoned] Skipped ${redact(checkout.email)} — non-deliverable recipient`)
         continue
       }
 

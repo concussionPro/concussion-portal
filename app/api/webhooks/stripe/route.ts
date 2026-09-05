@@ -5,7 +5,7 @@ import { provisionPlatformForBuyer } from '@/lib/sst-trainer/bundle'
 
 export const maxDuration = 60
 import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
-import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail } from '@/lib/resend-client'
+import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
 import { isEmailSuppressed } from '@/lib/email-suppression'
 import { createCourseHub, redeemHubSeat, revokeHub, hubSeatsForDeclaredCount, HUB_ADMIN_SEATS } from '@/lib/course-hub'
 import { createMagicToken, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
@@ -1880,6 +1880,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
       tags: [
+        { name: 'sequence', value: 'payment-failed-recovery' },
         { name: 'type', value: 'payment-failed-recovery' },
       ],
     })
@@ -1991,35 +1992,52 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     const unsubToken = generateUnsubscribeToken(email)
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
 
-    if (!unsubscribed) {
-      const html = firstEmail.template(name, recoveryUrl || undefined)
-        .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
-
-      await sendEmail({
-        to: email,
-        subject: firstEmail.subject,
-        html,
-        tags: [
-          { name: 'sequence', value: 'abandoned-checkout' },
-          { name: 'email-number', value: '1' },
-        ],
-        headers: {
-          'List-Unsubscribe': `<${unsubscribeUrl}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        },
-      })
-      console.log(`[Abandoned] Email 1 sent immediately → ${redact(email)}`)
-    } else {
-      console.log(`[Abandoned] Skipped email for ${redact(email)} — unsubscribed`)
+    // Reserved/test domains (e.g. @example.com) cannot be delivered — mark the
+    // row complete so cron does not retry forever. Real send failures leave
+    // emails_sent at 0 so the daily cron retries step 1.
+    if (isNonDeliverableRecipient(email)) {
+      await sql`
+        UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${claimedCheckoutId}
+      `
+      console.log(`[Abandoned] Skipped ${redact(email)} — non-deliverable recipient (emails_sent=${ABANDONED_CHECKOUT_SEQUENCE.length})`)
+      return
     }
 
-    // Advance the claimed row: 1 once email 1 is away, or the full sequence
-    // length when suppressed (so the cron skips this row entirely).
-    const emailsSent = unsubscribed ? ABANDONED_CHECKOUT_SEQUENCE.length : 1
+    if (unsubscribed) {
+      await sql`
+        UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${claimedCheckoutId}
+      `
+      console.log(`[Abandoned] Skipped email for ${redact(email)} — unsubscribed`)
+      return
+    }
+
+    const html = firstEmail.template(name, recoveryUrl || undefined)
+      .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+
+    const sent = await sendEmail({
+      to: email,
+      subject: firstEmail.subject,
+      html,
+      tags: [
+        { name: 'sequence', value: 'abandoned-checkout' },
+        { name: 'email-number', value: '1' },
+      ],
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    })
+
+    if (!sent) {
+      // Leave emails_sent = 0 so processAbandonedCheckouts retries step 1.
+      console.error(`[Abandoned] Email 1 FAILED for ${redact(email)} — leaving emails_sent=0 for cron retry`)
+      return
+    }
+
     await sql`
-      UPDATE abandoned_checkouts SET emails_sent = ${emailsSent} WHERE id = ${claimedCheckoutId}
+      UPDATE abandoned_checkouts SET emails_sent = 1 WHERE id = ${claimedCheckoutId}
     `
-    console.log(`Stored abandoned checkout for ${redact(email)} (emails_sent: ${emailsSent})`)
+    console.log(`[Abandoned] Email 1 sent immediately → ${redact(email)} (emails_sent: 1)`)
   } catch (err) {
     console.error('Failed to process abandoned checkout:', err)
   }

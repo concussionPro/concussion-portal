@@ -65,10 +65,30 @@ const BULK_SEQUENCES = new Set([
   'nomination-campaign', 'preseason', 'scat-resource', 'ready-to-train',
   'ai-course', 'ai-safety-checklist', 'concussion-hub', 'pdf-lead',
   'ppcs-waitlist', 'online-upgrade',
+  // Cart rescue + failed-payment recovery are marketing (same deliverability
+  // profile as nurture). Missing from the original Aug-18 list left them on
+  // zac@ root — 30/102 abandoned events historically delivery_delayed.
+  'abandoned-checkout', 'payment-failed-recovery',
 ])
 
 // Cold/partner engine lanes, present and future, regardless of exact slug.
 const BULK_SEQUENCE_PATTERNS = [/^cold-/, /outreach/, /^prospect/, /^partner-/]
+
+
+/**
+ * RFC 2606 / reserved + local test domains — never worth a Resend API call.
+ * Abandoned-checkout rows have landed on @example.com (Stripe test / docs
+ * paste) and then stuck the cron: send fails, claim releases, emails_sent
+ * never advances past the failed step.
+ */
+export function isNonDeliverableRecipient(email: string | null | undefined): boolean {
+  if (!email) return true
+  const domain = email.toLowerCase().trim().split('@')[1] || ''
+  if (!domain) return true
+  if (domain === 'example.com' || domain === 'example.org' || domain === 'example.net') return true
+  if (domain === 'test' || domain === 'localhost' || domain.endsWith('.test') || domain.endsWith('.invalid') || domain.endsWith('.localhost')) return true
+  return false
+}
 
 function fromEmailForTags(tags: Array<{ name: string; value: string }>): string {
   const seq = tags.find((t) => t.name === 'sequence')?.value ?? ''
