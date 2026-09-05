@@ -31,3 +31,15 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(src).toContain('context="scat-mastery"')
   })
 })
+
+  it('scat-mastery keeps clinic-day engagement AFTER dual exits (not above)', () => {
+    const src = readFileSync(join(root, 'app/scat-mastery/page.tsx'), 'utf8')
+    const exits = src.indexOf('<ScatFunnelExits context="scat-mastery"')
+    const engage = src.indexOf('Use it this week')
+    expect(exits).toBeGreaterThan(-1)
+    expect(engage).toBeGreaterThan(exits)
+    // Must not resurrect CCHC banner JSX above exits (comment mentions OK)
+    expect(src).not.toMatch(/Also free · second course[\s\S]{0,80}Concussion Care Has Changed/)
+    expect(src).not.toMatch(/bg-gradient-to-br from-\[#0d5c63\][\s\S]{0,200}Also free/)
+  })
+

@@ -567,6 +567,20 @@ export default function SCATMasteryPage() {
           <ScatFunnelExits context="scat-mastery" showPromo />
         </div>
 
+        {/* Clinic-day engagement AFTER paid exits (never above — e4a0cdcd).
+            Concrete next actions so free SCAT value sticks without covering CTAs. */}
+        <div className="mt-8 mx-auto max-w-3xl rounded-2xl border border-slate-200/80 bg-white/70 p-5 md:p-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-teal-700">Use it this week</p>
+          <h2 className="mt-1 text-base font-bold tracking-tight text-slate-900 md:text-lg">
+            Next concussion in clinic — three moves
+          </h2>
+          <ol className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-600 list-decimal list-inside">
+            <li><strong className="text-slate-800">SCAT6 / Child SCAT6</strong> — fillable forms from this page.</li>
+            <li><strong className="text-slate-800">VOMS + BESS</strong> — gaps SCAT alone misses (CCM Online).</li>
+            <li><strong className="text-slate-800">Sub-symptom exercise</strong> — measured with SST Clinical Testing.</li>
+          </ol>
+        </div>
+
         {/* ── Regulatory context — blog links ── */}
         <div className="mt-12 max-w-2xl mx-auto">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Further reading</p>
