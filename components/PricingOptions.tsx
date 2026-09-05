@@ -171,6 +171,9 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     } catch { /* storage unavailable — same-page timer still covers us */ }
   }, [])
   const [loading, setLoading] = useState<string | null>(null)
+  // Tracks which SKU the buyer last committed to so we can discourage
+  // immediate Online ↔ Complete thrash (ESSA visitor: 9 sessions flipping).
+  const [checkoutIntent, setCheckoutIntent] = useState<'online-only' | 'full-course' | 'secure-seat' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const {
     email: checkoutEmail,
@@ -313,6 +316,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       return
     }
     try {
+      setCheckoutIntent(courseType)
       setLoading(courseType)
       setError(null)
 
@@ -466,8 +470,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </div>
             </div>
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5 pl-1">Online</h3>
+            <p className="text-[10px] font-semibold text-[#0a5f57] mb-0.5 pl-1 leading-snug">
+              Best if you want to start today
+            </p>
             <p className="text-[11px] text-slate-500 mb-2 pl-1 leading-snug">
-              {CONFIG.COURSE.TOTAL_MODULES} modules · own pace · credits toward Complete
+              {CONFIG.COURSE.TOTAL_MODULES} modules · own pace · upgrade to the day later
             </p>
             <div className="mb-2 ml-1 rounded-lg border border-teal-200/70 bg-gradient-to-br from-teal-50/80 to-white px-2.5 py-1.5">
               <p className="text-[10px] leading-snug text-[var(--foreground)]">
@@ -504,9 +511,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Enrol Now — $${onlinePrice}`
+                `Start Online — $${onlinePrice}`
               )}
             </button>
+            <p className="mt-1.5 text-[10px] text-center text-[var(--muted-foreground)] leading-snug pl-1">
+              Start Online now — upgrade to the day later.
+            </p>
           </div>
 
           {/* Complete — quieter */}
@@ -528,8 +538,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </div>
             </div>
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Complete</h3>
+            <p className="text-[10px] font-semibold text-slate-600 mb-0.5 leading-snug">
+              Best if you already want the hands-on day
+            </p>
             <p className="text-[11px] text-slate-500 mb-2 leading-snug">
-              Includes Online · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
+              Online + practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
             </p>
             <ul className="space-y-1 mb-3 flex-1">
               {completeBullets.map((f, i) => (
@@ -563,14 +576,19 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             <button
               onClick={() => handleCheckout('full-course')}
               disabled={loading !== null || softEmailBlocks('full-course')}
-              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
+              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold border border-slate-300 bg-white text-[var(--foreground)] hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
             >
               {loading === 'full-course' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Enrol Now — $${fullCoursePrice.toLocaleString()}`
+                `Choose Complete — $${fullCoursePrice.toLocaleString()}`
               )}
             </button>
+            {(checkoutIntent === 'online-only' || loading === 'online-only') && (
+              <p className="mt-1.5 text-[10px] text-center text-slate-500 leading-snug">
+                Already starting Online? Upgrade to the day later — no second checkout.
+              </p>
+            )}
           </div>
 
           {/* Unlock — slim secondary */}
@@ -778,10 +796,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </div>
 
           <h3 className="text-xl font-extrabold text-[var(--foreground)] mb-0.5 pl-1 tracking-tight">Online</h3>
+          <p className="text-[12px] font-semibold text-[#0a5f57] leading-snug mb-1 pl-1">
+            Best if you want to start today
+          </p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-snug mb-3 pl-1">
-            {crm
-              ? `${CONFIG.COURSE.TOTAL_MODULES} modules · start today · upgrade to Complete later for $${upgradePriceFor()}.`
-              : `${CONFIG.COURSE.TOTAL_MODULES} modules · start today · credits toward Complete (upgrade $${upgradePriceFor()}).`}
+            {CONFIG.COURSE.TOTAL_MODULES} modules · own pace · upgrade to the practical day later (${upgradePriceFor()}).
           </p>
 
           <div className="mb-3 ml-1 flex items-start gap-2 rounded-xl border border-teal-200/80 bg-gradient-to-br from-teal-50/90 to-white px-3 py-2">
@@ -872,11 +891,14 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Enrol Now — ${onlinePrice}
+                Start Online — ${onlinePrice}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
+          <p className="mt-2 text-[11px] text-center text-[var(--muted-foreground)] leading-snug pl-1">
+            Start Online now — upgrade to the day later.
+          </p>
         </div>
 
         {/* ── Complete — quieter ── */}
@@ -918,8 +940,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </div>
 
           <h3 className="text-xl font-extrabold text-[var(--foreground)] mb-0.5 tracking-tight">Complete</h3>
+          <p className="text-[12px] font-semibold text-slate-600 leading-snug mb-1">
+            Best if you already want the hands-on day
+          </p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-snug mb-3">
-            Includes Online (unlocks now) + catered practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
+            Online included now + catered practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
           </p>
 
           <ul className="space-y-1.5 mb-3 text-left flex-1">
@@ -974,17 +999,21 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <button
             onClick={() => handleCheckout('full-course')}
             disabled={loading !== null || softEmailBlocks('full-course')}
-            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors mt-auto"
+            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm border border-slate-300 bg-white text-[var(--foreground)] hover:bg-slate-50 transition-colors mt-auto"
           >
             {loading === 'full-course' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Enrol Now — ${fullCoursePrice.toLocaleString()}
-                <ArrowRight className="w-4 h-4" />
+                Choose Complete — ${fullCoursePrice.toLocaleString()}
               </>
             )}
           </button>
+          {(checkoutIntent === 'online-only' || loading === 'online-only') && (
+            <p className="mt-2 text-[11px] text-center text-slate-500 leading-snug">
+              Already starting Online? Upgrade to the day later — no second checkout needed.
+            </p>
+          )}
         </div>
 
         {/* ── Unlock — slim secondary ── */}
