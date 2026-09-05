@@ -8,12 +8,23 @@ import {
   AlertCircle,
   BookOpen,
   Award,
-  FileText,
   Bell,
+  ChevronDown,
 } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocation, upgradePriceFor, workshopPriceFor, daysUntilCpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
+import {
+  CONFIG,
+  afterpayInstalment,
+  defaultNominationCity,
+  isEarlyBirdForLocation,
+  upgradePriceFor,
+  workshopPriceFor,
+  daysUntilCpdYearEnd,
+  CPD_YEAR_END_LABEL,
+  CPD_HOURS_PHYSIO,
+  CPD_HOURS_OSTEO,
+  SST_TIER_FROM_AUD,
+} from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
@@ -47,11 +58,6 @@ function cityHasLiveDate(slug: string | null | undefined): boolean {
     !!config.dateObj &&
     config.dateObj.getTime() > Date.now()
   )
-}
-
-/** True when ANY city currently has a confirmed, future-dated round. */
-function anyCityHasLiveDate(): boolean {
-  return CITY_OPTIONS.some((c) => cityHasLiveDate(c.slug))
 }
 
 function cityLabel(slug: string): string {
@@ -89,160 +95,56 @@ export interface PricingOptionsProps {
   stream?: 'ccm' | 'crm'
 }
 
-// ─── Workshop interest form ──────────────────────────────────────────────────
-
-interface WorkshopInterestFormProps {
-  citySlug: string
-  variant: 'full' | 'compact'
-}
-
-function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const label = cityLabel(citySlug)
-  const isCompact = variant === 'compact'
-
-  // Reset success/error when the city changes — feedback should belong to
-  // the current selection, not a previous click
-  useEffect(() => {
-    setSuccess(null)
-    setError(null)
-  }, [citySlug])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
-
-    if (!name.trim() || name.trim().length < 2) {
-      setError('Please enter your name.')
-      return
-    }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email.')
-      return
-    }
-
-    setSubmitting(true)
-    try {
-      // Background analytics — non-blocking
-      trackEvent('workshop_interest_submit', {
-        city: citySlug,
-        source: `pricing_${variant}`,
-      }).catch(() => {})
-
-      const res = await fetch('/api/register-interest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          name: name.trim(),
-          city: citySlug,
-        }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok || !data.success) {
-        setError(data?.error || 'Could not submit — please try again.')
-      } else {
-        setSuccess(data.message || `Thanks — we'll email you when ${label} is confirmed.`)
-        setName('')
-        setEmail('')
-      }
-    } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  // Confirmed-state success view — show only the message, no form
-  if (success) {
-    return (
-      <div className={`rounded-xl bg-emerald-50 border border-emerald-200 ${isCompact ? 'p-3' : 'p-4'}`}>
-        <div className="flex items-start gap-2">
-          <Check className={`text-emerald-600 flex-shrink-0 mt-0.5 ${isCompact ? 'w-4 h-4' : 'w-5 h-5'}`} strokeWidth={2.5} />
-          <div>
-            <p className={`text-emerald-900 leading-snug ${isCompact ? 'text-xs' : 'text-sm'}`}>{success}</p>
-            {/* Was a pure dead end: the visitor most likely to buy — they just
-                told us the city they want — was left with nothing to do next.
-                The online tier is the honest next step here, because it needs
-                no date and its full value is available immediately. */}
-            <p className={`mt-1.5 text-emerald-800/90 leading-snug ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-              In the meantime you can{' '}
-              <Link href="/pricing#pricing-cards" className="font-semibold underline underline-offset-2">
-                start the 8 online modules today for ${CONFIG.COURSE.PRICE_ONLINE}
-              </Link>{' '}
-              — every dollar counts toward the Complete course when your date launches.
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+function CityChips({
+  selected,
+  onSelect,
+  size = 'sm',
+  accent = 'teal',
+  requireExplicit = false,
+  locationExplicit = true,
+  trackSource,
+}: {
+  selected: string
+  onSelect: (slug: string) => void
+  size?: 'sm' | 'xs'
+  accent?: 'teal' | 'amber'
+  /** When true, only highlight if locationExplicit (Online optional picker). */
+  requireExplicit?: boolean
+  locationExplicit?: boolean
+  trackSource?: string
+}) {
+  const active = (slug: string) =>
+    requireExplicit ? locationExplicit && selected === slug : selected === slug
+  const pad = size === 'xs' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px]'
+  const activeCls =
+    accent === 'amber'
+      ? 'bg-amber-100 border-amber-300 text-amber-900'
+      : 'bg-[var(--accent)] text-white border-[var(--accent)]'
+  const idleCls =
+    accent === 'amber'
+      ? 'bg-white border-slate-200 text-slate-600 hover:border-amber-200'
+      : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
 
   return (
-    <div className={`rounded-xl border border-slate-200 bg-slate-50/60 ${isCompact ? 'p-3' : 'p-4'}`}>
-      <div className={`flex items-start gap-2 ${isCompact ? 'mb-2' : 'mb-3'}`}>
-        <Bell className={`text-[var(--accent)] flex-shrink-0 mt-0.5 ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
-        <div>
-          <p className={`font-semibold text-foreground leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>
-            {`Get a date alert for ${label}`}
-          </p>
-          <p className={`text-muted-foreground leading-snug mt-0.5 ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-            Drop your details — you&apos;ll be first to know when the {label} date is locked in.
-          </p>
-        </div>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-2" noValidate>
-        <input
-          type="text"
-          name="name"
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          disabled={submitting}
-          autoComplete="name"
-          className={`w-full rounded-lg border border-slate-300 bg-white px-3 ${isCompact ? 'py-1.5 text-xs' : 'py-2 text-sm'} text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] disabled:opacity-50`}
-          aria-label="Your name"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="you@clinic.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={submitting}
-          autoComplete="email"
-          inputMode="email"
-          className={`w-full rounded-lg border border-slate-300 bg-white px-3 ${isCompact ? 'py-1.5 text-xs' : 'py-2 text-sm'} text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] disabled:opacity-50`}
-          aria-label="Your email"
-        />
-        {error && (
-          <p role="alert" className={`text-red-700 leading-snug ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-            {error}
-          </p>
-        )}
+    <div className="flex flex-wrap gap-1">
+      {CITY_OPTIONS.map((city) => (
         <button
-          type="submit"
-          disabled={submitting}
-          className={`w-full rounded-lg font-semibold flex items-center justify-center gap-2 bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isCompact ? 'py-2 px-4 text-xs' : 'py-2.5 px-5 text-sm'}`}
+          key={city.slug}
+          type="button"
+          onClick={() => {
+            onSelect(city.slug)
+            if (trackSource) {
+              trackEvent('workshop_city_select', { city: city.slug, source: trackSource }).catch(() => {})
+            }
+          }}
+          className={`${pad} rounded-full font-medium border transition-colors ${
+            active(city.slug) ? activeCls : idleCls
+          }`}
+          aria-pressed={active(city.slug)}
         >
-          {submitting ? (
-            <Loader2 className={`animate-spin ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
-          ) : (
-            <>
-              <Bell className={`${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
-              Notify me when {label} opens
-            </>
-          )}
+          {city.label}
         </button>
-        <p className={`text-center text-muted-foreground leading-snug ${isCompact ? 'text-[10px]' : 'text-[11px]'}`}>
-          Or <Link href="/pricing#pricing-cards" className="text-[var(--accent)] underline underline-offset-2 hover:text-[var(--accent)]/80">enrol in the online course (${CONFIG.COURSE.PRICE_ONLINE})</Link> and add the workshop later.
-        </p>
-      </form>
+      ))}
     </div>
   )
 }
@@ -331,6 +233,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
   const [bookOwner, setBookOwner] = useState(false)
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
@@ -497,6 +400,30 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     }
   }
 
+  const onlineBullets = [
+    `${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD`,
+    'Clinical Toolkit — VOMS, BESS & SCAT6',
+    `Lifetime access · upgrade later $${upgradePriceFor()}`,
+  ]
+
+  const completeBullets = crm
+    ? [
+        'Includes everything in Online',
+        `Catered practical day (+${CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD)`,
+        'Graded exertion & 1:1 feedback',
+      ]
+    : [
+        'Includes everything in Online',
+        `Catered practical day (+${CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD)`,
+        'Hands-on VOMS, BESS & real cases',
+      ]
+
+  const unlockBullets = [
+    `Counts toward ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate`,
+    'Credited to Complete when date opens',
+    'Full refund if cohort does not form',
+  ]
+
   // COMPACT VARIANT
   if (isCompact) {
     return (
@@ -513,63 +440,67 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </div>
         )}
 
-        <div className="grid sm:grid-cols-3 gap-5 pt-5 max-w-5xl mx-auto">
-          {/* CCM Online - Compact (online component of CCM) */}
-          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
-                <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · Start today
+        <div className="grid sm:grid-cols-3 gap-4 pt-4 max-w-5xl mx-auto items-stretch">
+          {/* Online — primary */}
+          <div
+            className="card card-visible rounded-xl p-4 flex flex-col relative overflow-hidden"
+            style={{
+              borderWidth: '1.5px',
+              borderColor: 'rgba(13, 122, 111, 0.28)',
+              boxShadow: '0 2px 4px rgba(15,39,68,0.05), 0 12px 28px rgba(13,122,111,0.10)',
+            }}
+          >
+            <div
+              aria-hidden="true"
+              className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+              style={{ background: 'linear-gradient(180deg, #1aa897, #0d7a6f 40%, #0a5f57)' }}
+            />
+            <div className="flex items-center justify-between gap-2 mb-2 pl-1">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-[#0a5f57] border border-teal-200">
+                Start today · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD
               </span>
-            </div>
-
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Online</h3>
-            <p className="text-[10px] text-slate-500 mb-3">{crm ? `For exercise physiologists · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today` : `For physiotherapists, osteopaths & allied health · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today`}</p>
-
-            <div className="mb-3">
-              {bookOwner && (
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-xs text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_ONLINE}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
-                </div>
-              )}
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-[var(--foreground)]">${onlinePrice}</span>
-                <span className="text-[10px] text-slate-400">≈ $320 USD</span>
+              <div className="text-right">
+                {bookOwner && (
+                  <span className="text-[10px] text-[var(--muted-foreground)] line-through mr-1">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                )}
+                <span className="text-xl font-bold text-[var(--foreground)]">${onlinePrice}</span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(onlinePrice)} with Afterpay or Klarna</p>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD hours</p>
             </div>
-
-            <ul className="space-y-1.5 mb-4 flex-1">
-              {[
-                `${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today`,
-                'Own pace — no deadlines',
-                'Clinical Toolkit & resources',
-                `Complete includes Online — upgrade later for $${upgradePriceFor()} (the difference)`,
-              ].map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs">
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5 pl-1">Online</h3>
+            <p className="text-[11px] text-slate-500 mb-2 pl-1 leading-snug">
+              {CONFIG.COURSE.TOTAL_MODULES} modules · own pace · credits toward Complete
+            </p>
+            <div className="mb-2 ml-1 rounded-lg border border-teal-200/70 bg-gradient-to-br from-teal-50/80 to-white px-2.5 py-1.5">
+              <p className="text-[10px] leading-snug text-[var(--foreground)]">
+                <strong className="text-[#0a5f57]">Year 1 tools included</strong>
+                {' '}· then A${SST_TIER_FROM_AUD}/mo
+              </p>
+            </div>
+            <ul className="space-y-1 mb-3 flex-1 pl-1">
+              {onlineBullets.map((f, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px]">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
                   <span className="text-[var(--muted-foreground)]">{f}</span>
                 </li>
               ))}
             </ul>
-
             <CheckoutEmailField
               email={checkoutEmail}
               setEmail={setCheckoutEmail}
               sessionEmail={checkoutSessionEmail}
               disabled={loading !== null}
               inputId="checkout-email-compact-online"
-              className="mb-3"
+              className="mb-2"
               placeholder="Email for your receipt & enrolment"
             />
             <button
               onClick={() => handleCheckout('online-only')}
               disabled={loading !== null || softEmailBlocks('online-only')}
-              className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed text-white mt-auto"
+              style={{
+                background: 'linear-gradient(180deg, #129284, #0d7a6f)',
+                boxShadow: '0 1px 0 rgba(255,255,255,0.22) inset, 0 6px 16px rgba(13,122,111,0.28)',
+              }}
             >
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -577,148 +508,63 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 `Enrol Now — $${onlinePrice}`
               )}
             </button>
-            <PaymentMethodsStrip />
-            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
-              &ldquo;Relevant, applicable and easy to absorb&rdquo; — Sarah, Physio
-            </p>
           </div>
 
-          {/* CCM Complete - Compact (online + workshop, MOST POPULAR) */}
-          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
-            <div className="flex items-center gap-2.5 mb-3 flex-wrap">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
-                <Award className="w-4 h-4 text-orange-500" strokeWidth={2} />
+          {/* Complete — quieter */}
+          <div
+            className="card card-visible rounded-xl p-4 flex flex-col relative"
+            style={{ borderWidth: '1px', borderColor: 'rgba(15, 39, 68, 0.12)' }}
+          >
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                Online + practical day
+              </span>
+              <div className="text-right">
+                {(earlyBird || bookOwner) && (
+                  <span className="text-[10px] text-[var(--muted-foreground)] line-through mr-1">
+                    ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                  </span>
+                )}
+                <span className="text-xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
               </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                Most Popular
-              </span>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD
-              </span>
             </div>
-
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Complete</h3>
-            <p className="text-[10px] text-slate-500 mb-3">{crm ? `Online + catered practical day · ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD` : `Online + catered practical day · ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD`}</p>
-
-            <div className="mb-4">
-              {(earlyBird || bookOwner) && (
-                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                  <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                  {earlyBird && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Early bird</span>
-                  )}
-                  {bookOwner && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
-                  )}
-                </div>
-              )}
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
-                <span className="text-[10px] text-slate-400">AUD</span>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 16 CPD hours (8 online + 8 in-person)</p>
-              {earlyBird && (
-                <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
-                  Standard ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before each scheduled workshop.
-                </p>
-              )}
-            </div>
-
-            {/* Next workshop — Melbourne */}
-            {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
-              <div className="mb-3 rounded-lg border border-orange-200 bg-orange-50 overflow-hidden">
-                <div className="flex items-stretch">
-                  <div className="relative w-[80px] flex-shrink-0 bg-slate-900">
-                    <Image
-                      src="/melbourne-workshop.jpg"
-                      alt="Melbourne workshop"
-                      fill
-                      sizes="80px"
-                      className="object-contain"
-                    />
-                  </div>
-                  <div className="flex-1 px-2.5 py-2 min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-wide text-orange-700 mb-0.5">
-                      Next workshop
-                    </p>
-                    <p className="text-xs font-semibold text-slate-900 leading-tight">
-                      Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
-                    </p>
-                    <p className="text-[10px] text-orange-800 mt-0.5 leading-snug">
-                      Rydges Exhibition St · 8am–4pm · catered lunch
-                    </p>
-                    <p className="text-[10px] font-semibold text-orange-800 mt-0.5 leading-snug">
-                      {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats max
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <ul className="space-y-1.5 mb-4 flex-1">
-              {[
-                'Includes everything in Online',
-                `Full-day catered practical day (+${CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD)`,
-                'Hands-on VOMS, BESS & real cases',
-                CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
-                  ? 'More AU cities added when demand hits'
-                  : 'Choose your preferred AU location',
-              ].map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs">
+            <p className="text-[11px] text-slate-500 mb-2 leading-snug">
+              Includes Online · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
+            </p>
+            <ul className="space-y-1 mb-3 flex-1">
+              {completeBullets.map((f, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px]">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
                   <span className={`text-[var(--muted-foreground)] ${i === 0 ? 'font-semibold' : ''}`}>{f}</span>
                 </li>
               ))}
             </ul>
-
-            {/* City picker — the COMPACT variant had none, so a /preview buyer
-                clicking "Enrol Now — $1,190" was silently nominated into
-                defaultNominationCity() (the first 'collecting' city, i.e.
-                Sydney) for a city they were never shown. workshopLocation is
-                the nomination: it feeds the Ready-to-Train threshold and
-                decides which pre-workshop nurture lane they land in, so a
-                default the buyer never saw is the wrong city in the pipeline
-                and the wrong emails afterwards. Same control as the full
-                variant, same state. */}
-            <div className="mb-3">
-              <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1">Your workshop city</p>
-              <div className="flex flex-wrap gap-1">
-                {CITY_OPTIONS.map((city) => (
-                  <button
-                    key={city.slug}
-                    type="button"
-                    onClick={() => {
-                      setSelectedLocation(city.slug)
-                      setLocationExplicit(true)
-                      trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_compact' })
-                    }}
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
-                      selectedLocation === city.slug
-                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                        : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
-                    }`}
-                    aria-pressed={selectedLocation === city.slug}
-                  >
-                    {city.label}
-                  </button>
-                ))}
-              </div>
+            <div className="mb-2">
+              <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1">Workshop city</p>
+              <CityChips
+                selected={selectedLocation}
+                onSelect={(slug) => {
+                  setSelectedLocation(slug)
+                  setLocationExplicit(true)
+                }}
+                size="xs"
+                trackSource="pricing_compact"
+              />
             </div>
-
             <CheckoutEmailField
               email={checkoutEmail}
               setEmail={setCheckoutEmail}
               sessionEmail={checkoutSessionEmail}
               disabled={loading !== null}
               inputId="checkout-email-compact-complete"
-              className="mb-3"
+              className="mb-2"
               placeholder="Email for your receipt & enrolment"
             />
             <button
               onClick={() => handleCheckout('full-course')}
               disabled={loading !== null || softEmailBlocks('full-course')}
-              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
             >
               {loading === 'full-course' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -726,107 +572,56 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 `Enrol Now — $${fullCoursePrice.toLocaleString()}`
               )}
             </button>
-            <PaymentMethodsStrip />
-
-            {!hasLiveDate && (
-              <p className="text-[10px] text-[var(--muted-foreground)] mt-2 leading-snug">
-                Online unlocks now · {cityLabel(selectedLocation)} day TBD until {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits · {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice · early-bird locked in.
-              </p>
-            )}
-            {/* THE CPD DEADLINE. Licence-renewal compliance is the dominant
-                documented trigger for clinician CPD purchases — ahead of course
-                content — so the annual requirement and its closing date belong
-                on the money card. Both figures are the Boards' published
-                minimums (physio 20/yr, osteo 25/yr; CPD year 1 Dec – 30 Nov),
-                and the countdown derives from config so it can never go stale
-                or need a copy edit in December. A real regulatory deadline is
-                not scarcity marketing. */}
-            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2">
-              <p className="text-[11.5px] font-bold text-amber-900 leading-snug">
-                {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours — most of your year in one course
-              </p>
-              <p className="text-[10.5px] text-amber-900/80 leading-snug mt-0.5">
-                Physios need {CPD_HOURS_PHYSIO}/yr, osteopaths {CPD_HOURS_OSTEO}. The CPD year closes{' '}
-                {CPD_YEAR_END_LABEL} — {daysUntilCpdYearEnd()} days away.
-              </p>
-            </div>
-
-            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
-              &ldquo;Hands on component was invaluable&rdquo; — Amelia
-            </p>
-
           </div>
 
-          {/* ── Secure your seat — compact soft commit (owner 2026-09-05) ── */}
-          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '1.5px', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center border border-amber-200/50">
-                <Bell className="w-4 h-4 text-amber-600" strokeWidth={2} />
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+          {/* Unlock — slim secondary */}
+          <div
+            className="card card-visible rounded-xl p-3.5 flex flex-col relative"
+            style={{ borderWidth: '1px', borderColor: 'rgba(15, 39, 68, 0.08)' }}
+          >
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <span className="text-[9px] font-bold uppercase tracking-wide text-amber-700/80">
                 A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable
               </span>
+              <span className="text-lg font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_SECURE_SEAT}</span>
             </div>
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Unlock your seat</h3>
-            <p className="text-[10px] text-slate-500 mb-3">Soft commit · open the date at {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} · Online remains the front door</p>
-            <div className="mb-3">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_SECURE_SEAT}</span>
-                <span className="text-[10px] text-slate-400">AUD</span>
-              </div>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">Refundable · credited to Complete when date opens</p>
-            </div>
-            <ul className="space-y-1.5 mb-4 flex-1">
-              {[
-                'Preferred city on checkout',
-                `Counts toward ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate`,
-                'Full refund if cohort does not form',
-                'Does not unlock online modules',
-              ].map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs">
-                  <Check className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={3} />
+            <h3 className="text-[13px] font-bold text-[var(--foreground)] mb-0.5">Unlock your seat</h3>
+            <p className="text-[10px] text-slate-500 mb-2 leading-snug">
+              Soft commit · Online remains the front door
+            </p>
+            <ul className="space-y-1 mb-2.5 flex-1">
+              {unlockBullets.map((f, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[10px]">
+                  <Check className="w-2.5 h-2.5 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={3} />
                   <span className="text-[var(--muted-foreground)]">{f}</span>
                 </li>
               ))}
             </ul>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {CITY_OPTIONS.map((city) => (
-                <button
-                  key={city.slug}
-                  type="button"
-                  onClick={() => { setSelectedLocation(city.slug); setLocationExplicit(true) }}
-                  className={`text-[10px] font-semibold px-2 py-1 rounded-full border transition-colors ${
-                    selectedLocation === city.slug
-                      ? 'bg-amber-100 border-amber-300 text-amber-900'
-                      : 'bg-white border-slate-200 text-slate-600 hover:border-amber-200'
-                  }`}
-                  aria-pressed={selectedLocation === city.slug}
-                >
-                  {city.label}
-                </button>
-              ))}
+            <div className="mb-2">
+              <CityChips
+                selected={selectedLocation}
+                onSelect={(slug) => {
+                  setSelectedLocation(slug)
+                  setLocationExplicit(true)
+                }}
+                size="xs"
+                accent="amber"
+              />
             </div>
-            {seatUrgency.progressLine && (
-              <div className="mb-2 flex">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5">
-                  <span className="text-[10px] font-semibold text-emerald-800 leading-snug">{seatUrgency.progressLine}</span>
-                </span>
-              </div>
-            )}
             <CheckoutEmailField
               email={checkoutEmail}
               setEmail={setCheckoutEmail}
               sessionEmail={checkoutSessionEmail}
               disabled={loading !== null}
               inputId="checkout-email-compact-secure"
-              className="mb-3"
+              className="mb-2"
               placeholder="Email for your receipt & enrolment"
             />
             <button
               type="button"
               onClick={() => handleCheckout('secure-seat')}
               disabled={loading !== null || softEmailBlocks('secure-seat')}
-              className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-2 px-3 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-300 bg-white text-[var(--foreground)] hover:bg-slate-50 mt-auto"
             >
               {loading === 'secure-seat' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -837,9 +632,13 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </div>
         </div>
 
+        <div className="mt-3 max-w-5xl mx-auto">
+          <PaymentMethodsStrip />
+        </div>
+
         {/* Exit-point restate (2026-08-03 work order: 22 money-path sessions/14d
           died here without a money action — restate the offer where they leave). */}
-      <div className="mt-12 max-w-2xl mx-auto rounded-2xl border-2 border-accent/25 bg-white p-6 text-center">
+      <div className="mt-10 max-w-2xl mx-auto rounded-2xl border-2 border-accent/25 bg-white p-6 text-center">
         <p className="text-lg font-bold text-foreground mb-1.5">Still deciding? Start online today.</p>
         <p className="text-sm text-muted-foreground mb-4">
           ${CONFIG.COURSE.PRICE_ONLINE}{' '}gets you all 8 modules and the clinical platform now — and every
@@ -882,7 +681,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     )
   }
 
-  // FULL VARIANT
+  // FULL VARIANT — Online primary; Complete quieter; Unlock slim
   return (
     <div className="max-w-[1200px] mx-auto">
       {/* Promo code banner — concrete numbers, not vague reassurance.
@@ -929,29 +728,37 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
         </div>
       )}
 
-      {/* Pricing Cards — 3 equal-sized bento tiles. items-stretch forces
-          all three cells to the same height so cards match regardless of
-          content length. */}
-      {/* Tile order: Complete first — money-before-calendar (owner 2026-09-05).
-          Many buyers refuse Online until a day exists; Complete sells DATE TBD
-          with cohort confirmation, not a date picker and not free EOI.
-          Online remains the lighter path for clinicians happy to start content now.
-          DOM order Online → Complete; CSS order puts Complete first. */}
-      <div className="grid md:grid-cols-3 gap-5 pt-5 items-stretch max-w-6xl mx-auto">
+      {/* Pricing Cards — Online primary (teal), Complete quieter, Unlock slim.
+          DOM order Online → Complete → Unlock. */}
+      <div className="grid md:grid-cols-3 gap-4 pt-4 items-stretch max-w-6xl mx-auto">
 
-        {/* ── Online — 8 CPD, start today (displays second) ── */}
+        {/* ── Online — PRIMARY ── */}
         <div
-          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-2 transition-all duration-300 hover:shadow-xl hover:shadow-teal-900/10 hover:-translate-y-0.5"
-          style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}
+          className="card card-visible rounded-2xl p-4 md:p-5 flex flex-col relative order-1 overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+          style={{
+            borderWidth: '1.5px',
+            borderColor: 'rgba(13, 122, 111, 0.22)',
+            boxShadow: '0 2px 4px rgba(15,39,68,0.05), 0 12px 28px rgba(13,122,111,0.12)',
+          }}
         >
-          {/* Header row: badge left, price right */}
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50 flex-shrink-0">
-                <BookOpen className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
+          <div
+            aria-hidden="true"
+            className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+            style={{ background: 'linear-gradient(180deg, #1aa897, #0d7a6f 40%, #0a5f57)' }}
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(13,122,111,0.12), transparent 70%)' }}
+          />
+
+          <div className="flex items-start justify-between gap-3 mb-3 pl-1 relative">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50 flex-shrink-0">
+                <BookOpen className="w-4 h-4 text-[#0d7a6f]" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · Start today
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[#0a5f57] border border-teal-200">
+                Start today · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD
               </span>
             </div>
             <div className="text-right flex-shrink-0">
@@ -964,88 +771,85 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 </div>
               )}
               <div className="flex items-baseline gap-1 justify-end">
-                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${onlinePrice}</span>
+                <span className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">${onlinePrice}</span>
                 <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
               </div>
-              <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(onlinePrice)}</p>
+              <p className="text-[10px] text-[var(--muted-foreground)]">or 4 × ${afterpayInstalment(onlinePrice)}</p>
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Online</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? `For exercise physiologists · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today` : `For physiotherapists, osteopaths & allied health · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · start today`}</p>
-          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+          <h3 className="text-xl font-extrabold text-[var(--foreground)] mb-0.5 pl-1 tracking-tight">Online</h3>
+          <p className="text-[13px] text-[var(--muted-foreground)] leading-snug mb-3 pl-1">
             {crm
-              ? <>{CONFIG.COURSE.TOTAL_MODULES} modules with the working clinical tools — start today at your own pace. Complete includes Online; upgrade later for ${upgradePriceFor()} (just the difference).</>
-              : <>{CONFIG.COURSE.TOTAL_MODULES} modules · start today. Complete includes Online — upgrade later for ${upgradePriceFor()}{' '}when you&rsquo;re ready for the catered practical day, and you&rsquo;re on the list for a seat before it goes public.</>}
+              ? `${CONFIG.COURSE.TOTAL_MODULES} modules · start today · upgrade to Complete later for $${upgradePriceFor()}.`
+              : `${CONFIG.COURSE.TOTAL_MODULES} modules · start today · credits toward Complete (upgrade $${upgradePriceFor()}).`}
           </p>
 
-          {/* Visual: CCM Online course preview screenshot */}
-          <div className="relative rounded-xl overflow-hidden border border-teal-100 mb-4 h-[120px] bg-white">
-            <Image
-              src={crm ? "/online-course-preview.jpg" : "/ccm-online-preview.png"}
-              alt={crm ? "CRM Online course preview" : "CCM Online course preview interface"}
-              fill
-              sizes="(min-width: 1024px) 340px, 100vw"
-              className="object-cover object-top"
+          <div className="mb-3 ml-1 flex items-start gap-2 rounded-xl border border-teal-200/80 bg-gradient-to-br from-teal-50/90 to-white px-3 py-2">
+            <span
+              aria-hidden="true"
+              className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[#0d7a6f]"
+              style={{ boxShadow: '0 0 0 3px rgba(13,122,111,0.15)' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/30 pointer-events-none" aria-hidden="true" />
+            <p className="text-[12px] leading-snug text-[var(--foreground)] font-medium m-0">
+              <strong className="text-[#0a5f57]">Year 1 tools included</strong>
+              {' '}· then A${SST_TIER_FROM_AUD}/mo clinical tools. Cancel anytime after year 1.
+            </p>
           </div>
 
-          {/* 2-col feature bento */}
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5 text-left">
-            {[
-              `${CONFIG.COURSE.TOTAL_MODULES} modules · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD`,
-              'VOMS, BESS & SCAT6',
-              'Start today · own pace',
-              'Clinical Toolkit',
-              'Lifetime access',
-              `Upgrade later · $${upgradePriceFor()}`,
-            ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[12px]">
-                <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+          <ul className="space-y-1.5 mb-3 pl-1 text-left flex-1">
+            {onlineBullets.map((feature, i) => (
+              <li key={i} className="flex items-start gap-2 text-[13px]">
+                <Check className="w-3.5 h-3.5 text-[#0d7a6f] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
               </li>
             ))}
           </ul>
 
-          {/* Workshop-city nomination — OPTIONAL, and never pre-selected.
-              Until 2026-08-10 this card had no city control at all while
-              checkout still sent selectedLocation, so every online buyer who
-              touched nothing was silently nominated into the mount default
-              (Sydney) for a city they were never shown. That number is what
-              decides which city gets booked. Now: nothing is sent unless the
-              buyer picks, and if they pick they can see what they picked. */}
-          <div className="mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">
-              Preferred city <span className="font-medium normal-case tracking-normal opacity-70">— optional; Complete is what funds the day</span>
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {CITY_OPTIONS.map((city) => (
-                <button
-                  key={city.slug}
-                  type="button"
-                  onClick={() => {
-                    setSelectedLocation(city.slug)
-                    setLocationExplicit(true)
-                    trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_online_card' })
-                  }}
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
-                    locationExplicit && selectedLocation === city.slug
-                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                      : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
-                  }`}
-                  aria-pressed={locationExplicit && selectedLocation === city.slug}
-                >
-                  {city.label}
-                </button>
-              ))}
+          <details className="mb-3 ml-1 group rounded-lg border border-slate-200/80 bg-slate-50/40 px-3 py-2">
+            <summary className="cursor-pointer list-none flex items-center justify-between text-[11px] font-semibold text-[var(--muted-foreground)]">
+              What&apos;s included
+              <ChevronDown className="w-3.5 h-3.5 opacity-60 group-open:rotate-180 transition-transform" />
+            </summary>
+            <div className="mt-2 space-y-2">
+              <p className="text-[11px] text-[var(--muted-foreground)] leading-snug">
+                {crm
+                  ? `For exercise physiologists · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · own pace · Clinical Toolkit.`
+                  : `For physiotherapists, osteopaths & allied health · ${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · own pace.`}
+              </p>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1">
+                  Preferred city <span className="font-medium normal-case tracking-normal opacity-70">— optional</span>
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {CITY_OPTIONS.map((city) => (
+                    <button
+                      key={city.slug}
+                      type="button"
+                      onClick={() => {
+                        setSelectedLocation(city.slug)
+                        setLocationExplicit(true)
+                        trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_online_card' })
+                      }}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                        locationExplicit && selectedLocation === city.slug
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                          : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
+                      }`}
+                      aria-pressed={locationExplicit && selectedLocation === city.slug}
+                    >
+                      {city.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-[var(--muted-foreground)] mt-1.5 leading-snug">
+                  {locationExplicit
+                    ? `We'll tell you first when a ${cityLabel(selectedLocation)} date is announced.`
+                    : "Skip it if you're not sure — choose a city any time before you upgrade."}
+                </p>
+              </div>
             </div>
-            <p className="text-[10px] text-[var(--muted-foreground)] mt-1.5 leading-snug">
-              {locationExplicit
-                ? `We'll tell you first when a ${cityLabel(selectedLocation)} date is announced.`
-                : "Skip it if you're not sure — you can choose a city any time before you upgrade."}
-            </p>
-          </div>
+          </details>
 
           <CheckoutEmailField
             email={checkoutEmail}
@@ -1059,7 +863,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <button
             onClick={() => handleCheckout('online-only')}
             disabled={loading !== null || softEmailBlocks('online-only')}
-            className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm text-white mt-auto"
+            style={{
+              background: 'linear-gradient(180deg, #129284, #0d7a6f)',
+              boxShadow: '0 1px 0 rgba(255,255,255,0.22) inset, 0 6px 16px rgba(13,122,111,0.28)',
+            }}
           >
             {loading === 'online-only' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -1070,28 +878,24 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </>
             )}
           </button>
-
-          <Link
-            href="/preview"
-            className="text-[12px] text-[var(--muted-foreground)] hover:text-[var(--accent)] font-medium text-center mt-2.5 transition-colors"
-          >
-            Preview course content →
-          </Link>
         </div>
 
-        {/* ── Complete — online + catered practical day (displays first) ── */}
-        <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-1 shadow-lg shadow-teal-900/[0.07] transition-all duration-300 hover:shadow-2xl hover:shadow-teal-900/15 hover:-translate-y-1" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
-          {/* Header row: badge left, price right */}
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
-                <Award className="w-4.5 h-4.5 text-orange-500" strokeWidth={2} />
+        {/* ── Complete — quieter ── */}
+        <div
+          className="card card-visible rounded-2xl p-4 md:p-5 flex flex-col relative order-2 transition-all duration-300 hover:-translate-y-0.5"
+          style={{
+            borderWidth: '1px',
+            borderColor: 'rgba(15, 39, 68, 0.12)',
+            boxShadow: '0 1px 2px rgba(15,39,68,0.04), 0 4px 12px rgba(15,39,68,0.05)',
+          }}
+        >
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200/80 flex-shrink-0">
+                <Award className="w-4 h-4 text-slate-600" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                Most Popular
-              </span>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                Online + practical day
               </span>
             </div>
             <div className="text-right flex-shrink-0">
@@ -1107,125 +911,57 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 </div>
               )}
               <div className="flex items-baseline gap-1 justify-end">
-                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
+                <span className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
                 <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
               </div>
-              <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
-              <p className="text-[10px] text-[var(--muted-foreground)]">incl. GST · tax invoice issued</p>
+              <p className="text-[10px] text-[var(--muted-foreground)]">or 4 × ${afterpayInstalment(fullCoursePrice)}</p>
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Complete</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">{`Online + catered practical day · ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD`}</p>
-          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            {crm
-              ? <>Includes Online (unlocks now) plus the catered practical day — date confirmed when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit, with {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice. Not a free waitlist: your seat funds the day.</>
-              : <>Includes Online (unlocks now) plus the catered practical day — date TBD until {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits, then {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice before the day. Hands-on SCAT6, VOMS &amp; BESS. Money before calendar — not &ldquo;buy Online and hope&rdquo;.</>}
+          <h3 className="text-xl font-extrabold text-[var(--foreground)] mb-0.5 tracking-tight">Complete</h3>
+          <p className="text-[13px] text-[var(--muted-foreground)] leading-snug mb-3">
+            Includes Online (unlocks now) + catered practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
           </p>
 
-          {/* CPD split bar — 8 online + 8 hands-on = 16, seen not read */}
-          <div className="mb-4">
-            <div className="flex h-2 overflow-hidden rounded-full">
-              <div className="w-1/2 bg-teal-500" />
-              <div className="w-1/2 bg-amber-400" />
-            </div>
-            <div className="mt-1 flex justify-between text-[10px] font-semibold text-[var(--muted-foreground)]">
-              <span className="text-teal-700">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD online</span>
-              <span className="font-bold text-[var(--foreground)]">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD total</span>
-              <span className="text-amber-600">{CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD hands-on</span>
-            </div>
-          </div>
-
-          {/* Melbourne workshop mini-tile — thumbnail + date */}
-          {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
-            <div className="rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden mb-4">
-              <div className="flex items-stretch">
-                <div className="relative w-[90px] flex-shrink-0 bg-slate-900">
-                  {/* Date-bearing alt text derives from CONFIG.LOCATIONS — the
-                      literal "13 June 2026" here would keep asserting the
-                      completed round's date to screen readers the moment the
-                      next Melbourne round confirms with a new one. */}
-                  <Image
-                    src="/melbourne-workshop.jpg"
-                    alt={`Melbourne workshop · ${CONFIG.LOCATIONS.MELBOURNE.date}`}
-                    fill
-                    sizes="90px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex-1 p-2.5 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
-                      Next workshop confirmed
-                    </p>
-                  </div>
-                  <p className="text-[12px] font-bold text-slate-900 leading-tight">
-                    Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
-                  </p>
-                  <p className="text-[11px] text-slate-700 leading-snug mt-0.5">
-                    Rydges CBD · 8am–4pm · catered
-                  </p>
-                  <p className="text-[11px] font-semibold text-orange-800 mt-1 leading-snug">
-                    {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats max
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 2-col feature grid */}
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4 text-left">
-            {(crm ? [
-              'Includes Online',
-              'Catered practical day',
-              'Graded exertion, hands-on',
-              '1:1 expert feedback',
-              `${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD (${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} day)`,
-              'AU locations',
-            ] : [
-              'Includes Online',
-              'Catered practical day',
-              'VOMS, BESS & real cases',
-              '1:1 expert feedback',
-              `${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD (${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} day)`,
-              'AU locations',
-            ]).map((feature, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[12px]">
-                <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                <span className="text-[var(--muted-foreground)]">{feature}</span>
+          <ul className="space-y-1.5 mb-3 text-left flex-1">
+            {completeBullets.map((feature, i) => (
+              <li key={i} className="flex items-start gap-2 text-[13px]">
+                <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className={`text-[var(--muted-foreground)] ${i === 0 ? 'font-semibold' : ''}`}>{feature}</span>
               </li>
             ))}
           </ul>
 
-          {/* City picker. "Later" button removed — it let users click Enrol
-              with no city, sending location=undefined to Stripe and creating
-              an ops mess. Every city is buyable (nomination model): no live
-              date = early-bird nomination, date launches when the city fills. */}
-          <div className="mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">Your city <span className="font-medium normal-case tracking-normal opacity-70">— date TBD when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commit</span></p>
-            <div className="flex flex-wrap gap-1">
-              {CITY_OPTIONS.map((city) => (
-                <button
-                  key={city.slug}
-                  type="button"
-                  onClick={() => {
-                    setSelectedLocation(city.slug)
-                    setLocationExplicit(true)
-                    trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_card' })
-                  }}
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
-                    selectedLocation === city.slug
-                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                      : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
-                  }`}
-                  aria-pressed={selectedLocation === city.slug}
-                >
-                  {city.label}
-                </button>
-              ))}
+          <details className="mb-3 group rounded-lg border border-slate-200/80 bg-slate-50/40 px-3 py-2">
+            <summary className="cursor-pointer list-none flex items-center justify-between text-[11px] font-semibold text-[var(--muted-foreground)]">
+              What&apos;s included
+              <ChevronDown className="w-3.5 h-3.5 opacity-60 group-open:rotate-180 transition-transform" />
+            </summary>
+            <div className="mt-2 space-y-2.5">
+              <div>
+                <div className="flex h-1.5 overflow-hidden rounded-full">
+                  <div className="w-1/2 bg-teal-500" />
+                  <div className="w-1/2 bg-amber-400" />
+                </div>
+                <div className="mt-1 flex justify-between text-[10px] font-semibold text-[var(--muted-foreground)]">
+                  <span className="text-teal-700">{CONFIG.COURSE.ONLINE_CPD_POINTS} online</span>
+                  <span className="font-bold text-[var(--foreground)]">{CONFIG.COURSE.TOTAL_CPD_POINTS} total</span>
+                  <span className="text-amber-600">{CONFIG.COURSE.IN_PERSON_CPD_POINTS} hands-on</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-[var(--muted-foreground)] leading-snug">
+                Date confirms when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit, with{' '}
+                {CONFIG.WORKSHOP.LEAD_TIME_WEEKS}+ weeks&rsquo; notice. Early-bird locked in until then.
+              </p>
+              <p className="text-[11px] text-amber-900/90 leading-snug rounded-md border border-amber-200 bg-amber-50/70 px-2.5 py-1.5">
+                <strong>{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours</strong> — physios need {CPD_HOURS_PHYSIO}/yr, osteos {CPD_HOURS_OSTEO}.
+                Year closes {CPD_YEAR_END_LABEL} ({daysUntilCpdYearEnd()} days).
+              </p>
+              {!hasLiveDate && seatUrgency.progressLine && (
+                <p className="text-[11px] font-semibold text-emerald-800">{seatUrgency.progressLine}</p>
+              )}
             </div>
-          </div>
+          </details>
 
           <CheckoutEmailField
             email={checkoutEmail}
@@ -1239,7 +975,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <button
             onClick={() => handleCheckout('full-course')}
             disabled={loading !== null || softEmailBlocks('full-course')}
-            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
+            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors mt-auto"
           >
             {loading === 'full-course' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -1250,149 +986,51 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </>
             )}
           </button>
-
-              {/* THE CPD DEADLINE (full variant — the card /pricing actually
-              renders). Licence-renewal compliance is the dominant documented
-              trigger for clinician CPD purchases, ahead of course content,
-              so the annual requirement and its closing date belong on the
-              money card. Figures are the Boards' published minimums (physio
-              20/yr, osteo 25/yr; CPD year 1 Dec – 30 Nov) and the countdown
-              derives from config, so it can never go stale or need a copy
-              edit in December. A published regulatory deadline is not
-              scarcity marketing. */}
-          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2">
-            <p className="text-[12px] font-bold text-amber-900 leading-snug">
-              {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours — most of your year in one course
-            </p>
-            <p className="text-[11px] text-amber-900/80 leading-snug mt-0.5">
-              Physiotherapists need {CPD_HOURS_PHYSIO} hours a year, osteopaths {CPD_HOURS_OSTEO}.
-              The CPD year closes {CPD_YEAR_END_LABEL} — {daysUntilCpdYearEnd()} days away.
-            </p>
-          </div>
-
-          {/* THE LIGHTER ACTION, NEXT TO THE HEAVY ONE (2026-08-24).
-              Two separate visitors picked Byron Bay, hit "Enrol Now — $1,190",
-              went to Stripe and left — and neither registered interest, because
-              at the moment of hesitation the only affordance beside the price
-              was a $1,190 commitment. The interest form lived further down the
-              page and on the homepage, i.e. nowhere near the decision.
-              A city with no scheduled date is exactly where a buyer is most
-              likely to stall, so the low-commitment option belongs adjacent to
-              the high-commitment one — not as a competing CTA above it. */}
-          {!hasLiveDate && (
-            <details className="mt-2.5 group">
-              <summary className="cursor-pointer text-[11px] font-semibold text-[var(--accent)] hover:underline list-none">
-                Prefer a free reminder? Notify me when {cityLabel(selectedLocation)} gets a date →
-              </summary>
-              <div className="mt-2">
-                <WorkshopInterestForm citySlug={selectedLocation} variant="compact" />
-              </div>
-            </details>
-          )}
-
-          {!hasLiveDate && (
-            <>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-2.5 leading-snug">
-                <strong className="text-[var(--foreground)]">Date TBD — money before calendar.</strong>{' '}
-                Enrol Complete now: online unlocks today; your {cityLabel(selectedLocation)} practical day
-                confirms when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit (catered-day
-                break-even), with at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo; notice. Venue booked
-                only then. Early-bird ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} locked in. Free EOI
-                does not launch a day.
-              </p>
-              {seatUrgency.progressLine && (
-                <div className="mt-2 flex">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
-                    <span className="text-[11px] font-semibold text-emerald-800 leading-snug">
-                      {seatUrgency.progressLine}
-                    </span>
-                  </span>
-                </div>
-              )}
-              {/* The date-alert form used to sit HERE, inside the card, expanded by
-                  default. It added ~350px to the Complete tile and left the two
-                  cards visibly unequal — an $1,190 card towering over a $497 one,
-                  with a name/email form competing against its own Enrol button.
-                  Moved to full width directly BELOW both cards (2026-08-07): same
-                  visibility for date-hunters, without a lead-capture form living
-                  inside a price. */}
-            </>
-          )}
         </div>
 
-        {/* ── Secure your seat — full soft commit (owner 2026-09-05) ──
-            Third path card: Online | Complete | Secure your seat.
-            CSS order-3; money-before-calendar deposit replaces free EOI. */}
+        {/* ── Unlock — slim secondary ── */}
         <div
-          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-3 transition-all duration-300 hover:shadow-xl hover:shadow-amber-900/10 hover:-translate-y-0.5"
-          style={{ borderWidth: '1.5px', borderColor: 'rgba(245, 158, 11, 0.35)' }}
+          className="card card-visible rounded-2xl p-3.5 md:p-4 flex flex-col relative order-3 transition-all duration-300"
+          style={{
+            borderWidth: '1px',
+            borderColor: 'rgba(15, 39, 68, 0.08)',
+            boxShadow: 'none',
+          }}
         >
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center border border-amber-200/50 flex-shrink-0">
-                <Bell className="w-4.5 h-4.5 text-amber-600" strokeWidth={2} />
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-200/70 flex-shrink-0">
+                <Bell className="w-3.5 h-3.5 text-amber-700/80" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-amber-800/80">
                 Soft commit
               </span>
             </div>
             <div className="text-right flex-shrink-0">
               <div className="flex items-baseline gap-1 justify-end">
                 <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_SECURE_SEAT}</span>
-                <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                <span className="text-[10px] text-[var(--muted-foreground)]">AUD</span>
               </div>
-              <p className="text-[10px] text-[var(--muted-foreground)]">refundable deposit</p>
+              <p className="text-[10px] text-[var(--muted-foreground)]">refundable</p>
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{seatUrgency.headlineShort}</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">
-            Preferred city on checkout · open the date at {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}
+          <h3 className="text-base font-bold text-[var(--foreground)] mb-0.5">{seatUrgency.headlineShort}</h3>
+          <p className="text-[12px] text-slate-500 mb-2 leading-snug">
+            Preferred city below · open the date at {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}
           </p>
           {seatUrgency.progressLine && (
-            <div className="mb-3 flex">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
-                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
-                <span className="text-[11px] font-semibold text-emerald-800 leading-snug">{seatUrgency.progressLine}</span>
-              </span>
-            </div>
+            <p className="mb-2 text-[11px] font-semibold text-emerald-800 leading-snug">{seatUrgency.progressLine}</p>
           )}
-          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            {seatUrgency.body}
-          </p>
 
-          <ul className="grid grid-cols-1 gap-y-1.5 mb-5 text-left">
-            {[
-              'Preferred city / region on checkout',
-              `Counts toward ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits`,
-              'Credited to Complete when date opens',
-              'Full refund if cohort does not form',
-            ].map((feature, i) => (
+          <ul className="space-y-1 mb-3 text-left flex-1">
+            {unlockBullets.map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">
-                <Check className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <Check className="w-3 h-3 text-amber-600/90 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
               </li>
             ))}
           </ul>
-
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {CITY_OPTIONS.map((city) => (
-              <button
-                key={city.slug}
-                type="button"
-                onClick={() => { setSelectedLocation(city.slug); setLocationExplicit(true) }}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
-                  selectedLocation === city.slug
-                    ? 'bg-amber-100 border-amber-300 text-amber-900'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-amber-200'
-                }`}
-                aria-pressed={selectedLocation === city.slug}
-              >
-                {city.label}
-              </button>
-            ))}
-          </div>
 
           <CheckoutEmailField
             email={checkoutEmail}
@@ -1400,35 +1038,52 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             sessionEmail={checkoutSessionEmail}
             disabled={loading !== null}
             inputId="checkout-email-secure"
-            className="mb-3 mt-auto"
+            className="mb-2.5 mt-auto"
             placeholder="Email for your receipt & enrolment"
           />
           <button
             type="button"
             onClick={() => handleCheckout('secure-seat')}
             disabled={loading !== null || softEmailBlocks('secure-seat')}
-            className="btn-primary w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-2.5 px-4 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-300 bg-white text-[var(--foreground)] hover:bg-slate-50"
           >
             {loading === 'secure-seat' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <>{seatUrgency.ctaLabel} <ArrowRight className="w-4 h-4" /></>
+              <>{seatUrgency.ctaLabel} <ArrowRight className="w-3.5 h-3.5" /></>
             )}
           </button>
-          <PaymentMethodsStrip />
-          <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center">
-            Free notify-me stays secondary below — deposits launch dates; EOI does not.
-          </p>
         </div>
 
       </div>
 
-      {/* The date-alert block was REMOVED 2026-08-07 (owner: "get rid of this
-          completely"). The location bentos now sit directly under the pricing
-          cards and carry their own per-city signup, so a standalone name/email
-          form here was a second ask for the same thing. */}
-      {/* Trust Signals */}
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
+      {/* Shared workshop-city strip — chips moved out of card bodies */}
+      <div className="mt-4 max-w-6xl mx-auto rounded-xl border border-slate-200/90 bg-white/80 px-4 py-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-0.5">
+              Workshop city
+            </p>
+            <p className="text-[12px] text-[var(--muted-foreground)] leading-snug">
+              Required for Complete &amp; Unlock · date TBD when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commit
+            </p>
+          </div>
+          <CityChips
+            selected={selectedLocation}
+            onSelect={(slug) => {
+              setSelectedLocation(slug)
+              setLocationExplicit(true)
+            }}
+            trackSource="pricing_card"
+          />
+        </div>
+      </div>
+
+      {/* Trust + payment logos once under the row */}
+      <div className="mt-5 max-w-6xl mx-auto">
+        <PaymentMethodsStrip />
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
         {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'AHPRA Aligned', 'Lifetime Access', 'Certificate Included'].map(item => (
           <div key={item} className="flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
@@ -1436,11 +1091,6 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           </div>
         ))}
       </div>
-
-      {/* The team/clinic callout moved to CcmPricingContent, below the
-          location bentos (owner 2026-08-07: bentos belong directly under
-          the cards). Kept out of this shared component so the compact
-          /preview variant is unaffected. */}
     </div>
   )
 }
