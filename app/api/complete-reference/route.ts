@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Serve the PDF file
-    const filePath = join(process.cwd(), 'public', 'docs', 'CCM_Complete_Reference_2026.pdf')
+    // Paid reference PDF lives in private-docs/ (not public/docs CDN).
+    const filePath = join(process.cwd(), 'private-docs', 'CCM_Complete_Reference_2026.pdf')
     const fileBuffer = await readFile(filePath)
 
     return new NextResponse(fileBuffer, {

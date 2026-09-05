@@ -14,10 +14,13 @@ const nextConfig: NextConfig = {
   // protects the path and not the bytes. Two separate leaks in one day proved
   // the difference. Because private-docs/ is read at runtime rather than
   // imported, Next's tracer cannot see it and would ship a function that 404s
-  // every paid download — so it is included explicitly, and ONLY for the one
-  // route that serves it.
+  // every paid download — so it is included explicitly for every route that
+  // reads those bytes (the /docs handler plus the legacy download APIs).
   outputFileTracingIncludes: {
     '/docs/[...slug]': ['./private-docs/**'],
+    '/api/download': ['./private-docs/**'],
+    '/api/reference/download': ['./private-docs/**'],
+    '/api/complete-reference': ['./private-docs/**'],
   },
 
   experimental: {

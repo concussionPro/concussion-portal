@@ -304,7 +304,7 @@ describe('every product a checkout can create has webhook fulfilment', () => {
    */
   const UNFULFILLED = ['clinic-hub-extra-seat', 'clinic-workshop-upgrade']
 
-  it('the unfulfilled add-ons are refused by /api/create-checkout and /pay/[code]', async () => {
+  it('the unfulfilled add-ons are refused (contact CTA, not Stripe) by /api/create-checkout and /pay/[code]', async () => {
     const { readFileSync } = await import('fs')
     const { join } = await import('path')
     for (const file of ['app/api/create-checkout/route.ts', 'app/pay/[code]/route.ts']) {
@@ -312,6 +312,8 @@ describe('every product a checkout can create has webhook fulfilment', () => {
       for (const type of UNFULFILLED) {
         expect(src.includes(`courseType === '${type}'`)).toBe(true)
       }
+      // Must offer mailto/Cal — never take money without fulfilment.
+      expect(src.includes('hubAddonContact')).toBe(true)
     }
   })
 

@@ -1,9 +1,13 @@
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { CLINIC_DEMO_KEY } from '@/lib/demo-key'
+import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 import { isDemoUserId } from '@/lib/demo-session'
 import { getCurrentAccessLevel } from '@/lib/users'
-import { resolveModuleForAccess, type AccessLevel } from '@/lib/module-access'
+import {
+  resolveModuleForAccess,
+  resolveFlagshipCallerAccessLevel,
+  type AccessLevel,
+} from '@/lib/module-access'
 import type { InitialModuleData } from '@/hooks/useModuleData'
 import FlagshipModuleClient from './FlagshipModuleClient'
 
@@ -23,6 +27,8 @@ import FlagshipModuleClient from './FlagshipModuleClient'
  *
  * Gating is UNCHANGED and still enforced server-side — a free-tier user gets the
  * same two truncated sections with quiz answers stripped that the API returns.
+ * Reviewer demo_key (via /demo/essa etc.) is treated as full-course, matching
+ * toolkit-access and /api/auth/session synthesis; clinic_demo stays preview.
  */
 export default async function ModulePage({
   params,
@@ -36,21 +42,23 @@ export default async function ModulePage({
   const token = cookieStore.get('session')?.value
   const session = token ? verifySessionToken(token) : null
 
+  const reviewerDemo = cookieStore.get('demo_key')?.value === DEMO_KEY
   // Clinic-prospect demo (/demo/clinic) carries no session — the clinic_demo
   // cookie maps to PREVIEW scope, mirroring /api/modules/[id].
   const clinicDemo = cookieStore.get('clinic_demo')?.value === CLINIC_DEMO_KEY
-  // DEV-ONLY review bypass, mirroring the API route so localhost review of the
-  // whole course keeps working without a login. Production is untouched.
-  let accessLevel: AccessLevel | null =
-    session?.accessLevel ??
-    (clinicDemo ? 'preview' : null) ??
-    (process.env.NODE_ENV !== 'production' ? 'full-course' : null)
+
+  let accessLevel: AccessLevel | null = resolveFlagshipCallerAccessLevel({
+    sessionAccessLevel: session?.accessLevel ?? null,
+    demoKeyCookie: cookieStore.get('demo_key')?.value,
+    clinicDemoCookie: cookieStore.get('clinic_demo')?.value,
+  })
 
   // Revocation re-check (2026-08-05 sweep #5): a 365-day session JWT outlives
   // a refund downgrade — when the session CLAIMS a paid level, the DB row is
   // the truth for paid content. One cheap indexed select, only on paid claims;
-  // demo, unauthenticated and free paths never touch the DB here.
+  // demo_key, unauthenticated and free paths never touch the DB here.
   if (
+    !reviewerDemo &&
     session &&
     !isDemoUserId(session.userId) &&
     (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')
@@ -92,9 +100,9 @@ export default async function ModulePage({
   // ANYTHING. Without this the server's whole reason for existing here (see the
   // header comment) was cancelled by a client-side auth spinner.
   const initialAuth = {
-    authenticated: !!session || clinicDemo,
+    authenticated: !!session || clinicDemo || reviewerDemo,
     email: session?.email ?? '',
-    isDemo: clinicDemo || (session ? isDemoUserId(session.userId) : false),
+    isDemo: clinicDemo || reviewerDemo || (session ? isDemoUserId(session.userId) : false),
   }
 
   return <FlagshipModuleClient initialModuleData={initialModuleData} initialAuth={initialAuth} />

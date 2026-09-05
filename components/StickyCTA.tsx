@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { ArrowRight, X } from 'lucide-react'
 import Link from 'next/link'
-import { useSession } from '@/contexts/SessionContext'
+import { useSession, type SessionUser } from '@/contexts/SessionContext'
 import { CONFIG } from '@/lib/config'
+import { trackEvent } from '@/lib/analytics'
 
-// Pages where the sticky CTA should NOT appear.
+// Pages where the HARD (generic) sticky CTA should NOT appear.
 // Keep in sync (in intent) with ExitIntentPopup EXCLUDED_PREFIXES: workshop
 // pages (/courses/*) carry their own CTAs — don't stack another on top.
 const EXCLUDED_PATHS = [
@@ -65,12 +66,37 @@ const EXCLUDED_PATHS = [
   '/cep-uk', '/hpcsa', '/csep', '/cimspa',
 ]
 
+const SCAT_SOFT_DISMISS_KEY = 'scat_soft_cta_dismissed'
+const HARD_DISMISS_KEY = 'sticky_cta_dismissed'
+
+/** Free SCAT lead surfaces that get a soft CCM promo (once / session), not the hard bar. */
+function isScatSoftPath(pathname: string): boolean {
+  if (pathname.startsWith('/scat-mastery') || pathname.startsWith('/scat-course')) return true
+  // Free SCAT modules 101–103 only — not 104 awareness, not paid 1–8.
+  return /^\/modules\/10[123](\/|$)/.test(pathname)
+}
+
+function isFreeScatAudience(user: SessionUser | null): boolean {
+  // Unsigned visitors on the lead magnet: soft CTA is fine.
+  if (!user) return true
+  // CRM buyers carry accessLevel 'preview' — never pitch them CCM here.
+  if (user.ownsCrm) return false
+  // Paid CCM / online-only: no soft upsell chrome on the free course they already outgrew.
+  if (user.accessLevel === 'full-course' || user.accessLevel === 'online-only') return false
+  // Demo tours are product sales surfaces — keep course chrome off them.
+  if (user.isDemo) return false
+  return user.accessLevel === 'preview'
+}
+
 export function StickyCTA() {
   const pathname = usePathname()
-  // Signed-in users never see marketing chrome (standalone session fetch).
   const { user, isLoading: sessionLoading } = useSession()
   const [dismissed, setDismissed] = useState(false)
+  const [scatDismissed, setScatDismissed] = useState(false)
   const [visible, setVisible] = useState(false)
+
+  const scatSoft = isScatSoftPath(pathname)
+  const freeScat = isFreeScatAudience(user)
 
   // Show after scrolling 400px
   useEffect(() => {
@@ -81,21 +107,64 @@ export function StickyCTA() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Check if dismissed this session
+  // Check if dismissed this session (separate keys so hard/soft don't fight)
   useEffect(() => {
-    if (sessionStorage.getItem('sticky_cta_dismissed')) {
-      setDismissed(true)
-    }
+    if (sessionStorage.getItem(HARD_DISMISS_KEY)) setDismissed(true)
+    if (sessionStorage.getItem(SCAT_SOFT_DISMISS_KEY)) setScatDismissed(true)
   }, [])
 
-  // Don't show on excluded paths
+  // ── Soft SCAT6 promo sticky (leak board: monetize SCAT lead magnets, once not spam)
+  if (!sessionLoading && scatSoft && freeScat && !scatDismissed && visible) {
+    const promoHref = `/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`
+    const handleScatDismiss = () => {
+      setScatDismissed(true)
+      sessionStorage.setItem(SCAT_SOFT_DISMISS_KEY, '1')
+    }
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-40 animate-slideUp">
+        <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 border-t border-white/10 shadow-2xl">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <p className="text-sm text-white/85 truncate">
+                <span className="font-semibold text-white">
+                  SCAT6 completers: A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off CCM
+                </span>
+                <span className="hidden sm:inline">
+                  {' '}· code {CONFIG.COURSE.PROMO_CODE} · VOMS, BESS & return-to-play
+                </span>
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Link
+                href={promoHref}
+                onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_soft_sticky', promo: CONFIG.COURSE.PROMO_CODE })}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-900 rounded-lg text-sm font-bold hover:bg-white/90 transition-all"
+              >
+                Claim A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <button
+                onClick={handleScatDismiss}
+                className="p-1.5 text-white/40 hover:text-white/70 transition-colors"
+                aria-label="Dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't show hard sticky on excluded paths / signed-in users / soft-path handling
   const isExcluded =
-    !!user || sessionLoading || EXCLUDED_PATHS.some(p => pathname.startsWith(p))
+    !!user || sessionLoading || scatSoft || EXCLUDED_PATHS.some(p => pathname.startsWith(p))
   if (isExcluded || dismissed || !visible) return null
 
   const handleDismiss = () => {
     setDismissed(true)
-    sessionStorage.setItem('sticky_cta_dismissed', '1')
+    sessionStorage.setItem(HARD_DISMISS_KEY, '1')
   }
 
   return (

@@ -2,39 +2,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAllModules } from '@/data/modules'
 import { getSCATModules } from '@/data/scat-modules'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { resolveFlagshipCallerAccessLevel } from '@/lib/module-access'
 
 /**
  * Module List API - Returns module metadata based on access level
  *
  * - Preview users: FREE SCAT6/SCOAT6 Mastery course modules (3 modules)
- * - Paid users: Full concussion management course (8 modules)
+ * - Paid users / reviewer demo_key: Full concussion management course (8 modules)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
     const sessionToken = request.cookies.get('session')?.value
+    const sessionData = sessionToken ? verifySessionToken(sessionToken) : null
 
-    if (!sessionToken) {
+    const accessLevel = resolveFlagshipCallerAccessLevel({
+      sessionAccessLevel: sessionData?.accessLevel ?? null,
+      demoKeyCookie: request.cookies.get('demo_key')?.value,
+      clinicDemoCookie: request.cookies.get('clinic_demo')?.value,
+    })
+
+    if (!accessLevel) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    // Verify session
-    const sessionData = verifySessionToken(sessionToken)
-
-    if (!sessionData) {
-      return NextResponse.json(
-        { error: 'Invalid or expired session' },
-        { status: 401 }
-      )
-    }
-
     // Determine which modules to return based on access level
     const hasFullAccess =
-      sessionData.accessLevel === 'online-only' ||
-      sessionData.accessLevel === 'full-course'
+      accessLevel === 'online-only' || accessLevel === 'full-course'
 
     const modules = hasFullAccess ? getAllModules() : getSCATModules()
 
@@ -53,7 +49,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       modules: moduleList,
-      accessLevel: sessionData.accessLevel,
+      accessLevel,
     })
   } catch (error) {
     console.error('Module list API error:', error)

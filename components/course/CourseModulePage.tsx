@@ -1053,6 +1053,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               <div className="flex flex-col items-center gap-3">
                 <Link
                   href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
+                  onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_all_complete', from: 'preview', promo: CONFIG.COURSE.PROMO_CODE })}
                   className="px-8 py-3.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
                 >
                   Claim ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} Off — View Full Course
@@ -1183,20 +1184,9 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                     </button>
                   )
                 })()}
-                {isSCATModule && moduleId !== 102 && moduleId !== 104 && (
-                  <div className="flex flex-col items-center gap-2">
-                    <Link
-                      href="/pricing"
-                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-accent border-2 border-accent rounded-xl hover:bg-accent/5 transition-colors"
-                    >
-                      Unlock all 8 modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    <p className="text-xs text-slate-500 max-w-sm text-center mt-1">
-                      Learn VOMS screening, BESS scoring, return-to-play protocols &amp; phenotype-based rehabilitation
-                    </p>
-                  </div>
-                )}
+                {/* Soft paid CTA: keep mid-course promo on 102 only + all-complete
+                    screen above. Module 101 stays quiet so we don't spam the same
+                    SCAT6 offer on every section exit — sticky covers soft visibility. */}
               </div>
             </>
           )}

@@ -9,6 +9,7 @@ import NominateConfirmBanner from '@/components/pricing/NominateConfirmBanner'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
+import { InternationalPricingLink } from '@/components/MarketPricingSwitch'
 
 /**
  * /pricing — TABBED BY STREAM.
@@ -59,7 +60,7 @@ const STREAMS: Array<{
     id: 'ccm',
     code: 'CCM',
     name: 'Concussion Clinical Mastery',
-    audience: 'All AHPRA & allied health clinicians',
+    audience: 'Physiotherapists, osteopaths & chiropractors',
     openTo: 'Open to every AHPRA-registered clinician — physiotherapists, osteopaths, chiropractors, GPs and nurses. CPD hours are claimable under any Board’s standard.',
     icon: GraduationCap,
     endorse: 'Osteopathy Australia endorsed',
@@ -164,24 +165,25 @@ function PricingTabs() {
                   <Icon className={`w-6 h-6 ${active ? 'text-white' : 'text-[var(--accent)]'}`} strokeWidth={1.8} />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold tracking-[0.14em] text-[var(--accent)]">{s.code}</span>
+                  <span className="flex items-center gap-2 flex-wrap">
+                    <span className="block text-[16px] font-bold leading-tight text-[var(--foreground)]">{s.audience}</span>
                     {active && (
                       <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white bg-[var(--accent)] rounded-full px-2 py-[3px]">
                         Viewing
                       </span>
                     )}
                   </span>
-                  <span className="block text-[16px] font-bold leading-tight text-[var(--foreground)]">{s.name}</span>
                   <span className="block text-[12.5px] leading-tight mt-0.5 text-[var(--muted-foreground)]">
-                    {s.audience} · {s.endorse}
+                    {s.name} · {s.endorse}
                   </span>
+                  <span className="block text-[10px] font-bold tracking-[0.14em] text-[var(--accent)] mt-1">{s.code}</span>
                 </span>
                 {!active && <ArrowRight className="w-4 h-4 flex-none text-[var(--accent)]" />}
               </button>
             )
           })}
         </div>
+        <InternationalPricingLink />
       </div>
 
       {/* TITLE / DESCRIPTION — rendered HERE, not taken from the stream body.

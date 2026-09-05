@@ -26,8 +26,8 @@ export default function IntlCoursesTabs({ price, crmLive }: { price: Price; crmL
   const showTabs = crmLive
 
   const TABS = [
-    { id: 'ccm' as const, code: 'CCM', name: 'Concussion Clinical Mastery', who: 'Physiotherapists, Osteopaths & Chiropractors', icon: GraduationCap },
-    { id: 'crm' as const, code: 'CRM', name: 'Concussion Rehab Mastery', who: 'Exercise Physiologists & Scientists', icon: HeartPulse },
+    { id: 'ccm' as const, code: 'CCM', name: 'Concussion Clinical Mastery', who: 'Physiotherapists, osteopaths & chiropractors', icon: GraduationCap },
+    { id: 'crm' as const, code: 'CRM', name: 'Concussion Rehab Mastery', who: 'Exercise physiologists & scientists', icon: HeartPulse },
   ]
 
   return (
@@ -61,9 +61,9 @@ export default function IntlCoursesTabs({ price, crmLive }: { price: Price; crmL
                       <Icon className={cn('h-5 w-5', active ? 'text-white' : 'text-teal-600')} />
                     </span>
                     <span className="min-w-0">
-                      <span className={cn('block text-[10px] font-bold tracking-widest', active ? 'text-white/70' : 'text-teal-700')}>{t.code}</span>
-                      <span className="block text-[15px] font-bold leading-tight">{t.name}</span>
-                      <span className={cn('mt-0.5 block text-[12px] leading-tight', active ? 'text-white/90' : 'text-slate-500')}>{t.who}</span>
+                      <span className="block text-[15px] font-bold leading-tight">{t.who}</span>
+                      <span className={cn('mt-0.5 block text-[12px] leading-tight', active ? 'text-white/90' : 'text-slate-500')}>{t.name}</span>
+                      <span className={cn('mt-1 block text-[10px] font-bold tracking-widest', active ? 'text-white/60' : 'text-teal-700/80')}>{t.code}</span>
                     </span>
                   </button>
                 )

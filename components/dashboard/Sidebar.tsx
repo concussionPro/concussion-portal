@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, MapPin, Stethoscope, Sparkles, ArrowRight, Radio } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, MapPin, Stethoscope, Sparkles, ArrowRight, Radio, PenLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { holdsOnlineWithoutPracticalDay } from '@/lib/practical-day-seat'
@@ -8,7 +8,8 @@ import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import { isOwnerEmail } from '@/lib/owner'
-import { clearIdentity, trackEvent } from '@/lib/analytics'
+import { clearIdentity } from '@/lib/analytics'
+import { TrackedOutbound } from '@/components/TrackedOutbound'
 import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import Link from 'next/link'
@@ -47,6 +48,9 @@ const navItems: Array<{
   // and forwards; DEMO00 goes keyless.
   { icon: Radio, label: 'Live Hub', href: '/clinical-testing/hub', clinicalGated: true },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit', paidOnly: true },
+  // Fillable discharge / clinical letters — previously only reachable from deep
+  // toolkit links, so day-1 paid buyers never found them (P0 discoverability).
+  { icon: PenLine, label: 'Discharge Letters', href: '/clinical-toolkit/templates', paidOnly: true },
   { icon: Mail, label: 'Outreach Kit', href: '/outreach-kit', paidOnly: true },
   // Admin Workflow removed: Hub Pack material (clinic operations), not
   // individual-course content — /admin-workflow now explains + pitches the Hub.
@@ -231,8 +235,12 @@ export function Sidebar() {
             // No account to configure in a demo — Settings is noise there.
             !(isDemo && item.href === '/settings')
           ).map((item) => {
+            // Clinical Toolkit and Discharge Letters share a path prefix. Exact-match
+            // Toolkit so both nav items don't light up on /clinical-toolkit/templates.
             const isActive =
-              pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+              item.href === '/clinical-toolkit'
+                ? pathname === '/clinical-toolkit'
+                : pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
             // paidOnly items are CCM entitlements (Toolkit, Outreach Kit,
             // References, Complete Reference) — they lock for anyone without CCM,
             // INCLUDING CRM buyers. The destination pages gate on accessLevel
@@ -295,19 +303,19 @@ export function Sidebar() {
             never be shown the free-course upgrade funnel. */}
         {isFreeTier && (
           <Link
-            href="/pricing"
+            href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
             onClick={closeMobileMenu}
             className="mt-3 block shrink-0 rounded-xl bg-gradient-to-br from-accent to-accent-dark p-3.5 text-white shadow-md shadow-accent/20 hover:shadow-lg hover:scale-[1.02] transition-all group"
           >
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-4 h-4" strokeWidth={2} />
-              <span className="text-sm font-bold">Unlock everything</span>
+              <span className="text-sm font-bold">Continue with CCM</span>
             </div>
             <p className="text-[11px] text-white/85 leading-snug mb-2">
-              The full 8-module course, the clinical tools (SST + Baseline) and every reference — assess and manage, don&rsquo;t just recognise.
+              Full 8-module course + clinical tools (SST + Baseline). SCAT completers: code {CONFIG.COURSE.PROMO_CODE} saves A${CONFIG.COURSE.SCAT_DISCOUNT_AUD}.
             </p>
             <span className="inline-flex items-center gap-1 text-[12px] font-bold bg-white/15 rounded-lg px-2.5 py-1 group-hover:bg-white/25 transition-colors">
-              Enrol — A${CONFIG.COURSE.PRICE_ONLINE}
+              From A${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} with {CONFIG.COURSE.PROMO_CODE}
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </Link>
@@ -369,15 +377,14 @@ export function Sidebar() {
                   tour entries, 0 bookings — the tour ended nowhere). The
                   sidebar is on every workspace page, so this is the one
                   persistent affordance a touring prospect always has. */}
-              <a
+              <TrackedOutbound
                 href="https://cal.com/zac-lewis-so8zjs/30min"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackEvent('demo_book_walkthrough_click', { placement: 'sidebar' })}
+                event="cal_click"
+                source="demo-sidebar"
                 className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent text-white text-xs font-bold px-3 py-2 hover:bg-accent/90 transition-colors"
               >
-                Book a walkthrough with Zac
-              </a>
+                Book 20 minutes
+              </TrackedOutbound>
             </div>
           ) : user ? (
             <div className="glass-premium rounded-xl p-3">

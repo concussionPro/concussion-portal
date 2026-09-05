@@ -589,16 +589,19 @@ export default function SCATMasteryPage() {
           </div>
         </div>
 
-        {/* ── Upgrade CTA Card ── */}
+        {/* ── Upgrade CTA Card — soft paid path with SCAT6 promo (once, bottom) ── */}
         <div className="mt-20 md:mt-24">
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
             <div className="text-center mb-6">
+              <p className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-emerald-800 mb-3">
+                Completers: code {CONFIG.COURSE.PROMO_CODE} · A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off
+              </p>
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
                 Want more than SCAT6? Get up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours (
                 {CONFIG.COURSE.ONLINE_CPD_POINTS} online + optional in-person day).
               </h2>
               <p className="text-sm text-slate-500">
-                The complete course covers everything the free training doesn&apos;t.
+                Concussion Clinical Mastery covers everything the free training doesn&apos;t — from A${CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} with your SCAT completion code.
               </p>
             </div>
 
@@ -618,14 +621,14 @@ export default function SCATMasteryPage() {
 
             <div className="text-center">
               <Link
-                href="/pricing"
+                href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
                 className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#4a8a96] hover:to-[#5a8d98] transition-all shadow-lg shadow-teal-200/50"
               >
-                See Complete Course
+                See CCM pricing — A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off with {CONFIG.COURSE.PROMO_CODE}
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <p className="text-xs text-slate-400 mt-3">
-                7-day satisfaction guarantee
+                7-day satisfaction guarantee · promo applied at checkout
               </p>
             </div>
           </div>

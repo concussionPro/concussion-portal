@@ -27,7 +27,7 @@ const STREAMS: Record<StreamId, {
   ccm: {
     code: 'CCM',
     name: 'Concussion Clinical Mastery',
-    audience: 'For physios & allied health',
+    audience: 'Physiotherapists, osteopaths & chiropractors',
     tagline: 'Assessment, diagnosis & return-to-play',
     cpd: '8 CPD hours online',
     accredBody: 'AHPRA-aligned · OA-endorsed',
@@ -47,7 +47,7 @@ const STREAMS: Record<StreamId, {
   crm: {
     code: 'CRM',
     name: 'Concussion Rehab Mastery',
-    audience: 'For exercise physiologists',
+    audience: 'Exercise physiologists',
     tagline: 'The exercise-rehab pathway',
     cpd: '8 CPD hours online',
     accredBody: CONFIG.FEATURES.ESSA_ACCREDITED ? 'Accredited by ESSA' : 'ESSA endorsement pending',
@@ -102,7 +102,7 @@ export function DualStreamTabs({
   return (
     <section className="mb-10" data-track-section="streams">
       <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent mb-1.5">Your clinic portal · two course streams</p>
-      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">CCM &amp; CRM — one portal, two streams</h3>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">Two streams — one portal</h3>
       <p className="text-[15px] text-muted-foreground mb-6 max-w-2xl leading-relaxed">
         Your team gets both streams under one roof. Pick a stream to see its modules — the clinical tools, admin
         docs and the hands-on day are shared across both.
@@ -133,12 +133,11 @@ export function DualStreamTabs({
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-2.5 py-1 rounded-full border border-border">View</span>
                 )}
               </div>
-              <p className={`text-2xl sm:text-3xl font-bold tracking-tight leading-none ${on ? 'text-white' : 'text-foreground'}`}>{s.code}</p>
+              {/* Profession first — acronym is tertiary (conversion fix 2026-09). */}
+              <p className={`text-lg sm:text-xl font-bold tracking-tight leading-tight ${on ? 'text-white' : 'text-foreground'}`}>{s.audience}</p>
               <p className={`text-sm font-semibold mt-1.5 ${on ? 'text-emerald-50' : 'text-accent'}`}>{s.name}</p>
-              {/* Audience as a prominent headline — who each stream is FOR is the
-                  fastest signal for a prospect scanning the two cards (Zac 2026-07-01). */}
-              <p className={`text-lg sm:text-xl font-bold tracking-tight leading-tight mt-3 ${on ? 'text-white' : 'text-foreground'}`}>{s.audience}</p>
-              <p className={`text-xs mt-1 leading-snug ${on ? 'text-white/80' : 'text-muted-foreground'}`}>{s.tagline}</p>
+              <p className={`text-[11px] font-bold tracking-[0.14em] mt-1 ${on ? 'text-white/60' : 'text-muted-foreground'}`}>{s.code}</p>
+              <p className={`text-xs mt-2 leading-snug ${on ? 'text-white/80' : 'text-muted-foreground'}`}>{s.tagline}</p>
               <span className={`inline-flex items-center mt-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${on ? 'bg-white/15 text-white' : 'bg-accent/10 text-accent'}`}>{id === 'crm' ? crmAccredBody : s.accredBody}</span>
             </button>
           )

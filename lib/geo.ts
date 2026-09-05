@@ -35,3 +35,43 @@ export function isInternational(country: CountryCode | null): boolean {
 export function isHomeCountry(country: CountryCode | null): boolean {
   return country != null && HOME_COUNTRIES.has(country)
 }
+
+/**
+ * Explicit market override cookie (`cea_market`).
+ *
+ * Geo alone is insufficient: an AU/NZ clinician on an overseas VPN (or a
+ * traveller checking pricing from abroad) gets bounced to intl/UK/CATA and
+ * cannot self-recover. Values: `au` | `intl`. Set via `?market=au` /
+ * `?au=1` / `?market=intl` in middleware (cookie wins over cf-ipcountry).
+ * Bots never get a cookie from those params in a way that changes crawlable
+ * surfaces — middleware still skips geo redirects for bot UAs.
+ */
+export const MARKET_COOKIE = 'cea_market'
+export type MarketOverride = 'au' | 'intl'
+
+export function parseMarketCookie(value: string | undefined | null): MarketOverride | null {
+  if (value === 'au' || value === 'intl') return value
+  return null
+}
+
+/** Read the override from a NextRequest-like cookies bag, or null. */
+export function readMarketOverride(
+  cookies: { get: (name: string) => { value: string } | undefined },
+): MarketOverride | null {
+  return parseMarketCookie(cookies.get(MARKET_COOKIE)?.value)
+}
+
+/**
+ * Should this visitor be treated as overseas for homepage/`/pricing` redirects?
+ * Cookie wins: `au` never redirects to intl; `intl` always does (country still
+ * picks /uk vs /cata vs /pricing-international). No cookie → cf-ipcountry.
+ */
+export function shouldTreatAsInternational(
+  market: MarketOverride | null,
+  country: CountryCode | null,
+): boolean {
+  if (market === 'au') return false
+  if (market === 'intl') return true
+  return isInternational(country)
+}
+

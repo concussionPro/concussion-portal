@@ -8,6 +8,7 @@ import { SiteNav } from '@/components/SiteNav'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
 import { trackEvent } from '@/lib/analytics'
+import { InternationalPricingLink } from '@/components/MarketPricingSwitch'
 
 /**
  * Dual-stream courses page. One shared nav, a large stream toggle, and the two
@@ -21,7 +22,7 @@ import { trackEvent } from '@/lib/analytics'
 type Stream = 'ccm' | 'crm'
 
 const STREAMS: Array<{ id: Stream; code: string; name: string; audience: string; icon: typeof GraduationCap; badgeImg: string; badgeAlt: string; badgeClass: string }> = [
-  { id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery', audience: 'All AHPRA & allied health clinicians', icon: GraduationCap, badgeImg: '/osteopathy-australia-endorsed.png', badgeAlt: 'Endorsed by Osteopathy Australia', badgeClass: 'h-12' },
+  { id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery', audience: 'Physiotherapists, osteopaths & chiropractors', icon: GraduationCap, badgeImg: '/osteopathy-australia-endorsed.png', badgeAlt: 'Endorsed by Osteopathy Australia', badgeClass: 'h-12' },
   { id: 'crm', code: 'CRM', name: 'Concussion Rehab Mastery', audience: 'Exercise physiologists', icon: HeartPulse, badgeImg: '/essa-accredited-pd.png', badgeAlt: 'Accredited by ESSA', badgeClass: 'h-9' },
 ]
 
@@ -73,12 +74,12 @@ export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Str
                     <Icon className={`w-7 h-7 ${active ? 'text-white' : 'text-accent'}`} strokeWidth={1.8} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-[11px] font-bold tracking-[0.14em] mb-0.5 ${active ? 'text-white/70' : 'text-accent/70'}`}>
-                      {s.code}
-                    </span>
-                    <span className="block text-lg font-bold leading-tight">{s.name}</span>
+                    <span className="block text-lg font-bold leading-tight">{s.audience}</span>
                     <span className={`block text-sm leading-tight mt-0.5 ${active ? 'text-white/85' : 'text-muted-foreground'}`}>
-                      {s.audience}
+                      {s.name}
+                    </span>
+                    <span className={`block text-[11px] font-bold tracking-[0.14em] mt-1 ${active ? 'text-white/60' : 'text-accent/60'}`}>
+                      {s.code}
                     </span>
                   </span>
                   {/* Accreditation badge — same assets/verbs as the homepage
@@ -99,6 +100,7 @@ export default function CourseStreamsClient({ initial = 'ccm' }: { initial?: Str
               Try Module 1 free →
             </Link>
           </p>
+          <InternationalPricingLink />
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import { isBookOwner } from '@/lib/users'
 import { isDemoEmail } from '@/lib/demo-session'
 import { detectCountry } from '@/lib/geo'
 import { CONFIG } from '@/lib/config'
+import { hubAddonContact } from '@/lib/hub-addon-contact'
 
 // Bundle owner discount applied automatically to course purchases.
 // Single source (CONFIG) — the /pricing cards subtract the SAME number, so the
@@ -60,13 +61,11 @@ export async function POST(request: NextRequest) {
     // Hub Pack add-ons have NO webhook fulfilment yet — nothing bumps the hub's
     // seat cap or registers the workshop attendee on checkout.session.completed,
     // so a charge here would take money and deliver nothing. Schemas stay so the
-    // wiring is visible; refuse the sale until fulfilment exists. (Extra seats
-    // ARE sold correctly as a second line item on the clinic-hub-pack base.)
+    // wiring is visible; return a contact CTA (mailto + Cal) until fulfilment
+    // exists. (Extra seats ARE sold correctly as a second line item on the
+    // clinic-hub-pack base purchase.)
     if (courseType === 'clinic-hub-extra-seat' || courseType === 'clinic-workshop-upgrade') {
-      return NextResponse.json(
-        { error: 'This add-on is not yet available. Contact zac@concussion-education-australia.com to add seats or workshop places to your Hub Pack.' },
-        { status: 400 }
-      )
+      return NextResponse.json(hubAddonContact(courseType), { status: 409 })
     }
 
     // Workshop upgrade: requires authenticated online-only user + valid location

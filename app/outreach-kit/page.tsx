@@ -39,10 +39,10 @@ export default async function OutreachKitPage() {
                   Outreach Kit
                 </h1>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-lg mx-auto">
-                  Six referral-building outreach templates — schools, sports clubs, GP practices, surf life saving, endurance sport, plus a capability one-pager. Each with a follow-up schedule and AHPRA advertising compliance notes.
+                  Six referral-building outreach templates — School, Sports Club Coach, GP, AFL/Rugby/Football, Netball/Basketball/Cricket, plus a capability one-pager. Each with a follow-up schedule and AHPRA advertising compliance notes.
                 </p>
                 <div className="mx-auto mb-5 grid max-w-md grid-cols-2 gap-2 text-left">
-                  {['Schools & sport programs', 'Sports clubs', 'GP practices', 'Surf life saving', 'Endurance events', 'Capability one-pager'].map((t) => (
+                  {['School', 'Sports Club Coach', 'GP', 'AFL / Rugby / Football', 'Netball / Basketball / Cricket', 'Capability one-pager'].map((t) => (
                     <div key={t} className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-[11.5px] font-semibold text-slate-400">
                       {t}
                       <span className="mt-0.5 block text-[9px] font-normal">letter + follow-up schedule · AHPRA notes</span>

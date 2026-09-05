@@ -13,6 +13,7 @@ import EpLeadCapture from '@/components/crm/EpLeadCapture'
 import { SstWatchVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { CONFIG } from '@/lib/config'
 import { buildIntlFaqs, PLATFORM_MONTHLY_AUD } from '@/components/crm/intl-faqs'
+import { AustraliaPricingLink } from '@/components/MarketPricingSwitch'
 import { CRM_REFERENCE_COUNT } from '@/data/reference-count'
 import CourseShowcase from '@/components/ccm/CourseShowcase'
 
@@ -246,7 +247,7 @@ export default function CrmInternationalContent({
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
                   <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
                   The clinical platform (the SST Trainer) is <strong>included free for your
-                  first year</strong>, then <strong>A${PLATFORM_MONTHLY_AUD}/month</strong> to keep it — starts
+                  first year</strong>, then <strong>about A${PLATFORM_MONTHLY_AUD}/mo (AUD)</strong> to keep it — starts
                   automatically at 12 months, cancel anytime.
                 </p>
               </div>
@@ -430,6 +431,7 @@ export default function CrmInternationalContent({
             <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice with payment · certificate on completion.</p>
           </div>
         </div>
+        <AustraliaPricingLink className="max-w-3xl mx-auto mb-6 text-center text-xs text-muted-foreground" />
 
         {/* Value intro — same as AU */}
         <div className="text-center max-w-2xl mx-auto mb-2">
@@ -647,36 +649,53 @@ export default function CrmInternationalContent({
           </div>
         </div>
 
-        {/* Bottom enrol block. The `#founding` id is a legacy anchor target kept
-            so existing links still land here — the founding-cohort MODEL is
-            retired and must not come back (see lib/config.ts). */}
+        {/* Exit-point offer restatement (leak board exit-/pricing-international).
+            Dominant Enrol restatement at the last scroll position — mirrors CCM
+            #enrol-now. `#founding` kept as legacy anchor; founding-cohort MODEL
+            is retired (see lib/config.ts). */}
         <div id="founding" className="max-w-2xl mx-auto mt-16 scroll-mt-24">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
-              Enrol in Concussion Rehab Mastery
-            </h2>
-            <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
-              {audience.enrolBlurb ?? 'The EP-scoped course + the working clinical platform, delivered wholly online.'}
-              {' '}Your first year on the platform is included; secure checkout in your region&rsquo;s
-              currency, 7-day money-back guarantee.
-            </p>
-          </div>
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={handleEnrol}
-              disabled={enrolling}
-              className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
-              {!enrolling && <ArrowRight className="w-5 h-5" />}
-            </button>
-            {enrolError && (
-              <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>
-            )}
-            <p className="text-[11px] text-muted-foreground mt-3">
-              {price.display} {price.code} one-time · lifetime course + first year of the platform free · then A${PLATFORM_MONTHLY_AUD}/mo to keep the platform
-            </p>
+          <div className="rounded-2xl border-2 border-teal-600/30 bg-white p-6 md:p-8 shadow-sm">
+            <div className="text-center mb-5">
+              <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-accent mb-2">Ready when you are</p>
+              <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
+                Enrol in Concussion Rehab Mastery
+              </h2>
+              <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
+                {price.display} {price.code} one-time — {audience.enrolBlurb ?? 'the EP-scoped course + the working clinical platform, delivered wholly online.'}
+                {' '}First year of the platform included · 7-day money-back · lifetime course access.
+              </p>
+            </div>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 mb-5 max-w-lg mx-auto">
+              {[
+                audience.moduleBullet ?? '8 EP-scoped modules · 8 CPD hours',
+                'SST Trainer included year one',
+                'Certificate on 75% pass',
+                '7-day money-back guarantee',
+              ].map((feature) => (
+                <li key={feature} className="flex items-start gap-1.5 text-[12.5px]">
+                  <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[var(--muted-foreground)]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleEnrol}
+                disabled={enrolling}
+                className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+                {!enrolling && <ArrowRight className="w-5 h-5" />}
+              </button>
+              {enrolError && (
+                <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>
+              )}
+              <p className="text-[11px] text-muted-foreground mt-3">
+                {price.display} {price.code} one-time · lifetime course + first year of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD) to keep the platform
+              </p>
+              <AustraliaPricingLink className="mt-3 text-center text-xs text-muted-foreground" />
+            </div>
           </div>
         </div>
 

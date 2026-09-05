@@ -173,7 +173,10 @@ export function CourseStreams() {
                 {s.tabLabel}
               </p>
               <p className={`text-xs sm:text-sm font-semibold mt-1 ${on ? 'text-emerald-50' : 'text-accent'}`}>
-                {s.code} · {s.courseName}
+                {s.courseName}
+              </p>
+              <p className={`text-[10px] font-bold tracking-[0.14em] mt-1 ${on ? 'text-white/60' : 'text-muted-foreground'}`}>
+                {s.code}
               </p>
             </button>
           )
@@ -192,11 +195,12 @@ export function CourseStreams() {
           </div>
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] font-bold text-accent mb-1">
-              {active.code}
+              {active.tabLabel}
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
               {active.courseName}
             </h2>
+            <p className="text-[11px] font-bold tracking-[0.14em] text-muted-foreground mt-1">{active.code}</p>
           </div>
         </div>
 

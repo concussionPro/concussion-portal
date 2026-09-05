@@ -32,7 +32,7 @@ const HOME_STREAMS: Array<{
 }> = [
   {
     id: 'ccm', code: 'CCM', name: 'Concussion Clinical Mastery',
-    audience: 'All AHPRA & allied health clinicians', icon: GraduationCap, href: '/pricing',
+    audience: 'Physiotherapists, osteopaths & chiropractors', icon: GraduationCap, href: '/pricing',
     endorseImg: '/osteopathy-australia-endorsed.png',
     endorseOrg: 'Osteopathy Australia',
     endorseHref: 'https://osteopathy.org.au/Web/Web/cpd/endorsed-courses.aspx?hkey=3c85c306-c65a-4a5d-90f1-782a78dedd86',
@@ -151,9 +151,9 @@ export default function HomeClient() {
                         <Icon className="w-6 h-6 text-[var(--accent)]" strokeWidth={1.8} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[10px] font-bold tracking-[0.14em] text-[var(--accent)]">{s.code}</span>
-                        <span className="block text-[16px] font-bold leading-tight">{s.name}</span>
-                        <span className="block text-[12.5px] leading-tight mt-0.5 text-[var(--muted-foreground)]">{s.audience}</span>
+                        <span className="block text-[16px] font-bold leading-tight">{s.audience}</span>
+                        <span className="block text-[12.5px] leading-tight mt-0.5 text-[var(--muted-foreground)]">{s.name}</span>
+                        <span className="block text-[10px] font-bold tracking-[0.14em] text-[var(--accent)] mt-1">{s.code}</span>
                       </span>
                       <ArrowRight className="w-4 h-4 flex-none text-[var(--accent)]" />
                     </Link>

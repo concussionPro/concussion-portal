@@ -467,8 +467,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </span>
             </div>
 
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">CCM Online</h3>
-            <p className="text-[10px] text-slate-500 mb-3">{crm ? 'Online component of Concussion Rehab Mastery — no workshop' : 'Online component of Concussion Clinical Mastery — no workshop'}</p>
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Online</h3>
+            <p className="text-[10px] text-slate-500 mb-3">{crm ? 'Concussion Rehab Mastery — online, no workshop' : 'Concussion Clinical Mastery — online, no workshop'}</p>
 
             <div className="mb-3">
               {bookOwner && (
@@ -530,8 +530,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               </span>
             </div>
 
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">CCM Complete</h3>
-            <p className="text-[10px] text-slate-500 mb-3">Full Concussion Clinical Mastery — online modules + hands-on workshop</p>
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">Online + workshop</h3>
+            <p className="text-[10px] text-slate-500 mb-3">{crm ? 'Concussion Rehab Mastery — online modules + practical day' : 'Concussion Clinical Mastery — online modules + hands-on workshop'}</p>
 
             <div className="mb-4">
               {(earlyBird || bookOwner) && (
@@ -804,8 +804,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{crm ? 'CRM Online' : 'CCM Online'}</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Online component of Concussion Rehab Mastery — no workshop' : 'Online component of Concussion Clinical Mastery — no workshop'}</p>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Online</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Concussion Rehab Mastery — online, no workshop' : 'Concussion Clinical Mastery — online, no workshop'}</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
             {crm
               ? <>The EP-scoped course with the working clinical tools, at your own pace. Your payment counts toward the Complete course — upgrade for ${upgradePriceFor()} any time.</>
@@ -939,8 +939,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">{crm ? 'CRM Complete' : 'CCM Complete'}</h3>
-          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Full Concussion Rehab Mastery — online modules + the practical skills training' : 'Full Concussion Clinical Mastery — online modules + hands-on workshop'}</p>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">Online + workshop</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">{crm ? 'Concussion Rehab Mastery — online modules + the practical skills training' : 'Concussion Clinical Mastery — online modules + hands-on workshop'}</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
             {crm
               ? 'Everything in CRM Online, plus the same full-day practical every clinician attends — one multidisciplinary room. Graded exertion testing and prescription hands-on, assessment observed for depth.'

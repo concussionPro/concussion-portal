@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { resolveModuleForAccess, PREVIEW_SECTION_COUNT, isScatModuleId } from '../lib/module-access'
+import { resolveModuleForAccess, resolveFlagshipCallerAccessLevel, PREVIEW_SECTION_COUNT, isScatModuleId } from '../lib/module-access'
+import { DEMO_KEY, CLINIC_DEMO_KEY } from '../lib/demo-key'
 
 /**
  * MODULE ACCESS GATING.
@@ -166,5 +167,71 @@ describe('per-module trial pages carry no extra content', () => {
         expect(m!.previewSections.length).toBe(id === 1 ? MODULE_1_PREVIEW_COUNT : 1)
       }
     }
+  })
+})
+
+
+describe('resolveFlagshipCallerAccessLevel — demo vs clinic vs anonymous', () => {
+  // Same file as the content resolver — same regression surface for the
+  // cookie → AccessLevel mapping used by /modules/[id] and /api/modules/[id].
+  it('DEMO_KEY alone is full-course (reviewer /demo/essa)', () => {
+    expect(
+      resolveFlagshipCallerAccessLevel({
+        demoKeyCookie: DEMO_KEY,
+        nodeEnv: 'production',
+      }),
+    ).toBe('full-course')
+  })
+
+  it('clinic_demo alone stays preview — never opens paid CCM', () => {
+    expect(
+      resolveFlagshipCallerAccessLevel({
+        clinicDemoCookie: CLINIC_DEMO_KEY,
+        nodeEnv: 'production',
+      }),
+    ).toBe('preview')
+  })
+
+  it('DEMO_KEY wins over clinic_demo when both cookies are present', () => {
+    expect(
+      resolveFlagshipCallerAccessLevel({
+        demoKeyCookie: DEMO_KEY,
+        clinicDemoCookie: CLINIC_DEMO_KEY,
+        nodeEnv: 'production',
+      }),
+    ).toBe('full-course')
+  })
+
+  it('anonymous production callers get null (401 Authentication required)', () => {
+    expect(
+      resolveFlagshipCallerAccessLevel({
+        nodeEnv: 'production',
+      }),
+    ).toBeNull()
+  })
+
+  it('a wrong demo_key value never grants full-course', () => {
+    expect(
+      resolveFlagshipCallerAccessLevel({
+        demoKeyCookie: 'guessed-key',
+        nodeEnv: 'production',
+      }),
+    ).toBeNull()
+  })
+
+  it('a real session claim still applies when there is no demo_key', () => {
+    expect(
+      resolveFlagshipCallerAccessLevel({
+        sessionAccessLevel: 'online-only',
+        nodeEnv: 'production',
+      }),
+    ).toBe('online-only')
+    expect(
+      resolveFlagshipCallerAccessLevel({
+        sessionAccessLevel: 'preview',
+        clinicDemoCookie: CLINIC_DEMO_KEY,
+        nodeEnv: 'production',
+      }),
+    ).toBe('preview')
   })
 })

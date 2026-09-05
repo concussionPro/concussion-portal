@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Users, Copy, Check, Mail } from 'lucide-react'
 import { useSession } from '@/contexts/SessionContext'
 import { CONFIG } from '@/lib/config'
+import { HUB_ADDON_CAL_URL } from '@/lib/hub-addon-contact'
 
 /**
  * Hub Pack owner seat card — "{claimed} of {cap} seats redeemed", the
@@ -148,14 +149,24 @@ export function HubSeatsCard() {
         </div>
       )}
 
-      {/* Add-seats path */}
-      <a
-        href={addSeatsMailto}
-        className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold text-accent hover:underline"
-      >
-        <Mail className="w-3 h-3" />
-        Need more seats? Email me — A${CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT} per extra clinician seat
-      </a>
+      {/* Add-seats path — self-serve checkout not live; mailto + Cal today */}
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <a
+          href={addSeatsMailto}
+          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-accent hover:underline"
+        >
+          <Mail className="w-3 h-3" />
+          Need more seats? Email me — A${CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT} per extra clinician seat
+        </a>
+        <a
+          href={HUB_ADDON_CAL_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground hover:text-accent hover:underline"
+        >
+          or book a 30-min call →
+        </a>
+      </div>
     </motion.div>
   )
 }

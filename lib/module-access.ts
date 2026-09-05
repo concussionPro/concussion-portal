@@ -16,6 +16,7 @@
  */
 import { getModuleById, type Module, type QuizQuestion } from '@/data/modules'
 import { getSCATModuleById } from '@/data/scat-modules'
+import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 export type AccessLevel = 'preview' | 'online-only' | 'full-course'
 
@@ -99,4 +100,37 @@ export function resolveModuleForAccess(
   }
 
   return { ok: true, module: resolved, accessLevel }
+}
+
+
+/**
+ * Resolve the caller's AccessLevel for flagship CCM modules from cookies +
+ * session claim. Mirrors toolkit-access and /api/auth/session synthesis:
+ *  - valid demo_key (ESSA/partner reviewer) → full-course
+ *  - session JWT claim → that level
+ *  - clinic_demo (prospect tour) → preview only — NEVER paid modules
+ *  - localhost DEV → full-course (review without login)
+ *  - else null → 401 Authentication required
+ *
+ * demo_key wins over a lingering clinic_demo / preview session so reviewers
+ * who also toured /demo/clinic still get the paid CCM copy. Anonymous users
+ * and clinic_demo alone stay gated.
+ */
+export function resolveFlagshipCallerAccessLevel(input: {
+  sessionAccessLevel?: AccessLevel | null
+  demoKeyCookie?: string | null
+  clinicDemoCookie?: string | null
+  nodeEnv?: string | null
+}): AccessLevel | null {
+  if (input.demoKeyCookie === DEMO_KEY) return 'full-course'
+  if (
+    input.sessionAccessLevel === 'preview' ||
+    input.sessionAccessLevel === 'online-only' ||
+    input.sessionAccessLevel === 'full-course'
+  ) {
+    return input.sessionAccessLevel
+  }
+  if (input.clinicDemoCookie === CLINIC_DEMO_KEY) return 'preview'
+  if ((input.nodeEnv ?? process.env.NODE_ENV) !== 'production') return 'full-course'
+  return null
 }

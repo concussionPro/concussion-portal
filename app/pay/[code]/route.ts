@@ -9,6 +9,7 @@ import {
   type CourseType,
 } from '@/lib/stripe'
 import { findUserByEmail } from '@/lib/users'
+import { hubAddonContact, HUB_ADDON_CAL_URL, HUB_ADDON_EMAIL } from '@/lib/hub-addon-contact'
 
 /**
  * GET /pay/[code]
@@ -27,8 +28,47 @@ import { findUserByEmail } from '@/lib/users'
 // than a metadata export.
 const NOINDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
 
+function isBrowserNavigation(request: NextRequest): boolean {
+  const mode = request.headers.get('sec-fetch-mode')
+  if (mode) return mode === 'navigate'
+  return (request.headers.get('accept') || '').includes('text/html')
+}
+
+function hubAddonHtml(courseType: 'clinic-hub-extra-seat' | 'clinic-workshop-upgrade'): string {
+  const c = hubAddonContact(courseType)
+  const title = courseType === 'clinic-hub-extra-seat' ? 'Add Hub Pack seats' : 'Add workshop places'
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>${esc(title)} | Concussion Education Australia</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px}
+  .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.08);padding:40px 32px;max-width:440px;width:100%;text-align:center}
+  h1{font-size:22px;margin:0 0 8px}
+  p{font-size:15px;color:#475569;line-height:1.6;margin:0 0 20px}
+  .actions{display:flex;flex-direction:column;gap:10px}
+  a{display:inline-block;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none}
+  a.primary{background:#5b9aa6;color:#fff}
+  a.secondary{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+</style>
+</head><body>
+<div class="card">
+  <h1>${esc(title)}</h1>
+  <p>${esc(c.message)}</p>
+  <div class="actions">
+    <a class="primary" href="${esc(c.mailto)}">Email ${esc(HUB_ADDON_EMAIL)}</a>
+    <a class="secondary" href="${esc(HUB_ADDON_CAL_URL)}" target="_blank" rel="noopener">Book a 30-min call</a>
+  </div>
+</div>
+</body></html>`
+}
+
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
@@ -58,10 +98,15 @@ export async function GET(
       )
     }
     if (courseType === 'clinic-hub-extra-seat' || courseType === 'clinic-workshop-upgrade') {
-      return NextResponse.json(
-        { error: 'This add-on is not yet available. Contact zac@concussion-education-australia.com to add seats or workshop places to your Hub Pack.' },
-        { status: 409, headers: NOINDEX_HEADERS },
-      )
+      // Browser navigations (admin-emailed /pay links) get a readable page with
+      // mailto + Cal; programmatic callers keep the structured JSON.
+      if (isBrowserNavigation(request)) {
+        return new NextResponse(hubAddonHtml(courseType), {
+          status: 200,
+          headers: { ...NOINDEX_HEADERS, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+        })
+      }
+      return NextResponse.json(hubAddonContact(courseType), { status: 409, headers: NOINDEX_HEADERS })
     }
     // A city that isn't a real workshop location silently becomes a nomination
     // for a place that has no Ready-to-Train pipeline — the buyer pays and

@@ -26,6 +26,7 @@ import { isOwnerEmail } from '@/lib/owner'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { useCourseTier } from './useCourseTier'
 import Link from 'next/link'
+import { hubAddonContact } from '@/lib/hub-addon-contact'
 import { CONFIG, upgradePriceFor, SST_TIER_FROM_AUD } from '@/lib/config'
 import { holdsPracticalDaySeat, holdsOnlineWithoutPracticalDay } from '@/lib/practical-day-seat'
 import { COURSES, getEffectiveStatus, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
@@ -773,19 +774,24 @@ function WorkshopCard({
             {feedback.message}
           </p>
         )}
-        <Link
-          href={isHubPackSeat ? '/in-person' : '/upgrade'}
-          className="mt-2.5 flex items-center justify-center gap-1 text-[11px] font-semibold text-accent hover:underline"
-        >
-          {isHubPackSeat
-            // Clinic add-on price, not the solo upgrade — and there is no
-            // self-serve checkout for it (lib/schemas.ts marks
-            // 'clinic-workshop-upgrade' unfulfilled), so this informs rather
-            // than pretending to sell.
-            ? `Add the practical day — A$${CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE}/clinician`
-            : `Ready now? Add the workshop — $${upgradePriceFor(selectedCity || null)} early-bird`}
-          <ArrowUpRight className="w-3 h-3" />
-        </Link>
+        {isHubPackSeat ? (
+          // No self-serve fulfilment yet — mailto / Cal unblock today.
+          <a
+            href={hubAddonContact('clinic-workshop-upgrade').mailto}
+            className="mt-2.5 flex items-center justify-center gap-1 text-[11px] font-semibold text-accent hover:underline"
+          >
+            {`Add the practical day — A$${CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE}/clinician (email to arrange)`}
+            <ArrowUpRight className="w-3 h-3" />
+          </a>
+        ) : (
+          <Link
+            href="/upgrade"
+            className="mt-2.5 flex items-center justify-center gap-1 text-[11px] font-semibold text-accent hover:underline"
+          >
+            {`Ready now? Add the workshop — $${upgradePriceFor(selectedCity || null)} early-bird`}
+            <ArrowUpRight className="w-3 h-3" />
+          </Link>
+        )}
       </Card>
     )
   }

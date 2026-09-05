@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const filePath = path.join(process.cwd(), 'public', 'docs', BOOK_CONFIG.filename)
+    // Paid reference PDF was moved out of public/ (CDN) into private-docs/.
+    const filePath = path.join(process.cwd(), 'private-docs', BOOK_CONFIG.filename)
     const buffer = await fs.readFile(filePath)
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,

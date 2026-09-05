@@ -157,8 +157,9 @@ describe('paid documents are not served by the CDN at all', () => {
   // Twice in one day a copy of the paid toolkit sat in public/ and served 200.
   //
   // The paid files now live in private-docs/, which the CDN cannot reach. The
-  // ONLY route to those bytes is app/docs/[...slug]/route.ts, and that handler
-  // only runs for requests middleware has already admitted.
+  // primary route is app/docs/[...slug]/route.ts (middleware-gated); the
+  // legacy /api/download and /api/reference/download handlers also resolve
+  // private-docs with their own entitlement checks.
   const PRIVATE = join(ROOT, 'private-docs')
 
   it('every PAID_DOC exists in private-docs and NOT in public', () => {

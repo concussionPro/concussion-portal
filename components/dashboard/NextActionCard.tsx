@@ -349,13 +349,19 @@ export function NextActionCard() {
               </div>
 
               {isPreview && (
-                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
-                  <p className="text-sm text-purple-800 font-medium mb-2">Ready to master VOMS, BESS testing &amp; return-to-play protocols? Earn up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD hours with the full course.</p>
+                <div className="mt-4 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-center">
+                  <p className="text-sm text-emerald-900 font-bold mb-1">
+                    You&apos;ve earned A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off CCM
+                  </p>
+                  <p className="text-xs text-emerald-800 mb-3">
+                    Code <span className="font-semibold">{CONFIG.COURSE.PROMO_CODE}</span> — unlock VOMS, BESS, return-to-play protocols and the clinical tools.
+                  </p>
                   <button
-                    onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_card', from: 'preview' }); router.push('/pricing') }}
-                    className="text-sm text-purple-600 hover:text-purple-800 font-semibold"
+                    onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_card', from: 'preview', promo: CONFIG.COURSE.PROMO_CODE }); router.push(`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`) }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors"
                   >
-                    View Full Course &rarr;
+                    Claim A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off — see CCM pricing
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
@@ -420,10 +426,10 @@ export function NextActionCard() {
                 </button>
                 {isPreview ? (
                   <button
-                    onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_primary', from: 'preview' }); router.push('/pricing') }}
+                    onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_primary', from: 'preview', promo: CONFIG.COURSE.PROMO_CODE }); router.push(`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`) }}
                     className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all flex items-center gap-2"
                   >
-                    Unlock all {CONFIG.COURSE.TOTAL_MODULES} modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hrs (up to {CONFIG.COURSE.TOTAL_CPD_POINTS} with the workshop)
+                    Claim A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off CCM · code {CONFIG.COURSE.PROMO_CODE}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : accessLevel !== 'online-only' ? (

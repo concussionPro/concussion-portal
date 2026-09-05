@@ -199,7 +199,7 @@ function Shell() {
           </h1>
           <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
             {subtitle}Plans are priced on active caseload (patients with a session in the last 30
-            days) — every plan includes unlimited clinicians, each with their own login. Your
+            days) — every plan includes unlimited clinicians on one clinic code. Your
             existing patients keep working either way.
           </p>
 

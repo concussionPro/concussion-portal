@@ -16,6 +16,7 @@ import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/com
 import { REFERENCE_COUNT } from '@/data/reference-count'
 import { SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 import { CCM_INTL_FAQS } from '@/components/ccm/ccm-intl-faqs'
+import { AustraliaPricingLink } from '@/components/MarketPricingSwitch'
 import CourseShowcase from '@/components/ccm/CourseShowcase'
 
 /** The bundled platform's year-2 rate = the tier a course enrolment INCLUDES,
@@ -325,7 +326,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
                   <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
                   The clinical platform (SST Trainer + baseline testing) is <strong>included free for your
-                  first year</strong>, then <strong>A${PLATFORM_MONTHLY_AUD}/month</strong> to keep it — starts automatically
+                  first year</strong>, then <strong>about A${PLATFORM_MONTHLY_AUD}/mo (AUD)</strong> to keep it — starts automatically
                   at 12 months, cancel anytime.
                 </p>
               </div>
@@ -577,10 +578,13 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
         <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
           <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Most practitioners pay £0 out of pocket</p>
+            <p className="text-sm font-semibold text-foreground">
+              Most practitioners pay {price.code === 'GBP' ? '£0' : price.code === 'USD' ? 'US$0' : price.code === 'AUD' ? 'A$0' : 'nothing'} out of pocket
+            </p>
             <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice with payment · certificate on completion.</p>
           </div>
         </div>
+        <AustraliaPricingLink className="max-w-3xl mx-auto mb-6 text-center text-xs text-muted-foreground" />
 
         <SyllabusCapture uk={uk} price={price} />
 
@@ -735,6 +739,53 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               {!enrolling && <ArrowRight className="w-5 h-5" />}
             </button>
             <p className="text-xs text-muted-foreground mt-4">{audience.certFooterLine ?? 'Endorsed by Osteopathy Australia · 8 CPD hours · lifetime access'}</p>
+          </div>
+        </div>
+
+        {/* Exit-point offer restatement (leak board exit-/pricing-international:
+            142 sessions → 2 intents → 0 purchases). Price + what's included +
+            primary Enrol at the last scroll position — mirrors CRM #founding. */}
+        <div id="enrol-now" className="max-w-2xl mx-auto mt-16 scroll-mt-24">
+          <div className="rounded-2xl border-2 border-teal-600/30 bg-white p-6 md:p-8 shadow-sm">
+            <div className="text-center mb-5">
+              <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-accent mb-2">Ready when you are</p>
+              <h2 className="text-2xl font-extrabold tracking-tight mb-2 text-foreground">
+                Enrol in Concussion Clinical Mastery
+              </h2>
+              <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
+                {price.display} {price.code} one-time — 8 clinical modules, SCAT6 baseline &amp; SST Trainer
+                included free for year one, certificate on 75% pass, lifetime course access.
+              </p>
+            </div>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 mb-5 max-w-lg mx-auto">
+              {[
+                audience.moduleBullet ?? '8 clinical modules · 8 CPD hours',
+                'SCAT6 baseline & serial testing',
+                'SST Trainer + Clinical Toolkit',
+                'Certificate · 7-day money-back',
+              ].map((feature) => (
+                <li key={feature} className="flex items-start gap-1.5 text-[12.5px]">
+                  <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[var(--muted-foreground)]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleEnrol}
+                disabled={enrolling}
+                className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
+                {!enrolling && <ArrowRight className="w-5 h-5" />}
+              </button>
+              {enrolError && <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>}
+              <p className="text-[11px] text-muted-foreground mt-3">
+                Prices shown in your region&rsquo;s currency · secure checkout · first year of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD)
+              </p>
+              <AustraliaPricingLink className="mt-3 text-center text-xs text-muted-foreground" />
+            </div>
           </div>
         </div>
 

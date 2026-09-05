@@ -84,8 +84,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Try multiple possible file paths
+    // Paid Word/ZIP/reference assets live in private-docs/ (CDN-inaccessible);
+    // free/auth clinical PDFs remain under public/docs. Prefer private-docs so
+    // entitled buyers of moved assets do not 404 after the 2026-08 relocation.
     const possiblePaths = [
+      join(process.cwd(), 'private-docs', fileName),
       join(process.cwd(), 'public', 'docs', fileName),
       join(process.cwd(), 'docs', fileName),
       join(process.cwd(), '..', 'docs', fileName),

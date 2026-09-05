@@ -25,6 +25,8 @@ export const CONFIG = {
     // Derived below (see 'SELF-DERIVED CLAIM STRINGS'), not a literal — an
     // object literal cannot reference its own fields while it is being built.
     CPD_BADGE_TEXT: '',
+    // ONE-TIME CPD course purchase (online modules / complete workshop path).
+    // Not the clinical platform — SST_TIERS monthlyAud below is the subscription.
     PRICE_ONLINE: 497,
     // PRICING MODEL (owner decision 2026-07-02):
     // PRICE_REGULAR ($1,400) is the sticker/standard price. It is only ever
@@ -645,8 +647,10 @@ export function defaultNominationCity(): string | null {
 export const SST_TRIAL_PATIENT_CAP = 3
 
 /**
- * SST tiers — metered on NEW PATIENTS STARTED PER CALENDAR MONTH, never seats.
- * Clinicians are unlimited on every tier.
+ * SST tiers — clinical platform subscription ONLY (monthly Aud). Distinct from
+ * COURSE one-time CPD prices above (PRICE_ONLINE ~497, Complete ~1190/1400).
+ * Metered on NEW PATIENTS STARTED PER CALENDAR MONTH, never seats.
+ * Clinicians are unlimited on every tier (shared clinic code + viewKey — not per-clinician logins).
  *
  * RESTRUCTURED 2026-08-08 (owner). Two changes from the 2026-08-07 four-tier
  * caseload model, both load-bearing:

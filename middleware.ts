@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { sql } from '@vercel/postgres'
-import { detectCountry, isInternational, isHomeCountry } from '@/lib/geo'
+import {
+  detectCountry,
+  isHomeCountry,
+  MARKET_COOKIE,
+  readMarketOverride,
+  shouldTreatAsInternational,
+  type MarketOverride,
+} from '@/lib/geo'
 import { DEMO_KEY, CLINIC_DEMO_KEY } from '@/lib/demo-key'
 
 // Edge-compatible constant-time string comparison
@@ -310,6 +317,39 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ─── Explicit market override (?market=au|intl / ?au=1) ───────────────────
+  // Cookie `cea_market` wins over cf-ipcountry so AU travellers / VPN users can
+  // lock AUD pricing, and intl visitors can opt into USD/GBP surfaces. Strip the
+  // param and 302 so the URL stays clean for sharing.
+  {
+    const sp = request.nextUrl.searchParams
+    const raw = (sp.get('market') || '').toLowerCase()
+    const auFlag = sp.get('au')
+    let market: MarketOverride | null = null
+    if (raw === 'au' || auFlag === '1' || auFlag === 'true') market = 'au'
+    else if (raw === 'intl') market = 'intl'
+    if (market) {
+      const dest = request.nextUrl.clone()
+      dest.searchParams.delete('market')
+      dest.searchParams.delete('au')
+      if (market === 'au') {
+        dest.pathname = '/pricing'
+      } else {
+        // Keep country-specific surfaces if the visitor already landed on one.
+        const p = request.nextUrl.pathname
+        dest.pathname = p === '/uk' || p === '/cata' ? p : '/pricing-international'
+      }
+      const res = NextResponse.redirect(dest, 302)
+      res.cookies.set(MARKET_COOKIE, market, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      })
+      return res
+    }
+  }
+
   // ─── /international — explicit geo-router entry (restored 2026-07-20) ──────
   // This path 404'd (never a route); overseas visitors and ad links pointing at
   // it dead-ended. It's now a smart router: AU/NZ → the normal AUD pricing page,
@@ -318,10 +358,13 @@ export async function middleware(request: NextRequest) {
   // so the intl page is the crawlable canonical.
   if (pathname === '/international') {
     const country = detectCountry(request.headers)
+    const market = readMarketOverride(request.cookies)
     const dest = request.nextUrl.clone()
-    // AU/NZ → normal AUD pricing; everyone else INCLUDING unknown geo →
-    // international (the /international URL is explicit overseas intent).
-    dest.pathname = isHomeCountry(country) ? '/pricing' : '/pricing-international'
+    // Cookie wins; otherwise AU/NZ → AUD pricing, everyone else (incl. unknown
+    // geo) → international — /international is explicit overseas intent.
+    if (market === 'au') dest.pathname = '/pricing'
+    else if (market === 'intl') dest.pathname = '/pricing-international'
+    else dest.pathname = isHomeCountry(country) ? '/pricing' : '/pricing-international'
     return NextResponse.redirect(dest, 302)
   }
 
@@ -334,9 +377,12 @@ export async function middleware(request: NextRequest) {
   // the /uk model), other known-intl gets /pricing-international.
   if (pathname === '/') {
     const country = detectCountry(request.headers)
+    const market = readMarketOverride(request.cookies)
     const ua = request.headers.get('user-agent') || ''
     const hasSession = !!request.cookies.get('session')?.value
-    if (!hasSession && !BOT_UA_PATTERN.test(ua) && isInternational(country)) {
+    // Cookie wins over cf-ipcountry: cea_market=au keeps the AU homepage;
+    // cea_market=intl uses the existing overseas routing.
+    if (!hasSession && !BOT_UA_PATTERN.test(ua) && shouldTreatAsInternational(market, country)) {
       const intlUrl = request.nextUrl.clone()
       intlUrl.pathname =
         country === 'GB' ? '/uk' : country === 'CA' ? '/cata' : '/pricing-international'
@@ -348,15 +394,19 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/pricing') {
     // Country from the shared detector (cf-ipcountry first — Cloudflare proxies
     // to Vercel, so Vercel's own geo sees CF's edge IP, not the visitor).
+    // Cookie `cea_market` wins: au → stay on AUD /pricing; intl → overseas route.
     const country = detectCountry(request.headers)
+    const market = readMarketOverride(request.cookies)
     const ua = request.headers.get('user-agent') || ''
     // Don't redirect bots (preserve SEO for /pricing). Only redirect a KNOWN
-    // overseas country — unknown geo stays on /pricing (AU default) so a missing
-    // cf-ipcountry header never traps AU buyers on USD pricing.
-    if (!BOT_UA_PATTERN.test(ua) && isInternational(country)) {
+    // overseas country (or an explicit intl cookie) — unknown geo stays on
+    // /pricing (AU default) so a missing cf-ipcountry header never traps AU
+    // buyers on USD pricing.
+    if (!BOT_UA_PATTERN.test(ua) && shouldTreatAsInternational(market, country)) {
       const intlUrl = request.nextUrl.clone()
       // Country-specific audience pages take precedence over the generic
       // international pricing page (same model as the homepage redirect above).
+      // Preserve non-market query (e.g. ?stream=crm) when bouncing overseas.
       intlUrl.pathname = country === 'CA' ? '/cata' : '/pricing-international'
       return NextResponse.redirect(intlUrl, 302)
     }
@@ -571,6 +621,10 @@ export const config = {
   matcher: [
     '/',
     '/pricing',
+    '/pricing-international',
+    '/uk',
+    '/cata',
+    '/courses',
     '/international',
     // Whole DIRECTORY, no extension suffix: a matcher keyed on `.pdf`/`.zip`
     // did not match a percent-encoded dot, so middleware never ran and the

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { TrackedOutbound } from '@/components/TrackedOutbound'
 import { SstLivePanel } from '@/components/sst-trainer/SstLivePanel'
 import { PmsFileButton } from '@/components/clinical/PmsFileButton'
 import { SstTrajectory, type TrajectoryPoint } from '@/components/sst-trainer/SstTrajectory'
@@ -1635,14 +1636,14 @@ export default function ClinicalHubPage() {
                   with you, or start the free 3-patient trial yourself.
                 </p>
                 <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2.5">
-                  <a
+                  <TrackedOutbound
                     href="https://cal.com/zac-lewis-so8zjs/30min"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    event="cal_click"
+                    source="demo-hub-sample-report"
                     className="inline-flex items-center rounded-full bg-[var(--accent)] text-white text-xs font-bold px-5 py-2.5 hover:opacity-90 transition-opacity"
                   >
-                    Book a walkthrough
-                  </a>
+                    Book 20 minutes
+                  </TrackedOutbound>
                   <a
                     href="/clinical-suite/start?src=hub-demo"
                     className="inline-flex items-center rounded-full border border-[var(--accent)]/40 text-[var(--accent)] text-xs font-bold px-5 py-2.5 hover:bg-[var(--accent)]/[0.06] transition-colors"

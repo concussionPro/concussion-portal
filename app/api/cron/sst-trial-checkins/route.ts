@@ -67,7 +67,7 @@ function capEmail(c: ClinicRow): { subject: string; text: string } {
 
 You've got ${c.patients} patients running through SST at ${c.clinic_name} — keen to hear how the first episodes have gone, and whether the reports are landing the way your team needs.
 
-Your trial includes ${SST_TRIAL_PATIENT_CAP} patients. When you're ready to open it up, plans start at A$${SST_TIER_FROM_AUD}/month (cancel anytime) and every plan includes unlimited clinicians with their own logins — you can upgrade from your workspace, or just reply and I'll set it up with you.
+Your trial includes ${SST_TRIAL_PATIENT_CAP} patients. When you're ready to open it up, plans start at A$${SST_TIER_FROM_AUD}/month (cancel anytime) and every plan includes unlimited clinicians on your clinic workspace (one shared clinic code for the whole team) — you can upgrade from your workspace, or just reply and I'll set it up with you.
 
 If a walkthrough for the rest of the team would help, happy to do that too.
 

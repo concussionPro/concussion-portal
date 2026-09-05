@@ -2,9 +2,10 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { FileText, Download, Lock, Star, ClipboardCheck, Heart, FileEdit, BookOpen, GitBranch, Archive } from 'lucide-react'
+import { FileText, Download, Lock, Star, ClipboardCheck, Heart, FileEdit, BookOpen, GitBranch, Archive, PenLine, ArrowRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackDownload, trackShopClick, trackEvent } from '@/lib/analytics'
 
@@ -277,6 +278,34 @@ export default function ClinicalToolkitPage() {
                 </button>
               )}
 
+
+              {/* P0 discoverability — fillable discharge letters live one click
+                  deeper at /clinical-toolkit/templates and were easy to miss
+                  among the printable ZIP resources above. */}
+              <Link
+                href="/clinical-toolkit/templates"
+                className="glass-premium rounded-2xl p-5 sm:p-6 mb-6 flex items-start gap-4 border border-accent/15 hover:border-accent/30 transition-colors group"
+              >
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center flex-shrink-0">
+                  <PenLine className="w-5 h-5 text-accent" strokeWidth={1.8} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-bold text-foreground m-0">Fillable clinical letters</p>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20 uppercase tracking-wider">
+                      Interactive
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed m-0">
+                    8 fillable clinical letters — GP, school, WorkCover, sports club, NDIS, ACC and medicolegal. Fill on screen, export PDF on your letterhead.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-accent flex-shrink-0 mt-1 group-hover:gap-1.5 transition-all">
+                  Open
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </Link>
+
               {/* Locked state for preview/unauthenticated users */}
               {!accessLevel && (
                 <div className="bg-gradient-to-r from-purple-50 to-teal-50 border-2 border-purple-200 rounded-xl p-6 flex items-start gap-4">
@@ -285,7 +314,7 @@ export default function ClinicalToolkitPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-lg font-bold text-slate-900 mb-1">
-                      12 Clinical Resources Included With the Course
+                      13 Clinical Resources Included With the Course
                     </p>
                     <p className="text-sm text-slate-700 mb-1">
                       Flowcharts, fillable SCAT6/SCOAT6 PDFs, patient handouts, referral pathways, return-to-play ladders, and email templates — ready to use in clinic from day one.

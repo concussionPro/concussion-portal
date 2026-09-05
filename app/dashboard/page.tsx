@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { BentoGrid } from '@/components/dashboard/BentoGrid'
 import { WelcomeModal } from '@/components/dashboard/WelcomeModal'
 import { NextActionCard } from '@/components/dashboard/NextActionCard'
+import { StartHereChecklist } from '@/components/dashboard/StartHereChecklist'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Loader2 } from 'lucide-react'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
@@ -64,6 +65,9 @@ function DashboardInner() {
                   : 'Your concussion management training starts now.'}
               </p>
             </div>
+
+            {/* Day-1 orientation — paid CCM only; hides for free/CRM/demo */}
+            <StartHereChecklist />
 
             {/* Next Action — hero card */}
             <NextActionCard />
