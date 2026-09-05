@@ -49,7 +49,7 @@ import { getEnrollmentCount } from '@/lib/users'
 export const maxDuration = 300
 
 const VALID_CITIES = ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'] as const
-const MOMENTUM_MIN_ENROLLED = 5
+const MOMENTUM_MIN_ENROLLED = 6
 const DEFAULT_LIMIT = 50
 const MAX_LIMIT = 200
 

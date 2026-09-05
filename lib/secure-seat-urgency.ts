@@ -37,13 +37,26 @@ export type SecureSeatUrgency = {
   body: string
 }
 
-/** When remaining seats ≤ this, use stronger “Only X left” copy (n ≥ 9 at threshold 12). */
+/**
+ * Numeric n/N progress is conversion-positive only once the cohort looks real.
+ * Below half of CONFIRMATION_THRESHOLD (6 of 12), omit counts entirely — low
+ * n/12 reads as an empty room. Forming copy has no invented numbers.
+ */
 const HIGH_URGENCY_REMAINING = 3
+
+function formingProgressLine(city: string): string {
+  return `Be among the clinicians unlocking ${city}`
+}
+
+function formingDepositLine(city: string): string {
+  return `Unlock your seat in ${city} — your deposit opens the practical day when the cohort fills`
+}
 
 export function buildSecureSeatUrgency(input: SecureSeatProgressInput): SecureSeatUrgency {
   const city = (input.cityLabel || 'your city').trim() || 'your city'
   const threshold =
     typeof input.threshold === 'number' && input.threshold > 0 ? input.threshold : 12
+  const halfFull = Math.floor(threshold / 2) // 6 at threshold 12 — show n/N only once half full
   const price = typeof input.priceAud === 'number' && input.priceAud > 0 ? input.priceAud : 100
   const enrolled =
     typeof input.enrolled === 'number' && Number.isFinite(input.enrolled) && input.enrolled >= 0
@@ -58,14 +71,22 @@ export function buildSecureSeatUrgency(input: SecureSeatProgressInput): SecureSe
   const headlineShort = `Unlock your seat in ${city}`
   const ctaLabel = `Unlock your seat — A$${price}`
 
-  let progressLine: string | null = null
-  if (progressKnown && enrolled !== null) {
+  let progressLine: string | null
+  if (!progressKnown || enrolled === null) {
+    // No API row — never invent a count; forming copy only.
+    progressLine = formingProgressLine(city)
+  } else if (enrolled >= threshold) {
+    progressLine = `${city} unlocked — the practical day is opening`
+  } else if (enrolled < halfFull) {
+    // n < 6 at threshold 12: omit numeric progress (empty-room anti-pattern).
+    progressLine = formingDepositLine(city)
+  } else {
     const remaining = Math.max(threshold - enrolled, 0)
-    if (enrolled <= 0 || enrolled < 5) {
-      progressLine = `Be one of the first ${threshold} in ${city} — your deposit unlocks the practical day when the cohort fills`
-    } else if (remaining > 0 && remaining <= HIGH_URGENCY_REMAINING) {
+    if (remaining > 0 && remaining <= HIGH_URGENCY_REMAINING) {
+      // n >= 9 and n < 12
       progressLine = `Only ${remaining} seat${remaining === 1 ? '' : 's'} left to unlock ${city}`
     } else {
+      // halfFull <= n < (threshold - HIGH_URGENCY_REMAINING) → 6–8 at threshold 12
       progressLine = `${enrolled} of ${threshold} seats secured in ${city} — unlock yours to open the date`
     }
   }
@@ -77,9 +98,9 @@ export function buildSecureSeatUrgency(input: SecureSeatProgressInput): SecureSe
 
   const body = upgrade
     ? `You have Online — next step is the hands-on day. Put A$${price} down for ${city}. It counts toward the ${threshold}-seat gate that opens the date; credit toward Complete when it does; full refund if the cohort does not form.`
-    : progressKnown && enrolled !== null && enrolled > 0
+    : progressKnown && enrolled !== null && enrolled >= halfFull
       ? `Put A$${price} down for ${city}. It counts toward the ${threshold}-seat demand gate that opens the date. Credit toward Complete when the date opens; full refund if the cohort does not form. Online modules stay a separate enrol.`
-      : `Put A$${price} down for ${city}. Be among the clinicians who unlock the practical day when ${threshold} seats fill. Credit toward Complete when the date opens; full refund if it does not. Prefer modules first? Enrol Online, then unlock your seat.`
+      : `Put A$${price} down for ${city}. Be among the clinicians unlocking ${city} — your deposit opens the practical day when the cohort fills. Credit toward Complete when the date opens; full refund if it does not. Prefer modules first? Enrol Online, then unlock your seat.`
 
   return { headline, headlineShort, ctaLabel, progressLine, socialLine, body }
 }

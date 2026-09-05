@@ -61,11 +61,12 @@ function cityLabel(slug: string): string {
 // ─── City momentum (real counts only) ────────────────────────────────────────
 //
 // /api/city-progress returns TRUE round-scoped paid-nomination counts. A low
-// count is anti-social-proof ("1 of 8" reads as an empty room), so a numeric
-// momentum line renders ONLY when enrolled >= MOMENTUM_MIN_ENROLLED. Below
-// that, nothing numeric renders — the neutral nomination explainer covers it.
-// Never fabricate; never show zeros; interest counts are never shown here.
-export const MOMENTUM_MIN_ENROLLED = 5
+// count is anti-social-proof ("1 of 12" reads as an empty room), so numeric
+// n/N progress renders ONLY once half full (enrolled >= MOMENTUM_MIN_ENROLLED,
+// half of CONFIRMATION_THRESHOLD 12). Below that, buildSecureSeatUrgency uses
+// forming copy with no invented numbers. Never fabricate; never show zeros;
+// interest counts are never shown here.
+export const MOMENTUM_MIN_ENROLLED = 6
 
 interface CityProgress {
   slug: string
@@ -347,11 +348,9 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   const fullCourseBase = workshopPriceFor(selectedLocation)
   const fullCoursePrice = bundleApplies ? fullCourseBase - BUNDLE_DISCOUNT : fullCourseBase
   const hasLiveDate = cityHasLiveDate(selectedLocation)
-  // Momentum line for the selected city — renders ONLY when the true enrolled
-  // count is genuinely motivating (>= MOMENTUM_MIN_ENROLLED). Never zeros,
-  // never interest counts, never fabricated.
+  // Momentum / forming line — ALWAYS via buildSecureSeatUrgency (never raw n/12).
+  // Helper omits numeric progress below half full; forming copy has no invented counts.
   const selectedProgress = cityProgress[selectedLocation]
-  const showMomentum = !!selectedProgress && selectedProgress.enrolled >= MOMENTUM_MIN_ENROLLED
   const seatUrgency = buildSecureSeatUrgency({
     cityLabel: cityLabel(selectedLocation || 'melbourne'),
     enrolled: selectedProgress?.enrolled,
@@ -1200,12 +1199,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 only then. Early-bird ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} locked in. Free EOI
                 does not launch a day.
               </p>
-              {showMomentum && selectedProgress && (
+              {seatUrgency.progressLine && (
                 <div className="mt-2 flex">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
                     <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
                     <span className="text-[11px] font-semibold text-emerald-800 leading-snug">
-                      {selectedProgress.enrolled} of {selectedProgress.threshold} seats secured in {cityLabel(selectedLocation)} — unlock yours to open the date.
+                      {seatUrgency.progressLine}
                     </span>
                   </span>
                 </div>
