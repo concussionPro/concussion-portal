@@ -1204,10 +1204,10 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                   }
                   return (
                     <button
-                      onClick={() => router.push(hasNext ? `/` : backHref)}
+                      onClick={() => router.push(hasNext ? `${moduleBasePath}/${moduleId + 1}` : backHref)}
                       className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
                     >
-                      {hasNext ? `Start Module ` : 'View All Modules'}
+                      {hasNext ? `Start Module ${isSCATModule ? moduleId - 99 : moduleId + 1}` : 'View All Modules'}
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   )
@@ -1289,6 +1289,14 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 <div className="flex items-center gap-2">
                   <span className="text-slate-600">{module.duration}</span>
                 </div>
+                {(isDemoViewer || syncState === 'demo') && (
+                  <span
+                    className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md"
+                    title="Demo sessions are read-only — quiz answers are not persisted"
+                  >
+                    Demo — progress not saved
+                  </span>
+                )}
               </div>
             </div>
           ) : (
@@ -1607,7 +1615,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                                 </p>
                                 {quizAttemptCount > 1 && (
                                   <p className="text-[13px] text-slate-500 mb-4">
-                                    Attempt {quizAttemptCount} — every attempt is recorded on your progress record.
+                                    Attempt {quizAttemptCount}{isDemoViewer || syncState === 'demo' ? ' — demo session (not saved to your record).' : ' — every attempt is recorded on your progress record.'}
                                   </p>
                                 )}
                                 {!quizResult?.passed && (
@@ -1645,7 +1653,9 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                                     <p className="text-sm font-bold text-teal-900">{partLabel} questions answered</p>
                                   </div>
                                   <p className="text-sm text-slate-600 ml-8">
-                                    Your answers are saved. Continue to the next part — all answers will be submitted together at the end.
+                                    {isDemoViewer || syncState === 'demo'
+                                      ? 'Demo — answers stay on this device only for this visit. Continue to the next part — submit together at the end.'
+                                      : 'Your answers are saved. Continue to the next part — all answers will be submitted together at the end.'}
                                   </p>
                                 </div>
                               ) : (
@@ -1896,7 +1906,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                         behind a CPD certificate can be read in context. */}
                     {quizAttemptCount > 1 && (
                       <p className="text-[13px] text-slate-500 mb-4">
-                        Attempt {quizAttemptCount} — every attempt is recorded on your progress record.
+                        Attempt {quizAttemptCount}{isDemoViewer || syncState === 'demo' ? ' — demo session (not saved to your record).' : ' — every attempt is recorded on your progress record.'}
                       </p>
                     )}
                     {quizResult?.passed && isSCATModule && (
@@ -2053,6 +2063,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
               // accredited, NOT AHPRA-registered. Naming AHPRA at them is
               // simply the wrong regulator.
               regulator={descriptor.course === 'ep' ? 'ESSA' : 'AHPRA'}
+              isDemo={isDemoViewer || syncState === 'demo'}
             />
           )}
         </div>

@@ -30,6 +30,7 @@ export function ModuleNotes({
   moduleId,
   moduleTitle,
   regulator = 'AHPRA',
+  isDemo = false,
 }: {
   moduleId: number
   moduleTitle?: string
@@ -37,11 +38,13 @@ export function ModuleNotes({
    *  registered professions, ESSA for Accredited Exercise Physiologists (who
    *  are not AHPRA-registered at all). */
   regulator?: 'AHPRA' | 'ESSA'
+  /** Demo / ESSA-review sessions never persist — never flash a green Saved. */
+  isDemo?: boolean
 }) {
   const [notes, setNotes] = useState<Note[]>([])
   const [reflection, setReflection] = useState('')
   const [draft, setDraft] = useState('')
-  const [state, setState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'demo'>('idle')
   const [loaded, setLoaded] = useState(false)
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reflectionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -80,14 +83,21 @@ export function ModuleNotes({
           body: JSON.stringify({ moduleId, ...payload }),
         })
         const data = await res.json().catch(() => null)
-        flash()
+        // API echoes { demo: true } for synthetic viewers and does not persist.
+        if (isDemo || data?.demo) {
+          setState('demo')
+          if (savedTimer.current) clearTimeout(savedTimer.current)
+          savedTimer.current = setTimeout(() => setState('idle'), 2200)
+        } else {
+          flash()
+        }
         return data?.note as Note | null
       } catch {
         setState('idle')
         return null
       }
     },
-    [moduleId, flash],
+    [moduleId, flash, isDemo],
   )
 
   const addNote = async () => {
@@ -125,6 +135,11 @@ export function ModuleNotes({
         {state === 'saved' && (
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
             <Check className="h-3.5 w-3.5" /> Saved
+          </span>
+        )}
+        {(state === 'demo' || isDemo) && state !== 'saving' && (
+          <span className="text-[11px] font-semibold text-amber-700">
+            Demo — not saved
           </span>
         )}
       </div>
@@ -173,9 +188,15 @@ export function ModuleNotes({
           CPD reflection
         </label>
         <p className="mb-2 text-[11.5px] leading-snug text-slate-500">
-          {regulator}
-          {' '}asks for a reflection against each CPD activity. Write it here and it&apos;s included
-          in your CPD record export — you won&apos;t have to reconstruct it at audit time.
+          {isDemo ? (
+            <>Demo session — reflections stay on this visit only and are not written to a CPD record.</>
+          ) : (
+            <>
+              {regulator}
+              {' '}asks for a reflection against each CPD activity. Write it here and it&apos;s included
+              in your CPD record export — you won&apos;t have to reconstruct it at audit time.
+            </>
+          )}
         </p>
         <textarea
           id={`reflection-${moduleId}`}

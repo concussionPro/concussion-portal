@@ -17,7 +17,7 @@ const FLAGSHIP_ACTIONS: Record<number, ApplyTomorrowItem[]> = {
     },
     {
       action: 'Explain the energy crisis',
-      description: 'Use this simple explanation with patients: "Your brain needs more energy to heal, but has less blood flow - that\'s why rest is critical"',
+      description: 'Use this simple explanation with patients: "Your brain needs more energy to heal but has less efficient blood flow — brief relative rest, then early guided activity, is how we help it recover"',
     },
     {
       action: 'Screen for risk factors',

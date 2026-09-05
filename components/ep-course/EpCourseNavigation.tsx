@@ -370,6 +370,11 @@ export function EpCourseNavigation({
       {/* Footer Stats */}
       <div className="p-4 border-t border-slate-200 bg-slate-50">
         <div className="space-y-2">
+          {user?.isDemo && (
+            <p className="text-[11px] font-semibold text-amber-700 m-0">
+              Demo — progress not saved
+            </p>
+          )}
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-600">Your Progress</span>
             <span className="font-semibold text-slate-800">
