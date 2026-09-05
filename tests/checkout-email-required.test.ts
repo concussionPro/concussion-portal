@@ -42,10 +42,10 @@ describe('isCheckoutEmailRequired', () => {
       'online-only',
       'full-course',
       'secure-seat',
-      'workshop-upgrade',
       'international-online',
       'clinic-hub-pack',
     ]) {
+      // workshop-upgrade always uses session email (logged-in) — not in soft gate set
       expect(isCheckoutEmailRequired(t)).toBe(true)
       expect(CHECKOUT_EMAIL_REQUIRED_TYPES).toContain(t)
     }
