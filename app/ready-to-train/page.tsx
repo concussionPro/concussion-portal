@@ -37,8 +37,13 @@ export const metadata: Metadata = {
   alternates: { canonical: `${CONFIG.SEO.SITE_URL}/ready-to-train` },
 }
 
-/** Below this, a raw number reads as "nobody wants this" rather than momentum. */
-const SHOW_COUNT_FROM = 5
+/**
+ * Half of CONFIRMATION_THRESHOLD (12 → 6). Numeric "n of 12 places confirmed"
+ * is conversion-positive only once the cohort looks real — low n/12 reads as an
+ * empty room (same doctrine as lib/secure-seat-urgency.ts / PricingOptions).
+ * Interest-only lines may still show above this floor; they are not n/12.
+ */
+const SHOW_COUNT_FROM = 6
 
 /**
  * Cities that have a hand-built detail page at /courses/<slug>.
@@ -154,12 +159,10 @@ export default async function ReadyToTrainPage() {
         <div className="space-y-3 mb-10">
           {cities.map((c) => {
             const showCount = c.total >= SHOW_COUNT_FROM
-            // "0 of 8 places confirmed" is the emptiness this rule exists to
-            // avoid — a city with real interest but no paid seats yet (Perth: 6
-            // asked, 0 confirmed) reads as dead when it isn't. Progress renders
-            // only once at least one place is genuinely confirmed; otherwise the
-            // city stands on its interest line.
-            const showProgress = showCount && !c.ranAlready && c.paid > 0
+            // Numeric n/12 only once half full (paid >= 6). A city with paid=3
+            // and interest padding used to render "3 of 12" — empty-room anti-
+            // pattern. Below half full, stand on interest / collecting copy.
+            const showProgress = !c.ranAlready && c.paid >= SHOW_COUNT_FROM
             // `!c.ranAlready` matters: a completed city has its OWN interest
             // line below ("asked to be told when Melbourne runs again"), so
             // without this Melbourne rendered the interest count TWICE, in two

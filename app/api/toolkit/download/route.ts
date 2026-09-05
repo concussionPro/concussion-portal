@@ -200,7 +200,7 @@ function fillableHint(): string {
 // contenteditable span the clinic clicks and types into directly in the
 // browser, then prints to PDF (or prints blank and completes by hand). The
 // field-name shows as a greyed prompt that disappears as soon as they type.
-const NON_MERGE_TOKENS = new Set(['braces', 'curly_braces'])
+const NON_MERGE_TOKENS = new Set(['braces', 'curly_brace', 'curly_braces'])
 
 function parseFields(text: string): string {
   // Digits required: scat6_* tokens (a-z_ only left raw braces in HTML export)

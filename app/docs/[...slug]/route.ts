@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
+import { stat } from 'node:fs/promises'
+import { Readable } from 'node:stream'
 import { join, normalize } from 'node:path'
 import { isPaidDoc } from '@/lib/gated-docs'
 
@@ -75,19 +77,26 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  let bytes: Buffer
+  // Stream — do NOT buffer. CCM_Complete_Reference_2026.pdf is ~5.8MB and
+  // Vercel serverless buffered responses cap at ~4.5MB; buffering made
+  // /complete-reference hang on Loading forever.
+  const filePath = join(DOCS_DIR, safe)
+  let size: number
   try {
-    bytes = await readFile(join(DOCS_DIR, safe))
+    size = (await stat(filePath)).size
   } catch {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
   const ext = safe.split('.').pop()?.toLowerCase() ?? ''
-  return new NextResponse(new Uint8Array(bytes), {
+  const nodeStream = createReadStream(filePath)
+  const webStream = Readable.toWeb(nodeStream) as unknown as ReadableStream
+
+  return new NextResponse(webStream, {
     status: 200,
     headers: {
       'Content-Type': CONTENT_TYPES[ext] ?? 'application/octet-stream',
-      'Content-Length': String(bytes.length),
+      'Content-Length': String(size),
       // `inline` keeps the PDF viewer behaviour these links have always had;
       // the filename is quoted for the spaces in several of them.
       'Content-Disposition': `inline; filename="${safe.replace(/"/g, '')}"`,

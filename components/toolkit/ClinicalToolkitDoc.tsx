@@ -307,7 +307,7 @@ function TruncatedSectionLock({
               {headings.map((h, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <Lock className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
-                  <span>{h.replace(/\{[a-z_]+\}/g, '[merge field]')}</span>
+                  <span>{h.replace(/\{[a-z][a-z0-9_]*\}/gi, '[merge field]')}</span>
                 </li>
               ))}
               <li className="flex items-start gap-2">
@@ -377,7 +377,7 @@ function SectionRenderer({ heading, body }: { heading?: string; body: string[] }
  * Everything else is rendered as plain text.
  */
 /** Instructional tokens that must NEVER become fillable fields or print as {braces}. */
-const NON_MERGE_TOKENS = new Set(['braces', 'curly_braces'])
+const NON_MERGE_TOKENS = new Set(['braces', 'curly_brace', 'curly_braces'])
 
 function ParsedText({ text }: { text: string }) {
   const parts: React.ReactNode[] = []
