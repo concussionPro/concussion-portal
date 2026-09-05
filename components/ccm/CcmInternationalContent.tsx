@@ -223,11 +223,17 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
 
   // CCM international checkout is LIVE (not gated) — `international-online` grants
   // online-only = the CCM 8-module course. Currency is resolved server-side.
-  const handleEnrol = async () => {
+  const handleEnrol = async (focusEmailId: string = 'ccm-intl-checkout-email') => {
     if (enrolling) return
     if (!resolvedCheckoutEmail) {
       setEnrolError('Enter your email so we can send your enrolment link if checkout is interrupted.')
-      focusIntlCheckoutEmail('ccm-intl-checkout-email')
+      // Sticky: scroll to pricing card; FAQ/exit: focus the adjacent field.
+      if (focusEmailId === 'pricing-cards') {
+        document.getElementById('pricing-cards')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        focusIntlCheckoutEmail('ccm-intl-checkout-email')
+      } else {
+        focusIntlCheckoutEmail(focusEmailId)
+      }
       return
     }
     setEnrolling(true)
@@ -371,7 +377,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 />
                 <button
                   type="button"
-                  onClick={handleEnrol}
+                  onClick={() => handleEnrol()}
                   disabled={enrolling || softEmailBlocks}
                   className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
@@ -781,7 +787,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 placeholder={uk ? 'you@nhs.net' : 'your@email.com'}
               />
             </div>
-            <button type="button" onClick={handleEnrol} disabled={enrolling || softEmailBlocks} className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+            <button type="button" onClick={() => handleEnrol('ccm-intl-checkout-email-faq')} disabled={enrolling || softEmailBlocks} className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
               {enrolling ? 'Starting checkout…' : `Enrol — ${price.display}`}
               {!enrolling && <ArrowRight className="w-5 h-5" />}
             </button>
@@ -831,7 +837,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               </div>
               <button
                 type="button"
-                onClick={handleEnrol}
+                onClick={() => handleEnrol('ccm-intl-checkout-email-exit')}
                 disabled={enrolling || softEmailBlocks}
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
@@ -853,7 +859,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
       <div className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300 ${showStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="backdrop-blur-lg bg-background/90 border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-foreground">{price.display} · {audience.stickyCpdLabel ?? '8 CPD'}</span>
-          <button type="button" onClick={handleEnrol} disabled={enrolling || softEmailBlocks} className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed">
+          <button type="button" onClick={() => handleEnrol('pricing-cards')} disabled={enrolling || softEmailBlocks} className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed">
             {enrolling ? 'Starting…' : 'Enrol'}
             {!enrolling && <ArrowRight className="w-3.5 h-3.5" />}
           </button>

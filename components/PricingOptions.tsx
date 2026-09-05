@@ -276,13 +276,14 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     setEmail: setCheckoutEmail,
     sessionEmail: checkoutSessionEmail,
     resolved: resolvedCheckoutEmail,
+    loaded: checkoutEmailLoaded,
     needsField: checkoutNeedsField,
   } = useCheckoutEmail()
 
   const softEmailBlocks = (courseType: 'online-only' | 'full-course' | 'secure-seat') => {
     // CCM always; CRM complete/secure; CRM online stays optional.
     const required = !crm || courseType === 'full-course' || courseType === 'secure-seat'
-    return required && checkoutNeedsField && !resolvedCheckoutEmail
+    return required && checkoutEmailLoaded && checkoutNeedsField && !resolvedCheckoutEmail
   }
 
   const focusCheckoutEmail = (inputId: string) => {
@@ -391,7 +392,10 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     priceAud: CONFIG.COURSE.PRICE_SECURE_SEAT,
   })
 
-  const handleCheckout = async (courseType: 'online-only' | 'full-course' | 'secure-seat') => {
+  const handleCheckout = async (
+    courseType: 'online-only' | 'full-course' | 'secure-seat',
+    opts?: { emailInputId?: string },
+  ) => {
     // Only reachable when no city is open (defaultNominationCity() === null).
     // lib/schemas rejects a full-course / secure-seat without a location, so ask for one
     // instead of letting the buyer hit a generic "Invalid request."
@@ -403,7 +407,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     const crmNeedsEmail = courseType === 'full-course' || courseType === 'secure-seat'
     if ((!crm || crmNeedsEmail) && !resolvedCheckoutEmail) {
       setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
-      focusCheckoutEmail(emailInputIdFor(courseType, isCompact))
+      focusCheckoutEmail(opts?.emailInputId ?? emailInputIdFor(courseType, isCompact))
       return
     }
     try {
@@ -853,7 +857,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
         </div>
         <button
           type="button"
-          onClick={() => handleCheckout('online-only')}
+          onClick={() => handleCheckout('online-only', { emailInputId: 'checkout-email-compact-exit' })}
           disabled={loading !== null || softEmailBlocks('online-only')}
           className="btn-primary inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
