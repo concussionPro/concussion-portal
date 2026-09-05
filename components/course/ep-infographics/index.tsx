@@ -11,6 +11,7 @@ import { PhenotypeMapAnimated } from './PhenotypeMapAnimated'
 import { FittFrameworkAnimated } from './FittFrameworkAnimated'
 import { LoadMonitoringAnimated } from './LoadMonitoringAnimated'
 import { RecoveryTimelineAnimated } from './RecoveryTimelineAnimated'
+import { BcttProtocol } from './BcttProtocol'
 
 /**
  * Registry of EP-course infographics keyed by the id used in the
@@ -30,12 +31,22 @@ import { RecoveryTimelineAnimated } from './RecoveryTimelineAnimated'
  * upgrades at once. Reverting any one is deleting a line.
  *
  * Both courses share these ids, so registering here lights them up across CCM
- * and CRM together — 26 placements from 11 entries.
+ * and CRM together. RICH upgrades (e.g. BCTT) swap the PNG for an authored SVG
+ * without touching module markers.
  *
  * Falling back is safe in both directions: an id with no animated component
  * renders its image, and an unknown id returns null so a stray or typo'd marker
  * never leaks raw "[INFOGRAPHIC: …]" text onto the page.
  */
+/**
+ * Rich (non-animated) React SVG components that still beat the static PNG for
+ * the same id. Kept separate from ANIMATED so the video-index sync test only
+ * lists true motion graphics — BCTT is a staged diagram, not a timeline play.
+ */
+const RICH: Record<string, ComponentType> = {
+  'bctt-protocol': BcttProtocol,
+}
+
 const ANIMATED: Record<string, ComponentType> = {
   'hrt-to-prescription': HrtToPrescriptionAnimated,
   'autonomic-dysfunction': AutonomicDysfunctionAnimated,
@@ -53,6 +64,8 @@ const ANIMATED: Record<string, ComponentType> = {
 export function getEpInfographic(id: string): ComponentType | null {
   const animated = ANIMATED[id]
   if (animated) return animated
+  const rich = RICH[id]
+  if (rich) return rich
   if (!(id in INFOGRAPHIC_CONFIG)) return null
   return function EpInfographic() {
     return <ImageInfographic id={id} />
