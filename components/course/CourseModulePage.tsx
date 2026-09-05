@@ -22,6 +22,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { CONFIG } from '@/lib/config'
 import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 import { ScatFunnelExits } from '@/components/scat/ScatFunnelExits'
+import { SoftScatPaidBridge } from '@/components/scat/SoftScatPaidBridge'
 import type { QuizQuestion, Section } from '@/data/modules'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
@@ -1078,6 +1079,16 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 </div>
               )}
 
+              {/* Soft SCAT→paid bridge after Module 1 — course-intent signal.
+                  Cold free-resource drip stays paused; this is one in-product
+                  nudge (competency + optional SCAT6 code). Continue Module 2
+                  remains the primary action below. Skip if already paid CCM. */}
+              {isSCATModule && moduleId === 101 && accessLevel === 'preview' && (
+                <div className="mb-6 w-full max-w-md mx-auto">
+                  <SoftScatPaidBridge source="scat_module1_complete" compact />
+                </div>
+              )}
+
               {/* Prominent upgrade CTA after SCAT module 102 (mid-course peak engagement) */}
               {isSCATModule && moduleId === 102 && (
                 <div className="bg-gradient-to-br from-slate-50 to-teal-50 rounded-xl p-6 border-2 border-teal-200 mb-6 text-left max-w-md mx-auto">
@@ -1212,9 +1223,9 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                     </button>
                   )
                 })()}
-                {/* Soft paid CTA: keep mid-course promo on 102 only + all-complete
-                    screen above. Module 101 stays quiet so we don't spam the same
-                    SCAT6 offer on every section exit — sticky covers soft visibility. */}
+                {/* Soft paid CTA: Module 101 soft bridge (course intent) + mid-course
+                    promo on 102 + all-complete dual-exit above. Sticky still covers
+                    soft visibility on module pages; cold drip stays paused. */}
               </div>
             </>
           )}

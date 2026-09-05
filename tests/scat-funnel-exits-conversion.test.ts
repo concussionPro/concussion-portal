@@ -70,4 +70,22 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(src).toContain('Enrol Online')
     expect(src).not.toContain('/courses?src=')
   })
+
+  it('SoftScatPaidBridge on Module 101 completion (course-intent soft bridge)', () => {
+    const bridge = readFileSync(join(root, 'components/scat/SoftScatPaidBridge.tsx'), 'utf8')
+    expect(bridge).toContain('/pricing?promo=')
+    expect(bridge).toContain('Clinical competency is the next layer')
+    expect(bridge).toContain('PROMO_CODE')
+    expect(bridge).toContain('SCAT_DISCOUNT_AUD')
+
+    const page = readFileSync(join(root, 'components/course/CourseModulePage.tsx'), 'utf8')
+    expect(page).toContain("from '@/components/scat/SoftScatPaidBridge'")
+    expect(page).toContain('source="scat_module1_complete"')
+    expect(page).toMatch(/moduleId === 101 && accessLevel === 'preview'/)
+    // Cold drip pause must stay — soft bridge is UI-only, not unpausing nurture days
+    const cron = readFileSync(join(root, 'app/api/cron/send-nurture-emails/route.ts'), 'utf8')
+    expect(cron).toContain('PAUSED_SCAT_MASTERY_DAYS = new Set([3, 10, 28, 42])')
+    expect(cron).toContain('PAUSED_PDF_LEAD_DAYS = new Set([3, 14, 45])')
+  })
+
 })
