@@ -16,7 +16,7 @@ import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 // the physio/osteo/chiro course.
 // 2026-08-04 routing fix (owner): "Courses" led to the CCM-only pricing page
 // while the tabbed CCM⇄CRM hub lived unlinked at /courses. Free Training stays
-// on /scat-mastery, which carries BOTH free courses (CCHC block near the top).
+// on /scat-mastery (SCAT free gate + dual paid exits; CCHC only as Further reading).
 const BASE_NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
   { label: 'Courses', path: '/courses', accent: false },

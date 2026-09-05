@@ -559,27 +559,11 @@ export default function SCATMasteryPage() {
           </div>
         </div>
 
-        {/* ── Equal-weight dual exit after free SCAT value (owner: push SST harder).
-            CCHC "Also free · second course" banner removed from this slot — it was
-            covering the paid exits (Learn competency vs Apply protocol with SST).
-            Quiet link remains under Further reading. ── */}
-        {/* Clinic-day engagement hook — concrete next action before paid exits */}
-        <div className="mt-14 md:mt-16 mx-auto max-w-3xl rounded-2xl border border-teal-200/70 bg-gradient-to-br from-teal-50/80 to-white p-5 md:p-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-teal-700">Use it this week</p>
-          <h2 className="mt-1 text-lg font-bold tracking-tight text-slate-900 md:text-xl">
-            Next concussion in clinic — three moves
-          </h2>
-          <ol className="mt-3 space-y-2 text-sm leading-relaxed text-slate-600 list-decimal list-inside">
-            <li><strong className="text-slate-800">SCAT6 / Child SCAT6</strong> — fillable forms you already unlocked on this page.</li>
-            <li><strong className="text-slate-800">VOMS + BESS</strong> — the gaps SCAT alone does not cover (taught in CCM Online).</li>
-            <li><strong className="text-slate-800">Sub-symptom exercise</strong> — measured on the patient&apos;s watch with SST Clinical Testing.</li>
-          </ol>
-          <p className="mt-3 text-xs text-slate-500">
-            Assessment skill is free here. Full competency and clinic delivery are the two paid paths below — priced separately on purpose.
-          </p>
-        </div>
-
-        <div className="mt-6 md:mt-8">
+        {/* ── Equal-weight dual exit immediately under hero / free gate.
+            No CCHC "Also free · second course" banner and no clinic-day interstitial
+            above this slot — ScatFunnelExits is the first post-hero conversion block.
+            CCHC stays only as a quiet Further reading link at the bottom. ── */}
+        <div className="mt-14 md:mt-16">
           <ScatFunnelExits context="scat-mastery" showPromo />
         </div>
 
