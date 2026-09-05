@@ -99,10 +99,7 @@ export async function GET(request: NextRequest) {
           },
         })
       }
-      return NextResponse.json(
-        { error: 'No session found' },
-        { status: 401 }
-      )
+      return NextResponse.json({ success: false, error: 'No session found' })
     }
 
     // Verify JWT session token
@@ -126,10 +123,7 @@ export async function GET(request: NextRequest) {
           },
         })
       }
-      return NextResponse.json(
-        { error: 'Invalid or expired session' },
-        { status: 401 }
-      )
+      return NextResponse.json({ success: false, error: 'Invalid or expired session' })
     }
 
     // Always fetch full user from DB for up-to-date data

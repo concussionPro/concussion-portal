@@ -1032,7 +1032,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
   if (showCompletionCelebration && module) {
     return (
       <div className="flex min-h-screen bg-slate-50 items-center justify-center">
-        <div className="max-w-lg mx-auto p-8 text-center animate-fadeInUp">
+        <div className="max-w-3xl mx-auto p-8 text-center animate-fadeInUp">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
             <Award className="w-10 h-10 text-white" strokeWidth={2} />
           </div>
@@ -1182,12 +1182,32 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                       </>
                     )
                   }
+                  // Online finish without certificate CTA still must not dump to /pricing.
+                  if (!hasNext && !isSCATModule && course !== 'ep' && accessLevel === 'online-only') {
+                    return (
+                      <>
+                        <div className="mt-2 w-full max-w-3xl mx-auto text-left">
+                          <ScatFunnelExits
+                            context="module-8"
+                            ownsOnline
+                            showPromo={false}
+                          />
+                        </div>
+                        <button
+                          onClick={() => router.push(backHref)}
+                          className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+                        >
+                          Back to all modules
+                        </button>
+                      </>
+                    )
+                  }
                   return (
                     <button
-                      onClick={() => router.push(hasNext ? `${moduleBasePath}/${moduleId + 1}` : backHref)}
+                      onClick={() => router.push(hasNext ? `/` : backHref)}
                       className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
                     >
-                      {hasNext ? `Start Module ${isSCATModule ? moduleId - 99 : moduleId + 1}` : 'View All Modules'}
+                      {hasNext ? `Start Module ` : 'View All Modules'}
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   )

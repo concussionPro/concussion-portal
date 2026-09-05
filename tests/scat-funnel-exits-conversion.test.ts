@@ -23,6 +23,7 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(src).toContain('ownsOnline')
     // Must not send Online owners to full-price Complete on /pricing from the invite
     expect(src).not.toMatch(/module_8_online_only[\s\S]{0,400}\/pricing#pricing-cards/)
+    expect(src).toContain('Online finish without certificate CTA')
   })
 
   it('scat-mastery still hosts public dual-exit', () => {

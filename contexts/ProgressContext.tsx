@@ -274,6 +274,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const retryAttemptRef = useRef(0)
   /** Latest attemptSave, so the retry can re-enter without self-referencing. */
   const attemptSaveRef = useRef<(() => Promise<void>) | null>(null)
+  /** True after GET /api/progress 2xx — skip anonymous POSTs that 401 on public pages. */
+  const backendAuthedRef = useRef(false)
 
   // Keep ref in sync for beforeunload handler
   useEffect(() => {
@@ -344,6 +346,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
             signal: AbortSignal.timeout(15000),
           })
           if (response.ok) {
+            backendAuthedRef.current = true
             const data = await response.json()
             if (data.success && data.progress) {
               const parsed = parseStoredProgress(data.progress)
@@ -398,7 +401,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     // tab is killed from the background) — pagehide + visibilitychange(hidden)
     // are the events that actually fire on mobile.
     const flushPending = () => {
-      if (hasPendingSaveRef.current) {
+      if (backendAuthedRef.current && hasPendingSaveRef.current) {
         const body = JSON.stringify({ progress: progressRef.current })
         const ok = navigator.sendBeacon('/api/progress', new Blob([body], { type: 'application/json' }))
         if (ok) hasPendingSaveRef.current = false
@@ -440,6 +443,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
    */
   const attemptSave = useCallback(async () => {
     if (typeof window === 'undefined') return
+    if (!backendAuthedRef.current) {
+      hasPendingSaveRef.current = false
+      setSyncState('idle')
+      return
+    }
     if (retryTimeoutRef.current) {
       clearTimeout(retryTimeoutRef.current)
       retryTimeoutRef.current = null
@@ -480,7 +488,13 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         syncClearRef.current = setTimeout(() => setSyncState('idle'), 3000)
         return
       }
-      // Not ok — keep the pending flag so pagehide can still beacon it out.
+      if (response.status === 401 || response.status === 403) {
+        backendAuthedRef.current = false
+        hasPendingSaveRef.current = false
+        setSyncState('idle')
+        return
+      }
+      // Other failures — keep the pending flag so pagehide can still beacon it out.
       console.error('Progress save rejected by server:', response.status)
       setSyncState('error')
       scheduleRetry()

@@ -13,11 +13,16 @@ import { REFERENCE_COUNT } from '@/data/reference-count'
  * PDF lives in private-docs/ and is served ONLY via app/docs/[...slug] (middleware
  * entitlement first). Do NOT blob-fetch through /api/reference/download — that
  * buffered ~5.8MB through serverless (4.5MB cap) and left the UI on Loading forever.
+ *
+ * Demo cookies can mint a synthetic full-course session user, but middleware
+ * never streams paid /docs for demo — treat demo as gated with clearer copy
+ * (never a broken entitled iframe).
  */
 export default function CompleteReferencePage() {
   const router = useRouter()
   const [accessLevel, setAccessLevel] = useState<string | null>(null)
   const [bookOwner, setBookOwner] = useState(false)
+  const [isDemo, setIsDemo] = useState(false)
   const [loading, setLoading] = useState(true)
   const [previewFailed, setPreviewFailed] = useState(false)
 
@@ -38,6 +43,7 @@ export default function CompleteReferencePage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
+            if (data.user.isDemo) setIsDemo(true)
             if (data.user.accessLevel !== 'preview') {
               setAccessLevel(data.user.accessLevel)
             }
@@ -59,7 +65,29 @@ export default function CompleteReferencePage() {
     }
   }, [router])
 
-  const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course' || bookOwner
+  const entitled =
+    accessLevel === 'online-only' || accessLevel === 'full-course' || bookOwner
+  const hasAccess = entitled && !isDemo
+
+  // Soft probe so a denied stream fails closed to download options (iframe
+  // often fires no onError for PDF MIME).
+  useEffect(() => {
+    if (!hasAccess || typeof window === 'undefined') return
+    const controller = new AbortController()
+    const t = window.setTimeout(() => controller.abort(), 15000)
+    fetch(pdfUrl, { method: 'HEAD', credentials: 'include', signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) setPreviewFailed(true)
+      })
+      .catch(() => {
+        /* HEAD may be unsupported — leave iframe + blank fallback UI */
+      })
+      .finally(() => window.clearTimeout(t))
+    return () => {
+      window.clearTimeout(t)
+      controller.abort()
+    }
+  }, [hasAccess, pdfUrl])
 
   return (
     <ProtectedRoute>
@@ -102,10 +130,12 @@ export default function CompleteReferencePage() {
                   <BookMarked className="w-8 h-8 text-amber-600" strokeWidth={2} />
                 </div>
                 <h2 className="text-xl font-bold text-foreground mb-2">
-                  Premium Access Required
+                  {isDemo ? 'Included with enrolment' : 'Included with the course'}
                 </h2>
-                <p className="text-muted-foreground mb-4">
-                  The Complete Clinical Reference is available to enrolled students.
+                <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
+                  {isDemo
+                    ? 'You\u2019re in a demo browse. The Complete Clinical Reference (5.8 MB PDF) streams for Online and Complete students via a real student login — demo cookies cannot open paid /docs.'
+                    : 'The Complete Clinical Reference streams for enrolled Online and Complete students (and Reference+Toolkit owners). Sign in with your student account, or enrol to unlock it.'}
                 </p>
                 <ul className="mx-auto mb-5 max-w-sm list-none space-y-1 text-left">
                   {['256 referenced pages — the full clinical text', 'Assessment: SCAT6, VOMS, BESS, cervical, oculomotor', 'Phenotype-directed management & PPCS pathways', 'Return-to-play / learn / work frameworks', `${REFERENCE_COUNT} citations, linked to the reference repository`].map((t) => (
@@ -114,13 +144,21 @@ export default function CompleteReferencePage() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href="/pricing"
-                  className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-lg"
-                >
-                  Enrol Now
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <a
+                    href="/pricing"
+                    className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-lg"
+                  >
+                    Enrol Now
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="/login?redirect=/complete-reference"
+                    className="btn-secondary inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold"
+                  >
+                    Student login
+                  </a>
+                </div>
               </div>
             ) : (
               <>
