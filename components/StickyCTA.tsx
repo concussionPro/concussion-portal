@@ -140,7 +140,7 @@ export function StickyCTA() {
                 onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_soft_sticky', promo: CONFIG.COURSE.PROMO_CODE })}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-900 rounded-lg text-sm font-bold hover:bg-white/90 transition-all"
               >
-                Claim A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off
+                Enrol Online — A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <button
@@ -182,7 +182,7 @@ export function StickyCTA() {
               href="/pricing"
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-slate-900 rounded-lg text-sm font-bold hover:bg-white/90 transition-all"
             >
-              View Pricing
+              Enrol from A${CONFIG.COURSE.PRICE_ONLINE}
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <button

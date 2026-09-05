@@ -21,6 +21,7 @@ import { useModuleData, type CourseKey, type InitialModuleData } from '@/hooks/u
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { CONFIG } from '@/lib/config'
 import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
+import { ScatFunnelExits } from '@/components/scat/ScatFunnelExits'
 import type { QuizQuestion, Section } from '@/data/modules'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
@@ -1043,44 +1044,23 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                 You&apos;ve completed all 3 modules of the free SCAT6 Mastery course. Ready to go deeper?
               </p>
 
-              {/* Promo offer */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border-2 border-emerald-200 mb-6 text-left">
-                <p className="text-sm font-bold text-emerald-800 mb-2">You&apos;ve earned ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off the full course</p>
-                <p className="text-sm text-slate-600 mb-3">
-                  SCAT6 is one assessment tool — but confident concussion management requires more. The full course teaches you to administer VOMS vestibular screening, score BESS accurately, identify concussion phenotypes, and make evidence-based return-to-play decisions. Online ({CONFIG.COURSE.ONLINE_CPD_POINTS} CPD) or complete with hands-on workshop ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD).
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5 border-2 border-emerald-200 mb-6 text-left">
+                <p className="text-sm font-bold text-emerald-800 mb-1">You&apos;ve earned ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off Online</p>
+                <p className="text-xs text-emerald-700 font-semibold">
+                  Code {CONFIG.COURSE.PROMO_CODE} · applied on /pricing when you enrol
                 </p>
-                <div className="flex items-center gap-2 text-xs text-emerald-700 font-semibold bg-emerald-100 rounded-lg px-3 py-2 w-fit">
-                  Code: {CONFIG.COURSE.PROMO_CODE} · ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off · applied automatically
-                </div>
               </div>
 
-              <div className="flex flex-col items-center gap-3 w-full max-w-lg mx-auto">
-                <Link
-                  href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
-                  onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_all_complete', from: 'preview', promo: CONFIG.COURSE.PROMO_CODE })}
-                  className="w-full px-8 py-3.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2"
-                >
-                  Claim ${CONFIG.COURSE.SCAT_DISCOUNT_AUD} Off — Enrol Online
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <div className="w-full rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-left">
-                  <p className="text-xs font-bold text-amber-900 mb-2">Or secure your seat for the catered day</p>
-                  <SecureSeatCheckout variant="button" source="scat_all_complete" />
-                </div>
-                <Link
-                  href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}#pricing-cards`}
-                  onClick={() => trackEvent('upgrade_cta_click', { source: 'scat_all_complete_complete', from: 'preview' })}
-                  className="text-sm font-semibold text-teal-700 hover:underline"
-                >
-                  Enrol Complete (date TBD) →
-                </Link>
-                <button
-                  onClick={() => router.push(backHref)}
-                  className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
-                >
-                  Back to dashboard
-                </button>
+              <div className="w-full max-w-3xl mx-auto text-left mb-6">
+                <ScatFunnelExits context="scat-complete" showPromo />
               </div>
+
+              <button
+                onClick={() => router.push(backHref)}
+                className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+              >
+                Back to dashboard
+              </button>
             </>
           ) : (
             <>
@@ -1185,20 +1165,12 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                           <ArrowRight className="w-4 h-4" />
                         </button>
                         {showPracticalInvite && (
-                          <div className="mt-4 w-full max-w-md mx-auto rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-left">
-                            <p className="text-sm font-bold text-slate-900 mb-1">
-                              Unlock your seat — add the catered day ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD)
-                            </p>
-                            <p className="text-xs text-slate-600 mb-3">
-                              You finished Online. Unlock a seat (A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable) toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate that opens your city&apos;s date — or enrol Complete. No fake calendar: the day runs when demand is met.
-                            </p>
-                            <SecureSeatCheckout variant="button" source="module_8_online_only" forOnlineUpgrade />
-                            <Link
-                              href="/pricing#pricing-cards"
-                              className="mt-2 inline-flex text-xs font-semibold text-teal-700 hover:underline"
-                            >
-                              Or enrol Complete →
-                            </Link>
+                          <div className="mt-4 w-full max-w-3xl mx-auto text-left">
+                            <ScatFunnelExits
+                              context="module-8"
+                              ownsOnline
+                              showPromo={false}
+                            />
                           </div>
                         )}
                         <button
