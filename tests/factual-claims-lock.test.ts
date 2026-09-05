@@ -70,8 +70,20 @@ function walk(dir: string, out: string[] = []): string[] {
  * retired"). Those comments are the institutional memory that stops the defect
  * recurring — scanning them would make this file punish the documentation of a
  * fix. Comments cannot render, so they are exempt; strings and JSX text are not.
+ *
+ * Markdown inline code is exempt on the same grounds. docs/SQUARESPACE_COPY_SYNC.md
+ * is a find-and-replace sheet whose left column QUOTES the stale strings to hunt
+ * for (`14 CPD`, `AOA Endorsed`); scanning them would make this file fail the one
+ * document written to fix the drift it guards. Backticks are the marker: prose
+ * asserting a rating stays in scope, a quoted literal does not. This is the same
+ * exemption tests/ already gets for holding the banned forms as fixtures.
  */
 function stripComments(src: string, path: string): string {
+  if (/\.md$/.test(path)) {
+    // Inline spans only — fenced blocks stay in scope, since a copy-paste block
+    // is shippable copy.
+    return src.replace(/`[^`\n]+`/g, (m) => ' '.repeat(m.length))
+  }
   if (!/\.(tsx?|jsx?|mjs|cjs)$/.test(path)) return src
   return src
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
@@ -445,6 +457,11 @@ const CURRENT_PRICES = new Set<number>([
   CONFIG.COURSE.PRICE_CLINIC_HUB_PACK,
   CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT,
   CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE,
+  // The refundable seat deposit (owner 2026-09-05) is charged for real, via
+  // price_data rather than a Stripe Price id — which is why it still belongs
+  // here: this rule asks whether a tier-labelled figure is actually charged,
+  // not whether it has its own Price object.
+  CONFIG.COURSE.PRICE_SECURE_SEAT,
 ])
 
 /**
