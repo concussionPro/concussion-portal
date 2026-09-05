@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Lock, ArrowRight, Award, BookOpen, ShieldCheck, Star, Loader2 } from 'lucide-react'
 import { CONFIG, defaultNominationCity, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
@@ -24,12 +25,22 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
   // slug: a 'completed' city (Melbourne) drops the buyer out of the reservation,
   // momentum and pre-workshop lanes. Every city stays selectable below.
   const [city, setCity] = useState(defaultNominationCity() ?? '')
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail: checkoutSessionEmail,
+    resolved: resolvedCheckoutEmail,
+  } = useCheckoutEmail()
 
   const fullPrice = workshopPriceFor(city)
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     if (courseType === 'full-course' && !city) {
       setError('Please choose your workshop city.')
+      return
+    }
+    if (!resolvedCheckoutEmail) {
+      setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
       return
     }
     setLoading(courseType)
@@ -42,11 +53,13 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         // full-course requires a workshop location (lib/schemas.ts superRefine
         // rejects it otherwise). Nomination model: the chosen city's date
         // launches when the city fills; buyers before then pay early-bird.
         body: JSON.stringify({
           courseType,
+          email: resolvedCheckoutEmail,
           ...(courseType === 'full-course' ? { location: city } : {}),
           attribution: getAttribution(),
         }),
@@ -127,6 +140,16 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
               <div className="text-xs font-semibold text-foreground leading-tight mt-1">AHPRA Aligned</div>
               <div className="text-xs text-muted-foreground">Endorsed by OA</div>
             </div>
+          </div>
+
+          <div className="max-w-sm mx-auto mb-4 text-left">
+            <CheckoutEmailField
+              email={checkoutEmail}
+              setEmail={setCheckoutEmail}
+              sessionEmail={checkoutSessionEmail}
+              disabled={loading !== null}
+              inputId="content-locked-checkout-email"
+            />
           </div>
 
           {/* Direct checkout CTAs */}

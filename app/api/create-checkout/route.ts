@@ -10,6 +10,10 @@ import { isDemoEmail } from '@/lib/demo-session'
 import { detectCountry, readMarketOverride, shouldForceAudOnlineSku } from '@/lib/geo'
 import { CONFIG } from '@/lib/config'
 import { hubAddonContact } from '@/lib/hub-addon-contact'
+import {
+  isCheckoutEmailRequired,
+  resolveCheckoutCustomerEmail,
+} from '@/lib/checkout-email'
 
 // Bundle owner discount applied automatically to course purchases.
 // Single source (CONFIG) — the /pricing cards subtract the SAME number, so the
@@ -22,9 +26,12 @@ const BUNDLE_OWNER_DISCOUNT_AUD = CONFIG.COURSE.BUNDLE_OWNER_DISCOUNT_AUD
  * Creates a Stripe Checkout session for course purchases.
  *
  * Body params:
- *   courseType: 'online-only' | 'full-course' | 'workshop-upgrade'
- *   location?: 'sydney' | 'melbourne' | 'byron-bay' (required for full-course and workshop-upgrade)
- *   email?: string (optional, pre-fills checkout — ignored for workshop-upgrade, uses session email)
+ *   courseType: 'online-only' | 'full-course' | 'workshop-upgrade' | 'secure-seat' | 'international-online' | 'clinic-hub-pack' | …
+ *   location?: workshop city slug (required for full-course, workshop-upgrade, secure-seat)
+ *   email?: string — REQUIRED for anonymous CCM seat types (online-only / full-course /
+ *     secure-seat / international-online / clinic-hub-pack) when not logged in, so
+ *     abandon rescue can email the enrolment link. Soft client field + server enforce.
+ *     Ignored for workshop-upgrade (uses session email). Prefills Stripe customer_email.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -132,6 +139,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Require a real email before minting a Stripe session for CCM (and any
+    // shared create-checkout path including clinic-hub-pack). Without
+    // customer_email, checkout.session.expired rescue has nobody to email —
+    // most abandoned sessions in Stripe show exactly that null.
+    let customerEmail: string | undefined = sessionEmail || email
+    if (isCheckoutEmailRequired(courseType)) {
+      const resolved = resolveCheckoutCustomerEmail(sessionEmail, email)
+      if (!resolved.ok) {
+        return NextResponse.json({ error: resolved.error }, { status: 400 })
+      }
+      customerEmail = resolved.email
+    }
+
     // Detect bundle-owner discount eligibility. Applies to online-only and
     // full-course — NOT workshop-upgrade (already discounted) or
     // international-online (different currency / market).
@@ -148,7 +168,7 @@ export async function POST(request: NextRequest) {
       // every sale for the duration of the incident. isBookOwner() also runs
       // ensureColumns() (ALTER TABLE users …), so this catch additionally
       // covers a lazy migration failing under lock contention.
-      const buyerEmail = sessionEmail || email
+      const buyerEmail = customerEmail
       if (buyerEmail) {
         try {
           if (await isBookOwner(buyerEmail)) {
@@ -226,7 +246,7 @@ export async function POST(request: NextRequest) {
         ? location
         : undefined,
       preferredCity: courseType === 'online-only' ? preferredCity : undefined,
-      customerEmail: sessionEmail || email,
+      customerEmail,
       country,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl,

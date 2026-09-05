@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CONFIG } from '@/lib/config'
 import { trackEvent, getAttribution } from '@/lib/analytics'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import { Users, Check, Loader2, ArrowRight, Plane, ShieldCheck } from 'lucide-react'
 
 /**
@@ -23,6 +24,12 @@ export function HubPackBuyCard({ clinical, slug, clinicName }: { clinical: numbe
   // Ccm/CrmInternationalContent); this one — the only self-serve path a 2–7
   // clinician prospect has — did not.
   const [error, setError] = useState<string | null>(null)
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail: checkoutSessionEmail,
+    resolved: resolvedCheckoutEmail,
+  } = useCheckoutEmail()
   const basePrice = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
   const baseSeats = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
   const extraSeatPrice = CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT
@@ -37,6 +44,10 @@ export function HubPackBuyCard({ clinical, slug, clinicName }: { clinical: numbe
   const cheaperThanIndividual = individualCost > price
 
   async function buy() {
+    if (!resolvedCheckoutEmail) {
+      setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      return
+    }
     setLoading(true)
     setError(null)
     trackEvent('checkout_start', { courseType: 'clinic-hub-pack', source: 'prospect_portal', slug })
@@ -44,8 +55,10 @@ export function HubPackBuyCard({ clinical, slug, clinicName }: { clinical: numbe
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           courseType: 'clinic-hub-pack',
+          email: resolvedCheckoutEmail,
           clinicianCount: count,
           // The whole checkout pipe carries clinicName (schema → Stripe metadata
           // → createCourseHub → the admin "Hub Pack purchased" ping) but this
@@ -149,6 +162,14 @@ export function HubPackBuyCard({ clinical, slug, clinicName }: { clinical: numbe
           </p>
         )}
 
+        <CheckoutEmailField
+          email={checkoutEmail}
+          setEmail={setCheckoutEmail}
+          sessionEmail={checkoutSessionEmail}
+          disabled={loading}
+          inputId="hub-pack-checkout-email"
+          className="mb-3"
+        />
         <button
           onClick={buy}
           disabled={loading}

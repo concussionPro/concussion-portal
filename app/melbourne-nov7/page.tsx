@@ -6,6 +6,7 @@ import { ArrowRight, BookOpen, Check, Loader2, MapPin, Users, Utensils } from 'l
 import { SiteNav } from '@/components/SiteNav'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import { CONFIG, upgradePriceFor, cpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
@@ -30,6 +31,12 @@ export default function MelbourneNov7Page() {
   // Redirect-blocked fallback — see PricingOptions: renders only if the page
   // survives the navigation order (proxy blocked stripe.com).
   const [stuckCheckoutUrl, setStuckCheckoutUrl] = useState<string | null>(null)
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail: checkoutSessionEmail,
+    resolved: resolvedCheckoutEmail,
+  } = useCheckoutEmail()
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem('cea-checkout-pending')
@@ -62,6 +69,10 @@ export default function MelbourneNov7Page() {
 
   const enrol = async () => {
     if (loading) return
+    if (!resolvedCheckoutEmail) {
+      setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      return
+    }
     setLoading(true)
     setError(null)
     trackEvent('checkout_start', { courseType: 'full-course', location: 'melbourne', source: 'melbourne-nov7' })
@@ -69,9 +80,11 @@ export default function MelbourneNov7Page() {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           courseType: 'full-course',
           location: 'melbourne',
+          email: resolvedCheckoutEmail,
           utm: { source: 'email', medium: 'email', campaign: 'quarterly_blast_v1' },
         }),
       })
@@ -172,6 +185,14 @@ export default function MelbourneNov7Page() {
               your early-bird rate is locked and your payment carries in full.
             </p>
           )}
+          <CheckoutEmailField
+            email={checkoutEmail}
+            setEmail={setCheckoutEmail}
+            sessionEmail={checkoutSessionEmail}
+            disabled={loading}
+            inputId="melbourne-nov7-checkout-email"
+            className="mb-3 text-left"
+          />
           <button
             type="button"
             onClick={enrol}

@@ -18,6 +18,7 @@ import { SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 import { CCM_INTL_FAQS } from '@/components/ccm/ccm-intl-faqs'
 import { AustraliaPricingLink } from '@/components/MarketPricingSwitch'
 import CourseShowcase from '@/components/ccm/CourseShowcase'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 
 /** The bundled platform's year-2 rate = the tier a course enrolment INCLUDES,
  *  which is what the webhook attaches. Never a literal, and never a `.find()`
@@ -202,11 +203,21 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
   const [enrolling, setEnrolling] = useState(false)
   const [enrolError, setEnrolError] = useState<string | null>(null)
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail: checkoutSessionEmail,
+    resolved: resolvedCheckoutEmail,
+  } = useCheckoutEmail()
 
   // CCM international checkout is LIVE (not gated) — `international-online` grants
   // online-only = the CCM 8-module course. Currency is resolved server-side.
   const handleEnrol = async () => {
     if (enrolling) return
+    if (!resolvedCheckoutEmail) {
+      setEnrolError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      return
+    }
     setEnrolling(true)
     setEnrolError(null)
     trackEvent('checkout_start', {
@@ -218,7 +229,12 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseType: 'international-online', utm: { source: 'csp', medium: 'course-advert', campaign: 'intl-ccm' } }),
+        credentials: 'include',
+        body: JSON.stringify({
+          courseType: 'international-online',
+          email: resolvedCheckoutEmail,
+          utm: { source: 'csp', medium: 'course-advert', campaign: 'intl-ccm' },
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data?.url) {
@@ -332,6 +348,15 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               </div>
 
               <div className="mt-auto">
+                <CheckoutEmailField
+                  email={checkoutEmail}
+                  setEmail={setCheckoutEmail}
+                  sessionEmail={checkoutSessionEmail}
+                  disabled={enrolling}
+                  inputId="ccm-intl-checkout-email"
+                  placeholder={uk ? 'you@nhs.net' : 'your@email.com'}
+                  className="mb-3 text-left"
+                />
                 <button
                   type="button"
                   onClick={handleEnrol}

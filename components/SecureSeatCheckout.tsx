@@ -5,6 +5,7 @@ import { ArrowRight, Check, Loader2, MapPin, Shield } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { trackEvent, getAttribution } from '@/lib/analytics'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import {
   buildSecureSeatUrgency,
   fetchCityProgressRows,
@@ -61,6 +62,12 @@ export function SecureSeatCheckout({
   const [error, setError] = useState<string | null>(null)
   const [stuckUrl, setStuckUrl] = useState<string | null>(null)
   const [progressRow, setProgressRow] = useState<CityProgressRow | null | undefined>(undefined)
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail: checkoutSessionEmail,
+    resolved: resolvedCheckoutEmail,
+  } = useCheckoutEmail()
 
   useEffect(() => {
     if (defaultCity && CITY_OPTIONS.some((c) => c.slug === defaultCity)) {
@@ -110,6 +117,10 @@ export function SecureSeatCheckout({
 
   async function startCheckout() {
     if (loading) return
+    if (!resolvedCheckoutEmail) {
+      setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      return
+    }
     setLoading(true)
     setError(null)
     setStuckUrl(null)
@@ -127,6 +138,7 @@ export function SecureSeatCheckout({
         body: JSON.stringify({
           courseType: 'secure-seat',
           location: city,
+          email: resolvedCheckoutEmail,
           attribution: getAttribution(),
         }),
       })
@@ -165,6 +177,14 @@ export function SecureSeatCheckout({
       <div className={className}>
         {stuckUrl && <div className="mb-3"><CheckoutRescue url={stuckUrl} /></div>}
         {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+        <CheckoutEmailField
+          email={checkoutEmail}
+          setEmail={setCheckoutEmail}
+          sessionEmail={checkoutSessionEmail}
+          disabled={loading}
+          inputId="secure-seat-checkout-email"
+          className="mb-2"
+        />
         {!lockCity && (
           <label className="mb-2 block text-xs font-semibold text-slate-600">
             Preferred city
@@ -202,6 +222,14 @@ export function SecureSeatCheckout({
       <div className={`rounded-xl border border-amber-200/80 bg-amber-50/60 p-4 ${className}`}>
         {stuckUrl && <div className="mb-3"><CheckoutRescue url={stuckUrl} /></div>}
         {ProgressBadge && <div className="mb-2">{ProgressBadge}</div>}
+        <CheckoutEmailField
+          email={checkoutEmail}
+          setEmail={setCheckoutEmail}
+          sessionEmail={checkoutSessionEmail}
+          disabled={loading}
+          inputId="secure-seat-checkout-email-inline"
+          className="mb-2"
+        />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           {!lockCity && (
             <label className="flex-1 text-xs font-semibold text-slate-700">
@@ -286,6 +314,14 @@ export function SecureSeatCheckout({
           </select>
         </label>
       )}
+        <CheckoutEmailField
+          email={checkoutEmail}
+          setEmail={setCheckoutEmail}
+          sessionEmail={checkoutSessionEmail}
+          disabled={loading}
+          inputId="secure-seat-checkout-email-card"
+          className="mt-3 mb-1"
+        />
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
       <button
         type="button"

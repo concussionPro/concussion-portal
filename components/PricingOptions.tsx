@@ -17,6 +17,7 @@ import { CONFIG, afterpayInstalment, defaultNominationCity, isEarlyBirdForLocati
 import { trackEvent, trackLeadConversion, getAttribution } from '@/lib/analytics'
 import { PaymentMethodsStrip } from '@/components/PaymentMethodsStrip'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
@@ -270,6 +271,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   }, [])
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail: checkoutSessionEmail,
+    resolved: resolvedCheckoutEmail,
+  } = useCheckoutEmail()
 
   const isCompact = variant === 'compact'
 
@@ -367,6 +374,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
       setError('Please choose your workshop city.')
       return
     }
+    // Soft email: CCM always; CRM complete/secure same shared field; CRM online optional.
+    const crmNeedsEmail = courseType === 'full-course' || courseType === 'secure-seat'
+    if ((!crm || crmNeedsEmail) && !resolvedCheckoutEmail) {
+      setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      return
+    }
     try {
       setLoading(courseType)
       setError(null)
@@ -398,10 +411,12 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
         body: JSON.stringify(crm ? {
           tier: courseType === 'full-course' ? 'complete' : 'online',
           ...(selectedLocation ? { location: selectedLocation } : {}),
+          ...(resolvedCheckoutEmail ? { email: resolvedCheckoutEmail } : {}),
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
           attribution: getAttribution(),
         } : {
           courseType,
+          email: resolvedCheckoutEmail,
           ...((courseType === 'full-course' || courseType === 'secure-seat') && selectedLocation
             ? { location: selectedLocation }
             : {}),
@@ -461,6 +476,15 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <CheckoutRescue url={stuckCheckoutUrl} />
         </div>
       )}
+      <CheckoutEmailField
+        email={checkoutEmail}
+        setEmail={setCheckoutEmail}
+        sessionEmail={checkoutSessionEmail}
+        disabled={loading !== null}
+        inputId="checkout-email-compact"
+        className="mb-3"
+        placeholder="Email for your receipt & enrolment"
+      />
         {error && (
           <div role="alert" aria-live="assertive" className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800">
             <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -838,6 +862,16 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
           <CheckoutRescue url={stuckCheckoutUrl} />
         </div>
       )}
+      <div className="max-w-md mx-auto mb-6">
+        <CheckoutEmailField
+          email={checkoutEmail}
+          setEmail={setCheckoutEmail}
+          sessionEmail={checkoutSessionEmail}
+          disabled={loading !== null}
+          inputId="checkout-email-full"
+          placeholder="Email for your receipt & enrolment"
+        />
+      </div>
       {/* Global error */}
       {error && (
         <div role="alert" aria-live="assertive" className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
