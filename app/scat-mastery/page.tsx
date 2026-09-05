@@ -18,8 +18,8 @@ import {
   Star,
 } from 'lucide-react'
 import Link from 'next/link'
-import { CONFIG, SST_TIER_FROM_AUD } from '@/lib/config'
-import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
+import { CONFIG } from '@/lib/config'
+import { ScatFunnelExits } from '@/components/scat/ScatFunnelExits'
 import { SiteNav } from '@/components/SiteNav'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createCourseSchema } from '@/lib/schema-markup'
@@ -590,82 +590,9 @@ export default function SCATMasteryPage() {
           </div>
         </div>
 
-        {/* ── Competency path after free SCAT value (owner 2026-09-05) ──
-            SCAT6 promo stays primary. Secure your seat / Complete / Online after
-            the management gap. Soft SST only below that — do not steal the promo. */}
-        <div className="mt-20 md:mt-24 space-y-6">
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
-            <div className="text-center mb-6">
-              <p className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-emerald-800 mb-3">
-                Completers: code {CONFIG.COURSE.PROMO_CODE} · A${CONFIG.COURSE.SCAT_DISCOUNT_AUD} off
-              </p>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                SCAT mastery → full concussion competency
-              </h2>
-              <p className="text-sm text-slate-500 max-w-xl mx-auto">
-                Administering SCAT correctly is step one. Managing the case — VOMS, BESS,
-                phenotypes, return-to-play — is the next competency step. From A$
-                {CONFIG.COURSE.PRICE_ONLINE - CONFIG.COURSE.SCAT_DISCOUNT_AUD} Online with your completion code.
-              </p>
-            </div>
-
-            <ul className="space-y-3 max-w-md mx-auto mb-8">
-              {[
-                'VOMS (Vestibular/Ocular Motor Screening) — the assessment most clinicians should be using',
-                'BESS balance testing with hands-on scoring practice',
-                'Return-to-play & return-to-learn protocols for clubs and schools',
-                `Secure your seat (A$${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable) or Complete — date TBD until ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits`,
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-slate-700">
-                  <CheckCircle2 className="w-4.5 h-4.5 text-[#5b9aa6] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="grid gap-3 sm:grid-cols-3 max-w-3xl mx-auto mb-4">
-              <Link
-                href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
-                className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border border-teal-200 bg-white px-4 py-3 text-center hover:border-teal-400 transition-colors"
-              >
-                <span className="text-[11px] font-bold uppercase text-teal-700">Online</span>
-                <span className="text-sm font-bold text-slate-900">Enrol · promo {CONFIG.COURSE.PROMO_CODE}</span>
-              </Link>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-2">
-                <SecureSeatCheckout variant="button" source="scat_mastery" />
-              </div>
-              <Link
-                href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}#pricing-cards`}
-                className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-teal-300 bg-white px-4 py-3 text-center hover:border-teal-500 transition-colors"
-              >
-                <span className="text-[11px] font-bold uppercase text-amber-700">Complete</span>
-                <span className="text-sm font-bold text-slate-900">Date TBD · cohort of {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}</span>
-              </Link>
-            </div>
-            <p className="text-center text-xs text-slate-400">
-              7-day satisfaction guarantee · SCAT promo on Online · Secure seat is a separate soft commit
-            </p>
-          </div>
-
-          {/* Soft SST — after management gap only; separate product surface */}
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Already know the protocol?</p>
-              <p className="text-sm font-semibold text-slate-800 mt-0.5">
-                Apply it in clinic with SST Clinical Testing
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Standalone from A${SST_TIER_FROM_AUD}/mo — pricing on /clinical-suite, not mixed into course cards.
-              </p>
-            </div>
-            <Link
-              href="/clinical-suite"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-100"
-            >
-              See SST
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+        {/* ── Equal-weight dual exit after free SCAT value (owner: push SST harder) ── */}
+        <div className="mt-20 md:mt-24">
+          <ScatFunnelExits context="scat-mastery" showPromo />
         </div>
 
         {/* ── Regulatory context — blog links ── */}
