@@ -30,6 +30,20 @@ describe('prod FAIL regressions (half-full / scat6 braces / complete-reference)'
     expect(mid.progressLine).toMatch(/6 of 12/)
   })
 
+
+  it('SpotsRemaining uses half-full urgency (no raw N spots remaining below half)', () => {
+    const src = readFileSync(join(root, 'components/SpotsRemaining.tsx'), 'utf8')
+    expect(src).toContain('buildSecureSeatUrgency')
+    expect(src).toContain('progressKnown: true')
+    expect(src).not.toMatch(/\{spotsLeft\} \{spotsLeft === 1 \? 'spot' : 'spots'\} remaining/)
+  })
+
+  it('melbourne-nov7 seat line uses half-full urgency (no raw seats left below half)', () => {
+    const src = readFileSync(join(root, 'app/melbourne-nov7/page.tsx'), 'utf8')
+    expect(src).toContain('buildSecureSeatUrgency')
+    expect(src).not.toContain('seats left — capped at')
+  })
+
   it('ClinicalToolkitDoc parses {scat6_*} merge tokens (digits)', () => {
     const src = readFileSync(join(root, 'components/toolkit/ClinicalToolkitDoc.tsx'), 'utf8')
     expect(src).toContain('[a-z0-9_]')

@@ -8,6 +8,7 @@ import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
 import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import { CONFIG, upgradePriceFor, cpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
+import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -143,9 +144,19 @@ export default function MelbourneNov7Page() {
             <div className="flex items-center gap-2.5 rounded-xl bg-teal-50 border border-teal-200 px-3.5 py-2.5">
               <Users className="w-5 h-5 text-teal-700 flex-shrink-0" />
               <p className="text-[14px] font-bold text-slate-900">
-                {seatsLeft !== null && seatsLeft < CONFIG.WORKSHOP.CAPACITY_PER_COURSE
-                  ? `${seatsLeft} of ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats left — capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE}`
-                  : `Capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats`}
+                {(() => {
+                  const capacity = CONFIG.WORKSHOP.CAPACITY_PER_COURSE
+                  if (seatsLeft === null) return `Capped at ${capacity} seats`
+                  const enrolled = Math.max(0, capacity - seatsLeft)
+                  const urgency = buildSecureSeatUrgency({
+                    cityLabel: 'Melbourne',
+                    enrolled,
+                    threshold: capacity,
+                    progressKnown: true,
+                  })
+                  // Half-full rule: never flash "11 of 12 seats left" on a 1-paid room.
+                  return urgency.progressLine || `Capped at ${capacity} seats`
+                })()}
                 <span className="font-medium text-slate-600"> — CCM and CRM streams train together, one multidisciplinary room</span>
               </p>
             </div>

@@ -3,12 +3,19 @@
 import { useState, useEffect } from 'react'
 import { CONFIG, Location } from '@/lib/config'
 import { AlertCircle } from 'lucide-react'
+import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
 
 interface SpotsRemainingProps {
   location: Location
   className?: string
 }
 
+/**
+ * Confirmed-city seat line — honest counts only, gated by the half-full rule.
+ * Owner 2026-09-05: never show n/12 (or "N spots remaining") when the room
+ * looks empty. Below half of CAPACITY (6 of 12) use forming copy with no
+ * numbers; at ≥6 show progress; at ≥9 use "only X left."
+ */
 export default function SpotsRemaining({ location, className = '' }: SpotsRemainingProps) {
   const [spotsLeft, setSpotsLeft] = useState<number | null>(null)
 
@@ -16,12 +23,8 @@ export default function SpotsRemaining({ location, className = '' }: SpotsRemain
     const locationData = CONFIG.LOCATIONS[location]
     if (!locationData || locationData.status !== 'confirmed') return
 
-    // Fetch live enrollment count for confirmed cities.
-    // NO FALLBACK: a stated seat count must be a REAL one. This used to fall
-    // back to CAPACITY_PER_COURSE on any failure, so a 500 (or an HTML error
-    // page that blew up `.json()`) rendered "12 spots remaining" — a number
-    // nothing had measured, on the page where the buyer decides. Non-2xx and
-    // network throws now both leave the counter unrendered.
+    // NO FALLBACK: a stated seat count must be a REAL one. Non-2xx / throws
+    // leave the counter unrendered rather than inventing capacity.
     fetch(`/api/early-bird-status?location=${locationData.slug}`)
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
@@ -38,15 +41,32 @@ export default function SpotsRemaining({ location, className = '' }: SpotsRemain
     return null
   }
 
-  const isLowSpots = spotsLeft <= 5
+  const locationData = CONFIG.LOCATIONS[location]
+  const capacity = CONFIG.WORKSHOP.CAPACITY_PER_COURSE
+  const enrolled = Math.max(0, capacity - Math.floor(spotsLeft))
+  const urgency = buildSecureSeatUrgency({
+    cityLabel: locationData?.city || 'this city',
+    enrolled,
+    threshold: capacity,
+    progressKnown: true,
+  })
+
+  const halfFull = Math.floor(capacity / 2)
+  const highUrgency = enrolled >= capacity - 3 && enrolled < capacity
+  const line = urgency.progressLine
+  if (!line) return null
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
-      {isLowSpots && (
+      {highUrgency && (
         <AlertCircle className="w-4 h-4 text-orange-600 animate-pulse" aria-hidden="true" />
       )}
-      <span className={`text-sm font-bold ${isLowSpots ? 'text-orange-600' : 'text-slate-700'}`}>
-        {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} remaining
+      <span
+        className={`text-sm font-bold ${
+          highUrgency ? 'text-orange-600' : enrolled >= halfFull ? 'text-slate-700' : 'text-slate-600'
+        }`}
+      >
+        {line}
       </span>
     </div>
   )
