@@ -371,7 +371,6 @@ export default function SCAT6DownloadPage() {
                   source="scat6_download_post"
                   className="mt-1 border-teal-200/70 shadow-none"
                 />
-                </div>
               </div>
             ) : (
               /* Download form */
