@@ -42,12 +42,15 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
 
   it('AfterTheAssessment: free mastery + Online + SST dual exit', () => {
     const src = readFileSync(join(root, 'components/scat-forms/AfterTheAssessment.tsx'), 'utf8')
-    expect(src).toContain('href="/scat-mastery"')
+    expect(src).toContain('/scat-mastery')
     expect(src).toContain('Start free course')
     expect(src).toContain('Enrol Online')
-    expect(src).toContain('href="/pricing"')
-    expect(src).toContain('href="/clinical-suite"')
+    expect(src).toContain('/pricing')
+    expect(src).toContain('/clinical-suite')
     expect(src).toContain('See SST Clinical Testing')
+    expect(src).toContain('href={pricingHref}')
+    expect(src).toContain('href={suiteHref}')
+    expect(src).toContain('href={masteryHref}')
   })
 
   it('SCAT form Clients land completers on AfterTheAssessment (not mastery-only)', () => {
@@ -86,6 +89,39 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     const cron = readFileSync(join(root, 'app/api/cron/send-nurture-emails/route.ts'), 'utf8')
     expect(cron).toContain('PAUSED_SCAT_MASTERY_DAYS = new Set([3, 10, 28, 42])')
     expect(cron).toContain('PAUSED_PDF_LEAD_DAYS = new Set([3, 14, 45])')
+  })
+
+  it('scat6-download post-download uses compact Online + SST + mastery bridge (not /preview)', () => {
+    const src = readFileSync(join(root, 'app/scat6-download/page.tsx'), 'utf8')
+    expect(src).toContain("from '@/components/scat-forms/AfterTheAssessment'")
+    expect(src).toContain('source="scat6_download_post"')
+    expect(src).toContain('compact')
+    expect(src).toContain('source="scat6_download"')
+    expect(src).toContain('/pricing?src=scat6_download_pre')
+    expect(src).toContain('/clinical-suite?src=scat6_download_pre')
+    expect(src).toContain('/scat-mastery?src=scat6_download_pre')
+    expect(src).not.toContain('href="/preview"')
+    expect(src).not.toContain('utm_campaign=post_download')
+    expect(src).not.toContain('Or start the free 1-hour SCAT6 course')
+  })
+
+  it('resources lander post-capture mounts compact dual-exit bridge', () => {
+    const src = readFileSync(join(root, 'app/resources/page.tsx'), 'utf8')
+    expect(src).toContain("from '@/components/scat-forms/AfterTheAssessment'")
+    expect(src).toContain('source="resources_post"')
+    expect(src).toContain('source="resources"')
+    expect(src).not.toContain('start Module 1 of the free course')
+  })
+
+  it('AfterTheAssessment compact + source props stay wired for download landers', () => {
+    const src = readFileSync(join(root, 'components/scat-forms/AfterTheAssessment.tsx'), 'utf8')
+    expect(src).toContain('compact = false')
+    expect(src).toContain('source?: string')
+    expect(src).toContain('After your download')
+    expect(src).toContain('/pricing')
+    expect(src).toContain('/clinical-suite')
+    expect(src).toContain('/scat-mastery')
+    expect(src).toContain('does not unpause cold SCAT')
   })
 
 })

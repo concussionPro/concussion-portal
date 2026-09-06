@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { FileText, CheckSquare, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
 
 export default function ResourcesPage() {
   const [email, setEmail] = useState('')
@@ -225,42 +226,29 @@ export default function ResourcesPage() {
               )}
             </div>
 
-            <div className="text-center pt-6 border-t border-teal-200 space-y-3">
-              <Link
-                href="/scat6-download"
-                className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
-              >
-                Download the SCAT6 &amp; SCOAT6 forms
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <p className="text-sm text-slate-600">
-                Or{' '}
-                <Link href="/modules/101" className="text-[#6b9da8] font-semibold hover:underline">
-                  start Module 1 of the free course
+            <div className="pt-6 border-t border-teal-200 space-y-4">
+              <div className="text-center">
+                <Link
+                  href="/scat6-download"
+                  className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
+                >
+                  Download the SCAT6 &amp; SCOAT6 forms
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
-                .
-              </p>
+              </div>
+              {/* Same dual exit as /scat6-download post-download — Online + SST + mastery, no cold email */}
+              <AfterTheAssessment
+                compact
+                source="resources_post"
+                className="shadow-none"
+              />
             </div>
           </div>
         )}
 
-        {/* CTA to Free Course */}
+        {/* Ladder bridge — mastery + Online + SST (same as forms/download) */}
         {!submitted && (
-          <div className="bg-slate-900 rounded-2xl p-8 text-center">
-            <h3 className="text-2xl font-bold text-white mb-3">
-              Ready for Structured Training?
-            </h3>
-            <p className="text-slate-300 mb-6">
-              Start with free SCAT6 Mastery — 3 modules, no credit card required.
-            </p>
-            <Link
-              href="/scat-mastery"
-              className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
-            >
-              Start Free SCAT6 Course
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <AfterTheAssessment source="resources" className="mb-4" />
         )}
       </div>
     </div>

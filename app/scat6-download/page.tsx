@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
 import {
-  Brain,
   Mail,
   User,
   Check,
@@ -16,12 +15,10 @@ import {
   FileText,
   CheckCircle2,
   Zap,
-  BookOpen,
   ChevronRight,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
-import { CONFIG, CPD_YEAR_END_LABEL } from '@/lib/config'
 
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat6-download'
@@ -368,49 +365,12 @@ export default function SCAT6DownloadPage() {
                   </div>
                 </div>
 
-                {/* Upsell to mastery course */}
-                <div className="bg-gradient-to-br from-teal-50 to-blue-50/50 rounded-xl border border-teal-200/60 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#5b9aa6]/10 border border-[#5b9aa6]/20 flex items-center justify-center flex-shrink-0">
-                      <BookOpen className="w-4 h-4 text-[#5b9aa6]" />
-                    </div>
-                    <div>
-                      {/* THE HANDOVER, REPOINTED (2026-08-22).
-                          This box fires at the single warmest moment the site
-                          owns: they have just given an email and are logged in.
-                          It used to hand that moment to the free SCAT course —
-                          which has converted 0 of 46 signups to paid, and which
-                          the freemium literature predicts (a COMPLETE free
-                          version substitutes for the paid one; NYT metering
-                          +31% subs, n=29.7M; removing a free unlock +20.98%).
-                          It now leads with the paid course's real content and
-                          the CPD arithmetic that actually drives clinician
-                          purchases, with the free course kept as the secondary
-                          option rather than the headline. */}
-                      <p className="text-sm font-semibold text-slate-900 mb-0.5">
-                        The form gives you a score. Now what?
-                      </p>
-                      <p className="text-xs text-slate-600 mb-3 leading-snug">
-                        Scoring is the easy half — the decision is what the score means and what you
-                        do on Monday. Read the real course content free, no signup:{' '}
-                        {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours covers most of your year, and the
-                        CPD year closes {CPD_YEAR_END_LABEL}.
-                      </p>
-                      <Link
-                        href="/preview?utm_source=scat6_download&utm_medium=internal&utm_campaign=post_download"
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#5b9aa6] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#4a8a96]"
-                      >
-                        See what the course covers
-                        <ChevronRight className="w-4 h-4" />
-                      </Link>
-                      <Link
-                        href="/modules/101"
-                        className="mt-2 block text-[11px] font-semibold text-slate-500 hover:text-[#5b9aa6] transition-colors"
-                      >
-                        Or start the free 1-hour SCAT6 course →
-                      </Link>
-                    </div>
-                  </div>
+                {/* Post-download dual exit: Online + SST + scat-mastery (UI-only; cold SCAT stays paused) */}
+                <AfterTheAssessment
+                  compact
+                  source="scat6_download_post"
+                  className="mt-1 border-teal-200/70 shadow-none"
+                />
                 </div>
               </div>
             ) : (
@@ -553,34 +513,26 @@ export default function SCAT6DownloadPage() {
               </div>
             )}
 
-            {/* Upsell promo box (visible before submit) */}
+            {/* Pre-download bridge teaser — money pages + mastery, not /preview dead-end */}
             {!success && (
-              <div className="mt-4 bg-gradient-to-br from-teal-50 to-blue-50/50 rounded-xl border border-teal-200/60 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#5b9aa6]/10 border border-[#5b9aa6]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <BookOpen className="w-4 h-4 text-[#5b9aa6]" />
-                  </div>
-                  <div>
-                    {/* Routes to the free-to-read TRIAL, not the free course.
-                        The free course converts 0 of 46 signups to paid — 17
-                        finished it and none bought — so sending a downloader
-                        there just adds another non-converting email. The trial
-                        shows real paid module content and qualifies. */}
-                    <p className="text-sm font-semibold text-slate-900 mb-0.5">
-                      The form gives you a score. What do you do with it?
-                    </p>
-                    <p className="text-xs text-slate-600 mb-2 leading-snug">
-                      Read the opening of every module free — phenotypes, VOMS, BESS and
-                      return-to-play reasoning. No signup.
-                    </p>
-                    <Link
-                      href="/preview"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#5b9aa6] hover:text-[#4a8a96] transition-colors"
-                    >
-                      Read the course preview
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
+              <div className="mt-4 rounded-xl border border-teal-200/60 bg-gradient-to-br from-teal-50 to-blue-50/50 p-4">
+                <p className="text-sm font-semibold text-slate-900 mb-0.5">
+                  After the PDF: Online, SST, or free SCAT mastery
+                </p>
+                <p className="text-xs text-slate-600 mb-3 leading-snug">
+                  Scoring is only half the job. Enrol Online for full competency, run SST in clinic,
+                  or start free SCAT mastery first — no cold email wall.
+                </p>
+                <div className="flex flex-col gap-1.5 text-xs font-semibold">
+                  <Link href="/pricing?src=scat6_download_pre" className="inline-flex items-center gap-1 text-[#0d7377] hover:underline">
+                    Enrol Online <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link href="/clinical-suite?src=scat6_download_pre" className="inline-flex items-center gap-1 text-cyan-900 hover:underline">
+                    See SST Clinical Testing <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link href="/scat-mastery?src=scat6_download_pre" className="inline-flex items-center gap-1 text-emerald-800 hover:underline">
+                    Free SCAT mastery (~1 hr) <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               </div>
             )}
@@ -619,7 +571,7 @@ export default function SCAT6DownloadPage() {
             analytics finding "Organic Search sends visitors who never touch a
             money page"). Same component /scat-forms uses; free-to-read trial
             first, never another email wall. */}
-        <AfterTheAssessment className="mt-6" />
+        <AfterTheAssessment source="scat6_download" className="mt-6" />
 
         {/* ── Crawlable Q&A — mirrored exactly in the FAQPage JSON-LD ── */}
         <div className="mt-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-7 shadow-lg shadow-slate-200/40">
