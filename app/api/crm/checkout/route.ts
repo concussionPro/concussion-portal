@@ -6,6 +6,10 @@ import { VALID_LOCATIONS } from '@/lib/stripe'
 import { userOwnsCrm } from '@/lib/crm-course'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
+import {
+  isCrmCheckoutEmailRequired,
+  resolveCheckoutCustomerEmail,
+} from '@/lib/checkout-email'
 
 /**
  * POST /api/crm/checkout — Concussion Rehab Mastery (EP stream) purchase.
