@@ -288,9 +288,9 @@ export async function GET(request: Request) {
     // 2026-09-05 Zac confirm: PAUSE cold free-resource SCAT monetization drip.
     // Evidence: 0/4 joinable buyers got classic SCAT nurture before pay; free-resource
     // collectors historically 0-for-106. Keep Module activation / paid-student nudges.
-    // Paused: $50 discount, SCAT6/SCOAT6, red flags, training-behind-forms, CPD-options final.
+    // Paused: $50 discount, SCAT6/SCOAT6, red flags, PDF baseline day28, training-behind-forms, CPD-options final.
     const PAUSED_SCAT_MASTERY_DAYS = new Set([3, 10, 28, 42])
-    const PAUSED_PDF_LEAD_DAYS = new Set([3, 14, 45])
+    const PAUSED_PDF_LEAD_DAYS = new Set([3, 14, 28, 45])
 
     // Stagger nurture sends across ~30-45 min with per-domain throttling so
     // the daily batch doesn't read as a marketing blast to inbox providers.
