@@ -85,10 +85,11 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(page).toContain("from '@/components/scat/SoftScatPaidBridge'")
     expect(page).toContain('source="scat_module1_complete"')
     expect(page).toMatch(/moduleId === 101 && accessLevel === 'preview'/)
-    // Cold drip pause must stay — soft bridge is UI-only, not unpausing nurture days
+    // Cold free SCAT reengagement must stay HARD-OFF — soft bridge is UI-only
     const cron = readFileSync(join(root, 'app/api/cron/send-nurture-emails/route.ts'), 'utf8')
-    expect(cron).toContain('PAUSED_SCAT_MASTERY_DAYS = new Set([3, 10, 28, 42])')
-    expect(cron).toContain('PAUSED_PDF_LEAD_DAYS = new Set([3, 14, 45])')
+    expect(cron).toContain('COLD_FREE_SCAT_REENGAGEMENT_ENABLED = false')
+    expect(cron).toContain('PAUSED_SCAT_MASTERY_DAYS = new Set([3, 7, 10, 14, 28, 42])')
+    expect(cron).toContain('PAUSED_PDF_LEAD_DAYS = new Set([3, 7, 14, 28, 45])')
   })
 
   it('scat6-download post-download uses compact Online + SST + mastery bridge (not /preview)', () => {

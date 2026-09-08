@@ -285,12 +285,17 @@ export async function GET(request: Request) {
     // 'sst-clinic', 'cpd-tracker', 'purchase', 'admin', 'alumni*' → none.
     const SCAT_DRIP_SOURCES = new Set(['free-course', 'squarespace', 'scat-export', 'preseason'])
 
-    // 2026-09-05 Zac confirm: PAUSE cold free-resource SCAT monetization drip.
-    // Evidence: 0/4 joinable buyers got classic SCAT nurture before pay; free-resource
-    // collectors historically 0-for-106. Keep Module activation / paid-student nudges.
-    // Paused: $50 discount, SCAT6/SCOAT6, red flags, PDF baseline day28, training-behind-forms, CPD-options final.
-    const PAUSED_SCAT_MASTERY_DAYS = new Set([3, 10, 28, 42])
-    const PAUSED_PDF_LEAD_DAYS = new Set([3, 14, 28, 45])
+    // HARD KILL 2026-09-09 (Zac): entire cold free SCAT/PDF reengagement OFF.
+    // History: 3b10713a paused some days; 1ff877a5 added PDF day 28 after Sep 8
+    // Resend still delivered "The test that makes every future SCAT6 more useful".
+    // Partial pause still left SCAT days 7/14 + day-7 FREE_LOGGED_IN_NO_PROGRESS /
+    // PDF_LEAD_TOOLS live. Flag stays false — do not re-enable without Zac.
+    // Keep: abandoned-checkout (section 0), post-purchase + paid module nudges,
+    // FREE_ALMOST_DONE (section 9 module activation for 2/3 progress).
+    const COLD_FREE_SCAT_REENGAGEMENT_ENABLED = false
+    // Expanded pause sets kept as defence-in-depth if the flag is ever flipped.
+    const PAUSED_SCAT_MASTERY_DAYS = new Set([3, 7, 10, 14, 28, 42])
+    const PAUSED_PDF_LEAD_DAYS = new Set([3, 7, 14, 28, 45])
 
     // Stagger nurture sends across ~30-45 min with per-domain throttling so
     // the daily batch doesn't read as a marketing blast to inbox providers.
@@ -313,7 +318,11 @@ export async function GET(request: Request) {
 
     // ── 1. SCAT6 Mastery Nurture Sequence (preview users) ──
     // Routes Day 7 and Day 10 to variant emails based on user activity/progress
+    if (!COLD_FREE_SCAT_REENGAGEMENT_ENABLED) {
+      console.log('[Nurture] Cold free SCAT/PDF reengagement HARD-OFF — skipping section 1')
+    }
     for (const user of users) {
+      if (!COLD_FREE_SCAT_REENGAGEMENT_ENABLED) break
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
@@ -1119,7 +1128,12 @@ export async function GET(request: Request) {
     // ── 8. SCAT6 Mastery Completion Upsell (cron fallback) ──
     // Catches preview users who completed all 3 modules but didn't trigger upsell
     // via the certificate endpoint (e.g. downloaded PDF only, or never clicked certificate)
+    // HARD-OFF with cold free SCAT reengagement (2026-09-09) — free monetization lane.
+    if (!COLD_FREE_SCAT_REENGAGEMENT_ENABLED) {
+      console.log('[Nurture] SCAT completion upsell HARD-OFF — skipping section 8')
+    }
     for (const user of users) {
+      if (!COLD_FREE_SCAT_REENGAGEMENT_ENABLED) break
       if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
@@ -1195,7 +1209,12 @@ export async function GET(request: Request) {
     // copy that says so truthfully (SCAT_COMPLETION_UPSELL opens "You've
     // finished the SCAT6 Mastery course" and must never be widened to them).
     // Lane 9 below handles 2-of-3; this is the 1-of-3 gap nobody covered.
+    // HARD-OFF with cold free SCAT reengagement (2026-09-09) — $50 ladder monetization.
+    if (!COLD_FREE_SCAT_REENGAGEMENT_ENABLED) {
+      console.log('[Nurture] SCAT module1 ladder HARD-OFF — skipping section 8b')
+    }
     for (const user of users) {
+      if (!COLD_FREE_SCAT_REENGAGEMENT_ENABLED) break
       if (exceedsWeeklyCap(user.email)) continue
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
