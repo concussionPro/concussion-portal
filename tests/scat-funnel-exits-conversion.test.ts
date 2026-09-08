@@ -125,4 +125,15 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(src).toContain('does not unpause cold SCAT')
   })
 
+
+  it('VOMS lander mounts AfterTheAssessment Online+SST dual exit (not buried mastery/pricing only)', () => {
+    const src = readFileSync(join(root, 'app/scat-forms/voms/page.tsx'), 'utf8')
+    expect(src).toContain("from '@/components/scat-forms/AfterTheAssessment'")
+    expect(src).toContain('<AfterTheAssessment')
+    expect(src).toContain('source="voms"')
+    expect(src).toContain('print:hidden')
+    expect(src).not.toContain('Want the full assess-to-rehab pathway')
+  })
+
+
 })

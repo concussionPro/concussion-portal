@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
 import { createFAQSchema, createMedicalWebPageSchema } from '@/lib/schema-markup'
+import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat-forms/voms'
 
@@ -188,19 +189,9 @@ export default function VomsPage() {
             </div>
           ))}
         </div>
-        <p className="mt-6 pt-4 border-t border-slate-100 text-sm text-slate-600">
-          Want the full assess-to-rehab pathway — VOMS interpretation, phenotype-driven
-          rehabilitation and graded return?{' '}
-          <a href="/scat-mastery" className="text-blue-600 font-semibold hover:underline">
-            Start with the free SCAT6 Mastery course
-          </a>{' '}
-          or see the{' '}
-          <a href="/pricing" className="text-blue-600 font-semibold hover:underline">
-            Concussion Clinical Mastery course
-          </a>
-          .
-        </p>
       </section>
+
+      <AfterTheAssessment source="voms" className="mt-6 print:hidden" />
     </>
   )
 }
