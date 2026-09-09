@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { retrieveCheckoutSession, COURSE_ACCESS_MAP } from '@/lib/stripe'
-import { findUserByEmail } from '@/lib/users'
+import { findUserByEmail, setUserNameFromTrustedSource } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
 
 // Rate limit: max 20 requests per session ID per 15 minutes
@@ -77,7 +77,19 @@ export async function GET(request: NextRequest) {
 
     const customerEmail = session.customer_details?.email || ''
     const customerName = session.customer_details?.name || ''
-    const courseType = session.metadata?.courseType || 'online-only'
+    // CRM checkouts stamp productType/stream/tier and often omit courseType.
+    // Defaulting missing courseType to 'online-only' made success-page analytics
+    // (and any courseType-only UI) treat a CRM Online sale as CCM online-only
+    // (Jessica Cheslett 2026-09-09 — purchase event courseType:'online-only'
+    // while Stripe metadata.stream was 'crm').
+    const isCrmSession =
+      session.metadata?.stream === 'crm' ||
+      session.metadata?.productType === 'crm-course' ||
+      session.metadata?.productType === 'crm-upgrade'
+    const crmTier = session.metadata?.tier || 'online'
+    const courseType = isCrmSession
+      ? (crmTier === 'complete' ? 'crm-complete' : crmTier === 'upgrade' ? 'crm-upgrade' : 'crm-online')
+      : (session.metadata?.courseType || 'online-only')
 
     // Redact email — show first name and masked email so user can confirm identity
     // without exposing the full address to unauthenticated requests
@@ -89,6 +101,7 @@ export async function GET(request: NextRequest) {
     // response so the client knows whether a logged-in session was minted.
     // - Retries user lookup if webhook hasn't created/upgraded the user yet (#11)
     // - Always sets fresh JWT so access level reflects the purchase (#13)
+    // - Re-applies Stripe customer_details.name so the JWT/DB match the payer
     let sessionToken: string | null = null
     if (customerEmail) {
       try {
@@ -101,6 +114,14 @@ export async function GET(request: NextRequest) {
           }
         }
         if (user) {
+          if (customerName && customerName !== user.name) {
+            try {
+              await setUserNameFromTrustedSource(customerEmail, customerName)
+              user = { ...user, name: customerName }
+            } catch (nameErr) {
+              console.error('Post-checkout name sync failed:', nameErr)
+            }
+          }
           const accessLevel = user.accessLevel as 'preview' | 'online-only' | 'full-course'
           sessionToken = createJWTSession(user.id, user.email, user.name || customerName, accessLevel, true)
         }
@@ -125,8 +146,8 @@ export async function GET(request: NextRequest) {
         // success page defaulted them to 'online-only' and rendered the CCM
         // confirmation (Start Module 1, SCAT6/VOMS/BESS outcomes, CCM workshop
         // upgrade) to an exercise physiologist (2026-08-05 parity).
-        stream: session.metadata?.stream === 'crm' ? 'crm' : 'ccm',
-        tier: session.metadata?.tier || '',
+        stream: isCrmSession ? 'crm' : 'ccm',
+        tier: isCrmSession ? crmTier : (session.metadata?.tier || ''),
         location: session.metadata?.location || '',
         amountPaid: (session.amount_total || 0) / 100,
         currency: (session.currency || 'aud').toUpperCase(),

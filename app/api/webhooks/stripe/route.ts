@@ -4,7 +4,7 @@ import { setSstClinicPlan, getSstClinicByEmail, getSstClinicStripeSubscription }
 import { provisionPlatformForBuyer } from '@/lib/sst-trainer/bundle'
 
 export const maxDuration = 60
-import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
+import { createUser, findUserByEmail, markBookPurchased, setUserNameFromTrustedSource } from '@/lib/users'
 import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
 import { isEmailSuppressed } from '@/lib/email-suppression'
 import { createCourseHub, redeemHubSeat, revokeHub, hubSeatsForDeclaredCount, HUB_ADMIN_SEATS } from '@/lib/course-hub'
@@ -157,6 +157,7 @@ async function handleSecureSeatDeposit(
     await createUser({
       email: customerEmail,
       name: customerName,
+        trustedName: true,
       accessLevel: 'preview',
       stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
       workshopLocation: location || undefined,
@@ -731,6 +732,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await createUser({
         email: customerEmail,
         name: customerName,
+        trustedName: true,
         accessLevel,
         stripeCustomerId: (typeof session.customer === 'string' ? session.customer : undefined),
         workshopLocation: workshopCity || undefined,
@@ -764,11 +766,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     userId = await createUser({
       email: customerEmail,
       name: customerName,
+        trustedName: true,
       accessLevel,
       stripeCustomerId: (typeof session.customer === 'string' ? session.customer : undefined),
       workshopLocation: workshopCity || undefined,
       signupSource: 'purchase',
     })
+  }
+
+  // Stripe customer_details.name is authoritative for paid fulfilment. Re-apply
+  // after createUser so a concurrent free-signup upsert cannot leave a wrong
+  // display name on the buyer (2026-09-09 Bec Burns / Olivia Millar).
+  try {
+    await setUserNameFromTrustedSource(customerEmail, customerName)
+  } catch (err) {
+    console.error(`Failed to sync purchase name for ${redact(customerEmail)}:`, err)
   }
 
   // Record EVERY CCM purchase in course_purchases at fulfilment (2026-08-05
@@ -1024,6 +1036,7 @@ async function handleShortCoursePurchase(
     userId = await createUser({
       email: customerEmail,
       name: customerName,
+        trustedName: true,
       accessLevel: 'preview',
       stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
       signupSource: 'purchase',
@@ -1184,16 +1197,24 @@ async function handleCrmPurchase(
     : await createUser({
         email: customerEmail,
         name: customerName,
+        trustedName: true,
         accessLevel: 'preview',
         stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
         workshopLocation: location || undefined,
         signupSource: 'ep-course',
       })
-  // Existing user: still capture the nominated city. createUser's COALESCE
-  // prefers the NEW value (EXCLUDED first), so the latest nomination wins —
-  // which is what we want for a fresh purchase.
-  if (existing && location) {
-    await createUser({ email: customerEmail, name: customerName, accessLevel: existing.accessLevel, workshopLocation: location, signupSource: 'ep-course' })
+  // Existing user: capture nominated city (when present) and always apply the
+  // Stripe customer_details.name — createUser now preserves names by default,
+  // so paid fulfilment must pass trustedName (or call setUserNameFromTrustedSource).
+  if (existing) {
+    await createUser({
+      email: customerEmail,
+      name: customerName,
+      trustedName: true,
+      accessLevel: existing.accessLevel,
+      workshopLocation: location || undefined,
+      signupSource: 'ep-course',
+    })
   }
 
   // Entitlements — rethrow on failure so Stripe retries (buyer must not be left
@@ -1221,6 +1242,14 @@ async function handleCrmPurchase(
       })
     } catch (alertErr) { console.error('[crm] admin alert failed:', alertErr) }
     throw err
+  }
+
+  // Paid Stripe name wins — including for existing preview leads whose row
+  // pre-dated the purchase (createUser alone preserves names by default now).
+  try {
+    await setUserNameFromTrustedSource(customerEmail, customerName)
+  } catch (err) {
+    console.error(`[crm] name sync failed for ${redact(customerEmail)}:`, err)
   }
 
   try {
@@ -1515,6 +1544,7 @@ async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerE
   const userId = await createUser({
     email: customerEmail,
     name: customerName,
+        trustedName: true,
     accessLevel: 'full-course',
     stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
     signupSource: 'purchase',
@@ -1661,6 +1691,7 @@ async function handleBookPurchase(
     userId = await createUser({
       email: customerEmail,
       name: customerName,
+        trustedName: true,
       accessLevel: 'preview',
       signupSource: 'purchase',
     })

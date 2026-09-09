@@ -295,6 +295,15 @@ export async function createUser(data: {
    * grant (/api/admin/update-user-access), never by a later hub re-redeem.
    */
   hubPackSeat?: boolean
+  /**
+   * When true (paid Stripe fulfilment / admin sale), a non-empty incoming name
+   * OVERWRITES the existing row. Default false: keep the existing name so a
+   * later free signup, email-gate, or Squarespace form cannot clobber the
+   * Stripe customer_details.name stamped at purchase (2026-09-09: Bec Burns
+   * landed as "Olivia Millar" after a post-purchase name write won over the
+   * paid identity).
+   */
+  trustedName?: boolean
 }): Promise<string> {
   await ensureColumns()
   await ensureEmailIndex()
@@ -327,7 +336,13 @@ export async function createUser(data: {
         WHEN EXCLUDED.access_level = 'online-only' AND users.access_level = 'preview' THEN 'online-only'
         ELSE users.access_level
       END,
-      name = COALESCE(NULLIF(EXCLUDED.name, ''), users.name),
+      -- Default PRESERVES an existing name (free signup / email-gate / SS form
+      -- must never overwrite a paid Stripe identity). trustedName purchase
+      -- paths pass the flag so customer_details.name wins.
+      name = CASE
+        WHEN ${data.trustedName === true} AND NULLIF(EXCLUDED.name, '') IS NOT NULL THEN EXCLUDED.name
+        ELSE COALESCE(NULLIF(users.name, ''), EXCLUDED.name)
+      END,
       stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, users.stripe_customer_id),
       stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, users.stripe_subscription_id),
       workshop_location = COALESCE(EXCLUDED.workshop_location, users.workshop_location),
@@ -362,6 +377,23 @@ export async function createUser(data: {
   `
 
   return rows[0].id
+}
+
+
+/**
+ * Force-set users.name from a trusted identity source (Stripe customer_details).
+ * Paid fulfilment calls this AFTER createUser so a concurrent free-signup
+ * upsert cannot leave a stale/wrong display name on the buyer row.
+ */
+export async function setUserNameFromTrustedSource(email: string, name: string): Promise<void> {
+  const clean = (name || '').trim()
+  if (!email || !clean) return
+  await sql`
+    UPDATE users
+    SET name = ${clean}
+    WHERE LOWER(email) = LOWER(${email})
+      AND name IS DISTINCT FROM ${clean}
+  `
 }
 
 /** Ensure unique index on LOWER(email) for upsert support */
