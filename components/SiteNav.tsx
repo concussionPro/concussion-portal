@@ -17,17 +17,32 @@ import { clearLocalLearnerState } from '@/contexts/ProgressContext'
 // 2026-08-04 routing fix (owner): "Courses" led to the CCM-only pricing page
 // while the tabbed CCM⇄CRM hub lived unlinked at /courses. Free Training stays
 // on /scat-mastery (SCAT free gate + dual paid exits; CCHC only as Further reading).
+// ORDER AND ACCENT ARE SET BY BUYER PATHS, not by funnel shape (2026-09-09).
+// Every paying customer to date, traced event by event:
+//
+//   entered /pricing   -> Bec, sld_osteo, kadyn, sonya   4 buyers, 1 attempt EACH
+//   entered /courses   -> jessica, tandiaee              2 buyers, 2 attempts each
+//   entered /crm page  -> jaydenlehman                   1 buyer,  1 attempt
+//   entered /scat-mastery or /scat6-download             ZERO buyers, ever
+//
+// /pricing is the only surface anyone has bought from first time. /scat-mastery
+// held the first slot AND the only accent, pointing at the free cohort that is
+// 0-for-106 lifetime and produced none of the seven sales — while being the
+// single highest-traffic page on the site. That is the most valuable real estate
+// on every page pointed at the one audience that has never paid.
+//
+// So: Pricing leads and carries the accent, Free Training keeps its route (it is
+// a real SEO and nurture asset) but surrenders the slot and the colour.
 const BASE_NAV_ITEMS = [
-  { label: 'Free Training', path: '/scat-mastery', accent: true },
+  // Pricing was NOT in the nav at all until 2026-08-07 (owner: "pricing tab
+  // doesn't exist on home"); a visitor who wanted the price had to guess. It is
+  // now first, because four of seven buyers entered there and every one of them
+  // converted on a single checkout attempt.
+  { label: 'Pricing', path: '/pricing', accent: true },
   { label: 'Courses', path: '/courses', accent: false },
-  // Pricing was NOT in the nav (owner 2026-08-07: "pricing tab doesn't exist on
-  // home"). /pricing is the page 229 sessions reached in 90 days and the only
-  // one that takes money, and the only routes to it were in-page CTAs and the
-  // footer. A visitor who wanted to know the price had to guess. Sits directly
-  // after Courses, which is where people look for it.
-  { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Clinical Tools', path: '/clinical-suite', accent: false },
+  { label: 'Free Training', path: '/scat-mastery', accent: false },
   // Blog removed from the primary nav (owner nav review 2026-08-15): /blog is
   // absent from the top-14 pages by 30-day sessions while holding a slot on
   // the money path; it stays in the footer Resources list and in-content
@@ -187,7 +202,11 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
         <div className="flex items-center justify-between h-[60px]">
           <Link
             href={logoHref}
-            className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-accent rounded"
+            // min-w-0 so the wordmark can shrink instead of forcing the row wider
+            // than the viewport: with the mobile Enrol pill added, the full name
+            // wrapped to two lines and the 60px bar spilled over the page content
+            // on a 393px screen. aria-label carries the full name either way.
+            className="flex items-center gap-2.5 min-w-0 focus:outline-none focus:ring-2 focus:ring-accent rounded"
             aria-label="Concussion Education Australia home"
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center shadow-sm">
@@ -198,7 +217,12 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
                 <circle cx="12" cy="12" r="1.5" fill="white"/>
               </svg>
             </div>
-            <span className="text-sm font-semibold tracking-tight text-[var(--foreground)]">
+            {/* Mark alone under 500px. Adding the mobile Enrol pill left the
+                wordmark too little room: it first wrapped to two lines and broke
+                the 60px bar, then truncated to "Concussion Education Aust…",
+                which reads as a bug rather than a brand. The mark carries the
+                identity on a phone and the aria-label above carries the name. */}
+            <span className="hidden min-[500px]:inline text-sm font-semibold tracking-tight text-[var(--foreground)] whitespace-nowrap">
               Concussion Education Australia
             </span>
           </Link>
@@ -258,10 +282,27 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
             ))}
           </div>
 
-          {/* Mobile burger */}
+          {/* Mobile: Enrol stays OUTSIDE the burger.
+              Desktop carries a permanent Enrol pill; mobile hid it behind a menu
+              tap, so the only always-visible control on a phone was a hamburger.
+              Measured cost: desktop 838 sessions -> 15 checkout starts, mobile 457
+              -> 1, and mobile reaches pricing at 11.6% against desktop's 19.5%.
+              Every buyer so far started checkout within one page of arriving, so a
+              CTA that needs a menu tap first is one tap past where they convert. */}
+          <div className="md:hidden flex items-center gap-1">
+            {showEnrolCta && (
+              <Link
+                href={enrolTarget}
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn-primary px-3 py-1.5 rounded-lg text-[12px] font-semibold inline-flex items-center gap-1"
+              >
+                {enrolLabel}
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            )}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
+            className="p-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileMenuOpen}
           >
@@ -271,6 +312,7 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
               <span className={`block h-[1.5px] w-5 bg-[var(--foreground)] transition-all ${mobileMenuOpen ? '-rotate-45 -translate-y-[5px]' : ''}`} />
             </div>
           </button>
+          </div>
         </div>
       </div>
 

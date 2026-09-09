@@ -197,25 +197,27 @@ describe('send-nurture-emails cron', () => {
   })
 
   // These three cover the SEND MACHINERY — counting, audit rollback, per-step
-  // dedupe keys — and used day 3 until 2026-09-05, when Zac paused the cold
-  // free-resource monetization steps (PAUSED_SCAT_MASTERY_DAYS = 3, 10, 28, 42).
-  // Moved to day 14 — still live, and the lowest step that reaches the GENERIC
-  // per-step sender — rather than weakened: the machinery is what these assert,
-  // and it has to stay covered for the lanes that still send.
+  // dedupe keys. They drove the SCAT drip until the cold free-resource lane was
+  // progressively killed (3b10713a, 1ff877a5, 311cc2c4) and every SCAT day —
+  // 3, 7, 10, 14, 28, 42 — ended up paused. Chasing the last unpaused day was
+  // how this file broke twice, so they now drive POST_PURCHASE, the paid-student
+  // lane the owner explicitly kept. Same machinery, on a lane that still sends.
+  // workshopLocation is cleared so the confirmed-round workshop lanes cannot add
+  // a second send and turn the exact-count assertions into noise.
   it('counts a successful send and writes no audit rollback', async () => {
-    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(14) })])
+    loadUsersMock.mockResolvedValue([fullCourseUser({ createdAt: daysAgo(1), workshopLocation: null })])
 
     const res = await GET(makeRequest())
     const body = await res.json()
 
     expect(body.emailsSent).toBe(1)
     expect(sendEmailMock).toHaveBeenCalledTimes(1)
-    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'SCAT Day 14' })
+    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'PP Day 1' })
     expect(sqlCalls('DELETE FROM email_audit_log')).toHaveLength(0)
   })
 
   it('rolls back the audit row and does not count a failed send', async () => {
-    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(14) })])
+    loadUsersMock.mockResolvedValue([fullCourseUser({ createdAt: daysAgo(1), workshopLocation: null })])
     sendEmailMock.mockResolvedValue(false)
 
     const res = await GET(makeRequest())
@@ -224,23 +226,23 @@ describe('send-nurture-emails cron', () => {
     expect(body.emailsSent).toBe(0)
     const rollbacks = sqlCalls('DELETE FROM email_audit_log WHERE audit_key')
     expect(rollbacks).toHaveLength(1)
-    expect(rollbacks[0].values).toContain('scat_day14_u1')
+    expect(rollbacks[0].values).toContain('onboard_day1_u2')
   })
 
   it('catch-up window sends a missed step (audit key stays per-step)', async () => {
-    // Day-14 email missed; user is now 15 days old → still inside the window
-    loadUsersMock.mockResolvedValue([previewUser({ createdAt: daysAgo(15) })])
+    // Day-1 email missed; user is now 2 days old → still inside the window
+    loadUsersMock.mockResolvedValue([fullCourseUser({ createdAt: daysAgo(2), workshopLocation: null })])
 
     const res = await GET(makeRequest())
     const body = await res.json()
 
     expect(body.emailsSent).toBe(1)
-    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'SCAT Day 14' })
+    expect(sendEmailMock.mock.calls[0][0]).toMatchObject({ subject: 'PP Day 1' })
     // Dedupe key is the STEP day, not the calendar day
     const inserts = sqlCalls('INSERT INTO email_audit_log').filter((c) =>
-      c.values.some((v) => String(v).startsWith('scat_day'))
+      c.values.some((v) => String(v).startsWith('onboard_day'))
     )
-    expect(inserts[0].values).toContain('scat_day14_u1')
+    expect(inserts[0].values).toContain('onboard_day1_u2')
   })
 
   it('does not send the paused cold free-resource steps', async () => {

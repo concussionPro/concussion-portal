@@ -301,6 +301,10 @@ export function CourseModulePage({
   // demo-specific UX affordances historically; hiding the banner caused red
   // "Save failed" on flagship quiz when Progress API returned demo:true.
   const [isDemoViewer, setIsDemoViewer] = useState(!!initialAuth?.isDemo)
+  // A CRM buyer's accessLevel is 'preview' — the purchase lands in
+  // course_purchases, never in users.access_level. Anything that reads 'preview'
+  // as "has not paid" therefore pitches the course to a paying customer.
+  const [ownsCrm, setOwnsCrm] = useState(false)
 
   // Check authentication first
   useEffect(() => {
@@ -323,6 +327,7 @@ export function CourseModulePage({
             setIsAuthenticated(true)
             if (data.user.email) setUserEmail(data.user.email)
             setIsDemoViewer(!!data.user.isDemo)
+            setOwnsCrm(!!data.user.ownsCrm)
             setCheckingAuth(false)
             return
           }
@@ -387,10 +392,10 @@ export function CourseModulePage({
   }
 
   // Authenticated - render module content
-  return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} isDemoViewer={isDemoViewer} descriptor={descriptor} initialModuleData={initialModuleData} />
+  return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} isDemoViewer={isDemoViewer} ownsCrm={ownsCrm} descriptor={descriptor} initialModuleData={initialModuleData} />
 }
 
-function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descriptor, initialModuleData }: { moduleId: number; router: AppRouterInstance; userEmail: string; isDemoViewer: boolean; descriptor: CourseModuleDescriptor; initialModuleData?: InitialModuleData }) {
+function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, ownsCrm, descriptor, initialModuleData }: { moduleId: number; router: AppRouterInstance; userEmail: string; isDemoViewer: boolean; ownsCrm: boolean; descriptor: CourseModuleDescriptor; initialModuleData?: InitialModuleData }) {
   const {
     course,
     NavComponent,
@@ -1083,7 +1088,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer, descript
                   Cold free-resource drip stays paused; this is one in-product
                   nudge (competency + optional SCAT6 code). Continue Module 2
                   remains the primary action below. Skip if already paid CCM. */}
-              {isSCATModule && moduleId === 101 && accessLevel === 'preview' && (
+              {isSCATModule && moduleId === 101 && accessLevel === 'preview' && !ownsCrm && (
                 <div className="mb-6 w-full max-w-md mx-auto">
                   <SoftScatPaidBridge source="scat_module1_complete" compact />
                 </div>
