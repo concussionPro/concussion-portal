@@ -222,6 +222,18 @@ export async function GET(request: NextRequest) {
     }
     const labelSeen = new Map<string, number>()
 
+    // Daily check-ins — the between-session symptom signal patients have been
+    // submitting since the check-in shipped, which until 2026-09-11 had NO
+    // clinician-side surface at all: sst_daily_checkins was written by
+    // /api/sst/checkin and read by nothing. MSCC flagged exactly this, and it
+    // is the weakest point in the "clinician makes every decision" posture —
+    // data collected that the treating clinician cannot see. 21 days is the
+    // longest window a weekly review realistically scans; the strip is
+    // DESCRIPTIVE ONLY (score, trained, missed reason) — no derived clinical
+    // judgement, because interpreting the trend is the clinician's job, not
+    // the software's (TGA position).
+    const checkinsByCode = new Map<string, Array<{ date: string; score: number; trained: boolean; missedReason: string | null }>>()
+
     // Practitioner assignments (minted registry) — one guarded query for the
     // whole roster; the column is lazily migrated, so failure = no assignments,
     // never a broken roster.
@@ -245,6 +257,31 @@ export async function GET(request: NextRequest) {
           if (r.rtw_status) rtwByCode.set(String(r.patient_code), String(r.rtw_status))
         }
       } catch { /* pre-migration DB — roster renders unassigned */ }
+
+      // Same guarded posture as practitioner/rtw: the check-in table is created
+      // lazily by the write path, so on a clinic that has never received one
+      // this SELECT fails — which must degrade to "no check-ins", never a
+      // broken roster.
+      try {
+        const { rows: ciRows } = await sql.query(
+          `SELECT patient_code, on_date::text AS on_date, symptom_score, trained, missed_reason
+           FROM sst_daily_checkins
+           WHERE clinic_code = $1 AND patient_code = ANY($2::text[])
+             AND on_date >= (NOW() - INTERVAL '21 days')::date
+           ORDER BY on_date ASC`,
+          [code, codes],
+        )
+        for (const r of ciRows) {
+          const pc = String(r.patient_code)
+          if (!checkinsByCode.has(pc)) checkinsByCode.set(pc, [])
+          checkinsByCode.get(pc)!.push({
+            date: String(r.on_date),
+            score: Number(r.symptom_score),
+            trained: r.trained === true,
+            missedReason: r.missed_reason ? String(r.missed_reason) : null,
+          })
+        }
+      } catch { /* table not yet created — no check-ins to show */ }
     }
 
     const patients = [...byPatient.values()].map((p) => {
@@ -311,6 +348,9 @@ export async function GET(request: NextRequest) {
         }),
         sessions: p.trainings.map((t) => ({ date: occurredIso(t), ...(t.payload ?? {}) })),
         sessionCount: p.trainings.length,
+        // Last 21 days of daily check-ins, oldest first. Descriptive data only —
+        // the hub renders it; it draws no conclusions from it.
+        checkins: p.patientCode ? checkinsByCode.get(p.patientCode) ?? [] : [],
         // 'no-intolerance' on a re-test = recovered → clinician clearance review
         clearanceReady: interp === 'no-intolerance',
         // GP-report trigger (owner 2026-07-06): Medicare CDM funds ~5 allied
@@ -348,6 +388,34 @@ export async function GET(request: NextRequest) {
       }
       for (const p of patients) {
         if (p.patientRef && demoPrac[p.patientRef]) p.practitioner = demoPrac[p.patientRef]
+      }
+      // Curated check-in strips so the demo shows the between-session signal a
+      // real caseload produces (fixture data, never the DB — same rule as the
+      // session rows). demo-mt: settling nicely with one flare day; demo-dp:
+      // symptoms drifting up across the week with missed sessions — the
+      // pattern a clinician would want to catch between appointments.
+      const today = Date.now()
+      const day = (n: number) => new Date(today - n * 86400000).toISOString().slice(0, 10)
+      const demoCheckins: Record<string, Array<{ date: string; score: number; trained: boolean; missedReason: string | null }>> = {
+        'demo-mt': [
+          { date: day(6), score: 3, trained: true, missedReason: null },
+          { date: day(5), score: 2, trained: true, missedReason: null },
+          { date: day(4), score: 4, trained: true, missedReason: null },
+          { date: day(3), score: 2, trained: true, missedReason: null },
+          { date: day(2), score: 1, trained: false, missedReason: 'rest-day' },
+          { date: day(1), score: 1, trained: true, missedReason: null },
+        ],
+        'demo-dp': [
+          { date: day(6), score: 2, trained: true, missedReason: null },
+          { date: day(5), score: 3, trained: true, missedReason: null },
+          { date: day(4), score: 4, trained: false, missedReason: 'symptoms' },
+          { date: day(3), score: 5, trained: false, missedReason: 'symptoms' },
+          { date: day(2), score: 5, trained: false, missedReason: 'no-time' },
+          { date: day(1), score: 6, trained: false, missedReason: 'symptoms' },
+        ],
+      }
+      for (const p of patients) {
+        if (p.patientRef && demoCheckins[p.patientRef]) p.checkins = demoCheckins[p.patientRef]
       }
     }
 

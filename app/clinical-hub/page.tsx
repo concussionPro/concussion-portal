@@ -48,6 +48,8 @@ type Session = {
   deviceName?: string | null      // e.g. "Garmin Forerunner" — future payload field
 }
 
+type Checkin = { date: string; score: number; trained: boolean; missedReason: string | null }
+
 type Patient = {
   id: string
   /** stable grouping key — patientRef UUID when the app sent one, else the normalised label */
@@ -83,6 +85,8 @@ type Patient = {
   rtwStatus?: string | null
   /** Minted registry code — required for clinician writes (RTW status). */
   patientCode?: string | null
+  /** Last 21 days of daily check-ins (oldest first) — descriptive only. */
+  checkins?: Checkin[]
   /** DEMO only — which completed episode this row's reports render. */
   demoCase?: 'recovery' | 'adherence' | 'stalled'
 }
@@ -153,6 +157,16 @@ const PATIENTS: Patient[] = [
   },
   {
     id: 'c-stalled', name: 'D.P. — 17M, school rugby', age: 17, practitioner: 'Clinician 1', rtwStatus: 'graded-return',
+    // The strip's pitch case: symptoms drifting UP between appointments with
+    // missed sessions — visible days before the next booked review.
+    checkins: [
+      { date: iso(6), score: 2, trained: true, missedReason: null },
+      { date: iso(5), score: 3, trained: true, missedReason: null },
+      { date: iso(4), score: 4, trained: false, missedReason: 'symptoms' },
+      { date: iso(3), score: 5, trained: false, missedReason: 'symptoms' },
+      { date: iso(2), score: 5, trained: false, missedReason: 'no-time' },
+      { date: iso(1), score: 6, trained: false, missedReason: 'symptoms' },
+    ],
     sport: 'Rugby union', code: 'CEA-9034', demoCase: 'stalled',
     injuryDate: short(30), daysPost: 30, stage: { n: 4, label: 'Sub-symptom aerobic — flat since wk 3' },
     hrt: 142, ...band(142), restSymptoms: 3, baseline: 'captured',
@@ -183,6 +197,14 @@ const PATIENTS: Patient[] = [
   },
   {
     id: 'c-recovery', name: 'M.T. — 24M, community football', age: 24, practitioner: 'Clinic owner', rtwStatus: 'at-work',
+    checkins: [
+      { date: iso(6), score: 3, trained: true, missedReason: null },
+      { date: iso(5), score: 2, trained: true, missedReason: null },
+      { date: iso(4), score: 2, trained: true, missedReason: null },
+      { date: iso(3), score: 1, trained: true, missedReason: null },
+      { date: iso(2), score: 1, trained: false, missedReason: 'rest-day' },
+      { date: iso(1), score: 0, trained: true, missedReason: null },
+    ],
     sport: 'Football (AFL)', code: 'CEA-7729', demoCase: 'recovery',
     injuryDate: short(30), daysPost: 30, stage: { n: 6, label: 'Clearance review' },
     hrt: 155, ...band(155), restSymptoms: 0, baseline: 'captured',
@@ -554,6 +576,7 @@ type ApiPatient = {
   sessions?: ApiSession[]
   clearanceReady?: boolean
   lastActivity?: string | null
+  checkins?: Checkin[]
 }
 
 function num(v: unknown): number | null {
@@ -631,6 +654,9 @@ function groupApiPatients(list: ApiPatient[]): ApiPatient[] {
       hrtTrajectory,
       clearanceReady: latestInterp != null ? latestInterp === 'no-intolerance' : members.some((m) => m.clearanceReady === true),
       lastActivity: members.map((m) => m.lastActivity).filter(Boolean).sort().pop() ?? primary.lastActivity,
+      // Check-ins are keyed on the minted patientCode, which only one member
+      // of a merged group carries — take the first non-empty strip.
+      checkins: members.map((m) => m.checkins).find((c) => c && c.length) ?? primary.checkins,
     }
   })
 }
@@ -751,6 +777,7 @@ function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
     practitioner: p.practitioner ?? null,
     rtwStatus: p.rtwStatus ?? null,
     patientCode: p.patientCode ?? null,
+    checkins: Array.isArray(p.checkins) ? p.checkins : [],
     id: `real-${patientKey}`,
     patientKey,
     name: p.name?.trim() || 'Unidentified',
@@ -1384,6 +1411,47 @@ export default function ClinicalHubPage() {
                 </div>
               </div>
 
+              {/* Daily check-ins — the between-session signal (2026-09-11).
+                  Patients submit a 0-10 symptom score + trained/missed every
+                  day; until this strip, that data was written to
+                  sst_daily_checkins and read by NOTHING — the clinician's
+                  first sight of a bad week was the next appointment. MSCC
+                  flagged it. DESCRIPTIVE ONLY: dots and numbers, no derived
+                  advice — reading the trend is the clinician's decision
+                  (the TGA clinician-directed posture depends on that split). */}
+              {(p.checkins?.length ?? 0) > 0 && (
+                <div className="mt-4 border-t border-black/[0.06] pt-3.5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                      Daily check-ins · last {p.checkins!.length}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/60">
+                      0–10 symptom score · between-session self-report
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-end gap-1.5">
+                    {p.checkins!.map((c) => (
+                      <div key={c.date} className="flex flex-col items-center gap-0.5" title={`${c.date} — score ${c.score}/10 · ${c.trained ? 'trained' : `did not train${c.missedReason ? ` (${c.missedReason.replace(/-/g, ' ')})` : ''}`}`}>
+                        <span
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-bold ${
+                            c.score >= 5
+                              ? 'bg-red-50 text-red-700 border border-red-200'
+                              : c.score >= 3
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}
+                        >
+                          {c.score}
+                        </span>
+                        {/* trained = filled dot; missed = hollow. The reason is in the tooltip. */}
+                        <span className={`h-1.5 w-1.5 rounded-full ${c.trained ? 'bg-[var(--accent)]' : 'border border-muted-foreground/40'}`} />
+                        <span className="text-[9px] text-muted-foreground/60">{c.date.slice(8, 10)}/{c.date.slice(5, 7)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Documents — their own labelled row (2026-08-11 design pass:
                   they shared a flex-wrap with the stage chip and wrapped
                   raggedly, with "File to Cliniko" orphaned on its own line;
@@ -1405,6 +1473,11 @@ export default function ClinicalHubPage() {
                   {([
                     ['gp-report', 'GP report'],
                     ['rtp-clearance', 'RTP data'],
+                    // RTW summary — the payer-facing document the rtw_status
+                    // field exists to feed (Clinical Framework P4). Built and
+                    // API-reachable since 08-12 but absent from this menu, so
+                    // the occ-rehab pitch's headline artefact had no button.
+                    ['rtw-summary', 'RTW summary'],
                     ['medicolegal', 'Clinical record'],
                     ['acc884', 'ACC884 (NZ)'],
                   ] as const).map(([skin, label]) => (
