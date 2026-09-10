@@ -11,9 +11,9 @@ import { createCourseHub, redeemHubSeat, revokeHub, hubSeatsForDeclaredCount, HU
 import { createMagicToken, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, SST_TIERS } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
-import { ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
+import { ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, SST_SUBSCRIPTION_CONFIRMED } from '@/lib/email-sequences'
 import {
   abandonedCourseTypeFromMetadata,
   isCrmAbandonedCourseType,
@@ -603,6 +603,27 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         tier: session.metadata?.plan,
       })
       console.log(`SST subscription active for clinic ${clinicCode}`)
+      // Buyer confirmation — manage-billing CTA. Best-effort; never fail the webhook.
+      try {
+        const planKey = session.metadata?.plan || 'starter'
+        const planName = SST_TIERS.find((t) => t.plan === planKey)?.name || planKey
+        const base = (process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL || CONFIG.SEO.SITE_URL).replace(/\/$/, '')
+        await sendEmail({
+          to: customerEmail,
+          subject: SST_SUBSCRIPTION_CONFIRMED.subject(planName),
+          html: SST_SUBSCRIPTION_CONFIRMED.template(
+            customerName,
+            planName,
+            `${base}/clinical-testing/subscribe`,
+          ),
+          tags: [
+            { name: 'type', value: 'sst-subscription-confirmed' },
+            { name: 'sequence', value: 'sst-subscription' },
+          ],
+        })
+      } catch (confirmErr) {
+        console.error('[sst] subscription confirmation email failed:', confirmErr)
+      }
       if (priorSubId && newSubId && priorSubId !== newSubId) {
         console.error(`[sst] clinic ${clinicCode} now has TWO subscriptions: ${priorSubId} (orphaned) and ${newSubId}`)
         try {
@@ -1271,9 +1292,9 @@ async function handleCrmPurchase(
   // are explicitly promised the platform ("the platform is the product").
   //
   // INTERNATIONAL only (gated on international:'true' AND the go-live flag): the
-  // platform is bundled FREE for year 1, then bills MONTHLY at the real single-
+  // platform is bundled FREE for the included months, then bills MONTHLY at the real single-
   // included-tier SST price. We attach a REAL sst-trainer subscription with
-  // a 365-day trial so monthly billing starts automatically at year 2 — managed
+  // a trial matching INCLUDED_PLATFORM_MONTHS so monthly billing starts after — managed
   // by the EXISTING sst-trainer subscription webhook handling. Resolve the Stripe
   // customer + saved card here and hand them to the provisioner (which owns the
   // clinic code the subscription is keyed to). Best-effort — never lose the sale.
@@ -1290,7 +1311,7 @@ async function handleCrmPurchase(
           defaultPaymentMethod = typeof pi.payment_method === 'string' ? pi.payment_method : pi.payment_method?.id
         }
       } catch (pmErr) {
-        console.error(`[crm-intl] payment-method lookup failed for ${redact(customerEmail)} (year-2 monthly billing will need a PM):`, pmErr)
+        console.error(`[crm-intl] payment-method lookup failed for ${redact(customerEmail)} (post-include monthly billing will need a PM):`, pmErr)
       }
       bundledSubscription = { customerId, defaultPaymentMethod }
     } else {

@@ -20,7 +20,7 @@ import { AustraliaPricingLink } from '@/components/MarketPricingSwitch'
 import CourseShowcase from '@/components/ccm/CourseShowcase'
 import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 
-/** The bundled platform's year-2 rate = the tier a course enrolment INCLUDES,
+/** The bundled platform's post-include rate = the tier a course enrolment INCLUDES,
  *  which is what the webhook attaches. Never a literal, and never a `.find()`
  *  on a plan name — the 2026-08-08 rename retired 'single' and a stale find()
  *  would have thrown on a non-null assertion at module load. */
@@ -329,7 +329,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                     <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">{price.display}</span>
                     <span className="text-[11px] text-[var(--muted-foreground)]">{price.code}</span>
                   </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">course + first year on the platform</p>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">course + first 3 months on the platform</p>
                 </div>
               </div>
 
@@ -360,8 +360,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
                   <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
                   The clinical platform (SST Trainer + baseline testing) is <strong>included free for your
-                  first year</strong>, then <strong>about A${PLATFORM_MONTHLY_AUD}/mo (AUD)</strong> to keep it — starts automatically
-                  at 12 months, cancel anytime.
+                  first 3 months</strong> (implementation window), then <strong>about A${PLATFORM_MONTHLY_AUD}/mo (AUD)</strong> to keep it — starts automatically
+                  at 3 months, cancel anytime.
                 </p>
               </div>
 
@@ -808,7 +808,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               </h2>
               <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
                 {price.display} {price.code} one-time — 8 clinical modules, SCAT6 baseline &amp; SST Trainer
-                included free for year one, certificate on 75% pass, lifetime course access.
+                included free for 3 months, certificate on 75% pass, lifetime course access.
               </p>
             </div>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 mb-5 max-w-lg mx-auto">
@@ -846,7 +846,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               </button>
               {enrolError && <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>}
               <p className="text-[11px] text-muted-foreground mt-3">
-                Prices shown in your region&rsquo;s currency · secure checkout · first year of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD)
+                Prices shown in your region&rsquo;s currency · secure checkout · first 3 months of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD)
               </p>
               <AustraliaPricingLink className="mt-3 text-center text-xs text-muted-foreground" />
             </div>

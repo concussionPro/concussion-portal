@@ -125,7 +125,7 @@ export default function CimspaLandingPage() {
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold tracking-tight">{CRM_PRICE.display}</span>
             <span className="text-[13px] text-slate-500 font-semibold">{CRM_PRICE.code}</span>
-            <span className="text-[12px] text-slate-400">· course + first year on the platform</span>
+            <span className="text-[12px] text-slate-400">· course + first 3 months on the platform</span>
           </div>
           <p className="mt-3 text-[12.5px] leading-relaxed text-slate-500">
             The clinical pathway you refer into runs on a published, standardised protocol —{' '}

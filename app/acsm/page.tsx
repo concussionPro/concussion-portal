@@ -135,7 +135,7 @@ export default function AcsmLandingPage() {
             <span className="text-4xl font-extrabold tracking-tight">${PRICE_USD}</span>
             <span className="text-[13px] text-slate-500 font-semibold">USD</span>
           </div>
-          <p className="text-[11px] text-slate-400">course + first year on the platform</p>
+          <p className="text-[11px] text-slate-400">course + first 3 months on the platform</p>
 
           <ul className="mt-5 space-y-2 text-[14px] text-slate-700">
             {[
@@ -153,10 +153,10 @@ export default function AcsmLandingPage() {
           </ul>
 
           <p className="mt-5 rounded-xl bg-teal-50 border border-teal-100 p-4 text-[13.5px] leading-relaxed text-teal-900">
-            <strong>Year one is included.</strong> After 12 months the clinical
+            <strong>First 3 months included.</strong> After the implementation window the clinical
             platform continues at <strong>A${PLATFORM_MONTHLY}/month</strong> (cancel
             any time), and your <strong>annual concussion-update module</strong> comes
-            with it, so it meets that year&rsquo;s recurring CPD requirement.
+            with the paid platform, so it meets that year&rsquo;s recurring CPD requirement.
           </p>
 
           <p className="mt-4 text-[13px] leading-relaxed text-slate-600 border-t border-slate-200 pt-4">

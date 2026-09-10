@@ -110,7 +110,7 @@ export interface ClinicUsage {
    */
   overCap: boolean
   /**
-   * True when this clinic is on the trial ALLOWANCE because the platform year
+   * True when this clinic is on the trial ALLOWANCE because the platform period
    * included with a course enrolment has lapsed — not because they are a
    * trialist. They paid; their included period simply ended.
    *
@@ -146,7 +146,7 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
       tier = tier ?? rows[0]?.tier ?? null
     } catch { /* table absent → stay trial */ }
   }
-  // The INCLUDED platform year that came with a course enrolment has a hard
+  // The INCLUDED platform period that came with a course enrolment has a hard
   // end date. Once it passes, and no real subscription has been attached, the
   // clinic reverts to the trial allowance for NEW patients — it is not cut off.
   // Existing patients are never blocked (the same doctrine the caseload cap
@@ -508,7 +508,7 @@ export async function ensureSstClinicsTable(): Promise<void> {
   // and "make sure we're tracking referrals from them" needs the channel ON
   // the clinic, not just in a notification email nobody can query.
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS source TEXT`
-  // The INCLUDED platform year that comes with a course enrolment. Set when a
+  // The INCLUDED platform period that comes with a course enrolment. Set when a
   // course purchase provisions the clinic; NULL for trials, for clinics on a
   // real subscription, and for comped/alumni clinics (which are open-ended by
   // owner decision). At expiry the clinic is PROMPTED to subscribe — never
@@ -584,7 +584,7 @@ export interface SstClinic {
   /** paid tier ('single' | 'clinic' | 'enterprise') — null until first subscription */
   tier: string | null
   /**
-   * End of the platform year included with a course enrolment, ISO. Null for
+   * End of the platform period included with a course enrolment, ISO. Null for
    * trials, for clinics on a real subscription, and for comped/alumni clinics.
    * The workspace reads this to prompt BEFORE it lapses.
    */

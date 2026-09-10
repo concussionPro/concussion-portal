@@ -393,13 +393,26 @@ function CheckoutSuccessContent() {
             </div>
             <div>
               <h3 className="font-semibold mb-1">
-                {isCrm ? 'Open the SST Trainer and clinical toolkit' : 'Download the clinical toolkit'}
+                {isSecureSeat
+                  ? 'Clinical toolkit after you unlock Online'
+                  : 'Open Clinical Testing (SST Trainer + Baseline)'}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {isCrm
-                  ? 'Your enrolment includes the clinical platform — graded exercise testing, threshold prescription and monitored home sessions — plus the report templates.'
-                  : 'Referral templates, return-to-play protocols, and clearance letters — ready to use in practice.'}
+                {isSecureSeat
+                  ? 'Referral templates, return-to-play protocols, and clearance letters unlock with Online or Complete.'
+                  : isCrm
+                    ? 'Your enrolment includes 3 months of the clinical platform — graded exercise testing, threshold prescription and monitored home sessions — plus the report templates. The App Store app is how patients train after your clinic code is live.'
+                    : 'Your enrolment includes 3 months of Clinical Testing (SST Trainer + Baseline) plus the clinical toolkit. Start in the portal — the App Store app is the patient delivery rail once your clinic code is live.'}
               </p>
+              {!isSecureSeat && (
+                <Link
+                  href="/clinical-testing"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
+                >
+                  Open Clinical Testing
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
             </div>
           </div>
 

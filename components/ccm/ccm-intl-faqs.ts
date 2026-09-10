@@ -1,6 +1,6 @@
 import { CONFIG, SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
 
-/** What the bundled platform costs once the included first year ends. */
+/** What the bundled platform costs once the included 3 months end. */
 const PLATFORM_MONTHLY_AUD = SST_INCLUDED_TIER.monthlyAud
 const STARTER_TIER = SST_INCLUDED_TIER
 
@@ -26,7 +26,7 @@ export const CCM_INTL_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Is there an ongoing cost?',
-    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + SCAT6 baseline testing) is included free for your first year. After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (' + sstTierAllowance(STARTER_TIER).toLowerCase() + '; clinicians are unlimited on every tier); it starts automatically at the 12-month mark and you can cancel anytime.',
+    a: 'The course is a one-time purchase — lifetime access. The clinical platform (SST Trainer + SCAT6 baseline testing) is included free for your first 3 months (implementation window). After that, keeping the platform is A$' + PLATFORM_MONTHLY_AUD + '/month (' + sstTierAllowance(STARTER_TIER).toLowerCase() + '; clinicians are unlimited on every tier); it starts automatically at the 3-month mark and you can cancel anytime.',
   },
   {
     q: 'What’s the refund policy?',

@@ -236,7 +236,7 @@ export default function CrmInternationalContent({
                     <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">{price.display}</span>
                     <span className="text-[11px] text-[var(--muted-foreground)]">{price.code}</span>
                   </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">course + first year on the platform</p>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">course + first 3 months on the platform</p>
                 </div>
               </div>
 
@@ -262,13 +262,13 @@ export default function CrmInternationalContent({
                 ))}
               </ul>
 
-              {/* Platform: bundled free year 1, then the real monthly rate */}
+              {/* Platform: bundled free 3 months, then the real monthly rate */}
               <div className="rounded-xl bg-teal-50/60 border border-teal-200 px-4 py-3 mb-4">
                 <p className="text-[12.5px] text-slate-700 leading-relaxed">
                   <strong className="text-teal-800">Course is one-time — lifetime access.</strong>{' '}
                   The clinical platform (the SST Trainer) is <strong>included free for your
-                  first year</strong>, then <strong>about A${PLATFORM_MONTHLY_AUD}/mo (AUD)</strong> to keep it — starts
-                  automatically at 12 months, cancel anytime.
+                  first 3 months</strong> (implementation window), then <strong>about A${PLATFORM_MONTHLY_AUD}/mo (AUD)</strong> to keep it — starts
+                  automatically at 3 months, cancel anytime.
                 </p>
               </div>
 
@@ -720,7 +720,7 @@ export default function CrmInternationalContent({
                 <p className="text-[12px] text-red-600 mt-3">{enrolError}</p>
               )}
               <p className="text-[11px] text-muted-foreground mt-3">
-                {price.display} {price.code} one-time · lifetime course + first year of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD) to keep the platform
+                {price.display} {price.code} one-time · lifetime course + first 3 months of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD) to keep the platform
               </p>
               <AustraliaPricingLink className="mt-3 text-center text-xs text-muted-foreground" />
             </div>

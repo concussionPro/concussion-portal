@@ -46,11 +46,14 @@ export interface BundledSubscription {
  * caller decides that provisioning is best-effort.
  *
  * When `bundledSubscription` is supplied (international CRM), the platform is
- * FREE for year 1, then bills MONTHLY at the real single-clinician SST price —
- * attached here as an sst-trainer subscription with a 365-day trial.
+ * FREE for the included platform months, then bills MONTHLY at the real
+ * single-clinician SST price — attached here as an sst-trainer subscription
+ * with a trial matching INCLUDED_PLATFORM_MONTHS.
  */
 /** Months of platform included with a course enrolment before the renewal prompt. */
-export const INCLUDED_PLATFORM_MONTHS = 12
+export const INCLUDED_PLATFORM_MONTHS = 3
+/** Stripe trial_period_days for the intl bundled subscription (~30 days/month). */
+export const INCLUDED_PLATFORM_TRIAL_DAYS = INCLUDED_PLATFORM_MONTHS * 30
 
 /**
  * Ordering of paid tiers by how much they allow, so provisioning can tell an
@@ -101,7 +104,7 @@ export async function provisionPlatformForBuyer(
   // UNCAPPED clinic forever, free — including CCM buyers (who never carry a
   // subscription) the moment bundle provisioning was switched on, and including
   // international buyers whose subscription creation had silently failed. The
-  // free platform year is deliberate; a free platform *forever* is not.
+  // free included period is deliberate; a free platform *forever* is not.
   if (subscriptionAttached) {
     // The intl bundle's included platform is the ENTRY rung — without a tier
     // the clinic sat unlimited (null tier) until a random subscription.updated
@@ -124,17 +127,17 @@ export async function provisionPlatformForBuyer(
     // new patients a month — rather than uncapped. The guard above exists
     // because an unconditional lift once handed every provisioned buyer an
     // unlimited clinic free forever; this is deliberately the included tier.
-    // 12 months included with the enrolment, then a PROMPT to subscribe —
-    // never an automatic charge. A domestic course checkout saves no payment
-    // method and the buyer consented to a one-off course fee, not to
-    // off-session billing a year later.
+    // INCLUDED_PLATFORM_MONTHS included with the enrolment, then a PROMPT to
+    // subscribe — never an automatic charge. A domestic course checkout saves
+    // no payment method and the buyer consented to a one-off course fee, not
+    // to off-session billing months later.
     //
     // A FLOOR, NEVER A DOWNGRADE. setSstClinicPlan writes `tier = COALESCE(new,
     // old)`, so passing the included tier OVERWRITES whatever the clinic
     // already had. Without the guard below, buying a course made an existing
     // clinic WORSE:
     //   - an alumni/comp clinic (active, tier NULL = unlimited) dropped to the
-    //     entry cap AND gained a 12-month expiry it never had;
+    //     entry cap AND gained an included-period expiry it never had;
     //   - a clinic PAYING for a higher rung dropped to the entry cap while
     //     still being billed at the higher one.
     // Both are live shapes: 26 of 27 production clinics are active/tier-NULL
@@ -201,11 +204,12 @@ export async function provisionPlatformForBuyer(
 
 /**
  * Attach the REAL included-tier SST subscription (the entry rung,
- * STRIPE_SST_SINGLE_PRICE_ID) to a clinic, FREE for year 1 then auto-monthly.
+ * STRIPE_SST_SINGLE_PRICE_ID) to a clinic, FREE for the included months then
+ * auto-monthly.
  *
  *  - Uses the existing dashboard Price (SST_PLANS.single) — no invented price.
- *  - trial_period_days: 365 → year 1 bundled/free; monthly billing starts at
- *    year 2 automatically.
+ *  - trial_period_days: INCLUDED_PLATFORM_TRIAL_DAYS → included period bundled/
+ *    free; monthly billing starts automatically when the trial ends.
  *  - metadata.product='sst-trainer' + clinicCode → the EXISTING sst-trainer
  *    subscription webhook (customer.subscription.updated/deleted →
  *    setSstClinicPlan) manages every plan flip: trialing/active keep the clinic
@@ -241,8 +245,8 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
     const created = await getStripe().subscriptions.create({
       customer: sub.customerId,
       items: [{ price: priceId, quantity: 1 }],
-      // Year 1 free (bundled with the course) → monthly billing starts at year 2.
-      trial_period_days: 365,
+      // Included months free (bundled with the course) → monthly billing starts after.
+      trial_period_days: INCLUDED_PLATFORM_TRIAL_DAYS,
       ...(sub.defaultPaymentMethod ? { default_payment_method: sub.defaultPaymentMethod } : {}),
       // Reuse the EXISTING sst-trainer plan-flip handling — do NOT add parallel logic.
       metadata: {
@@ -253,10 +257,10 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
       },
     })
 
-    // Year 1 must match what the subscription's webhook events will set from
-    // year 2 (metadata.plan below) — never a tier flip mid-customer.
+    // Included period must match what the subscription's webhook events will
+    // set once billing starts (metadata.plan below) — never a tier flip mid-customer.
     await setSstClinicPlan(clinicCode, 'active', { customerId: sub.customerId, subscriptionId: created.id, tier: SST_INCLUDED_TIER.plan })
-    console.log(`[bundle] SST subscription ${created.id} attached to clinic ${clinicCode} (365-day trial → ${SST_INCLUDED_TIER.name} at year 2)`)
+    console.log(`[bundle] SST subscription ${created.id} attached to clinic ${clinicCode} (${INCLUDED_PLATFORM_TRIAL_DAYS}-day trial → ${SST_INCLUDED_TIER.name} after included period)`)
     return true
   } catch (err) {
     // Redact first: Stripe echoes an invalid id back inside its error message,
@@ -267,7 +271,7 @@ async function createBundledSstSubscription(clinicCode: string, sub: BundledSubs
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
         subject: `ACTION REQUIRED: bundled SST subscription failed for clinic ${clinicCode}`,
-        html: `<p>An international CRM buyer paid but the <strong>bundled-then-monthly SST subscription failed to create</strong> — course + platform (free year 1) are fine, but no monthly billing is scheduled for year 2.</p><p><strong>Clinic:</strong> ${escapeHtml(clinicCode)}</p><p>Error: ${escapeHtml(safeMessage)}</p><p>Create the sst-trainer subscription manually in Stripe (single plan, 365-day trial, metadata product=sst-trainer + clinicCode). The sale is NOT at risk and Stripe will NOT retry.</p>`,
+        html: `<p>An international CRM buyer paid but the <strong>bundled-then-monthly SST subscription failed to create</strong> — course + platform (included period free) are fine, but no monthly billing is scheduled after the included period.</p><p><strong>Clinic:</strong> ${escapeHtml(clinicCode)}</p><p>Error: ${escapeHtml(safeMessage)}</p><p>Create the sst-trainer subscription manually in Stripe (single plan, ${INCLUDED_PLATFORM_TRIAL_DAYS}-day trial, metadata product=sst-trainer + clinicCode). The sale is NOT at risk and Stripe will NOT retry.</p>`,
       })
     } catch (alertErr) {
       console.error('[bundle] SST subscription admin alert failed:', alertErr)

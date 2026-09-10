@@ -6,10 +6,10 @@ import { CONFIG, SST_INCLUDED_TIER, sstTierAllowance } from '@/lib/config'
  * Lives OUTSIDE the 'use client' component so server pages (/cata) can call it
  * too — audience pages reuse the platform-cost / refund / course-or-platform
  * answers so that copy keeps tracking CONFIG (the platform monthly rate must
- * never fork from what the card is actually charged at the 12-month mark).
+ * never fork from what the card is actually charged after the included period).
  */
 
-/** What the bundled platform costs once the included first year ends. */
+/** What the bundled platform costs once the included 3 months end. */
 export const PLATFORM_MONTHLY_AUD = SST_INCLUDED_TIER.monthlyAud
 
 // ESSA accreditation is gated on CONFIG.FEATURES.ESSA_ACCREDITED, same
@@ -26,7 +26,7 @@ export const buildIntlFaqs = (essaAccredited: boolean): { q: string; a: string }
   },
   {
     q: 'Is there an ongoing cost?',
-    a: `The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first year. After that, keeping the platform is A$${PLATFORM_MONTHLY_AUD}/month (the Starter rate — ${sstTierAllowance(SST_INCLUDED_TIER).toLowerCase()}, unlimited clinicians); it starts automatically at the 12-month mark and you can cancel anytime.`,
+    a: `The course is a one-time purchase — lifetime access. The clinical platform (the SST Trainer) is included free for your first 3 months (implementation window). After that, keeping the platform is A$${PLATFORM_MONTHLY_AUD}/month (the Starter rate — ${sstTierAllowance(SST_INCLUDED_TIER).toLowerCase()}, unlimited clinicians); it starts automatically at the 3-month mark and you can cancel anytime.`,
   },
   {
     q: 'What’s the refund policy?',

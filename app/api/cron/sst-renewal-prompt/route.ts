@@ -16,22 +16,9 @@ import { SST_INCLUDED_PERIOD_ENDING } from '@/lib/email-sequences'
  * subscriptions against 25 active clinics. The platform is given away
  * permanently by default, which is not a pricing decision anyone made.
  *
- * TWO THINGS KEEP THIS INERT, DELIBERATELY.
- *
- * 1. FEATURES.SST_RENEWAL_PROMPT_LIVE is false. This asks real clinics —
- *    several of them alumni and early supporters — for money. The copy is the
- *    owner's call before it goes anywhere.
- *
- * 2. Even armed, it would currently reach NOBODY. Measured today: 26 clinics,
- *    ZERO with an `included_until` date. The column exists and new provisioning
- *    stamps it, but every existing clinic predates the field. That is the same
- *    "mechanism exists, reach is zero" failure as the $50 discount, which sent
- *    22 emails in its entire life because of where its gate sat. Backfilling
- *    those dates is a production write and a business decision — which date,
- *    counted from when — so it is the owner's, not mine.
- *
- * The route is written and scheduled now so that arming it is one flag and one
- * backfill, rather than a build.
+ * ARMED via FEATURES.SST_RENEWAL_PROMPT_LIVE. Clinics without an
+ * `included_until` stamp are skipped — existing comps are NOT retroactively
+ * shortened. New course grants stamp included_until from INCLUDED_PLATFORM_MONTHS.
  */
 
 export const runtime = 'nodejs'

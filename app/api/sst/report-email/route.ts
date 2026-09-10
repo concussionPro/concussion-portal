@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
         : isTrial
           ? {
               draftBanner: isLapsedInclusion
-                ? 'UNLICENSED DOCUMENT — the platform year included with your enrolment has ended. Subscribe from your clinic workspace to issue reports without this notice.'
+                ? 'UNLICENSED DOCUMENT — the included platform period with your enrolment has ended. Subscribe from your clinic workspace to issue reports without this notice.'
                 : 'FREE-TRIAL DOCUMENT — generated on the SST free trial. Subscribe from your clinic workspace to issue reports without this notice.',
               watermarkText: isLapsedInclusion ? 'UNLICENSED' : 'TRIAL',
             }

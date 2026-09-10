@@ -666,14 +666,14 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
                   {([
                     [`${CONFIG.COURSE.TOTAL_MODULES} online modules`, true, true],
                     // TERM DISCLOSURE (2026-08-06 residual sweep). The webhook stamps
-                    // sst_clinics.included_until = NOW() + 12 months on a domestic course
-                    // purchase (lib/sst-trainer/bundle.ts INCLUDED_PLATFORM_MONTHS), and
+                    // sst_clinics.included_until = NOW() + INCLUDED_PLATFORM_MONTHS on a
+                    // domestic course purchase (lib/sst-trainer/bundle.ts), and
                     // getClinicUsage demotes the clinic to the trial allowance once that
                     // date passes with no subscription. The international pages already
-                    // say "included free for your first year"; this AUD table said only
+                    // say "included free for your first 3 months"; this AUD table said only
                     // "(included)", so a domestic buyer was not told the term at the point
                     // of sale. Never sell an unqualified "included" against a dated gate.
-                    [`Clinical Testing suite — SST Trainer + club baseline testing (${sstTierAllowance(SST_INCLUDED_TIER).toLowerCase()}, unlimited clinicians — included for your first year, then A$${SST_INCLUDED_TIER.monthlyAud}/mo to keep, cancel anytime)`, true, true],
+                    [`Clinical Testing suite — SST Trainer + club baseline testing (${sstTierAllowance(SST_INCLUDED_TIER).toLowerCase()}, unlimited clinicians — included for your first 3 months, then A$${SST_INCLUDED_TIER.monthlyAud}/mo to keep, cancel anytime)`, true, true],
                     ['Your clinic code — patients & clubs link straight to you', true, true],
                     ['Clinical Toolkit downloads', true, true],
                     ['CPD certificate (online)', `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`, `${CONFIG.COURSE.ONLINE_CPD_POINTS} pts`],

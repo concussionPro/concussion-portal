@@ -762,22 +762,22 @@ export const SCAT_COMPLETION_UPSELL = {
 }
 
 /**
- * SST platform — the included 12 months is ending.
+ * SST platform — the included platform months are ending.
  *
  * WHY (2026-08-06, item 6 of the approved plan). A course enrolment includes
  * INCLUDED_PLATFORM_MONTHS of the Clinical Testing suite. Nothing ever told the
- * clinic that period was ending, so 25 clinics sit on `plan: 'active'` with no
- * subscription and no prompt — the platform is given away permanently by
- * default. There are 0 SST subscriptions against 25 active clinics.
+ * clinic that period was ending, so clinics sat on `plan: 'active'` with no
+ * subscription and no prompt — the platform was given away permanently by
+ * default.
  *
  * Tone is deliberately not a sales email. These are alumni and early
  * supporters; the honest framing is "this is what you have, here is what
  * happens next, here is the number". No urgency theatre, no fake deadline —
  * the date is real and comes from `included_until`.
  *
- * NOT ARMED. Gated on FEATURES.SST_RENEWAL_PROMPT_LIVE, which stays false until
- * the owner has read this copy AND `included_until` is backfilled (measured
- * today: 26 clinics, zero with a date).
+ * ARMED via FEATURES.SST_RENEWAL_PROMPT_LIVE. Only clinics with an
+ * `included_until` stamp are reached — existing comps without a date are not
+ * retroactively shortened.
  */
 export const SST_INCLUDED_PERIOD_ENDING = {
   subject: (clinic: string) => `${clinic}: your included Clinical Testing period ends soon`,
@@ -790,8 +790,31 @@ export const SST_INCLUDED_PERIOD_ENDING = {
       ${tiers}<br><br>
       Billing is on <strong>active caseload</strong>, not seats &mdash; every clinician in your practice is included on every tier.
     </div>
-    <center><a href="${utm(manageLink, 'sst_included_ending', 'see_plans')}" class="cta-btn">See the plans</a></center>
+    <center><a href="${utm(manageLink, 'sst_included_ending', 'subscribe')}" class="cta-btn">Subscribe — keep Clinical Testing</a></center>
     <p style="font-size:13px;color:#64748b;">If the suite hasn't earned its place in your clinic, do nothing and it simply stops taking new patients &mdash; no invoice, no auto-renew.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
+/**
+ * SST paid subscription confirmation — sent when a clinic completes Stripe
+ * Checkout for Clinical Testing (mode=subscription, product=sst-trainer).
+ * Manage-billing CTA points at the subscribe page (portal button lives there).
+ */
+export const SST_SUBSCRIPTION_CONFIRMED = {
+  subject: (planName: string) => `You're on Clinical Testing ${planName}`,
+  template: (contactName: string, planName: string, manageLink: string) => emailShell(`
+    <h2>Hi ${greetingName(contactName)},</h2>
+    <p>Your <strong>Clinical Testing — ${escapeHtml(planName)}</strong> subscription is active. The patient cap from your trial or included period is lifted, documents are unwatermarked, and every clinician on your clinic code is included.</p>
+    <div class="callout">
+      <strong>Manage billing anytime</strong><br><br>
+      Change plan, update the card, or cancel from the billing portal — no second subscription needed.
+    </div>
+    <center><a href="${utm(manageLink, 'sst_subscription_confirmed', 'manage_billing')}" class="cta-btn">Manage billing</a></center>
+    <p style="font-size:13px;color:#64748b;">Questions? Just reply — I read every message.</p>
     <div class="sig">
       Zac Lewis<br>
       Concussion Education Australia

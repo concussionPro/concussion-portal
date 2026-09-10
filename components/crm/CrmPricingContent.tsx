@@ -356,12 +356,12 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
             of practice.
           </p>
           {/* TERM DISCLOSURE (2026-08-06 residual sweep). A domestic enrolment stamps
-              sst_clinics.included_until = NOW() + 12 months (lib/sst-trainer/bundle.ts
-              INCLUDED_PLATFORM_MONTHS) and getClinicUsage drops the clinic back to the
+              sst_clinics.included_until = NOW() + INCLUDED_PLATFORM_MONTHS
+              (lib/sst-trainer/bundle.ts) and getClinicUsage drops the clinic back to the
               trial allowance when it lapses without a subscription. The international
               CRM page already discloses the same term; this AUD page did not. */}
           <p className="text-sm text-muted-foreground mt-3">
-            The platform is included for your first year. After that it&rsquo;s
+            The platform is included for your first 3 months (implementation window). After that it&rsquo;s
             A${SST_TIERS[0].monthlyAud}/month to keep it ({sstTierAllowance(SST_TIERS[0]).toLowerCase()};
             clinicians unlimited on every tier) — you&rsquo;re prompted, never auto-charged, and the
             course itself is yours for life.

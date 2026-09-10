@@ -58,8 +58,8 @@ export const CONFIG = {
     // line item — they were two independent literals, so a change to one shipped
     // a page quoting a price the buyer would not be charged.
     BUNDLE_OWNER_DISCOUNT_AUD: 100,
-    // International (USD) — CRM course + first year on the platform, with the
-    // annual renewal covering the concussion-update module + platform access.
+    // International (USD) — CRM course + included platform months, with the
+    // paid platform thereafter covering ongoing access.
     // Consumed by lib/stripe.ts (international-online checkout) and the
     // /acsm + /pricing-international offer cards — keep them in lockstep.
     PRICE_INTERNATIONAL: 347,
@@ -308,19 +308,14 @@ export const CONFIG = {
     /**
      * Arms the SST included-period renewal prompt.
      *
-     * OFF until two things are true (2026-08-06):
-     *  1. Zac has read the email copy — it goes to real clinics, several of
-     *     them alumni, and the ask is money.
-     *  2. `included_until` is backfilled. Measured today: 26 clinics, ZERO
-     *     with a date. The column exists and new provisioning stamps it, but
-     *     every existing clinic predates the field, so an armed prompt would
-     *     reach nobody — the same "mechanism exists, reach is zero" failure as
-     *     the $50 discount, which sent 22 emails in its lifetime.
-     * Flipping this true without the backfill is a no-op, not a send.
+     * LIVE 2026-09-10 — sends include-ending emails (30d / 7d windows) with a
+     * Subscribe CTA to /clinical-testing/subscribe. Only clinics with an
+     * `included_until` date are reached; existing comps without a stamp are
+     * not retroactively shortened. Open/click tracking stays off at Resend.
      */
-    SST_RENEWAL_PROMPT_LIVE: false,
+    SST_RENEWAL_PROMPT_LIVE: true,
     // International CRM live commerce: online-only, geo-priced checkout, the
-    // bundled platform, and the year-2 renewal subscription.
+    // bundled platform, and the post-include monthly subscription.
     // LIVE 2026-07-26 — the three STRIPE_SST_*_PRICE_ID vars now hold real
     // Price ids, which is what the renewal depends on. instrumentation.ts
     // refuses to boot production with this true and those unset/malformed, so
@@ -339,7 +334,7 @@ export const CONFIG = {
     //
     // Buyers land on the 3-patient trial cap: the cap now lifts only where a
     // renewal subscription exists (lib/sst-trainer/bundle.ts), and CCM does not
-    // carry one. The free platform year is deliberate; free forever is not.
+    // carry one. The free included period is deliberate; free forever is not.
     CCM_PLATFORM_BUNDLE_LIVE: true,
     // SST Trainer iOS app — Apple ID 6792171738, v1.0 submitted ~18 Jul 2026,
     // WAITING FOR REVIEW as of 27 Jul (release set to automatic-on-approval).
@@ -718,8 +713,8 @@ export const SST_TIERS = [
 ] as const
 
 /**
- * The tier a COURSE ENROLMENT includes for its first year, and the tier the
- * Embodia one-month lane converts onto. Starter — the entry rung.
+ * The tier a COURSE ENROLMENT includes for its included platform months, and
+ * the tier the Embodia one-month lane converts onto. Starter — the entry rung.
  *
  * Under the retired model this pointed at SST_TIERS[1] because SST_TIERS[0]
  * ('single') meant ONE active patient and would have cut existing clinics from

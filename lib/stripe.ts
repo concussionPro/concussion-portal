@@ -566,8 +566,9 @@ export async function createCrmCheckoutSession({
  * EPs cannot attend the AU practical day, so there is NO city/location and NO
  * practical entitlement: the buyer gets the online CRM course (one-time /
  * lifetime) + the bundled clinical platform (SST Trainer + Baseline), which is
- * FREE for year 1 then bills MONTHLY at the real single-clinician SST price
- * (A$49/mo) via a real sst-trainer subscription the webhook attaches.
+ * FREE for the included platform months then bills MONTHLY at the real
+ * single-clinician SST price (A$49/mo) via a real sst-trainer subscription the
+ * webhook attaches.
  *
  * Currency + amount come from lib/international-pricing.ts (intlPriceForCountry),
  * the SAME single source the /pricing-international display uses, so display and
@@ -576,7 +577,7 @@ export async function createCrmCheckoutSession({
  *
  * customer_creation:'always' + setup_future_usage:'off_session' ensure a Stripe
  * customer AND a saved payment method exist so the webhook can attach the
- * bundled-then-monthly SST subscription and charge it from year 2.
+ * bundled-then-monthly SST subscription and charge it after the included period.
  *
  * Callers MUST gate on CONFIG.FEATURES.CRM_INTERNATIONAL_LIVE — this function is
  * kept pure; the /api/crm/checkout-international route refuses when the flag is off.
@@ -603,8 +604,8 @@ export async function createCrmInternationalCheckoutSession({
     mode: 'payment',
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
     adaptive_pricing: { enabled: false },
-    // Always create a customer + save the card off-session so the annual renewal
-    // subscription can be attached and charged from year 2.
+    // Always create a customer + save the card off-session so the bundled SST
+    // subscription can be attached and charged after the included period.
     customer_creation: 'always',
     line_items: [
       {
@@ -614,7 +615,7 @@ export async function createCrmInternationalCheckoutSession({
           product_data: {
             name: 'Concussion Rehab Mastery — International',
             description:
-              '8 online modules (8 hours of learning) · Lifetime course access · Clinical platform included for year 1 (SST Trainer + Baseline & Serial Testing) · Clinical Toolkit · Certificate of completion',
+              '8 online modules (8 hours of learning) · Lifetime course access · Clinical platform included for 3 months (SST Trainer + Baseline & Serial Testing) · Clinical Toolkit · Certificate of completion',
           },
         },
         quantity: 1,
@@ -645,7 +646,7 @@ export async function createCrmInternationalCheckoutSession({
       ...(attribution?.firstUtm ? { attr_first_utm: attribution.firstUtm.slice(0, 480) } : {}),
     },
     payment_intent_data: {
-      // Save the card to the customer so the year-2 renewal can charge it.
+      // Save the card to the customer so the post-include subscription can charge it.
       setup_future_usage: 'off_session',
       metadata: {
         email: customerEmail || '',
@@ -660,7 +661,7 @@ export async function createCrmInternationalCheckoutSession({
     custom_text: {
       submit: {
         message:
-          "You'll get a login link by email to start the CRM course immediately, plus your clinic code for the SST Trainer + Baseline platform (first year included).",
+          "You'll get a login link by email to start the CRM course immediately, plus your clinic code for the SST Trainer + Baseline platform (first 3 months included).",
       },
     },
   })
@@ -720,7 +721,7 @@ export type SstPlan = 'starter' | 'clinic' | 'pro'
  * "re-use our stripe env vars already set").
  *
  * Only three SST price vars are set in production — SINGLE, CLINIC and
- * ENTERPRISE. STARTER was never set, which is why the year-2 renewal silently
+ * ENTERPRISE. STARTER was never set, which is why the post-include renewal silently
  * skipped. The 2026-08-08 ladder has exactly three PURCHASABLE tiers, because
  * Enterprise is quote-only and needs no Stripe price at all — so the freed
  * ENTERPRISE slot carries Pro, and no new Vercel variable is required.

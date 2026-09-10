@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
               // They bought a course and the platform came with it for 12
               // months. Calling that "your free trial" is untrue and is the
               // worst possible first sentence to show a customer at renewal.
-              error: `The platform year included with your enrolment has ended, so you're back to the ${usage.cap}-patient allowance. Subscribe to add more — your existing patients keep working.`,
+              error: `The included platform period with your enrolment has ended, so you're back to the ${usage.cap}-patient allowance. Subscribe to add more — your existing patients keep working.`,
               code: 'included-period-ended',
               usage,
             }

@@ -1,10 +1,10 @@
 /**
- * The platform year INCLUDED with a course enrolment.
+ * The platform period INCLUDED with a course enrolment.
  *
- * Owner model: a course enrolment includes the working clinical platform for 12
- * months at the single-clinician tier, and then the clinic is PROMPTED to
- * subscribe — never auto-charged (a domestic course checkout saves no payment
- * method and nobody consented to off-session billing a year later).
+ * Owner model: a course enrolment includes the working clinical platform for
+ * INCLUDED_PLATFORM_MONTHS (3) at the included tier, and then the clinic is
+ * PROMPTED to subscribe — never auto-charged (a domestic course checkout saves
+ * no payment method and nobody consented to off-session billing months later).
  *
  * These are the invariants that model rests on. Each one has been broken at
  * least once:
@@ -100,8 +100,8 @@ beforeEach(() => {
   sqlHandler = () => []
 })
 
-describe('the included platform year, at the admission gate', () => {
-  it('a domestic course buyer inside their included year is ACTIVE at the included tier', async () => {
+describe('the included platform period, at the admission gate', () => {
+  it('a domestic course buyer inside their included period is ACTIVE at the included tier', async () => {
     kvRecord = { clinicName: 'Buyer', plan: 'active', tier: SST_INCLUDED_TIER.plan }
     sqlHandler = dbWithColumn({ includedUntil: FUTURE, subscription: null, tier: SST_INCLUDED_TIER.plan })
 
@@ -116,7 +116,7 @@ describe('the included platform year, at the admission gate', () => {
     expect(usage.plan).not.toBe('trial')
   })
 
-  it('reverts to the TRIAL allowance once the included year lapses with no subscription', async () => {
+  it('reverts to the TRIAL allowance once the included period lapses with no subscription', async () => {
     kvRecord = { clinicName: 'Lapsed', plan: 'active', tier: SST_INCLUDED_TIER.plan }
     sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: SST_INCLUDED_TIER.plan })
 
@@ -189,7 +189,7 @@ describe('the included platform year, at the admission gate', () => {
   })
 
   it('a lapsed clinic still lets its EXISTING patients through — only new admissions stop', async () => {
-    // 20 patients seen over the included year, now reverted to the 3 cap.
+    // 20 patients seen over the included period, now reverted to the 3 cap.
     kvRecord = { clinicName: 'Lapsed busy', plan: 'active', tier: SST_INCLUDED_TIER.plan }
     sqlHandler = dbWithColumn({ includedUntil: PAST, subscription: null, tier: SST_INCLUDED_TIER.plan, patients: 20 })
 
@@ -353,8 +353,9 @@ describe('provisioning a course buyer is a FLOOR, never a downgrade', () => {
     return { setSstClinicPlan, createSstClinic, INCLUDED_PLATFORM_MONTHS }
   }
 
-  it('a brand-new domestic buyer gets active at the INCLUDED tier with a 12-month period', async () => {
+  it('a brand-new domestic buyer gets active at the INCLUDED tier with a 3-month period', async () => {
     const { setSstClinicPlan, INCLUDED_PLATFORM_MONTHS } = await provisionAgainst(null, null)
+    expect(INCLUDED_PLATFORM_MONTHS).toBe(3)
     expect(setSstClinicPlan).toHaveBeenCalledWith('NEW123', 'active', { tier: SST_INCLUDED_TIER.plan }, INCLUDED_PLATFORM_MONTHS)
     // Explicitly NOT an unlimited clinic: a tier is always named, and it is the
     // tier an enrolment INCLUDES — the 5-patient rung, not the $39 single.
