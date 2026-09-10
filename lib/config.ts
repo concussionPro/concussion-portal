@@ -345,7 +345,12 @@ export const CONFIG = {
     // WAITING FOR REVIEW as of 27 Jul (release set to automatic-on-approval).
     // Flip TRUE the day Apple approves. While false, no App Store badge or
     // link renders anywhere — same discipline as every other unheld claim.
-    SST_IOS_APP_LIVE: false,
+    // APPROVED 2026-09-10 (Apple review, org account), auto-released and
+    // CONFIRMED LIVE via the iTunes lookup API 2026-09-11: SST Trainer v1.0,
+    // released 2026-09-10T22:30:58Z, apps.apple.com/au/app/id6792171738.
+    // Flipping this: /j/<code> leads with the App Store install, the clinic
+    // welcome email and SstClinicCard switch from TestFlight to store copy.
+    SST_IOS_APP_LIVE: true,
     // ACSM Approved Provider status for the CRM (the US$600 application).
     // FALSE until the approval letter arrives. Same discipline as ESSA: while
     // false, /acsm may state HOURS of learning (verifiable) but must never
