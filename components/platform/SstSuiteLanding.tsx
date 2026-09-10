@@ -6,7 +6,7 @@ import { SstWatchAnimation } from '@/components/platform/SstWatchAnimation'
 import { BaselineLaptopAnimation } from '@/components/platform/BaselineLaptopAnimation'
 import { Clock, Link2, FileText } from 'lucide-react'
 import { REFERENCE_COUNT } from '@/data/reference-count'
-import { SST_TIERS, SST_TIER_FROM_AUD, sstTierAllowance } from '@/lib/config'
+import { CONFIG, SST_TIERS, SST_TIER_FROM_AUD, sstTierAllowance } from '@/lib/config'
 
 /**
  * /sst — the Clinical Testing landing with a top toggle between TWO FULL
@@ -132,6 +132,23 @@ function SstTab() {
     have. The clinician's actual try-it path is "Start free trial →" next to
     this. Label it for what it shows. */}
 <Cta variant="ghost" href={CAL_WALKTHROUGH_URL}>Book a walkthrough</Cta><Cta variant="ghost" href="/sst-trainer?landing=1">See the patient app</Cta><Cta variant="ghost" href="/clinical-suite/evidence">See the evidence</Cta></div>
+          {/* App Store badge — LIVE 2026-09-10 (v1.0, id6792171738). Only while
+              the flag is true: an approved-then-pulled listing must never leave
+              a dead badge on the sales surface. Text link, not Apple's black
+              badge artwork — the hero already carries two competing CTAs, and
+              Apple's marketing guidelines require clear space the flex row
+              here cannot give it. */}
+          {CONFIG.FEATURES.SST_IOS_APP_LIVE && (
+            <a
+              href={CONFIG.SST_APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-black/15 bg-black px-3.5 py-1.5 text-[12px] font-semibold text-white no-underline"
+            >
+              <svg width="13" height="15" viewBox="0 0 13 15" fill="currentColor" aria-hidden="true"><path d="M10.76 7.92c.02 2.14 1.88 2.85 1.9 2.86-.02.05-.3 1.02-.99 2.02-.6.87-1.22 1.73-2.2 1.75-.96.02-1.27-.57-2.37-.57s-1.44.55-2.35.59c-.94.03-1.66-.94-2.27-1.8C1.24 11 .27 7.86 1.55 5.7c.63-1.07 1.77-1.75 3-1.77.94-.02 1.82.63 2.39.63.57 0 1.65-.78 2.78-.67.47.02 1.8.19 2.65 1.44-.07.04-1.58.92-1.61 2.59M8.98 2.7c.5-.61.84-1.45.75-2.29-.72.03-1.6.48-2.12 1.09-.47.54-.87 1.4-.76 2.22.8.06 1.63-.41 2.13-1.02"/></svg>
+              SST Trainer on the App Store
+            </a>
+          )}
           <FreeBadge note="Buffalo-protocol graded test · their own wearable · files into your PMS" />
         </div>
         <div className="flex min-w-0 flex-1 basis-[420px] justify-center"><SstWatchAnimation /></div>
