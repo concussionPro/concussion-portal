@@ -690,7 +690,7 @@ export default function CrmInternationalContent({
               </h2>
               <p className="text-[15px] text-muted-foreground max-w-xl mx-auto">
                 {price.display} {price.code} one-time — {audience.enrolBlurb ?? 'the EP-scoped course + the working clinical platform, delivered wholly online.'}
-                {' '}First year of the platform included · 7-day money-back · lifetime course access.
+                {' '}First 3 months of the platform included · 7-day money-back · lifetime course access.
               </p>
             </div>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 mb-5 max-w-lg mx-auto">
