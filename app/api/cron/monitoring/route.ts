@@ -293,7 +293,15 @@ export async function GET(request: NextRequest) {
   // The B2B send-cron can 500 silently (it did 17–26 June — 9 days dark from a
   // corrupted '+&+' in the selection SQL — and nothing flagged it). If prospects
   // are DUE but zero has sent in 48h, the engine is halted: alert loudly.
-  try {
+  //
+  // OWNER Sep 2026: cold bulk lanes are intentionally OFF (removed from
+  // vercel.json; volume ≠ traffic). Without this gate, Check 6 emails a false
+  // "DARK" alert every day while the due queue sits idle. Re-arm only by
+  // setting COLD_OUTREACH_LIVE=true when the prospect cron is scheduled again.
+  const coldOutreachLive = process.env.COLD_OUTREACH_LIVE === 'true'
+  if (!coldOutreachLive) {
+    console.log('[monitoring] Check 6: skipped — COLD_OUTREACH_LIVE is not true (cold bulk intentionally off)')
+  } else try {
     const { rows: sentRows } = await sql`
       SELECT COUNT(*)::int AS n FROM prospect_outreach_log
       WHERE sent_at > NOW() - INTERVAL '48 hours' AND audit_key NOT LIKE '%:test:%'

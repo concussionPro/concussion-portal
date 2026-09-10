@@ -382,7 +382,11 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
 
       const data = await res.json().catch(() => ({ success: false, error: 'Unexpected server response' }))
 
-      if (data.success && data.url) {
+      // CRM /api/crm/checkout returns { url } (no success flag). Requiring
+      // data.success minted Stripe sessions then showed a client error — buyers
+      // rage-clicked into piles of unpaid CRM sessions (Jessica 9 Sep: 14
+      // expired CRM Online before abandon-rescue paid). Accept any url.
+      if (data.url) {
         try { sessionStorage.setItem('cea-checkout-pending', JSON.stringify({ url: data.url, t: Date.now() })) } catch {}
         window.location.href = data.url
         // If we're still here in 2.5s the redirect was blocked — give the

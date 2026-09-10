@@ -64,15 +64,26 @@ beforeEach(() => {
 
 describe('monitoring cron failure visibility', () => {
   it('reports every thrown check as an alert instead of "all checks passed"', async () => {
+    delete process.env.COLD_OUTREACH_LIVE
     const res = await monitoringGET(cronRequest('http://localhost/api/cron/monitoring'))
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.alerts).toBe(6) // all 6 checks threw → 6 alert findings (check 6 = cold-send health)
+    // Check 6 (cold DARK) is skipped unless COLD_OUTREACH_LIVE=true — cold bulk is intentionally off.
+    expect(body.alerts).toBe(5)
     expect(sendEmailMock).toHaveBeenCalledTimes(1)
     const emailArgs = sendEmailMock.mock.calls[0][0]
     expect(emailArgs.subject).toContain('alert')
     expect(emailArgs.html).toContain('Monitoring check failed')
+  })
+
+  it('includes cold-engine Check 6 when COLD_OUTREACH_LIVE=true', async () => {
+    process.env.COLD_OUTREACH_LIVE = 'true'
+    const res = await monitoringGET(cronRequest('http://localhost/api/cron/monitoring'))
+    const body = await res.json()
+    expect(res.status).toBe(200)
+    expect(body.alerts).toBe(6)
+    delete process.env.COLD_OUTREACH_LIVE
   })
 
   it('returns 500 when the alert email itself fails to send', async () => {

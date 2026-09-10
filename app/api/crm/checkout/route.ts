@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const session = await createCrmCheckoutSession({ tier, location, customerEmail, successUrl, cancelUrl, utm, attribution })
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ success: true, url: session.url })
   } catch (err) {
     console.error('[crm-checkout] session create failed:', err)
     return NextResponse.json({ error: 'Could not start checkout. Please try again.' }, { status: 500 })

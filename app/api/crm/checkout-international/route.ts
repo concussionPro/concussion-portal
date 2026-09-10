@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       utm,
       attribution,
     })
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ success: true, url: session.url })
   } catch (err) {
     console.error('[crm-intl-checkout] session create failed:', err)
     return NextResponse.json({ error: 'Could not start checkout. Please try again.' }, { status: 500 })

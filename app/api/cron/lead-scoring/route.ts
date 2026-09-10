@@ -303,6 +303,16 @@ export async function GET(request: NextRequest) {
   const dormant = scoredLeads.filter(l => l.score < 30)
 
   // ── Step 6: Workshop pipeline ────
+  // Slug-normalize city keys so paid seats (users.workshop_location) and EOI
+  // (workshop_interest.city) merge. A mismatched key used to surface Melb as
+  // "15/12" from interested alone while paid sat on a different row.
+  const normalizeWorkshopLocationKey = (raw: string) =>
+    String(raw || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+
   let workshopPipeline: { location: string; paid: number; interested: number }[] = []
   try {
     // PAID practical-day seats per city — BOTH streams. The day is shared
@@ -330,17 +340,22 @@ export async function GET(request: NextRequest) {
 
     const locationMap = new Map<string, { paid: number; interested: number }>()
     for (const r of paidRows) {
-      locationMap.set(r.location, { paid: r.count, interested: 0 })
+      const key = normalizeWorkshopLocationKey(r.location)
+      if (!key) continue
+      const existing = locationMap.get(key) || { paid: 0, interested: 0 }
+      existing.paid += Number(r.count) || 0
+      locationMap.set(key, existing)
     }
     for (const r of interestRows) {
-      const existing = locationMap.get(r.location) || { paid: 0, interested: 0 }
-      existing.interested = r.count
-      locationMap.set(r.location, existing)
+      const key = normalizeWorkshopLocationKey(r.location)
+      if (!key) continue
+      const existing = locationMap.get(key) || { paid: 0, interested: 0 }
+      existing.interested += Number(r.count) || 0
+      locationMap.set(key, existing)
     }
-    workshopPipeline = [...locationMap.entries()].map(([location, data]) => ({
-      location,
-      ...data,
-    }))
+    workshopPipeline = [...locationMap.entries()]
+      .map(([location, data]) => ({ location, ...data }))
+      .sort((a, b) => b.paid - a.paid || b.interested - a.interested)
   } catch (err) {
     console.warn('[lead-scoring] Workshop pipeline query failed:', err)
   }
@@ -487,7 +502,7 @@ function buildBriefingEmail(
             <div style="background: #f0f9ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <strong style="font-size: 14px; color: #1e293b;">${escapeHtml(cityName)}</strong>
-                <span style="font-size: 13px; color: #64748b;">${w.paid}/${threshold} paid${w.interested > 0 ? ` + ${w.interested} interested` : ''}</span>
+                <span style="font-size: 13px; color: #64748b;"><strong>${w.paid}</strong>/${threshold} paid seats${w.interested > 0 ? ` · ${w.interested} EOI (not paid)` : ''}</span>
               </div>
               <div style="background: #dbeafe; border-radius: 4px; height: 8px;">
                 <div style="background: #3b82f6; border-radius: 4px; height: 8px; width: ${pct}%;"></div>
