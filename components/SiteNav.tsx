@@ -96,6 +96,36 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
       .catch(() => setAuth({ accessLevel: '', ownsCrm: false }))
   }, [])
 
+  /**
+   * GEO-AWARE NAV (2026-09-10).
+   *
+   * The middleware matcher covers /, /pricing, /courses, /uk and /cata — but NOT
+   * /scat6-download, /scat-forms or /scat-mastery, which is where most overseas
+   * traffic actually lands: of 391 US sessions in 30 days, 103 were on
+   * /scat6-download, 49 on /scat-forms and 34 on /scat-forms/scat6, against 48
+   * on /pricing-international. On every one of those pages the nav said
+   * "Pricing → /pricing", the Australian-dollar page, and middleware never ran
+   * to correct it. 23 US sessions rendered A$497 / A$1,190 and a Melbourne
+   * workshop they cannot attend; the /pricing redirect only rescues the ones
+   * whose geo header is present.
+   *
+   * So the nav asks for itself. One cheap header read, no database, and the
+   * overseas visitor gets their own funnel from whatever page they entered on.
+   * GB and CA keep their audience pages (/uk, /cata) — same precedence the
+   * homepage and /pricing redirects already use.
+   */
+  const [intlHome, setIntlHome] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/geo')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!d?.routedAsInternational) return
+        const c = d.detectedCountry
+        setIntlHome(c === 'GB' ? '/uk' : c === 'CA' ? '/cata' : '/pricing-international')
+      })
+      .catch(() => {})
+  }, [])
+
   // Demo watermark sits at top:0 z-[100]; if present, push nav below it.
   const [hasDemoBar, setHasDemoBar] = useState(false)
   useEffect(() => {
@@ -114,7 +144,15 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   }, [mobileMenuOpen])
 
   // Build nav items based on auth state
-  const navItems = [...BASE_NAV_ITEMS]
+  // International visitors get their own funnel: Pricing points straight at
+  // their own priced page instead of bouncing through the AUD one, and Courses
+  // is dropped — /courses is the workshop hub, and international enrolment is
+  // ONLINE-ONLY by design, so it advertises a practical day they cannot attend.
+  const navItems = intlHome
+    ? BASE_NAV_ITEMS
+        .filter(i => i.path !== '/courses')
+        .map(i => (i.path === '/pricing' ? { ...i, path: intlHome } : i))
+    : [...BASE_NAV_ITEMS]
   if (!auth) {
     // Still loading — show Login (no flash)
     navItems.push({ label: 'Login', path: '/login', accent: false })
@@ -161,7 +199,13 @@ export function SiteNav({ logoHref = '/' }: { logoHref?: string } = {}) {
   const ccmOnlineOnly = !onCrmSurface && auth?.accessLevel === 'online-only'
   const showEnrolCta = !ownsThisStream || ccmOnlineOnly
   const enrolLabel = ccmOnlineOnly ? 'Add the in-person day' : 'Enrol'
-  const enrolTarget = ccmOnlineOnly ? '/upgrade' : enrolHref
+  // Path-specific rules still win (a /cata or CRM reader stays in their stream);
+  // otherwise an overseas visitor enrols on their own currency page.
+  const enrolTarget = ccmOnlineOnly
+    ? '/upgrade'
+    : intlHome && enrolHref === CONFIG.SHOP_URL
+    ? intlHome
+    : enrolHref
   // On /pricing the CTA scrolls to the cards instead of navigating — that only
   // makes sense while it IS a purchase CTA for this reader.
   const enrolScrolls = onPricing && !ccmOnlineOnly
