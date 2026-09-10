@@ -57,3 +57,31 @@ describe('daily check-ins reach the clinician', () => {
     expect(roster).not.toMatch(/trainings\.push\([^)]*checkin/i)
   })
 })
+
+describe('cap prompts fire on both sides of the limit', () => {
+  // notifyPlanFull covers the refusal; notifyApproachingCap covers the LAST
+  // successful admission before it. Losing either half silently reverts the
+  // upgrade prompt to failure-moment-only, which is the defect it replaced.
+  const src = readFileSync(join(ROOT, 'app/api/sst/session/route.ts'), 'utf8')
+
+  it('the approaching-cap nudge exists and checks suppression before the audit key', () => {
+    const fn = src.slice(src.indexOf('async function notifyApproachingCap'))
+    expect(fn.length).toBeGreaterThan(100)
+    const supIdx = fn.indexOf('email_suppression')
+    const keyIdx = fn.indexOf('INSERT INTO email_audit_log')
+    expect(supIdx).toBeGreaterThan(-1)
+    expect(keyIdx).toBeGreaterThan(-1)
+    // Suppression BEFORE the key claim — the 2026-08-06 planfull lesson: a
+    // burned key with no email means a month of silence.
+    expect(supIdx).toBeLessThan(keyIdx)
+  })
+
+  it('it fires on the admission that reaches cap-1, paid plans only', () => {
+    expect(src).toMatch(/usage\.plan === 'active' && usage\.cap != null && usage\.patientCount \+ 1 === usage\.cap/)
+  })
+
+  it('a failed send releases the month key', () => {
+    const fn = src.slice(src.indexOf('async function notifyApproachingCap'))
+    expect(fn).toMatch(/if \(!sent\) await sql`DELETE FROM email_audit_log/)
+  })
+})

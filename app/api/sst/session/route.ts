@@ -59,6 +59,45 @@ async function notifyPlanFull(clinicCode: string, usage: { patientCount: number;
   if (!sent) await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}`.catch(() => {})
 }
 
+/**
+ * APPROACHING-CAP NUDGE (2026-09-11). notifyPlanFull fires at the REFUSAL —
+ * the owner's first contact with their cap arrives as a failure ("a patient
+ * couldn't start"), which is the worst possible moment to sell a tier. This
+ * one fires on the ADMISSION that takes a paid clinic to ONE SEAT SHORT of
+ * its cap: nothing has broken, the message is a heads-up, and the upgrade is
+ * a choice rather than an apology. Same contract as notifyPlanFull —
+ * suppression BEFORE the audit key, once per clinic per month, rollback on a
+ * failed send. Trial clinics are excluded: their next step is the subscribe
+ * page, which the trial copy already owns.
+ */
+async function notifyApproachingCap(clinicCode: string, usage: { patientCount: number; cap: number | null }) {
+  if (usage.cap == null) return
+  const rec = await getClinic(clinicCode)
+  const email = rec?.email?.trim().toLowerCase()
+  if (!email) return
+  const monthKey = new Date().toISOString().slice(0, 7)
+  const auditKey = `sst_capnear_${clinicCode}_${monthKey}`
+  try {
+    const { rows: sup } = await sql`SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email} LIMIT 1`
+    if (sup.length > 0) return
+  } catch {
+    return // fail closed — key untouched, the next admission retries
+  }
+  const { rowCount: fresh } = await sql`
+    INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW())
+    ON CONFLICT (audit_key) DO NOTHING
+  `
+  if (!fresh) return
+  const first = (rec?.contactName || '').trim().split(/\s+/)[0] || ''
+  const sent = await sendEmail({
+    to: email,
+    subject: `One active-patient spot left on your SST plan`,
+    html: `<p style="margin:0 0 1em 0;">Hi${first ? ' ' + escapeHtml(first) : ''},</p><p style="margin:0 0 1em 0;">Quick heads-up — ${escapeHtml(rec?.clinicName || 'your clinic')} now has ${usage.patientCount} of ${usage.cap} active patients in the last 30 days, so there's one spot left before new admissions pause. Nothing is blocked, and existing patients are never affected.</p><p style="margin:0 0 1em 0;">If the caseload is growing, <a href="https://portal.concussion-education-australia.com/clinical-testing">the next tier is a one-click change from your workspace</a> (Manage billing &rarr; change plan) — it applies immediately.</p><p style="margin:0;">Zac Lewis<br/>Concussion Education Australia</p>`,
+    tags: [{ name: 'type', value: 'sst-cap-approaching' }],
+  })
+  if (!sent) await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}`.catch(() => {})
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request)
@@ -182,6 +221,16 @@ export async function POST(request: NextRequest) {
               : { error: 'plan-full', message: 'This clinic’s plan is at its active-patient limit — ask your clinician to add you.' },
             { status: 402 },
           )
+        }
+        // This admission SUCCEEDS. If it lands the clinic one short of a paid
+        // cap, nudge the owner now — before the next new patient becomes the
+        // refusal notifyPlanFull exists for. `patientCount` was measured
+        // BEFORE this admission, so +1 is this patient counted in.
+        if (usage.plan === 'active' && usage.cap != null && usage.patientCount + 1 === usage.cap) {
+          await notifyApproachingCap(clinicCode, {
+            patientCount: usage.patientCount + 1,
+            cap: usage.cap,
+          }).catch((err) => console.error('[sst-session] cap-approaching notify failed:', err))
         }
       }
     }
