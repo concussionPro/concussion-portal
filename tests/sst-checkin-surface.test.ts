@@ -77,7 +77,7 @@ describe('cap prompts fire on both sides of the limit', () => {
   })
 
   it('it fires on the admission that reaches cap-1, paid plans only', () => {
-    expect(src).toMatch(/usage\.plan === 'active' && usage\.cap != null && usage\.patientCount \+ 1 === usage\.cap/)
+    expect(src).toMatch(/usage\.plan === 'active' && !usage\.pendingActivation && usage\.cap != null && usage\.patientCount \+ 1 === usage\.cap/)
   })
 
   it('a failed send releases the month key', () => {

@@ -199,12 +199,25 @@ export async function POST(request: NextRequest) {
           // AUTO-PROMPT (owner 2026-08-05): the moment a paid clinic loses an
           // admission to its caseload cap, tell the owner — audit-keyed to
           // once per clinic per month. Suppression fail-closed per doctrine.
-          if (usage.plan === 'active') {
+          if (usage.plan === 'active' && !usage.pendingActivation) {
             // AWAITED (final sweep #14): void'd sends can be frozen with the
             // lambda after the 402 returns — burning the monthly audit key
             // with no email and no delete-on-fail.
             await notifyPlanFull(clinicCode, usage).catch((err) =>
               console.error('[sst-session] plan-full notify failed:', err),
+            )
+          }
+          if (usage.pendingActivation) {
+            // Granted-but-unactivated: the fix is one click in the clinician's
+            // workspace, so the refusal names ACTIVATION, never a tier or a
+            // trial — this buyer has already paid for the platform.
+            return NextResponse.json(
+              {
+                error: 'included-pending',
+                message:
+                  'This clinic\u2019s included platform period hasn\u2019t been activated yet \u2014 ask your clinician to activate it from their workspace.',
+              },
+              { status: 402 },
             )
           }
           return NextResponse.json(
@@ -226,7 +239,7 @@ export async function POST(request: NextRequest) {
         // cap, nudge the owner now — before the next new patient becomes the
         // refusal notifyPlanFull exists for. `patientCount` was measured
         // BEFORE this admission, so +1 is this patient counted in.
-        if (usage.plan === 'active' && usage.cap != null && usage.patientCount + 1 === usage.cap) {
+        if (usage.plan === 'active' && !usage.pendingActivation && usage.cap != null && usage.patientCount + 1 === usage.cap) {
           await notifyApproachingCap(clinicCode, {
             patientCount: usage.patientCount + 1,
             cap: usage.cap,

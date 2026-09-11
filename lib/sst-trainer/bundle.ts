@@ -24,6 +24,7 @@ import {
   type SstClinic,
 } from './clinic-registry'
 import { buildWelcomeEmail } from './clinic-welcome-email'
+import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { grantSstEntitlement } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
@@ -160,7 +161,16 @@ export async function provisionPlatformForBuyer(
           `(plan=${clinic.plan}, tier=${clinic.tier ?? 'unlimited'}, subscription=${hasRealSubscription}) — left unchanged`,
       )
     } else {
-      await setSstClinicPlan(clinic.code, 'active', { tier: SST_INCLUDED_TIER.plan }, INCLUDED_PLATFORM_MONTHS)
+      // ACTIVATION MODEL (owner 2026-09-11): the included months start when
+      // the buyer ACTIVATES from the workspace, not at purchase — the clock
+      // must not burn while they are still doing the course. Grant the tier
+      // with NO included_until stamp and mark it pending; getClinicUsage
+      // meters pending clinics at the trial allowance until activation.
+      await setSstClinicPlan(clinic.code, 'active', { tier: SST_INCLUDED_TIER.plan })
+      await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_pending BOOLEAN`.catch(() => {})
+      await sql`UPDATE sst_clinics SET included_pending = TRUE WHERE code = ${clinic.code}`.catch((err) =>
+        console.error('[bundle] included_pending mark failed:', err),
+      )
     }
   } else {
     console.warn(

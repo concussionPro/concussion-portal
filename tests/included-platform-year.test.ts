@@ -353,10 +353,14 @@ describe('provisioning a course buyer is a FLOOR, never a downgrade', () => {
     return { setSstClinicPlan, createSstClinic, INCLUDED_PLATFORM_MONTHS }
   }
 
-  it('a brand-new domestic buyer gets active at the INCLUDED tier with a 3-month period', async () => {
+  it('a brand-new domestic buyer gets active at the INCLUDED tier, PENDING activation', async () => {
+    // ACTIVATION MODEL (owner 2026-09-11): the grant no longer stamps the
+    // 3-month period at purchase — the clock starts when the clinician
+    // activates from the workspace. So the plan call carries NO months
+    // argument; the pending mark is what arms the activation button.
     const { setSstClinicPlan, INCLUDED_PLATFORM_MONTHS } = await provisionAgainst(null, null)
     expect(INCLUDED_PLATFORM_MONTHS).toBe(3)
-    expect(setSstClinicPlan).toHaveBeenCalledWith('NEW123', 'active', { tier: SST_INCLUDED_TIER.plan }, INCLUDED_PLATFORM_MONTHS)
+    expect(setSstClinicPlan).toHaveBeenCalledWith('NEW123', 'active', { tier: SST_INCLUDED_TIER.plan })
     // Explicitly NOT an unlimited clinic: a tier is always named, and it is the
     // tier an enrolment INCLUDES — the 5-patient rung, not the $39 single.
     const [, , stripeArg] = setSstClinicPlan.mock.calls[0] as unknown as [string, string, { tier: string }]
@@ -380,7 +384,7 @@ describe('provisioning a course buyer is a FLOOR, never a downgrade', () => {
   })
 
   it('DOES grant to an existing clinic still on the trial cap', async () => {
-    const { setSstClinicPlan, INCLUDED_PLATFORM_MONTHS } = await provisionAgainst({ plan: 'trial', tier: null }, null)
-    expect(setSstClinicPlan).toHaveBeenCalledWith('EXIST1', 'active', { tier: SST_INCLUDED_TIER.plan }, INCLUDED_PLATFORM_MONTHS)
+    const { setSstClinicPlan } = await provisionAgainst({ plan: 'trial', tier: null }, null)
+    expect(setSstClinicPlan).toHaveBeenCalledWith('EXIST1', 'active', { tier: SST_INCLUDED_TIER.plan })
   })
 })

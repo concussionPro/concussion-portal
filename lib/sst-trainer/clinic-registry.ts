@@ -119,6 +119,8 @@ export interface ClinicUsage {
    * bait-and-switch on something they were promised at the point of sale.
    */
   includedLapsed?: boolean
+  /** Course-included platform granted but its 3-month clock not yet started. */
+  pendingActivation?: boolean
 }
 
 /**
@@ -153,6 +155,7 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
   // uses), because ending someone's access mid-rehabilitation is a clinical
   // problem, not a billing one. The clinic is PROMPTED to subscribe.
   let includedLapsed = false
+  let pendingActivation = false
   if (plan === 'active') {
     try {
       // `to_jsonb(c) ->> 'included_until'` instead of naming the column: this
@@ -161,9 +164,10 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
       // statement. Reading it out of the row's jsonb form yields NULL when the
       // column is absent, which is exactly the "no included period" case. Same
       // reason applies to every other included_until read in this file.
-      const { rows } = await sql<{ included_until: string | null; stripe_subscription_id: string | null }>`
+      const { rows } = await sql<{ included_until: string | null; stripe_subscription_id: string | null; included_pending: string | null }>`
         SELECT (to_jsonb(c) ->> 'included_until') AS included_until,
-               (to_jsonb(c) ->> 'stripe_subscription_id') AS stripe_subscription_id
+               (to_jsonb(c) ->> 'stripe_subscription_id') AS stripe_subscription_id,
+               (to_jsonb(c) ->> 'included_pending') AS included_pending
         FROM sst_clinics c WHERE code = ${code} LIMIT 1
       `
       const until = rows[0]?.included_until
@@ -172,14 +176,21 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
         plan = 'trial'
         tier = null
         includedLapsed = true
+      } else if (!until && !hasSubscription && rows[0]?.included_pending === 'true') {
+        // Granted but not yet activated: the trial allowance applies (enough
+        // to try it on a real patient), and every refusal points at
+        // ACTIVATION, not at a tier. Deliberately NOT a lapse.
+        pendingActivation = true
       }
     } catch { /* column/table absent → leave the plan as-is */ }
   }
   // Paid plans meter NEW patients STARTED this calendar month; the trial meters
   // lifetime distinct patients. A tier of null on an active plan (alumni
   // comps, legacy grants, enterprise) is unlimited.
-  const allowance = plan === 'active' ? (tier ? (TIER_MONTHLY_PATIENT_CAP[tier] ?? null) : null) : TRIAL_PATIENT_CAP
-  const windowed = plan === 'active'
+  const allowance = pendingActivation
+    ? TRIAL_PATIENT_CAP
+    : plan === 'active' ? (tier ? (TIER_MONTHLY_PATIENT_CAP[tier] ?? null) : null) : TRIAL_PATIENT_CAP
+  const windowed = plan === 'active' && !pendingActivation
   let patientCount = 0
   try {
     // One human = one identity, LABEL-first (final sweep #13): the ref is an
@@ -238,6 +249,7 @@ export async function getClinicUsage(rawCode: unknown): Promise<ClinicUsage> {
     canAddPatient: windowed ? true : !atOrOverCap,
     overCap: windowed && atOrOverCap,
     includedLapsed,
+    pendingActivation,
   }
 }
 
@@ -344,6 +356,7 @@ export async function setSstClinicPlan(
     // lost from Postgres on every plan flip. KV said 'active', PG said 'trial',
     // and PG is what the KV-blip fallback and the admin list read.
     await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_until TIMESTAMPTZ`
+    await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_pending BOOLEAN`
     await sql`
       UPDATE sst_clinics SET plan = ${plan},
         tier = COALESCE(${stripe?.tier ?? null}, tier),
@@ -515,6 +528,11 @@ export async function ensureSstClinicsTable(): Promise<void> {
   // auto-charged, because a domestic course checkout saves no payment method
   // and nobody consented to off-session billing at the point of sale.
   await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_until TIMESTAMPTZ`
+  // Included period starts at ACTIVATION, not purchase (owner 2026-09-11): the
+  // clock must not burn while the buyer is still doing the course. A grant sets
+  // included_pending; the workspace's "Activate" stamps included_until =
+  // NOW() + INCLUDED_PLATFORM_MONTHS and clears it.
+  await sql`ALTER TABLE sst_clinics ADD COLUMN IF NOT EXISTS included_pending BOOLEAN`
   // ONE CLINIC PER EMAIL, enforced by the database.
   //
   // Every provisioning path is check-then-create (`getSstClinicByEmail(...) ??
