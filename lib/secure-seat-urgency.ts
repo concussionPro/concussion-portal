@@ -25,6 +25,12 @@ export type SecureSeatProgressInput = {
   priceAud?: number
   /** Prefer upgrade framing when the visitor already owns Online. */
   forOnlineUpgrade?: boolean
+  /**
+   * True when a practical-day date is already announced (live Melb round,
+   * confirmed LOCATIONS row). Below half-full we still hide n/12, but we must
+   * NOT use demand-gate “deposit opens the date” copy — the date is live.
+   */
+  hasLiveDate?: boolean
 }
 
 export type SecureSeatUrgency = {
@@ -64,6 +70,7 @@ export function buildSecureSeatUrgency(input: SecureSeatProgressInput): SecureSe
       : null
   const progressKnown = Boolean(input.progressKnown) && enrolled !== null
   const upgrade = Boolean(input.forOnlineUpgrade)
+  const live = Boolean(input.hasLiveDate)
 
   const headline = upgrade
     ? `Unlock your seat in ${city} — add the catered day`
@@ -74,33 +81,45 @@ export function buildSecureSeatUrgency(input: SecureSeatProgressInput): SecureSe
   let progressLine: string | null
   if (!progressKnown || enrolled === null) {
     // No API row — never invent a count; forming copy only.
-    progressLine = formingProgressLine(city)
+    progressLine = live ? `Capped at ${threshold} seats` : formingProgressLine(city)
   } else if (enrolled >= threshold) {
-    progressLine = `${city} unlocked — the practical day is opening`
+    progressLine = live
+      ? `${city} is full for this round`
+      : `${city} unlocked — the practical day is opening`
   } else if (enrolled < halfFull) {
     // n < 6 at threshold 12: omit numeric progress (empty-room anti-pattern).
-    progressLine = formingDepositLine(city)
+    // Live announced dates must NOT claim the deposit still “opens the date”.
+    progressLine = live ? `Capped at ${threshold} seats` : formingDepositLine(city)
   } else {
     const remaining = Math.max(threshold - enrolled, 0)
     if (remaining > 0 && remaining <= HIGH_URGENCY_REMAINING) {
       // n >= 9 and n < 12
-      progressLine = `Only ${remaining} seat${remaining === 1 ? '' : 's'} left to unlock ${city}`
+      progressLine = live
+        ? `Only ${remaining} seat${remaining === 1 ? '' : 's'} left`
+        : `Only ${remaining} seat${remaining === 1 ? '' : 's'} left to unlock ${city}`
     } else {
       // halfFull <= n < (threshold - HIGH_URGENCY_REMAINING) → 6–8 at threshold 12
-      progressLine = `${enrolled} of ${threshold} seats secured in ${city} — unlock yours to open the date`
+      progressLine = live
+        ? `${enrolled} of ${threshold} seats taken`
+        : `${enrolled} of ${threshold} seats secured in ${city} — unlock yours to open the date`
     }
   }
 
-  const socialLine =
-    'Clinicians secure seats to open the catered day — the date opens at ' +
-    String(threshold) +
-    ' paid commits. Money before calendar · no fake dates.'
+  const socialLine = live
+    ? `Capped at ${threshold} seats — multidisciplinary room · early-bird while it lasts.`
+    : (
+      'Clinicians secure seats to open the catered day — the date opens at ' +
+      String(threshold) +
+      ' paid commits. Money before calendar · no fake dates.'
+    )
 
-  const body = upgrade
-    ? `You have Online — next step is the hands-on day. Put A$${price} down for ${city}. It counts toward the ${threshold}-seat gate that opens the date; credit toward Complete when it does; full refund if the cohort does not form.`
-    : progressKnown && enrolled !== null && enrolled >= halfFull
-      ? `Put A$${price} down for ${city}. It counts toward the ${threshold}-seat demand gate that opens the date. Credit toward Complete when the date opens; full refund if the cohort does not form. Online modules stay a separate enrol.`
-      : `Put A$${price} down for ${city}. Be among the clinicians unlocking ${city} — your deposit opens the practical day when the cohort fills. Credit toward Complete when the date opens; full refund if it does not. Prefer modules first? Enrol Online, then unlock your seat.`
+  const body = live
+    ? `Join the ${city} practical day. Room capped at ${threshold}. Online modules included with Complete; upgrade from Online pays the difference.`
+    : upgrade
+      ? `You have Online — next step is the hands-on day. Put A$${price} down for ${city}. It counts toward the ${threshold}-seat gate that opens the date; credit toward Complete when it does; full refund if the cohort does not form.`
+      : progressKnown && enrolled !== null && enrolled >= halfFull
+        ? `Put A$${price} down for ${city}. It counts toward the ${threshold}-seat demand gate that opens the date. Credit toward Complete when the date opens; full refund if the cohort does not form. Online modules stay a separate enrol.`
+        : `Put A$${price} down for ${city}. Be among the clinicians unlocking ${city} — your deposit opens the practical day when the cohort fills. Credit toward Complete when the date opens; full refund if it does not. Prefer modules first? Enrol Online, then unlock your seat.`
 
   return { headline, headlineShort, ctaLabel, progressLine, socialLine, body }
 }

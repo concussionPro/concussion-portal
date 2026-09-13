@@ -49,6 +49,7 @@ export default function SpotsRemaining({ location, className = '' }: SpotsRemain
     enrolled,
     threshold: capacity,
     progressKnown: true,
+    hasLiveDate: true, // confirmed LOCATIONS row = announced date
   })
 
   const halfFull = Math.floor(capacity / 2)

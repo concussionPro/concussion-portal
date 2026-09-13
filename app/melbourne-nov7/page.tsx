@@ -153,6 +153,7 @@ export default function MelbourneNov7Page() {
                     enrolled,
                     threshold: capacity,
                     progressKnown: true,
+                    hasLiveDate: true,
                   })
                   // Half-full rule: never flash "11 of 12 seats left" on a 1-paid room.
                   return urgency.progressLine || `Capped at ${capacity} seats`

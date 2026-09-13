@@ -21,6 +21,7 @@ describe('prod FAIL regressions (half-full / scat6 braces / complete-reference)'
       progressKnown: true,
     })
     expect(low.progressLine).not.toMatch(/\d+\s+of\s+12/)
+    expect(low.progressLine).toMatch(/deposit opens the practical day/i)
     const mid = buildSecureSeatUrgency({
       cityLabel: 'Sydney',
       enrolled: 6,
@@ -28,6 +29,28 @@ describe('prod FAIL regressions (half-full / scat6 braces / complete-reference)'
       progressKnown: true,
     })
     expect(mid.progressLine).toMatch(/6 of 12/)
+  })
+
+  it('live-date urgency hides empty-room counts and skips deposit-forming copy', () => {
+    const lowLive = buildSecureSeatUrgency({
+      cityLabel: 'Melbourne',
+      enrolled: 2,
+      threshold: 12,
+      progressKnown: true,
+      hasLiveDate: true,
+    })
+    expect(lowLive.progressLine).toBe('Capped at 12 seats')
+    expect(lowLive.progressLine).not.toMatch(/deposit opens/i)
+    expect(lowLive.progressLine).not.toMatch(/\d+\s+of\s+12/)
+    const midLive = buildSecureSeatUrgency({
+      cityLabel: 'Melbourne',
+      enrolled: 7,
+      threshold: 12,
+      progressKnown: true,
+      hasLiveDate: true,
+    })
+    expect(midLive.progressLine).toBe('7 of 12 seats taken')
+    expect(midLive.progressLine).not.toMatch(/open the date/i)
   })
 
 
@@ -41,6 +64,7 @@ describe('prod FAIL regressions (half-full / scat6 braces / complete-reference)'
   it('melbourne-nov7 seat line uses half-full urgency (no raw seats left below half)', () => {
     const src = readFileSync(join(root, 'app/melbourne-nov7/page.tsx'), 'utf8')
     expect(src).toContain('buildSecureSeatUrgency')
+    expect(src).toContain('hasLiveDate: true')
     expect(src).not.toContain('seats left — capped at')
   })
 
