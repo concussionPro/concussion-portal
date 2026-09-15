@@ -1,3 +1,4 @@
+import { isTrainingFlare } from '@/lib/sst-trainer/flare'
 import { sql } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClinic, isRegisteredClinic, verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
@@ -157,11 +158,7 @@ export async function buildGpReportHtml(
       typeof t.payload?.peakSymptom === 'number' ||
       t.payload?.flare === true,
   ).length
-  const flares = trainings.filter((t) => {
-    const pre = typeof t.payload?.preSymptom === 'number' ? (t.payload.preSymptom as number) : null
-    const peak = typeof t.payload?.peakSymptom === 'number' ? (t.payload.peakSymptom as number) : null
-    return t.payload?.flare === true || (pre != null && peak != null && peak - pre >= 2)
-  }).length
+  const flares = trainings.filter((t) => isTrainingFlare(t.payload)).length
   const flaresCell =
     trainings.length === 0
       ? 'no training sessions on record'

@@ -1,3 +1,4 @@
+import { isTrainingFlare } from '@/lib/sst-trainer/flare'
 import { jsPDF } from 'jspdf'
 import { sql } from '@/lib/db'
 import { getClinic } from '@/lib/sst-trainer/clinic-registry'
@@ -179,17 +180,13 @@ export async function loadGpReportData(code: string, patientLabel: string, patie
         minutes: typeof t.payload?.completedMinutes === 'number' ? (t.payload.completedMinutes as number) : null,
         verified: t.payload?.hrVerified === true && (t.payload?.hrSource as string | undefined) !== 'manual' && (t.payload?.hrSource as string | undefined) !== undefined,
         hrRecorded: hasHrSource(t.payload),
-        flare: t.payload?.flare === true || t.payload?.nextDayFlare === true || (pre != null && peak != null && peak - pre >= 2),
+        flare: isTrainingFlare(t.payload),
       }
     }),
     sessionsTotal: trainings.length,
     sessionsVerified: trainings.filter((t) => t.payload?.hrVerified === true && (t.payload?.hrSource as string | undefined) !== 'manual' && (t.payload?.hrSource as string | undefined) !== undefined).length,
     weeks: Math.max(1, weekSet.size),
-    flares: trainings.filter((t) => {
-      const pre = typeof t.payload?.preSymptom === 'number' ? (t.payload.preSymptom as number) : null
-      const peak = typeof t.payload?.peakSymptom === 'number' ? (t.payload.peakSymptom as number) : null
-      return t.payload?.flare === true || (pre != null && peak != null && peak - pre >= 2)
-    }).length,
+    flares: trainings.filter((t) => isTrainingFlare(t.payload)).length,
     sessionsWithSymptomData: trainings.filter(
       (t) =>
         typeof t.payload?.preSymptom === 'number' ||
