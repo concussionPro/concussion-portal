@@ -126,6 +126,19 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
   })
 
 
+
+  it('Child SCAT6 lander mounts above-fold AfterTheAssessment (entrants never reach post-form exit)', () => {
+    const page = readFileSync(join(root, 'app/scat-forms/child-scat6/page.tsx'), 'utf8')
+    expect(page).toContain("from '@/components/scat-forms/AfterTheAssessment'")
+    expect(page).toContain('<AfterTheAssessment')
+    expect(page).toContain('source="child_scat6"')
+    expect(page).toContain('print:hidden')
+    // Post-form exit stays for completers
+    const client = readFileSync(join(root, 'app/scat-forms/child-scat6/Client.tsx'), 'utf8')
+    expect(client).toContain('<AfterTheAssessment')
+    expect(client).toContain('source="child_scat6_post"')
+  })
+
   it('VOMS lander mounts AfterTheAssessment Online+SST dual exit (not buried mastery/pricing only)', () => {
     const src = readFileSync(join(root, 'app/scat-forms/voms/page.tsx'), 'utf8')
     expect(src).toContain("from '@/components/scat-forms/AfterTheAssessment'")

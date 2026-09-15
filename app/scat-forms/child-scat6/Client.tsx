@@ -1151,8 +1151,8 @@ export default function ChildSCAT6Client() {
               placeholder="Enter any additional clinical observations, notes, or follow-up plans..."
             />
           </SectionHeader>
-          {/* Post-form exit: free mastery + Online / SST dual path */}
-          <AfterTheAssessment className="mt-6" />
+          {/* Post-form exit: free mastery + Online / SST dual path (completers) */}
+          <AfterTheAssessment source="child_scat6_post" className="mt-6 print:hidden" />
         </div>
       </div>
     </div>

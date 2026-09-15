@@ -15,9 +15,10 @@
  *   - HOT LEADS (>= 60)    — ready for personal follow-up
  *   - WARMING UP (30-59)    — let nurture sequence continue
  *   - DORMANT (< 30)        — summary count only
- *   - WORKSHOP PIPELINE     — paid practical-day seats per city vs threshold
- *                             (CCM full-course + CRM 'crm-practical' — the day
- *                              is shared, so both streams fill the same room)
+ *   - WORKSHOP PIPELINE     — paid seats = round-scoped getEnrollmentCount
+ *                             (same truth as /api/city-progress); EOI =
+ *                             workshop_interest (not paid). Never treat EOI
+ *                             as paid seats for Melb fill decisions.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -25,7 +26,7 @@ import crypto from 'crypto'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
-import { CRM_PRACTICAL_SLUG } from '@/lib/crm-course'
+import { getEnrollmentCount } from '@/lib/users'
 
 export const maxDuration = 60
 
@@ -303,9 +304,12 @@ export async function GET(request: NextRequest) {
   const dormant = scoredLeads.filter(l => l.score < 30)
 
   // ── Step 6: Workshop pipeline ────
-  // Slug-normalize city keys so paid seats (users.workshop_location) and EOI
-  // (workshop_interest.city) merge. A mismatched key used to surface Melb as
-  // "15/12" from interested alone while paid sat on a different row.
+  // Paid seats MUST match customer-facing / admin truth: round-scoped
+  // getEnrollmentCount(slug) (same as /api/city-progress). A prior broad
+  // users.workshop_location + access_level/CRM query overcounted Melbourne
+  // as 15/12 paid while real Round-4 enrolled was ~2 — EOI/interested was
+  // being read as paid (Resend "5 hot leads" 2026-09-14). Keep EOI from
+  // workshop_interest with the same suspect filter as city-progress.
   const normalizeWorkshopLocationKey = (raw: string) =>
     String(raw || '')
       .trim()
@@ -315,46 +319,39 @@ export async function GET(request: NextRequest) {
 
   let workshopPipeline: { location: string; paid: number; interested: number }[] = []
   try {
-    // PAID practical-day seats per city — BOTH streams. The day is shared
-    // between CCM and CRM, and a CRM Complete/upgrade buyer keeps access_level
-    // 'preview' (isolated streams, lib/crm-course.ts), so the access_level
-    // test alone reported a paid CRM seat as zero demand for that city.
-    const { rows: paidRows } = await sql`
-      SELECT location, COUNT(*)::int AS count FROM (
-        SELECT DISTINCT u.id, u.workshop_location AS location
-        FROM users u
-        LEFT JOIN course_purchases cp
-          ON LOWER(cp.user_email) = LOWER(u.email)
-         AND cp.course_slug = ${CRM_PRACTICAL_SLUG}
-        WHERE u.workshop_location IS NOT NULL
-          AND u.workshop_location != ''
-          AND (u.access_level = 'full-course' OR cp.id IS NOT NULL)
-      ) seats
-      GROUP BY location
-    `
     const { rows: interestRows } = await sql`
       SELECT city AS location, COUNT(*)::int AS count
       FROM workshop_interest
+      WHERE COALESCE(source, '') NOT LIKE '%suspect%'
       GROUP BY city
     `
 
-    const locationMap = new Map<string, { paid: number; interested: number }>()
-    for (const r of paidRows) {
-      const key = normalizeWorkshopLocationKey(r.location)
-      if (!key) continue
-      const existing = locationMap.get(key) || { paid: 0, interested: 0 }
-      existing.paid += Number(r.count) || 0
-      locationMap.set(key, existing)
-    }
+    const interestedByCity = new Map<string, number>()
     for (const r of interestRows) {
       const key = normalizeWorkshopLocationKey(r.location)
       if (!key) continue
-      const existing = locationMap.get(key) || { paid: 0, interested: 0 }
-      existing.interested += Number(r.count) || 0
-      locationMap.set(key, existing)
+      interestedByCity.set(key, (interestedByCity.get(key) || 0) + (Number(r.count) || 0))
     }
-    workshopPipeline = [...locationMap.entries()]
-      .map(([location, data]) => ({ location, ...data }))
+
+    const locations = Object.values(CONFIG.LOCATIONS)
+    workshopPipeline = (
+      await Promise.all(
+        locations.map(async (loc) => {
+          let paid = 0
+          try {
+            paid = await getEnrollmentCount(loc.slug)
+          } catch {
+            // leave 0 — briefing must never invent paid seats
+          }
+          return {
+            location: loc.slug,
+            paid,
+            interested: interestedByCity.get(loc.slug) ?? 0,
+          }
+        }),
+      )
+    )
+      .filter((w) => w.paid > 0 || w.interested > 0)
       .sort((a, b) => b.paid - a.paid || b.interested - a.interested)
   } catch (err) {
     console.warn('[lead-scoring] Workshop pipeline query failed:', err)

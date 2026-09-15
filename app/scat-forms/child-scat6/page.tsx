@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { PROTOCOL_DOI_LABEL, PROTOCOL_DOI_URL } from '@/lib/protocol-reference'
+import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
 import ChildSCAT6Client from './Client'
 
 const PAGE_URL = 'https://portal.concussion-education-australia.com/scat-forms/child-scat6'
@@ -108,6 +109,11 @@ export default function ChildSCAT6Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      {/* Above-fold dual exit: form is long; analytics 2026-09-13 showed
+          /scat-forms/child-scat6 8 entries / 0 second-page views — same dead
+          end VOMS had before AfterTheAssessment. Keep post-form exit in Client. */}
+      <AfterTheAssessment source="child_scat6" className="mb-6 print:hidden" />
 
       {/* Crawlable definition block */}
       <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
