@@ -47,6 +47,11 @@ const SKIP_DIRS = new Set([
   '.data',
   // This directory: the rules below quote the banned forms as fixtures.
   'tests',
+  // Ephemeral agent worktrees: git checkouts of OTHER branches (including historical ones) living
+  // under .claude/worktrees. Scanning them made this lock fail on documents that are not part of
+  // the working tree and are never deployed, pointing at a superseded copy instead of a real
+  // surface (2026-09-15). The branch's own checkout runs this test on its own files.
+  '.claude',
 ])
 const TEXT = /\.(tsx?|jsx?|mjs|cjs|md|txt|json|html|css|py)$/
 

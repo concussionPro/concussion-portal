@@ -13,6 +13,7 @@
  * (and the ACC45 claim number) when transcribing onto ACC's fillable form.
  */
 import { sql } from '@/lib/db'
+import { isSensorVerified } from '@/lib/sst-trainer/hr-provenance'
 import { normalisePatientCode } from '../patient-identity'
 import { DEMO_CLINIC_CODE, getClinic } from '../clinic-registry'
 import { computePrescription, asCondition } from '../protocol'
@@ -75,11 +76,9 @@ const occurredIso = (r: { payload: Record<string, unknown> | null; created_at: s
   }
   return new Date(raw).toISOString()
 }
-/** Sensor-verified ONLY (strict) — a manual/camera entry is never "verified". */
-const isVerified = (p: Record<string, unknown> | null): boolean => {
-  const src = p?.hrSource as string | undefined
-  return p?.hrVerified === true && src !== 'manual' && src !== undefined
-}
+/** Sensor-verified ONLY (strict) — manual, camera and simulated entries are never "verified".
+ *  One rule, shared with the clinician roster: lib/sst-trainer/hr-provenance.ts. */
+const isVerified = (p: Record<string, unknown> | null): boolean => isSensorVerified(p)
 /**
  * Did this row record its HR provenance AT ALL? Collapsing "unknown" to `false`
  * made the medicolegal skin print "UNVERIFIED (manual/camera)" — a positive

@@ -17,6 +17,8 @@ import {
   FileText,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { isTrainingFlare } from '@/lib/sst-trainer/flare'
+import { hrProvenanceOf } from '@/lib/sst-trainer/hr-provenance'
 import { useClinicalAccess } from '@/components/clinical/useClinicalAccess'
 import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
 import { PmsFileButton } from '@/components/clinical/PmsFileButton'
@@ -91,12 +93,10 @@ function fmtDate(d: string | null): string {
   return new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
 }
 
-function sessionFlare(s: Record<string, unknown>): boolean {
-  if (s.flare === true) return true
-  const pre = typeof s.preSymptom === 'number' ? s.preSymptom : null
-  const peak = typeof s.peakSymptom === 'number' ? s.peakSymptom : null
-  return pre != null && peak != null && peak - pre >= 2
-}
+/** One flare rule for every surface: a rise of MORE than SESSION_STOP_RISE, plus next-day flares.
+ *  See lib/sst-trainer/flare.ts. The roster used to carry its own `>= 2` copy, which over-reported
+ *  flares against the in-session stop rule, the clinical hub, the watch and the GP report. */
+const sessionFlare = (s: Record<string, unknown>): boolean => isTrainingFlare(s)
 
 /**
  * HR provenance for one TRAINING session, on the same rule every SST document
@@ -116,14 +116,8 @@ function sessionFlare(s: Record<string, unknown>): boolean {
  * client (only threshold tests are re-derived server-side), so the check has
  * to be made here.
  */
-function sessionProvenance(s: Record<string, unknown>): 'verified' | 'unverified' | 'unknown' {
-  const src = typeof s.hrSource === 'string' && s.hrSource.trim() !== '' ? s.hrSource : undefined
-  const pct = typeof s.verifiedReadingPct === 'number' ? s.verifiedReadingPct : null
-  if (typeof s.hrVerified !== 'boolean' && src === undefined) return 'unknown'
-  const verified =
-    s.hrVerified === true && src !== undefined && src !== 'manual' && (pct == null || pct >= 80)
-  return verified ? 'verified' : 'unverified'
-}
+const sessionProvenance = (s: Record<string, unknown>): 'verified' | 'unverified' | 'unknown' =>
+  hrProvenanceOf(s)
 
 /** A 'session-abandoned' row is an audit record of an interrupted attempt, not
  *  a delivered session. Every SST document excludes it from the session count
