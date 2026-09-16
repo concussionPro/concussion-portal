@@ -139,6 +139,27 @@ describe('SCAT / Module 8 funnel exit conversion', () => {
     expect(client).toContain('source="child_scat6_post"')
   })
 
+  it('SCAT6 + SCOAT6 landers mount above-fold AfterTheAssessment (same long-form dead-lander leak)', () => {
+    for (const [rel, source] of [
+      ['app/scat-forms/scat6/page.tsx', 'scat6'],
+      ['app/scat-forms/scoat6/page.tsx', 'scoat6'],
+    ] as const) {
+      const page = readFileSync(join(root, rel), 'utf8')
+      expect(page).toContain("from '@/components/scat-forms/AfterTheAssessment'")
+      expect(page).toContain('<AfterTheAssessment')
+      expect(page).toContain(`source="${source}"`)
+      expect(page).toContain('print:hidden')
+    }
+    // Post-form exits stay for completers
+    for (const rel of [
+      'app/scat-forms/scat6/Client.tsx',
+      'app/scat-forms/scoat6/Client.tsx',
+    ]) {
+      const client = readFileSync(join(root, rel), 'utf8')
+      expect(client).toContain('<AfterTheAssessment')
+    }
+  })
+
   it('VOMS lander mounts AfterTheAssessment Online+SST dual exit (not buried mastery/pricing only)', () => {
     const src = readFileSync(join(root, 'app/scat-forms/voms/page.tsx'), 'utf8')
     expect(src).toContain("from '@/components/scat-forms/AfterTheAssessment'")

@@ -3147,7 +3147,7 @@ export default function SCOAT6Client() {
             </div>
           </div>
           {/* Post-form exit: free mastery + Online / SST dual path */}
-          <AfterTheAssessment className="mt-6" />
+          <AfterTheAssessment source="scoat6_post" className="mt-6 print:hidden" />
         </div>
       </div>
     </div>

@@ -1771,7 +1771,7 @@ export default function SCAT6Client() {
             </div>
           </div>
           {/* Post-form exit: free mastery + Online / SST dual path */}
-          <AfterTheAssessment className="mt-6" />
+          <AfterTheAssessment source="scat6_post" className="mt-6 print:hidden" />
         </div>
       </div>
     </div>
