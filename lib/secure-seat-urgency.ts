@@ -114,7 +114,7 @@ export function buildSecureSeatUrgency(input: SecureSeatProgressInput): SecureSe
     )
 
   const body = live
-    ? `Join the ${city} practical day. Room capped at ${threshold}. Online modules included with Complete; upgrade from Online pays the difference.`
+    ? `A$${price} refundable deposit holds your ${city} seat and counts toward the ${threshold}-seat room. Full credit toward Complete when you enrol; refund if this round does not run. Online modules stay with Online / Complete.`
     : upgrade
       ? `You have Online — next step is the hands-on day. Put A$${price} down for ${city}. It counts toward the ${threshold}-seat gate that opens the date; credit toward Complete when it does; full refund if the cohort does not form.`
       : progressKnown && enrolled !== null && enrolled >= halfFull

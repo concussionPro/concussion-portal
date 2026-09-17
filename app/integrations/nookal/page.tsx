@@ -92,7 +92,7 @@ export default function NookalIntegrationPage() {
             <Link href="/clinics" className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-300 font-semibold text-sm text-foreground hover:bg-slate-50">
               See it live &mdash; no login
             </Link>
-            <Link href="/clinical-testing" className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-300 font-semibold text-sm text-foreground hover:bg-slate-50">
+            <Link href="/clinical-suite" className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-300 font-semibold text-sm text-foreground hover:bg-slate-50">
               Clinician workspace
             </Link>
           </div>

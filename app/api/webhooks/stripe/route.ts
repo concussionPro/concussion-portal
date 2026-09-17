@@ -1445,8 +1445,8 @@ async function handleCrmPurchase(
               <li><strong>BCTT calculator</strong> — Buffalo stages in, heart-rate threshold and training band out</li>
               <li><strong>Clinical toolkit</strong> — the NDIS / WorkCover / GP report templates</li>
             </ul>
-            <a href="${baseUrl}/clinical-testing" style="display:inline-block;padding:10px 18px;background:#0f766e;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">Open your clinical suite</a>
-            <p style="margin:12px 0 0;font-size:13px;color:#0f766e;">Want to look around first? <a href="${baseUrl}/demo/clinic" style="color:#0f766e;font-weight:600;">Open the demo workspace</a> — a full working clinic with sample patients that saves nothing.</p>
+            <a href="${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=crm_purchase_sst&redirect=${encodeURIComponent('/clinical-testing')}" style="display:inline-block;padding:10px 18px;background:#0f766e;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">Open your clinical suite</a>
+            <p style="margin:12px 0 0;font-size:13px;color:#0f766e;">Cold open without the magic link? <a href="${baseUrl}/clinical-suite" style="color:#0f766e;font-weight:600;">See the Clinical Suite</a> — or <a href="${baseUrl}/demo/clinic" style="color:#0f766e;font-weight:600;">open the demo workspace</a> (sample patients, saves nothing).</p>
           </div>` : ''}
           <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
             <strong>What you paid:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br>

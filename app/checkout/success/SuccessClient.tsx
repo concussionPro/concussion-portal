@@ -405,13 +405,31 @@ function CheckoutSuccessContent() {
                     : 'Your enrolment includes 3 months of Clinical Testing (SST Trainer + Baseline) plus the clinical toolkit. Start in the portal — the App Store app is the patient delivery rail once your clinic code is live.'}
               </p>
               {!isSecureSeat && (
-                <Link
-                  href="/clinical-testing"
-                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
-                >
-                  Open Clinical Testing
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                <div className="mt-2 flex flex-col items-start gap-1.5">
+                  {loggedIn ? (
+                    <Link
+                      href="/clinical-testing"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
+                    >
+                      Open Clinical Testing
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/login?redirect=/clinical-testing"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
+                    >
+                      Sign in to open Clinical Testing
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  )}
+                  <Link
+                    href="/clinical-suite"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-accent hover:underline"
+                  >
+                    Or explore the Clinical Suite (App Store + how it works)
+                  </Link>
+                </div>
               )}
             </div>
           </div>

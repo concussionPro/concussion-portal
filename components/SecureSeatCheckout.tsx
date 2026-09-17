@@ -34,6 +34,11 @@ export interface SecureSeatCheckoutProps {
   source?: string
   /** Frame copy for Online → practical upgrade (Module 8 / learning). */
   forOnlineUpgrade?: boolean
+  /**
+   * Force live-date urgency copy (announced practical day). When omitted,
+   * inherits hasLiveDate from /api/city-progress for the selected city.
+   */
+  hasLiveDate?: boolean
   className?: string
 }
 
@@ -51,6 +56,7 @@ export function SecureSeatCheckout({
   variant = 'card',
   source = 'secure_seat_cta',
   forOnlineUpgrade = false,
+  hasLiveDate: hasLiveDateProp,
   className = '',
 }: SecureSeatCheckoutProps) {
   const initial =
@@ -112,8 +118,9 @@ export function SecureSeatCheckout({
       progressKnown: known,
       priceAud: price,
       forOnlineUpgrade,
+      hasLiveDate: hasLiveDateProp ?? progressRow?.hasLiveDate,
     })
-  }, [cityLabel, progressRow, threshold, price, forOnlineUpgrade])
+  }, [cityLabel, progressRow, threshold, price, forOnlineUpgrade, hasLiveDateProp])
 
   async function startCheckout() {
     if (loading) return

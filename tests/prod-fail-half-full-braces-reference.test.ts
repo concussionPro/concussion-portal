@@ -68,6 +68,38 @@ describe('prod FAIL regressions (half-full / scat6 braces / complete-reference)'
     expect(src).not.toContain('seats left — capped at')
   })
 
+  it('melbourne-nov7 offers Secure-seat soft-commit secondary CTA with live-date copy', () => {
+    const src = readFileSync(join(root, 'app/melbourne-nov7/page.tsx'), 'utf8')
+    expect(src).toContain('SecureSeatCheckout')
+    expect(src).toContain('defaultCity="melbourne"')
+    expect(src).toContain('source="melbourne_nov7"')
+    expect(src).toMatch(/hasLiveDate/)
+    expect(src).toMatch(/A\$100 refundable deposit/i)
+    // Primary Complete CTA remains
+    expect(src).toContain('Take a Melbourne seat')
+  })
+
+  it('post-purchase + public SST CTAs do not dead-end anonymous traffic on /clinical-testing', () => {
+    const success = readFileSync(join(root, 'app/checkout/success/SuccessClient.tsx'), 'utf8')
+    // Gated workspace only when session is ready; otherwise login redirect + public suite
+    expect(success).toContain('login?redirect=/clinical-testing')
+    expect(success).toContain('Sign in to open Clinical Testing')
+    expect(success).toContain('/clinical-suite')
+    expect(success).toContain('loggedIn ?')
+    expect(success).toContain('href="/clinical-testing"') // still offered once session is ready
+
+    const webhook = readFileSync(join(root, 'app/api/webhooks/stripe/route.ts'), 'utf8')
+    expect(webhook).not.toContain('href="${baseUrl}/clinical-testing"')
+    expect(webhook).toContain("redirect=${encodeURIComponent('/clinical-testing')}")
+    expect(webhook).toContain('${baseUrl}/clinical-suite')
+
+    for (const rel of ['app/integrations/cliniko/page.tsx', 'app/integrations/nookal/page.tsx']) {
+      const page = readFileSync(join(root, rel), 'utf8')
+      expect(page).toContain('href="/clinical-suite"')
+      expect(page).not.toContain('href="/clinical-testing"')
+    }
+  })
+
   it('ClinicalToolkitDoc parses {scat6_*} merge tokens (digits)', () => {
     const src = readFileSync(join(root, 'components/toolkit/ClinicalToolkitDoc.tsx'), 'utf8')
     expect(src).toContain('[a-z0-9_]')

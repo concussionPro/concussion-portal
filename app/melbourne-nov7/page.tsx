@@ -6,6 +6,7 @@ import { ArrowRight, BookOpen, Check, Loader2, MapPin, Users, Utensils } from 'l
 import { SiteNav } from '@/components/SiteNav'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import { CONFIG, upgradePriceFor, cpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
 import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
@@ -222,6 +223,25 @@ export default function MelbourneNov7Page() {
           <p className="text-[11px] text-muted-foreground mt-2 text-center">
             Secure Stripe checkout · 7-day money-back guarantee · tax invoice with payment
           </p>
+
+          {!soldOut && (
+            <div className="mt-5 pt-5 border-t border-slate-200">
+              <p className="text-sm font-semibold text-center text-slate-800 mb-1">
+                Not ready for Complete yet?
+              </p>
+              <p className="text-[12px] text-center text-muted-foreground mb-3 leading-snug">
+                Soft-commit with an A$100 refundable deposit — counts toward the Melbourne room,
+                credited in full to Complete when you enrol.
+              </p>
+              <SecureSeatCheckout
+                defaultCity="melbourne"
+                lockCity
+                hasLiveDate
+                variant="inline"
+                source="melbourne_nov7"
+              />
+            </div>
+          )}
 
           {/* THE CPD DEADLINE — the single strongest documented purchase trigger
               for clinicians is licence-renewal compliance, not content. This is
