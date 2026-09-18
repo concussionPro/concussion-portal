@@ -74,8 +74,34 @@ export default function IntlCoursesTabs({ price, crmLive }: { price: Price; crmL
       )}
 
       {!showTabs || stream === 'ccm'
-        ? <CcmInternationalContent price={price} hideNav />
-        : <CrmInternationalContent price={price} live hideNav />}
+        ? (
+          <CcmInternationalContent
+            price={price}
+            hideNav
+            audience={{
+              // 2026-09-18 fold fix — analytics WO 13 Sep: money-path dies on
+              // /pricing-international. Price card immediately under offer;
+              // secondary prose collapsed; exit Enrol restated below.
+              heroFlow: true,
+              priceFirst: true,
+              heroBlurb:
+                'Online concussion CPD in your local currency — 8 modules, start anytime, with the clinical tools to practise from day one. Diagnosis and red-flag clearance stay with medical; you own the rest.',
+            }}
+          />
+        )
+        : (
+          <CrmInternationalContent
+            price={price}
+            live
+            hideNav
+            audience={{
+              priceCardInHero: true,
+              priceFirst: true,
+              strapText:
+                'Online concussion CPD in your local currency — 8 modules, start anytime. A referral-worthy exercise-rehab service line, delivered wholly online from wherever you practise.',
+            }}
+          />
+        )}
     </div>
   )
 }

@@ -176,6 +176,10 @@ export interface CcmAudienceCopy {
   /** Render hero media + pricing card directly under the hero (owner:
    *  "title then [image] then price card"), skipping their default slots. */
   heroFlow?: boolean
+  /** With heroFlow: put the pricing card BEFORE hero media (intl fold fix
+   *  2026-09-18 — money-path exits on /pricing-international). /cata keeps
+   *  title → image → price (priceFirst unset). */
+  priceFirst?: boolean
   /** Replaces the live-training photo (online-only audiences get a showcase
    *  of the ONLINE course, not an AU workshop room — owner 2026-08-15). */
   heroMedia?: ReactNode
@@ -199,6 +203,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
   uk?: boolean; audience?: CcmAudienceCopy }) {
   const FAQS = audience.faqs ?? CCM_INTL_FAQS
   const heroFlow = audience.heroFlow ?? false
+  const priceFirst = audience.priceFirst ?? false
   const endorseTile = audience.endorseTile ?? (uk ? { big: 'CSP', small: '', label: 'Directory listed' } : { big: 'OA', small: '', label: 'Endorsed' })
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
   const [enrolling, setEnrolling] = useState(false)
@@ -313,7 +318,7 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
   const pricingSection = (
     <>
         {/* Pricing card */}
-        <div id="pricing-cards" className="mt-6">
+        <div id="pricing-cards" data-cea-conversion="intl-fold-fix-sep18" className="mt-6">
           <div className="max-w-xl mx-auto pt-2">
             <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
               <div className="flex items-start justify-between gap-3 mb-4">
@@ -600,25 +605,37 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
           {!heroFlow && (
             <div className="mt-5 flex justify-center">
               <a href="#pricing-cards" className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm">
-                See enrolment options
+                Enrol — see options
                 <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           )}
           {heroFlow && (
             <div className="text-left mt-8">
-              {audience.heroMedia ?? trainingPhoto}
-              {pricingSection}
+              {priceFirst ? (
+                <>
+                  {/* Intl fold fix: checkout card immediately under the offer. */}
+                  {pricingSection}
+                  {audience.heroMedia}
+                </>
+              ) : (
+                <>
+                  {audience.heroMedia ?? trainingPhoto}
+                  {pricingSection}
+                </>
+              )}
             </div>
           )}
         </div>
 
         {!audience.standardsBandTop && (audience.standardsBand ?? defaultStandardsBand)}
 
+        {/* Training photo — skip on priceFirst intl (AU workshop room pushes
+            checkout below the fold; /cata keeps its own heroMedia). */}
         {!heroFlow && trainingPhoto}
 
-        {/* Employer callout */}
-        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+        {/* Employer callout — compact when priceFirst */}
+        <div className={`max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3 ${priceFirst ? 'mt-2' : ''}`}>
           <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-foreground">
@@ -629,90 +646,178 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
         </div>
         <AustraliaPricingLink className="max-w-3xl mx-auto mb-6 text-center text-xs text-muted-foreground" />
 
+        {/* Syllabus is the soft mid-funnel — keep AFTER the money CTA */}
         <SyllabusCapture uk={uk} price={price} />
 
-        {/* Value intro */}
-        <div className="text-center max-w-2xl mx-auto mb-2">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-3">Built for you</p>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-            Screen, assess, manage — and get the tools to <span className="text-gradient">deliver it</span>
-          </h2>
-          <p className="text-base text-muted-foreground">
-            You don&rsquo;t just learn the pathway — you leave with the instruments to run it. Every
-            enrolment includes the working clinical platform: SCAT6 baseline &amp; serial testing,
-            the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator and the full Clinical
-            Toolkit — the screening, monitoring and reporting done.
-          </p>
-        </div>
-
-        {!heroFlow && pricingSection}
-
-        {/* Course showcase — see inside (skipped when the page already renders
-            it as heroMedia, e.g. /cata). */}
-        {!audience.heroMedia && (
-          <div className="max-w-4xl mx-auto mt-10 mb-2">
-            <CourseShowcase />
+        {/* Value intro — compressed when priceFirst so secondary prose does not
+            re-bury the exit enrol restatement. */}
+        {priceFirst ? (
+          <div className="text-center max-w-2xl mx-auto mb-2">
+            <p className="text-sm text-muted-foreground">
+              Every enrolment includes SCAT6 baseline &amp; serial testing, the SST Trainer,
+              the BCTT calculator and the Clinical Toolkit — ready Monday.
+            </p>
+          </div>
+        ) : (
+          <div className="text-center max-w-2xl mx-auto mb-2">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-3">Built for you</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
+              Screen, assess, manage — and get the tools to <span className="text-gradient">deliver it</span>
+            </h2>
+            <p className="text-base text-muted-foreground">
+              You don&rsquo;t just learn the pathway — you leave with the instruments to run it. Every
+              enrolment includes the working clinical platform: SCAT6 baseline &amp; serial testing,
+              the Sub-Symptom-Threshold (SST) Trainer app, the BCTT calculator and the full Clinical
+              Toolkit — the screening, monitoring and reporting done.
+            </p>
           </div>
         )}
 
-        {/* Instrument visuals */}
-        <div className="max-w-4xl mx-auto mt-10 mb-2">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
-              <SstWatchVisual />
-              <div className="p-5">
-                <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
-                <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
-                  A graded test measures each patient&rsquo;s symptom threshold; they train just under
-                  it — live heart rate, verified progression, every session on your dashboard.
-                </p>
-                <Link href="/sst-trainer?clinic=DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
-                  See the patient app <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-            <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
-              <BaselineLaptopVisual />
-              <div className="p-5">
-                <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">SCAT6 Baseline Testing</h3>
-                <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
-                  One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a PDF
-                  report lands in your inbox — on file for the day it matters.
-                </p>
-                <Link href="/preseason/b/DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
-                  Try the baseline flow <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        {!heroFlow && pricingSection}
 
-        {/* Tools grid */}
-        <div className="max-w-4xl mx-auto mt-10 mb-2">
-          <div className="text-center mb-6">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-2">Included with every enrolment</p>
-            <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">The clinical platform, not just the lessons</h3>
-            <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto">You leave with the working tools CEA&rsquo;s clinics run on — ready to use with patients from day one.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {[
-              { icon: LineChart, title: 'SCAT6 Baseline & Serial Testing', desc: 'Capture the athlete’s healthy baseline, then auto-build the serial-comparison report on the day it matters — measured against their own normal, not a generic zero.' },
-              { icon: HeartPulse, title: 'Sub-Symptom-Threshold (SST) Trainer', desc: 'The patient app: threshold test → in-band heart-rate training on the wearable they already own → guided progression, clinician-set and overseen by you.' },
-              { icon: Activity, title: 'BCTT Calculator → Prescription', desc: 'Enter the Buffalo test stages; get the heart-rate threshold (HRt) and the 80–90% training band with the plain-language prescription.' },
-              { icon: ClipboardList, title: 'Clinical Toolkit + Reporting Templates', desc: 'VOMS/BESS guides, the phenotype library, return-to-play protocols and referrer-ready reporting — the paperwork done.' },
-            ].map((tool) => (
-              <div key={tool.title} className="glass rounded-2xl p-5 flex gap-4">
-                <div className="icon-container w-11 h-11 flex-shrink-0">
-                  <tool.icon className="w-5 h-5 text-accent" strokeWidth={1.75} />
+        {/* Course showcase — collapsed on intl priceFirst to keep money path short */}
+        {!audience.heroMedia && (
+          priceFirst ? (
+            <details className="max-w-4xl mx-auto mt-8 mb-2 rounded-2xl border border-slate-200 bg-white open:shadow-sm">
+              <summary className="cursor-pointer list-none px-5 py-4 text-sm font-bold text-foreground flex items-center justify-between gap-3">
+                <span>See inside the course (optional)</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              </summary>
+              <div className="px-3 pb-4">
+                <CourseShowcase />
+              </div>
+            </details>
+          ) : (
+            <div className="max-w-4xl mx-auto mt-10 mb-2">
+              <CourseShowcase />
+            </div>
+          )
+        )}
+
+        {/* Instrument + tools — collapsed on intl priceFirst (fold-fix 2026-09-18) */}
+        {priceFirst ? (
+          <details className="max-w-4xl mx-auto mt-8 mb-2 rounded-2xl border border-slate-200 bg-white">
+            <summary className="cursor-pointer list-none px-5 py-4 text-sm font-bold text-foreground flex items-center justify-between gap-3">
+              <span>Clinical tools included with enrolment</span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            </summary>
+            <div className="px-5 pb-5 space-y-6">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
+                  <SstWatchVisual />
+                  <div className="p-5">
+                    <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
+                    <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
+                      A graded test measures each patient&rsquo;s symptom threshold; they train just under
+                      it — live heart rate, verified progression, every session on your dashboard.
+                    </p>
+                    <Link href="/sst-trainer?clinic=DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                      See the patient app <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-foreground mb-1">{tool.title}</h4>
-                  <p className="text-[13px] text-muted-foreground leading-relaxed">{tool.desc}</p>
+                <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
+                  <BaselineLaptopVisual />
+                  <div className="p-5">
+                    <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">SCAT6 Baseline Testing</h3>
+                    <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
+                      One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a PDF
+                      report lands in your inbox — on file for the day it matters.
+                    </p>
+                    <Link href="/preseason/b/DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
+                      Try the baseline flow <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+              <div>
+                <div className="text-center mb-6">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-2">Included with every enrolment</p>
+                  <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">The clinical platform, not just the lessons</h3>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { icon: LineChart, title: 'SCAT6 Baseline & Serial Testing', desc: 'Capture the athlete’s healthy baseline, then auto-build the serial-comparison report on the day it matters — measured against their own normal, not a generic zero.' },
+                    { icon: HeartPulse, title: 'Sub-Symptom-Threshold (SST) Trainer', desc: 'The patient app: threshold test → in-band heart-rate training on the wearable they already own → guided progression, clinician-set and overseen by you.' },
+                    { icon: Activity, title: 'BCTT Calculator → Prescription', desc: 'Enter the Buffalo test stages; get the heart-rate threshold (HRt) and the 80–90% training band with the plain-language prescription.' },
+                    { icon: ClipboardList, title: 'Clinical Toolkit + Reporting Templates', desc: 'VOMS/BESS guides, the phenotype library, return-to-play protocols and referrer-ready reporting — the paperwork done.' },
+                  ].map((tool) => (
+                    <div key={tool.title} className="glass rounded-2xl p-5 flex gap-4">
+                      <div className="icon-container w-11 h-11 flex-shrink-0">
+                        <tool.icon className="w-5 h-5 text-accent" strokeWidth={1.75} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-foreground mb-1">{tool.title}</h4>
+                        <p className="text-[13px] text-muted-foreground leading-relaxed">{tool.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </details>
+        ) : (
+          <>
+            {/* Instrument visuals */}
+            <div className="max-w-4xl mx-auto mt-10 mb-2">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
+                  <SstWatchVisual />
+                  <div className="p-5">
+                    <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
+                    <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
+                      A graded test measures each patient&rsquo;s symptom threshold; they train just under
+                      it — live heart rate, verified progression, every session on your dashboard.
+                    </p>
+                    <Link href="/sst-trainer?clinic=DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                      See the patient app <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+                <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
+                  <BaselineLaptopVisual />
+                  <div className="p-5">
+                    <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">SCAT6 Baseline Testing</h3>
+                    <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
+                      One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a PDF
+                      report lands in your inbox — on file for the day it matters.
+                    </p>
+                    <Link href="/preseason/b/DEMO00" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
+                      Try the baseline flow <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tools grid */}
+            <div className="max-w-4xl mx-auto mt-10 mb-2">
+              <div className="text-center mb-6">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-2">Included with every enrolment</p>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">The clinical platform, not just the lessons</h3>
+                <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto">You leave with the working tools CEA&rsquo;s clinics run on — ready to use with patients from day one.</p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[
+                  { icon: LineChart, title: 'SCAT6 Baseline & Serial Testing', desc: 'Capture the athlete’s healthy baseline, then auto-build the serial-comparison report on the day it matters — measured against their own normal, not a generic zero.' },
+                  { icon: HeartPulse, title: 'Sub-Symptom-Threshold (SST) Trainer', desc: 'The patient app: threshold test → in-band heart-rate training on the wearable they already own → guided progression, clinician-set and overseen by you.' },
+                  { icon: Activity, title: 'BCTT Calculator → Prescription', desc: 'Enter the Buffalo test stages; get the heart-rate threshold (HRt) and the 80–90% training band with the plain-language prescription.' },
+                  { icon: ClipboardList, title: 'Clinical Toolkit + Reporting Templates', desc: 'VOMS/BESS guides, the phenotype library, return-to-play protocols and referrer-ready reporting — the paperwork done.' },
+                ].map((tool) => (
+                  <div key={tool.title} className="glass rounded-2xl p-5 flex gap-4">
+                    <div className="icon-container w-11 h-11 flex-shrink-0">
+                      <tool.icon className="w-5 h-5 text-accent" strokeWidth={1.75} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground mb-1">{tool.title}</h4>
+                      <p className="text-[13px] text-muted-foreground leading-relaxed">{tool.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {audience.scopeNote ?? defaultScopeNote}
 
@@ -849,6 +954,13 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 Prices shown in your region&rsquo;s currency · secure checkout · first 3 months of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD)
               </p>
               <AustraliaPricingLink className="mt-3 text-center text-xs text-muted-foreground" />
+              {/* Equal-weight secondary exit — SST acquire via clinical suite (not gated clinical-testing) */}
+              <p className="mt-5 text-sm text-muted-foreground">
+                Already competent — need the clinic tools?{' '}
+                <Link href="/clinical-suite" className="font-semibold text-accent hover:underline">
+                  Start SST Clinical Testing →
+                </Link>
+              </p>
             </div>
           </div>
         </div>

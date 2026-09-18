@@ -88,6 +88,9 @@ export interface IntlAudienceCopy {
    *  capture, which are redundant next to it — owner 2026-08-15 on /cata:
    *  "these are redundant just show price card"). */
   priceCardInHero?: boolean
+  /** With priceCardInHero: put the card before the training photo (intl
+   *  fold-fix 2026-09-18). */
+  priceFirst?: boolean
 }
 
 export default function CrmInternationalContent({
@@ -110,6 +113,7 @@ export default function CrmInternationalContent({
   const showAcsmQuote = audience.showAcsmQuote ?? true
   const certFooterLine = audience.certFooterLine ?? `Built to ACSM CEC standards · ${essaBadgeLine}`
   const priceCardInHero = audience.priceCardInHero ?? false
+  const priceFirst = audience.priceFirst ?? false
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
 
   // Live checkout (only when `live`): POST to the geo-priced international
@@ -216,7 +220,7 @@ export default function CrmInternationalContent({
   const pricingSection = (
     <>
         {/* Pricing — same card design as AU (single international tier, geo-priced) */}
-        <div id="pricing-cards" className="mt-6">
+        <div id="pricing-cards" data-cea-conversion="intl-fold-fix-sep18" className="mt-6">
           <div className="max-w-xl mx-auto pt-2">
             <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}>
               <div className="flex items-start justify-between gap-3 mb-4">
@@ -400,8 +404,16 @@ export default function CrmInternationalContent({
 
           {priceCardInHero ? (
             <div className="text-left">
-              <div className="mt-8">{trainingPhoto}</div>
-              {pricingSection}
+              {priceFirst ? (
+                <>
+                  {pricingSection}
+                </>
+              ) : (
+                <>
+                  <div className="mt-8">{trainingPhoto}</div>
+                  {pricingSection}
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -723,6 +735,12 @@ export default function CrmInternationalContent({
                 {price.display} {price.code} one-time · lifetime course + first 3 months of the platform free · then about A${PLATFORM_MONTHLY_AUD}/mo (AUD) to keep the platform
               </p>
               <AustraliaPricingLink className="mt-3 text-center text-xs text-muted-foreground" />
+              <p className="mt-5 text-sm text-muted-foreground">
+                Already competent — need the clinic tools?{' '}
+                <Link href="/clinical-suite" className="font-semibold text-accent hover:underline">
+                  Start SST Clinical Testing →
+                </Link>
+              </p>
             </div>
           </div>
         </div>

@@ -119,6 +119,15 @@ export default async function PreviewModulePage({
               <BookOpen className="h-4 w-4" /> {data.totalSections} sections
             </span>
           </div>
+          {/* Above-fold enrol — analytics: /preview/3 and /preview/7 had entries with 0 second pages */}
+          <div className="mt-5">
+            <Link
+              href={meta.enrolHref}
+              className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-accent-dark"
+            >
+              {meta.enrolLabel} <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </header>
 
         <div className="space-y-6">
