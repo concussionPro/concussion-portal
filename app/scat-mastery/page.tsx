@@ -21,6 +21,7 @@ import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { ScatFunnelExits } from '@/components/scat/ScatFunnelExits'
 import { SiteNav } from '@/components/SiteNav'
+import { LiveDateStrip } from '@/components/LiveDateStrip'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createCourseSchema } from '@/lib/schema-markup'
 import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from '@/lib/google-ads'
@@ -296,6 +297,7 @@ export default function SCATMasteryPage() {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-blue-100/30 to-transparent blur-3xl pointer-events-none" />
 
       <SiteNav />
+      <LiveDateStrip source="scat-mastery" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-[120px] pb-12 md:pb-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">

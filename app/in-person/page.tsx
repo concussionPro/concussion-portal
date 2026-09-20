@@ -79,7 +79,7 @@ export default function InPersonTrainingPage() {
                 <Link href="/pricing" className="font-semibold text-accent hover:underline">
                   Enrol Online (A${CONFIG.COURSE.PRICE_ONLINE})
                 </Link>
-                {' '}— $0 opex path; add the practical day when your city unlocks.
+                {' '}— start now and add the practical day when your city's date is set.
               </p>
             </div>
           </div>

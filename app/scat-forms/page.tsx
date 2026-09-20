@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { FileText, Clock, ArrowRight } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { LiveDateStrip } from '@/components/LiveDateStrip'
 import { EmailCaptureInline } from '@/components/EmailCaptureInline'
 import { createFAQSchema, createMedicalWebPageSchema } from '@/lib/schema-markup'
 import { AfterTheAssessment } from '@/components/scat-forms/AfterTheAssessment'
@@ -59,6 +60,7 @@ export default function SCATFormsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <SiteNav />
+      <LiveDateStrip source="scat-forms" />
 
       <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-16">
         <div className="text-center mb-10">

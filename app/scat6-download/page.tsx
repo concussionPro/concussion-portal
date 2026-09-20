@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { LiveDateStrip } from '@/components/LiveDateStrip'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
 
@@ -234,6 +235,7 @@ export default function SCAT6DownloadPage() {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-blue-100/30 to-transparent blur-3xl pointer-events-none" />
 
       <SiteNav />
+      <LiveDateStrip source="scat6-download" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20 pt-[120px]">
         <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-start">

@@ -4,10 +4,11 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { GraduationCap, HeartPulse, ArrowRight, Check } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { LiveDateStrip } from '@/components/LiveDateStrip'
 import CcmPricingContent from '@/components/pricing/CcmPricingContent'
 import NominateConfirmBanner from '@/components/pricing/NominateConfirmBanner'
 import CrmPricingContent from '@/components/crm/CrmPricingContent'
-import { CONFIG, upgradePriceFor } from '@/lib/config'
+import { CONFIG, upgradePriceFor, workshopPriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 import { InternationalPricingLink } from '@/components/MarketPricingSwitch'
 
@@ -105,6 +106,7 @@ function PricingTabs() {
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
+      <LiveDateStrip source="pricing" />
 
       {/* Email nomination confirm step — renders only when the URL carries a
           signed pending payload from nominate-click. The nomination records
@@ -114,7 +116,7 @@ function PricingTabs() {
       <NominateConfirmBanner />
 
       <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-2">
-        <div className="text-center mb-5">
+        <div className="text-center mb-4">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             Course pricing
           </h1>
@@ -136,9 +138,6 @@ function PricingTabs() {
             explicit "Viewing" flag; the inactive one stays white with a plain
             border and a tinted-not-grey icon, so it reads as available rather
             than disabled. */}
-        <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)] mb-4">
-          Two CPD streams — choose yours
-        </p>
         <div role="tablist" aria-label="Course stream" className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mx-auto">
           {STREAMS.map((s) => {
             const active = s.id === stream
@@ -176,6 +175,19 @@ function PricingTabs() {
                   <span className="block text-[12.5px] leading-tight mt-0.5 text-[var(--muted-foreground)]">
                     {s.name} · {s.endorse}
                   </span>
+                  {/* PRICE IN THE TAB (2026-09-20). The one rule this page has is
+                      price above the fold, and it had drifted to y=1493 desktop /
+                      1782 mobile as blocks accumulated between title and cards.
+                      The tabs are the only element guaranteed to be on the first
+                      screen at every viewport, so the price lives here too. Both
+                      streams are priced identically (lib/crm-course crmPriceCents
+                      = these same two functions), and both numbers are the ones
+                      Stripe charges. */}
+                  <span className="block text-[12.5px] font-bold leading-tight text-[var(--foreground)] mt-1.5">
+                    Online A${CONFIG.COURSE.PRICE_ONLINE}
+                    <span className="font-normal text-[var(--muted-foreground)]"> · with practical day </span>
+                    A${workshopPriceFor(null).toLocaleString('en-AU')}
+                  </span>
                   <span className="block text-[10px] font-bold tracking-[0.14em] text-[var(--accent)] mt-1">{s.code}</span>
                 </span>
                 {!active && <ArrowRight className="w-4 h-4 flex-none text-[var(--accent)]" />}
@@ -197,7 +209,7 @@ function PricingTabs() {
       {(() => {
         const st = STREAMS.find((x) => x.id === stream)!
         return (
-          <div className="max-w-3xl mx-auto px-6 text-center mt-6 mb-6">
+          <div className="max-w-3xl mx-auto px-6 text-center mt-4 mb-5">
             <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">{st.name}</h2>
             <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-2xl mx-auto">{st.blurb}</p>
             {/* Credential line + skill chips + the upgrade note live HERE, with
@@ -243,18 +255,35 @@ function PricingTabs() {
              3 price cards
              4 locations
              5 everything else */
+        /* CRM body: photo and cards ARE direct .stream-body children. */
         .pricing-embed .stream-body { display: flex; flex-direction: column; }
         .pricing-embed .stream-body > * { order: 5; }
-        .pricing-embed .stream-body > #secure-seat-hero { order: 2; }
         .pricing-embed .stream-body > #workshop-photo { order: 3; }
         .pricing-embed .stream-body > #pricing-cards { order: 4; }
         .pricing-embed .stream-body > #workshop-locations { order: 5; }
+        /* CCM body — THE LAYER WAS DEAD THERE (found 2026-09-20). The rules above target
+           ".stream-body > #id", but in CcmPricingContent photo, cards and
+           locations all sit inside the body's ".text-center.mb-8" hero wrapper — they are its children,
+           not .stream-body's — so no order ever applied and the blocks rendered
+           in source order. That is how the soft-commit strip (added 2026-09-05)
+           came to sit above the photo and push the first card price to y=1493.
+           The layer now orders the wrapper's own children. width:100% because an
+           auto-margined flex item would otherwise shrink to its content. */
+        .pricing-embed .stream-body > .text-center.mb-8 { display: flex; flex-direction: column; }
+        .pricing-embed .stream-body > .text-center.mb-8 > * { order: 6; width: 100%; }
+        .pricing-embed .stream-body > .text-center.mb-8 > #workshop-photo { order: 2; }
+        .pricing-embed .stream-body > .text-center.mb-8 > #pricing-cards { order: 3; }
+        .pricing-embed .stream-body > .text-center.mb-8 > #cards-proof { order: 4; }
+        .pricing-embed .stream-body > .text-center.mb-8 > #workshop-locations { order: 5; }
+        /* The soft-commit strip follows the locations: its $100 option is
+           already the third card, so above the cards it only delayed them. */
+        .pricing-embed .stream-body > .text-center.mb-8 > #secure-seat-hero { order: 6; margin-top: 28px; }
         /* The hero wrapper still holds the h1, subtitle, credential, chips and
            upgrade note that the page-level title now replaces. */
         .pricing-embed .stream-body > .text-center.mb-8 > :nth-child(-n+5) { display: none; }
         /* Give the white cards something to sit on — the page was white boxes
            on a white background. */
-        .pricing-embed .stream-body > #pricing-cards {
+        .pricing-embed .stream-body > .text-center.mb-8 > #pricing-cards {
           background: linear-gradient(180deg, rgba(13,115,119,0.05), rgba(13,115,119,0.02));
           border: 1px solid rgba(13,115,119,0.10);
           border-radius: 28px; padding: 26px 20px 30px;

@@ -192,7 +192,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
     },
     {
       q: "How are workshop dates confirmed?",
-      a: "Money before calendar: enrol Complete (online unlocks now) with date TBD. The catered practical day is confirmed when " + CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD + " paid clinicians in your city have committed — free EOI does not count. You get at least " + CONFIG.WORKSHOP.LEAD_TIME_WEEKS + " weeks' notice; the venue is booked only after the cohort fills. Online-only buyers can upgrade for the difference whenever they are ready.",
+      a: "Enrol in the Complete course at any time — the online modules unlock straight away. A city's catered practical day is confirmed when " + CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD + " clinicians in your city have enrolled (registering interest alone does not hold a seat). Any city showing a date is already confirmed and on sale. You get at least " + CONFIG.WORKSHOP.LEAD_TIME_WEEKS + " weeks' notice. Online-only buyers can upgrade for the difference whenever they are ready.",
     },
     {
       q: 'How much time does the course take?',
@@ -399,9 +399,9 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             the upgrade, so the number here can never drift from the real one. */}
         <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 text-center">
           <p className="text-[13.5px] sm:text-sm text-foreground leading-relaxed">
-            <strong className="font-bold">Money before calendar — enrol Online today (primary).</strong>{' '}
+            <strong className="font-bold">Start online today, add the practical day when it suits.</strong>{' '}
             <span className="text-muted-foreground">
-              Online is the $0-opex path — modules unlock immediately. The catered practical day stays demand-gated: confirmed when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid clinicians commit, with at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice. Unlock your seat is a refundable soft commit toward that gate — not a substitute for Online.
+              The online modules unlock the moment you enrol. A city&apos;s practical day is scheduled once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians there have enrolled, with at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice. Unlock your seat is a refundable deposit that holds your place in your city.
             </span>
           </p>
         </div>
@@ -413,10 +413,10 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
             href="#pricing-cards"
             className="flex flex-col justify-center rounded-2xl border-2 border-[var(--accent)] bg-gradient-to-br from-teal-50 via-white to-white p-5 shadow-md hover:shadow-lg transition-shadow text-left"
           >
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">Primary · start today</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">Start today</p>
             <p className="mt-1 text-lg font-bold text-slate-900 tracking-tight">Enrol Online — A${CONFIG.COURSE.PRICE_ONLINE}</p>
             <p className="mt-1.5 text-[13px] leading-snug text-slate-600">
-              {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · lifetime access · modules unlock now. Highest margin path — no venue opex until a city cohort fills.
+              {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD · lifetime access · modules unlock now. Add the practical day later for the difference.
             </p>
             <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--accent)]">
               See Online pricing <ArrowRight className="w-4 h-4" />
@@ -424,7 +424,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
           </a>
           <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-3 flex flex-col justify-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-800 mb-2 px-1">
-              Secondary · unlock the catered day
+              Hold a place at the practical day
             </p>
             <SecureSeatCheckout variant="button" source="pricing_hero_secondary" />
           </div>
@@ -450,7 +450,7 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
         {/* Decision-moment proof — one verbatim testimonial + risk reversal
             DIRECTLY under the cards (clean-data 30d: 95 sessions saw the cards,
             11 started checkout; the fuller strip sits screens below). */}
-        <div className="max-w-3xl mx-auto mt-4 mb-2 text-center">
+        <div id="cards-proof" className="max-w-3xl mx-auto mt-4 mb-2 text-center">
           <p className="text-[13.5px] italic text-slate-600 leading-relaxed">
             &ldquo;An outstanding blend of evidence-based knowledge and practical skills. Directly
             applicable to concussion diagnosis and management in real-world settings.&rdquo;
@@ -481,8 +481,9 @@ function PricingContent({ hideNav }: { hideNav?: boolean }) {
               Where the practical day runs
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg mx-auto mt-2">
-              Enrol Complete any time — online unlocks now, date TBD. Nominate your city; the
-              day confirms when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits land, with at least{' '}
+              Enrol in Complete any time — online unlocks now. A city with a date below is confirmed
+              and on sale; for the others, nominate your city and its day is set once{' '}
+              {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians have enrolled, with at least{' '}
               {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
             </p>
           </div>

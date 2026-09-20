@@ -287,6 +287,15 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
   const fullCourseBase = workshopPriceFor(selectedLocation)
   const fullCoursePrice = bundleApplies ? fullCourseBase - BUNDLE_DISCOUNT : fullCourseBase
   const hasLiveDate = cityHasLiveDate(selectedLocation)
+  // The Complete card said "date TBD" for EVERY city — including Melbourne while
+  // its 7 November round was confirmed and on sale (found 2026-09-20). A buyer
+  // choosing the $1,190 option for the default city was told there was no date.
+  // Derived from CONFIG.LOCATIONS, so it reverts to "date TBD" by itself for a
+  // city that is still collecting and after a round has run.
+  const liveLoc = hasLiveDate
+    ? Object.values(CONFIG.LOCATIONS).find((loc) => loc.slug === selectedLocation)
+    : undefined
+  const dateLine = liveLoc ? `${liveLoc.city}, ${liveLoc.date}` : 'date TBD'
   // Momentum / forming line — ALWAYS via buildSecureSeatUrgency (never raw n/12).
   // Helper omits numeric progress below half full; forming copy has no invented counts.
   const selectedProgress = cityProgress[selectedLocation]
@@ -296,6 +305,10 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
     threshold: selectedProgress?.threshold ?? CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD,
     progressKnown: !!selectedProgress,
     priceAud: CONFIG.COURSE.PRICE_SECURE_SEAT,
+    // Same fix abcc4179 made on /melbourne-nov7 and missed here: without this
+    // the card told a Melbourne buyer their deposit "opens the practical day
+    // when the cohort fills" while 7 November was confirmed and on sale.
+    hasLiveDate,
   })
 
   const handleCheckout = async (
@@ -425,11 +438,19 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
         'Hands-on VOMS, BESS & real cases',
       ]
 
-  const unlockBullets = [
-    `Counts toward ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate`,
-    'Credited to Complete when date opens',
-    'Full refund if cohort does not form',
-  ]
+  // A city with a confirmed date has no gate left to count toward — the deposit
+  // simply holds a place on that day.
+  const unlockBullets = liveLoc
+    ? [
+        `Holds your place for ${liveLoc.date}`,
+        'Credited in full toward Complete',
+        'Fully refundable',
+      ]
+    : [
+        `Counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} enrolments that set a date`,
+        'Credited to Complete when the date is set',
+        'Full refund if the day does not go ahead',
+      ]
 
   // COMPACT VARIANT
   if (isCompact) {
@@ -546,7 +567,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               Best if you already want the hands-on day
             </p>
             <p className="text-[11px] text-slate-500 mb-2 leading-snug">
-              Online + practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
+              Online + practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · {dateLine}
             </p>
             <ul className="space-y-1 mb-3 flex-1">
               {completeBullets.map((f, i) => (
@@ -608,7 +629,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </div>
             <h3 className="text-[13px] font-bold text-[var(--foreground)] mb-0.5">Unlock your seat</h3>
             <p className="text-[10px] text-slate-500 mb-2 leading-snug">
-              Soft commit · Online remains the front door
+              Refundable deposit · holds your place while you decide
             </p>
             <ul className="space-y-1 mb-2.5 flex-1">
               {unlockBullets.map((f, i) => (
@@ -948,7 +969,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             Best if you already want the hands-on day
           </p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-snug mb-3">
-            Online included now + catered practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · date TBD
+            Online included now + catered practical day · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD · {dateLine}
           </p>
 
           <ul className="space-y-1.5 mb-3 text-left flex-1">
@@ -1049,7 +1070,9 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
 
           <h3 className="text-base font-bold text-[var(--foreground)] mb-0.5">{seatUrgency.headlineShort}</h3>
           <p className="text-[12px] text-slate-500 mb-2 leading-snug">
-            Preferred city below · open the date at {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}
+            {liveLoc
+              ? `Refundable deposit · ${liveLoc.date}`
+              : `Preferred city below · a date is set at ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} enrolments`}
           </p>
           {seatUrgency.progressLine && (
             <p className="mb-2 text-[11px] font-semibold text-emerald-800 leading-snug">{seatUrgency.progressLine}</p>
@@ -1097,7 +1120,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               Workshop city
             </p>
             <p className="text-[12px] text-[var(--muted-foreground)] leading-snug">
-              Required for Complete &amp; Unlock · date TBD when {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commit
+              Required for Complete &amp; Unlock ·{' '}
+              {liveLoc ? `${liveLoc.city} is confirmed for ${liveLoc.date}` : `a city's date is set once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians have enrolled`}
             </p>
           </div>
           <CityChips
