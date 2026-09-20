@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { detectCountry, isInternational } from '@/lib/geo'
+import { detectCountry, readMarketOverride, shouldTreatAsInternational } from '@/lib/geo'
 
 /**
  * GET /api/geo — geo-detection diagnostic.
@@ -14,9 +14,17 @@ import { detectCountry, isInternational } from '@/lib/geo'
 export async function GET(request: NextRequest) {
   const h = request.headers
   const country = detectCountry(h)
+  // The nav (components/SiteNav.tsx) reads routedAsInternational to decide
+  // whether Pricing/Enrol point at the AUD page. It must apply the SAME
+  // cea_market override middleware and checkout use — otherwise an AU clinician
+  // abroad or on a VPN who has chosen ?market=au keeps /pricing (middleware
+  // honours the cookie) while the nav still sends them to /cata or
+  // /pricing-international and drops Courses (found 2026-09-20).
+  const market = readMarketOverride(request.cookies)
   return NextResponse.json({
     detectedCountry: country,
-    routedAsInternational: isInternational(country),
+    marketOverride: market,
+    routedAsInternational: shouldTreatAsInternational(market, country),
     headers: {
       'cf-ipcountry': h.get('cf-ipcountry'),
       'x-vercel-ip-country': h.get('x-vercel-ip-country'),

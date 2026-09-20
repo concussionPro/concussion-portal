@@ -64,3 +64,28 @@ describe('shouldForceAudOnlineSku (checkout remap)', () => {
     expect(shouldForceAudOnlineSku(null, null)).toBe(false)
   })
 })
+
+describe('/api/geo — the signal the nav reads', () => {
+  // The nav rewrites Pricing/Enrol to the overseas page off this endpoint. It
+  // ignored cea_market until 2026-09-20, so an AU clinician abroad who chose
+  // ?market=au kept /pricing (middleware) but lost it from the nav.
+  const call = async (country: string, market?: string) => {
+    const { GET } = await import('@/app/api/geo/route')
+    const { NextRequest } = await import('next/server')
+    const headers: Record<string, string> = { 'cf-ipcountry': country }
+    if (market) headers.cookie = `cea_market=${market}`
+    const res = await GET(new NextRequest('https://portal.test/api/geo', { headers }))
+    return res.json()
+  }
+
+  it('cea_market=au overrides an overseas IP', async () => {
+    expect((await call('CA', 'au')).routedAsInternational).toBe(false)
+  })
+  it('no cookie → geo decides', async () => {
+    expect((await call('CA')).routedAsInternational).toBe(true)
+    expect((await call('AU')).routedAsInternational).toBe(false)
+  })
+  it('cea_market=intl overrides an AU IP', async () => {
+    expect((await call('AU', 'intl')).routedAsInternational).toBe(true)
+  })
+})
