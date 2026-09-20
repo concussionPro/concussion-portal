@@ -608,6 +608,21 @@ export function upgradePriceFor(_locationSlug?: string | null): number {
   return CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
 }
 
+
+/**
+ * The next city with a CONFIRMED, FUTURE-dated practical day, or null. The one
+ * test for "is there a date on sale right now" — used by copy that would
+ * otherwise say "date TBD" while a round is confirmed (found 2026-09-20 on the
+ * Complete card, the SCAT funnel exits and the workshop-city bar).
+ */
+export function nextLiveWorkshop(now: number = Date.now()) {
+  return (
+    Object.values(CONFIG.LOCATIONS)
+      .filter((l) => l.status === 'confirmed' && !!l.dateObj && l.dateObj.getTime() > now)
+      .sort((x, y) => x.dateObj!.getTime() - y.dateObj!.getTime())[0] ?? null
+  )
+}
+
 /**
  * Cities whose NEXT round is live for the nurture crons, in CONFIG.LOCATIONS
  * declaration order.

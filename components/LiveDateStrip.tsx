@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { CONFIG, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
+import { CONFIG, isEarlyBirdForLocation, nextLiveWorkshop, workshopPriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -37,12 +37,6 @@ import { trackEvent } from '@/lib/analytics'
 // confirmed city falls back to its /courses/<slug> page.
 const DATE_PAGE: Record<string, string> = { melbourne: '/melbourne-nov7' }
 
-function liveCity(now: number) {
-  return Object.values(CONFIG.LOCATIONS)
-    .filter((l) => l.status === 'confirmed' && !!l.dateObj && l.dateObj.getTime() > now)
-    .sort((a, b) => a.dateObj!.getTime() - b.dateObj!.getTime())[0]
-}
-
 const shortDate = (d: Date) =>
   new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Australia/Melbourne' }).format(d).replace(',', '')
 const dayMonth = (d: Date) =>
@@ -62,7 +56,7 @@ export function LiveDateStrip({ source }: { source: string }) {
   }, [])
 
   if (!show) return null
-  const loc = liveCity(Date.now())
+  const loc = nextLiveWorkshop()
   if (!loc || !loc.dateObj) return null
 
   const earlyBird = isEarlyBirdForLocation(loc.slug)

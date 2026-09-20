@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, GraduationCap, Activity } from 'lucide-react'
-import { CONFIG, SST_TIER_FROM_AUD, upgradePriceFor } from '@/lib/config'
+import { CONFIG, SST_TIER_FROM_AUD, nextLiveWorkshop, upgradePriceFor, workshopPriceFor } from '@/lib/config'
 import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 
 export interface ScatFunnelExitsProps {
@@ -35,6 +35,8 @@ export function ScatFunnelExits({
   ownsOnline = false,
   className = '',
 }: ScatFunnelExitsProps) {
+  // A confirmed round is on sale — say so instead of "Date TBD" (2026-09-20).
+  const liveWorkshop = nextLiveWorkshop()
   const promo = CONFIG.COURSE.PROMO_CODE
   const discount = CONFIG.COURSE.SCAT_DISCOUNT_AUD
   const pricingHref = showPromo ? `/pricing?promo=${promo}` : '/pricing'
@@ -186,10 +188,14 @@ export function ScatFunnelExits({
                       Complete
                     </span>
                     <span className="mt-1 text-sm font-bold text-slate-900">
-                      From A${CONFIG.COURSE.PRICE_EARLY_BIRD}
+                      {liveWorkshop
+                        ? `A$${workshopPriceFor(liveWorkshop.slug).toLocaleString('en-AU')}`
+                        : `From A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}`}
                     </span>
                     <span className="mt-0.5 text-[11px] text-slate-500">
-                      Date TBD · {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} paid commits
+                      {liveWorkshop
+                        ? `${liveWorkshop.city} · ${liveWorkshop.date}`
+                        : `Date set once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians enrol`}
                     </span>
                     <span className="mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-[#0d7377]">
                       Enrol Complete <ArrowRight className="h-3.5 w-3.5" />
