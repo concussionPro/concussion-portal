@@ -49,14 +49,16 @@ export const publications: Publication[] = [
     program: 'Concussion — exercise rehabilitation',
     primary: true,
     title:
-      'Sub-Symptom-Threshold Aerobic Exercise in the Management of Sport-Related Concussion: From the Buffalo Concussion Treadmill Test to Clinician-Supervised Digital Delivery — A Clinical Review',
+      'Sub-symptom-threshold aerobic exercise for concussion: from the Buffalo test to digital, clinician-supervised delivery — a narrative review',
     authors: 'Lewis Z.',
-    venue: 'medRxiv (preprint) → clinical-review journal',
-    venueType: 'Preprint',
+    // Journal deliberately unnamed while under review. Preprint: SportRxiv
+    // (medRxiv does not accept narrative reviews) — set `url` when its DOI lands.
+    venue: 'Peer-reviewed sports medicine journal (submitted August 2026); preprint lodged with SportRxiv',
+    venueType: 'Peer-reviewed journal',
     year: '2026',
-    status: 'in-preparation',
+    status: 'under-review',
     summary:
-      'A clinical review of the evidence for early sub-symptom-threshold aerobic exercise after concussion (Leddy et al.; 2023 Amsterdam consensus) and the delivery gap between clinic and home that software can close.',
+      'A narrative review of the evidence for early sub-symptom-threshold aerobic exercise after concussion (Leddy et al.; 2023 Amsterdam consensus) and the delivery gap between clinic and home that software can close.',
   },
   {
     id: 'sst-tools-paper',
@@ -125,6 +127,10 @@ export const publications: Publication[] = [
       'A research report on personalising display colour and contrast to an individual’s measured and stated comfort, grounded in the melanopsin/ipRGC photophobia pathway. Relevant to post-concussion screen intolerance. A wellness/accessibility framework — not a medical device, and not peer-reviewed.',
   },
 ]
+
+// Page sections, in display order. 'in-preparation' stays last and is limited
+// to the curated real outputs above — never speculative titles.
+export const statusOrder: PubStatus[] = ['published', 'preprint', 'under-review', 'in-preparation']
 
 export const programOrder: Program[] = [
   'Concussion — exercise rehabilitation',

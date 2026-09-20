@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { CONFIG } from '@/lib/config'
 
 // Honest static lastModified date for non-blog pages — bump when page content
 // meaningfully changes. A rolling `new Date()` tells crawlers every page
@@ -317,12 +318,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     // Public clinical calculator — the mid-consult search surface. robots.txt
     // carries a matching `Allow:` exception to the /tools/ block.
-    {
-      url: `${baseUrl}/publications`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    },
+    // /publications follows CONFIG.FEATURES.PUBLICATIONS_PUBLIC (robots.txt
+    // disallows it while hidden — a sitemap must not list a disallowed URL).
+    ...(CONFIG.FEATURES.PUBLICATIONS_PUBLIC
+      ? [{
+          url: `${baseUrl}/publications`,
+          lastModified: new Date('2026-09-20'),
+          changeFrequency: 'monthly' as const,
+          priority: 0.6,
+        }]
+      : []),
     {
       url: `${baseUrl}/scat-forms/voms`,
       lastModified: new Date(),

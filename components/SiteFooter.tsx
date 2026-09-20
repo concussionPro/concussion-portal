@@ -40,7 +40,9 @@ export function SiteFooter() {
               <li><Link href="/scat-mastery" className="hover:text-white transition-colors">Free SCAT6 Mastery Course</Link></li>
               <li><Link href="/ready-to-train" className="hover:text-white transition-colors">Practical Day — City Status</Link></li>
               <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-              <li><Link href="/publications" className="hover:text-white transition-colors">Research &amp; Publications</Link></li>
+              {CONFIG.FEATURES.PUBLICATIONS_PUBLIC && (
+                <li><Link href="/publications" className="hover:text-white transition-colors">Research &amp; Publications</Link></li>
+              )}
             </ul>
           </div>
 

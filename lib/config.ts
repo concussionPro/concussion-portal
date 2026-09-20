@@ -346,6 +346,12 @@ export const CONFIG = {
     // Flipping this: /j/<code> leads with the App Store install, the clinic
     // welcome email and SstClinicCard switch from TestFlight to store copy.
     SST_IOS_APP_LIVE: true,
+    // /publications visibility. FALSE (2026-09-20, Zac): hidden until the
+    // flybrain preprints are out. While false the page is noindex, carries the
+    // internal-preview banner, and is absent from the footer and the sitemap
+    // (still reachable by direct URL). TO REVEAL: flip true AND delete the
+    // `Disallow: /publications` line in public/robots.txt (static file).
+    PUBLICATIONS_PUBLIC: false,
     // ACSM Approved Provider status for the CRM (the US$600 application).
     // FALSE until the approval letter arrives. Same discipline as ESSA: while
     // false, /acsm may state HOURS of learning (verifiable) but must never

@@ -1,16 +1,27 @@
-// PUBLIC — Research & Publications. Revealed 2026-08-11: the first real DOI
-// landed (protocol v2 on Zenodo). Listed in the footer + sitemap.
+// Research & Publications. Visibility is ONE flag: CONFIG.FEATURES.PUBLICATIONS_PUBLIC
+// (footer link, sitemap entry, robots meta and the preview banner all follow it;
+// public/robots.txt is static and must be edited at reveal). Hidden again
+// 2026-09-20 until the flybrain preprints are out.
 // QUALITY OVER QUANTITY: lists only genuinely achievable outputs (peer-reviewed
 // journals + real-DOI reports). Data + statuses live in lib/publications.ts.
 // Compliance: research/education framing — methods/provenance & comfort, never
 // efficacy/diagnosis claims (TGA/AHPRA).
 import { SiteNav } from '@/components/SiteNav'
-import { publications, programOrder, type Publication, type PubStatus, type VenueType } from '@/lib/publications'
+import { CONFIG } from '@/lib/config'
+import { publications, statusOrder, type Publication, type PubStatus, type VenueType } from '@/lib/publications'
 
 export const metadata = {
   title: 'Research & Publications — Concussion Education Australia',
   description:
     'Open-access and peer-review research on concussion exercise rehabilitation, oculomotor measurement, and visual comfort — including the published SST delivery protocol (Zenodo, CC BY).',
+  ...(CONFIG.FEATURES.PUBLICATIONS_PUBLIC ? {} : { robots: { index: false, follow: false } }),
+}
+
+const SECTION: Record<PubStatus, string> = {
+  published: 'Published',
+  preprint: 'Preprints — not peer reviewed',
+  'under-review': 'Under peer review',
+  'in-preparation': 'In preparation',
 }
 
 const STATUS: Record<PubStatus, { label: string; cls: string }> = {
@@ -40,6 +51,7 @@ function PubCard({ p }: { p: Publication }) {
           </span>
         )}
         <span className={`text-[12px] font-medium ${VENUE[p.venueType]}`}>{p.venueType}</span>
+        <span className="text-[12px] text-slate-400">· {p.program}</span>
       </div>
       <h3 className="mt-3 text-[16.5px] font-semibold leading-snug text-slate-900">
         {p.url ? (
@@ -64,9 +76,11 @@ export default function PublicationsPage() {
       <SiteNav />
 
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-10">
-        <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Internal preview — goes public as DOIs land
-        </div>
+        {!CONFIG.FEATURES.PUBLICATIONS_PUBLIC && (
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Internal preview — not yet public
+          </div>
+        )}
 
         <h1 className="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           Research &amp; Publications
@@ -79,12 +93,12 @@ export default function PublicationsPage() {
           only genuinely achievable, peer-reviewed or openly-citable outputs are listed.
         </p>
 
-        {programOrder.map((prog) => {
-          const items = publications.filter((p) => p.program === prog)
+        {statusOrder.map((st) => {
+          const items = publications.filter((p) => p.status === st)
           if (!items.length) return null
           return (
-            <section key={prog} className="mt-10">
-              <h2 className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">{prog}</h2>
+            <section key={st} className="mt-10">
+              <h2 className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">{SECTION[st]}</h2>
               <ul className="mt-4 space-y-4">
                 {items.map((p) => (
                   <PubCard key={p.id} p={p} />

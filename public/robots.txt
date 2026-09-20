@@ -59,7 +59,8 @@ Disallow: /verify
 Allow: /tools/bctt-calculator
 Disallow: /tools/
 Disallow: /screen-comfort
-# Research & publications — hidden until the first DOIs land
+# Research & publications — hidden until the flybrain preprints are out (2026-09-20).
+# At reveal: delete the Disallow below AND flip CONFIG.FEATURES.PUBLICATIONS_PUBLIC.
 Disallow: /publications
 
 # Training-only crawlers with no search/citation value for AU clinicians —
