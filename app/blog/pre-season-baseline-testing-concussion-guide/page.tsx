@@ -80,9 +80,38 @@ export default function PreSeasonBaselineTestingPage() {
             <p className="text-xl text-sky-100 mb-4">
               Individual variation in symptoms, cognition, balance, and vestibular-ocular function means normative data alone is not enough. Pre-season baselines transform post-injury assessment from guesswork into precision medicine.
             </p>
-            <div className="flex items-center gap-3 text-sky-100 text-sm">
+            <div className="flex items-center gap-3 text-sky-100 text-sm mb-6">
               <Clock className="w-4 h-4" />
               <span>Zac Lewis — Osteopath (AHPRA-registered) — March 9, 2026 — 10 min read</span>
+            </div>
+            {/* Dead-lander fix (2026-09-21): lander-dead baseline blog —
+                OrganicOfferStrip sat below this tall blue hero (pt-[120px]),
+                so entrants never saw a next step. Dual exit IN hero: SST
+                apply path + Online competency (SCAT pattern). */}
+            <div
+              className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3"
+              data-cea-conversion="blog-preseason-hero-exits-sep21"
+            >
+              <Link
+                href="/clinical-suite?src=blog-preseason-hero"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-sky-800 rounded-xl text-sm font-bold hover:bg-sky-50 transition-colors shadow-lg"
+              >
+                Apply baselines with SST
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/pricing?src=blog-preseason-hero"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-white/70 text-white rounded-xl text-sm font-bold hover:bg-white/10 transition-colors"
+              >
+                Enrol Online — full competency
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/scat-mastery?src=blog-preseason-hero"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sky-100 text-sm font-semibold underline underline-offset-2 hover:text-white transition-colors"
+              >
+                Free SCAT6 course
+              </Link>
             </div>
           </div>
         </div>

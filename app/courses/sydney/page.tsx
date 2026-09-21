@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { CONFIG, workshopPriceFor } from '@/lib/config'
+import { CONFIG, nextLiveWorkshop, workshopDatePage, workshopPriceFor } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
@@ -12,6 +12,7 @@ import { REFERENCE_COUNT } from '@/data/reference-count'
 
 export default function SydneyPage() {
   const location = CONFIG.LOCATIONS.SYDNEY as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
+  const liveWorkshop = nextLiveWorkshop()
 
   return (
     <>
@@ -73,9 +74,37 @@ export default function SydneyPage() {
               <>
                 <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
                   <Calendar className="w-4 h-4" aria-hidden="true" />
-                  Sydney round forming — no date confirmed yet. Hold your place below.
+                  Sydney round forming — no date confirmed yet.
                 </div>
-                {/* Interest capture — makes the badge's promise true. */}
+                {/* Dead-lander fix (2026-09-21): lander-dead-/courses/sydney —
+                    FREE_WORKSHOP_NOTIFY off → NextEarlyBirdCapture is only
+                    SecureSeatCheckout (Stripe embed ≠ second page). Put link
+                    CTAs above the deposit so entrants can leave for Online
+                    ($0 opex) or the live Melb dated page. */}
+                <div
+                  className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3"
+                  data-cea-conversion="sydney-forming-exits-sep21"
+                >
+                  <Link
+                    href="/pricing?src=sydney-forming-hero"
+                    className="btn-primary px-8 py-3.5 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  >
+                    Enrol Online — start anytime
+                    <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                  </Link>
+                  {liveWorkshop && (
+                    <Link
+                      href={`${workshopDatePage(liveWorkshop.slug)}?src=sydney-forming-hero`}
+                      className="glass px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-slate-100 transition-colors inline-flex items-center gap-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                    >
+                      {liveWorkshop.city} {liveWorkshop.date.replace(/^Saturday /, 'Sat ')} is live
+                      <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                    </Link>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-3 mb-1">
+                  Prefer to hold a Sydney seat? Refundable A${CONFIG.COURSE.PRICE_SECURE_SEAT} deposit below.
+                </p>
                 <NextEarlyBirdCapture defaultCity="sydney" />
               </>
             )}
@@ -159,13 +188,13 @@ export default function SydneyPage() {
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
               ) : (
-                <a
-                  href="/pricing"
+                <Link
+                  href="/pricing?src=sydney-forming-bottom"
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 >
-                  Reserve My Spot
+                  Enrol Online
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
-                </a>
+                </Link>
               )}
               <Link
                 href="/preview"
