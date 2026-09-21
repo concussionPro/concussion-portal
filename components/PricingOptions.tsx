@@ -503,7 +503,10 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
             </p>
             <div className="mb-2 ml-1 rounded-lg border border-teal-200/70 bg-gradient-to-br from-teal-50/80 to-white px-2.5 py-1.5">
               <p className="text-[10px] leading-snug text-[var(--foreground)]">
-                <strong className="text-[#0a5f57]">Year 1 tools included</strong>
+                {/* 3 months from ACTIVATION — owner ruling 2026-09-11 ("3 months
+                    across the board"); this card still promised a year until
+                    2026-09-21. */}
+                <strong className="text-[#0a5f57]">3 months of clinical tools included</strong>
                 {' '}· then A${SST_TIER_FROM_AUD}/mo
               </p>
             </div>
@@ -835,8 +838,8 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
               style={{ boxShadow: '0 0 0 3px rgba(13,122,111,0.15)' }}
             />
             <p className="text-[12px] leading-snug text-[var(--foreground)] font-medium m-0">
-              <strong className="text-[#0a5f57]">Year 1 tools included</strong>
-              {' '}· then A${SST_TIER_FROM_AUD}/mo clinical tools. Cancel anytime after year 1.
+              <strong className="text-[#0a5f57]">3 months of clinical tools included</strong>
+              {' '}· starts when you activate, then A${SST_TIER_FROM_AUD}/mo. Cancel anytime.
             </p>
           </div>
 
