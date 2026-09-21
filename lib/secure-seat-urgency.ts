@@ -108,18 +108,20 @@ export function buildSecureSeatUrgency(input: SecureSeatProgressInput): SecureSe
   const socialLine = live
     ? `Capped at ${threshold} seats — multidisciplinary room · early-bird while it lasts.`
     : (
-      'Clinicians secure seats to open the catered day — the date opens at ' +
+      // Customer-facing: no internal shorthand ("paid commits", "money before
+      // calendar") — those shipped to the public /in-person page until 2026-09-21.
+      "A city's catered practical day is scheduled once " +
       String(threshold) +
-      ' paid commits. Money before calendar · no fake dates.'
+      ' clinicians have enrolled — we never advertise a date we have not booked.'
     )
 
   const body = live
     ? `A$${price} refundable deposit holds your ${city} seat and counts toward the ${threshold}-seat room. Full credit toward Complete when you enrol; refund if this round does not run. Online modules stay with Online / Complete.`
     : upgrade
-      ? `You have Online — next step is the hands-on day. Put A$${price} down for ${city}. It counts toward the ${threshold}-seat gate that opens the date; credit toward Complete when it does; full refund if the cohort does not form.`
+      ? `You have Online — next step is the hands-on day. Put A$${price} down for ${city}. It counts toward the ${threshold} enrolments that set the date; credited toward Complete when it does; full refund if the day does not go ahead.`
       : progressKnown && enrolled !== null && enrolled >= halfFull
-        ? `Put A$${price} down for ${city}. It counts toward the ${threshold}-seat demand gate that opens the date. Credit toward Complete when the date opens; full refund if the cohort does not form. Online modules stay a separate enrol.`
-        : `Put A$${price} down for ${city}. Be among the clinicians unlocking ${city} — your deposit opens the practical day when the cohort fills. Credit toward Complete when the date opens; full refund if it does not. Prefer modules first? Enrol Online, then unlock your seat.`
+        ? `Put A$${price} down for ${city}. It counts toward the ${threshold} enrolments that set the date. Credited toward Complete when the date is set; full refund if the day does not go ahead. The online modules are a separate enrolment.`
+        : `Put A$${price} down for ${city}. Be among the clinicians unlocking ${city} — your deposit opens the practical day when the cohort fills. Credit toward Complete when the date opens; full refund if it does not. Prefer to start with the modules? Enrol Online, then hold your seat.`
 
   return { headline, headlineShort, ctaLabel, progressLine, socialLine, body }
 }
