@@ -97,6 +97,10 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* The nav is fixed (~62px). Without this every in-page anchor — the nav's
+     Enrol, each "#pricing-cards" CTA — landed with the top of its target hidden
+     underneath it (measured 2026-09-21: card top at y=0 after the jump). */
+  scroll-padding-top: 84px;
 }
 
 * {
