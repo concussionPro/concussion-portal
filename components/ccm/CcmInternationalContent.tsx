@@ -558,6 +558,45 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
               'You screen, assess, manage and rehabilitate concussion every week — this is the course that makes you the clinician who does it to guideline standard, with the working tools to start Monday. Diagnosis and clearance for red flags stay with medical; you own the rest.'}
           </p>
 
+          {heroFlow && !priceFirst && (
+            <>
+            {/* HERO CTA (2026-09-21). In this order (title → media → price
+                card, owner-ordered for /cata) the hero had NO call to action:
+                the first in-body Enrol sat at y=1404 and the price at y=1534
+                on desktop (1573 / 1699 on a phone), under a 600px preview.
+                Bot-filtered data for 14 days: ~9 real Canadian entries on
+                /cata, 7–90s each, not one click. These readers arrive from
+                their own association's approved-provider list already
+                knowing what they want — CEUs (in the band above) and what it
+                costs. The order is unchanged; the hero just stops being a
+                dead end. Price sits under the button, not in its label. Placed
+                directly under the blurb: under the stat tiles it landed at y=828 /
+                1168 — still off the first screen on a phone. */}
+            <div className="text-center mt-5">
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href="#pricing-cards"
+                  onClick={() => trackEvent('hero_cta_click', { target: 'enrol', page: 'ccm-intl-heroflow' })}
+                  className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
+                >
+                  Enrol now
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                <Link
+                  href="/preview"
+                  onClick={() => trackEvent('hero_cta_click', { target: 'preview', page: 'ccm-intl-heroflow' })}
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-foreground hover:border-accent transition-colors"
+                >
+                  Preview a module first
+                </Link>
+              </div>
+              <p className="mt-2.5 text-[12.5px] text-muted-foreground">
+                {price.display} one-time · 7-day money-back · tax invoice for reimbursement
+              </p>
+            </div>
+            </>
+          )}
+
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
             {[
               'SCAT6 / SCOAT6',
