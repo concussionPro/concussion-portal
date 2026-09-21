@@ -4,7 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Loader2, Check, Sparkles, ArrowRight } from 'lucide-react'
 import { trackInterestRegistration } from '@/lib/analytics'
-import { CONFIG, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
+import { CONFIG, isEarlyBirdForLocation, nextLiveWorkshop, workshopPriceFor } from '@/lib/config'
+import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 
 type CitySlug = 'sydney' | 'adelaide' | 'wa' | 'melbourne'
 
@@ -103,6 +104,19 @@ export function NextEarlyBirdCapture({
             <ArrowRight className="w-3 h-3" />
           </Link>
         )}
+      </div>
+    )
+  }
+
+  // Free notify is off (CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY). A city with a
+  // confirmed date needs nothing here — the Enrol button above it is the action,
+  // and a free form directly under a $1,190 button only gave people a way not
+  // to press it. A forming city gets the refundable deposit instead.
+  if (!CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY) {
+    if (nextLiveWorkshop()?.slug === city) return null
+    return (
+      <div className={`mt-4 mx-auto max-w-md ${className}`}>
+        <SecureSeatCheckout defaultCity={city} lockCity variant="button" source="next_early_bird" />
       </div>
     )
   }

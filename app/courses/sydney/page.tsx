@@ -73,7 +73,7 @@ export default function SydneyPage() {
               <>
                 <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
                   <Calendar className="w-4 h-4" aria-hidden="true" />
-                  Sydney round forming — no date confirmed yet. Register your interest below.
+                  Sydney round forming — no date confirmed yet. Hold your place below.
                 </div>
                 {/* Interest capture — makes the badge's promise true. */}
                 <NextEarlyBirdCapture defaultCity="sydney" />

@@ -161,6 +161,7 @@ export default function CrmWorkshopInterest() {
         </p>
         <SecureSeatCheckout defaultCity={city as 'sydney' | 'melbourne' | 'byron-bay' | 'adelaide' | 'wa'} lockCity variant="button" source="crm_workshop_interest" />
       </div>
+      {CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY && (<>
       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Or just email me when a date is set</p>
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
@@ -284,6 +285,7 @@ export default function CrmWorkshopInterest() {
         alone — the workshop is optional.
       </p>
     </form>
+      </>)}
     </div>
   )
 }

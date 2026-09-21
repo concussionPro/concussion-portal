@@ -93,7 +93,7 @@ export function OtherCityInterest() {
       <p className="text-[12px] text-slate-600 leading-snug mb-3">
         {isTeam
           ? 'In-house training for clinics, sports orgs, and hospital networks. Pricing scoped privately on a short call.'
-          : `Put A$${CONFIG.COURSE.PRICE_SECURE_SEAT} down for ${cityLabel} — counts toward the cohort gate. Free notify-me stays secondary below.`}
+          : `Put A$${CONFIG.COURSE.PRICE_SECURE_SEAT} down for ${cityLabel} — it holds your place and counts toward the enrolments that set the date.`}
       </p>
 
       {!isTeam && (
@@ -104,7 +104,9 @@ export function OtherCityInterest() {
             variant="button"
             source="other_city_interest"
           />
-          <p className="mt-2 text-[11px] text-slate-500 text-center">Or just email me when a date is set (this does not hold a place):</p>
+          {CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY && (
+            <p className="mt-2 text-[11px] text-slate-500 text-center">Or just email me when a date is set (this does not hold a place):</p>
+          )}
         </div>
       )}
 
@@ -148,6 +150,10 @@ export function OtherCityInterest() {
             </button>
           </div>
 
+          {/* Free city notify is off (CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY): for a
+              city the deposit above is the registration. The fields remain for
+              the team-training enquiry, which is a B2B lead. */}
+          {(isTeam || CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY) && (<>
           <div className="grid grid-cols-2 gap-2">
             <input
               type="text"
@@ -211,6 +217,7 @@ export function OtherCityInterest() {
               One email when the date is confirmed. No spam, unsubscribe any time.
             </p>
           )}
+          </>)}
         </form>
       )}
     </div>

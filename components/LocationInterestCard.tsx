@@ -192,7 +192,7 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         {/* Notify-me — forming cities only. A confirmed date has nothing left to
             be notified about, and "notify me when Melbourne confirms" beside
             "Saturday 7 November 2026" contradicted the card's own badge. */}
-        {hasLiveDate ? null : done ? (
+        {hasLiveDate || !CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY ? null : done ? (
           <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-emerald-400/15 border border-emerald-300/30 backdrop-blur p-3">
             <Check className="w-4 h-4 text-emerald-300 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-[13px] text-emerald-50 leading-snug">{message}</p>
@@ -230,7 +230,7 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         <p className="mt-2 text-[10px] text-white/50 leading-snug">
           {hasLiveDate
             ? `A$${deposit} deposit is fully refundable and credited toward the Complete course.`
-            : `The A$${deposit} refundable deposit counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} enrolments that set a date — an email reminder does not.`}
+            : `The A$${deposit} refundable deposit counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} enrolments that set ${city}'s date, and is credited toward the Complete course.`}
         </p>
       </div>
     </div>

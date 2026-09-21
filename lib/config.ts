@@ -268,6 +268,21 @@ export const CONFIG = {
   // Feature Flags
   FEATURES: {
     /**
+     * FREE workshop "notify me" sign-ups. Default FALSE (owner 2026-09-21: "the
+     * $100 gate is to stop free sign ups that have no buy intent"; 2026-09-20:
+     * "too many times people have signed up … free and then not engaged when a
+     * date went live").
+     *
+     * The 09-05 change made the A$100 refundable deposit the primary way to
+     * register for a city but left a free email form beside it on seven
+     * surfaces — so the no-intent sign-up path it was meant to close stayed
+     * open. With this off, the deposit (or buying the course) is the ONLY way
+     * to register for a city. Team-training enquiries are B2B leads, not
+     * registrations, and are unaffected. /api/register-interest itself stays:
+     * the dashboard nomination and email nominate links still use it.
+     */
+    FREE_WORKSHOP_NOTIFY: false,
+    /**
      * The RESEARCH consent block inside SST intake. Default FALSE.
      *
      * The clinical covariates (injury date, age band, sex) collect regardless —

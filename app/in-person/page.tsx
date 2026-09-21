@@ -290,8 +290,9 @@ export default function InPersonTrainingPage() {
               </Link>
             </p>
 
-            {/* Unlock seat lives in hero — secondary here is free notify-me only */}
-            {/* City interest email capture */}
+            {/* Free city notify-me — off by CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY;
+                the deposit in the hero is the registration. */}
+            {CONFIG.FEATURES.FREE_WORKSHOP_NOTIFY && (
             <div className="mt-6 pt-6 border-t border-border/30">
               {interestSuccess ? (
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
@@ -350,6 +351,7 @@ export default function InPersonTrainingPage() {
                 </>
               )}
             </div>
+            )}
           </div>
 
           {/* CTA */}

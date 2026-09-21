@@ -54,6 +54,14 @@ const nextConfig: NextConfig = {
       // The bespoke page's old path — anything that cached or noted it
       // (screenshare history, meeting notes) must land on the demo, not a 404.
       { source: '/mscc-demo', destination: '/demo/clinic', permanent: false },
+      // Parent paths that have children but no index page. Each 404'd for
+      // anyone who trimmed a URL or followed a crawler-discovered link
+      // (45-day log, 2026-09-21: /about, /faq, /tools, /integrations). Send
+      // them to the page they were evidently after instead of a dead end.
+      { source: '/about', destination: '/about/zac-lewis', permanent: true },
+      { source: '/faq', destination: '/faq/scat-assessment', permanent: true },
+      { source: '/tools', destination: '/tools/bctt-calculator', permanent: true },
+      { source: '/integrations', destination: '/clinical-suite', permanent: false },
       {
         source: '/pricing/international',
         destination: '/pricing-international',
