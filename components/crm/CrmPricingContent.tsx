@@ -20,6 +20,7 @@ import {
   Star,
 } from 'lucide-react'
 import Link from 'next/link'
+import { trackEvent } from '@/lib/analytics'
 import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
@@ -167,19 +168,54 @@ export default function CrmPricingContent({ hideNav }: { hideNav?: boolean }) {
         <div className="text-center mb-8">
           <div className="badge mb-5 inline-flex">
             <Award className="w-3.5 h-3.5 mr-1.5" />
-            For Accredited Exercise Physiologists &amp; Exercise Scientists
+            {CONFIG.FEATURES.ESSA_ACCREDITED ? 'ESSA-accredited CPD · for' : 'For Accredited'} Exercise Physiologists &amp; Exercise Scientists
           </div>
 
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
             Concussion rehab is <span className="text-gradient">exercise medicine</span>.
             <br className="hidden sm:block" /> Which makes it yours.
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed
-            treatment for concussion — a graded aerobic prescription, squarely in the EP scope.
-            This is the course that makes you the clinician who delivers it, with the working
-            tools to start Monday.
-          </p>
+          {/* Blurb + hero CTA share ONE wrapper on purpose: the /pricing embed hides
+              this header's first five children by position (nth-child), so adding
+              a sibling here would un-hide the stat bento over there. */}
+          <div>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Sub-symptom-threshold aerobic exercise is now the first-line, guideline-endorsed
+              treatment for concussion — a graded aerobic prescription, squarely in the EP scope.
+              This is the course that makes you the clinician who delivers it, with the working
+              tools to start Monday.
+            </p>
+            {/* HERO CTA (2026-09-21). Real AU traffic, 30 days, bots removed: 31
+                entries on this page — mostly from the ESSA listing — 17 left from
+                it and 3 reached checkout. The hero had no call to action: the
+                first Enrol sat at y=1402 desktop / 1639 on a phone, the first
+                price at ~1960. Standalone page only — inside the /pricing embed
+                the cards already sit directly under the title. */}
+            {!hideNav && (
+              <div className="mt-5">
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href="#pricing-cards"
+                    onClick={() => trackEvent('hero_cta_click', { target: 'enrol', page: 'crm-landing' })}
+                    className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
+                  >
+                    Enrol now
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <Link
+                    href="/preview"
+                    onClick={() => trackEvent('hero_cta_click', { target: 'preview', page: 'crm-landing' })}
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-foreground hover:border-accent transition-colors"
+                  >
+                    Preview a module first
+                  </Link>
+                </div>
+                <p className="mt-2.5 text-[12.5px] text-muted-foreground">
+                  Online from A${CONFIG.COURSE.PRICE_ONLINE} · 7-day money-back · tax invoice for reimbursement
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Skill chips — the EP's actual clinical capabilities, scannable */}
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">

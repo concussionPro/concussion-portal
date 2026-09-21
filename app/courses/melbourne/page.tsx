@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Calendar, ArrowRight, CheckCircle2, Utensils, Clock, BookOpen, FileText, Infinity, BedDouble, Car, Plane } from 'lucide-react'
-import { CONFIG, workshopPriceFor } from '@/lib/config'
+import { CONFIG, workshopDatePage, workshopPriceFor } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
@@ -83,7 +83,7 @@ export default function MelbournePage() {
                 </p>
 
                 <a
-                  href={`${CONFIG.SHOP_URL}?location=melbourne`}
+                  href={workshopDatePage('melbourne')}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label={`Enrol in Melbourne session for $${workshopPriceFor('melbourne').toLocaleString()}`}
                 >
@@ -248,7 +248,7 @@ export default function MelbournePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               {isConfirmed ? (
                 <a
-                  href={`${CONFIG.SHOP_URL}?location=melbourne`}
+                  href={workshopDatePage('melbourne')}
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 >
                   Enrol Now
