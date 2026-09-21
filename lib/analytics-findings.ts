@@ -73,7 +73,31 @@ export async function loadWindow(days: number, endMs: number): Promise<Ev[]> {
 /** Pure analysis — visitor-stitched, money-anchored. Exported for tests. */
 export function analyze(events: Ev[]): Finding[] {
   const findings: Finding[] = []
-  const client = events.filter((e) => !e.sessionId.startsWith('server_'))
+  // GHOST SESSIONS (2026-09-21). A real browser always emits something besides
+  // its page_view — page_exit on unload at minimum, usually scroll_depth too.
+  // Measured over 14 days: 174 of 195 CN/SG/HK sessions fired page_view and
+  // NOTHING else, against 5 of 150 AU/NZ ones. Those are scripted fetches that
+  // run the tracker once and leave, and unfiltered they produced five of the
+  // six "pipeline gap" work orders in the 21 Sep digest — every "takes entries
+  // and loses every one of them" lander was 100% CN/SG/HK/US direct traffic with
+  // no scroll or exit event, and not one Australian session. The engine exists
+  // to order site changes, so it must not order them on behalf of bots.
+  // A session counts only if it shows ANY sign of a person: a non-page_view
+  // event, or more than one page. Deliberately behavioural, not a country list
+  // — real overseas clinicians (US ATs, UK physios) still count.
+  const bySession = new Map<string, { pv: number; other: number }>()
+  for (const e of events) {
+    if (e.sessionId.startsWith('server_')) continue
+    const s = bySession.get(e.sessionId) || { pv: 0, other: 0 }
+    if (e.type === 'page_view') s.pv++
+    else s.other++
+    bySession.set(e.sessionId, s)
+  }
+  const isGhost = (sessionId: string) => {
+    const s = bySession.get(sessionId)
+    return !!s && s.other === 0 && s.pv <= 1
+  }
+  const client = events.filter((e) => !e.sessionId.startsWith('server_') && !isGhost(e.sessionId))
 
   // Visitor stitching: persistent id when present, session id as fallback.
   const visitorOf = (e: Ev) =>
@@ -90,6 +114,8 @@ export function analyze(events: Ev[]): Finding[] {
     [...byVisitor.values()].filter(pred).length
 
   const isPv = (e: Ev) => e.type === 'page_view'
+  const isPassive = (e: Ev) =>
+    e.type === 'page_exit' || e.type === 'scroll_depth' || e.type === 'pricing_page' || e.type.endsWith('_in_view')
   const purchases = events.filter((e) => e.type === 'purchase_complete').length
   const checkoutIntent = visitors((evs) =>
     evs.some((e) => ['enroll_button_click', 'enrol_click', 'checkout_start', 'shop_click'].includes(e.type)),
@@ -222,7 +248,13 @@ export function analyze(events: Ev[]): Finding[] {
     l.entries++
     // Self-contained landers (tabs, in-page checkout) produce ONE pageview by
     // design — any interaction event means the visitor engaged, not bounced.
-    const interacted = evs.some((e) => !isPv(e))
+    // PASSIVE telemetry is not interaction (2026-09-21). page_exit fires on
+    // every unload and scroll/in-view events fire without a decision, so
+    // counting them made a human who read one page and left look "engaged" —
+    // which meant this rule could only ever fire on sessions with NO other
+    // event at all, i.e. on scripted traffic. With ghosts now removed above it
+    // would never fire. An interaction is something the visitor chose to do.
+    const interacted = evs.some((e) => !isPv(e) && !isPassive(e))
     if (new Set(pvs.map((p) => p.path)).size <= 1 && !interacted) l.bounced++
     landers.set(entry, l)
   }
