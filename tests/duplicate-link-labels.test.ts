@@ -41,14 +41,13 @@ const REPEATED_CTAS = [
   {
     file: 'components/LocationInterestCard.tsx',
     what: 'the per-city Complete-enrol link on the homepage',
-    // Re-derived 2026-09-06. The owner made "Secure your seat" the primary CTA
-    // on 2026-09-05, which demoted this link to the live-dated-city alternate
-    // and moved the price out of the visible label into the accessible name.
-    // The guard still applies: this renders once per city and every instance
-    // reads identically, so only the aria-label says which city it enrols into.
-    visible: /Or enrol Complete — early-bird locked/,
+    // Re-derived 2026-09-21. For a city with a CONFIRMED date the seat purchase
+    // is the card's primary action again (the 09-05 deposit-first order stays
+    // for cities still forming). The guard's intent is now met by a
+    // label AND an accessible name that carry the city and the price.
+    visible: /Take a \{city\} seat —/,
     // The accessible name must name the city AND carry the price it commits to.
-    aria: /aria-label=\{`Enrol Complete in \$\{city\} from \$\$\{CONFIG\.COURSE\.PRICE_ONLINE\}/,
+    aria: /aria-label=\{`Take a \$\{city\} seat for \$\$\{workshopPriceFor\(citySlug\)\}/,
   },
   {
     file: 'app/learning/page.tsx',
@@ -82,12 +81,12 @@ describe('repeated calls to action name what they act on', () => {
   it('the guard can fail', () => {
     // Proven against the exact shape that would regress: the visible label
     // present, no aria-label anywhere.
-    const shipped = 'Or enrol Complete — early-bird locked'
+    const shipped = 'Take a {city} seat — $1,190'
     expect(REPEATED_CTAS[0].visible.test(shipped)).toBe(true)
     expect(REPEATED_CTAS[0].aria.test(shipped)).toBe(false)
     // A city-less accessible name does not satisfy it either — that is the
     // whole defect: three identically named links in a screen-reader link list.
-    const cityless = 'aria-label={`Enrol Complete from $${CONFIG.COURSE.PRICE_ONLINE}`}'
+    const cityless = 'aria-label={`Take a seat for $${workshopPriceFor(citySlug)}`}'
     expect(REPEATED_CTAS[0].aria.test(cityless)).toBe(false)
   })
 })

@@ -257,7 +257,11 @@ function PricingTabs() {
              5 everything else */
         /* CRM body: photo and cards ARE direct .stream-body children. */
         .pricing-embed .stream-body { display: flex; flex-direction: column; }
-        .pricing-embed .stream-body > * { order: 5; }
+        /* width/min-width: an auto-margined flex item is NOT stretched — it
+           shrink-wraps its content, so the comparison table's min-w-[600px]
+           made its section 602px wide and the whole page scrolled sideways on
+           a phone (scrollWidth 642 at a 393 viewport, measured 2026-09-21). */
+        .pricing-embed .stream-body > * { order: 5; width: 100%; min-width: 0; }
         .pricing-embed .stream-body > #workshop-photo { order: 3; }
         .pricing-embed .stream-body > #pricing-cards { order: 4; }
         .pricing-embed .stream-body > #workshop-locations { order: 5; }

@@ -609,6 +609,16 @@ export function upgradePriceFor(_locationSlug?: string | null): number {
 }
 
 
+
+/**
+ * Where a confirmed round is SOLD: its dated landing page when one exists
+ * (direct Complete checkout for that date), else the city's /courses page.
+ */
+const WORKSHOP_DATE_PAGES: Record<string, string> = { melbourne: '/melbourne-nov7' }
+export function workshopDatePage(slug: string): string {
+  return WORKSHOP_DATE_PAGES[slug] ?? `/courses/${slug}`
+}
+
 /**
  * The next city with a CONFIRMED, FUTURE-dated practical day, or null. The one
  * test for "is there a date on sale right now" — used by copy that would

@@ -1056,7 +1056,7 @@ export function PricingOptions({ variant = 'full', stream = 'ccm' }: PricingOpti
                 <Bell className="w-3.5 h-3.5 text-amber-700/80" strokeWidth={2} />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wide text-amber-800/80">
-                Soft commit
+                Refundable deposit
               </span>
             </div>
             <div className="text-right flex-shrink-0">

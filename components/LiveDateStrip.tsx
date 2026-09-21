@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { CONFIG, isEarlyBirdForLocation, nextLiveWorkshop, workshopPriceFor } from '@/lib/config'
+import { CONFIG, isEarlyBirdForLocation, nextLiveWorkshop, workshopDatePage, workshopPriceFor } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -33,10 +33,6 @@ import { trackEvent } from '@/lib/analytics'
  *    (/api/geo, the same signal SiteNav uses; unknown geo is treated as home).
  */
 
-// The dated landing page for a confirmed round, where one exists. Any other
-// confirmed city falls back to its /courses/<slug> page.
-const DATE_PAGE: Record<string, string> = { melbourne: '/melbourne-nov7' }
-
 const shortDate = (d: Date) =>
   new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Australia/Melbourne' }).format(d).replace(',', '')
 const dayMonth = (d: Date) =>
@@ -62,7 +58,7 @@ export function LiveDateStrip({ source }: { source: string }) {
   const earlyBird = isEarlyBirdForLocation(loc.slug)
   const price = workshopPriceFor(loc.slug)
   const closes = new Date(loc.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000)
-  const href = DATE_PAGE[loc.slug] ?? `/courses/${loc.slug}`
+  const href = workshopDatePage(loc.slug)
 
   return (
     <div className="absolute top-[68px] inset-x-0 z-20 flex justify-center px-3 pointer-events-none">

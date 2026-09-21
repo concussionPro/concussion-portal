@@ -110,9 +110,8 @@ export function AfterTheAssessment({
             Learn full clinical competency
           </span>
           <span className="mt-1 text-[12.5px] leading-snug text-slate-600">
-            Enrol Online first (front door) from A${CONFIG.COURSE.PRICE_ONLINE}. Then unlock your
-            seat (A${CONFIG.COURSE.PRICE_SECURE_SEAT}) toward the{' '}
-            {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate — or Complete.
+            Start with the online course from A${CONFIG.COURSE.PRICE_ONLINE}, then add the
+            hands-on practical day — or enrol in Complete for both.
           </span>
           <span className="mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-[#0d7377]">
             Enrol Online{' '}

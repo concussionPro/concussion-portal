@@ -157,11 +157,11 @@ export default function CrmWorkshopInterest() {
       <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
         <p className="text-sm font-bold text-slate-900 mb-1">Unlock your seat</p>
         <p className="text-xs text-slate-600 mb-3">
-          A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate that opens the catered day — preferred city on checkout. Date opens when demand is met.
+          A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit that holds your place at the catered practical day in your preferred city. A city's date is set once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians have enrolled.
         </p>
         <SecureSeatCheckout defaultCity={city as 'sydney' | 'melbourne' | 'byron-bay' | 'adelaide' | 'wa'} lockCity variant="button" source="crm_workshop_interest" />
       </div>
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Or free notify-me (secondary)</p>
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Or just email me when a date is set</p>
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <div>

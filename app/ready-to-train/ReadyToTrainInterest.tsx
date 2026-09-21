@@ -75,7 +75,7 @@ export default function ReadyToTrainInterest({
         <p className="text-sm font-bold text-foreground mb-1">Unlock your seat</p>
         <p className="text-[13px] text-muted-foreground mb-3">
           A${CONFIG.COURSE.PRICE_SECURE_SEAT} refundable deposit — preferred city on checkout.
-          Counts toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate. Free notify does not.
+          Counts toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} enrolments that set your city&apos;s date — an email reminder does not.
         </p>
         <SecureSeatCheckout
           defaultCity={(city || cities[0]?.slug || 'melbourne') as 'melbourne' | 'sydney' | 'byron-bay' | 'adelaide' | 'wa'}

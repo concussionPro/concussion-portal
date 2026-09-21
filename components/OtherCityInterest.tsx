@@ -104,7 +104,7 @@ export function OtherCityInterest() {
             variant="button"
             source="other_city_interest"
           />
-          <p className="mt-2 text-[11px] text-slate-500 text-center">Or free notify-me (does not count toward the seat gate):</p>
+          <p className="mt-2 text-[11px] text-slate-500 text-center">Or just email me when a date is set (this does not hold a place):</p>
         </div>
       )}
 

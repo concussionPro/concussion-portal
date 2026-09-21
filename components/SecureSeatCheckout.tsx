@@ -218,7 +218,9 @@ export function SecureSeatCheckout({
           )}
         </button>
         <p className="mt-1.5 text-center text-[11px] text-slate-500">
-          Refundable · counts toward {threshold} · {cityLabel}
+          {(hasLiveDateProp ?? progressRow?.hasLiveDate)
+            ? `Fully refundable · credited toward Complete · ${cityLabel}`
+            : `Refundable · counts toward the ${threshold} that set a date · ${cityLabel}`}
         </p>
       </div>
     )
@@ -282,7 +284,7 @@ export function SecureSeatCheckout({
       {stuckUrl && <div className="mb-3"><CheckoutRescue url={stuckUrl} /></div>}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">
-          <MapPin className="h-3 w-3" /> Soft commit
+          <MapPin className="h-3 w-3" /> Refundable deposit
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2.5 py-1 text-[10px] font-bold text-slate-600">
           <Shield className="h-3 w-3 text-[var(--accent)]" /> A${price} refundable
@@ -298,7 +300,7 @@ export function SecureSeatCheckout({
       <ul className="mt-3 space-y-1.5">
         {[
           `Preferred city on checkout — ${cityLabel}`,
-          `Counts toward ${threshold} paid commits (with Complete)`,
+          `Counts toward the ${threshold} enrolments that set your city's date`,
           'Does not unlock online modules (that is Online / Complete)',
         ].map((line) => (
           <li key={line} className="flex items-start gap-2 text-xs text-slate-700">

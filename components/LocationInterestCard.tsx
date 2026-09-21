@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Check, ArrowRight, Loader2 } from 'lucide-react'
-import { trackInterestRegistration } from '@/lib/analytics'
-import { CONFIG } from '@/lib/config'
+import { trackEvent, trackInterestRegistration } from '@/lib/analytics'
+import { CONFIG, workshopDatePage, workshopPriceFor } from '@/lib/config'
 import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
 
@@ -79,6 +79,9 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
     threshold: progress?.threshold ?? CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD,
     progressKnown: !!progress,
     priceAud: deposit,
+    // Without this a city with a CONFIRMED date still said the deposit "opens
+    // the practical day when the cohort fills" (home page, 2026-09-21).
+    hasLiveDate,
   })
 
   async function submit(e: React.FormEvent) {
@@ -142,7 +145,8 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         </h3>
         <p className="mt-1.5 text-[12.5px] text-white/75 leading-snug">{caption}</p>
 
-        {seatUrgency.progressLine && (
+        {/* Live date: the deposit box below already carries the capacity line. */}
+        {seatUrgency.progressLine && !hasLiveDate && (
           <div className="mt-2.5 flex">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 border border-emerald-300/30 backdrop-blur px-2.5 py-1">
               <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
@@ -153,8 +157,30 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
           </div>
         )}
 
-        {/* PRIMARY: Secure your seat (replaces free EOI) */}
-        <div className="mt-3.5 rounded-xl bg-white/95 p-2.5 shadow-lg">
+        {/* LIVE DATE: the seat itself is the primary action (2026-09-21). With
+            7 November confirmed, this card led with the A$100 deposit and
+            offered the actual purchase as a ghost button underneath — the first
+            FOUR calls to action on the home page were all the deposit. A
+            confirmed date is sold; the deposit is for cities still forming. */}
+        {hasLiveDate && (
+          <Link
+            href={workshopDatePage(citySlug)}
+            aria-label={`Take a ${city} seat for $${workshopPriceFor(citySlug)}`}
+            onClick={() => trackEvent('location_card_seat_click', { city: citySlug })}
+            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3.5 text-[15px] font-bold text-slate-900 shadow-lg transition-transform hover:-translate-y-0.5"
+          >
+            Take a {city} seat — ${workshopPriceFor(citySlug).toLocaleString('en-AU')}
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </Link>
+        )}
+        {hasLiveDate && (
+          <p className="mt-2 text-[11px] font-medium text-white/70">
+            Not ready to pay in full? Hold your place with a refundable deposit:
+          </p>
+        )}
+
+        {/* Forming cities: the deposit IS the primary action (replaces free EOI) */}
+        <div className={`${hasLiveDate ? 'mt-1.5' : 'mt-3.5'} rounded-xl bg-white/95 p-2.5 shadow-lg`}>
           <SecureSeatCheckout
             defaultCity={citySlug}
             lockCity
@@ -163,20 +189,10 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
           />
         </div>
 
-        {/* Alternate: Complete enrol when a live date exists */}
-        {hasLiveDate && (
-          <Link
-            href={`/pricing?location=${citySlug}#pricing-cards`}
-            aria-label={`Enrol Complete in ${city} from $${CONFIG.COURSE.PRICE_ONLINE}`}
-            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/40 bg-white/10 backdrop-blur px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-white/20"
-          >
-            Or enrol Complete — early-bird locked
-            <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-          </Link>
-        )}
-
-        {/* SECONDARY: notify-me only */}
-        {done ? (
+        {/* Notify-me — forming cities only. A confirmed date has nothing left to
+            be notified about, and "notify me when Melbourne confirms" beside
+            "Saturday 7 November 2026" contradicted the card's own badge. */}
+        {hasLiveDate ? null : done ? (
           <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-emerald-400/15 border border-emerald-300/30 backdrop-blur p-3">
             <Check className="w-4 h-4 text-emerald-300 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-[13px] text-emerald-50 leading-snug">{message}</p>
@@ -184,7 +200,7 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
         ) : (
           <form onSubmit={submit} className="mt-2.5">
             <p className="mb-1.5 text-[11px] font-medium text-white/70">
-              Prefer a free reminder? Notify me when {city} confirms (secondary).
+              Or just email me when {city}&apos;s date is confirmed.
             </p>
             <div className="flex gap-2">
               <label htmlFor={`loc-email-${citySlug}`} className="sr-only">Email for {city} workshop updates</label>
@@ -212,7 +228,9 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
           </form>
         )}
         <p className="mt-2 text-[10px] text-white/50 leading-snug">
-          A${deposit} refundable deposit counts toward the {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD}-seat gate — free notify does not.
+          {hasLiveDate
+            ? `A$${deposit} deposit is fully refundable and credited toward the Complete course.`
+            : `The A$${deposit} refundable deposit counts toward the ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} enrolments that set a date — an email reminder does not.`}
         </p>
       </div>
     </div>

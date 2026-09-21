@@ -60,7 +60,7 @@ export default function InPersonTrainingPage() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-4">
               <Award className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-accent">8 CPD hours - AHPRA Aligned · Demand-gated cohorts</span>
+              <span className="text-sm font-semibold text-accent">8 CPD hours · AHPRA aligned · small groups, capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE}</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
               Master Clinical Assessment <span className="text-gradient">You Can&apos;t Learn Online</span>
