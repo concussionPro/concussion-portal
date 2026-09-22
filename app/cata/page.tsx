@@ -20,8 +20,11 @@ import { InternationalCourseSchema } from '@/components/international/Internatio
  *
  * Thin shell over CcmInternationalContent — the component /uk and the intl
  * tabs render — with AT audience copy, the CATA band replacing the OA band,
- * and heroFlow (title → training photo → price card; owner-ordered). The
- * checkout is the live geo-priced `international-online` (grants CCM online).
+ * and heroFlow + priceFirst (title → price card → course showcase).
+ * Evidence 2026-09-22 analytics: lander-dead-/cata (10 entries / 0 second
+ * page) after the 2026-09-21 under-blurb Enrol→#pricing-cards CTA — the
+ * 600px CourseShowcase still buried checkout. Same fold fix as intl Sep 18.
+ * Checkout is live geo-priced `international-online` (grants CCM online).
  */
 
 const BADGE_PATH = '/logos/cata-approved-provider-2025-2027-en.png'
@@ -121,6 +124,8 @@ export default async function CataLandingPage() {
           standardsBand,
           standardsBandTop: true,
           heroFlow: true,
+          // 2026-09-22: money above CourseShowcase (lander-dead-/cata evidence).
+          priceFirst: true,
           heroMedia: <CourseShowcase enrolHref="#pricing-cards" trialHref="/preview" />,
           cardChip: 'Canada',
           cardCpdChip: cataApproved ? `${ceus} CATA CEUs` : '8 CPD hrs',

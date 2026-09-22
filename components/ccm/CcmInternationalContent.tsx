@@ -572,16 +572,20 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
                 dead end. Price sits under the button, not in its label. Placed
                 directly under the blurb: under the stat tiles it landed at y=828 /
                 1168 — still off the first screen on a phone. */}
-            <div className="text-center mt-5">
+            <div className="text-center mt-5" data-cea-conversion="cata-hero-enrol-sep22">
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <a
-                  href="#pricing-cards"
-                  onClick={() => trackEvent('hero_cta_click', { target: 'enrol', page: 'ccm-intl-heroflow' })}
-                  className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm"
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackEvent('hero_cta_click', { target: 'enrol', page: 'ccm-intl-heroflow' })
+                    void handleEnrol('ccm-intl-checkout-email')
+                  }}
+                  disabled={enrolling || softEmailBlocks}
+                  className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Enrol now
-                  <ArrowRight className="w-4 h-4" />
-                </a>
+                  {enrolling ? 'Starting checkout…' : 'Enrol now'}
+                  {!enrolling && <ArrowRight className="w-4 h-4" />}
+                </button>
                 <Link
                   href="/preview"
                   onClick={() => trackEvent('hero_cta_click', { target: 'preview', page: 'ccm-intl-heroflow' })}
@@ -653,8 +657,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
             <div className="text-left mt-8">
               {priceFirst ? (
                 <>
-                  {/* Intl fold fix: checkout card immediately under the offer. */}
-                  {pricingSection}
+                  {/* Intl fold fix + /cata 2026-09-22: checkout above showcase. */}
+                  <div data-cea-conversion="cata-pricefirst-sep22">{pricingSection}</div>
                   {audience.heroMedia}
                 </>
               ) : (

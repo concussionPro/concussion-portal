@@ -28,9 +28,16 @@ describe('intl pricing fold conversion', () => {
     // priceFirst branch renders pricingSection before optional heroMedia
     const heroBlock = ccm.slice(ccm.indexOf('{heroFlow && ('), ccm.indexOf('{!audience.standardsBandTop'))
     expect(heroBlock.includes('priceFirst')).toBe(true)
-    expect(heroBlock.indexOf('{pricingSection}')).toBeLessThan(heroBlock.indexOf('{audience.heroMedia}'))
+    expect(heroBlock.indexOf('pricingSection')).toBeLessThan(heroBlock.indexOf('{audience.heroMedia}'))
   })
 
+
+  it('/cata enables priceFirst so checkout sits above CourseShowcase', () => {
+    const cata = readFileSync(join(process.cwd(), 'app/cata/page.tsx'), 'utf8')
+    expect(cata.includes('heroFlow: true')).toBe(true)
+    expect(cata.includes('priceFirst: true')).toBe(true)
+    expect(ccm.includes('cata-pricefirst-sep22')).toBe(true)
+  })
   it('CCM collapses secondary showcase/tools on priceFirst', () => {
     expect(ccm.includes('See inside the course (optional)')).toBe(true)
     expect(ccm.includes('Clinical tools included with enrolment')).toBe(true)
