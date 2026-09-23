@@ -10,6 +10,11 @@ import CcmInternationalContent from '@/components/ccm/CcmInternationalContent'
  * CcmInternationalContent (the international landing structure) — NOT a bespoke
  * page. Auto-currency (GB → £275), international-online checkout grants the CCM
  * 8-module course.
+ *
+ * heroFlow + priceFirst (2026-09-24 weekday pass): analytics money-path exits
+ * on /uk (8 visitors in 14d) + lander 10 entries / 8 bounce. Live smoke still
+ * showed hero CTA "Enrol — see options" (#pricing-cards) with the checkout
+ * card buried under the training photo — same fold bug /cata fixed Sep 22.
  */
 export const metadata: Metadata = {
   title: 'Concussion Clinical Mastery for Physiotherapists — Online CPD | Concussion Education Australia',
@@ -20,5 +25,16 @@ export const metadata: Metadata = {
 
 export default async function UkCoursePage() {
   const price = intlPriceForCountry(detectCountry(await headers()))
-  return <CcmInternationalContent price={{ display: price.display, code: price.code }} uk />
+  return (
+    <CcmInternationalContent
+      price={{ display: price.display, code: price.code }}
+      uk
+      audience={{
+        heroFlow: true,
+        priceFirst: true,
+        heroBlurb:
+          'Online concussion CPD for UK physiotherapists — 8 modules, start anytime, priced in GBP. Diagnosis and red-flag clearance stay with medical; you own screening, management and rehab.',
+      }}
+    />
+  )
 }

@@ -38,6 +38,12 @@ describe('intl pricing fold conversion', () => {
     expect(cata.includes('priceFirst: true')).toBe(true)
     expect(ccm.includes('cata-pricefirst-sep22')).toBe(true)
   })
+  it('/uk enables heroFlow + priceFirst so checkout replaces Enrol — see options', () => {
+    const uk = readFileSync(join(process.cwd(), 'app/uk/page.tsx'), 'utf8')
+    expect(uk.includes('heroFlow: true')).toBe(true)
+    expect(uk.includes('priceFirst: true')).toBe(true)
+  })
+
   it('CCM collapses secondary showcase/tools on priceFirst', () => {
     expect(ccm.includes('See inside the course (optional)')).toBe(true)
     expect(ccm.includes('Clinical tools included with enrolment')).toBe(true)
