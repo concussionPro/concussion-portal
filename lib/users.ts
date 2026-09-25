@@ -683,7 +683,19 @@ export async function loadWorkshopEnrolmentDates(): Promise<Map<string, string>>
                (SELECT MAX(c.purchased_at) FROM course_purchases c
                  WHERE LOWER(c.user_email) = LOWER(u.email)
                    AND (c.course_slug = ${CRM_PRACTICAL_SLUG} OR c.course_slug LIKE ${CCM_COMPLETE_SLUG_PREFIX})),
-               u.workshop_location_set_at
+               u.workshop_location_set_at,
+               -- FINAL FALLBACK (incident 2026-09-25). Without it, a paid
+               -- attendee with neither a course_purchases row nor a
+               -- workshop_location_set_at returns NO date, isWorkshopAlumnus
+               -- fails safe to "current buyer", and a PRIOR-round attendee is
+               -- swept into the next round's logistics/prep sequence. That is
+               -- what sent 10 Melbourne Round 1-3 attendees the Round 4
+               -- "your workshop is 6 weeks away" email. An account cannot be
+               -- created after its owner registered, so created_at is a safe
+               -- lower bound: if it precedes ROUND_START the person cannot be
+               -- a buyer for the current round. Same root cause as the Bailey
+               -- misclassification, fixed here instead of per-user.
+               u.created_at
              ) AS enrolled_at
       FROM users u
       WHERE u.workshop_location IS NOT NULL
