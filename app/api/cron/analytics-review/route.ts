@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { CONFIG } from '@/lib/config'
 import { sendEmail } from '@/lib/resend-client'
-import { analyze, loadWindow, reconcileFindings } from '@/lib/analytics-findings'
+import { analyze, analyzeCommercial, loadWindow, reconcileFindings } from '@/lib/analytics-findings'
 import { sql } from '@/lib/db'
 
 export const maxDuration = 60
@@ -50,7 +50,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const events = await loadWindow(14, Date.now())
-    const findings = analyze(events)
+    // Event-shaped findings, plus the customer-shaped ones the event stream
+    // cannot express (see analyzeCommercial). The loop was blind to the
+    // second kind until 2026-09-30.
+    const findings = [...analyze(events), ...(await analyzeCommercial())]
     const { opened, refreshed, resolved } = await reconcileFindings(findings)
 
     const { rows: open } = await sql`

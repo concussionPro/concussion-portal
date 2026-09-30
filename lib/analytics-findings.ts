@@ -277,6 +277,71 @@ export function analyze(events: Ev[]): Finding[] {
   return findings.sort((a, b) => a.severity - b.severity)
 }
 
+/**
+ * Findings that CANNOT come from analytics_events.
+ *
+ * `analyze()` is a pure function over the event stream, which means the loop
+ * has only ever been able to see event-shaped problems. It ran for months
+ * without noticing that a third of the paying customer base had no recorded
+ * origin, because "who bought, and where did they come from" lives in
+ * `users` and `course_purchases` — tables the loop never touched. That is a
+ * blind spot in the loop, not a missing check: no amount of event analysis
+ * could have surfaced it.
+ *
+ * Anything about CUSTOMERS rather than SESSIONS belongs here.
+ */
+export async function analyzeCommercial(): Promise<Finding[]> {
+  const out: Finding[] = []
+
+  try {
+    const { unattributedBuyers, acquisitionByRevenue } = await import('@/lib/acquisition')
+    const { total, unattributed } = await unattributedBuyers()
+
+    if (total > 0 && unattributed > 0) {
+      const pct = Math.round((unattributed / total) * 100)
+      // A handful of legacy rows is noise; a third of the customer base is a
+      // reason the channel question cannot be answered at all.
+      if (pct >= 20) {
+        out.push({
+          key: 'unattributed-buyers',
+          severity: pct >= 33 ? 1 : 2,
+          title: `${unattributed} of ${total} paying customers have no recorded origin`,
+          evidence:
+            `${pct}% of buyers carry no acquisition_source, so spend and effort cannot be ` +
+            `judged against revenue. Accounts created BY a purchase get signup_source ` +
+            `'purchase', which records that they paid, not what sent them.`,
+          proposedChange:
+            'Run the acquisition backfill (POST /api/admin/backfill-acquisition) to recover ' +
+            'origins already stamped on purchase_complete events, then check that new sales ' +
+            'arrive with acquisition_source set.',
+        })
+      }
+    }
+
+    // Which placements actually produce buyers. Reported as a SIGNAL rather
+    // than a fault — it is the answer to "what should we keep doing".
+    const byRev = (await acquisitionByRevenue()).filter(
+      (r) => r.buyers > 0 && r.source !== '(unknown)' && r.source !== '(direct)',
+    )
+    if (byRev.length) {
+      const top = byRev.slice(0, 5).map((r) => `${r.source} (${r.buyers})`).join(', ')
+      out.push({
+        key: 'acquisition-by-revenue',
+        severity: 3,
+        title: 'Referrers that have produced paying customers',
+        evidence: top,
+        proposedChange:
+          'Put effort behind the sources on this list before inventing new channels — ' +
+          'these are the only ones with a buyer attached.',
+      })
+    }
+  } catch (err) {
+    console.error('[analytics-findings] commercial checks failed:', err)
+  }
+
+  return out
+}
+
 export async function ensureFindingsTable(): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS analytics_findings (

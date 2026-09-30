@@ -922,6 +922,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.error('Failed to log purchase analytics:', err)
   }
 
+  // Promote the origin onto the USER row, not just the analytics event.
+  // Stamping it only on the event is how a third of the customer base ended
+  // up reading 'purchase' as its source: every customer report reads users,
+  // and the answer was sitting one table away. Write-once, never throws.
+  try {
+    const sm = session.metadata ?? {}
+    const { recordAcquisition } = await import('@/lib/acquisition')
+    await recordAcquisition(customerEmail, {
+      referrer: sm.attr_first_ref || sm.attr_ref || null,
+      utm: sm.attr_first_utm ? (safeJson(sm.attr_first_utm) as Record<string, string>) : null,
+    })
+  } catch (err) {
+    console.error('[acquisition] purchase stamp failed (non-fatal):', err)
+  }
+
   // Fire Google Ads conversion via GA4 Measurement Protocol (server-side backup)
   // The checkout success page also fires client-side — GA4 deduplicates by transaction_id
   try {
@@ -1369,6 +1384,13 @@ async function handleCrmPurchase(
       customerEmail,
       { sessionId: md.attr_session || null, referrer: md.attr_first_ref || md.attr_ref || null },
     )
+    // Same promotion as the CCM path above — the CRM stream is where most of
+    // this year's sales came from, so it cannot be the one left unattributed.
+    const { recordAcquisition } = await import('@/lib/acquisition')
+    await recordAcquisition(customerEmail, {
+      referrer: md.attr_first_ref || md.attr_ref || null,
+      utm: md.attr_first_utm ? (safeJson(md.attr_first_utm) as Record<string, string>) : null,
+    })
   } catch (err) {
     console.error('[crm] analytics log failed:', err)
   }
