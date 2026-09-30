@@ -69,10 +69,11 @@ describe('monitoring cron failure visibility', () => {
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    // Checks 1,2,3,4,5,7 all touch Postgres and all throw here. Check 6
-    // (cold DARK) is skipped unless COLD_OUTREACH_LIVE=true — cold bulk is
-    // intentionally off. Check 7 (engagement telemetry) was added 2026-09-29.
-    expect(body.alerts).toBe(6)
+    // Check 6 (cold DARK) is skipped unless COLD_OUTREACH_LIVE=true, and
+    // Check 7 (engagement telemetry) unless EMAIL_ENGAGEMENT_TRACKING=true.
+    // Both are intentionally off — open/click tracking is disabled in Resend
+    // for deliverability, so zero opens is the correct state, not a fault.
+    expect(body.alerts).toBe(5)
     expect(sendEmailMock).toHaveBeenCalledTimes(1)
     const emailArgs = sendEmailMock.mock.calls[0][0]
     expect(emailArgs.subject).toContain('alert')
@@ -84,7 +85,7 @@ describe('monitoring cron failure visibility', () => {
     const res = await monitoringGET(cronRequest('http://localhost/api/cron/monitoring'))
     const body = await res.json()
     expect(res.status).toBe(200)
-    expect(body.alerts).toBe(7)
+    expect(body.alerts).toBe(6)
     delete process.env.COLD_OUTREACH_LIVE
   })
 

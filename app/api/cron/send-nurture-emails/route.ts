@@ -817,14 +817,15 @@ export async function GET(request: Request) {
 
     // ── SEAT LANES GATE ─────────────────────────────────────────────────
     // 2b (deposit balance) and 2c (practical-day upgrade) both write to real
-    // paying customers with real money figures in the copy. Standing rule:
-    // no lane sends until Zac has approved the exact wording, and deploying
-    // a cron lane IS arming it. So both are dark until WORKSHOP_SEAT_LANES
-    // is set to 'true' in Vercel. Everything else about them — pricing,
-    // links, seat counts, audit keys — is live and testable while off.
-    const seatLanesLive = process.env.WORKSHOP_SEAT_LANES === 'true'
+    // paying customers with real money figures in the copy, so neither
+    // shipped live until Zac had read the exact wording. He approved all six
+    // rendered templates on 2026-09-30, so they run by default now.
+    //
+    // The flag survives as a kill switch: set WORKSHOP_SEAT_LANES=false in
+    // Vercel to take both lanes dark without a deploy.
+    const seatLanesLive = process.env.WORKSHOP_SEAT_LANES !== 'false'
     if (!seatLanesLive) {
-      console.log('[Seat lanes] 2b + 2c skipped — WORKSHOP_SEAT_LANES is not true (awaiting copy sign-off)')
+      console.log('[Seat lanes] 2b + 2c skipped — WORKSHOP_SEAT_LANES=false (kill switch)')
     }
 
     // ── 2b. Secure-seat deposit → balance request ──────────────────────

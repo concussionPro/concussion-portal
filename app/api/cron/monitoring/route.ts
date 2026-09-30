@@ -327,19 +327,27 @@ export async function GET(request: NextRequest) {
     recordCheckFailure('Check 6 (cold engine dark)', err)
   }
 
-  // ── CHECK 7: Engagement telemetry DEAD ────────────
-  // Incident 2026-09-29: open/click events stopped arriving from Resend on
-  // 11 June 2026 and nobody noticed for 110 days. `delivered`/`sent`/`bounced`
-  // kept flowing the whole time, so every dashboard looked alive while ~4,300
-  // delivered emails recorded zero opens and zero clicks. Every "no
-  // engagement" conclusion drawn in that window was unsafe — "not opened" was
-  // indistinguishable from "never recorded".
+  // ── CHECK 7: Engagement telemetry dead ────────────
+  // OFF BY DEFAULT — owner decision 2026-09-30: open/click tracking is
+  // deliberately disabled in Resend and stays that way. Open tracking adds a
+  // remote pixel and click tracking rewrites every link through a redirect
+  // domain; both cost inbox placement, which on cold B2B matters far more
+  // than an open rate. Clicks were worthless anyway (Defender/SafeLinks
+  // detonations, see the comment in the Resend webhook handler).
   //
-  // The webhook handler is type-agnostic (it inserts whatever arrives), so a
-  // one-sided outage like this can only be a Resend-side setting: domain
-  // open/click tracking toggled off, or the webhook endpoint's subscribed
-  // event list. Neither is visible from the code — hence this check.
-  try {
+  // So zero opens is the CORRECT state here, not a fault. Without this gate
+  // the check would email a false alert every single day — the same trap
+  // Check 6 fell into. Only arm it by setting EMAIL_ENGAGEMENT_TRACKING=true,
+  // and only if tracking is ever switched back on in the Resend dashboard.
+  //
+  // Kept rather than deleted because the failure it guards is real: the
+  // webhook handler is type-agnostic, so if tracking IS on and the events
+  // stop arriving, nothing else in the system notices — delivered/sent/
+  // bounced keep flowing and every dashboard looks alive.
+  const engagementTrackingOn = process.env.EMAIL_ENGAGEMENT_TRACKING === 'true'
+  if (!engagementTrackingOn) {
+    console.log('[monitoring] Check 7: skipped — EMAIL_ENGAGEMENT_TRACKING is not true (open/click tracking intentionally off)')
+  } else try {
     const { rows } = await sql`
       SELECT
         COUNT(*) FILTER (WHERE event_type = 'delivered')::int AS delivered,
@@ -373,7 +381,7 @@ export async function GET(request: NextRequest) {
             : ' — no engagement event has ever been recorded.') +
           ' Delivery events are still arriving, so sending is fine; it is the telemetry that is off. Until this is fixed, treat every "no engagement" reading as unknown, not as zero.',
         suggestion:
-          'Resend dashboard → Domains → concussion-education-australia.com → confirm Open Tracking and Click Tracking are ON. Then Webhooks → the portal endpoint → confirm email.opened and email.clicked are in its subscribed events. The handler accepts both already; nothing to deploy.',
+          'EMAIL_ENGAGEMENT_TRACKING is set, so tracking is meant to be on. Resend dashboard → Domains → concussion-education-australia.com → confirm Open Tracking and Click Tracking are ON. Then Webhooks → the portal endpoint → confirm email.opened and email.clicked are in its subscribed events. The handler accepts both already; nothing to deploy. If tracking was switched off deliberately for deliverability, unset EMAIL_ENGAGEMENT_TRACKING instead and this check goes quiet.',
       })
     }
     console.log(
