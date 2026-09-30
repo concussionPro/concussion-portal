@@ -83,3 +83,27 @@ describe('WORKSHOP_FINAL_SEATS (post-early-bird window)', () => {
     expect(crm).toContain(String(CONFIG.COURSE.CRM_TOTAL_CPD_POINTS))
   })
 })
+
+describe('WORKSHOP_DEPOSIT_BALANCE_EMAIL (first ask)', () => {
+  it('names the early-bird close date, never the rule that produces it', async () => {
+    const { WORKSHOP_DEPOSIT_BALANCE_EMAIL } = await import('@/lib/email-sequences')
+    const html = WORKSHOP_DEPOSIT_BALANCE_EMAIL.template(
+      'Lilly Nolte', 'Melbourne', 'Saturday 7 November 2026', 593, 100, '24 October',
+      'https://portal.example.com/upgrade',
+    )
+    expect(html).toContain('holds until <strong>24 October</strong>')
+    // The old copy read "holds until 14 days before the date", which made the
+    // reader compute their own deadline.
+    expect(html).not.toMatch(/days before the date/)
+  })
+
+  it('drops the early-bird sentence once the window has closed', async () => {
+    const { WORKSHOP_DEPOSIT_BALANCE_EMAIL } = await import('@/lib/email-sequences')
+    const html = WORKSHOP_DEPOSIT_BALANCE_EMAIL.template(
+      'Lilly Nolte', 'Melbourne', 'Saturday 7 November 2026', 803, 100, null,
+      'https://portal.example.com/upgrade',
+    )
+    expect(html).toMatch(/early-bird window for this date has already closed/i)
+    expect(html).not.toMatch(/rate holds until/i)
+  })
+})

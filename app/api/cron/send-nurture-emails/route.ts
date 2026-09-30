@@ -815,6 +815,18 @@ export async function GET(request: Request) {
       }
     }
 
+    // ── SEAT LANES GATE ─────────────────────────────────────────────────
+    // 2b (deposit balance) and 2c (practical-day upgrade) both write to real
+    // paying customers with real money figures in the copy. Standing rule:
+    // no lane sends until Zac has approved the exact wording, and deploying
+    // a cron lane IS arming it. So both are dark until WORKSHOP_SEAT_LANES
+    // is set to 'true' in Vercel. Everything else about them — pricing,
+    // links, seat counts, audit keys — is live and testable while off.
+    const seatLanesLive = process.env.WORKSHOP_SEAT_LANES === 'true'
+    if (!seatLanesLive) {
+      console.log('[Seat lanes] 2b + 2c skipped — WORKSHOP_SEAT_LANES is not true (awaiting copy sign-off)')
+    }
+
     // ── 2b. Secure-seat deposit → balance request ──────────────────────
     // The A$100 deposit is sold as credit toward Complete. Nothing used to ask
     // for the rest, so a deposit just sat there: the holder had paid, believed
@@ -827,7 +839,7 @@ export async function GET(request: Request) {
     // TRANSACTIONAL: they have paid money toward this seat. A marketing
     // unsubscribe must not hide the balance from them; only a hard
     // bounce/complaint suppression skips.
-    {
+    if (seatLanesLive) {
       const { openSecureSeatDeposits, secureSeatCreditCents } = await import('@/lib/secure-seat-credit')
       const { upgradePriceFor, workshopPriceFor, isEarlyBirdForLocation, workshopDatePage } = await import('@/lib/config')
       const deposits = await openSecureSeatDeposits()
@@ -878,9 +890,14 @@ export async function GET(request: Request) {
 
         const unsubToken = generateUnsubscribeToken(user.email)
         const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+        // The real close date, not the rule that produces it. "Holds until
+        // 14 days before the date" makes the reader do arithmetic to find
+        // their own deadline; "holds until 24 October" is the deadline.
+        // Past the close there is no early-bird left to hold, so say so.
+        const ebCloses = new Date(loc.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 86400000)
         const earlyBirdLabel = isEarlyBirdForLocation(user.workshopLocation)
-          ? `${CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before the date`
-          : 'the early-bird close'
+          ? ebCloses.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })
+          : null
         // The date page's PRIMARY button charges 'full-course' — the whole
         // A$1,190, not the difference. Sending an online owner there after
         // quoting them a balance would offer them a number three times the one
@@ -941,7 +958,7 @@ export async function GET(request: Request) {
     //
     // MARKETING: they have paid nothing toward a seat, so nurture_unsubscribed
     // and the weekly cap both apply, unlike the deposit-balance email above.
-    {
+    if (seatLanesLive) {
       const { upgradePriceFor } = await import('@/lib/config')
       const { openSecureSeatDeposits: openDeps } = await import('@/lib/secure-seat-credit')
       const { practicalDayAttendees } = await import('@/lib/users')

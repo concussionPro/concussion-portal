@@ -1115,7 +1115,8 @@ export const WORKSHOP_DEPOSIT_BALANCE_EMAIL = {
     date: string,
     balanceAud: number,
     depositAud: number,
-    earlyBirdEndsLabel: string,
+    /** The early-bird close date, or null once it has passed. */
+    earlyBirdEndsLabel: string | null,
     checkoutLink: string,
   ) => emailShell(`
     <h2>Hi ${greetingName(name)},</h2>
@@ -1127,7 +1128,9 @@ export const WORKSHOP_DEPOSIT_BALANCE_EMAIL = {
       &#8226; Balance now: <strong>A$${balanceAud.toLocaleString('en-AU')}</strong><br><br>
       Your deposit is credited automatically at checkout — you will see it on the payment page.
     </div>
-    <p>The early-bird rate holds until <strong>${earlyBirdEndsLabel}</strong>. After that the balance goes up, so it is worth doing before then.</p>
+    ${earlyBirdEndsLabel
+      ? `<p>The early-bird rate holds until <strong>${earlyBirdEndsLabel}</strong>. After that the balance goes up, so it is worth doing before then.</p>`
+      : `<p>That figure is the standard rate — the early-bird window for this date has already closed.</p>`}
     <center><a href="${checkoutLink}" class="cta-btn">Confirm my seat</a></center>
     <p class="ps">Changed your mind? The deposit is refundable — just reply and I will take care of it.</p>
     <div class="sig">Zac Lewis<br>Osteopath &middot; Concussion Education Australia</div>
