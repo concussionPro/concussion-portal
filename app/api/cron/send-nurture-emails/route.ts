@@ -1044,6 +1044,12 @@ export async function GET(request: Request) {
             )
           : (tpl as typeof WORKSHOP_UPGRADE_OFFER).template(
               user.name, loc.city, loc.date, priceAud, ebLabel, regularAud, link, stream,
+              // Owner 2026-09-30: no incentive rides on these. The only levers
+              // are the two true facts — the early-bird deadline and how many
+              // seats are actually left — so the live count goes in the copy.
+              // undefined when the roster failed to load, which drops the
+              // sentence rather than substituting capacity for availability.
+              seatsLeft,
             )
         ).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 

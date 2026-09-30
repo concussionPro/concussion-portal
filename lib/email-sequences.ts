@@ -1073,8 +1073,16 @@ function rydgesBenefitsBlock(city: string): string {
  */
 export const WORKSHOP_UPGRADE_OFFER = {
   subject: (city: string) => `Your ${city} practical day is confirmed`,
+  /**
+   * `seatsLeft` is the live roster count, or null when it could not be read.
+   * No incentive rides on this email (owner decision 2026-09-30) — the levers
+   * are the two facts that are already true: the early-bird deadline and how
+   * many seats are actually left. So the count has to be the real one or
+   * absent; never the capacity dressed up as availability.
+   */
   template: (name: string, city: string, date: string, priceAud: number,
-             earlyBirdLabel: string, regularAud: number, link: string, stream: 'ccm' | 'crm') => emailShell(`
+             earlyBirdLabel: string, regularAud: number, link: string, stream: 'ccm' | 'crm',
+             seatsLeft?: number | null) => emailShell(`
     <h2>Hi ${greetingName(name)},</h2>
     <p>You own the online course and nominated <strong>${city}</strong> for the practical day. That date is now confirmed:</p>
     <div class="callout">
@@ -1082,7 +1090,9 @@ export const WORKSHOP_UPGRADE_OFFER = {
       &#8226; A full day of supervised practice — the assessments run on each other, corrected<br>
       &#8226; ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} additional CPD hours, taking you to ${stream === 'crm' ? CONFIG.COURSE.CRM_TOTAL_CPD_POINTS : CONFIG.COURSE.TOTAL_CPD_POINTS}<br>
       &#8226; Catered, with the practical handbook included<br>
-      &#8226; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places
+      &#8226; ${typeof seatsLeft === 'number'
+            ? `<strong>${seatsLeft} of ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places still open</strong>`
+            : `${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places`}
     </div>
     <p>Because you already own the online modules, you pay the difference only:</p>
     <p style="font-size: 26px; font-weight: 700; margin: 6px 0 2px;">A$${priceAud.toLocaleString('en-AU')}</p>
@@ -1097,10 +1107,14 @@ export const WORKSHOP_UPGRADE_OFFER = {
 export const WORKSHOP_UPGRADE_LAST_CALL = {
   subject: (city: string) => `${city} early-bird closes this week`,
   template: (name: string, city: string, date: string, priceAud: number,
-             earlyBirdLabel: string, regularAud: number, link: string, stream: 'ccm' | 'crm') => emailShell(`
+             earlyBirdLabel: string, regularAud: number, link: string, stream: 'ccm' | 'crm',
+             seatsLeft?: number | null) => emailShell(`
     <h2>Hi ${greetingName(name)},</h2>
     <p>Short note: the early-bird rate for the <strong>${city}</strong> practical day on <strong>${date}</strong> closes <strong>${earlyBirdLabel}</strong>.</p>
-    <p>Your upgrade is <strong>A$${priceAud.toLocaleString('en-AU')}</strong> until then, and <strong>A$${regularAud.toLocaleString('en-AU')}</strong> after.</p>
+    <p>Your upgrade is <strong>A$${priceAud.toLocaleString('en-AU')}</strong> until then, and <strong>A$${regularAud.toLocaleString('en-AU')}</strong> after.${
+      typeof seatsLeft === 'number'
+        ? ` There ${seatsLeft === 1 ? 'is <strong>one seat</strong>' : `are <strong>${seatsLeft} seats</strong>`} left.`
+        : ''}</p>
     <center><a href="${link}" class="cta-btn">Take a seat before ${earlyBirdLabel}</a></center>
     <p class="ps">If the date does not work, reply and I will let you know when the next one lands — you keep the online course either way.</p>
     <div class="sig">Zac</div>

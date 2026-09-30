@@ -107,3 +107,45 @@ describe('WORKSHOP_DEPOSIT_BALANCE_EMAIL (first ask)', () => {
     expect(html).not.toMatch(/rate holds until/i)
   })
 })
+
+describe('upgrade emails state the real seat count (no incentive, owner 2026-09-30)', () => {
+  it('OFFER shows seats remaining, not capacity, when the roster loaded', async () => {
+    const { WORKSHOP_UPGRADE_OFFER } = await import('@/lib/email-sequences')
+    const html = WORKSHOP_UPGRADE_OFFER.template(
+      'Sonya', 'Melbourne', 'Sat 7 Nov', 693, '24 October', 903, link, 'ccm', 10,
+    )
+    expect(html).toContain('10 of 12 places still open')
+  })
+
+  it('OFFER falls back to capacity when the roster could not be read', async () => {
+    const { WORKSHOP_UPGRADE_OFFER } = await import('@/lib/email-sequences')
+    const html = WORKSHOP_UPGRADE_OFFER.template(
+      'Sonya', 'Melbourne', 'Sat 7 Nov', 693, '24 October', 903, link, 'ccm', null,
+    )
+    // Never dress capacity up as availability.
+    expect(html).not.toMatch(/still open/)
+    expect(html).toContain(`${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places`)
+  })
+
+  it('LAST CALL adds the count beside the deadline and handles one seat', async () => {
+    const { WORKSHOP_UPGRADE_LAST_CALL } = await import('@/lib/email-sequences')
+    expect(WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 4))
+      .toContain('<strong>4 seats</strong> left')
+    expect(WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 1))
+      .toContain('<strong>one seat</strong> left')
+    expect(WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', null))
+      .not.toMatch(/left\./)
+  })
+
+  it('no upgrade email offers a discount, bonus or incentive', async () => {
+    const m = await import('@/lib/email-sequences')
+    const all = [
+      m.WORKSHOP_UPGRADE_OFFER.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 10),
+      m.WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 4),
+      m.WORKSHOP_FINAL_SEATS.template('S', 'Melbourne', 'd', 903, 11, 9, link, 'ccm'),
+    ]
+    for (const html of all) {
+      expect(html).not.toMatch(/\b(discount|bonus|free (month|access|upgrade)|promo code|coupon|% off)\b/i)
+    }
+  })
+})
