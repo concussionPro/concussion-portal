@@ -147,6 +147,61 @@ export default function Oa2026Page() {
           </Link>
         </div>
 
+        {/* THE CLINICAL SUITE — the answer to "what changes in my practice?"
+            The session could not make this argument: the submitted disclosure
+            says no products are sold during it. The page behind the QR is
+            where it belongs, and it is the part of the offer that is not a
+            course at all. Framed as instruments Zac built for his own
+            caseload, because that is what they are — and described by what
+            they DO rather than by a superiority claim, which AHPRA
+            advertising rules would require us to substantiate. */}
+        <div className="card card-visible rounded-2xl p-6 md:p-7 mb-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent mb-2">
+            Included with either option
+          </p>
+          <h2 className="text-xl font-bold text-foreground mb-1.5">
+            The clinical suite
+          </h2>
+          <p className="text-[13.5px] text-muted-foreground mb-5 leading-relaxed">
+            I built these for my own caseload, because the things I needed did not exist. They
+            are part of the course, not an upsell.
+          </p>
+
+          <div className="space-y-4">
+            {[
+              {
+                name: 'Pre-season baseline platform',
+                body: 'A whole squad self-administers the SCAT6 baseline sections remotely — about five minutes each, no appointments. A report per athlete comes back to your clinic and is stored, so the re-test after an injury compares against their own number instead of a population norm.',
+              },
+              {
+                name: 'Threshold-guided trainer + clinician dashboard',
+                body: 'Sub-symptom aerobic prescription is the part patients get wrong alone. The band holds them at 80–90% of their measured threshold at home, and the session comes back to you — whether they stayed in band, what symptoms did afterwards, and whether the threshold has moved. Three months included.',
+              },
+              {
+                name: 'SCAT6, SCOAT6 and Child SCAT6, scored as you go',
+                body: 'The full forms in the browser, totalled automatically, exported as a PDF for the medical record. No paper, no arithmetic errors at the end of a long consult.',
+              },
+              {
+                name: 'BCTT calculator and the clinical toolkit',
+                body: 'The exertion protocol worked out for you, plus the flowcharts, referral thresholds and patient handouts from the course — the same ones I use in clinic.',
+              },
+            ].map((t) => (
+              <div key={t.name} className="flex gap-3">
+                <Check
+                  className="w-4 h-4 text-accent flex-shrink-0 mt-[3px]"
+                  strokeWidth={2.5}
+                />
+                <div>
+                  <p className="text-[14.5px] font-bold text-foreground leading-snug">{t.name}</p>
+                  <p className="text-[13px] text-muted-foreground mt-0.5 leading-relaxed">
+                    {t.body}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="flex items-start gap-2.5 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3">
           <ShieldCheck className="w-5 h-5 text-teal-700 flex-shrink-0 mt-0.5" />
           <p className="text-[13px] text-slate-700 leading-relaxed">
