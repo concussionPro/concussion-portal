@@ -93,13 +93,15 @@ vi.mock('@/lib/config', () => ({
         status: 'confirmed',
       },
     },
-    WORKSHOP: { CONFIRMATION_THRESHOLD: 10, EARLY_BIRD_DAYS_BEFORE: 14 },
-    COURSE: { PRICE_ONLINE: 497, PRICE_EARLY_BIRD: 1190, PRICE_SECURE_SEAT: 100 },
+    WORKSHOP: { CONFIRMATION_THRESHOLD: 10, EARLY_BIRD_DAYS_BEFORE: 14, CAPACITY_PER_COURSE: 12 },
+    COURSE: { PRICE_ONLINE: 497, PRICE_EARLY_BIRD: 1190, PRICE_REGULAR: 1400, PRICE_SECURE_SEAT: 100,
+      IN_PERSON_CPD_POINTS: 8, TOTAL_CPD_POINTS: 16, CRM_TOTAL_CPD_POINTS: 16 },
     CONTACT_EMAIL: 'zac@test.local',
   },
   // Used by the deposit-balance block (section 2b) to price the balance from
   // the same helpers the checkout charges from.
   upgradePriceFor: () => 693,
+  PRICE_REGULAR: 1400,
   workshopPriceFor: () => 1190,
   isEarlyBirdForLocation: () => true,
   workshopDatePage: (slug: string) => `/courses/${slug}`,

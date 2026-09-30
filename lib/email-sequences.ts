@@ -1050,6 +1050,63 @@ function rydgesBenefitsBlock(city: string): string {
  * Transactional, not marketing: they have paid money toward a seat and this
  * tells them what is outstanding and by when.
  */
+/**
+ * Online owner → practical day. The upgrade ask.
+ *
+ * 12 people owned an online course with no practical seat and nothing ever
+ * asked them to upgrade (found 2026-09-30, with Melbourne Round 4 at 3 of 12
+ * seats and four of those twelve having already nominated the city). The
+ * deposit-balance email only reaches deposit holders; this is the rest.
+ *
+ * Anchored on the EARLY-BIRD CLOSE, not the workshop date, because that is the
+ * real decision point: the upgrade is A$693 before it and A$903 after, and
+ * that deadline is genuine — PRICE_REGULAR is actually charged in the final
+ * window (ACL). Two touches, first inside four weeks of the deadline, last
+ * call inside a week. Nothing after it: once the price has gone up the ask has
+ * changed and chasing is just noise.
+ *
+ * Stream-aware. The practical day is SHARED, so a CRM online owner is offered
+ * the same room via crm-practical.
+ *
+ * MARKETING, not transactional — unlike the deposit balance, these people have
+ * paid nothing toward a seat. Respects nurture_unsubscribed and the weekly cap.
+ */
+export const WORKSHOP_UPGRADE_OFFER = {
+  subject: (city: string) => `Your ${city} practical day is confirmed`,
+  template: (name: string, city: string, date: string, priceAud: number,
+             earlyBirdLabel: string, regularAud: number, link: string, stream: 'ccm' | 'crm') => emailShell(`
+    <h2>Hi ${greetingName(name)},</h2>
+    <p>You own the online course and nominated <strong>${city}</strong> for the practical day. That date is now confirmed:</p>
+    <div class="callout">
+      <strong>${city} &middot; ${date}</strong><br><br>
+      &#8226; A full day of supervised practice — the assessments run on each other, corrected<br>
+      &#8226; ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} additional CPD hours, taking you to ${stream === 'crm' ? CONFIG.COURSE.CRM_TOTAL_CPD_POINTS : CONFIG.COURSE.TOTAL_CPD_POINTS}<br>
+      &#8226; Catered, with the practical handbook included<br>
+      &#8226; ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places
+    </div>
+    <p>Because you already own the online modules, you pay the difference only:</p>
+    <p style="font-size: 26px; font-weight: 700; margin: 6px 0 2px;">A$${priceAud.toLocaleString('en-AU')}</p>
+    <p style="margin: 0 0 14px; font-size: 13px; color: #64748b;">Early-bird rate, held until <strong>${earlyBirdLabel}</strong>. After that the upgrade is A$${regularAud.toLocaleString('en-AU')}.</p>
+    <center><a href="${link}" class="cta-btn">Take a seat</a></center>
+    <p class="ps">The day builds directly on the online modules, so it is worth finishing them first — but you do not need to have finished to book.</p>
+    <div class="sig">Zac Lewis<br>Osteopath &middot; Concussion Education Australia</div>
+  `, undefined, stream === 'crm' ? 'ep' : 'ccm'),
+}
+
+/** Last call — same audience, only those who have not taken a seat. */
+export const WORKSHOP_UPGRADE_LAST_CALL = {
+  subject: (city: string) => `${city} early-bird closes this week`,
+  template: (name: string, city: string, date: string, priceAud: number,
+             earlyBirdLabel: string, regularAud: number, link: string, stream: 'ccm' | 'crm') => emailShell(`
+    <h2>Hi ${greetingName(name)},</h2>
+    <p>Short note: the early-bird rate for the <strong>${city}</strong> practical day on <strong>${date}</strong> closes <strong>${earlyBirdLabel}</strong>.</p>
+    <p>Your upgrade is <strong>A$${priceAud.toLocaleString('en-AU')}</strong> until then, and <strong>A$${regularAud.toLocaleString('en-AU')}</strong> after.</p>
+    <center><a href="${link}" class="cta-btn">Take a seat before ${earlyBirdLabel}</a></center>
+    <p class="ps">If the date does not work, reply and I will let you know when the next one lands — you keep the online course either way.</p>
+    <div class="sig">Zac</div>
+  `, undefined, stream === 'crm' ? 'ep' : 'ccm'),
+}
+
 export const WORKSHOP_DEPOSIT_BALANCE_EMAIL = {
   subject: 'Your seat is held — here is the balance',
   template: (

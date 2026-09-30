@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
-import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, WORKSHOP_DEPOSIT_BALANCE_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, WORKSHOP_DEPOSIT_BALANCE_EMAIL, WORKSHOP_UPGRADE_OFFER, WORKSHOP_UPGRADE_LAST_CALL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { isCrmAbandonedCourseType } from '@/lib/abandoned-checkout'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
@@ -869,6 +869,89 @@ export async function GET(request: Request) {
           emailsSent++
           incrementWeeklySent(user.email)
           console.log(`[Deposit balance] A$${balanceAud} owing → ${redact(user.email)}`)
+        }
+      }
+    }
+
+    // ── 2c. Online owner → practical day upgrade ───────────────────────
+    // Nothing ever asked an online owner to take a seat. On 2026-09-30
+    // Melbourne Round 4 sat at 3 of 12 with twelve online owners holding no
+    // seat, four of them having already nominated the city.
+    //
+    // Anchored on the EARLY-BIRD CLOSE rather than the workshop date: that is
+    // the real decision point, the price genuinely changes there, and it gives
+    // an honest deadline. Two touches — inside four weeks, then inside one
+    // week — and nothing after, because once the price has risen the ask has
+    // changed.
+    //
+    // MARKETING: they have paid nothing toward a seat, so nurture_unsubscribed
+    // and the weekly cap both apply, unlike the deposit-balance email above.
+    {
+      const { upgradePriceFor, workshopDatePage } = await import('@/lib/config')
+      const { openSecureSeatDeposits: openDeps } = await import('@/lib/secure-seat-credit')
+      const depositHolders = new Set((await openDeps()).map(d => d.email.toLowerCase()))
+      for (const user of users) {
+        if (!user.workshopLocation) continue
+        if (holdsWorkshopSeat(user)) continue          // already in the room
+        if (user.nurtureUnsubscribed) continue          // marketing, so this applies
+        if (suppressedEmails.has(user.email.toLowerCase())) continue
+        if ((recipientSendsThisWeek.get(user.email.toLowerCase()) ?? 0) >= MAX_PER_USER_PER_WEEK) continue
+
+        const ownsOnline = user.accessLevel === 'online-only' || ownsCrmCourse(user.email)
+        if (!ownsOnline) continue                       // nothing to upgrade FROM
+        // A deposit holder is already being asked for their balance by 2b, and
+        // that email quotes a figure with their A$100 credited. Sending this
+        // one too would quote a different, higher number for the same seat.
+        if (depositHolders.has(user.email.toLowerCase())) continue
+
+        const loc = Object.values(CONFIG.LOCATIONS).find(
+          l => l.slug === user.workshopLocation && l.status === 'confirmed' && l.dateObj,
+        )
+        if (!loc || !loc.dateObj || loc.dateObj.getTime() <= now.getTime()) continue
+
+        // Days until the early-bird closes, which is the deadline that matters.
+        const earlyBirdEnds = new Date(loc.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 86400000)
+        const daysToEb = Math.floor((earlyBirdEnds.getTime() - now.getTime()) / 86400000)
+        if (daysToEb <= 0) continue                     // price has risen; the ask has changed
+
+        const step = daysToEb <= 7 ? 'last_call' : daysToEb <= 28 ? 'offer' : null
+        if (!step) continue
+
+        // A CRM online owner who is not also a CCM online buyer gets the EP
+        // framing and the shared day via crm-practical.
+        const stream: 'ccm' | 'crm' = user.accessLevel === 'online-only' ? 'ccm' : 'crm'
+        const priceAud = upgradePriceFor(user.workshopLocation)
+        const regularAud = CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+        const ebLabel = earlyBirdEnds.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })
+
+        const key = `workshop_upgrade_${step}_${user.id}`
+        const { rowCount: ins } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${key}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (ins === 0) continue
+
+        const unsubToken = generateUnsubscribeToken(user.email)
+        const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+        const link = `${baseUrl}${workshopDatePage(user.workshopLocation)}`
+        const tpl = step === 'last_call' ? WORKSHOP_UPGRADE_LAST_CALL : WORKSHOP_UPGRADE_OFFER
+
+        const html = tpl.template(user.name, loc.city, loc.date, priceAud, ebLabel, regularAud, link, stream)
+          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+
+        const sent = await sendOrRollbackAudit({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: tpl.subject(loc.city),
+          html,
+          tags: [{ name: 'sequence', value: 'workshop-upgrade' }, { name: 'step', value: step },
+                 { name: 'stream', value: stream }],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }, key, `Workshop upgrade ${step}`)
+        if (sent) {
+          emailsSent++
+          incrementWeeklySent(user.email)
+          console.log(`[Workshop upgrade] ${step} · ${stream} · ${daysToEb}d to early-bird → ${redact(user.email)}`)
         }
       }
     }
