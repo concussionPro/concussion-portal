@@ -589,6 +589,7 @@ export async function countSecureSeatDeposits(location: string): Promise<number>
         INNER JOIN course_purchases cp
           ON LOWER(cp.user_email) = LOWER(u.email)
          AND cp.course_slug = ${slug}
+         AND cp.refunded_at IS NULL
         WHERE u.workshop_location = ${location}
           AND COALESCE(cp.purchased_at, u.workshop_location_set_at, u.created_at) >= ${roundStart}
           AND u.is_test IS NOT TRUE
@@ -601,6 +602,7 @@ export async function countSecureSeatDeposits(location: string): Promise<number>
         INNER JOIN course_purchases cp
           ON LOWER(cp.user_email) = LOWER(u.email)
          AND cp.course_slug = ${slug}
+         AND cp.refunded_at IS NULL
         WHERE u.workshop_location = ${location}
           AND u.is_test IS NOT TRUE
           AND COALESCE(u.signup_source, '') <> ${COMP_SOURCE}

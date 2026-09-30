@@ -54,6 +54,15 @@ async function ensureTable(): Promise<void> {
   // CRM, USD) went live 2026-07-26 and every row before this migration was
   // charged in AUD.
   await sql`ALTER TABLE course_purchases ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'AUD'`
+  // Secure-seat deposit lifecycle (2026-09-29). Added HERE rather than in
+  // lib/secure-seat-credit.ts because lib/users.ts reads these columns with
+  // its own raw SQL in the seat-gate count — a caller that never touches the
+  // credit module would otherwise 42703 on a fresh database.
+  //   credited_at — consumed against a Complete / upgrade purchase
+  //   refunded_at — deposit refunded: stops being worth money AND stops
+  //                 occupying one of the twelve seats
+  await sql`ALTER TABLE course_purchases ADD COLUMN IF NOT EXISTS credited_at TIMESTAMPTZ`
+  await sql`ALTER TABLE course_purchases ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMPTZ`
   tableEnsured = true
 }
 

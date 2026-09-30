@@ -40,13 +40,8 @@ export function isCreditableCourseType(t: string): t is CreditableCourseType {
   return (CREDITABLE_COURSE_TYPES as readonly string[]).includes(t)
 }
 
-let columnEnsured = false
-async function ensureCreditedColumn(): Promise<void> {
-  if (columnEnsured) return
-  await ensureCoursePurchasesTable()
-  await sql`ALTER TABLE course_purchases ADD COLUMN IF NOT EXISTS credited_at TIMESTAMPTZ`
-  columnEnsured = true
-}
+/** credited_at / refunded_at are created by ensureCoursePurchasesTable(). */
+const ensureCreditedColumn = ensureCoursePurchasesTable
 
 /**
  * Cents of deposit credit this email can still apply, or 0.
@@ -69,6 +64,7 @@ export async function secureSeatCreditCents(email?: string | null): Promise<numb
       WHERE LOWER(user_email) = LOWER(${email})
         AND course_slug = ${SECURE_SEAT_SLUG}
         AND credited_at IS NULL
+        AND refunded_at IS NULL
         AND UPPER(COALESCE(currency, 'AUD')) = 'AUD'
       ORDER BY purchased_at
       LIMIT 1
@@ -104,6 +100,7 @@ export async function consumeSecureSeatCredit(
         WHERE LOWER(user_email) = LOWER(${email})
           AND course_slug = ${SECURE_SEAT_SLUG}
           AND credited_at IS NULL
+          AND refunded_at IS NULL
           AND UPPER(COALESCE(currency, 'AUD')) = 'AUD'
         ORDER BY purchased_at
         LIMIT 1
@@ -131,7 +128,8 @@ export async function openSecureSeatDeposits(): Promise<
     const { rows } = await sql<{ user_email: string; amount_aud: number; purchased_at: string }>`
       SELECT user_email, amount_aud, purchased_at
       FROM course_purchases
-      WHERE course_slug = ${SECURE_SEAT_SLUG} AND credited_at IS NULL
+      WHERE course_slug = ${SECURE_SEAT_SLUG}
+        AND credited_at IS NULL AND refunded_at IS NULL
       ORDER BY purchased_at
     `
     return rows.map(r => ({
@@ -142,5 +140,30 @@ export async function openSecureSeatDeposits(): Promise<
   } catch (err) {
     console.error('[secure-seat-credit] openSecureSeatDeposits failed:', err)
     return []
+  }
+}
+
+/**
+ * Void a deposit that has been refunded. Called from the refund webhook.
+ *
+ * Stamps `refunded_at`, which removes the row from both the credit lookup and
+ * the seat-gate count — a refunded deposit must stop being worth A$100 at
+ * checkout AND stop occupying one of the twelve seats.
+ */
+export async function voidSecureSeatDeposit(email: string): Promise<boolean> {
+  try {
+    await ensureCreditedColumn()
+    const { rowCount } = await sql`
+      UPDATE course_purchases
+      SET refunded_at = NOW()
+      WHERE LOWER(user_email) = LOWER(${email})
+        AND course_slug = ${SECURE_SEAT_SLUG}
+        AND refunded_at IS NULL
+    `
+    if (rowCount) console.log(`[secure-seat-credit] voided refunded deposit for ${email}`)
+    return Boolean(rowCount)
+  } catch (err) {
+    console.error('[secure-seat-credit] FAILED TO VOID refunded deposit:', email, err)
+    return false
   }
 }

@@ -529,9 +529,24 @@ export async function createCrmCheckoutSession({
   attribution?: Record<string, string>
 }): Promise<Stripe.Checkout.Session> {
   const { crmPriceCents, crmProductName, crmInvoiceDescription, crmIsEarlyBird } = await import('@/lib/crm-course')
-  const unitAmount = crmPriceCents(tier, location)
+  let unitAmount = crmPriceCents(tier, location)
   const isEarlyBird = crmIsEarlyBird(location)
   const productType = tier === 'upgrade' ? 'crm-upgrade' : 'crm-course'
+
+  // The practical day is SHARED between CCM and CRM — one room, one seat. A
+  // deposit holder who then buys the CRM tier that includes that day has paid
+  // toward the same seat, so the same credit applies. 'online' is excluded:
+  // it buys no practical day, and the deposit explicitly does not include
+  // online modules.
+  let crmSecureSeatCredit = 0
+  if ((tier === 'complete' || tier === 'upgrade') && customerEmail) {
+    const credit = await secureSeatCreditCents(customerEmail)
+    if (credit > 0) {
+      const MIN_CHARGE_CENTS = 100
+      crmSecureSeatCredit = Math.min(credit, Math.max(0, unitAmount - MIN_CHARGE_CENTS))
+      unitAmount -= crmSecureSeatCredit
+    }
+  }
 
   return getStripe().checkout.sessions.create({
     mode: 'payment',
@@ -561,6 +576,8 @@ export async function createCrmCheckoutSession({
       // 'crm' stream marker so analytics + refunds never confuse it with CCM.
       stream: 'crm',
       tier,
+      // Same key the CCM lane uses — the webhook consumes on either stream.
+      secureSeatCreditAppliedCents: String(crmSecureSeatCredit),
       location: location || '',
       isEarlyBird: isEarlyBird ? 'true' : 'false',
       currency: 'aud',

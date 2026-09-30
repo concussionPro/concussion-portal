@@ -61,6 +61,21 @@ describe('secure-seat deposit credit', () => {
     expect(await consumeSecureSeatCredit('a@b.com', 'cs_1')).toBe(false)
   })
 
+  it('a refunded deposit is worth nothing (the SQL filters refunded_at)', async () => {
+    // The deposit is advertised refundable. Without the refunded_at filter the
+    // holder keeps a A$100 credit for money already returned to them.
+    const { secureSeatCreditCents } = await load()
+    expect(await secureSeatCreditCents('refunded@b.com')).toBe(0)
+  })
+
+  it('voiding a refunded deposit is idempotent', async () => {
+    const { voidSecureSeatDeposit } = await load()
+    updateRowCount = 1
+    expect(await voidSecureSeatDeposit('a@b.com')).toBe(true)
+    updateRowCount = 0
+    expect(await voidSecureSeatDeposit('a@b.com')).toBe(false)
+  })
+
   it('only full-course and workshop-upgrade are creditable', async () => {
     const { isCreditableCourseType } = await load()
     expect(isCreditableCourseType('full-course')).toBe(true)

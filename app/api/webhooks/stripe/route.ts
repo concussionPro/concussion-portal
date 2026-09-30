@@ -684,6 +684,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // CRM-specific invoice + /ep-course welcome. Returns early.
   if (session.metadata?.productType === 'crm-course' || session.metadata?.productType === 'crm-upgrade') {
     await handleCrmPurchase(session, customerEmail, customerName)
+    // The CRM lane returns early, so the shared consumption below is never
+    // reached — consume here too, or a deposit credited against a CRM
+    // practical-day tier stays creditable for a second purchase.
+    const crmCredit = Number(session.metadata?.secureSeatCreditAppliedCents ?? '0')
+    if (crmCredit > 0 && customerEmail) {
+      const { consumeSecureSeatCredit } = await import('@/lib/secure-seat-credit')
+      await consumeSecureSeatCredit(customerEmail, session.id)
+    }
     return
   }
 
@@ -2436,6 +2444,18 @@ async function revokeEntitlementsForCharge(charge: Stripe.Charge, email: string,
         tags: [{ name: 'type', value: 'revocation-unattributed' }],
       })
     } catch { /* alert best-effort */ }
+    return
+  }
+
+  // A refunded secure-seat deposit must stop being worth anything. Left
+  // alone it keeps credited_at NULL, so the holder would get A$100 off a
+  // later Complete purchase for money already returned — and the row would
+  // keep occupying one of the twelve seats in countSecureSeatDeposits().
+  // The deposit is advertised as refundable, so this path is expected.
+  if (courseType === 'secure-seat') {
+    const { voidSecureSeatDeposit } = await import('@/lib/secure-seat-credit')
+    await voidSecureSeatDeposit(email)
+    console.log(`[revocation] ${cause} on secure-seat deposit for ${redact(email)} — deposit voided, no access change`)
     return
   }
 
