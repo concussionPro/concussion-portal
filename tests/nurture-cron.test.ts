@@ -57,6 +57,10 @@ vi.mock('@/lib/users', () => ({
   // fallback to created_at. (Missing from the mock, so every run threw before
   // it sent anything.)
   loadWorkshopEnrolmentDates: async () => new Map<string, string>(),
+  // The post-early-bird upgrade touch quotes a live seat count, so the cron
+  // reads the roster. Empty roster = every seat free; no fixture user is an
+  // attendee.
+  practicalDayAttendees: async () => [],
 }))
 
 // CRM (EP stream) ownership. The cron FAILS CLOSED if this returns null, so the

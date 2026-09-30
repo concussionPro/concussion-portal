@@ -1134,6 +1134,66 @@ export const WORKSHOP_DEPOSIT_BALANCE_EMAIL = {
   `),
 }
 
+/**
+ * Second and final ask for an unpaid deposit.
+ *
+ * WORKSHOP_DEPOSIT_BALANCE_EMAIL fires once, when the city confirms. If the
+ * holder does nothing, nothing chased them — the deposit sat there and the
+ * seat was held out of the room for a person who never came. This is the
+ * chase, sent close to the date, and it states the hold deadline plainly so
+ * the seat can be released to someone else afterwards.
+ */
+export const WORKSHOP_BALANCE_REMINDER = {
+  subject: (city: string) => `${city}: your seat is still held, balance outstanding`,
+  template: (
+    name: string,
+    city: string,
+    date: string,
+    balanceAud: number,
+    depositAud: number,
+    daysToDate: number,
+    checkoutLink: string,
+  ) => emailShell(`
+    <h2>Hi ${greetingName(name)},</h2>
+    <p>The <strong>${city}</strong> practical day is on <strong>${date}</strong> — ${daysToDate} day${daysToDate === 1 ? '' : 's'} away — and your A$${depositAud} deposit is still holding a place.</p>
+    <p>The balance outstanding is <strong>A$${balanceAud.toLocaleString('en-AU')}</strong>, with your deposit credited automatically at checkout.</p>
+    <center><a href="${checkoutLink}" class="cta-btn">Confirm my seat</a></center>
+    <p>I need to know either way before the day: catering, the handbook and the assessment pairs are all set from the confirmed list. If I have not heard from you by then I will release the place and refund your deposit — no hard feelings, and you can take a later round.</p>
+    <p class="ps">If the date has stopped working, just reply and say so. A refund takes a minute.</p>
+    <div class="sig">Zac Lewis<br>Osteopath &middot; Concussion Education Australia</div>
+  `),
+}
+
+/**
+ * The window nothing covered: early-bird has closed but the workshop has not
+ * run. For Melbourne Round 4 that is 24 Oct → 7 Nov — a fortnight of silence
+ * with seats still empty, because the upgrade lane is anchored on the
+ * early-bird close and stops there.
+ *
+ * The ask genuinely has changed by now: the price has risen, so this leads
+ * with the room rather than the rate. The seat count is read live from the
+ * roster and only stated when it is true.
+ */
+export const WORKSHOP_FINAL_SEATS = {
+  subject: (city: string) => `${city} practical day — seats still open`,
+  template: (name: string, city: string, date: string, priceAud: number,
+             daysToDate: number, seatsLeft: number, link: string, stream: 'ccm' | 'crm') => emailShell(`
+    <h2>Hi ${greetingName(name)},</h2>
+    <p>The <strong>${city}</strong> practical day runs on <strong>${date}</strong>, ${daysToDate} day${daysToDate === 1 ? '' : 's'} from now, and there ${seatsLeft === 1 ? 'is one seat' : `are ${seatsLeft} seats`} left in the room.</p>
+    <p>You own the online course, so the day is the part that is still missing: running the assessments on another clinician, being corrected while you do it, and leaving able to do it on Monday.</p>
+    <div class="callout">
+      <strong>${city} &middot; ${date}</strong><br><br>
+      &#8226; ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} additional CPD hours, taking you to ${stream === 'crm' ? CONFIG.COURSE.CRM_TOTAL_CPD_POINTS : CONFIG.COURSE.TOTAL_CPD_POINTS}<br>
+      &#8226; Catered, with the practical handbook included<br>
+      &#8226; A$${priceAud.toLocaleString('en-AU')} to upgrade — the difference only
+    </div>
+    <p>The early-bird rate has closed, so this is the standard upgrade. I am sending it because the seats are real and the date is close, not to press you.</p>
+    <center><a href="${link}" class="cta-btn">Take one of the remaining seats</a></center>
+    <p class="ps">If this round does not suit, reply and I will flag you for the next one — you keep the online course regardless.</p>
+    <div class="sig">Zac Lewis<br>Osteopath &middot; Concussion Education Australia</div>
+  `, undefined, stream === 'crm' ? 'ep' : 'ccm'),
+}
+
 export const WORKSHOP_LOGISTICS_EMAIL = {
   daysBefore: 42,
   subject: 'Your workshop is 6 weeks away — what to know',

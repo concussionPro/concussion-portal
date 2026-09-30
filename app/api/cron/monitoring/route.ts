@@ -327,6 +327,62 @@ export async function GET(request: NextRequest) {
     recordCheckFailure('Check 6 (cold engine dark)', err)
   }
 
+  // ── CHECK 7: Engagement telemetry DEAD ────────────
+  // Incident 2026-09-29: open/click events stopped arriving from Resend on
+  // 11 June 2026 and nobody noticed for 110 days. `delivered`/`sent`/`bounced`
+  // kept flowing the whole time, so every dashboard looked alive while ~4,300
+  // delivered emails recorded zero opens and zero clicks. Every "no
+  // engagement" conclusion drawn in that window was unsafe — "not opened" was
+  // indistinguishable from "never recorded".
+  //
+  // The webhook handler is type-agnostic (it inserts whatever arrives), so a
+  // one-sided outage like this can only be a Resend-side setting: domain
+  // open/click tracking toggled off, or the webhook endpoint's subscribed
+  // event list. Neither is visible from the code — hence this check.
+  try {
+    const { rows } = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE event_type = 'delivered')::int AS delivered,
+        COUNT(*) FILTER (WHERE event_type IN ('opened','clicked'))::int AS engagement
+      FROM email_events
+      WHERE created_at > NOW() - INTERVAL '14 days'
+        AND COALESCE(project, 'cea') = 'cea'
+    `
+    const delivered14d = rows[0]?.delivered ?? 0
+    const engagement14d = rows[0]?.engagement ?? 0
+
+    // 50 delivered with not one open across a fortnight is not a quiet list —
+    // open rates never floor at zero on real traffic. It is a dead pipe.
+    if (delivered14d >= 50 && engagement14d === 0) {
+      const { rows: lastRows } = await sql`
+        SELECT MAX(created_at) AS last FROM email_events
+        WHERE event_type IN ('opened','clicked')
+      `
+      const last = lastRows[0]?.last ? new Date(lastRows[0].last) : null
+      const daysDark = last
+        ? Math.round((Date.now() - last.getTime()) / 86400000)
+        : null
+
+      findings.push({
+        severity: 'alert',
+        title: 'Email engagement tracking is DEAD',
+        detail:
+          `${delivered14d} emails delivered in the last 14 days and NOT ONE open or click was recorded` +
+          (daysDark !== null
+            ? ` — the last engagement event of any kind was ${daysDark} days ago.`
+            : ' — no engagement event has ever been recorded.') +
+          ' Delivery events are still arriving, so sending is fine; it is the telemetry that is off. Until this is fixed, treat every "no engagement" reading as unknown, not as zero.',
+        suggestion:
+          'Resend dashboard → Domains → concussion-education-australia.com → confirm Open Tracking and Click Tracking are ON. Then Webhooks → the portal endpoint → confirm email.opened and email.clicked are in its subscribed events. The handler accepts both already; nothing to deploy.',
+      })
+    }
+    console.log(
+      `[monitoring] Check 7: 14d delivered=${delivered14d}, opens+clicks=${engagement14d}`
+    )
+  } catch (err) {
+    recordCheckFailure('Check 7 (engagement telemetry)', err)
+  }
+
   // ── Send alert email if findings exist ────────────
   const alerts = findings.filter(f => f.severity === 'alert')
   const infos = findings.filter(f => f.severity === 'info')

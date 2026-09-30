@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
-import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, WORKSHOP_DEPOSIT_BALANCE_EMAIL, WORKSHOP_UPGRADE_OFFER, WORKSHOP_UPGRADE_LAST_CALL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { WORKSHOP_BALANCE_REMINDER, WORKSHOP_FINAL_SEATS, PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, WORKSHOP_DEPOSIT_BALANCE_EMAIL, WORKSHOP_UPGRADE_OFFER, WORKSHOP_UPGRADE_LAST_CALL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { isCrmAbandonedCourseType } from '@/lib/abandoned-checkout'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
@@ -184,6 +184,22 @@ export async function GET(request: Request) {
     // MAX_PER_USER_PER_WEEK to protect domain reputation + avoid the
     // "annoying sender" perception that tanks reply rate.
     const MAX_PER_USER_PER_WEEK = 3
+
+    // Timing for the two workshop-seat lanes below (2b and 2c).
+    //
+    // DEPOSIT_CHASE_DAYS_BEFORE — an unpaid A$100 deposit gets a second and
+    // final ask this many days out. It is set inside the early-bird window's
+    // tail but with enough room to actually pay and arrange the day; the
+    // email also states that an unanswered seat is released and refunded, so
+    // it must not land so late that the holder has no chance to respond.
+    //
+    // FINAL_WINDOW_MIN_DAYS — after the early-bird closes, the upgrade ask
+    // keeps running until this many days before the date, then stops. Inside
+    // the last few days the honest position is that the roster is set
+    // (catering, handbooks, assessment pairs), so selling a seat there would
+    // be selling something the day can no longer absorb well.
+    const DEPOSIT_CHASE_DAYS_BEFORE = 12
+    const FINAL_WINDOW_MIN_DAYS = 4
     // Count 'delivered' — the webhook subscribes delivered/opened/clicked/
     // bounced/complained and never writes 'sent' rows, so counting only
     // 'sent' made the cap a no-op. 'sent' stays in the IN list in case we
@@ -839,7 +855,24 @@ export async function GET(request: Request) {
         const balanceAud = Math.max(0, grossAud - creditAud)
         if (balanceAud <= 0) continue
 
-        const depositAuditKey = `deposit_balance_${user.id}`
+        // Two touches, not one. The first goes out as soon as the city
+        // confirms; the second chases inside the final fortnight, because a
+        // single unanswered ask leaves the seat held for someone who never
+        // paid and never said no. `step` picks which, and each carries its
+        // own audit key so neither can repeat.
+        const daysToDate = Math.floor((loc.dateObj.getTime() - now.getTime()) / 86400000)
+        const firstKey = `deposit_balance_${user.id}`
+        const chaseKey = `deposit_balance_final_${user.id}`
+        const { rows: alreadyAsked } = await sql`
+          SELECT audit_key FROM email_audit_log WHERE audit_key = ${firstKey}
+        `
+        const depStep: 'first' | 'chase' =
+          alreadyAsked.length === 0 ? 'first' : 'chase'
+        // The chase only makes sense close to the date, and only once the
+        // first ask has had time to land.
+        if (depStep === 'chase' && daysToDate > DEPOSIT_CHASE_DAYS_BEFORE) continue
+
+        const depositAuditKey = depStep === 'first' ? firstKey : chaseKey
         const { rowCount: depIns } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${depositAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (depIns === 0) continue
 
@@ -859,25 +892,32 @@ export async function GET(request: Request) {
             ? `${baseUrl}/concussion-rehab-mastery`
             : `${baseUrl}${workshopDatePage(user.workshopLocation)}`
 
-        const html = WORKSHOP_DEPOSIT_BALANCE_EMAIL.template(
-          user.name, loc.city, loc.date, balanceAud, dep.amountAud, earlyBirdLabel, checkoutLink,
+        const html = (depStep === 'first'
+          ? WORKSHOP_DEPOSIT_BALANCE_EMAIL.template(
+              user.name, loc.city, loc.date, balanceAud, dep.amountAud, earlyBirdLabel, checkoutLink,
+            )
+          : WORKSHOP_BALANCE_REMINDER.template(
+              user.name, loc.city, loc.date, balanceAud, dep.amountAud, Math.max(1, daysToDate), checkoutLink,
+            )
         ).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
         const sent = await sendOrRollbackAudit({
           to: user.email,
           scheduledAt: scheduler.next(user.email),
-          subject: WORKSHOP_DEPOSIT_BALANCE_EMAIL.subject,
+          subject: depStep === 'first'
+            ? WORKSHOP_DEPOSIT_BALANCE_EMAIL.subject
+            : WORKSHOP_BALANCE_REMINDER.subject(loc.city),
           html,
-          tags: [{ name: 'sequence', value: 'deposit-balance' }],
+          tags: [{ name: 'sequence', value: 'deposit-balance' }, { name: 'step', value: depStep }],
           headers: {
             'List-Unsubscribe': `<${unsubscribeUrl}>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
-        }, depositAuditKey, 'Deposit balance')
+        }, depositAuditKey, `Deposit balance ${depStep}`)
         if (sent) {
           emailsSent++
           incrementWeeklySent(user.email)
-          console.log(`[Deposit balance] A$${balanceAud} owing → ${redact(user.email)}`)
+          console.log(`[Deposit balance] ${depStep} · A$${balanceAud} owing · ${daysToDate}d to date → ${redact(user.email)}`)
         }
       }
     }
@@ -890,15 +930,40 @@ export async function GET(request: Request) {
     // Anchored on the EARLY-BIRD CLOSE rather than the workshop date: that is
     // the real decision point, the price genuinely changes there, and it gives
     // an honest deadline. Two touches — inside four weeks, then inside one
-    // week — and nothing after, because once the price has risen the ask has
-    // changed.
+    // week.
+    //
+    // Then a THIRD, after the early-bird has closed. The first version of this
+    // lane stopped dead at the close, which for Melbourne Round 4 left
+    // 24 Oct → 7 Nov silent with the room half empty. The ask has genuinely
+    // changed by then (the price has risen), so that touch leads with the
+    // remaining seats instead of the rate — and it only sends when seats are
+    // actually left, with the count read live off the roster.
     //
     // MARKETING: they have paid nothing toward a seat, so nurture_unsubscribed
     // and the weekly cap both apply, unlike the deposit-balance email above.
     {
       const { upgradePriceFor } = await import('@/lib/config')
       const { openSecureSeatDeposits: openDeps } = await import('@/lib/secure-seat-credit')
+      const { practicalDayAttendees } = await import('@/lib/users')
       const depositHolders = new Set((await openDeps()).map(d => d.email.toLowerCase()))
+
+      // Seats remaining per confirmed future city, read once. The final-window
+      // email states this number out loud, so it has to be the real roster
+      // (CLAUDE.md: no fake scarcity — a stated seat count must be true).
+      const seatsLeftByCity = new Map<string, number>()
+      for (const l of Object.values(CONFIG.LOCATIONS)) {
+        if (l.status !== 'confirmed' || !l.dateObj || l.dateObj.getTime() <= now.getTime()) continue
+        try {
+          const taken = (await practicalDayAttendees(l.slug)).length
+          seatsLeftByCity.set(l.slug, Math.max(0, CONFIG.WORKSHOP.CAPACITY_PER_COURSE - taken))
+        } catch (err) {
+          // Can't prove a seat count → don't claim one. The final-window
+          // touch is skipped for this city; the two early-bird touches are
+          // unaffected because they never quote a count.
+          console.error(`[Workshop upgrade] seat count failed for ${l.slug}:`, err)
+        }
+      }
+
       for (const user of users) {
         if (!user.workshopLocation) continue
         if (holdsWorkshopSeat(user)) continue          // already in the room
@@ -921,9 +986,16 @@ export async function GET(request: Request) {
         // Days until the early-bird closes, which is the deadline that matters.
         const earlyBirdEnds = new Date(loc.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 86400000)
         const daysToEb = Math.floor((earlyBirdEnds.getTime() - now.getTime()) / 86400000)
-        if (daysToEb <= 0) continue                     // price has risen; the ask has changed
+        const daysToDate = Math.floor((loc.dateObj.getTime() - now.getTime()) / 86400000)
+        const seatsLeft = seatsLeftByCity.get(loc.slug)
 
-        const step = daysToEb <= 7 ? 'last_call' : daysToEb <= 28 ? 'offer' : null
+        let step: 'offer' | 'last_call' | 'final' | null = null
+        if (daysToEb > 28) step = null
+        else if (daysToEb > 7) step = 'offer'
+        else if (daysToEb > 0) step = 'last_call'
+        // Post-early-bird: only while the day is still ahead, only when the
+        // roster loaded, and only when there is genuinely a seat to sell.
+        else if (daysToDate >= FINAL_WINDOW_MIN_DAYS && seatsLeft !== undefined && seatsLeft > 0) step = 'final'
         if (!step) continue
 
         // A CRM online owner who is not also a CCM online buyer gets the EP
@@ -944,10 +1016,18 @@ export async function GET(request: Request) {
         const link = stream === 'crm'
           ? `${baseUrl}/concussion-rehab-mastery`
           : `${baseUrl}/upgrade`
-        const tpl = step === 'last_call' ? WORKSHOP_UPGRADE_LAST_CALL : WORKSHOP_UPGRADE_OFFER
+        const tpl = step === 'final' ? WORKSHOP_FINAL_SEATS
+          : step === 'last_call' ? WORKSHOP_UPGRADE_LAST_CALL
+          : WORKSHOP_UPGRADE_OFFER
 
-        const html = tpl.template(user.name, loc.city, loc.date, priceAud, ebLabel, regularAud, link, stream)
-          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+        const html = (step === 'final'
+          ? WORKSHOP_FINAL_SEATS.template(
+              user.name, loc.city, loc.date, priceAud, daysToDate, seatsLeft ?? 0, link, stream,
+            )
+          : (tpl as typeof WORKSHOP_UPGRADE_OFFER).template(
+              user.name, loc.city, loc.date, priceAud, ebLabel, regularAud, link, stream,
+            )
+        ).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
         const sent = await sendOrRollbackAudit({
           to: user.email,
@@ -964,7 +1044,7 @@ export async function GET(request: Request) {
         if (sent) {
           emailsSent++
           incrementWeeklySent(user.email)
-          console.log(`[Workshop upgrade] ${step} · ${stream} · ${daysToEb}d to early-bird → ${redact(user.email)}`)
+          console.log(`[Workshop upgrade] ${step} · ${stream} · ${daysToEb}d to early-bird · ${daysToDate}d to date · seatsLeft=${seatsLeft ?? 'unknown'} → ${redact(user.email)}`)
         }
       }
     }
