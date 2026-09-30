@@ -53,12 +53,8 @@ describe('WORKSHOP_BALANCE_REMINDER (deposit chase)', () => {
 
 describe('WORKSHOP_FINAL_SEATS (post-early-bird window)', () => {
   const html = WORKSHOP_FINAL_SEATS.template(
-    'Sonya Moore', 'Melbourne', 'Saturday 7 November 2026', 903, 11, 9, link, 'ccm',
+    'Sonya Moore', 'Melbourne', 'Saturday 7 November 2026', 903, 11, link, 'ccm',
   )
-
-  it('states the real seat count it was handed', () => {
-    expect(html).toContain('9 seats')
-  })
 
   it('does not dangle an early-bird rate that has already closed', () => {
     expect(html).toMatch(/early-bird rate has closed/i)
@@ -72,14 +68,8 @@ describe('WORKSHOP_FINAL_SEATS (post-early-bird window)', () => {
     expect(html).not.toContain(`A$${fullPrice}`)
   })
 
-  it('reads correctly at one remaining seat', () => {
-    const one = WORKSHOP_FINAL_SEATS.template('A', 'Melbourne', 'd', 903, 3, 1, link, 'ccm')
-    expect(one).toContain('is one seat')
-    expect(one).not.toMatch(/\b1 seats\b/)
-  })
-
   it('carries the EP stream CPD total for a CRM owner', () => {
-    const crm = WORKSHOP_FINAL_SEATS.template('A', 'Melbourne', 'd', 903, 11, 5, link, 'crm')
+    const crm = WORKSHOP_FINAL_SEATS.template('A', 'Melbourne', 'd', 903, 11, link, 'crm')
     expect(crm).toContain(String(CONFIG.COURSE.CRM_TOTAL_CPD_POINTS))
   })
 })
@@ -108,41 +98,40 @@ describe('WORKSHOP_DEPOSIT_BALANCE_EMAIL (first ask)', () => {
   })
 })
 
-describe('upgrade emails state the real seat count (no incentive, owner 2026-09-30)', () => {
-  it('OFFER shows seats remaining, not capacity, when the roster loaded', async () => {
-    const { WORKSHOP_UPGRADE_OFFER } = await import('@/lib/email-sequences')
-    const html = WORKSHOP_UPGRADE_OFFER.template(
-      'Sonya', 'Melbourne', 'Sat 7 Nov', 693, '24 October', 903, link, 'ccm', 10,
-    )
-    expect(html).toContain('10 of 12 places still open')
-  })
-
-  it('OFFER falls back to capacity when the roster could not be read', async () => {
-    const { WORKSHOP_UPGRADE_OFFER } = await import('@/lib/email-sequences')
-    const html = WORKSHOP_UPGRADE_OFFER.template(
-      'Sonya', 'Melbourne', 'Sat 7 Nov', 693, '24 October', 903, link, 'ccm', null,
-    )
-    // Never dress capacity up as availability.
-    expect(html).not.toMatch(/still open/)
-    expect(html).toContain(`${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} places`)
-  })
-
-  it('LAST CALL adds the count beside the deadline and handles one seat', async () => {
-    const { WORKSHOP_UPGRADE_LAST_CALL } = await import('@/lib/email-sequences')
-    expect(WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 4))
-      .toContain('<strong>4 seats</strong> left')
-    expect(WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 1))
-      .toContain('<strong>one seat</strong> left')
-    expect(WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', null))
-      .not.toMatch(/left\./)
-  })
-
-  it('no upgrade email offers a discount, bonus or incentive', async () => {
+describe('no upgrade email ever states how many seats are left', () => {
+  /**
+   * Zac killed "10 of 12 places still open" on 2026-09-30 before it sent.
+   * A remaining-seats figure is anti-social-proof unless the room is nearly
+   * full — it reports that nobody else wanted the day. The count stays a
+   * send gate in the cron; it never reaches the copy.
+   */
+  it('states no remaining-seats figure in any template', async () => {
     const m = await import('@/lib/email-sequences')
     const all = [
-      m.WORKSHOP_UPGRADE_OFFER.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 10),
-      m.WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm', 4),
-      m.WORKSHOP_FINAL_SEATS.template('S', 'Melbourne', 'd', 903, 11, 9, link, 'ccm'),
+      m.WORKSHOP_UPGRADE_OFFER.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm'),
+      m.WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm'),
+      m.WORKSHOP_FINAL_SEATS.template('S', 'Melbourne', 'd', 903, 11, link, 'ccm'),
+      m.WORKSHOP_BALANCE_REMINDER.template('S', 'Melbourne', 'd', 593, 100, 12, link),
+    ]
+    for (const html of all) {
+      expect(html).not.toMatch(/\bseats? (left|remaining|still open|available)\b/i)
+      expect(html).not.toMatch(/\d+\s+of\s+\d+\s+(places|seats)/i)
+      expect(html).not.toMatch(/only\s+\d+\s+(places|seats)/i)
+    }
+  })
+
+  it('keeps capacity as a format fact, which is the opposite claim', async () => {
+    const { WORKSHOP_UPGRADE_OFFER } = await import('@/lib/email-sequences')
+    const html = WORKSHOP_UPGRADE_OFFER.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm')
+    expect(html).toContain(`Capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE}`)
+  })
+
+  it('offers no discount, bonus or incentive', async () => {
+    const m = await import('@/lib/email-sequences')
+    const all = [
+      m.WORKSHOP_UPGRADE_OFFER.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm'),
+      m.WORKSHOP_UPGRADE_LAST_CALL.template('S', 'Melbourne', 'd', 693, '24 October', 903, link, 'ccm'),
+      m.WORKSHOP_FINAL_SEATS.template('S', 'Melbourne', 'd', 903, 11, link, 'ccm'),
     ]
     for (const html of all) {
       expect(html).not.toMatch(/\b(discount|bonus|free (month|access|upgrade)|promo code|coupon|% off)\b/i)

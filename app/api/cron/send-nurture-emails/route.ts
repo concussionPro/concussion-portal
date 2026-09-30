@@ -969,9 +969,11 @@ export async function GET(request: Request) {
       const { practicalDayAttendees } = await import('@/lib/users')
       const depositHolders = new Set((await openDeps()).map(d => d.email.toLowerCase()))
 
-      // Seats remaining per confirmed future city, read once. The final-window
-      // email states this number out loud, so it has to be the real roster
-      // (CLAUDE.md: no fake scarcity — a stated seat count must be true).
+      // Seats remaining per confirmed future city, read once. This is a SEND
+      // GATE only — it decides whether there is a seat to sell, and is never
+      // printed in the copy. A remaining-seats figure below about half
+      // capacity is anti-social-proof: "10 of 12 still open" says nobody else
+      // wanted it. Zac killed that wording on 2026-09-30 before it sent.
       const seatsLeftByCity = new Map<string, number>()
       for (const l of Object.values(CONFIG.LOCATIONS)) {
         if (l.status !== 'confirmed' || !l.dateObj || l.dateObj.getTime() <= now.getTime()) continue
@@ -1044,16 +1046,10 @@ export async function GET(request: Request) {
 
         const html = (step === 'final'
           ? WORKSHOP_FINAL_SEATS.template(
-              user.name, loc.city, loc.date, priceAud, daysToDate, seatsLeft ?? 0, link, stream,
+              user.name, loc.city, loc.date, priceAud, daysToDate, link, stream,
             )
           : (tpl as typeof WORKSHOP_UPGRADE_OFFER).template(
               user.name, loc.city, loc.date, priceAud, ebLabel, regularAud, link, stream,
-              // Owner 2026-09-30: no incentive rides on these. The only levers
-              // are the two true facts — the early-bird deadline and how many
-              // seats are actually left — so the live count goes in the copy.
-              // undefined when the roster failed to load, which drops the
-              // sentence rather than substituting capacity for availability.
-              seatsLeft,
             )
         ).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
