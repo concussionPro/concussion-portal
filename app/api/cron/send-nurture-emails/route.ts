@@ -816,16 +816,20 @@ export async function GET(request: Request) {
     }
 
     // ── SEAT LANES GATE ─────────────────────────────────────────────────
-    // 2b (deposit balance) and 2c (practical-day upgrade) both write to real
-    // paying customers with real money figures in the copy, so neither
-    // shipped live until Zac had read the exact wording. He approved all six
-    // rendered templates on 2026-09-30, so they run by default now.
+    // 2b (deposit balance) and 2c (practical-day upgrade) are DARK.
     //
-    // The flag survives as a kill switch: set WORKSHOP_SEAT_LANES=false in
-    // Vercel to take both lanes dark without a deploy.
-    const seatLanesLive = process.env.WORKSHOP_SEAT_LANES !== 'false'
+    // Zac stopped these on 2026-09-30 ("DO NOT SEND THAT EMAIL") after they
+    // had been switched on earlier the same day. Nothing had sent yet — the
+    // nightly cron had not run between the two changes — so no customer
+    // received either lane. Fail closed: unset means off, so an env that is
+    // missing, misspelled or lost in a project migration can never start a
+    // send on its own.
+    //
+    // Do NOT flip this back without Zac approving the exact copy again.
+    // See [[feedback_no_send_without_copy_approval]] — arming is sending.
+    const seatLanesLive = process.env.WORKSHOP_SEAT_LANES === 'true'
     if (!seatLanesLive) {
-      console.log('[Seat lanes] 2b + 2c skipped — WORKSHOP_SEAT_LANES=false (kill switch)')
+      console.log('[Seat lanes] 2b + 2c DARK — WORKSHOP_SEAT_LANES is not true')
     }
 
     // ── 2b. Secure-seat deposit → balance request ──────────────────────
