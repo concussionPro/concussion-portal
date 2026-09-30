@@ -14,6 +14,7 @@
  */
 
 import Stripe from 'stripe'
+import { secureSeatCreditCents, isCreditableCourseType } from '@/lib/secure-seat-credit'
 import { CONFIG, isEarlyBirdForLocation } from '@/lib/config'
 import { intlPriceForCountry } from '@/lib/international-pricing'
 import { hubSeatsForDeclaredCount } from '@/lib/course-hub'
@@ -285,6 +286,31 @@ export async function createCourseCheckoutSession({
       : `8 online modules (start today) + full-day in-person workshop (${locationLabel} — date launches as your city fills, min ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice) · 16 CPD hours · AHPRA aligned`) + earlyBirdNote
   }
 
+  // ── SECURE-SEAT DEPOSIT CREDIT ───────────────────────────────────────────
+  // The A$100 deposit is sold as "credit toward Complete when the date opens"
+  // (its own Stripe product description) and "credited in full to Complete
+  // when you enrol" (/melbourne-nov7). Applied HERE, in the function that sets
+  // the charge, so the Stripe page and the capture cannot disagree.
+  //
+  // Consumed by the webhook on successful payment, not here — an abandoned
+  // checkout must leave the deposit creditable.
+  let secureSeatCreditApplied = 0
+  if (isCreditableCourseType(courseType) && customerEmail) {
+    const credit = await secureSeatCreditCents(customerEmail)
+    if (credit > 0) {
+      // Never below Stripe's minimum chargeable amount, and never negative:
+      // a deposit worth more than the balance reduces the charge to the floor
+      // rather than producing an invalid session.
+      const MIN_CHARGE_CENTS = 100
+      secureSeatCreditApplied = Math.min(credit, Math.max(0, unitAmount - MIN_CHARGE_CENTS))
+      if (secureSeatCreditApplied > 0) {
+        unitAmount -= secureSeatCreditApplied
+        productDescription +=
+          ` · Includes your A$${(secureSeatCreditApplied / 100).toLocaleString()} seat deposit, credited`
+      }
+    }
+  }
+
   // Hub Pack base price already includes 5 seats — never let a promo code stack
   // on the marginal seat/upgrade add-ons either.
   //
@@ -431,6 +457,9 @@ export async function createCourseCheckoutSession({
       source: 'portal',
       timestamp: new Date().toISOString(),
       bundleDiscountAppliedCents: String(bundleDiscountApplied),
+      // The webhook consumes the deposit only when this is non-zero, so an
+      // abandoned checkout can never burn the credit.
+      secureSeatCreditAppliedCents: String(secureSeatCreditApplied),
       ...(clinicianCount ? { clinicianCount: String(clinicianCount) } : {}),
       ...(clinicName ? { clinicName: clinicName.slice(0, 120) } : {}),
       ...(utm?.utm_source ? { utm_source: utm.utm_source } : {}),

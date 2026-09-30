@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
-import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
+import { PDF_LEAD_TOOLS, PDF_LEAD_SEQUENCE, SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, CRM_ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, WORKSHOP_DEPOSIT_BALANCE_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, SCAT_MODULE1_LADDER, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, CRM_POST_PURCHASE_SEQUENCE, CRM_NO_PROGRESS_NUDGE, CRM_ALMOST_DONE_EMAIL, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { isCrmAbandonedCourseType } from '@/lib/abandoned-checkout'
 import { getEnrollmentCount, loadWorkshopEnrolmentDates } from '@/lib/users'
 import { crmOwnership } from '@/lib/crm-course'
@@ -796,6 +796,80 @@ export async function GET(request: Request) {
         emailsSent++
         incrementWeeklySent(user.email)
         console.log(`[Onboarding${stream === 'crm' ? ' CRM' : ''}] Day ${email.day}${useEmail !== email ? ' (activation)' : ''} → ${redact(user.email)}`)
+      }
+    }
+
+    // ── 2b. Secure-seat deposit → balance request ──────────────────────
+    // The A$100 deposit is sold as credit toward Complete. Nothing used to ask
+    // for the rest, so a deposit just sat there: the holder had paid, believed
+    // they had a seat, and never got an invoice. This is the automatic ask.
+    //
+    // Fires once per deposit (audit key), only for a city with a CONFIRMED
+    // future date — before that there is no seat to confirm and the deposit is
+    // doing its actual job of building the cohort.
+    //
+    // TRANSACTIONAL: they have paid money toward this seat. A marketing
+    // unsubscribe must not hide the balance from them; only a hard
+    // bounce/complaint suppression skips.
+    {
+      const { openSecureSeatDeposits, secureSeatCreditCents } = await import('@/lib/secure-seat-credit')
+      const { upgradePriceFor, workshopPriceFor, isEarlyBirdForLocation, workshopDatePage } = await import('@/lib/config')
+      const deposits = await openSecureSeatDeposits()
+      for (const dep of deposits) {
+        const user = users.find(u => u.email.toLowerCase() === dep.email.toLowerCase())
+        if (!user || !user.workshopLocation) continue
+        if (suppressedEmails.has(user.email.toLowerCase())) continue
+
+        const loc = Object.values(CONFIG.LOCATIONS).find(
+          l => l.slug === user.workshopLocation && l.status === 'confirmed' && l.dateObj,
+        )
+        if (!loc || !loc.dateObj || loc.dateObj.getTime() <= now.getTime()) continue
+
+        // Already holds the practical day → nothing outstanding.
+        if (holdsWorkshopSeat(user)) continue
+
+        // Price from the SAME helpers the checkout uses, less the credit the
+        // checkout will apply, so the number in the email is the number
+        // Stripe charges. An online-only owner pays the upgrade; everyone
+        // else pays the Complete price.
+        const creditAud = Math.round((await secureSeatCreditCents(user.email)) / 100)
+        const grossAud = user.accessLevel === 'online-only'
+          ? upgradePriceFor(user.workshopLocation)
+          : workshopPriceFor(user.workshopLocation)
+        const balanceAud = Math.max(0, grossAud - creditAud)
+        if (balanceAud <= 0) continue
+
+        const depositAuditKey = `deposit_balance_${user.id}`
+        const { rowCount: depIns } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${depositAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (depIns === 0) continue
+
+        const unsubToken = generateUnsubscribeToken(user.email)
+        const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+        const earlyBirdLabel = isEarlyBirdForLocation(user.workshopLocation)
+          ? `${CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before the date`
+          : 'the early-bird close'
+        const checkoutLink = `${baseUrl}${workshopDatePage(user.workshopLocation)}`
+
+        const html = WORKSHOP_DEPOSIT_BALANCE_EMAIL.template(
+          user.name, loc.city, loc.date, balanceAud, dep.amountAud, earlyBirdLabel, checkoutLink,
+        ).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+
+        const sent = await sendOrRollbackAudit({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: WORKSHOP_DEPOSIT_BALANCE_EMAIL.subject,
+          html,
+          tags: [{ name: 'sequence', value: 'deposit-balance' }],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }, depositAuditKey, 'Deposit balance')
+        if (sent) {
+          emailsSent++
+          incrementWeeklySent(user.email)
+          console.log(`[Deposit balance] A$${balanceAud} owing → ${redact(user.email)}`)
+        }
       }
     }
 

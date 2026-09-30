@@ -93,9 +93,27 @@ vi.mock('@/lib/config', () => ({
         status: 'confirmed',
       },
     },
-    WORKSHOP: { CONFIRMATION_THRESHOLD: 10 },
+    WORKSHOP: { CONFIRMATION_THRESHOLD: 10, EARLY_BIRD_DAYS_BEFORE: 14 },
+    COURSE: { PRICE_ONLINE: 497, PRICE_EARLY_BIRD: 1190, PRICE_SECURE_SEAT: 100 },
     CONTACT_EMAIL: 'zac@test.local',
   },
+  // Used by the deposit-balance block (section 2b) to price the balance from
+  // the same helpers the checkout charges from.
+  upgradePriceFor: () => 693,
+  workshopPriceFor: () => 1190,
+  isEarlyBirdForLocation: () => true,
+  workshopDatePage: (slug: string) => `/courses/${slug}`,
+}))
+
+// No open deposits in these fixtures — section 2b is exercised by
+// tests/secure-seat-credit.test.ts, and hitting the real module here would
+// reach the database.
+vi.mock('@/lib/secure-seat-credit', () => ({
+  openSecureSeatDeposits: async () => [],
+  secureSeatCreditCents: async () => 0,
+  consumeSecureSeatCredit: async () => false,
+  isCreditableCourseType: () => false,
+  SECURE_SEAT_SLUG: 'ccm-secure-seat',
 }))
 
 const tpl = vi.hoisted(

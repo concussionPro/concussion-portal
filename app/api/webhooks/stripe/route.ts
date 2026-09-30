@@ -696,6 +696,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
+  // Consume the secure-seat deposit once the purchase it was credited against
+  // is confirmed PAID. Done here rather than at session creation so an
+  // abandoned checkout leaves the credit available for the next attempt.
+  // Idempotent on `credited_at IS NULL`, so a replayed webhook is a no-op.
+  const creditApplied = Number(session.metadata?.secureSeatCreditAppliedCents ?? '0')
+  if (creditApplied > 0 && customerEmail) {
+    const { consumeSecureSeatCredit } = await import('@/lib/secure-seat-credit')
+    await consumeSecureSeatCredit(customerEmail, session.id)
+  }
+
   // NEVER DEFAULT A GRANT (2026-08-06 server-surface audit). `accessLevel`
   // used to fall back to 'online-only', so ANY completed one-time Checkout
   // Session that reached this point with no metadata — a dashboard-created

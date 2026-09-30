@@ -1038,6 +1038,45 @@ function rydgesBenefitsBlock(city: string): string {
   `
 }
 
+/**
+ * Deposit holder → balance. The A$100 secure-seat deposit is sold as credit
+ * toward Complete; this is the only thing that ever ASKS for the rest, and it
+ * exists because the alternative was the owner invoicing each holder by hand.
+ *
+ * `balanceAud` is computed by the caller from the SAME helpers that price the
+ * checkout (upgradePriceFor / workshopPriceFor, less the deposit), so the
+ * figure quoted here is the figure Stripe will charge.
+ *
+ * Transactional, not marketing: they have paid money toward a seat and this
+ * tells them what is outstanding and by when.
+ */
+export const WORKSHOP_DEPOSIT_BALANCE_EMAIL = {
+  subject: 'Your seat is held — here is the balance',
+  template: (
+    name: string,
+    city: string,
+    date: string,
+    balanceAud: number,
+    depositAud: number,
+    earlyBirdEndsLabel: string,
+    checkoutLink: string,
+  ) => emailShell(`
+    <h2>Hi ${greetingName(name)},</h2>
+    <p>Your A$${depositAud} deposit is holding a seat at the <strong>${city}</strong> practical day on <strong>${date}</strong>.</p>
+    <p>To confirm it, the balance is:</p>
+    <div class="callout">
+      <strong>Balance to complete your enrolment</strong><br><br>
+      &#8226; Deposit already paid: <strong>A$${depositAud}</strong><br>
+      &#8226; Balance now: <strong>A$${balanceAud.toLocaleString('en-AU')}</strong><br><br>
+      Your deposit is credited automatically at checkout — you will see it on the payment page.
+    </div>
+    <p>The early-bird rate holds until <strong>${earlyBirdEndsLabel}</strong>. After that the balance goes up, so it is worth doing before then.</p>
+    <center><a href="${checkoutLink}" class="cta-btn">Confirm my seat</a></center>
+    <p class="ps">Changed your mind? The deposit is refundable — just reply and I will take care of it.</p>
+    <div class="sig">Zac Lewis<br>Osteopath &middot; Concussion Education Australia</div>
+  `),
+}
+
 export const WORKSHOP_LOGISTICS_EMAIL = {
   daysBefore: 42,
   subject: 'Your workshop is 6 weeks away — what to know',
