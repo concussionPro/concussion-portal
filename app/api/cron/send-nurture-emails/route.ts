@@ -848,7 +848,16 @@ export async function GET(request: Request) {
         const earlyBirdLabel = isEarlyBirdForLocation(user.workshopLocation)
           ? `${CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before the date`
           : 'the early-bird close'
-        const checkoutLink = `${baseUrl}${workshopDatePage(user.workshopLocation)}`
+        // The date page's PRIMARY button charges 'full-course' — the whole
+        // A$1,190, not the difference. Sending an online owner there after
+        // quoting them a balance would offer them a number three times the one
+        // in the email. Online owners go to the upgrade checkout; only someone
+        // who owns nothing yet belongs on the date page.
+        const checkoutLink = user.accessLevel === 'online-only'
+          ? `${baseUrl}/upgrade`
+          : ownsCrmCourse(user.email)
+            ? `${baseUrl}/concussion-rehab-mastery`
+            : `${baseUrl}${workshopDatePage(user.workshopLocation)}`
 
         const html = WORKSHOP_DEPOSIT_BALANCE_EMAIL.template(
           user.name, loc.city, loc.date, balanceAud, dep.amountAud, earlyBirdLabel, checkoutLink,
@@ -887,7 +896,7 @@ export async function GET(request: Request) {
     // MARKETING: they have paid nothing toward a seat, so nurture_unsubscribed
     // and the weekly cap both apply, unlike the deposit-balance email above.
     {
-      const { upgradePriceFor, workshopDatePage } = await import('@/lib/config')
+      const { upgradePriceFor } = await import('@/lib/config')
       const { openSecureSeatDeposits: openDeps } = await import('@/lib/secure-seat-credit')
       const depositHolders = new Set((await openDeps()).map(d => d.email.toLowerCase()))
       for (const user of users) {
@@ -930,7 +939,11 @@ export async function GET(request: Request) {
 
         const unsubToken = generateUnsubscribeToken(user.email)
         const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
-        const link = `${baseUrl}${workshopDatePage(user.workshopLocation)}`
+        // Same rule as 2b: the price quoted is the DIFFERENCE, so the link has
+        // to be the upgrade checkout, never the date page's full-course CTA.
+        const link = stream === 'crm'
+          ? `${baseUrl}/concussion-rehab-mastery`
+          : `${baseUrl}/upgrade`
         const tpl = step === 'last_call' ? WORKSHOP_UPGRADE_LAST_CALL : WORKSHOP_UPGRADE_OFFER
 
         const html = tpl.template(user.name, loc.city, loc.date, priceAud, ebLabel, regularAud, link, stream)
@@ -1143,7 +1156,19 @@ export async function GET(request: Request) {
       // Upgrade nudge sequence (marketing — not affected by progressEmailsOptedOut)
       // Only applicable to online-only users
       if (user.accessLevel === 'online-only') {
-        const upgradeEmail = findCatchUp(ONLINE_UPGRADE_SEQUENCE, daysSinceSignup)
+        // Section 2c runs a deadline-anchored upgrade offer for anyone whose
+        // nominated city has a CONFIRMED future date. It names the real price
+        // and the real early-bird close, so it beats this signup-anniversary
+        // nudge — and both landing in one week would be two upgrade asks.
+        // 2c owns that user; this lane keeps everyone else.
+        const cityConfirmed = Boolean(
+          user.workshopLocation &&
+          Object.values(CONFIG.LOCATIONS).some(
+            l => l.slug === user.workshopLocation && l.status === 'confirmed' &&
+                 l.dateObj && l.dateObj.getTime() > now.getTime(),
+          ),
+        )
+        const upgradeEmail = cityConfirmed ? null : findCatchUp(ONLINE_UPGRADE_SEQUENCE, daysSinceSignup)
         if (upgradeEmail) {
           const upgradeAuditKey = `upgrade_day${upgradeEmail.day}_${user.id}`
           const { rowCount: upgradeInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${upgradeAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
