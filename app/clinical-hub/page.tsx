@@ -9,7 +9,7 @@ import { PROTOCOL_STAGE_CAP, SESSION_STOP_RISE } from '@/lib/sst-trainer/protoco
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
   AlertTriangle, AlertOctagon, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock,
-  NotebookPen, ShieldCheck, QrCode, KeyRound, FileText,
+  NotebookPen, ShieldCheck, QrCode, KeyRound, FileText, ChevronDown, Calculator,
 } from 'lucide-react'
 
 /* ───────────────────────────────────────────────────────────────────
@@ -905,6 +905,11 @@ export default function ClinicalHubPage() {
 
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  // Demo mode on a phone: the nine-patient roster used to be the first and
+  // only thing on screen — "just a list of cases" (Zac, 2026-10-01). Below
+  // lg it now sits behind one button; the suite and the three worked cases
+  // come first. Designed on the canvas before it was built here.
+  const [rosterOpen, setRosterOpen] = useState(false)
   const [clinicCode, setClinicCode] = useState('')
 
   // ── WHO IS USING THIS DEVICE (owner 2026-08-11) ──────────────────────────
@@ -1266,9 +1271,107 @@ export default function ClinicalHubPage() {
             </div>
           </div>
         ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5">
+        <>
+        {/* ── Demo mode: the suite first, then the three worked cases ──
+            This page is the QR target on the conference deck (slide 20) and
+            the /acc pitch link. A clinician scanning from their seat used to
+            land on a nine-patient admin roster with the instruments never
+            shown as a set. Drawn on the Design canvas (Clinical Hub Mobile)
+            and built to it: four tools, what each does, one tap; the three
+            episodes that each carry one argument; the full roster folded
+            behind a button below lg. Real clinics never see this block. */}
+        {isDemo && (
+          <div className="mb-6 space-y-6">
+            <section>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)] mb-1.5">The clinical suite</p>
+              <p className="text-[13.5px] leading-relaxed text-muted-foreground mb-3">
+                Four instruments, built for a working caseload. Everything on this page is one of them.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {([
+                  { href: '/preseason', Icon: TrendingDown, name: 'Pre-season baseline',
+                    body: 'A squad self-administers the SCAT6 baseline remotely, about five minutes each. A report per athlete comes back to the clinic.' },
+                  { href: null, Icon: Activity, name: 'Threshold trainer + clinician dashboard',
+                    body: 'The band holds them at 80–90% of their measured threshold at home. The session comes back to you. You are looking at it.' },
+                  { href: '/scat-forms', Icon: ClipboardList, name: 'SCAT6 · SCOAT6 · Child SCAT6',
+                    body: 'The full forms in the browser, totalled as you go, exported as a PDF for the record.' },
+                  { href: '/tools/bctt-calculator', Icon: Calculator, name: 'BCTT calculator',
+                    body: 'The graded exertion protocol worked out for you — stages, stop rule, and the 80–90% band from the measured threshold.' },
+                ] as const).map((t) => {
+                  const inner = (
+                    <>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${t.href ? 'bg-[var(--accent)]/[0.08]' : 'bg-[var(--accent)]'}`}>
+                        <t.Icon className={`w-5 h-5 ${t.href ? 'text-[var(--accent)]' : 'text-white'}`} strokeWidth={2} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14.5px] font-semibold leading-snug text-foreground">{t.name}</p>
+                        <p className="text-[12.5px] leading-relaxed text-muted-foreground mt-0.5">{t.body}</p>
+                      </div>
+                      {t.href
+                        ? <ChevronRight className="w-[18px] h-[18px] text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.2} />
+                        : <span className="flex-shrink-0 mt-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">This page</span>}
+                    </>
+                  )
+                  const cls = `flex gap-3 items-start rounded-2xl bg-white p-3.5 ${t.href ? 'border border-[var(--accent)]/[0.12] hover:border-[var(--accent)]/40' : 'border-[1.5px] border-[var(--accent)]'}`
+                  return t.href
+                    ? <a key={t.name} href={t.href} className={cls + ' no-underline text-inherit'}>{inner}</a>
+                    : <div key={t.name} className={cls}>{inner}</div>
+                })}
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)] mb-1.5">Three worked cases</p>
+              <p className="text-[13.5px] leading-relaxed text-muted-foreground mb-3">
+                Synthetic, built to the published protocol. Each one carries one argument.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                {([
+                  { k: 'recovery', who: 'M.T. — 24M, community football', n: '128 → 155 bpm', tone: 'text-[var(--accent)]',
+                    body: 'Textbook response. Threshold climbed across three tests, final re-test to exhaustion with no symptom rise — cleared.' },
+                  { k: 'adherence', who: 'R.K. — 31F, recreational netball', n: '124 → 131 bpm', tone: 'text-[#b4482b]',
+                    body: 'Prescribed is not performed. Thirteen sessions logged; the sensor shows four above band, two flared, two typed in by hand. Threshold barely moved.' },
+                  { k: 'stalled', who: 'D.P. — 17M, school rugby', n: '126 → 142 → 142', tone: 'text-muted-foreground',
+                    body: 'Delivered exactly as prescribed, in band, no flares — and plateaued at week three. Not a dose problem. A re-assessment.' },
+                ] as const).map((c) => {
+                  const pt = roster.find((x) => x.demoCase === c.k)
+                  return (
+                    <div key={c.k} className="flex flex-col gap-2 rounded-2xl bg-white border border-[var(--accent)]/[0.12] p-3.5">
+                      <div className="flex items-baseline justify-between gap-2.5">
+                        <p className="text-[15px] font-semibold text-foreground leading-snug">{c.who}</p>
+                        <span className={`font-mono text-[11px] font-semibold whitespace-nowrap ${c.tone}`}>{c.n}</span>
+                      </div>
+                      <p className="text-[12.5px] leading-relaxed text-muted-foreground">{c.body}</p>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        {pt && (
+                          <button type="button"
+                            onClick={() => { setSelectedId(pt.id); setRosterOpen(false); document.getElementById('hub-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
+                            className="text-[12.5px] font-semibold text-[var(--accent)] hover:underline">
+                            Open the case ↓
+                          </button>
+                        )}
+                        <a href={`/api/sst/report?code=DEMO00&patient=demo&case=${c.k}`} target="_blank" rel="noopener"
+                           className="text-[12.5px] font-semibold text-[var(--accent)] hover:underline">
+                          Report ↗
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+
+            <button type="button" onClick={() => setRosterOpen((v) => !v)} aria-expanded={rosterOpen}
+              className="lg:hidden w-full min-h-[48px] flex items-center justify-between gap-2.5 rounded-xl bg-white border border-[var(--accent)]/[0.12] px-3.5 py-3 text-sm font-semibold text-foreground">
+              <span>All {roster.length} example patients</span>
+              <ChevronDown className={`w-[18px] h-[18px] text-muted-foreground transition-transform ${rosterOpen ? 'rotate-180' : ''}`} strokeWidth={2.2} />
+            </button>
+          </div>
+        )}
+
+        <div id="hub-detail" className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 scroll-mt-4">
           {/* ── Roster ── */}
-          <aside className="space-y-3">
+          <aside className={`space-y-3 ${isDemo && !rosterOpen ? 'hidden lg:block' : ''}`}>
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -1729,6 +1832,7 @@ export default function ClinicalHubPage() {
           </section>
           )}
         </div>
+        </>
         )}
       </div>
 
