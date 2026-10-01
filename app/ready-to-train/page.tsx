@@ -68,7 +68,7 @@ const SHOW_COUNT_FROM = 6
  * city-status hub, and a visitor on the hub could not reach the page that
  * actually sells their city. Both directions are now wired.
  */
-const CITIES_WITH_A_PAGE = new Set(['melbourne', 'sydney'])
+const CITIES_WITH_A_PAGE = new Set(['melbourne', 'sydney', 'byron-bay'])
 
 // The page reads live counts, so it must not be statically frozen at build.
 export const dynamic = 'force-dynamic'
