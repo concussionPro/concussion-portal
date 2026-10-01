@@ -1072,7 +1072,11 @@ function rydgesBenefitsBlock(city: string): string {
  * paid nothing toward a seat. Respects nurture_unsubscribed and the weekly cap.
  */
 export const WORKSHOP_UPGRADE_OFFER = {
-  subject: (city: string) => `Your ${city} practical day is confirmed`,
+  // 2026-10-01: four online owners received "Your Melbourne practical day is
+  // confirmed" — which reads as a booking to someone who has NOT paid for the
+  // day. The DATE is confirmed; their seat is not. The subject must say what
+  // the email is: an offer to upgrade.
+  subject: (city: string) => `${city} practical day is set — your upgrade to the full course`,
   /**
    * NEVER state how many seats are left. A remaining-seats figure is
    * anti-social-proof unless the room is nearly full: "10 of 12 still open"
