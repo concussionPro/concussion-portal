@@ -905,11 +905,6 @@ export default function ClinicalHubPage() {
 
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
-  // Demo mode on a phone: the nine-patient roster used to be the first and
-  // only thing on screen — "just a list of cases" (Zac, 2026-10-01). Below
-  // lg it now sits behind one button; the suite and the three worked cases
-  // come first. Designed on the canvas before it was built here.
-  const [rosterOpen, setRosterOpen] = useState(false)
   const [clinicCode, setClinicCode] = useState('')
 
   // ── WHO IS USING THIS DEVICE (owner 2026-08-11) ──────────────────────────
@@ -1166,12 +1161,10 @@ export default function ClinicalHubPage() {
           fixture from a patient. They are now initials plus age band, sex and
           sport: enough clinical context for the case to land, nothing that
           resembles a person. */}
-      {isDemo && (
-        <div className="bg-[var(--accent)]/[0.07] border-b border-[var(--accent)]/20 text-center text-[11.5px] py-1.5 px-4 text-[#4a6a6e]">
-          <strong className="font-semibold text-[#2c5457]">Example clinic.</strong>{' '}
-          Worked cases built to the published protocol — not patients, and not real health data.
-        </div>
-      )}
+      {/* Demo disclosure moved to a footnote under the hero (v2, 2026-10-01):
+          a disclaimer as the first words on the page read as "this is a
+          mock-up" to a buyer. The instrument is real; the episodes are
+          examples. It is still said — once, at the bottom of the hero. */}
 
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
         {/* Live in-session monitor */}
@@ -1212,7 +1205,7 @@ export default function ClinicalHubPage() {
               </label>
             )}
             {isDemo && (
-              <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
+              <button onClick={() => setAddOpen(true)} className="hidden lg:inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
                 <Plus className="w-4 h-4" /> Add patient
               </button>
             )}
@@ -1280,98 +1273,114 @@ export default function ClinicalHubPage() {
             and built to it: four tools, what each does, one tap; the three
             episodes that each carry one argument; the full roster folded
             behind a button below lg. Real clinics never see this block. */}
-        {isDemo && (
-          <div className="mb-6 space-y-6">
-            <section>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)] mb-1.5">The clinical suite</p>
-              <p className="text-[13.5px] leading-relaxed text-muted-foreground mb-3">
-                Four instruments, built for a working caseload. Everything on this page is one of them.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                {([
-                  { href: '/preseason', Icon: TrendingDown, name: 'Pre-season baseline',
-                    body: 'A squad self-administers the SCAT6 baseline remotely, about five minutes each. A report per athlete comes back to the clinic.' },
-                  { href: null, Icon: Activity, name: 'Threshold trainer + clinician dashboard',
-                    body: 'The band holds them at 80–90% of their measured threshold at home. The session comes back to you. You are looking at it.' },
-                  { href: '/scat-forms', Icon: ClipboardList, name: 'SCAT6 · SCOAT6 · Child SCAT6',
-                    body: 'The full forms in the browser, totalled as you go, exported as a PDF for the record.' },
-                  { href: '/tools/bctt-calculator', Icon: Calculator, name: 'BCTT calculator',
-                    body: 'The graded exertion protocol worked out for you — stages, stop rule, and the 80–90% band from the measured threshold.' },
-                ] as const).map((t) => {
-                  const inner = (
-                    <>
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${t.href ? 'bg-[var(--accent)]/[0.08]' : 'bg-[var(--accent)]'}`}>
-                        <t.Icon className={`w-5 h-5 ${t.href ? 'text-[var(--accent)]' : 'text-white'}`} strokeWidth={2} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[14.5px] font-semibold leading-snug text-foreground">{t.name}</p>
-                        <p className="text-[12.5px] leading-relaxed text-muted-foreground mt-0.5">{t.body}</p>
-                      </div>
-                      {t.href
-                        ? <ChevronRight className="w-[18px] h-[18px] text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.2} />
-                        : <span className="flex-shrink-0 mt-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">This page</span>}
-                    </>
-                  )
-                  const cls = `flex gap-3 items-start rounded-2xl bg-white p-3.5 ${t.href ? 'border border-[var(--accent)]/[0.12] hover:border-[var(--accent)]/40' : 'border-[1.5px] border-[var(--accent)]'}`
-                  return t.href
-                    ? <a key={t.name} href={t.href} className={cls + ' no-underline text-inherit'}>{inner}</a>
-                    : <div key={t.name} className={cls}>{inner}</div>
-                })}
+        {isDemo && (() => {
+          // v2 (2026-10-01): product first. v1 opened on a disclaimer, an admin
+          // header and eight text cards — "messy, boring, too much text". This
+          // opens on the instrument working: one session's heart-rate trace
+          // against its band, three numbers, one line. Chips switch the case
+          // (and the full detail below). Numbers are the real fixtures; the
+          // trace is a representative session. Designed on the canvas first.
+          const HERO = {
+            adherence: { date: '26 Sept', band: '99–112', hrt: '131', inBand: '7 / 13', inBandHot: true,
+              flagBig: 'Flared', flagSmall: 'next day', flagHot: true,
+              line: 'Adherent on paper. The sensor shows four sessions above band and two typed in by hand. Threshold 124 → 131 in four weeks.',
+              inPts: '0,118 24,104 48,92 72,78 96,70 120,66 144,64 168,62',
+              overPts: '168,62 192,54 216,44 240,36 264,30 288,27 312,26 330,25',
+              endX: 330, endY: 25, endLabelY: 16, endHot: true, endLabel: 'above band · 131' },
+            recovery: { date: '14 Sept', band: '114–128', hrt: '155', inBand: '13 / 13', inBandHot: false,
+              flagBig: 'Cleared', flagSmall: 'on re-test', flagHot: false,
+              line: 'Textbook response. Threshold 128 → 142 → 155, final re-test to exhaustion with no symptom rise.',
+              inPts: '0,120 24,102 48,86 72,74 96,68 120,66 144,67 168,65 192,66 216,64 240,66 264,65 288,66 312,65 330,66',
+              overPts: '', endX: 330, endY: 66, endLabelY: 100, endHot: false, endLabel: 'in band · 20 min' },
+            stalled: { date: '21 Sept', band: '114–128', hrt: '142', inBand: '12 / 12', inBandHot: false,
+              flagBig: 'Plateau', flagSmall: 'week three', flagHot: false,
+              line: 'Delivered exactly as prescribed, in band, no flares — and the threshold sat at 142. Not a dose problem. A re-assessment.',
+              inPts: '0,121 24,100 48,84 72,72 96,67 120,66 144,68 168,66 192,67 216,65 240,67 264,66 288,67 312,66 330,67',
+              overPts: '', endX: 330, endY: 67, endLabelY: 100, endHot: false, endLabel: 'in band · 20 min' },
+          } as const
+          const k = (p?.demoCase ?? 'adherence') as keyof typeof HERO
+          const h = HERO[k]
+          const amber = '#E0785A', teal = '#35B5AC'
+          const chips = [['recovery', 'M.T.'], ['adherence', 'R.K.'], ['stalled', 'D.P.']] as const
+          const tools = [
+            { href: '/preseason', label: 'Baseline', Icon: TrendingDown },
+            { href: '#hub-detail', label: 'Trainer', Icon: Activity, solid: true },
+            { href: '/scat-forms', label: 'SCAT6', Icon: ClipboardList },
+            { href: '/tools/bctt-calculator', label: 'BCTT', Icon: Calculator },
+          ]
+          return (
+          <div className="mb-8 lg:hidden">
+            <div className="rounded-3xl bg-[#06252A] text-[#EAF2F2] px-[18px] pt-[22px] pb-5 flex flex-col gap-3.5">
+              <div className="flex items-center justify-between gap-2.5">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#35B5AC]">Clinical Hub</p>
+                <p className="font-mono text-[11px] text-[#6E9498]">{h.date}</p>
               </div>
-            </section>
-
-            <section>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)] mb-1.5">Three worked cases</p>
-              <p className="text-[13.5px] leading-relaxed text-muted-foreground mb-3">
-                Synthetic, built to the published protocol. Each one carries one argument.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                {([
-                  { k: 'recovery', who: 'M.T. — 24M, community football', n: '128 → 155 bpm', tone: 'text-[var(--accent)]',
-                    body: 'Textbook response. Threshold climbed across three tests, final re-test to exhaustion with no symptom rise — cleared.' },
-                  { k: 'adherence', who: 'R.K. — 31F, recreational netball', n: '124 → 131 bpm', tone: 'text-[#b4482b]',
-                    body: 'Prescribed is not performed. Thirteen sessions logged; the sensor shows four above band, two flared, two typed in by hand. Threshold barely moved.' },
-                  { k: 'stalled', who: 'D.P. — 17M, school rugby', n: '126 → 142 → 142', tone: 'text-muted-foreground',
-                    body: 'Delivered exactly as prescribed, in band, no flares — and plateaued at week three. Not a dose problem. A re-assessment.' },
-                ] as const).map((c) => {
-                  const pt = roster.find((x) => x.demoCase === c.k)
-                  return (
-                    <div key={c.k} className="flex flex-col gap-2 rounded-2xl bg-white border border-[var(--accent)]/[0.12] p-3.5">
-                      <div className="flex items-baseline justify-between gap-2.5">
-                        <p className="text-[15px] font-semibold text-foreground leading-snug">{c.who}</p>
-                        <span className={`font-mono text-[11px] font-semibold whitespace-nowrap ${c.tone}`}>{c.n}</span>
-                      </div>
-                      <p className="text-[12.5px] leading-relaxed text-muted-foreground">{c.body}</p>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        {pt && (
-                          <button type="button"
-                            onClick={() => { setSelectedId(pt.id); setRosterOpen(false); document.getElementById('hub-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
-                            className="text-[12.5px] font-semibold text-[var(--accent)] hover:underline">
-                            Open the case ↓
-                          </button>
-                        )}
-                        <a href={`/api/sst/report?code=DEMO00&patient=demo&case=${c.k}`} target="_blank" rel="noopener"
-                           className="text-[12.5px] font-semibold text-[var(--accent)] hover:underline">
-                          Report ↗
-                        </a>
-                      </div>
-                    </div>
-                  )
-                })}
+              <p className="text-[22px] font-bold tracking-tight leading-[1.15]">{p?.name}</p>
+              <div className="rounded-2xl bg-[#041C20] px-3 pt-3 pb-2 flex flex-col gap-1.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="font-mono text-[10.5px] tracking-[0.1em] text-[#6E9498]">HEART RATE · ONE SESSION</span>
+                  <span className="font-mono text-[10.5px] text-[#6E9498]">band {h.band}</span>
+                </div>
+                <svg viewBox="0 0 334 132" className="w-full h-auto" role="img" aria-label="Heart-rate trace for one home session against the prescribed band">
+                  <rect x="0" y="52" width="334" height="30" fill={teal} opacity="0.14" />
+                  <line x1="0" y1="52" x2="334" y2="52" stroke={teal} strokeOpacity="0.5" strokeWidth="1" strokeDasharray="3 4" />
+                  <line x1="0" y1="82" x2="334" y2="82" stroke={teal} strokeOpacity="0.5" strokeWidth="1" strokeDasharray="3 4" />
+                  <polyline points={h.inPts} fill="none" stroke={teal} strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round" />
+                  {h.overPts && <polyline points={h.overPts} fill="none" stroke={amber} strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round" />}
+                  <circle cx={h.endX} cy={h.endY} r="4.5" fill={h.endHot ? amber : teal} />
+                  <text x={h.endX} y={h.endLabelY} textAnchor="end" fontFamily="ui-monospace, monospace" fontSize="10.5" fontWeight="600" fill={h.endHot ? amber : teal}>{h.endLabel}</text>
+                </svg>
               </div>
-            </section>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none">{h.hrt}</span><span className="text-[11px] text-[#A8C9C7]">bpm threshold</span></div>
+                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none" style={{ color: h.inBandHot ? amber : teal }}>{h.inBand}</span><span className="text-[11px] text-[#A8C9C7]">in band</span></div>
+                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none" style={{ color: h.flagHot ? amber : (k === 'stalled' ? '#A8C9C7' : teal) }}>{h.flagBig}</span><span className="text-[11px] text-[#A8C9C7]">{h.flagSmall}</span></div>
+              </div>
+              <p className="text-[13.5px] leading-snug text-[#A8C9C7]">{h.line}</p>
+            </div>
 
-            <button type="button" onClick={() => setRosterOpen((v) => !v)} aria-expanded={rosterOpen}
-              className="lg:hidden w-full min-h-[48px] flex items-center justify-between gap-2.5 rounded-xl bg-white border border-[var(--accent)]/[0.12] px-3.5 py-3 text-sm font-semibold text-foreground">
-              <span>All {roster.length} example patients</span>
-              <ChevronDown className={`w-[18px] h-[18px] text-muted-foreground transition-transform ${rosterOpen ? 'rotate-180' : ''}`} strokeWidth={2.2} />
-            </button>
+            <div className="flex gap-2 pt-3.5">
+              {chips.map(([id, chip]) => {
+                const pt = roster.find((x) => x.demoCase === id); const on = id === k
+                return (
+                  <button key={id} type="button" aria-pressed={on} onClick={() => { if (pt) setSelectedId(pt.id) }}
+                    className={`flex-1 min-h-[44px] rounded-xl text-sm font-semibold border ${on ? 'bg-[#0a0f14] text-white border-[#0a0f14]' : 'bg-white text-foreground border-[var(--accent)]/20'}`}>
+                    {chip}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 pt-5">
+              {tools.map((t) => (
+                <a key={t.label} href={t.href} className="flex flex-col items-center gap-2 min-h-[44px] no-underline text-foreground">
+                  <span className={`w-[52px] h-[52px] rounded-2xl flex items-center justify-center ${t.solid ? 'bg-[var(--accent)]' : 'bg-white border border-[var(--accent)]/[0.14]'}`}>
+                    <t.Icon className={`w-[22px] h-[22px] ${t.solid ? 'text-white' : 'text-[var(--accent)]'}`} strokeWidth={2} />
+                  </span>
+                  <span className="text-[11.5px] font-semibold text-center leading-tight">{t.label}</span>
+                </a>
+              ))}
+            </div>
+            <p className="mt-2.5 text-center text-[12px] text-muted-foreground">Four instruments. Included with the course.</p>
+
+            <a href="/oa2026" className="mt-5 min-h-[50px] flex items-center justify-center rounded-2xl bg-[var(--accent)] text-white text-[15px] font-semibold no-underline">
+              The course and the November date
+            </a>
+
+            <div className="pt-6 pb-1 flex items-center justify-center gap-2 text-[12px] text-muted-foreground">
+              <span>Full case, sessions and reports below</span>
+              <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.2} />
+            </div>
+            <p className="mt-3 text-center text-[10.5px] leading-snug text-[#6b7a84]">Example clinic. Worked cases built to the published protocol — synthetic, not patients.</p>
           </div>
-        )}
+          )
+        })()}
 
         <div id="hub-detail" className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 scroll-mt-4">
           {/* ── Roster ── */}
-          <aside className={`space-y-3 ${isDemo && !rosterOpen ? 'hidden lg:block' : ''}`}>
+          {/* Demo on a phone: the roster is admin chrome a prospect never needs —
+              the hero's chips select the case. Real clinics keep it everywhere. */}
+          <aside className={`space-y-3 ${isDemo ? 'hidden lg:block' : ''}`}>
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <input
