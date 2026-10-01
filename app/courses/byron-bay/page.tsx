@@ -10,8 +10,8 @@ import { SiteNav } from '@/components/SiteNav'
 import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
 import { REFERENCE_COUNT } from '@/data/reference-count'
 
-export default function SydneyPage() {
-  const location = CONFIG.LOCATIONS.SYDNEY as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
+export default function ByronBayPage() {
+  const location = CONFIG.LOCATIONS.BYRON_BAY as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
   const liveWorkshop = nextLiveWorkshop()
 
   return (
@@ -21,7 +21,7 @@ export default function SydneyPage() {
       <BreadcrumbSchema items={[
         { name: 'Home', url: '/' },
         { name: 'Training Locations', url: '/course' },
-        { name: 'Sydney', url: '/courses/sydney' },
+        { name: 'Byron Bay', url: '/courses/byron-bay' },
       ]} />
 
       <SiteNav />
@@ -41,7 +41,7 @@ export default function SydneyPage() {
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
-              Master SCAT6, VOMS, and BESS protocols in Sydney&apos;s premier concussion management course.
+              Master SCAT6, VOMS, and BESS protocols in Byron Bay&apos;s premier concussion management course.
               Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA-aligned CPD hours.
             </p>
 
@@ -60,7 +60,7 @@ export default function SydneyPage() {
                 <a
                   href={`${CONFIG.SHOP_URL}?location=sydney`}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label={`Enrol in Sydney session for $${workshopPriceFor('sydney').toLocaleString()}`}
+                  aria-label={`Enrol in Byron Bay session for $${workshopPriceFor('sydney').toLocaleString()}`}
                 >
                   Enrol Now - ${workshopPriceFor('sydney').toLocaleString()}
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
@@ -74,19 +74,19 @@ export default function SydneyPage() {
               <>
                 <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
                   <Calendar className="w-4 h-4" aria-hidden="true" />
-                  Sydney round forming — no date confirmed yet.
+                  Byron Bay round forming — no date confirmed yet.
                 </div>
-                {/* Dead-lander fix (2026-09-21): lander-dead-/courses/sydney —
+                {/* Dead-lander fix (2026-09-21): lander-dead-/courses/byron-bay —
                     FREE_WORKSHOP_NOTIFY off → NextEarlyBirdCapture is only
                     SecureSeatCheckout (Stripe embed ≠ second page). Put link
                     CTAs above the deposit so entrants can leave for Online
                     ($0 opex) or the live Melb dated page. */}
                 <div
                   className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3"
-                  data-cea-conversion="sydney-forming-exits-sep21"
+                  data-cea-conversion="byron-bay-forming-exits-sep21"
                 >
                   <Link
-                    href="/pricing?src=sydney-forming-hero"
+                    href="/pricing?src=byron-bay-forming-hero"
                     className="btn-primary px-8 py-3.5 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   >
                     Enrol Online — start anytime
@@ -94,7 +94,7 @@ export default function SydneyPage() {
                   </Link>
                   {liveWorkshop && (
                     <Link
-                      href={`${workshopDatePage(liveWorkshop.slug)}?src=sydney-forming-hero`}
+                      href={`${workshopDatePage(liveWorkshop.slug)}?src=byron-bay-forming-hero`}
                       className="glass px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-slate-100 transition-colors inline-flex items-center gap-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                     >
                       {liveWorkshop.city} {liveWorkshop.date.replace(/^Saturday /, 'Sat ')} is live
@@ -103,7 +103,7 @@ export default function SydneyPage() {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-3 mb-1">
-                  Prefer to hold a Sydney seat? Refundable A${CONFIG.COURSE.PRICE_SECURE_SEAT} deposit below.
+                  Prefer to hold a Byron Bay seat? Refundable A${CONFIG.COURSE.PRICE_SECURE_SEAT} deposit below.
                 </p>
                 <NextEarlyBirdCapture defaultCity="sydney" />
               </>
@@ -176,7 +176,7 @@ export default function SydneyPage() {
               Secure Your Spot in {location.city}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Join Sydney clinicians mastering evidence-based concussion management.{location.status === 'confirmed' ? ` Workshop date confirmed — limited spots for optimal hands-on practice.` : ` We run workshops as demand opens up — register and you'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice when the next date is confirmed.`}
+              Join Byron Bay clinicians mastering evidence-based concussion management.{location.status === 'confirmed' ? ` Workshop date confirmed — limited spots for optimal hands-on practice.` : ` We run workshops as demand opens up — register and you'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice when the next date is confirmed.`}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               {location.status === 'confirmed' ? (
@@ -189,7 +189,7 @@ export default function SydneyPage() {
                 </a>
               ) : (
                 <Link
-                  href="/pricing?src=sydney-forming-bottom"
+                  href="/pricing?src=byron-bay-forming-bottom"
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 >
                   Enrol Online
@@ -206,13 +206,13 @@ export default function SydneyPage() {
                   sitemap.ts and SEO-targeted, but had ZERO inbound links from
                   anywhere on the site and zero pageviews in 90 days — so the
                   only way anyone arrives is Google, and once here there was no
-                  route to the page that says how close Sydney actually is
+                  route to the page that says how close Byron Bay actually is
                   (2026-08-06, register A pass 2). */}
               <Link
                 href="/ready-to-train"
                 className="glass px-8 py-4 rounded-xl text-base font-semibold hover:bg-slate-100 transition-colors inline-flex items-center gap-2 border border-slate-200 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
               >
-                Where Sydney Is Up To
+                Where Byron Bay Is Up To
               </Link>
             </div>
           </div>
