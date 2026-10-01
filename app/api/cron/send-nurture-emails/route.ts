@@ -200,16 +200,28 @@ export async function GET(request: Request) {
     // be selling something the day can no longer absorb well.
     const DEPOSIT_CHASE_DAYS_BEFORE = 12
     const FINAL_WINDOW_MIN_DAYS = 4
-    // Count 'delivered' — the webhook subscribes delivered/opened/clicked/
-    // bounced/complained and never writes 'sent' rows, so counting only
-    // 'sent' made the cap a no-op. 'sent' stays in the IN list in case we
-    // ever subscribe to email.sent.
+    // Count MESSAGES, not event rows. The comment that used to sit here said
+    // the webhook "never writes 'sent' rows" — it has since 6 Aug 2026, so
+    // every message produced a 'sent' AND a 'delivered' row and the cap of 3
+    // was really a cap of 1.5. Incident 2026-10-01: the first upgrade run
+    // skipped the two NEWEST buyers (Thanh-Xuan Ly, Tyler Bell) — the people
+    // most likely to convert — because their enrolment + platform + login
+    // emails, double-counted, had "used up" their marketing allowance.
+    //
+    // Two fixes: DISTINCT email_id (one message = one count regardless of how
+    // many webhook states it passes through), and transactional sequences
+    // are excluded — a receipt, a login link, a certificate or a platform
+    // welcome is not marketing and must never lock someone out of it.
     const { rows: weeklyCounts } = await sql<{ recipient: string; n: number }>`
-      SELECT LOWER(recipient) AS recipient, COUNT(*)::int AS n
+      SELECT LOWER(recipient) AS recipient, COUNT(DISTINCT email_id)::int AS n
       FROM email_events
-      WHERE event_type IN ('sent', 'delivered')
+      WHERE event_type IN ('sent', 'delivered', 'scheduled')
         AND created_at > NOW() - INTERVAL '7 days'
         AND COALESCE(project, 'cea') = 'cea'
+        AND COALESCE(sequence, '') NOT IN (
+          'magic-link', 'tax-invoice', 'certificate', 'course-bundle-platform',
+          'purchase-welcome', 'untagged-other', 'deposit-balance'
+        )
       GROUP BY LOWER(recipient)
     `
     const recipientSendsThisWeek = new Map<string, number>(

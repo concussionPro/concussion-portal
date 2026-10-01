@@ -304,11 +304,16 @@ describe('send-nurture-emails cron', () => {
     expect(sendEmailMock).not.toHaveBeenCalled()
   })
 
-  it('weekly cap counts delivered events (not just the never-written sent type)', async () => {
+  it('weekly cap counts distinct MESSAGES across sent/delivered/scheduled, never rows', async () => {
+    // 2026-10-01: the webhook HAS written 'sent' rows since 6 Aug, so counting
+    // rows made every message count twice and the cap of 3 a cap of 1.5 —
+    // which skipped the two newest buyers on the first upgrade run.
     await GET(makeRequest())
 
-    const capQueries = sqlCalls("event_type IN ('sent', 'delivered')")
+    const capQueries = sqlCalls("event_type IN ('sent', 'delivered', 'scheduled')")
     expect(capQueries).toHaveLength(1)
     expect(capQueries[0].text).toContain('FROM email_events')
+    expect(capQueries[0].text).toContain('COUNT(DISTINCT email_id)')
+    expect(capQueries[0].text).toContain("'magic-link'") // transactional never consumes the allowance
   })
 })
