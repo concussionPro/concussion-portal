@@ -1300,7 +1300,7 @@ export default function ClinicalHubPage() {
           } as const
           const k = (p?.demoCase ?? 'adherence') as keyof typeof HERO
           const h = HERO[k]
-          const amber = '#E0785A', teal = '#35B5AC'
+          const amber = '#b45309', teal = '#0d7377'   // portal amber-700 / accent — never clay / bright teal
           const chips = [['recovery', 'M.T.'], ['adherence', 'R.K.'], ['stalled', 'D.P.']] as const
           const tools = [
             { href: '/preseason', label: 'Baseline', Icon: TrendingDown },
@@ -1310,19 +1310,19 @@ export default function ClinicalHubPage() {
           ]
           return (
           <div className="mb-8 lg:hidden">
-            <div className="rounded-3xl bg-[#06252A] text-[#EAF2F2] px-[18px] pt-[22px] pb-5 flex flex-col gap-3.5">
+            <div className="rounded-3xl bg-white border border-[var(--accent)]/[0.12] text-foreground px-[18px] pt-[22px] pb-5 flex flex-col gap-3.5">
               <div className="flex items-center justify-between gap-2.5">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#35B5AC]">Clinical Hub</p>
-                <p className="font-mono text-[11px] text-[#6E9498]">{h.date}</p>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">Clinical Hub</p>
+                <p className="font-mono text-[11px] text-muted-foreground">{h.date}</p>
               </div>
               <p className="text-[22px] font-bold tracking-tight leading-[1.15]">{p?.name}</p>
-              <div className="rounded-2xl bg-[#041C20] px-3 pt-3 pb-2 flex flex-col gap-1.5">
+              <div className="rounded-2xl bg-[#f0f4f5] border border-[var(--accent)]/[0.10] px-3 pt-3 pb-2 flex flex-col gap-1.5">
                 <div className="flex justify-between items-baseline">
-                  <span className="font-mono text-[10.5px] tracking-[0.1em] text-[#6E9498]">HEART RATE · ONE SESSION</span>
-                  <span className="font-mono text-[10.5px] text-[#6E9498]">band {h.band}</span>
+                  <span className="font-mono text-[10.5px] tracking-[0.1em] text-muted-foreground">HEART RATE · ONE SESSION</span>
+                  <span className="font-mono text-[10.5px] text-muted-foreground">band {h.band}</span>
                 </div>
                 <svg viewBox="0 0 334 132" className="w-full h-auto" role="img" aria-label="Heart-rate trace for one home session against the prescribed band">
-                  <rect x="0" y="52" width="334" height="30" fill={teal} opacity="0.14" />
+                  <rect x="0" y="52" width="334" height="30" fill={teal} opacity="0.10" />
                   <line x1="0" y1="52" x2="334" y2="52" stroke={teal} strokeOpacity="0.5" strokeWidth="1" strokeDasharray="3 4" />
                   <line x1="0" y1="82" x2="334" y2="82" stroke={teal} strokeOpacity="0.5" strokeWidth="1" strokeDasharray="3 4" />
                   <polyline points={h.inPts} fill="none" stroke={teal} strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round" />
@@ -1332,11 +1332,11 @@ export default function ClinicalHubPage() {
                 </svg>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none">{h.hrt}</span><span className="text-[11px] text-[#A8C9C7]">bpm threshold</span></div>
-                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none" style={{ color: h.inBandHot ? amber : teal }}>{h.inBand}</span><span className="text-[11px] text-[#A8C9C7]">in band</span></div>
-                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none" style={{ color: h.flagHot ? amber : (k === 'stalled' ? '#A8C9C7' : teal) }}>{h.flagBig}</span><span className="text-[11px] text-[#A8C9C7]">{h.flagSmall}</span></div>
+                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none">{h.hrt}</span><span className="text-[11px] text-muted-foreground">bpm threshold</span></div>
+                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none" style={{ color: h.inBandHot ? amber : teal }}>{h.inBand}</span><span className="text-[11px] text-muted-foreground">in band</span></div>
+                <div className="flex flex-col gap-0.5"><span className="font-mono text-[26px] font-bold leading-none" style={{ color: h.flagHot ? amber : (k === 'stalled' ? '#4a5568' : teal) }}>{h.flagBig}</span><span className="text-[11px] text-muted-foreground">{h.flagSmall}</span></div>
               </div>
-              <p className="text-[13.5px] leading-snug text-[#A8C9C7]">{h.line}</p>
+              <p className="text-[13.5px] leading-snug text-muted-foreground">{h.line}</p>
             </div>
 
             <div className="flex gap-2 pt-3.5">
@@ -1371,7 +1371,7 @@ export default function ClinicalHubPage() {
               <span>Full case, sessions and reports below</span>
               <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.2} />
             </div>
-            <p className="mt-3 text-center text-[10.5px] leading-snug text-[#6b7a84]">Example clinic. Worked cases built to the published protocol — synthetic, not patients.</p>
+            <p className="mt-3 text-center text-[10.5px] leading-snug text-muted-foreground">Example clinic. Worked cases built to the published protocol — synthetic, not patients.</p>
           </div>
           )
         })()}
