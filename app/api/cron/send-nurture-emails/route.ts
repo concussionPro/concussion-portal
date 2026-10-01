@@ -825,11 +825,14 @@ export async function GET(request: Request) {
     // missing, misspelled or lost in a project migration can never start a
     // send on its own.
     //
-    // Do NOT flip this back without Zac approving the exact copy again.
-    // See [[feedback_no_send_without_copy_approval]] — arming is sending.
-    const seatLanesLive = process.env.WORKSHOP_SEAT_LANES === 'true'
+    // 2026-10-01: Zac — "run the outreach… they are most likely to convert."
+    // The seat-count line he killed is gone (no remaining-seats figure in any
+    // template; a test locks it); the copy is otherwise what he approved on
+    // 30 Sep with the early-bird date named. ON by default from here.
+    // WORKSHOP_SEAT_LANES=false is the kill switch, no deploy needed.
+    const seatLanesLive = process.env.WORKSHOP_SEAT_LANES !== 'false'
     if (!seatLanesLive) {
-      console.log('[Seat lanes] 2b + 2c DARK — WORKSHOP_SEAT_LANES is not true')
+      console.log('[Seat lanes] 2b + 2c skipped — WORKSHOP_SEAT_LANES=false (kill switch)')
     }
 
     // ── 2b. Secure-seat deposit → balance request ──────────────────────
