@@ -42,6 +42,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ skipped: true, reason: 'Not primary project' })
     }
 
+    // PAUSE SWITCH (Zac 2026-10-04): MARKETING_EMAILS_PAUSED=true in the Vercel
+    // env stops every marketing send from this cron without a deploy, while
+    // transactional mail (magic links, invoices, certificates) runs elsewhere
+    // and is untouched. Set while deliverability is in question; unset to resume.
+    if (process.env.MARKETING_EMAILS_PAUSED === 'true') {
+      console.log('[cron] marketing sends PAUSED — MARKETING_EMAILS_PAUSED=true')
+      return NextResponse.json({ skipped: true, reason: 'MARKETING_EMAILS_PAUSED' })
+    }
+
     // Guard: CRON_SECRET must be set
     if (!process.env.CRON_SECRET) {
       console.error('CRON_SECRET not configured — refusing to run')
