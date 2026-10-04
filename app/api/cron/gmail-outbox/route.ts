@@ -14,7 +14,7 @@ import {
   sentAwaitingReply,
   sentTodayCount,
 } from '@/lib/gmail/outbox'
-import { gmailConfigured, gmailSend, gmailThreadMessages, isReplyFromOtherSide } from '@/lib/gmail/client'
+import { gmailConfigured, gmailSend, gmailThreadMessages, isReplyFromOtherSide, textToSimpleHtml } from '@/lib/gmail/client'
 import { isEmailSuppressed } from '@/lib/email-suppression'
 
 /**
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
       if (wait > 4 * 60_000) { summary.held++; continue } // this domain goes next tick
       if (wait > 0) await sleep(wait)
       try {
-        const r = await gmailSend({ to: row.recipient, subject: row.subject, text: row.text, html: row.html || undefined })
+        const r = await gmailSend({ to: row.recipient, subject: row.subject, text: row.text, html: row.html || textToSimpleHtml(row.text) })
         await markSent(row.id, r.id, r.threadId)
         summary.sent++
         released++

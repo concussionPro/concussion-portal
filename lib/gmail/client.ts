@@ -107,6 +107,22 @@ export function buildMime(m: MimeInput): string {
   return lines.join('\r\n')
 }
 
+/**
+ * Minimal HTML alternative derived from the plain text: paragraphs with real
+ * spacing, the system font, links clickable, nothing else — so Gmail and
+ * Outlook render the note the way a person would have typed it, while the
+ * text part stays the canonical copy.
+ */
+export function textToSimpleHtml(text: string): string {
+  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const link = (t: string) => t.replace(/(https?:\/\/[^\s<]+)/g, (u) => `<a href="${u}" style="color:#0d7377">${u}</a>`)
+  const paras = text.replace(/\r\n/g, '\n').trim().split(/\n{2,}/)
+  const body = paras
+    .map((p) => `<p style="margin:0 0 16px;line-height:1.5">${link(esc(p)).replace(/\n/g, '<br>')}</p>`)
+    .join('')
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:#0a0f14;max-width:620px">${body}</div>`
+}
+
 export interface GmailSendResult { id: string; threadId: string }
 
 /** Send as zac@. The message lands in Zac's Sent folder like any other. */

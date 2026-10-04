@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'fs'
-import { buildMime, encodeHeader, isReplyFromOtherSide, GMAIL_SENDER } from '@/lib/gmail/client'
+import { buildMime, encodeHeader, isReplyFromOtherSide, textToSimpleHtml, GMAIL_SENDER } from '@/lib/gmail/client'
 import { allowedWhilePaused, GMAIL_DAILY_CAP } from '@/lib/gmail/outbox'
 
 describe('gmail warm lane', () => {
@@ -31,6 +31,13 @@ describe('gmail warm lane', () => {
     expect(mime.indexOf('text/plain')).toBeLessThan(mime.indexOf('text/html'))
     expect(mime).not.toMatch(/List-Unsubscribe|X-Entity-Ref-ID|Precedence: bulk/i)
     expect(mime).toContain('Subject: =?UTF-8?B?') // em dash → encoded header
+  })
+  it('derived HTML keeps paragraphs, links the URL and escapes markup', () => {
+    const h = textToSimpleHtml('Hi Zac,\n\nLine one <b>\nline two\n\nhttps://portal.concussion-education-australia.com/melbourne\n\nZac')
+    expect((h.match(/<p /g) || []).length).toBe(4)
+    expect(h).toContain('&lt;b&gt;')
+    expect(h).toContain('<a href="https://portal.concussion-education-australia.com/melbourne"')
+    expect(h).toContain('line-height:1.5')
   })
   it('header encoding leaves ASCII alone', () => {
     expect(encodeHeader('Plain subject')).toBe('Plain subject')
