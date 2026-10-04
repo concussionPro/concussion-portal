@@ -197,17 +197,20 @@ export async function GET(request: Request) {
     // Timing for the two workshop-seat lanes below (2b and 2c).
     //
     // DEPOSIT_CHASE_DAYS_BEFORE — an unpaid A$100 deposit gets a second and
-    // final ask this many days out. It is set inside the early-bird window's
-    // tail but with enough room to actually pay and arrange the day; the
-    // email also states that an unanswered seat is released and refunded, so
-    // it must not land so late that the holder has no chance to respond.
+    // final ask this many days out. 14, not 12 (Zac 2026-10-04: "she's paid
+    // her $100 to secure her spot. leave lilly until 14d before course to
+    // complete purchase") — 14 days out IS the early-bird close, so the one
+    // chase a deposit holder gets lands on the only deadline that matters to
+    // them, and nothing is sent in the quiet weeks between. The email also
+    // states that an unanswered seat is released and refunded, so it must not
+    // land so late that the holder has no chance to respond.
     //
     // FINAL_WINDOW_MIN_DAYS — after the early-bird closes, the upgrade ask
     // keeps running until this many days before the date, then stops. Inside
     // the last few days the honest position is that the roster is set
     // (catering, handbooks, assessment pairs), so selling a seat there would
     // be selling something the day can no longer absorb well.
-    const DEPOSIT_CHASE_DAYS_BEFORE = 12
+    const DEPOSIT_CHASE_DAYS_BEFORE = CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE
     const FINAL_WINDOW_MIN_DAYS = 4
     // Count MESSAGES, not event rows. The comment that used to sit here said
     // the webhook "never writes 'sent' rows" — it has since 6 Aug 2026, so

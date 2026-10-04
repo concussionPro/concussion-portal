@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs'
 import { describe, it, expect } from 'vitest'
 import { WORKSHOP_BALANCE_REMINDER, WORKSHOP_FINAL_SEATS } from '@/lib/email-sequences'
 import { CONFIG } from '@/lib/config'
@@ -136,5 +137,16 @@ describe('no upgrade email ever states how many seats are left', () => {
     for (const html of all) {
       expect(html).not.toMatch(/\b(discount|bonus|free (month|access|upgrade)|promo code|coupon|% off)\b/i)
     }
+  })
+})
+
+// Zac 2026-10-04: a deposit holder gets ONE chase, and it lands on the
+// early-bird close — the only deadline that matters to them. Never a separate
+// hand-picked number that drifts from the price boundary.
+describe('deposit chase lands on the early-bird close', () => {
+  it('the chase constant derives from CONFIG, not a literal', () => {
+    const src = readFileSync('app/api/cron/send-nurture-emails/route.ts', 'utf8')
+    expect(src).toContain('const DEPOSIT_CHASE_DAYS_BEFORE = CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE')
+    expect(src).not.toMatch(/DEPOSIT_CHASE_DAYS_BEFORE = \d/)
   })
 })
