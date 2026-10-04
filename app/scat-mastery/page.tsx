@@ -1,4 +1,5 @@
 'use client'
+import { trackEvent } from '@/lib/analytics'
 
 import { useEffect, useState } from 'react'
 import {
@@ -106,6 +107,8 @@ const freeCourseSchema = {
  * that helper doesn't support.
  */
 async function fireSignupConversionThenNavigate(email: string, destination: string) {
+  // GA4 sign_up (bridged in lib/analytics) — independent of the retired Ads conversion below.
+  trackEvent('free_course_signup', { source: 'scat-mastery' })
   let navigated = false
   const navigate = () => {
     if (navigated) return

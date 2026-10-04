@@ -1,6 +1,7 @@
 // Analytics tracking library for user behavior monitoring
 
 import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from './google-ads'
+import { ga4EventFor } from './ga4-events'
 
 export interface AnalyticsEvent {
   id: string
@@ -271,6 +272,13 @@ export async function trackEvent(
   eventData: Record<string, unknown> = {}
 ): Promise<void> {
   if (isAutomation()) return
+  // GA4 bridge — recommended events only (purchase, begin_checkout,
+  // generate_lead, sign_up, view_item*). Fire-and-forget; the Postgres
+  // record below is the source of truth and never waits on gtag.
+  try {
+    const ga = ga4EventFor(eventType, eventData)
+    if (ga && typeof window !== 'undefined' && typeof window.gtag === 'function') window.gtag('event', ga.name, ga.params)
+  } catch { /* never let GA4 break our own tracking */ }
   try {
     // Session id first — getVisitNumber() keys off its value, not its absence.
     const sessionId = getOrCreateSessionId()
