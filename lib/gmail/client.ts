@@ -108,19 +108,18 @@ export function buildMime(m: MimeInput): string {
 }
 
 /**
- * Minimal HTML alternative derived from the plain text: paragraphs with real
- * spacing, the system font, links clickable, nothing else — so Gmail and
- * Outlook render the note the way a person would have typed it, while the
- * text part stays the canonical copy.
+ * HTML alternative in the exact shape Gmail's own composer emits — one <div>
+ * per line, <div><br></div> for a blank line, no font-size or margin styling.
+ * That shape renders identically in Gmail web, Gmail iOS/Android, Apple Mail
+ * and Outlook because it IS what those clients receive from every hand-typed
+ * Gmail message. Styled <p> margins did not (Zac, 4 Oct: "spacing is still
+ * shit"). The plain-text part stays the canonical copy.
  */
 export function textToSimpleHtml(text: string): string {
   const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const link = (t: string) => t.replace(/(https?:\/\/[^\s<]+)/g, (u) => `<a href="${u}" style="color:#0d7377">${u}</a>`)
-  const paras = text.replace(/\r\n/g, '\n').trim().split(/\n{2,}/)
-  const body = paras
-    .map((p) => `<p style="margin:0 0 16px;line-height:1.5">${link(esc(p)).replace(/\n/g, '<br>')}</p>`)
-    .join('')
-  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:#0a0f14;max-width:620px">${body}</div>`
+  const link = (t: string) => t.replace(/(https?:\/\/[^\s<]+)/g, (u) => `<a href="${u}">${u}</a>`)
+  const lines = text.replace(/\r\n/g, '\n').trim().split('\n')
+  return `<div dir="ltr">${lines.map((l) => (l.trim() === '' ? '<div><br></div>' : `<div>${link(esc(l))}</div>`)).join('')}</div>`
 }
 
 export interface GmailSendResult { id: string; threadId: string }

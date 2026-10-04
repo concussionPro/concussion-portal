@@ -32,12 +32,14 @@ describe('gmail warm lane', () => {
     expect(mime).not.toMatch(/List-Unsubscribe|X-Entity-Ref-ID|Precedence: bulk/i)
     expect(mime).toContain('Subject: =?UTF-8?B?') // em dash → encoded header
   })
-  it('derived HTML keeps paragraphs, links the URL and escapes markup', () => {
-    const h = textToSimpleHtml('Hi Zac,\n\nLine one <b>\nline two\n\nhttps://portal.concussion-education-australia.com/melbourne\n\nZac')
-    expect((h.match(/<p /g) || []).length).toBe(4)
+  it('derived HTML is Gmail-compose shaped: div per line, <div><br></div> blanks, link clickable, markup escaped', () => {
+    const h = textToSimpleHtml('Hi Zac,\n\nLine one <b>\n\nhttps://portal.concussion-education-australia.com/melbourne\n\nZac')
+    expect(h.startsWith('<div dir="ltr">')).toBe(true)
+    expect((h.match(/<div><br><\/div>/g) || []).length).toBe(3)
+    expect(h).toContain('<div>Hi Zac,</div>')
     expect(h).toContain('&lt;b&gt;')
-    expect(h).toContain('<a href="https://portal.concussion-education-australia.com/melbourne"')
-    expect(h).toContain('line-height:1.5')
+    expect(h).toContain('<a href="https://portal.concussion-education-australia.com/melbourne">')
+    expect(h).not.toMatch(/style=|font-size|margin/)
   })
   it('header encoding leaves ASCII alone', () => {
     expect(encodeHeader('Plain subject')).toBe('Plain subject')
