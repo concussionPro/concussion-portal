@@ -81,6 +81,17 @@ export async function provisionPlatformForBuyer(
    * they fell through to the trial cap.
    */
   entitledPlatform = false,
+  /**
+   * Send the standalone "your clinical platform is ready" email.
+   *
+   * FALSE for a course purchase: the purchase welcome already carries the
+   * login link, the clinic code, the invoice and the order reference, so a
+   * second email arriving in the same second is pure noise — and noise is
+   * what gets a sender filed as spam. One purchase, one email (Zac
+   * 2026-10-06: "4 emails is insane. it is spam"). TRUE for a standalone SST
+   * signup, where this IS the only welcome.
+   */
+  sendWelcome = true,
 ): Promise<string> {
   const cleanEmail = email.trim().toLowerCase()
   const clinicName = (name || '').trim() || 'Clinic'
@@ -191,6 +202,11 @@ export async function provisionPlatformForBuyer(
     loginUrl = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent('/clinical-testing')}`
   } catch (err) {
     console.error('[bundle] grantSstEntitlement/login-link failed (welcome still sends code):', err)
+  }
+
+  if (!sendWelcome) {
+    console.log(`[bundle] welcome email suppressed for ${cleanEmail} — the purchase welcome carries the code`)
+    return clinic.code
   }
 
   await sendEmail({

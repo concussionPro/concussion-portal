@@ -415,6 +415,13 @@ export async function sendPostPurchaseLoginEmail(opts: {
    * 24h transactional TTL, which is what the admin resend path uses.
    */
   linkTtlHours?: number
+  /**
+   * The buyer's clinic code, folded into THIS email instead of arriving as a
+   * second message seconds later. One purchase, one email (Zac 2026-10-06:
+   * "4 emails is insane. it is spam… one email. login and invoice and any
+   * other immediately pertinent info a new purchase needs").
+   */
+  clinicCode?: string | null
 }): Promise<boolean> {
   const baseUrl = opts.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   const loginUrl = `${baseUrl}/api/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome`
@@ -495,6 +502,20 @@ export async function sendPostPurchaseLoginEmail(opts: {
       </div>
 
       ${workshopBlock}
+
+      ${opts.clinicCode ? `
+      <div style="margin:22px 0;padding:18px;border:1px solid #99f6e4;border-radius:12px;background:#f0fdfa;">
+        <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:.08em;">Included with your enrolment — live now</p>
+        <p style="margin:0 0 10px;font-size:14px;color:#134e4a;line-height:1.55;">You don't have to finish the course to use these. Your clinic workspace is already set up:</p>
+        <p style="margin:0 0 12px;font-size:15px;color:#0f172a;">Your clinic code: <strong style="font-family:monospace;font-size:17px;letter-spacing:.06em;">${escapeHtml(opts.clinicCode)}</strong></p>
+        <ul style="margin:0 0 14px;padding-left:18px;font-size:14px;color:#134e4a;line-height:1.7;">
+          <li><strong>SST Trainer</strong> — graded exertion testing, then in-band training your patient runs on their own phone</li>
+          <li><strong>Pre-season Baseline</strong> — one link per club, athletes self-complete in about five minutes, reports back to you</li>
+          <li><strong>BCTT calculator</strong> — Buffalo stages in, heart-rate threshold and training band out</li>
+          <li><strong>Clinical toolkit</strong> — the report templates</li>
+        </ul>
+        <a href="${baseUrl}/api/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome_sst&redirect=${encodeURIComponent('/clinical-testing')}" style="display:inline-block;padding:10px 18px;background:#0f766e;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">Open your clinical suite</a>
+      </div>` : ''}
 
       <div class="next">
         <strong>Where to start</strong> — Module 1 (Concussion neuroscience) takes about 75 minutes. Clinicians who finish it in the first 48 hours are 3× more likely to complete the whole course.

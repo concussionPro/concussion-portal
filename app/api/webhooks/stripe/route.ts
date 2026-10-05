@@ -855,6 +855,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.error('Failed to mark abandoned checkouts as recovered:', err)
   }
 
+  // Captured so the ONE welcome email below can hand over the clinic code
+  // instead of a second email arriving in the same second.
+  let ccmClinicCode: string | null = null
+
   // Bundle: CCM enrolment includes the working clinical platform (SST Trainer +
   // Baseline). Provision it for online-only / full-course buyers.
   //
@@ -868,7 +872,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     CONFIG.FEATURES.CCM_PLATFORM_BUNDLE_LIVE &&
     (accessLevel === 'online-only' || accessLevel === 'full-course')
   ) {
-    await provisionPlatformBestEffort(customerEmail, customerName, `CCM ${courseType}`, undefined, true)
+    ccmClinicCode = await provisionPlatformBestEffort(customerEmail, customerName, `CCM ${courseType}`, undefined, true, false)
   }
 
   // Step 2: Check workshop threshold — send admin alert when threshold hit
@@ -1006,6 +1010,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       // Same TTL the token above was minted with — the template used to state a
       // flat 24 hours regardless, sending buyers to request a link they had.
       linkTtlHours: NURTURE_TTL_MS / (60 * 60 * 1000),
+      clinicCode: ccmClinicCode,
       ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
     })
 
@@ -1351,7 +1356,7 @@ async function handleCrmPurchase(
       console.error(`[crm-intl] no Stripe customer on international CRM session ${session.id} — cannot attach the bundled SST subscription`)
     }
   }
-  const clinicCode = await provisionPlatformBestEffort(customerEmail, customerName, `CRM ${tier}`, bundledSubscription, true)
+  const clinicCode = await provisionPlatformBestEffort(customerEmail, customerName, `CRM ${tier}`, bundledSubscription, true, false)
 
   // Analytics — same purchase_complete event the CCM path fires, marked
   // stream='crm' + the nominated city so EP demand shows in Ready-to-Train and
@@ -1551,6 +1556,8 @@ async function provisionPlatformBestEffort(
   bundledSubscription?: { customerId: string; defaultPaymentMethod?: string },
   /** The purchase entitles them to the included platform (a course enrolment). */
   entitledPlatform = false,
+  /** False when the caller's own welcome email carries the clinic code. */
+  sendWelcome = true,
 ): Promise<string | null> {
   // Returns the clinic code so the welcome email can actually HAND IT OVER.
   // It used to be logged and thrown away: the platform was created for every
@@ -1558,7 +1565,7 @@ async function provisionPlatformBestEffort(
   // provisioned on 2026-08-02 with nobody ever logging in — the product was
   // bought, built and never opened.
   try {
-    const code = await provisionPlatformForBuyer(email, name, bundledSubscription, entitledPlatform)
+    const code = await provisionPlatformForBuyer(email, name, bundledSubscription, entitledPlatform, sendWelcome)
     console.log(`[bundle] platform provisioned for ${redact(email)} (${context}) — clinic ${code}`)
     return code
   } catch (err) {
