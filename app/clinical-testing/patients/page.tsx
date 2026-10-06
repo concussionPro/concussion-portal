@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Flag,
   FileText,
+  Activity,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { isTrainingFlare } from '@/lib/sst-trainer/flare'
@@ -74,6 +75,9 @@ interface PatientRow {
   /** install-UUID identity from any trajectory point — threads into the
    *  GP-report loader so duplicate names can't merge/404 (final sweep #9) */
   patientRef?: string | null
+  /** minted registry key — deep-links this patient straight into the trainer
+   *  for a re-test (/sst-trainer?clinic=CODE&p=PATIENTCODE) */
+  patientCode?: string | null
   condition: string | null
   gpReportDue?: boolean
   hrt: number | null
@@ -190,6 +194,26 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
           {/* Referring-practitioner report (owner 2026-07-06): auto-built from
               the episode — clearance referral or extend-plan recommendation. */}
           <div className="mt-3 flex flex-wrap gap-2">
+            {/* Run the graded test ON THIS PATIENT. The card already said
+                "Re-test due — last measured N days ago" and offered no way to
+                start one, so the clinician had to re-key the clinic code and
+                patient code into the trainer by hand mid-consult (Zac
+                2026-10-06). The deep link already existed; nothing linked to
+                it. ?p= pre-fills the minted code, so the re-test lands on the
+                SAME record and extends the trajectory instead of creating a
+                duplicate patient. Falls back to clinic-only when a patient
+                pre-dates minted codes — the clinician then picks the record. */}
+            <a
+              href={`/sst-trainer?clinic=${encodeURIComponent(clinic.code)}${
+                patient.patientCode ? `&p=${encodeURIComponent(patient.patientCode)}` : ''
+              }&start=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 transition-colors"
+            >
+              <Activity className="h-3.5 w-3.5" />
+              {patient.hrt ? 'Run re-test — graded exertion' : 'Run graded test'}
+            </a>
             <a
               href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(labelFor(patient))}${refFor(patient) ? `&ref=${encodeURIComponent(refFor(patient) as string)}` : ''}`}
               target="_blank"
