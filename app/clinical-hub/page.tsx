@@ -1756,7 +1756,31 @@ export default function ClinicalHubPage() {
               <div className="glass-premium rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-foreground">SST program</h3>
-                  <span className="text-[11px] text-muted-foreground">{p.sessions.length} session{p.sessions.length === 1 ? '' : 's'}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-muted-foreground">{p.sessions.length} session{p.sessions.length === 1 ? '' : 's'}</span>
+                    {/* Start the graded test ON THIS PATIENT. The panel told the
+                        clinician to "run the graded threshold test" and gave them
+                        no way to start one, so mid-consult meant re-keying the
+                        clinic code and patient code into the trainer by hand
+                        (Zac 2026-10-06, during a live clinic). ?p= carries the
+                        minted code so the result extends THIS record's
+                        trajectory rather than creating a duplicate patient;
+                        without a code it still opens clinic-scoped and the
+                        clinician picks the record. Hidden on the demo clinic,
+                        which is read-only. */}
+                    {!isDemo && clinicCode ? (
+                      <a
+                        href={`/sst-trainer?clinic=${encodeURIComponent(clinicCode)}${
+                          p.patientCode ? `&p=${encodeURIComponent(p.patientCode)}` : ''
+                        }&start=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0d7377] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#0b6165] transition-colors"
+                      >
+                        {p.hrt ? 'Run re-test' : 'Run graded test'}
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
                 {p.sessions.length === 0 ? (
                   <p className="text-xs text-muted-foreground leading-relaxed py-6 text-center">

@@ -30,3 +30,18 @@ describe('patient roster can start a re-test', () => {
     expect(page).toContain("patient.hrt ? 'Run re-test — graded exertion' : 'Run graded test'")
   })
 })
+
+describe('clinical hub can start a re-test too', () => {
+  const hub = readFileSync('app/clinical-hub/page.tsx', 'utf8')
+
+  it('the SST panel deep-links into the trainer with clinic and patient code', () => {
+    expect(hub).toContain('/sst-trainer?clinic=${encodeURIComponent(clinicCode)}')
+    expect(hub).toContain('&p=${encodeURIComponent(p.patientCode)}')
+  })
+
+  it('the demo clinic never offers it (read-only)', () => {
+    const i = hub.indexOf('Run graded test')
+    expect(i).toBeGreaterThan(-1)
+    expect(hub.slice(Math.max(0, i - 1200), i)).toContain('!isDemo && clinicCode')
+  })
+})
