@@ -107,3 +107,87 @@ describe('the platform emails the patient their setup', () => {
     expect(registry).toContain('Never surfaced to a patient-facing route')
   })
 })
+
+/**
+ * Zac 2026-10-06, after the first run: "run re-test asks for input again.
+ * account info should be linked. no re-filling out patient info" → "MAKE IT
+ * SEAMLESS". The deep link linked the record but the onboarding screen never
+ * asked the server about it, so the clinician re-typed name, pathway, goal,
+ * date of injury, age, sex and both consents on every re-test.
+ */
+describe('a clinician re-test opens with nothing to re-enter', () => {
+  const route = readFileSync('app/api/sst/patient/route.ts', 'utf8')
+  const onboarding = readFileSync('components/platform/SstOnboarding.tsx', 'utf8')
+  const app = readFileSync('app/platform/app/page.tsx', 'utf8')
+  const hub = readFileSync('app/clinical-hub/page.tsx', 'utf8')
+  const roster = readFileSync('app/clinical-testing/patients/page.tsx', 'utf8')
+
+  it('resolve returns the record only to a caller holding the clinic viewKey', () => {
+    expect(route).toContain("const suppliedKey = sp.get('k')")
+    expect(route).toContain('await verifyViewKey(clinicCode, suppliedKey)')
+    // the identity fields live INSIDE the key-gated branch, never outside it
+    const i = route.indexOf('clinicianPrefill = {')
+    const gate = route.lastIndexOf('verifyViewKey(clinicCode, suppliedKey)', i)
+    expect(gate).toBeGreaterThan(-1)
+    expect(gate).toBeLessThan(i)
+  })
+
+  it('a code-only caller still learns nothing but "this code exists"', () => {
+    // label/practitioner appear in the GET only within the gated branch
+    const get = route.slice(route.indexOf('export async function GET'))
+    const ungated = get.slice(0, get.indexOf("const suppliedKey = sp.get('k')"))
+    expect(ungated).not.toContain('patient.label')
+    expect(ungated).not.toContain('patient.practitioner')
+  })
+
+  it('onboarding resolves the record and fills itself in', () => {
+    expect(onboarding).toContain("void fetch(`/api/sst/patient?${q.toString()}`)")
+    expect(onboarding).toContain("if (clinicianKey) q.set('k', clinicianKey)")
+    expect(onboarding).toContain('setPatientName((v) => v || (d.label as string))')
+    expect(onboarding).toContain('setAgeBand((v) => v || (d.ageBand as string))')
+  })
+
+  it('a resolved record carries its research consent forward (recordIntake does not COALESCE it)', () => {
+    expect(onboarding).toContain("if (typeof d.researchConsentVersion === 'number') setResearchConsent(true)")
+  })
+
+  it('a linked record needs no goal, no name and no intake to continue', () => {
+    expect(onboarding).toContain("const linked = mode === 'clinic-code' && !!prefill?.label && !editDetails")
+    expect(onboarding).toContain('const blocked = codeNotValid || trialBlocked || (!linked && (nameMissing || goal === null))')
+    expect(onboarding).toContain("'Start re-test'")
+  })
+
+  it('the identity, goal, intake and consent blocks are all hidden when linked', () => {
+    expect(onboarding).toContain("{mode === 'clinic-code' && !linked && (")
+    expect(onboarding).toContain("{mode === 'clinic-code' && !linked && !intakeAnswered && (")
+    expect(onboarding).toContain('{CONFIG.FEATURES.SST_POTS_PATHWAY_LIVE && !linked && (')
+    expect(onboarding).toContain("{CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE && mode === 'clinic-code' && !linked && (")
+    expect(onboarding).toContain('{!linked && (')
+  })
+
+  it('a patient who already answered the intake elsewhere is not asked twice', () => {
+    expect(onboarding).toContain('const intakeAnswered =')
+    expect(onboarding).toContain('!prefill.needsIntake')
+  })
+
+  it('the shared clinic device always has a way back to the full form', () => {
+    expect(onboarding).toContain('setEditDetails(true)')
+    expect(onboarding).toContain('Not them?')
+  })
+
+  it('both clinician surfaces pass the viewKey, and only alongside a patient code', () => {
+    expect(hub).toContain('${viewKey && p.patientCode ? `&k=${encodeURIComponent(viewKey)}` : \'\'}')
+    expect(roster).toContain('${patient.patientCode ? `&k=${encodeURIComponent(clinic.viewKey)}` : \'\'}')
+  })
+
+  it('the trainer scrubs the key from the address bar and never persists it', () => {
+    expect(app).toContain("url.searchParams.delete('k')")
+    expect(app).toContain('window.history.replaceState(null, \'\', url.toString())')
+    expect(app).not.toMatch(/savePatientState[^\n]*viewKey/)
+  })
+
+  it('a shared device never adopts another patient’s episode', () => {
+    expect(app).toContain('const otherPatient = !!urlP && !!saved && storedP !== urlP')
+    expect(app).toContain('const stored = otherPatient ? null : saved')
+  })
+})

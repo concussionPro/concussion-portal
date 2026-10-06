@@ -1784,12 +1784,22 @@ export default function ClinicalHubPage() {
                         trajectory rather than creating a duplicate patient;
                         without a code it still opens clinic-scoped and the
                         clinician picks the record. Hidden on the demo clinic,
-                        which is read-only. */}
+                        which is read-only.
+
+                        &k= (this hub's viewKey) is what makes the re-test
+                        SEAMLESS: it authorises the trainer's resolve call to
+                        return the record, so the screen opens with the
+                        patient's name, pathway and demographics already in
+                        place instead of an empty form (Zac 2026-10-06: "run
+                        re-test asks for input again… MAKE IT SEAMLESS"). The
+                        trainer scrubs it from the address bar on arrival and
+                        never persists it. Only sent WITH a patient code —
+                        there is nothing to resolve without one. */}
                     {!isDemo && clinicCode ? (
                       <a
                         href={`/sst-trainer?clinic=${encodeURIComponent(clinicCode)}${
                           p.patientCode ? `&p=${encodeURIComponent(p.patientCode)}` : ''
-                        }&start=1`}
+                        }${viewKey && p.patientCode ? `&k=${encodeURIComponent(viewKey)}` : ''}&start=1`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-[#0d7377] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#0b6165] transition-colors"

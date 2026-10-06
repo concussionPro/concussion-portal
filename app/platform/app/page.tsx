@@ -217,8 +217,28 @@ export default function PlatformAppPage({
 
   // ── hydration: land returning patients on HOME, not onboarding ─────────────
   useEffect(() => {
-    const stored = loadState()
-    const s = stored ?? defaultState()
+    const saved = loadState()
+    /**
+     * WRONG-PATIENT INTERLOCK. A clinic iPad is a shared device, so the
+     * persisted state belongs to whoever used it last. When the URL names a
+     * DIFFERENT patient (?p= from the hub's "Run re-test" or a patient's own
+     * emailed link), the stored episode is not this person's and must not be
+     * adopted — otherwise the clinician would land on the previous patient's
+     * Home screen and record a re-test against their trajectory.
+     *
+     * Dropping the state is the safe direction: sessions and threshold tests
+     * sync to the clinic as they happen, so the record lives server-side; the
+     * device is just a terminal.
+     */
+    const qp0 = new URLSearchParams(window.location.search)
+    const urlP = (qp0.get('p') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9)
+    const storedP = (saved?.patientCode || '').trim().toUpperCase()
+    const otherPatient = !!urlP && !!saved && storedP !== urlP
+    if (otherPatient) {
+      console.log('[sst] device held another patient — starting clean for the one in the link')
+    }
+    const stored = otherPatient ? null : saved
+    const s = stored ?? { ...defaultState(), installId: saved?.installId || defaultState().installId }
     installIdRef.current = s.installId
     if (stored) {
       if (s.clinicCode || s.patientName || s.prescription) {
@@ -360,6 +380,17 @@ export default function PlatformAppPage({
   // value so it genuinely remounts pre-filled (and auto-validates) once read.
   const [urlClinicCode, setUrlClinicCode] = useState<string | undefined>(undefined)
   const [urlPatientCode, setUrlPatientCode] = useState<string | undefined>(undefined)
+  /**
+   * ?k= — the clinic's viewKey, present ONLY when the clinician launched this
+   * from their signed-in hub ("Run re-test"). It authorises the resolve call to
+   * return the patient's own record so the screen asks nothing.
+   *
+   * Held in memory and SCRUBBED from the address bar immediately: the key is
+   * the clinic's credential, and the trainer is the surface most likely to be
+   * handed to a patient or screenshotted. It is never persisted to the device
+   * and never written into a patient-facing link.
+   */
+  const [urlViewKey, setUrlViewKey] = useState<string | undefined>(undefined)
   useEffect(() => {
     const qp = new URLSearchParams(window.location.search)
     const code = qp.get('clinic')?.trim()
@@ -368,6 +399,17 @@ export default function PlatformAppPage({
     // QR (/j/CODE?p=XXXX). One scan links clinic AND record; nothing is typed.
     const pp = qp.get('p')?.trim()
     if (pp) setUrlPatientCode(pp.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9))
+    const k = qp.get('k')?.trim()
+    if (k) {
+      setUrlViewKey(k)
+      try {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('k')
+        window.history.replaceState(null, '', url.toString())
+      } catch {
+        /* address bar untouched — the key is still only in memory */
+      }
+    }
   }, [])
 
   // Live HR feed from the REAL paired connection. Null connection → 'manual'.
@@ -749,6 +791,7 @@ export default function PlatformAppPage({
           allowSelfGuided={!publicSurface && !embeddedClinicCode}
           initialClinicCode={urlClinicCode ?? embeddedClinicCode ?? undefined}
           initialPatientCode={urlPatientCode}
+          clinicianKey={urlViewKey}
           onPair={handlePair}
           onStart={(r: OnboardingResult) => {
             setWelcome(r.welcome)

@@ -202,11 +202,14 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
                 it. ?p= pre-fills the minted code, so the re-test lands on the
                 SAME record and extends the trajectory instead of creating a
                 duplicate patient. Falls back to clinic-only when a patient
-                pre-dates minted codes — the clinician then picks the record. */}
+                pre-dates minted codes — the clinician then picks the record.
+                &k= carries this screen's viewKey so the trainer can resolve the
+                record and open with nothing to re-type; it is scrubbed from the
+                address bar on arrival and never persisted. */}
             <a
               href={`/sst-trainer?clinic=${encodeURIComponent(clinic.code)}${
                 patient.patientCode ? `&p=${encodeURIComponent(patient.patientCode)}` : ''
-              }&start=1`}
+              }${patient.patientCode ? `&k=${encodeURIComponent(clinic.viewKey)}` : ''}&start=1`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 transition-colors"

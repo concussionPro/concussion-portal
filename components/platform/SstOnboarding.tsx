@@ -91,6 +91,7 @@ export default function SstOnboarding({
   onStart,
   initialClinicCode,
   initialPatientCode,
+  clinicianKey,
   allowSelfGuided = false,
 }: {
   device: HrSource
@@ -101,6 +102,14 @@ export default function SstOnboarding({
   initialClinicCode?: string
   /** Patient code carried by the per-patient QR — links the record silently. */
   initialPatientCode?: string
+  /**
+   * Clinic viewKey, present ONLY when the clinician launched this from the
+   * signed-in hub/roster. It authorises the resolve endpoint to return the
+   * patient's own details so a re-test opens with nothing to re-enter. A
+   * patient arriving from their emailed link never has it, and their device
+   * remembers them after the first session instead.
+   */
+  clinicianKey?: string
   /** self-guided (no clinic code) is a paid-surface capability — see header */
   allowSelfGuided?: boolean
 }) {
@@ -280,10 +289,75 @@ export default function SstOnboarding({
   const nameMissing = mode === 'clinic-code' && patientName.trim().length === 0
   const codeNotValid = mode === 'clinic-code' && codeStatus !== 'valid'
   const trialBlocked = mode === 'clinic-code' && trialFull
-  const blocked = codeNotValid || nameMissing || goal === null || trialBlocked
 
-  const continueLabel =
-    goal === null
+  // PATHWAY (2026-08-12, flag-gated): concussion stays the default; the
+  // POTS / long-COVID pathway is selectable when live. Language doctrine:
+  // "exertion-intolerance rehabilitation" with PEM safeguarding — NEVER
+  // "graded exercise therapy" (NICE NG206 withdrew GET for ME/CFS).
+  const [condition, setCondition] = useState<Condition>('concussion')
+
+  /**
+   * SEAMLESS RE-TEST. A known patient code means this person is already on the
+   * clinic's list — so pull what is already recorded instead of asking for it
+   * again (Zac 2026-10-06, mid-clinic: "run re-test asks for input again.
+   * account info should be linked. no re-filling out patient info").
+   * Best-effort: any failure just leaves the form as it was.
+   */
+  const [prefill, setPrefill] = useState<{ label: string | null; needsIntake: boolean } | null>(null)
+  // "Not this person?" — the clinic device is shared, so there must always be a
+  // way back to the full form. One tap, never a reload.
+  const [editDetails, setEditDetails] = useState(false)
+  useEffect(() => {
+    const code = (initialPatientCode || '').trim()
+    const clinic = (initialClinicCode || '').trim()
+    if (!code || !clinic) return
+    let cancelled = false
+    const q = new URLSearchParams({ clinic, code })
+    if (clinicianKey) q.set('k', clinicianKey)
+    void fetch(`/api/sst/patient?${q.toString()}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { label?: string | null; condition?: string | null; ageBand?: string | null; sex?: string | null; researchConsentVersion?: number | null; needsIntake?: boolean } | null) => {
+        if (!d || cancelled) return
+        if (d.label) setPatientName((v) => v || (d.label as string))
+        // 'long-covid' is the component's own id for the POTS pathway; the
+        // server stores the engine's 'pots'. Map, don't assume.
+        if (d.condition === 'pots' || d.condition === 'long-covid') setCondition('long-covid')
+        else if (d.condition === 'concussion') setCondition('concussion')
+        if (d.ageBand) setAgeBand((v) => v || (d.ageBand as string))
+        if (d.sex) setSex((v) => v || (d.sex as string))
+        // researchConsentVersion is NOT COALESCEd by recordIntake — carrying it
+        // forward is what stops a re-test silently withdrawing a consent the
+        // patient already gave.
+        if (typeof d.researchConsentVersion === 'number') setResearchConsent(true)
+        setPrefill({ label: typeof d.label === 'string' ? d.label : null, needsIntake: d.needsIntake !== false })
+      })
+      .catch(() => { /* leave the form as-is */ })
+    return () => { cancelled = true }
+  }, [initialPatientCode, initialClinicCode, clinicianKey])
+
+  /**
+   * LINKED = this person is already on the clinic's list and the server gave
+   * their record back, so there is nothing legitimate left to ask. The whole
+   * identity half of this screen collapses to one confirmation strip and the
+   * button says "Start re-test" (Zac 2026-10-06: "MAKE IT SEAMLESS").
+   *
+   * A label only comes back when the caller held the clinic's viewKey, so this
+   * is the CLINICIAN-launched path. A patient opening their own emailed link
+   * gets the unchanged screen minus the demographics they already answered —
+   * their name is deliberately never returned to a code-only caller.
+   */
+  const linked = mode === 'clinic-code' && !!prefill?.label && !editDetails
+  // Demographics already recorded → don't ask twice, whoever is holding it.
+  const intakeAnswered = mode === 'clinic-code' && prefill !== null && !prefill.needsIntake && !editDetails
+  const blocked = codeNotValid || trialBlocked || (!linked && (nameMissing || goal === null))
+
+  const continueLabel = linked
+    ? trialBlocked
+      ? 'Ask your clinic to activate your spot'
+      : codeStatus !== 'valid'
+        ? 'Checking the clinic code…'
+        : 'Start re-test'
+    : goal === null
       ? 'Pick a goal to continue'
       : mode === 'clinic-code' && codeStatus !== 'valid'
         ? 'Enter your clinic code to continue'
@@ -292,12 +366,6 @@ export default function SstOnboarding({
           : trialBlocked
             ? 'Ask your clinic to activate your spot'
             : 'Continue'
-
-  // PATHWAY (2026-08-12, flag-gated): concussion stays the default; the
-  // POTS / long-COVID pathway is selectable when live. Language doctrine:
-  // "exertion-intolerance rehabilitation" with PEM safeguarding — NEVER
-  // "graded exercise therapy" (NICE NG206 withdrew GET for ME/CFS).
-  const [condition, setCondition] = useState<Condition>('concussion')
 
   return (
     <section className="flex flex-col gap-3.5 pt-1">
@@ -427,8 +495,46 @@ export default function SstOnboarding({
         </div>
       )}
 
+      {/* LINKED RECORD: everything the form used to ask for is already on the
+          record, so state it and move on. The escape hatch matters — a clinic
+          iPad is a shared device and the wrong patient must be one tap away
+          from a clean form. */}
+      {linked && (
+        <div className="rounded-[14px] border-[1.5px] border-(--sst-good) bg-(--sst-card) px-3.5 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">Patient</span>
+              <span className="truncate text-[15px] font-bold text-(--sst-navy)">✓ {prefill?.label}</span>
+              <span className="mt-0.5 text-[11px] leading-snug text-(--sst-faint)">
+                Linked to their clinic record{patientCode ? <> · <span className="font-[family-name:var(--font-space)] tracking-[0.1em]">{patientCode.toUpperCase()}</span></> : null}
+                {condition === 'long-covid' ? ' · POTS / long-COVID pathway' : ' · concussion pathway'}
+              </span>
+              <span className="mt-1 text-[11px] leading-snug text-(--sst-ink-3)">
+                Nothing to re-enter — pick the heart-rate source and start.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditDetails(true)}
+              className="flex-none text-[11.5px] font-semibold text-(--sst-faint) underline"
+            >
+              Not them?
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* A patient whose intake is already recorded loses the whole block below,
+          so the linkage still has to be stated — otherwise the screen silently
+          drops the one line that tells them their clinic has them. */}
+      {mode === 'clinic-code' && !linked && intakeAnswered && (
+        <p className="m-0 text-[11.5px] font-semibold leading-snug text-(--sst-good)">
+          ✓ Linked to your clinic record — your details are already saved.
+        </p>
+      )}
+
       {/* the patient's name — needed on BOTH code branches (chip and input) */}
-      {mode === 'clinic-code' && (
+      {mode === 'clinic-code' && !linked && (
         <div className="flex flex-col gap-1.5">
           <label htmlFor="patient-name" className="text-xs font-semibold text-(--sst-ink-2)">
             Your name
@@ -452,7 +558,7 @@ export default function SstOnboarding({
       )}
 
       {/* pathway selector — flag-gated; concussion is and stays the default */}
-      {CONFIG.FEATURES.SST_POTS_PATHWAY_LIVE && (
+      {CONFIG.FEATURES.SST_POTS_PATHWAY_LIVE && !linked && (
         <div className="flex flex-col gap-2">
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
             What are you recovering from?
@@ -482,7 +588,9 @@ export default function SstOnboarding({
         </div>
       )}
 
-      {/* goal chip grid */}
+      {/* goal chip grid — the patient's own motivational anchor, so it is asked
+          on their first open and never again on a clinician re-test. */}
+      {!linked && (
       <div className="flex flex-col gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--sst-faint-2)">
           What are you working back to?
@@ -508,6 +616,7 @@ export default function SstOnboarding({
           })}
         </div>
       </div>
+      )}
 
       {/* heart-rate source — verified tier first (watch broadcast / strap) */}
       <div className="flex flex-col gap-2">
@@ -659,8 +768,12 @@ export default function SstOnboarding({
             ageBand/sex  established recovery modifiers. Bands, not a birth date.
 
           Only shown in clinic-code mode: a self-guided user has no clinic to
-          mint a code and no clinician reading the covariates. */}
-      {mode === 'clinic-code' && (
+          mint a code and no clinician reading the covariates.
+
+          Asked ONCE, now meaning once per PERSON rather than once per device:
+          a resolved record carries its own answers back, so neither the patient
+          on a new phone nor the clinician running a re-test re-types them. */}
+      {mode === 'clinic-code' && !linked && !intakeAnswered && (
         <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-3">
           {/* DEMO00 mints no patient codes, so "your clinic gave you a patient
               code" is a false sentence there — and the third code-shaped ask on
@@ -749,6 +862,7 @@ export default function SstOnboarding({
           is the opt-in for CEA's de-identified service-improvement use, with an
           honourable opt-out (ask us to delete). "Research" is deliberately NOT
           claimed here — that requires separate HREC-gated consent. */}
+      {!linked && (
       <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-2.5">
         <p className="m-0 mb-2 text-[11px] leading-snug text-(--sst-ink-3)">
           Your name and results go to <strong>your own clinician</strong> to guide your care.
@@ -766,6 +880,7 @@ export default function SstOnboarding({
           </span>
         </label>
       </div>
+      )}
 
       {/* RESEARCH consent — SEPARATE, LAST, and independently declinable.
           Asked after the patient has seen exactly what is collected: asking
@@ -776,7 +891,7 @@ export default function SstOnboarding({
           collected before an ethics committee approves the wording is not
           usable consent. Declining changes nothing about care — the clinical
           path never reads this value. */}
-      {CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE && mode === 'clinic-code' && (
+      {CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE && mode === 'clinic-code' && !linked && (
         <div className="mt-2 rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-2.5">
           <label className="flex items-start gap-2.5 cursor-pointer">
             <input

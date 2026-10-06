@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { sql } from '@/lib/db'
 import { verifyViewKey, normaliseClinicCode, DEMO_CLINIC_CODE } from '@/lib/sst-trainer/clinic-registry'
 import { createPatient, resolvePatient, recordIntake, closeEpisode, enrolSite, setRtwStatus } from '@/lib/sst-trainer/patient-registry'
 import { isDemoUserId } from '@/lib/demo-session'
@@ -164,12 +165,41 @@ export async function GET(request: NextRequest) {
    * whether the intake screen is still needed. A guessed code therefore
    * discloses "this code exists" and nothing more.
    */
+  /**
+   * CLINICIAN CONTEXT ONLY: with a valid viewKey the caller is the clinic, not
+   * a stranger with a guessed code, so the record's own fields can come back
+   * and the trainer can open a re-test with NOTHING to re-enter (Zac
+   * 2026-10-06: "run re-test asks for input again… MAKE IT SEAMLESS"). Without
+   * the key the response is unchanged, so a guessed code still discloses only
+   * "this code exists".
+   */
+  const suppliedKey = sp.get('k') || ''
+  let clinicianPrefill: Record<string, unknown> = {}
+  if (suppliedKey && (await verifyViewKey(clinicCode, suppliedKey))) {
+    let condition: string | null = null
+    try {
+      const { rows } = await sql<{ condition: string | null }>`
+        SELECT condition FROM sst_clinic_sessions
+        WHERE clinic_code = ${clinicCode} AND payload->>'patientCode' = ${patient.patientCode}
+          AND condition IS NOT NULL
+        ORDER BY created_at DESC LIMIT 1
+      `
+      condition = rows[0]?.condition ?? null
+    } catch { /* no prior session → the clinician picks once */ }
+    clinicianPrefill = {
+      label: patient.label ?? null,
+      practitioner: patient.practitioner ?? null,
+      condition,
+    }
+  }
+
   return NextResponse.json({
     patientCode: patient.patientCode,
     ageBand: patient.ageBand,
     sex: patient.sex,
     researchConsentVersion: patient.researchConsentVersion,
     needsIntake: patient.ageBand === null && patient.sex === null,
+    ...clinicianPrefill,
   })
 }
 
