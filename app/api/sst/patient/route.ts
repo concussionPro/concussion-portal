@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { verifyViewKey, normaliseClinicCode, DEMO_CLINIC_CODE } from '@/lib/sst-trainer/clinic-registry'
-import { createPatient, resolvePatient, recordIntake, closeEpisode, enrolSite, setRtwStatus } from '@/lib/sst-trainer/patient-registry'
+import { createPatient, resolvePatient, recordIntake, closeEpisode, enrolSite, setRtwStatus, findOrCreatePatientByLabel } from '@/lib/sst-trainer/patient-registry'
 import { isDemoUserId } from '@/lib/demo-session'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
@@ -42,6 +42,21 @@ export async function POST(request: NextRequest) {
   if (clinicCode === DEMO_CLINIC_CODE || isDemoUserId(clinicCode)) {
     return NextResponse.json({ error: 'Demo clinic is read-only' }, { status: 403 })
   }
+  /**
+   * action:'ensure' — the clinician pressed "Run re-test" on a roster patient
+   * who has sessions but no minted record (the common case for anyone treated
+   * before patient codes shipped). Find-or-mint by label so the re-test can
+   * open on their record instead of a blank form; no email, because an ensure
+   * carries no address and the patient is in the room.
+   */
+  if (body?.action === 'ensure') {
+    const existing = await findOrCreatePatientByLabel(clinicCode, body?.label)
+    if (!existing) {
+      return NextResponse.json({ error: 'Could not link that patient' }, { status: 409 })
+    }
+    return NextResponse.json({ patientCode: existing.patientCode, label: existing.label })
+  }
+
   const label = typeof body?.label === 'string' ? body.label.trim().slice(0, 80) : null
   // Treating practitioner — the "their patients" assignment (owner 2026-08-11).
   const practitioner = typeof body?.practitioner === 'string' ? body.practitioner.trim().slice(0, 80) : null

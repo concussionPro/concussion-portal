@@ -10,20 +10,26 @@ import { readFileSync } from 'fs'
 describe('patient roster can start a re-test', () => {
   const page = readFileSync('app/clinical-testing/patients/page.tsx', 'utf8')
 
-  it('each patient card deep-links into the trainer with clinic AND patient code', () => {
-    expect(page).toContain('/sst-trainer?clinic=${encodeURIComponent(clinic.code)}')
-    expect(page).toContain('&p=${encodeURIComponent(patient.patientCode)}')
-    expect(page).toContain('&start=1')
+  it('each patient card opens the trainer on THAT patient, minting the record if needed', () => {
+    expect(page).toContain('`/sst-trainer?clinic=${encodeURIComponent(clinic.code)}`')
+    expect(page).toContain("(code ? `&p=${encodeURIComponent(code)}` : '')")
+    expect(page).toContain("'&start=1'")
+    expect(page).toContain("action: 'ensure'")
   })
 
   it('the row type carries the minted patient code', () => {
     expect(page).toMatch(/patientCode\?:\s*string \| null/)
   })
 
-  it('a patient with no minted code still gets a clinic-scoped link, not a dead button', () => {
-    const i = page.indexOf('patient.patientCode ? `&p=')
+  it('a patient whose record cannot be minted still gets a clinic-scoped link, not a dead button', () => {
+    expect(page).toContain("(code ? `&p=${encodeURIComponent(code)}` : '')")
+    expect(page).toContain("(code ? `&k=${encodeURIComponent(clinic.viewKey)}` : '')")
+  })
+
+  it('the tab is opened before the await, or Safari blocks it', () => {
+    const i = page.indexOf("window.open('about:blank', '_blank')")
     expect(i).toBeGreaterThan(-1)
-    expect(page.slice(i, i + 200)).toContain(": ''")
+    expect(i).toBeLessThan(page.indexOf("action: 'ensure'"))
   })
 
   it('the label reflects whether this is a first test or a re-test', () => {
@@ -34,9 +40,11 @@ describe('patient roster can start a re-test', () => {
 describe('clinical hub can start a re-test too', () => {
   const hub = readFileSync('app/clinical-hub/page.tsx', 'utf8')
 
-  it('the SST panel deep-links into the trainer with clinic and patient code', () => {
-    expect(hub).toContain('/sst-trainer?clinic=${encodeURIComponent(clinicCode)}')
-    expect(hub).toContain('&p=${encodeURIComponent(p.patientCode)}')
+  it('the SST panel opens the trainer on that patient, minting the record if needed', () => {
+    expect(hub).toContain('`/sst-trainer?clinic=${encodeURIComponent(clinicCode)}`')
+    expect(hub).toContain("(code ? `&p=${encodeURIComponent(code)}` : '')")
+    expect(hub).toContain("action: 'ensure'")
+    expect(hub).toContain('void startTestFor(p.name, p.patientCode)')
   })
 
   it('the demo clinic never offers it (read-only)', () => {
@@ -176,8 +184,13 @@ describe('a clinician re-test opens with nothing to re-enter', () => {
   })
 
   it('both clinician surfaces pass the viewKey, and only alongside a patient code', () => {
-    expect(hub).toContain('${viewKey && p.patientCode ? `&k=${encodeURIComponent(viewKey)}` : \'\'}')
-    expect(roster).toContain('${patient.patientCode ? `&k=${encodeURIComponent(clinic.viewKey)}` : \'\'}')
+    expect(hub).toContain("(code && viewKey ? `&k=${encodeURIComponent(viewKey)}` : '')")
+    expect(roster).toContain("(code ? `&k=${encodeURIComponent(clinic.viewKey)}` : '')")
+  })
+
+  it('a clinician launch that resolves nothing says so instead of showing a blank form', () => {
+    expect(onboarding).toContain('setResolveFailed(true)')
+    expect(onboarding).toContain('Couldn&rsquo;t load this patient&rsquo;s record')
   })
 
   it('the trainer scrubs the key from the address bar and never persists it', () => {
@@ -189,5 +202,58 @@ describe('a clinician re-test opens with nothing to re-enter', () => {
   it('a shared device never adopts another patient’s episode', () => {
     expect(app).toContain('const otherPatient = !!urlP && !!saved && storedP !== urlP')
     expect(app).toContain('const stored = otherPatient ? null : saved')
+  })
+})
+
+/**
+ * 2026-10-06, second report: "still doesnt populate from run re-test butto[n]".
+ * Ground truth from the production DB: sst_clinic_patients was EMPTY — no
+ * patient had ever been minted — and the one roster patient carrying a
+ * "patientCode" had the CLINIC code in its session payload (someone typed the
+ * clinic code into the patient-code box; both are six characters from the same
+ * alphabet, so nothing rejected it). So the link resolved nothing and the
+ * trainer had nothing to populate from.
+ */
+describe('a patient with history but no minted record can still be linked', () => {
+  const api = readFileSync('app/api/sst/clinic-sessions/route.ts', 'utf8')
+  const registry = readFileSync('lib/sst-trainer/patient-registry.ts', 'utf8')
+  const route = readFileSync('app/api/sst/patient/route.ts', 'utf8')
+
+  it('a payload code equal to the clinic code is not treated as a patient code', () => {
+    expect(api).toContain("if (pc && pc.toUpperCase() !== code) p.patientCode = pc")
+  })
+
+  it('the roster back-fills the minted code from the patients table by label', () => {
+    expect(api).toContain('SELECT patient_code, label FROM sst_clinic_patients')
+    expect(api).toContain('const unlinked = [...byPatient.values()].filter((p) => !p.patientCode')
+  })
+
+  it('that back-fill refuses an ambiguous label rather than stitching two people together', () => {
+    expect(api).toContain('if (hits && hits.length === 1) p.patientCode = hits[0]')
+  })
+
+  it('the demo clinic is never back-filled from the real patients table', () => {
+    expect(api).toContain("if (code !== 'DEMO00') {")
+  })
+
+  it('find-or-create by label mints only when the label is unambiguous', () => {
+    expect(registry).toContain('export async function findOrCreatePatientByLabel')
+    expect(registry).toContain('if (rows.length > 1) return null')
+    expect(registry).toContain("LIMIT 2")
+  })
+
+  it('it mints nothing for a blank label', () => {
+    const i = registry.indexOf('export async function findOrCreatePatientByLabel')
+    expect(registry.slice(i, i + 1400)).toContain('if (!clinicCode || !label) return null')
+  })
+
+  it("the ensure action is clinician-authed and never emails", () => {
+    const i = route.indexOf("if (body?.action === 'ensure')")
+    expect(i).toBeGreaterThan(-1)
+    // sits AFTER the viewKey check and the demo read-only guard
+    expect(route.indexOf('await verifyViewKey(clinicCode, viewKey)')).toBeLessThan(i)
+    expect(route.indexOf("Demo clinic is read-only")).toBeLessThan(i)
+    // returns before any send path is reached
+    expect(i).toBeLessThan(route.indexOf('buildPatientWelcomeEmail'))
   })
 })

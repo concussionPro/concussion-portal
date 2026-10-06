@@ -135,6 +135,40 @@ function sessionAbandoned(s: Record<string, unknown>): boolean {
 
 function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic }) {
   const [open, setOpen] = useState(false)
+  const [linking, setLinking] = useState(false)
+
+  /**
+   * Mint-or-find this patient's record, then open the trainer on it. A plain
+   * link opened a BLANK FORM for anyone treated before patient codes existed,
+   * because the roster is built from sessions and those rows carry no code
+   * (Zac 2026-10-06: "still doesn't populate from run re-test button").
+   * The tab is opened before the await — Safari blocks a post-await open.
+   */
+  const startTest = async () => {
+    const w = window.open('about:blank', '_blank')
+    let code = patient.patientCode || null
+    if (!code) {
+      setLinking(true)
+      try {
+        const r = await fetch('/api/sst/patient', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clinicCode: clinic.code, viewKey: clinic.viewKey, action: 'ensure', label: labelFor(patient) }),
+        })
+        if (r.ok) code = ((await r.json()) as { patientCode?: string })?.patientCode ?? null
+      } catch {
+        /* offline → clinic-scoped link, the clinician picks the record */
+      }
+      setLinking(false)
+    }
+    const url =
+      `/sst-trainer?clinic=${encodeURIComponent(clinic.code)}` +
+      (code ? `&p=${encodeURIComponent(code)}` : '') +
+      (code ? `&k=${encodeURIComponent(clinic.viewKey)}` : '') +
+      '&start=1'
+    if (w) w.location.href = url
+    else window.location.href = url
+  }
   const recent = [...patient.sessions].slice(-6).reverse()
   // DELIVERED sessions only — `sessionCount` from the API includes abandoned
   // attempts, which every generated document excludes.
@@ -206,17 +240,15 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
                 &k= carries this screen's viewKey so the trainer can resolve the
                 record and open with nothing to re-type; it is scrubbed from the
                 address bar on arrival and never persisted. */}
-            <a
-              href={`/sst-trainer?clinic=${encodeURIComponent(clinic.code)}${
-                patient.patientCode ? `&p=${encodeURIComponent(patient.patientCode)}` : ''
-              }${patient.patientCode ? `&k=${encodeURIComponent(clinic.viewKey)}` : ''}&start=1`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 transition-colors"
+            <button
+              type="button"
+              disabled={linking}
+              onClick={() => void startTest()}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 transition-colors disabled:opacity-60"
             >
               <Activity className="h-3.5 w-3.5" />
-              {patient.hrt ? 'Run re-test — graded exertion' : 'Run graded test'}
-            </a>
+              {linking ? 'Linking record…' : patient.hrt ? 'Run re-test — graded exertion' : 'Run graded test'}
+            </button>
             <a
               href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(labelFor(patient))}${refFor(patient) ? `&ref=${encodeURIComponent(refFor(patient) as string)}` : ''}`}
               target="_blank"

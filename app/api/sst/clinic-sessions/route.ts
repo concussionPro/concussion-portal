@@ -190,8 +190,16 @@ export async function GET(request: NextRequest) {
       const key = ref || `label:${label}`
       if (!byPatient.has(key)) byPatient.set(key, { label, ref, patientCode: null, thresholds: [], trainings: [] })
       const p = byPatient.get(key)!
+      /**
+       * A payload code equal to the CLINIC code is not a patient code — it is
+       * someone having typed the clinic code into the "already have a patient
+       * code?" box (both are six characters from the same alphabet, so nothing
+       * rejected it). Found 2026-10-06: it made the roster offer a re-test and
+       * a handover link for a patient code that does not exist, so the trainer
+       * resolved nothing and opened a blank form.
+       */
       const pc = (r.patient_code || '').trim()
-      if (pc) p.patientCode = pc
+      if (pc && pc.toUpperCase() !== code) p.patientCode = pc
       // Keep the most recent non-placeholder label for this device.
       if (label !== 'Unidentified') p.label = label
       if (r.session_type === 'threshold') p.thresholds.push(r)
@@ -233,6 +241,43 @@ export async function GET(request: NextRequest) {
     // judgement, because interpreting the trend is the clinician's job, not
     // the software's (TGA position).
     const checkinsByCode = new Map<string, Array<{ date: string; score: number; trained: boolean; missedReason: string | null }>>()
+
+    /**
+     * BACK-FILL THE MINTED CODE BY LABEL.
+     *
+     * patientCode used to come ONLY from a session payload, so a patient whose
+     * sessions were run before their record was minted (or run without the
+     * per-patient link) showed no code at all — and every code-keyed feature
+     * silently switched off for them: no re-test deep link, no handover link,
+     * no practitioner, no RTW status, no check-in strip.
+     *
+     * Matching on the label is exactly what patient_identity.ts warns about,
+     * so it is done ONLY when the match is unambiguous: one minted record with
+     * that label, and no session-supplied code to contradict it. Two patients
+     * sharing a display name leave both unlinked rather than stitching one
+     * person's trajectory onto the other's record.
+     */
+    if (code !== 'DEMO00') {
+      const unlinked = [...byPatient.values()].filter((p) => !p.patientCode && p.label !== 'Unidentified')
+      if (unlinked.length) {
+        try {
+          const { rows: mintedRows } = await sql.query(
+            `SELECT patient_code, label FROM sst_clinic_patients
+             WHERE clinic_code = $1 AND label IS NOT NULL AND btrim(label) <> ''`,
+            [code],
+          )
+          const byLabel = new Map<string, string[]>()
+          for (const r of mintedRows) {
+            const key = String(r.label).trim().toLowerCase()
+            byLabel.set(key, [...(byLabel.get(key) ?? []), String(r.patient_code)])
+          }
+          for (const p of unlinked) {
+            const hits = byLabel.get(p.label.trim().toLowerCase())
+            if (hits && hits.length === 1) p.patientCode = hits[0]
+          }
+        } catch { /* pre-migration DB — roster renders unlinked, as before */ }
+      }
+    }
 
     // Practitioner assignments (minted registry) — one guarded query for the
     // whole roster; the column is lazily migrated, so failure = no assignments,

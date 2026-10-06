@@ -307,6 +307,7 @@ export default function SstOnboarding({
   // "Not this person?" — the clinic device is shared, so there must always be a
   // way back to the full form. One tap, never a reload.
   const [editDetails, setEditDetails] = useState(false)
+  const [resolveFailed, setResolveFailed] = useState(false)
   useEffect(() => {
     const code = (initialPatientCode || '').trim()
     const clinic = (initialClinicCode || '').trim()
@@ -315,7 +316,13 @@ export default function SstOnboarding({
     const q = new URLSearchParams({ clinic, code })
     if (clinicianKey) q.set('k', clinicianKey)
     void fetch(`/api/sst/patient?${q.toString()}`)
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => {
+        // A clinician launch that resolves nothing must SAY so. Failing silent
+        // left a blank form that looked identical to a new patient, with no
+        // clue the link hadn't carried the record (2026-10-06).
+        if (!r.ok && clinicianKey && !cancelled) setResolveFailed(true)
+        return r.ok ? r.json() : null
+      })
       .then((d: { label?: string | null; condition?: string | null; ageBand?: string | null; sex?: string | null; researchConsentVersion?: number | null; needsIntake?: boolean } | null) => {
         if (!d || cancelled) return
         if (d.label) setPatientName((v) => v || (d.label as string))
@@ -522,6 +529,13 @@ export default function SstOnboarding({
             </button>
           </div>
         </div>
+      )}
+
+      {resolveFailed && !linked && (
+        <p className="m-0 rounded-[12px] border border-(--sst-warn) bg-(--sst-warn-soft) px-3 py-2 text-[11.5px] font-semibold leading-snug text-(--sst-warn-ink)">
+          Couldn&rsquo;t load this patient&rsquo;s record — fill the details in below, or go back and
+          open them from the roster again.
+        </p>
       )}
 
       {/* A patient whose intake is already recorded loses the whole block below,

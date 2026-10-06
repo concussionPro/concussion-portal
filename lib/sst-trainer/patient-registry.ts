@@ -129,6 +129,48 @@ export async function createPatient(
 }
 
 /**
+ * FIND-OR-MINT BY LABEL — the retro-fit for patients who already have history.
+ *
+ * The roster is built from SESSIONS, so a patient the clinic has been treating
+ * since before patient codes existed (or who was run without the per-patient
+ * link) has sessions, a name, a threshold trajectory — and no record. Every
+ * code-keyed feature is therefore off for exactly the patients with the most
+ * history, and the only way to switch them on was to re-enter them by hand as
+ * a "new" patient, which a clinician mid-consult will simply not do.
+ *
+ * Label matching is normally forbidden here (see this module's header: two
+ * "John S" at one clinic must never merge), so it is permitted ONLY when the
+ * match is unambiguous — zero or one existing record with that label. Two
+ * matches returns null and the caller falls back to the clinic-scoped link,
+ * where the clinician picks the record themselves.
+ *
+ * Clinician-authed only (the caller checks the viewKey), and it mints nothing
+ * for a blank label.
+ */
+export async function findOrCreatePatientByLabel(
+  rawClinicCode: unknown,
+  rawLabel: unknown,
+): Promise<PatientRecord | null> {
+  const clinicCode = normaliseClinicCode(rawClinicCode)
+  const label = typeof rawLabel === 'string' ? rawLabel.trim().slice(0, 80) : ''
+  if (!clinicCode || !label) return null
+  try {
+    await ensureSstPatientsTable()
+    const { rows } = await sql`
+      SELECT patient_code FROM sst_clinic_patients
+      WHERE clinic_code = ${clinicCode} AND lower(btrim(label)) = ${label.toLowerCase()}
+      LIMIT 2
+    `
+    // Ambiguous → the clinician disambiguates; we must not guess which human.
+    if (rows.length > 1) return null
+    if (rows.length === 1) return await resolvePatient(clinicCode, String(rows[0].patient_code))
+  } catch {
+    return null
+  }
+  return await createPatient(clinicCode, label, null, null)
+}
+
+/**
  * Resolve a typed code to a patient. This is the whole "new device" path: the
  * patient types six characters and gets their record back.
  *

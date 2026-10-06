@@ -934,11 +934,52 @@ export default function ClinicalHubPage() {
       })
       .catch(() => { /* keyed-link access has no session — free-text stays possible via reports */ })
   }, [clinicCode])
+  /**
+   * START A TEST ON A SPECIFIC PATIENT.
+   *
+   * A plain link was not enough: the roster is built from SESSIONS, so a
+   * patient treated before patient codes existed has no minted record, the
+   * link carried no ?p=, and the trainer opened a blank form — which is what
+   * Zac hit on 2026-10-06 after the deep link shipped ("still doesn't populate
+   * from run re-test"). So mint-or-find the record first (by label, only when
+   * unambiguous), THEN open the trainer on it.
+   *
+   * The tab is opened SYNCHRONOUSLY, before the await, or Safari treats the
+   * post-await open as a popup and blocks it.
+   */
+  const startTestFor = async (name: string, existingCode?: string | null) => {
+    const w = typeof window !== 'undefined' ? window.open('about:blank', '_blank') : null
+    let code = existingCode || null
+    if (!code && viewKey && clinicCode) {
+      setLinking(name)
+      try {
+        const r = await fetch('/api/sst/patient', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clinicCode, viewKey, action: 'ensure', label: name }),
+        })
+        if (r.ok) code = ((await r.json()) as { patientCode?: string })?.patientCode ?? null
+      } catch {
+        /* offline → fall through to the clinic-scoped link, clinician picks */
+      }
+      setLinking(null)
+    }
+    const url =
+      `/sst-trainer?clinic=${encodeURIComponent(clinicCode)}` +
+      (code ? `&p=${encodeURIComponent(code)}` : '') +
+      (code && viewKey ? `&k=${encodeURIComponent(viewKey)}` : '') +
+      '&start=1'
+    if (w) w.location.href = url
+    else window.location.href = url
+  }
+
   const selectPractising = (name: string) => {
     setPractisingAs(name)
     try { localStorage.setItem(`sst_practising_as:${clinicCode}`, name) } catch { /* private mode */ }
   }
   const [viewKey, setViewKey] = useState<string | null>(null)
+  // Patient whose record is being linked on the way into a test (label → code).
+  const [linking, setLinking] = useState<string | null>(null)
   const [clinicName, setClinicName] = useState<string | null>(null)
   // Per-patient handover card (QR + link). Nothing is emailed to patients —
   // the clinician hands this over at the end of the consult.
@@ -1796,16 +1837,14 @@ export default function ClinicalHubPage() {
                         never persists it. Only sent WITH a patient code —
                         there is nothing to resolve without one. */}
                     {!isDemo && clinicCode ? (
-                      <a
-                        href={`/sst-trainer?clinic=${encodeURIComponent(clinicCode)}${
-                          p.patientCode ? `&p=${encodeURIComponent(p.patientCode)}` : ''
-                        }${viewKey && p.patientCode ? `&k=${encodeURIComponent(viewKey)}` : ''}&start=1`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0d7377] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#0b6165] transition-colors"
+                      <button
+                        type="button"
+                        disabled={linking === p.name}
+                        onClick={() => void startTestFor(p.name, p.patientCode)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0d7377] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#0b6165] transition-colors disabled:opacity-60"
                       >
-                        {p.hrt ? 'Run re-test' : 'Run graded test'}
-                      </a>
+                        {linking === p.name ? 'Linking record…' : p.hrt ? 'Run re-test' : 'Run graded test'}
+                      </button>
                     ) : null}
                     {/* Hand the patient their own link. The QR carries ?p=, so
                         they scan once, the app asks nothing, and every session
