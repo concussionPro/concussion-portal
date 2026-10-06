@@ -69,3 +69,41 @@ describe('patient handover carries the record, so nothing is filled in', () => {
     expect(onboarding).toContain('Linked to your clinic record')
   })
 })
+
+describe('the platform emails the patient their setup', () => {
+  const route = readFileSync('app/api/sst/patient/route.ts', 'utf8')
+  const email = readFileSync('lib/sst-trainer/patient-welcome-email.ts', 'utf8')
+  const registry = readFileSync('lib/sst-trainer/patient-registry.ts', 'utf8')
+  const qr = readFileSync('app/api/qr/route.ts', 'utf8')
+
+  it('minting a patient with an email sends one onboarding email', () => {
+    expect(route).toContain('buildPatientWelcomeEmail')
+    expect(route).toContain("value: 'sst-patient-onboarding'")
+  })
+
+  it('that send checks suppression and fails closed', () => {
+    expect(route).toContain('isEmailSuppressed')
+    expect(route.indexOf('isEmailSuppressed')).toBeLessThan(route.indexOf('buildPatientWelcomeEmail'))
+    expect(route).toContain('emailBlocked = true')
+  })
+
+  it('the email carries the per-patient join link and a QR of the same link', () => {
+    expect(route).toContain('/j/${encodeURIComponent(clinicCode)}?p=${encodeURIComponent(patient.patientCode)}')
+    expect(email).toContain('/api/qr?d=')
+  })
+
+  it('it prompts for broadcasting but defers the per-brand steps to the app', () => {
+    expect(email).toContain('broadcast')
+    expect(email).toContain('Connect a monitor')
+  })
+
+  it('the QR endpoint refuses targets that are not our own domain', () => {
+    expect(qr).toContain('ALLOWED_HOSTS')
+    expect(qr).toContain('target not allowed')
+  })
+
+  it('patient email is stored as optional and typed as PHI', () => {
+    expect(registry).toContain('ADD COLUMN IF NOT EXISTS email TEXT')
+    expect(registry).toContain('Never surfaced to a patient-facing route')
+  })
+})

@@ -31,6 +31,8 @@ export interface PatientRecord extends PatientIdentity {
   createdAt: string
   /** Treating practitioner (display name from the clinic's team list). */
   practitioner?: string | null
+  /** Patient's own email — PHI. Never surfaced to a patient-facing route. */
+  email?: string | null
 }
 
 /**
@@ -80,6 +82,16 @@ export async function createPatient(
   rawClinicCode: unknown,
   label?: string | null,
   practitioner?: string | null,
+  /**
+   * Patient's own email, OPTIONAL and entered by the clinician with the
+   * patient in front of them. Stored so the platform can send the one
+   * onboarding email (join link + QR + app instructions) instead of the
+   * clinician copying a URL by hand (Zac 2026-10-06). It is the only piece of
+   * directly identifying contact data this table holds — treat it as PHI:
+   * never return it to a patient-facing surface, never use it for marketing,
+   * and it leaves only in the patient's own onboarding email.
+   */
+  email?: string | null,
 ): Promise<PatientRecord | null> {
   const clinicCode = normaliseClinicCode(rawClinicCode)
   if (!clinicCode) return null
@@ -88,13 +100,17 @@ export async function createPatient(
   // "their patients" half of practitioner identity (owner 2026-08-11).
   await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS practitioner TEXT`.catch(() => {})
   const prac = practitioner?.trim().slice(0, 80) || null
+  await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS email TEXT`.catch(() => {})
+  const cleanEmail = typeof email === 'string' && /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email.trim())
+    ? email.trim().toLowerCase().slice(0, 160)
+    : null
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const patientCode = generatePatientCode()
     const researchRef = generateResearchRef()
     const { rowCount } = await sql`
-      INSERT INTO sst_clinic_patients (clinic_code, patient_code, research_ref, label, practitioner)
-      VALUES (${clinicCode}, ${patientCode}, ${researchRef}, ${label?.trim() || null}, ${prac})
+      INSERT INTO sst_clinic_patients (clinic_code, patient_code, research_ref, label, practitioner, email)
+      VALUES (${clinicCode}, ${patientCode}, ${researchRef}, ${label?.trim() || null}, ${prac}, ${cleanEmail})
       ON CONFLICT (clinic_code, patient_code) DO NOTHING
     `
     if (rowCount) {
@@ -102,6 +118,7 @@ export async function createPatient(
         clinicCode, patientCode, researchRef,
         label: label?.trim() || null,
         practitioner: prac,
+        email: cleanEmail,
         ageBand: null, sex: null, researchConsentVersion: null,
         createdAt: new Date().toISOString(),
       }

@@ -337,6 +337,10 @@ function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () =
       .catch(() => {})
   }, [clinic.code])
   const [minted, setMinted] = useState<string | null>(null)
+  // Patient's own email, OPTIONAL. Entered with the patient in front of you;
+  // its only use is the single onboarding email the platform sends on mint.
+  const [patientEmail, setPatientEmail] = useState('')
+  const [emailed, setEmailed] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -347,11 +351,12 @@ function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () =
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ clinicCode: clinic.code, viewKey: clinic.viewKey, label: label.trim() || null, practitioner: practitioner || null }),
+        body: JSON.stringify({ clinicCode: clinic.code, viewKey: clinic.viewKey, label: label.trim() || null, practitioner: practitioner || null, email: patientEmail.trim() || null }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data?.patientCode) throw new Error(data?.error || 'Could not create patient')
       setMinted(data.patientCode)
+      setEmailed(data.emailed ? (data.emailTo as string) : null)
       onMinted()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not create patient')
@@ -370,6 +375,11 @@ function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () =
         {/* ONE link = clinic + patient in a single scan (owner 2026-08-11).
             The patient types nothing; the code below is the fallback for a
             verbal handover or a future new phone. */}
+        {emailed ? (
+          <p className="mx-auto mb-3 max-w-md rounded-lg border border-accent/40 bg-white/70 px-3 py-2 text-[12.5px] font-semibold text-accent">
+            ✓ Sent to {emailed} — link, QR and heart-rate setup
+          </p>
+        ) : null}
         <p className="m-0 mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Patient link — one tap links everything</p>
         <p className="mx-auto mb-3 max-w-md break-all rounded-lg bg-white/70 px-3 py-2 font-mono text-[12px] text-foreground">
           {`${typeof window !== 'undefined' ? window.location.origin : ''}/j/${clinic.code}?p=${minted}`}
@@ -407,6 +417,18 @@ function NewPatientButton({ clinic, onMinted }: { clinic: Clinic; onMinted: () =
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Name or reference (for your list only)"
           className="min-w-[220px] flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm"
+        />
+        {/* OPTIONAL. Fill it in with the patient in front of you and the
+            platform sends them one email on mint: their join link, the same
+            link as a QR, and how to switch heart-rate broadcasting on. Leave
+            it blank and nothing is sent — you hand over the QR instead. */}
+        <input
+          type="email"
+          value={patientEmail}
+          onChange={(e) => setPatientEmail(e.target.value)}
+          placeholder="Patient email (optional — sends their setup)"
+          autoComplete="off"
+          className="min-w-[240px] flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm"
         />
         {team.length > 0 && (
           <select

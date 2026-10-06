@@ -44,8 +44,65 @@ export async function POST(request: NextRequest) {
   const label = typeof body?.label === 'string' ? body.label.trim().slice(0, 80) : null
   // Treating practitioner — the "their patients" assignment (owner 2026-08-11).
   const practitioner = typeof body?.practitioner === 'string' ? body.practitioner.trim().slice(0, 80) : null
-  const patient = await createPatient(clinicCode, label, practitioner)
+  // The patient's own email, OPTIONAL, entered by the clinician with the
+  // patient in front of them. Its ONLY use is the single onboarding email
+  // below — never marketing, never a sequence.
+  const patientEmail = typeof body?.email === 'string' ? body.email.trim() : null
+  const patient = await createPatient(clinicCode, label, practitioner, patientEmail)
   if (!patient) return NextResponse.json({ error: 'Could not create patient' }, { status: 500 })
+
+  // ONE email, sent now, carrying everything: the device-smart join link
+  // (iPhone → App Store, else straight into the web app), the same link as a
+  // scannable QR, a prompt to switch heart-rate broadcasting on, and the
+  // prescription when one exists. Best-effort: a mail failure must never lose
+  // the minted patient — the clinician still has the QR in the hub.
+  let emailed = false
+  let emailBlocked = false
+  if (patient.email) {
+    try {
+      // Suppression is checked here too and FAILS CLOSED, like every other
+      // sending lane in this codebase. A hard-bounced or opted-out address
+      // must not be written to even for a clinical onboarding — the clinician
+      // still has the QR in the hub, which is the better handover anyway.
+      const { isEmailSuppressed } = await import('@/lib/email-suppression')
+      if (await isEmailSuppressed(patient.email)) {
+        emailBlocked = true
+        console.log('[sst-patient] onboarding email skipped — address suppressed')
+      }
+    } catch (err) {
+      emailBlocked = true
+      console.error('[sst-patient] suppression check failed — not sending (fail closed):', err instanceof Error ? err.message : err)
+    }
+  }
+  if (patient.email && !emailBlocked) {
+    try {
+      const [{ buildPatientWelcomeEmail, patientWelcomeSubject }, { sendEmail }, { getClinic }] = await Promise.all([
+        import('@/lib/sst-trainer/patient-welcome-email'),
+        import('@/lib/resend-client'),
+        import('@/lib/sst-trainer/clinic-registry'),
+      ])
+      const clinic = await getClinic(clinicCode)
+      const clinicName = clinic?.clinicName?.trim() || 'your clinic'
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+      const joinUrl = `${baseUrl}/j/${encodeURIComponent(clinicCode)}?p=${encodeURIComponent(patient.patientCode)}`
+      emailed = await sendEmail({
+        to: patient.email,
+        subject: patientWelcomeSubject(clinicName),
+        html: buildPatientWelcomeEmail({
+          clinicName,
+          patientName: patient.label,
+          practitioner: patient.practitioner,
+          joinUrl,
+        }),
+        tags: [
+          { name: 'type', value: 'sst-patient-welcome' },
+          { name: 'sequence', value: 'sst-patient-onboarding' },
+        ],
+      })
+    } catch (err) {
+      console.error('[sst-patient] onboarding email failed:', err instanceof Error ? err.message : err)
+    }
+  }
   // researchRef is NEVER returned to the clinic — a clinician who could see it
   // could re-identify a published row from their own patient list, which is the
   // exact property the pseudonym exists to prevent.
@@ -53,6 +110,10 @@ export async function POST(request: NextRequest) {
     patientCode: patient.patientCode,
     label: patient.label,
     practitioner: patient.practitioner ?? null,
+    // So the clinician knows whether to hand over the QR instead.
+    emailed,
+    emailBlocked,
+    emailTo: patient.email ? patient.email : null,
   })
 }
 
