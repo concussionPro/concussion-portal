@@ -356,6 +356,14 @@ export default function SstOnboarding({
   const linked = mode === 'clinic-code' && !!prefill?.label && !editDetails
   // Demographics already recorded → don't ask twice, whoever is holding it.
   const intakeAnswered = mode === 'clinic-code' && prefill !== null && !prefill.needsIntake && !editDetails
+  /**
+   * Ask for the covariates only while they are MISSING. A linked record
+   * collapses the rest of the screen, but age and sex were never collected for
+   * a patient whose record was minted from their roster label, and they are the
+   * established recovery modifiers — hiding them forever would quietly drop the
+   * two fields the trajectory needs to mean anything.
+   */
+  const askIntake = mode === 'clinic-code' && (linked ? !!prefill?.needsIntake : !intakeAnswered)
   const blocked = codeNotValid || trialBlocked || (!linked && (nameMissing || goal === null))
 
   const continueLabel = linked
@@ -787,7 +795,7 @@ export default function SstOnboarding({
           Asked ONCE, now meaning once per PERSON rather than once per device:
           a resolved record carries its own answers back, so neither the patient
           on a new phone nor the clinician running a re-test re-types them. */}
-      {mode === 'clinic-code' && !linked && !intakeAnswered && (
+      {askIntake && (
         <div className="rounded-xl border border-(--sst-line) bg-(--sst-surface-4) px-3.5 py-3">
           {/* DEMO00 mints no patient codes, so "your clinic gave you a patient
               code" is a false sentence there — and the third code-shaped ask on

@@ -167,7 +167,7 @@ describe('a clinician re-test opens with nothing to re-enter', () => {
 
   it('the identity, goal, intake and consent blocks are all hidden when linked', () => {
     expect(onboarding).toContain("{mode === 'clinic-code' && !linked && (")
-    expect(onboarding).toContain("{mode === 'clinic-code' && !linked && !intakeAnswered && (")
+    expect(onboarding).toContain('{askIntake && (')
     expect(onboarding).toContain('{CONFIG.FEATURES.SST_POTS_PATHWAY_LIVE && !linked && (')
     expect(onboarding).toContain("{CONFIG.FEATURES.SST_RESEARCH_CONSENT_LIVE && mode === 'clinic-code' && !linked && (")
     expect(onboarding).toContain('{!linked && (')
@@ -176,6 +176,10 @@ describe('a clinician re-test opens with nothing to re-enter', () => {
   it('a patient who already answered the intake elsewhere is not asked twice', () => {
     expect(onboarding).toContain('const intakeAnswered =')
     expect(onboarding).toContain('!prefill.needsIntake')
+  })
+
+  it('but age and sex are still asked when the record has never held them', () => {
+    expect(onboarding).toContain('const askIntake = mode === \'clinic-code\' && (linked ? !!prefill?.needsIntake : !intakeAnswered)')
   })
 
   it('the shared clinic device always has a way back to the full form', () => {
