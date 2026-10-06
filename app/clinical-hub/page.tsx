@@ -5,6 +5,7 @@ import { TrackedOutbound } from '@/components/TrackedOutbound'
 import { SstLivePanel } from '@/components/sst-trainer/SstLivePanel'
 import { PmsFileButton } from '@/components/clinical/PmsFileButton'
 import { SstTrajectory, type TrajectoryPoint } from '@/components/sst-trainer/SstTrajectory'
+import { SstPatientQrCard } from '@/components/sst-trainer/SstPatientQrCard'
 import { PROTOCOL_STAGE_CAP, SESSION_STOP_RISE } from '@/lib/sst-trainer/protocol'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
@@ -939,6 +940,9 @@ export default function ClinicalHubPage() {
   }
   const [viewKey, setViewKey] = useState<string | null>(null)
   const [clinicName, setClinicName] = useState<string | null>(null)
+  // Per-patient handover card (QR + link). Nothing is emailed to patients —
+  // the clinician hands this over at the end of the consult.
+  const [handover, setHandover] = useState<{ code: string; name: string } | null>(null)
   const [mode, setMode] = useState<'demo' | 'real'>('demo')
   const [realState, setRealState] = useState<RealState>('idle')
   // Acknowledgements keyed by the localStorage cache key. The SERVER copy
@@ -1165,6 +1169,19 @@ export default function ClinicalHubPage() {
           a disclaimer as the first words on the page read as "this is a
           mock-up" to a buyer. The instrument is real; the episodes are
           examples. It is still said — once, at the bottom of the hero. */}
+
+      {/* Per-patient handover: QR + link the clinician shows or sends at the end
+          of the consult. Carries ?p=, so the patient scans once, fills in
+          nothing, and every session syncs back onto their record. */}
+      {handover ? (
+        <SstPatientQrCard
+          clinicName={clinicName ?? clinicCode}
+          code={clinicCode}
+          patientCode={handover.code}
+          patientName={handover.name}
+          onClose={() => setHandover(null)}
+        />
+      ) : null}
 
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
         {/* Live in-session monitor */}
@@ -1779,6 +1796,18 @@ export default function ClinicalHubPage() {
                       >
                         {p.hrt ? 'Run re-test' : 'Run graded test'}
                       </a>
+                    ) : null}
+                    {/* Hand the patient their own link. The QR carries ?p=, so
+                        they scan once, the app asks nothing, and every session
+                        they run at home syncs back onto THIS record. */}
+                    {!isDemo && clinicCode && p.patientCode ? (
+                      <button
+                        type="button"
+                        onClick={() => setHandover({ code: p.patientCode as string, name: p.name })}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#0d7377] px-3 py-1.5 text-[11px] font-bold text-[#0d7377] hover:bg-[#0d7377]/10 transition-colors"
+                      >
+                        Give patient their link
+                      </button>
                     ) : null}
                   </div>
                 </div>

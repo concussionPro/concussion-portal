@@ -45,3 +45,27 @@ describe('clinical hub can start a re-test too', () => {
     expect(hub.slice(Math.max(0, i - 1200), i)).toContain('!isDemo && clinicCode')
   })
 })
+
+describe('patient handover carries the record, so nothing is filled in', () => {
+  const card = readFileSync('components/sst-trainer/SstPatientQrCard.tsx', 'utf8')
+  const hub = readFileSync('app/clinical-hub/page.tsx', 'utf8')
+  const onboarding = readFileSync('components/platform/SstOnboarding.tsx', 'utf8')
+
+  it('the QR encodes the per-patient join link when a code is supplied', () => {
+    expect(card).toContain("`${origin}/j/${encodeURIComponent(code)}${patientCode ? `?p=${encodeURIComponent(patientCode)}` : ''}`")
+  })
+
+  it('a linked patient is told there is nothing to fill in', () => {
+    expect(card).toContain('Nothing to fill in')
+  })
+
+  it('the hub offers the handover only for a real clinic with a minted code', () => {
+    expect(hub).toContain('Give patient their link')
+    const i = hub.indexOf('Give patient their link')
+    expect(hub.slice(Math.max(0, i - 600), i)).toContain('!isDemo && clinicCode && p.patientCode')
+  })
+
+  it('the trainer asks for nothing when the code arrives on the link', () => {
+    expect(onboarding).toContain('Linked to your clinic record')
+  })
+})

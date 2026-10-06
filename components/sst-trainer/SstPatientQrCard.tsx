@@ -24,6 +24,8 @@ export function SstPatientQrCard({
   onClose,
   viewKey,
   variant = 'patient',
+  patientCode,
+  patientName,
 }: {
   clinicName: string
   code: string
@@ -31,11 +33,22 @@ export function SstPatientQrCard({
   /** Clinic's private read key — only rendered on the 'clinician' variant. */
   viewKey?: string
   variant?: 'patient' | 'clinician'
+  /**
+   * Minted patient code. Present = a PER-PATIENT handover: the QR carries
+   * ?p=, so the patient scans once and the app links to their record and asks
+   * nothing — no form, no code to type, and every session they run syncs back
+   * onto this record's trajectory (Zac 2026-10-06: "it also must autopopulate
+   * their info - no filling out forms. just launch the next training session").
+   * Absent = the old clinic-level walk-in QR.
+   */
+  patientCode?: string | null
+  /** Shown on the card so the clinician hands the right code to the right person. */
+  patientName?: string | null
 }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://portal.concussion-education-australia.com'
   // /j/CODE = platform-smart join (iPhone → native-app chooser, else straight
   // into the web app). Shorter URL also means a lighter, faster-scanning QR.
-  const url = `${origin}/j/${encodeURIComponent(code)}`
+  const url = `${origin}/j/${encodeURIComponent(code)}${patientCode ? `?p=${encodeURIComponent(patientCode)}` : ''}`
   const hubUrl =
     variant === 'clinician' && viewKey
       ? `${origin}/clinical-hub?clinic=${encodeURIComponent(code)}&k=${encodeURIComponent(viewKey)}`
@@ -71,7 +84,13 @@ export function SstPatientQrCard({
       >
         <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-teal-700 mb-1">SST Trainer · Recovery training</p>
         <h3 className="text-lg font-bold text-slate-900 mb-1">{clinicName}</h3>
-        <p className="text-xs text-slate-500 mb-4">Scan to start your guided sub-symptom-threshold training</p>
+        {patientName ? (
+          <p className="text-xs text-slate-500 mb-4">
+            Prepared for <span className="font-semibold text-slate-700">{patientName}</span> — scan to start your guided training
+          </p>
+        ) : (
+          <p className="text-xs text-slate-500 mb-4">Scan to start your guided sub-symptom-threshold training</p>
+        )}
 
         <div className="inline-block bg-white p-3 rounded-xl border border-slate-200">
           <QRCodeSVG value={url} size={208} level="M" marginSize={2} />
@@ -91,7 +110,11 @@ export function SstPatientQrCard({
               a way to start a training session. */}
         <ol className="text-left text-[12.5px] text-slate-600 leading-relaxed mt-4 mb-4 list-decimal pl-5 space-y-1">
           <li>Scan the code (or open the link) on your phone — it takes you to the right place for your device.</li>
-          <li>Enter your name. Your clinic is already linked.</li>
+          {patientCode ? (
+            <li>Nothing to fill in — you&rsquo;re already linked to your clinic record. Every session goes back to your clinician automatically.</li>
+          ) : (
+            <li>Enter your name. Your clinic is already linked.</li>
+          )}
           <li>
             Pair your heart-rate monitor or watch if you have one (Garmin, Polar, Wahoo, chest strap).
             No monitor, or on an iPhone browser? You&rsquo;ll type each reading instead — everything
