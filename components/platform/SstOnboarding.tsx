@@ -67,6 +67,12 @@ const BROADCAST_HOW_TO: { brand: string; how: string }[] = [
 ]
 
 export interface OnboardingResult {
+  /**
+   * The symptoms this patient has tracked before, so the symptom card opens
+   * ticked instead of blank. The PROFILE only — a severity recorded on a past
+   * visit is not today's measurement and is never carried forward as one.
+   */
+  symptomIds?: string[]
   welcome: WelcomeSelection
   /** the validated clinic name (shown as confirmation, synced for context) */
   clinicName: string | null
@@ -92,6 +98,7 @@ export default function SstOnboarding({
   initialClinicCode,
   initialPatientCode,
   clinicianKey,
+  savedIntake,
   allowSelfGuided = false,
 }: {
   device: HrSource
@@ -110,6 +117,18 @@ export default function SstOnboarding({
    * remembers them after the first session instead.
    */
   clinicianKey?: string
+  /**
+   * What this DEVICE already holds for the patient it is onboarding — the
+   * intake they typed on a previous visit.
+   *
+   * Zac 2026-10-06: "it must [be saved] because i had to input it the first
+   * time to run the test". He was right, and the data was never lost — it sits
+   * in localStorage; this screen simply never read it back, so every visit
+   * re-asked three fields the device already knew. Only ever passed when the
+   * stored episode belongs to the patient being onboarded (the caller's
+   * wrong-patient interlock drops it otherwise).
+   */
+  savedIntake?: { patientName?: string | null; injuryDate?: string | null; ageBand?: string | null; sex?: string | null }
   /** self-guided (no clinic code) is a paid-surface capability — see header */
   allowSelfGuided?: boolean
 }) {
@@ -120,7 +139,7 @@ export default function SstOnboarding({
   const [clinicCode, setClinicCode] = useState(initialClinicCode ?? '')
   const [codeStatus, setCodeStatus] = useState<CodeStatus>('idle')
   const [clinicName, setClinicName] = useState<string | null>(null)
-  const [patientName, setPatientName] = useState('')
+  const [patientName, setPatientName] = useState(savedIntake?.patientName ?? '')
   const [dataConsent, setDataConsent] = useState(false)
   // INTAKE (2026-08-09) — asked once, five controls, consent LAST.
   const [patientCode, setPatientCode] = useState(initialPatientCode ?? '')
@@ -128,9 +147,9 @@ export default function SstOnboarding({
   // renders only when the patient opens it (new phone, code from the clinic
   // front desk) — or is satisfied silently by the QR's ?p=.
   const [showCodeEntry, setShowCodeEntry] = useState(false)
-  const [injuryDate, setInjuryDate] = useState('')
-  const [ageBand, setAgeBand] = useState('')
-  const [sex, setSex] = useState('')
+  const [injuryDate, setInjuryDate] = useState(savedIntake?.injuryDate ?? '')
+  const [ageBand, setAgeBand] = useState(savedIntake?.ageBand ?? '')
+  const [sex, setSex] = useState(savedIntake?.sex ?? '')
   const [researchConsent, setResearchConsent] = useState(false)
   const [goal, setGoal] = useState<string | null>(null)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
@@ -303,7 +322,7 @@ export default function SstOnboarding({
    * account info should be linked. no re-filling out patient info").
    * Best-effort: any failure just leaves the form as it was.
    */
-  const [prefill, setPrefill] = useState<{ label: string | null; needsIntake: boolean } | null>(null)
+  const [prefill, setPrefill] = useState<{ label: string | null; needsIntake: boolean; symptoms?: string[] } | null>(null)
   // "Not this person?" — the clinic device is shared, so there must always be a
   // way back to the full form. One tap, never a reload.
   const [editDetails, setEditDetails] = useState(false)
@@ -323,7 +342,7 @@ export default function SstOnboarding({
         if (!r.ok && clinicianKey && !cancelled) setResolveFailed(true)
         return r.ok ? r.json() : null
       })
-      .then((d: { label?: string | null; condition?: string | null; ageBand?: string | null; sex?: string | null; researchConsentVersion?: number | null; needsIntake?: boolean } | null) => {
+      .then((d: { label?: string | null; condition?: string | null; ageBand?: string | null; sex?: string | null; researchConsentVersion?: number | null; needsIntake?: boolean; symptoms?: unknown[] } | null) => {
         if (!d || cancelled) return
         if (d.label) setPatientName((v) => v || (d.label as string))
         // 'long-covid' is the component's own id for the POTS pathway; the
@@ -336,7 +355,11 @@ export default function SstOnboarding({
         // forward is what stops a re-test silently withdrawing a consent the
         // patient already gave.
         if (typeof d.researchConsentVersion === 'number') setResearchConsent(true)
-        setPrefill({ label: typeof d.label === 'string' ? d.label : null, needsIntake: d.needsIntake !== false })
+        setPrefill({
+          label: typeof d.label === 'string' ? d.label : null,
+          needsIntake: d.needsIntake !== false,
+          symptoms: Array.isArray(d.symptoms) ? d.symptoms.filter((x): x is string => typeof x === 'string') : undefined,
+        })
       })
       .catch(() => { /* leave the form as-is */ })
     return () => { cancelled = true }
@@ -363,7 +386,16 @@ export default function SstOnboarding({
    * established recovery modifiers — hiding them forever would quietly drop the
    * two fields the trajectory needs to mean anything.
    */
-  const askIntake = mode === 'clinic-code' && (linked ? !!prefill?.needsIntake : !intakeAnswered)
+  const covariatesKnown = ageBand.trim() !== '' && sex.trim() !== ''
+  /**
+   * A LINKED RECORD IS NEVER ASKED ANYTHING. Age and sex are research
+   * covariates, not clinical gates — nothing in the protocol reads them — so
+   * they must not stand between a clinician and a test. Where they are still
+   * missing, the clinician sets them on the patient's own card in the hub, out
+   * of the consult's way (Zac 2026-10-06: "new test take user/clinician
+   * straight to test page").
+   */
+  const askIntake = mode === 'clinic-code' && !linked && !covariatesKnown && !intakeAnswered
   const blocked = codeNotValid || trialBlocked || (!linked && (nameMissing || goal === null))
 
   const continueLabel = linked
@@ -962,6 +994,7 @@ export default function SstOnboarding({
               researchConsent,
             },
             clinicName: mode === 'clinic-code' ? clinicName : null,
+            symptomIds: prefill?.symptoms,
             goal,
             goalLabel: GOALS.find((g) => g.id === goal)?.label ?? null,
           })

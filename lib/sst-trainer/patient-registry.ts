@@ -33,6 +33,15 @@ export interface PatientRecord extends PatientIdentity {
   practitioner?: string | null
   /** Patient's own email — PHI. Never surfaced to a patient-facing route. */
   email?: string | null
+  /**
+   * The symptoms this patient tracks, so a new visit — on any device, any
+   * screen — opens on their profile instead of a blank list. The PROFILE only;
+   * severity is a measurement taken on the day and is never stored here.
+   *
+   * Health information, so it is returned only to a clinician holding the
+   * clinic viewKey, never to a code-only caller.
+   */
+  symptomProfile?: string[] | null
 }
 
 /**
@@ -189,10 +198,15 @@ export async function resolvePatient(
     const { rows } = await sql<{
       clinic_code: string; patient_code: string; research_ref: string; label: string | null
       age_band: string | null; sex: string | null; research_consent_version: number | null
-      created_at: string
+      created_at: string; practitioner: string | null; symptom_profile: string[] | null
     }>`
       SELECT clinic_code, patient_code, research_ref, label, age_band, sex,
-             research_consent_version, created_at
+             research_consent_version, created_at,
+             -- Lazily-migrated columns: to_jsonb on the row keeps this query
+             -- working on a database that predates either column.
+             (to_jsonb(sst_clinic_patients.*) ->> 'practitioner') AS practitioner,
+             CASE WHEN to_jsonb(sst_clinic_patients.*) ? 'symptom_profile'
+                  THEN symptom_profile ELSE NULL END AS symptom_profile
       FROM sst_clinic_patients
       WHERE clinic_code = ${clinicCode} AND patient_code = ${patientCode}
       LIMIT 1
@@ -208,6 +222,8 @@ export async function resolvePatient(
       sex: (SEXES as readonly string[]).includes(r.sex ?? '') ? (r.sex as Sex) : null,
       researchConsentVersion: r.research_consent_version,
       createdAt: r.created_at,
+      practitioner: r.practitioner,
+      symptomProfile: Array.isArray(r.symptom_profile) ? r.symptom_profile : null,
     }
   } catch {
     // Table not migrated yet → no patient, never a throw into a clinical path.
@@ -238,6 +254,8 @@ export async function recordIntake(
     baselineSymptomScore?: number | null
     /** SCAT6/PCSS total (0-132) at discharge — closes the episode. */
     dischargeSymptomScore?: number | null
+    /** The symptoms this patient tracks (ids). Profile, never severity. */
+    symptomProfile?: string[] | null
   },
 ): Promise<boolean> {
   const clinicCode = normaliseClinicCode(rawClinicCode)
@@ -260,11 +278,31 @@ export async function recordIntake(
   const baseline = isValidSymptomScore(intake.baselineSymptomScore) ? intake.baselineSymptomScore : null
   const discharge = isValidSymptomScore(intake.dischargeSymptomScore) ? intake.dischargeSymptomScore : null
 
+  // Ids only, bounded — this is written from a client payload.
+  const profile = Array.isArray(intake.symptomProfile)
+    ? intake.symptomProfile
+        .filter((x): x is string => typeof x === 'string' && /^[a-z0-9_-]{1,48}$/i.test(x))
+        .slice(0, 24)
+    : []
+
   try {
     await ensureSstPatientsTable()
+    // Lazy column, same pattern as practitioner/rtw_status above.
+    await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS symptom_profile TEXT[]`.catch(() => {})
     // COALESCE on the existing value: an intake screen that omits a field must
     // never blank one already recorded (a returning patient re-entering only
     // their code would otherwise erase their own demographics).
+    // The profile is a text[] — a tagged template only takes primitives, so it
+    // goes in its own parameterised statement.
+    if (profile.length) {
+      await sql
+        .query(
+          `UPDATE sst_clinic_patients SET symptom_profile = $3::text[]
+           WHERE clinic_code = $1 AND patient_code = $2`,
+          [clinicCode, patientCode, profile],
+        )
+        .catch(() => { /* pre-migration column — covariates below still land */ })
+    }
     await sql`
       UPDATE sst_clinic_patients SET
         age_band = COALESCE(${ageBand}, age_band),

@@ -192,19 +192,48 @@ export async function GET(request: NextRequest) {
   let clinicianPrefill: Record<string, unknown> = {}
   if (suppliedKey && (await verifyViewKey(clinicCode, suppliedKey))) {
     let condition: string | null = null
+    let symptoms: string[] = []
     try {
-      const { rows } = await sql<{ condition: string | null }>`
-        SELECT condition FROM sst_clinic_sessions
-        WHERE clinic_code = ${clinicCode} AND payload->>'patientCode' = ${patient.patientCode}
-          AND condition IS NOT NULL
-        ORDER BY created_at DESC LIMIT 1
+      /**
+       * EVERYTHING ALREADY SAVED FOR THIS PATIENT, so a re-test re-asks none of
+       * it (Zac 2026-10-06: "just input the saved fucking data").
+       *
+       * Matched on the patient code OR THE LABEL. Code-only was the bug behind
+       * the second report: sessions logged before patient codes existed carry
+       * no code in their payload, so the lookup found nothing and the pathway
+       * silently fell back to the default. The label match is safe here because
+       * the record was itself resolved by code — we are asking "what did this
+       * named patient last do at this clinic", not identifying them by name.
+       */
+      const { rows } = await sql<{ condition: string | null; symptoms: unknown }>`
+        SELECT condition, payload->'symptoms' AS symptoms
+        FROM sst_clinic_sessions
+        WHERE clinic_code = ${clinicCode}
+          AND (payload->>'patientCode' = ${patient.patientCode}
+               OR (${patient.label ?? ''} <> '' AND lower(btrim(patient_label)) = ${(patient.label ?? '').trim().toLowerCase()}))
+        ORDER BY created_at DESC LIMIT 5
       `
-      condition = rows[0]?.condition ?? null
+      // The RECORD is the first source — the code is where this data lives.
+      if (Array.isArray(patient.symptomProfile) && patient.symptomProfile.length) {
+        symptoms = patient.symptomProfile.slice(0, 24)
+      }
+      for (const r of rows) {
+        if (!condition && r.condition) condition = r.condition
+        if (!symptoms.length && Array.isArray(r.symptoms)) {
+          // The profile only — a severity recorded in July is NOT today's
+          // measurement and must never be carried forward as one.
+          symptoms = (r.symptoms as Array<unknown>)
+            .map((x) => (typeof x === 'string' ? x : (x as { id?: unknown })?.id))
+            .filter((x): x is string => typeof x === 'string' && x.length > 0 && x.length < 60)
+            .slice(0, 24)
+        }
+      }
     } catch { /* no prior session → the clinician picks once */ }
     clinicianPrefill = {
       label: patient.label ?? null,
       practitioner: patient.practitioner ?? null,
       condition,
+      symptoms,
     }
   }
 

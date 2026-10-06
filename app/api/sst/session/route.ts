@@ -507,6 +507,44 @@ export async function POST(request: NextRequest) {
         `[sst-session] insert deduped by ON CONFLICT — clinic ${clinicCode}, session ${sessionType}, id ${rowId}. Expected for an offline replay; investigate if the clinic reports a missing session.`,
       )
     }
+
+    /**
+     * THE PATIENT CODE IS WHERE THE PERSONAL DATA LIVES (owner 2026-10-06:
+     * "you must assign data filled codes to each patient file that persists
+     * through screens — all personal and symptom data").
+     *
+     * Until now the covariates reached the record ONLY through the onboarding
+     * PATCH, which fires only when the client already holds a patient code. An
+     * intake typed before a code existed was therefore written nowhere — the
+     * prod patients table was empty while sessions had been running since
+     * July, so every re-test re-asked what the patient had already answered.
+     *
+     * Now every session carrying a code also tops up its record. recordIntake
+     * COALESCEs, so a session that omits a field never blanks a stored one.
+     * Best-effort and AFTER the insert: the session is the clinical record and
+     * must never be lost to a covariate write.
+     */
+    if (patientCode) {
+      try {
+        const { recordIntake } = await import('@/lib/sst-trainer/patient-registry')
+        const pf = payloadForStore as Record<string, unknown>
+        const sym = Array.isArray(pf.symptoms)
+          ? (pf.symptoms as unknown[]).filter((x): x is string => typeof x === 'string')
+          : []
+        await recordIntake(clinicCode, patientCode, {
+          ageBand: typeof pf.ageBand === 'string' ? pf.ageBand : null,
+          sex: typeof pf.sex === 'string' ? pf.sex : null,
+          daysSinceInjury: typeof pf.daysSinceInjury === 'number' ? pf.daysSinceInjury : null,
+          label: patientLabel || null,
+          // The symptom PROFILE, so the next visit opens on it. Severity is
+          // never carried: it is a measurement, taken on the day.
+          symptomProfile: sym.length ? sym : null,
+        })
+      } catch (err) {
+        console.error('[sst-session] covariate top-up failed (session is stored):', err instanceof Error ? err.message : err)
+      }
+    }
+
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('SST session ingest error:', err)

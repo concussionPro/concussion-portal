@@ -153,6 +153,15 @@ export default function PlatformAppPage({
   const [step, setStep] = useState<AppStep>('welcome')
   const [hydrated, setHydrated] = useState(false)
   const [welcomeBack, setWelcomeBack] = useState(false)
+  /**
+   * The intake this device already holds. Hydrated whether or not the stored
+   * episode reached a prescription, because the onboarding screen was re-asking
+   * three fields localStorage already knew (Zac 2026-10-06: "i had to input it
+   * the first time to run the test").
+   */
+  const [savedIntake, setSavedIntake] = useState<{
+    patientName?: string | null; injuryDate?: string | null; ageBand?: string | null; sex?: string | null
+  } | null>(null)
 
   // onboarding selections (the new design) → flow into the existing machine
   const [device, setDevice] = useState<HrSource>(DEFAULT_HR_SOURCE)
@@ -255,6 +264,12 @@ export default function PlatformAppPage({
           researchConsent: s.researchConsent,
         })
       }
+      setSavedIntake({
+        patientName: s.patientName,
+        injuryDate: s.injuryDate,
+        ageBand: s.ageBand,
+        sex: s.sex,
+      })
       setClinicName(s.clinicName)
       setGoal(s.goal)
       setGoalLabel(s.goalLabel)
@@ -792,6 +807,7 @@ export default function PlatformAppPage({
           initialClinicCode={urlClinicCode ?? embeddedClinicCode ?? undefined}
           initialPatientCode={urlPatientCode}
           clinicianKey={urlViewKey}
+          savedIntake={savedIntake ?? undefined}
           onPair={handlePair}
           onStart={(r: OnboardingResult) => {
             setWelcome(r.welcome)
@@ -819,15 +835,29 @@ export default function PlatformAppPage({
                 }),
               }).catch(() => {})
             }
-            // PEM interlock: a PEM-risk pathway is screened BEFORE the symptom
-            // profile — the flow must never reach a threshold test unscreened.
+            /**
+             * STRAIGHT TO THE TEST for a patient whose profile we already hold
+             * (Zac 2026-10-06: "new test take user/clinician straight to test
+             * page"). The saved symptom profile skips the symptom card.
+             *
+             * 'readiness' is NOT skipped and must never be: it takes TODAY's
+             * resting symptom score, which is the comparator the whole stop
+             * rule is measured against, plus the red-flag check. Carrying a
+             * past visit's score forward would mean reporting a measurement
+             * that was never taken.
+             */
+            const known = Array.isArray(r.symptomIds) && r.symptomIds.length > 0
+            if (known) setSelectedSymptomIds(r.symptomIds as string[])
+            const firstStep = known ? 'readiness' : 'symptoms'
+            // PEM interlock: a PEM-risk pathway is screened BEFORE anything
+            // else — the flow must never reach a threshold test unscreened.
             if (requiresPemScreen(r.welcome.condition)) {
               const status = scorePemScreen(pemScreen).status
               if (status === 'positive') setStep('pem-blocked')
               else if (status !== 'clear') setStep('pem')
-              else setStep('symptoms')
+              else setStep(firstStep)
             } else {
-              setStep('symptoms')
+              setStep(firstStep)
             }
           }}
         />
@@ -1055,6 +1085,14 @@ export default function PlatformAppPage({
                 thresholdStage: result.thresholdStage,
                 restingSymptomScore: input.restingSymptomScore,
                 symptoms: selectedSymptomIds,
+                // Covariates travel WITH the session. They used to reach the
+                // server only through a PATCH that required a patient code —
+                // so an intake typed before a code existed was written
+                // nowhere and silently lost (found 2026-10-06 in prod: the
+                // patients table was empty and no payload carried them).
+                ageBand: welcome?.ageBand ?? null,
+                sex: welcome?.sex ?? null,
+                daysSinceInjury: welcome?.injuryDate ? daysSinceInjury(welcome.injuryDate, new Date()) : null,
                 modality: input.modality ?? null,
                 stages: input.stages,
                 termination: input.termination,
@@ -1105,6 +1143,14 @@ export default function PlatformAppPage({
                   stages: info.stages,
                   restingSymptomScore,
                   symptoms: selectedSymptomIds,
+                // Covariates travel WITH the session. They used to reach the
+                // server only through a PATCH that required a patient code —
+                // so an intake typed before a code existed was written
+                // nowhere and silently lost (found 2026-10-06 in prod: the
+                // patients table was empty and no payload carried them).
+                ageBand: welcome?.ageBand ?? null,
+                sex: welcome?.sex ?? null,
+                daysSinceInjury: welcome?.injuryDate ? daysSinceInjury(welcome.injuryDate, new Date()) : null,
                   // belt to the server's event-row guard: an abort must never
                   // re-derive as a completed test (final sweep #1)
                   termination: 'aborted',

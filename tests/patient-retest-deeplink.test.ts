@@ -178,8 +178,14 @@ describe('a clinician re-test opens with nothing to re-enter', () => {
     expect(onboarding).toContain('!prefill.needsIntake')
   })
 
-  it('but age and sex are still asked when the record has never held them', () => {
-    expect(onboarding).toContain('const askIntake = mode === \'clinic-code\' && (linked ? !!prefill?.needsIntake : !intakeAnswered)')
+  it('a linked record is asked NOTHING — covariates are not clinical gates', () => {
+    expect(onboarding).toContain("const askIntake = mode === 'clinic-code' && !linked && !covariatesKnown && !intakeAnswered")
+  })
+
+  it('the device reads its own saved intake back instead of re-asking it', () => {
+    expect(onboarding).toContain("useState(savedIntake?.injuryDate ?? '')")
+    expect(onboarding).toContain("useState(savedIntake?.ageBand ?? '')")
+    expect(onboarding).toContain("useState(savedIntake?.sex ?? '')")
   })
 
   it('the shared clinic device always has a way back to the full form', () => {
@@ -259,5 +265,69 @@ describe('a patient with history but no minted record can still be linked', () =
     expect(route.indexOf("Demo clinic is read-only")).toBeLessThan(i)
     // returns before any send path is reached
     expect(i).toBeLessThan(route.indexOf('buildPatientWelcomeEmail'))
+  })
+})
+
+/**
+ * 2026-10-06: "you must assign data filled codes to each patient file that
+ * persists through screens - all personal and symptom data" / "new test take
+ * user/clinician straight to test page".
+ *
+ * The covariates reached the record ONLY via the onboarding PATCH, which fires
+ * only when the client already holds a patient code — so an intake typed
+ * before a code existed was written nowhere at all. Confirmed in prod: sessions
+ * running since July, sst_clinic_patients empty, no payload carrying ageBand,
+ * sex or daysSinceInjury.
+ */
+describe('the patient code is where the personal and symptom data lives', () => {
+  const session = readFileSync('app/api/sst/session/route.ts', 'utf8')
+  const registry = readFileSync('lib/sst-trainer/patient-registry.ts', 'utf8')
+  const route = readFileSync('app/api/sst/patient/route.ts', 'utf8')
+  const app = readFileSync('app/platform/app/page.tsx', 'utf8')
+  const onboarding = readFileSync('components/platform/SstOnboarding.tsx', 'utf8')
+
+  it('every session carries the covariates, so they can never be orphaned again', () => {
+    expect(app).toContain('ageBand: welcome?.ageBand ?? null')
+    expect(app).toContain('sex: welcome?.sex ?? null')
+    expect(app).toContain('daysSinceInjury: welcome?.injuryDate ? daysSinceInjury(welcome.injuryDate, new Date()) : null')
+  })
+
+  it('a synced session tops up its patient record', () => {
+    expect(session).toContain('const { recordIntake }')
+    expect(session).toContain('symptomProfile: sym.length ? sym : null')
+    // after the insert — the session must never be lost to a covariate write
+    expect(session.indexOf('INSERT INTO sst_clinic_sessions')).toBeLessThan(session.indexOf('covariate top-up failed'))
+  })
+
+  it('the top-up never blanks a stored field', () => {
+    expect(registry).toContain('age_band = COALESCE(')
+    expect(registry).toContain('sex = COALESCE(')
+    expect(registry).toContain('injury_days_at_intake = COALESCE(')
+  })
+
+  it('the symptom profile is stored as ids only, bounded, and never a severity', () => {
+    expect(registry).toContain('/^[a-z0-9_-]{1,48}$/i.test(x)')
+    expect(registry).toContain('.slice(0, 24)')
+    expect(registry).toContain('severity is a measurement taken on the day')
+  })
+
+  it('the record is the first source of the profile, sessions only the fallback', () => {
+    expect(route).toContain('if (Array.isArray(patient.symptomProfile) && patient.symptomProfile.length)')
+    expect(route.indexOf('patient.symptomProfile')).toBeLessThan(route.indexOf('if (!symptoms.length && Array.isArray(r.symptoms))'))
+  })
+
+  it('the last session is found by code OR label, since old sessions carry no code', () => {
+    expect(route).toContain("OR (${patient.label ?? ''} <> '' AND lower(btrim(patient_label)) =")
+  })
+
+  it('a known profile skips the symptom card and lands on the test', () => {
+    expect(onboarding).toContain('symptomIds: prefill?.symptoms')
+    expect(app).toContain("const firstStep = known ? 'readiness' : 'symptoms'")
+  })
+
+  it("but today's resting score is never skipped — it is the comparator, measured on the day", () => {
+    expect(app).toContain("'readiness' is NOT skipped and must never be")
+    // readiness is the only path into the test
+    expect(app).not.toMatch(/known \? 'test'/)
   })
 })
