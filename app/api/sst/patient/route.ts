@@ -50,9 +50,12 @@ export async function POST(request: NextRequest) {
    * carries no address and the patient is in the room.
    */
   if (body?.action === 'ensure') {
-    const existing = await findOrCreatePatientByLabel(clinicCode, body?.label)
+    const existing = await findOrCreatePatientByLabel(clinicCode, body?.label, body?.patientRef)
     if (!existing) {
-      return NextResponse.json({ error: 'Could not link that patient' }, { status: 409 })
+      // 409 and not 500: the usual cause is an AMBIGUOUS name, which the
+      // registry refuses to guess at. The caller must say so rather than open
+      // an unlinked trainer — that is how a third identity gets created.
+      return NextResponse.json({ error: 'Could not link that patient — the name is ambiguous' }, { status: 409 })
     }
     return NextResponse.json({ patientCode: existing.patientCode, label: existing.label })
   }
@@ -198,19 +201,21 @@ export async function GET(request: NextRequest) {
        * EVERYTHING ALREADY SAVED FOR THIS PATIENT, so a re-test re-asks none of
        * it (Zac 2026-10-06: "just input the saved fucking data").
        *
-       * Matched on the patient code OR THE LABEL. Code-only was the bug behind
-       * the second report: sessions logged before patient codes existed carry
-       * no code in their payload, so the lookup found nothing and the pathway
-       * silently fell back to the default. The label match is safe here because
-       * the record was itself resolved by code — we are asking "what did this
-       * named patient last do at this clinic", not identifying them by name.
+       * Matched on the patient code, or on the record's own patientRef for
+       * sessions logged before patient codes existed. NEVER on the label: two
+       * patients at one clinic can share a display name, and matching by name
+       * returned the OTHER patient's pathway and symptom profile, which this
+       * screen then presented on-screen as this patient's and ran the test
+       * against (e.g. a concussion patient opened on the POTS pathway with a
+       * stranger's symptom list). Caught in the 2026-10-06 sweep, same day it
+       * was introduced.
        */
       const { rows } = await sql<{ condition: string | null; symptoms: unknown }>`
         SELECT condition, payload->'symptoms' AS symptoms
         FROM sst_clinic_sessions
         WHERE clinic_code = ${clinicCode}
           AND (payload->>'patientCode' = ${patient.patientCode}
-               OR (${patient.label ?? ''} <> '' AND lower(btrim(patient_label)) = ${(patient.label ?? '').trim().toLowerCase()}))
+               OR (${patient.patientRef ?? ''} <> '' AND payload->>'patientRef' = ${patient.patientRef ?? ''}))
         ORDER BY created_at DESC LIMIT 5
       `
       // The RECORD is the first source — the code is where this data lives.

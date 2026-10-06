@@ -989,7 +989,23 @@ export default function PlatformAppPage({
           )}
           {directedRetestPrompt}
           <Readiness
-            initialRestingScore={restingSymptomScore}
+            /**
+             * DELIBERATELY NOT SEEDED from the stored episode.
+             *
+             * This number is the comparator the entire threshold calculation
+             * is measured against (provocation = stage score - this). Seeding
+             * it with the LAST visit's score meant a clinician could tap
+             * straight through and run today's test against a number nobody
+             * measured today — in both directions: a carried-forward 5 hides a
+             * genuine 5-point rise (false "no intolerance", clearance-grade),
+             * a carried-forward 0 fires provocation below the patient's own
+             * baseline and mints a false-low HRt and band.
+             *
+             * Found 2026-10-06. It directly contradicted the comment on the
+             * step-skip below, which is the rule: readiness is shown precisely
+             * because this is measured on the day.
+             */
+            initialRestingScore={undefined}
             onBack={() => setStep(prescription ? 'home' : 'symptoms')}
             onContinue={(res: ReadinessResult) => {
               setRestingSymptomScore(res.restingSymptomScore)

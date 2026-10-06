@@ -136,6 +136,7 @@ function sessionAbandoned(s: Record<string, unknown>): boolean {
 function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic }) {
   const [open, setOpen] = useState(false)
   const [linking, setLinking] = useState(false)
+  const [linkError, setLinkError] = useState<string | null>(null)
 
   /**
    * Mint-or-find this patient's record, then open the trainer on it. A plain
@@ -153,11 +154,30 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
         const r = await fetch('/api/sst/patient', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clinicCode: clinic.code, viewKey: clinic.viewKey, action: 'ensure', label: labelFor(patient) }),
+          body: JSON.stringify({
+            clinicCode: clinic.code, viewKey: clinic.viewKey, action: 'ensure',
+            label: labelFor(patient),
+            // The roster identity — without it the server can only match on
+            // the name, and two patients sharing one resolve to one record.
+            patientRef: refFor(patient),
+          }),
         })
         if (r.ok) code = ((await r.json()) as { patientCode?: string })?.patientCode ?? null
+        else {
+          w?.close()
+          setLinking(false)
+          setLinkError(
+            r.status === 409
+              ? `Two patients share the name “${labelFor(patient)}”. Rename one on their card so this test lands on the right record.`
+              : 'Could not link this patient record — reload and try again.',
+          )
+          return
+        }
       } catch {
-        /* offline → clinic-scoped link, the clinician picks the record */
+        w?.close()
+        setLinking(false)
+        setLinkError('No connection — the test would not be linked to this patient. Try again once you are back online.')
+        return
       }
       setLinking(false)
     }
@@ -227,6 +247,12 @@ function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic 
 
           {/* Referring-practitioner report (owner 2026-07-06): auto-built from
               the episode — clearance referral or extend-plan recommendation. */}
+          {linkError && (
+            <div role="alert" className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5">
+              <p className="m-0 text-[12px] font-bold text-amber-900">Test not started</p>
+              <p className="m-0 mt-0.5 text-[11.5px] leading-relaxed text-amber-800">{linkError}</p>
+            </div>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             {/* Run the graded test ON THIS PATIENT. The card already said
                 "Re-test due — last measured N days ago" and offered no way to

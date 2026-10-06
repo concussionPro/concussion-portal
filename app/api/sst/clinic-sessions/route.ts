@@ -271,9 +271,33 @@ export async function GET(request: NextRequest) {
             const key = String(r.label).trim().toLowerCase()
             byLabel.set(key, [...(byLabel.get(key) ?? []), String(r.patient_code)])
           }
+          /**
+           * Ambiguity has TWO sides and the first cut only checked one.
+           *
+           * Counting minted records with that name was not enough: if two
+           * session GROUPS (two real humans, correctly kept apart by their
+           * install refs) both claim the name, a single minted record was
+           * stamped onto BOTH — so one patient's check-in strip, practitioner,
+           * RTW status and handover QR appeared on the other's card, and the
+           * handover QR sent the second patient's future sessions onto the
+           * first one's record. Require the name to identify exactly one human
+           * on BOTH sides, or leave them unlinked.
+           */
+          const groupsPerLabel = new Map<string, number>()
           for (const p of unlinked) {
-            const hits = byLabel.get(p.label.trim().toLowerCase())
-            if (hits && hits.length === 1) p.patientCode = hits[0]
+            const key = p.label.trim().toLowerCase()
+            groupsPerLabel.set(key, (groupsPerLabel.get(key) ?? 0) + 1)
+          }
+          // A linked group holding the same name is also a competing claimant.
+          for (const p of byPatient.values()) {
+            if (!p.patientCode || p.label === 'Unidentified') continue
+            const key = p.label.trim().toLowerCase()
+            if (groupsPerLabel.has(key)) groupsPerLabel.set(key, (groupsPerLabel.get(key) ?? 0) + 1)
+          }
+          for (const p of unlinked) {
+            const key = p.label.trim().toLowerCase()
+            const hits = byLabel.get(key)
+            if (hits && hits.length === 1 && (groupsPerLabel.get(key) ?? 0) === 1) p.patientCode = hits[0]
           }
         } catch { /* pre-migration DB — roster renders unlinked, as before */ }
       }

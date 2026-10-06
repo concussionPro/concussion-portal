@@ -42,6 +42,8 @@ export interface PatientRecord extends PatientIdentity {
    * clinic viewKey, never to a code-only caller.
    */
   symptomProfile?: string[] | null
+  /** The roster/install identity this record was linked to, when known. */
+  patientRef?: string | null
 }
 
 /**
@@ -159,24 +161,83 @@ export async function createPatient(
 export async function findOrCreatePatientByLabel(
   rawClinicCode: unknown,
   rawLabel: unknown,
+  /**
+   * The roster's own identity for this patient — the install uuid their
+   * sessions carry. REQUIRED to link a patient who already has history.
+   *
+   * Without it this function matched on the display name alone, and the
+   * clinician's roster deliberately strips the "(2)" suffix it uses to tell two
+   * same-named patients apart — so pressing "Run re-test" on the second "John
+   * S" resolved the FIRST John's record and wrote the second John's test,
+   * symptom profile, demographics and episode outcome onto it. Silently. That
+   * is the exact failure this module's header exists to prevent.
+   */
+  rawPatientRef?: unknown,
 ): Promise<PatientRecord | null> {
   const clinicCode = normaliseClinicCode(rawClinicCode)
   const label = typeof rawLabel === 'string' ? rawLabel.trim().slice(0, 80) : ''
+  const patientRef = typeof rawPatientRef === 'string' && /^[0-9a-zA-Z-]{8,64}$/.test(rawPatientRef.trim())
+    ? rawPatientRef.trim()
+    : null
   if (!clinicCode || !label) return null
   try {
     await ensureSstPatientsTable()
-    const { rows } = await sql`
-      SELECT patient_code FROM sst_clinic_patients
+    await sql`ALTER TABLE sst_clinic_patients ADD COLUMN IF NOT EXISTS patient_ref TEXT`.catch(() => {})
+
+    // 1. The ref is an identity, so it is tried first and alone.
+    if (patientRef) {
+      const byRef = await sql`
+        SELECT patient_code FROM sst_clinic_patients
+        WHERE clinic_code = ${clinicCode} AND patient_ref = ${patientRef} LIMIT 1
+      `.catch(() => ({ rows: [] as Array<{ patient_code: string }> }))
+      if (byRef.rows.length === 1) return await resolvePatient(clinicCode, String(byRef.rows[0].patient_code))
+    }
+
+    // 2. The label is NOT an identity. It may only be used to adopt an
+    //    existing record when the name is unambiguous on BOTH sides: one
+    //    minted record with that name, AND one human with that name in the
+    //    clinic's session history. Two devices under one name means two
+    //    candidate humans and we must not guess which.
+    const { rows: minted } = await sql`
+      SELECT patient_code, patient_ref FROM sst_clinic_patients
       WHERE clinic_code = ${clinicCode} AND lower(btrim(label)) = ${label.toLowerCase()}
-      LIMIT 2
+      LIMIT 3
     `
-    // Ambiguous → the clinician disambiguates; we must not guess which human.
-    if (rows.length > 1) return null
-    if (rows.length === 1) return await resolvePatient(clinicCode, String(rows[0].patient_code))
+    if (minted.length > 1) return null
+    const { rows: refs } = await sql`
+      SELECT count(DISTINCT payload->>'patientRef')::int AS n
+      FROM sst_clinic_sessions
+      WHERE upper(clinic_code) = ${clinicCode}
+        AND lower(btrim(patient_label)) = ${label.toLowerCase()}
+        AND payload->>'patientRef' IS NOT NULL
+    `
+    const distinctHumans = Number(refs[0]?.n ?? 0)
+    if (distinctHumans > 1) return null
+
+    if (minted.length === 1) {
+      const code = String(minted[0].patient_code)
+      // Adopting a record that has no ref yet: stamp it, so the next lookup is
+      // an identity match and never has to trust the name again.
+      if (patientRef && !minted[0].patient_ref) {
+        await sql`
+          UPDATE sst_clinic_patients SET patient_ref = ${patientRef}
+          WHERE clinic_code = ${clinicCode} AND patient_code = ${code} AND patient_ref IS NULL
+        `.catch(() => {})
+      }
+      return await resolvePatient(clinicCode, code)
+    }
   } catch {
     return null
   }
-  return await createPatient(clinicCode, label, null, null)
+
+  const created = await createPatient(clinicCode, label, null, null)
+  if (created && patientRef) {
+    await sql`
+      UPDATE sst_clinic_patients SET patient_ref = ${patientRef}
+      WHERE clinic_code = ${created.clinicCode} AND patient_code = ${created.patientCode}
+    `.catch(() => {})
+  }
+  return created
 }
 
 /**
@@ -199,6 +260,7 @@ export async function resolvePatient(
       clinic_code: string; patient_code: string; research_ref: string; label: string | null
       age_band: string | null; sex: string | null; research_consent_version: number | null
       created_at: string; practitioner: string | null; symptom_profile: string[] | null
+      patient_ref: string | null
     }>`
       SELECT clinic_code, patient_code, research_ref, label, age_band, sex,
              research_consent_version, created_at,
@@ -206,7 +268,8 @@ export async function resolvePatient(
              -- working on a database that predates either column.
              (to_jsonb(sst_clinic_patients.*) ->> 'practitioner') AS practitioner,
              CASE WHEN to_jsonb(sst_clinic_patients.*) ? 'symptom_profile'
-                  THEN symptom_profile ELSE NULL END AS symptom_profile
+                  THEN symptom_profile ELSE NULL END AS symptom_profile,
+             (to_jsonb(sst_clinic_patients.*) ->> 'patient_ref') AS patient_ref
       FROM sst_clinic_patients
       WHERE clinic_code = ${clinicCode} AND patient_code = ${patientCode}
       LIMIT 1
@@ -224,6 +287,7 @@ export async function resolvePatient(
       createdAt: r.created_at,
       practitioner: r.practitioner,
       symptomProfile: Array.isArray(r.symptom_profile) ? r.symptom_profile : null,
+      patientRef: r.patient_ref,
     }
   } catch {
     // Table not migrated yet → no patient, never a throw into a clinical path.
@@ -256,6 +320,13 @@ export async function recordIntake(
     dischargeSymptomScore?: number | null
     /** The symptoms this patient tracks (ids). Profile, never severity. */
     symptomProfile?: string[] | null
+    /**
+     * Set ONLY by a path that actually presented the consent wording and read
+     * the patient's answer (the intake screen). Every other caller — the
+     * session top-up above all — must leave it undefined, which now means
+     * "don't touch the stored consent" rather than "withdraw it".
+     */
+    consentDecision?: boolean | null
   },
 ): Promise<boolean> {
   const clinicCode = normaliseClinicCode(rawClinicCode)
@@ -264,7 +335,26 @@ export async function recordIntake(
 
   const ageBand = (AGE_BANDS as readonly string[]).includes(intake.ageBand ?? '') ? intake.ageBand : null
   const sex = (SEXES as readonly string[]).includes(intake.sex ?? '') ? intake.sex : null
-  const consent = intake.researchConsent === true ? RESEARCH_CONSENT_VERSION : null
+  /**
+   * CONSENT IS NEVER WITHDRAWN AS A SIDE EFFECT.
+   *
+   * This column was the one field in the UPDATE below with no COALESCE, so any
+   * caller that omitted `researchConsent` wrote NULL over a consent the patient
+   * had given. The covariate top-up added to /api/sst/session on 2026-10-06
+   * omits it on every single session — so one training session silently
+   * un-enrolled the patient and dropped them from the research extract, while
+   * the DB kept no record that they had ever consented.
+   *
+   * Now: `consentDecision === undefined` means leave it alone (COALESCE);
+   * an explicit true/false is a real decision from a screen that showed the
+   * wording, and false is an honoured WITHDRAWAL.
+   */
+  const decision =
+    intake.consentDecision === undefined || intake.consentDecision === null
+      ? (intake.researchConsent === undefined ? undefined : intake.researchConsent === true)
+      : intake.consentDecision === true
+  const consent = decision === true ? RESEARCH_CONSENT_VERSION : null
+  const consentTouched = decision !== undefined
   const days =
     typeof intake.daysSinceInjury === 'number' &&
     Number.isInteger(intake.daysSinceInjury) &&
@@ -307,7 +397,7 @@ export async function recordIntake(
       UPDATE sst_clinic_patients SET
         age_band = COALESCE(${ageBand}, age_band),
         sex = COALESCE(${sex}, sex),
-        research_consent_version = ${consent},
+        research_consent_version = CASE WHEN ${consentTouched} THEN ${consent} ELSE research_consent_version END,
         injury_days_at_intake = COALESCE(${days}, injury_days_at_intake),
         baseline_symptom_score = COALESCE(${baseline}, baseline_symptom_score),
         discharge_symptom_score = COALESCE(${discharge}, discharge_symptom_score),

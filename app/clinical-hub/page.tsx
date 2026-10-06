@@ -947,20 +947,45 @@ export default function ClinicalHubPage() {
    * The tab is opened SYNCHRONOUSLY, before the await, or Safari treats the
    * post-await open as a popup and blocks it.
    */
-  const startTestFor = async (name: string, existingCode?: string | null) => {
+  const startTestFor = async (p: Patient) => {
+    // The STORED label, never p.name — that carries the roster's display-only
+    // "(2)" suffix, which matches nothing in the DB and would mint a third
+    // phantom record for a patient who already has two.
+    const name = labelOf(p)
     const w = typeof window !== 'undefined' ? window.open('about:blank', '_blank') : null
-    let code = existingCode || null
+    let code = p.patientCode || null
     if (!code && viewKey && clinicCode) {
-      setLinking(name)
+      setLinking(p.name)
       try {
         const r = await fetch('/api/sst/patient', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clinicCode, viewKey, action: 'ensure', label: name }),
+          body: JSON.stringify({
+            clinicCode, viewKey, action: 'ensure', label: name,
+            // The roster identity. Without it the server can only match on the
+            // name, and two patients sharing a name resolve to one record.
+            patientRef: refOf(p) ?? null,
+          }),
         })
         if (r.ok) code = ((await r.json()) as { patientCode?: string })?.patientCode ?? null
+        else {
+          // 409 = the name is ambiguous and the server refused to guess.
+          // Opening a blank trainer here is how a third identity gets created
+          // mid-consult; say so instead.
+          w?.close()
+          setLinking(null)
+          setLinkError(
+            r.status === 409
+              ? `Two patients share the name “${name}”. Open the right one from the patients screen so the test lands on their record.`
+              : 'Could not link that patient record — reload the hub and try again.',
+          )
+          return
+        }
       } catch {
-        /* offline → fall through to the clinic-scoped link, clinician picks */
+        w?.close()
+        setLinking(null)
+        setLinkError('No connection — the test would not be linked to this patient. Try again once you are back online.')
+        return
       }
       setLinking(null)
     }
@@ -980,6 +1005,7 @@ export default function ClinicalHubPage() {
   const [viewKey, setViewKey] = useState<string | null>(null)
   // Patient whose record is being linked on the way into a test (label → code).
   const [linking, setLinking] = useState<string | null>(null)
+  const [linkError, setLinkError] = useState<string | null>(null)
   const [clinicName, setClinicName] = useState<string | null>(null)
   // Per-patient handover card (QR + link). Nothing is emailed to patients —
   // the clinician hands this over at the end of the consult.
@@ -1226,6 +1252,19 @@ export default function ClinicalHubPage() {
 
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
         {/* Live in-session monitor */}
+        {linkError && (
+          <div role="alert" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+            <p className="m-0 text-[13px] font-bold text-amber-900">Test not started</p>
+            <p className="m-0 mt-1 text-[12.5px] leading-relaxed text-amber-800">{linkError}</p>
+            <button
+              type="button"
+              onClick={() => setLinkError(null)}
+              className="mt-2 text-[12px] font-semibold text-amber-900 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         {showLive && <SstLivePanel code={clinicCode} viewKey={viewKey} />}
 
         {/* Header */}
@@ -1840,7 +1879,7 @@ export default function ClinicalHubPage() {
                       <button
                         type="button"
                         disabled={linking === p.name}
-                        onClick={() => void startTestFor(p.name, p.patientCode)}
+                        onClick={() => void startTestFor(p)}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-[#0d7377] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#0b6165] transition-colors disabled:opacity-60"
                       >
                         {linking === p.name ? 'Linking record…' : p.hrt ? 'Run re-test' : 'Run graded test'}

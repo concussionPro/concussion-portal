@@ -15,6 +15,8 @@ describe('patient roster can start a re-test', () => {
     expect(page).toContain("(code ? `&p=${encodeURIComponent(code)}` : '')")
     expect(page).toContain("'&start=1'")
     expect(page).toContain("action: 'ensure'")
+    // the roster identity rides along, or the server can only match on a name
+    expect(page).toContain('patientRef: refFor(patient)')
   })
 
   it('the row type carries the minted patient code', () => {
@@ -44,7 +46,10 @@ describe('clinical hub can start a re-test too', () => {
     expect(hub).toContain('`/sst-trainer?clinic=${encodeURIComponent(clinicCode)}`')
     expect(hub).toContain("(code ? `&p=${encodeURIComponent(code)}` : '')")
     expect(hub).toContain("action: 'ensure'")
-    expect(hub).toContain('void startTestFor(p.name, p.patientCode)')
+    expect(hub).toContain('void startTestFor(p)')
+    // the STORED label, never p.name — that carries the display-only "(2)"
+    expect(hub).toContain('const name = labelOf(p)')
+    expect(hub).toContain('patientRef: refOf(p) ?? null')
   })
 
   it('the demo clinic never offers it (read-only)', () => {
@@ -239,7 +244,8 @@ describe('a patient with history but no minted record can still be linked', () =
   })
 
   it('that back-fill refuses an ambiguous label rather than stitching two people together', () => {
-    expect(api).toContain('if (hits && hits.length === 1) p.patientCode = hits[0]')
+    // superseded by the sweep fix: ambiguity is counted on BOTH sides now
+    expect(api).toContain('if (hits && hits.length === 1 && (groupsPerLabel.get(key) ?? 0) === 1) p.patientCode = hits[0]')
   })
 
   it('the demo clinic is never back-filled from the real patients table', () => {
@@ -248,8 +254,7 @@ describe('a patient with history but no minted record can still be linked', () =
 
   it('find-or-create by label mints only when the label is unambiguous', () => {
     expect(registry).toContain('export async function findOrCreatePatientByLabel')
-    expect(registry).toContain('if (rows.length > 1) return null')
-    expect(registry).toContain("LIMIT 2")
+    expect(registry).toContain('if (minted.length > 1) return null')
   })
 
   it('it mints nothing for a blank label', () => {
@@ -316,8 +321,9 @@ describe('the patient code is where the personal and symptom data lives', () => 
     expect(route.indexOf('patient.symptomProfile')).toBeLessThan(route.indexOf('if (!symptoms.length && Array.isArray(r.symptoms))'))
   })
 
-  it('the last session is found by code OR label, since old sessions carry no code', () => {
-    expect(route).toContain("OR (${patient.label ?? ''} <> '' AND lower(btrim(patient_label)) =")
+  it('the last session is found by code or patientRef — NEVER by name', () => {
+    expect(route).toContain("payload->>'patientRef' = ${patient.patientRef ?? ''}")
+    expect(route).not.toContain("lower(btrim(patient_label)) = ${(patient.label ?? '').trim().toLowerCase()}")
   })
 
   it('a known profile skips the symptom card and lands on the test', () => {
@@ -329,5 +335,63 @@ describe('the patient code is where the personal and symptom data lives', () => 
     expect(app).toContain("'readiness' is NOT skipped and must never be")
     // readiness is the only path into the test
     expect(app).not.toMatch(/known \? 'test'/)
+  })
+})
+
+/**
+ * 2026-10-06 sweep. Six agents read the suite line by line; three converged on
+ * the same class of defect, all of it introduced the same day: identity by
+ * DISPLAY NAME. Every one of these tests pins a fix for a failure that would
+ * have put one patient's clinical data on another patient's record.
+ */
+describe('sweep: no clinical identity is ever resolved by display name', () => {
+  const registry = readFileSync('lib/sst-trainer/patient-registry.ts', 'utf8')
+  const api = readFileSync('app/api/sst/clinic-sessions/route.ts', 'utf8')
+  const route = readFileSync('app/api/sst/patient/route.ts', 'utf8')
+  const hub = readFileSync('app/clinical-hub/page.tsx', 'utf8')
+  const roster = readFileSync('app/clinical-testing/patients/page.tsx', 'utf8')
+  const app = readFileSync('app/platform/app/page.tsx', 'utf8')
+
+  it('research consent is never withdrawn as a side effect of a session', () => {
+    expect(registry).toContain('research_consent_version = CASE WHEN ${consentTouched} THEN ${consent} ELSE research_consent_version END')
+    expect(registry).toContain('const consentTouched = decision !== undefined')
+  })
+
+  it('find-or-create prefers the roster identity over the name', () => {
+    expect(registry).toContain('WHERE clinic_code = ${clinicCode} AND patient_ref = ${patientRef} LIMIT 1')
+    expect(registry.indexOf('patient_ref = ${patientRef}')).toBeLessThan(registry.indexOf('lower(btrim(label)) = ${label.toLowerCase()}'))
+  })
+
+  it('and refuses a name claimed by more than one human, on BOTH sides', () => {
+    expect(registry).toContain('if (minted.length > 1) return null')
+    expect(registry).toContain('if (distinctHumans > 1) return null')
+    expect(registry).toContain("count(DISTINCT payload->>'patientRef')")
+  })
+
+  it('adopting a record stamps the ref so the name is never trusted again', () => {
+    expect(registry).toContain('UPDATE sst_clinic_patients SET patient_ref = ${patientRef}')
+  })
+
+  it('the roster back-fill counts competing session groups, not just minted rows', () => {
+    expect(api).toContain('const groupsPerLabel = new Map<string, number>()')
+    expect(api).toContain('(groupsPerLabel.get(key) ?? 0) === 1')
+  })
+
+  it('an ambiguous name is refused with 409, not silently guessed', () => {
+    expect(route).toContain('the name is ambiguous')
+    expect(route).toContain('status: 409')
+  })
+
+  it('both clinician surfaces SURFACE that refusal instead of opening a blank trainer', () => {
+    for (const src of [hub, roster]) {
+      expect(src).toContain('setLinkError(')
+      expect(src).toContain('r.status === 409')
+      expect(src).toContain('Test not started')
+    }
+  })
+
+  it("today's resting symptom score is never seeded from the last visit", () => {
+    expect(app).toContain('initialRestingScore={undefined}')
+    expect(app).not.toContain('initialRestingScore={restingSymptomScore}')
   })
 })
