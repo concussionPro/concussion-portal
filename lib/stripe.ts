@@ -426,7 +426,22 @@ export async function createCourseCheckoutSession({
   const isAudCheckout = currency === 'aud'
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour (gives BNPL users time)
+    /**
+     * 24 HOURS — Stripe's maximum, and its own default. Was 1 hour.
+     *
+     * The old comment said "1 hour (gives BNPL users time)", which had the
+     * direction backwards: one hour is far SHORTER than the default, so it
+     * took time away from everyone. A clinician who opens checkout between
+     * patients, gets pulled into a consult and comes back ninety minutes
+     * later found a dead link.
+     *
+     * Measured 2026-10-07 over 120 days: 77 checkouts started, 14 completed,
+     * ~54 expired. The $100 deposit abandoned 4 of 5 — at a hundred dollars
+     * that is not price resistance, it is the session dying before they
+     * finish. Expiry also fires the `checkout_expired` event, so the short
+     * window was inflating the abandonment figure it was causing.
+     */
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
     // Let Stripe auto-detect optimal payment methods per device/location/currency.
     // Shows Apple Pay, Google Pay, Link, cards, Afterpay, Klarna as appropriate.
     // Requires: (1) payment methods enabled in Stripe Dashboard, (2) Apple Pay
@@ -482,8 +497,23 @@ export async function createCourseCheckoutSession({
       },
     },
     ...(discounts ? { discounts } : { allow_promotion_codes: allowPromotionCodes }),
-    billing_address_collection: 'required',
-    phone_number_collection: { enabled: true },
+    /**
+     * 'auto' collects only what the chosen payment method actually requires,
+     * instead of a mandatory full billing address for a digital course with
+     * nothing to ship.
+     *
+     * Checked before changing: the tax invoice prints the buyer address only
+     * when present (`if (input.buyer.address)` in lib/tax-invoice.ts), and ATO
+     * tax-invoice rules for sales of $1,000+ require the buyer's IDENTITY or
+     * ABN — name and email satisfy that. Its only other use is guessing a
+     * likely workshop city for the demand view, which already prefers the
+     * explicit nomination and degrades to null without it.
+     *
+     * Phone was mandatory and is consumed by NOTHING: no invoice field, no
+     * user record, no workshop logistics. It was a required field on the
+     * highest-value page in the product, collecting data we never read.
+     */
+    billing_address_collection: 'auto',
     custom_text: {
       submit: {
         message:
@@ -550,7 +580,7 @@ export async function createCrmCheckoutSession({
 
   return getStripe().checkout.sessions.create({
     mode: 'payment',
-    expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24h — see the note on the main course session
     adaptive_pricing: { enabled: false },
     locale: 'en',
     line_items: [
@@ -594,8 +624,7 @@ export async function createCrmCheckoutSession({
     payment_intent_data: {
       metadata: { email: customerEmail || '', productType, stream: 'crm', tier },
     },
-    billing_address_collection: 'required',
-    phone_number_collection: { enabled: true },
+    billing_address_collection: 'auto',
     custom_text: {
       submit: {
         message: tier === 'online'
@@ -648,7 +677,7 @@ export async function createCrmInternationalCheckoutSession({
 
   return getStripe().checkout.sessions.create({
     mode: 'payment',
-    expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24h — see the note on the main course session
     adaptive_pricing: { enabled: false },
     // Always create a customer + save the card off-session so the bundled SST
     // subscription can be attached and charged after the included period.
@@ -702,8 +731,7 @@ export async function createCrmInternationalCheckoutSession({
         international: 'true',
       },
     },
-    billing_address_collection: 'required',
-    phone_number_collection: { enabled: true },
+    billing_address_collection: 'auto',
     custom_text: {
       submit: {
         message:
