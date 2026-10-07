@@ -74,7 +74,7 @@ export function buildPatientWelcomeEmail(a: PatientWelcomeArgs): string {
     <div style="margin:0 0 22px;padding:16px 18px;border:1px solid #99f6e4;border-radius:12px;background:#f0fdfa;">
       <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0f766e;">Your prescription</p>
       <p style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0a0f14;">Train at ${a.bandLow}–${a.bandHigh} bpm${a.hrt ? ` <span style="font-size:13px;font-weight:500;color:#4a5568;">(from your measured threshold of ${a.hrt} bpm)</span>` : ''}</p>
-      <p style="margin:0;font-size:14px;line-height:1.55;color:#134e4a;">About 20 minutes, most days. <strong>Stop the session if your symptoms rise more than 2 points</strong> above how you felt before you started — a small rise of up to 2 points is expected and fine. The app watches this for you and will stop it automatically.</p>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#134e4a;">About 20 minutes, most days. <strong>Stop the session if your symptoms rise 2 points or more</strong> above how you felt before you started. The app watches this for you and will stop it automatically.</p>
     </div>` : ''}
 
     <div style="margin:0 0 22px;padding:16px 18px;border:1px solid #d3dedc;border-radius:12px;background:#fff;">

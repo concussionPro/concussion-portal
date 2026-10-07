@@ -328,7 +328,7 @@ export function SstTrainerDemo() {
                   </div>
                 </div>
                 <p className="mt-auto text-center text-[8px] leading-snug text-slate-400">
-                  Feel worse? A 2-point rise stops the session safely.
+                  Feel worse? A rise of 2 points or more stops the session safely.
                 </p>
               </div>
 

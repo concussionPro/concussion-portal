@@ -233,7 +233,7 @@ describe('an aborted / incomplete test can never derive as a pass', () => {
   it('the SAME stages, but with the voluntary-exhaustion endpoint recorded, DO read as no-intolerance', () => {
     const r = detectThreshold({
       restingSymptomScore: 1,
-      stages: [stage(1, 96, 1, 8), stage(2, 108, 1, 11), stage(3, 168, 1, EXHAUSTION_RPE)],
+      stages: [stage(1, 96, 1, 8), stage(2, 108, 1, 11), stage(3, 168, 1, EXHAUSTION_RPE + 1)],
       termination: 'exhaustion-limited',
     })
     expect(r.interpretation).toBe('no-intolerance')
@@ -241,7 +241,7 @@ describe('an aborted / incomplete test can never derive as a pass', () => {
     expect(yieldsPrescription(r)).toBe(false)
   })
 
-  it('one point below the endpoint (RPE 16) is still not exhaustion', () => {
+  it('AT the endpoint value (RPE 17) is still not exhaustion — the manual says > 17', () => {
     const r = detectThreshold({
       restingSymptomScore: 0,
       stages: [stage(1, 120, 0, 13), stage(2, 150, 1, EXHAUSTION_RPE - 1)],
@@ -318,7 +318,8 @@ describe('an aborted / incomplete test can never derive as a pass', () => {
 })
 
 describe('a session with no live HR signal can never earn an advance', () => {
-  const rx = computePrescription(150)
+  // Below the 90%-of-HRt cap, so this isolates the VERIFICATION rule.
+  const rx = { ...computePrescription(150), upperBpm: 125 }
   const clean = (over: Partial<SessionLog> = {}): SessionLog => ({
     date: 'd',
     avgHeartRate: 128,

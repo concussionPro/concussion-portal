@@ -23,11 +23,13 @@ describe('detectThreshold — HRt = first stage with >=3-point symptom rise', ()
   it('exhaustion-limited with no provocation → no intolerance, refer', () => {
     // The terminal Borg is what makes this exhaustion-limited: 'no-intolerance'
     // is clearance-grade, so detectThreshold requires an endpoint to have been
-    // reached (RPE >= 17, or the full stage cap). Without it the same stages
+    // reached (RPE > 17, or the full stage cap). Without it the same stages
     // are an incomplete test — see tests/sst-clinical-integrity.test.ts.
+    // BCTT Instruction Manual: "Voluntary exhaustion – defined as an RPE of
+    // > 17", so 18 is the first qualifying rating.
     const input: TestInput = {
       restingSymptomScore: 0,
-      stages: [stage(1, 120, 0), stage(2, 150, 1), stage(3, 175, 1, 17)],
+      stages: [stage(1, 120, 0), stage(2, 150, 1), stage(3, 175, 1, 18)],
       termination: 'exhaustion-limited',
     }
     const r = detectThreshold(input)
@@ -63,7 +65,9 @@ describe('computePrescription — 80-90% HRt band (concussion)', () => {
 })
 
 describe('progressionDecision', () => {
-  const rx = computePrescription(150, 'concussion')
+  // Ceiling set below the 90%-of-HRt cap so an advance is reachable: a FRESH
+  // prescription is already at the cap and correctly answers 'retest'.
+  const rx = { ...computePrescription(150, 'concussion'), upperBpm: 125 }
   const clean: SessionLog = { date: 'd', avgHeartRate: 128, peakHeartRate: 134, preSymptom: 2, peakSymptom: 2, nextDayFlare: false, completedMinutes: 20 }
   const flare: SessionLog = { ...clean, peakSymptom: 5, nextDayFlare: true }
 

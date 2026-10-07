@@ -83,6 +83,14 @@ export type TestModality = 'treadmill' | 'bike' | 'walk' | 'other'
 
 /** A single minute/stage of the guided graded (threshold-finding) test. */
 export interface TestStage {
+  /**
+   * True when the patient rated symptoms at THIS stage; false/undefined when
+   * the score carried over from the previous minute. The BCTT asks for a
+   * rating every minute (Instruction Manual, Test Protocol steps 2 and 5), so
+   * a ramp of entirely unrated stages is not evidence of an absence of
+   * symptoms — see the fail-closed gate in detectThreshold.
+   */
+  symptomRated?: boolean
   minute: number          // 1-based stage index
   heartRate: number       // bpm at the end of the stage
   rpe?: number            // Borg 6-20 (optional)
@@ -153,21 +161,61 @@ const CONDITION_DEFAULTS: Record<Condition, { lowerPct: number; upperPct: number
   cardiac:       { lowerPct: 0.6, upperPct: 0.75, sessionMinutes: 20, daysPerWeek: 5 },
 }
 
+/**
+ * The highest heart rate that may ever be PRESCRIBED, given a measured HRt —
+ * the top of the prescribed band itself.
+ *
+ *   "Patients are advised to exercise for at least 20 minutes a day at 80% to
+ *    90% of the maximum heart rate achieved on symptom exacerbation."
+ *    (Haider, Leddy et al., Sports Health 2021)
+ *   "a safe level of exercise is considered to be below 90% of HRt"
+ *    (BCTT Instruction Manual, Interpretation)
+ *
+ * So 90% of HRt is the ceiling of the prescription, and nothing above it may
+ * ever be prescribed. This returns exactly the value computePrescription uses
+ * for `upperBpm`, which means a FRESH prescription already sits at the cap and
+ * has no headroom: the only way to raise the band is a new measurement, which
+ * is what the trial did — "A new target HR was determined by weekly clinic
+ * BCTT performance for as long as the participant remained symptomatic"
+ * (Leddy 2019 JAMA Pediatr). An advance therefore exists to REBUILD a ceiling
+ * that a regress lowered, never to climb past the prescription.
+ */
+export function safeCeilingBpm(hrt: number, condition: Condition = 'concussion'): number {
+  const pct = CONDITION_DEFAULTS[condition]?.upperPct ?? CONDITION_DEFAULTS.concussion.upperPct
+  return Math.round(hrt * pct)
+}
+
 /** The validated symptom-provocation threshold: a rise of >=3 points from rest. */
 export const PROVOCATION_RISE = 3
 /**
- * Within-session symptom tolerance during training: the MAXIMUM ACCEPTABLE
- * rise. The consensus wording is that no MORE than mild exacerbation is
- * acceptable — an increase of up to 2 points on 0–10 is explicitly tolerated
- * (Patricios et al., Amsterdam consensus statement, Br J Sports Med
- * 2023;57:695–711). The stop rule is therefore a rise EXCEEDING this value
- * (>2, i.e. ≥3 on an integer scale) — comparisons use `>`, never `>=`.
- * (Until 2026-08-11 the app stopped at exactly ≥2 — stricter than the
- * consensus, truncating sessions at the rise the guideline deems acceptable.)
+ * WITHIN-SESSION STOP RULE: a rise of 2 OR MORE points ends the session.
+ * Comparisons use `>=`, never `>`.
+ *
+ * SOURCE (verbatim, Leddy JJ, Haider MN, Ellis MJ, et al. "Early Subthreshold
+ * Aerobic Exercise for Sport-Related Concussion: A Randomized Clinical Trial."
+ * JAMA Pediatr. 2019;173(4):319-325, Methods — Aerobic Exercise Group):
+ *
+ *   "Participants were instructed to stop their home exercise session if their
+ *    symptoms increased by 2 or more points from their preexercise symptom
+ *    level (on a 10-point visual analog scale) or at 20 minutes, whichever
+ *    came first."
+ *
+ * That is the instruction given to the participants of the trial this product
+ * implements, so it is the rule.
+ *
+ * CORRECTED 2026-10-07. From 2026-08-11 the app used `>` on the claim that
+ * Amsterdam 2023 explicitly tolerates a 2-point rise. It does not: Patricios
+ * et al. endorse sub-symptom-threshold aerobic exercise without specifying a
+ * within-session symptom tolerance, so there was no consensus number to weigh
+ * against the trial's own protocol. Meanwhile four of this product's own
+ * outputs — the GP PDF footer, the medicolegal record, the EP toolkit and the
+ * trainer demo — all stated ≥2, i.e. the engine disagreed with every document
+ * it generated.
  *
  * NOTE: the pre-registered NEXT-DAY flare definition (research.ts
- * FLARE_MIN_RISE, ≥2 at the 12–36h check-in) is a DIFFERENT variable and
- * deliberately keeps its locked ≥2 definition — see research.ts.
+ * FLARE_MIN_RISE, ≥2 at the 12–36h check-in) is a DIFFERENT variable with its
+ * own locked definition — see research.ts. The two now agree numerically; they
+ * are still not the same measurement.
  */
 export const SESSION_STOP_RISE = 2
 /**
@@ -180,11 +228,20 @@ export const SESSION_STOP_RISE = 2
  */
 export const MIN_HRT_ABOVE_RESTING = 15
 /**
- * Voluntary-exhaustion RPE (Borg 6-20) without symptom provocation. The BCTT
- * manual phrases the criterion as RPE > 17; the applied rule everywhere in this
- * codebase (engine, guided test, public calculator) is RPE >= 17, i.e. the test
- * is treated as having reached voluntary exhaustion one point earlier than the
- * manual's wording — the conservative direction for a TERMINATION rule.
+ * Voluntary-exhaustion RPE (Borg 6-20) without symptom provocation.
+ *
+ * SOURCE (verbatim, Buffalo Concussion Treadmill Test Instruction Manual,
+ * Leddy, Haider & Willer, UB Concussion Management Clinic — Stopping Criteria):
+ *
+ *   "Voluntary exhaustion – defined as an RPE of > 17 without significant
+ *    symptom exacerbation."
+ *
+ * Applied as `> EXHAUSTION_RPE`, i.e. 18 or above. CORRECTED 2026-10-07: the
+ * code applied `>=` on the reasoning that firing one point early is the
+ * conservative direction "for a TERMINATION rule". It is not a termination
+ * rule — it is the INTERPRETATION gate that produces 'no-intolerance', the
+ * clearance-grade read. Firing early makes a clearance EASIER to obtain, which
+ * is the unsafe direction, and the UI's own label already said "RPE >17".
  */
 export const EXHAUSTION_RPE = 17
 /** Top of the Borg 6-20 scale — anything above it is not a rating. */
@@ -202,7 +259,7 @@ export const VERIFIED_READING_MIN_PCT = 80
  * +1deg incline per minute for 15 stages then +0.4 mph/min; 20 minutes is the
  * point at which every surface ends the test. Reaching it without provocation
  * means the patient completed the WHOLE protocol symptom-free — the second way
- * (besides a recorded RPE >= EXHAUSTION_RPE) that a test can honestly report no
+ * (besides a recorded RPE > EXHAUSTION_RPE) that a test can honestly report no
  * exercise intolerance. Single source of truth for the web GuidedTest
  * (MAX_STAGES) and the watch (SSTProtocol.protocolStageCap); the two surfaces
  * must never cap at different numbers.
@@ -280,7 +337,7 @@ export function detectThreshold(input: TestInput): ThresholdResult {
   // clearanceReady, the hub's clearance banner and the GP report's "tolerance
   // recovered" recommendation — so it may only be returned when the test
   // actually reached the OTHER validated BCTT endpoint: voluntary exhaustion
-  // (RPE >= EXHAUSTION_RPE). A test that stopped before EITHER endpoint proves
+  // (RPE > EXHAUSTION_RPE). A test that stopped before EITHER endpoint proves
   // nothing: a walk-out at minute 2 has no >=3-point rise either, and must
   // never read as "your symptoms are not exercise-driven". Fail closed to
   // 'invalid' — the same bucket an aborted test lands in.
@@ -300,7 +357,7 @@ export function detectThreshold(input: TestInput): ThresholdResult {
   const reachedExhaustion =
     typeof terminalRpe === 'number' &&
     Number.isFinite(terminalRpe) &&
-    terminalRpe >= EXHAUSTION_RPE &&
+    terminalRpe > EXHAUSTION_RPE &&
     terminalRpe <= BORG_MAX
   // Count DISTINCT stages, not array length: a replayed/duplicated row set
   // (twenty copies of minute 1) is not a completed 20-minute ramp, and the
@@ -311,6 +368,33 @@ export function detectThreshold(input: TestInput): ThresholdResult {
     return {
       hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'invalid',
       message: `The test ended before either stopping point was reached — your symptoms did not rise ${PROVOCATION_RISE} points, and you did not record reaching your limit. There is no threshold to read from it. Repeat the test another day and take the effort up until you genuinely cannot go harder.`,
+    }
+  }
+
+  /**
+   * FAIL CLOSED ON AN UNRATED RAMP.
+   *
+   * 'no-intolerance' is the clearance-grade read: it drives clearanceReady,
+   * the hub's clearance banner and the GP letter's "refer back for clearance
+   * review". It asserts that exercise did NOT provoke this patient's symptoms
+   * — which is only a finding if their symptoms were actually asked about.
+   *
+   * The BCTT elicits a rating at every stage ("he/she will be asked to rate
+   * symptom severity and exertion each minute during exercise" — Instruction
+   * Manual, Test Protocol step 2). A stage table in which the patient never
+   * once rated is silence, not a negative finding, and silence must not become
+   * a clearance recommendation.
+   *
+   * Legacy and watch rows carry no `symptomRated` field at all. Those are
+   * treated as rated (undefined ≠ false) so this cannot retroactively
+   * invalidate existing records; only a ramp that explicitly reports every
+   * stage as unrated fails here.
+   */
+  const anyRated = input.stages.some((st) => st.symptomRated !== false)
+  if (!anyRated) {
+    return {
+      hrtFound: false, hrt: null, thresholdStage: null, interpretation: 'invalid',
+      message: 'No symptom ratings were recorded during this test, so it cannot show whether exercise provoked symptoms. Repeat it and rate symptoms at each minute, as the protocol asks.',
     }
   }
 
@@ -562,18 +646,19 @@ export interface ProgressionResult {
 export function progressionDecision(
   rx: Prescription,
   recent: SessionLog[],
-  opts: { cleanSessionsToAdvance?: number; stepBpm?: number } = {},
+  opts: { cleanSessionsToAdvance?: number; stepBpm?: number; condition?: Condition } = {},
 ): ProgressionResult {
   const cleanNeeded = opts.cleanSessionsToAdvance ?? 3
   const step = opts.stepBpm ?? 5
+  // Concussion's 80–90% band is the default; a POTS/cardiac prescription has
+  // its own, lower, prescribed ceiling and must be capped against that one.
+  const condition: Condition = opts.condition ?? 'concussion'
   if (!recent.length) return { decision: 'hold', message: 'Log a few sessions first.' }
 
-  // In-session semantics track the stop rule: a rise EXCEEDING the tolerated
-  // 2 points (Amsterdam 2023). A ≤2-pt rise is the acceptable mild
-  // exacerbation and must not count as provocation, or the engine regresses
-  // patients for sessions the guideline calls well-tolerated.
+  // In-session semantics track the stop rule: a rise of 2 OR MORE points is a
+  // provocation (Leddy 2019 JAMA Pediatr, verbatim at SESSION_STOP_RISE).
   const isFlare = (s: SessionLog) =>
-    s.nextDayFlare || s.peakSymptom - s.preSymptom > SESSION_STOP_RISE
+    s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
 
   // Regress only on RECENT repeated provocation — window to the last few
   // sessions so old, long-since-resolved flares can't ratchet the ceiling down
@@ -634,11 +719,43 @@ export function progressionDecision(
     (s) => !isFlare(s) && s.completedMinutes >= rx.sessionMinutes * 0.8,
   )
   if (allClean) {
-    // Ceiling cap: upperBpm may never exceed the measured HRt.
-    if (rx.upperBpm >= rx.hrt) {
-      return { decision: 'retest', message: 'You have reached your measured threshold — time to re-test. A fresh test is the only safe way to raise your band further.' }
+    /**
+     * CEILING CAP — the prescribed band ceiling, never the measured threshold.
+     *
+     * SOURCE (verbatim, Buffalo Concussion Treadmill Test Instruction Manual,
+     * Leddy, Haider & Willer — Interpretation):
+     *
+     *   "The maximum HR achieved on the BCTT at symptom exacerbation is called
+     *    the Heart Rate threshold (HRt) and a safe level of exercise is
+     *    considered to be below 90% of HRt."
+     *
+     * and (Haider MN, Leddy JJ, et al., Sports Health 2021):
+     *
+     *   "Patients are advised to exercise for at least 20 minutes a day at 80%
+     *    to 90% of the maximum heart rate achieved on symptom exacerbation."
+     *   "It is of paramount importance to caution patients to avoid sustained
+     *    exercise above the symptom threshold because it may prolong symptoms."
+     *
+     * CORRECTED 2026-10-07. The cap was `rx.hrt`, so a run of clean sessions
+     * walked the do-not-exceed ceiling up to 100% of the measured threshold —
+     * the exact heart rate at which that patient's symptoms were provoked, and
+     * well outside the 80–90% band the evidence prescribes. At HRt 150 a
+     * patient reached a prescribed ceiling of 150 bpm after five clean
+     * sessions, with the app telling them not to exceed it.
+     *
+     * The cap is now the condition's own prescribed ceiling (0.9 x HRt for
+     * concussion), kept STRICTLY below it per "below 90% of HRt". Advance
+     * therefore rebuilds a ceiling that a regress lowered, and can never push
+     * past the prescription. The only way to raise the band beyond it is a new
+     * measurement — which is what the RCT did: "A new target HR was determined
+     * by weekly clinic BCTT performance for as long as the participant
+     * remained symptomatic" (Leddy 2019 JAMA Pediatr).
+     */
+    const safeCeiling = safeCeilingBpm(rx.hrt, condition)
+    if (rx.upperBpm >= safeCeiling) {
+      return { decision: 'retest', message: 'You are at the top of your prescribed band — time to re-test. A fresh test is the only safe way to raise it further.' }
     }
-    const newCeilingBpm = Math.min(rx.upperBpm + step, rx.hrt)
+    const newCeilingBpm = Math.min(rx.upperBpm + step, safeCeiling)
     return { decision: 'advance', newCeilingBpm, message: `${cleanNeeded} clean tracked sessions with no flare — you can step your ceiling up to ${newCeilingBpm} bpm to keep the stimulus effective. (Or re-test your threshold for a precise update.)` }
   }
   return { decision: 'hold', message: 'Staying the course — keep training in your current band until you have a clean run of tracked sessions.' }

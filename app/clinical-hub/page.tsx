@@ -690,7 +690,7 @@ function mapApiSession(s: ApiSession): Session {
   const overrodeStop = s.overrode_stop === true || s.overrodeStop === true
   const nextDayFlare = s.nextDayFlare === true
   const eventType = normEvent(s.eventType)
-  const flare = (symptomDelta != null && symptomDelta > SESSION_STOP_RISE) || eventType === 'symptom-stopped' || nextDayFlare
+  const flare = (symptomDelta != null && symptomDelta >= SESSION_STOP_RISE) || eventType === 'symptom-stopped' || nextDayFlare
   const status: Session['status'] = flare ? 'flare' : symptomDelta != null ? 'clean' : 'unknown'
 
   let timeInBandPct = num(s.timeInBandPct) ?? num(s.inBandPct)
@@ -2069,7 +2069,7 @@ function SessionRow({ s }: { s: Session }) {
         <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotCls}`} />
         <p className="text-xs font-medium text-foreground w-14 flex-shrink-0">{s.date}</p>
         <p className="text-xs text-muted-foreground flex-1">{bits || 'no data recorded'}</p>
-        <span className={`text-[11px] font-semibold ${s.symptomDelta != null && s.symptomDelta > SESSION_STOP_RISE ? 'text-amber-600' : s.symptomDelta == null ? 'text-muted-foreground/60' : 'text-[var(--accent)]'}`}>
+        <span className={`text-[11px] font-semibold ${s.symptomDelta != null && s.symptomDelta >= SESSION_STOP_RISE ? 'text-amber-600' : s.symptomDelta == null ? 'text-muted-foreground/60' : 'text-[var(--accent)]'}`}>
           {s.symptomDelta == null ? 'Δ —' : s.symptomDelta === 0 ? 'no Δ' : s.symptomDelta > 0 ? `+${s.symptomDelta}` : `${s.symptomDelta}`}
         </span>
       </div>

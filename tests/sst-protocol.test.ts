@@ -50,28 +50,54 @@ describe('band math — computePrescription', () => {
   })
 })
 
-describe('ceiling cap — a suggested advance never exceeds the measured HRt', () => {
+/**
+ * CEILING CAP — corrected 2026-10-07 against the primary sources.
+ *
+ * The cap used to be the measured HRt itself, so clean sessions walked the
+ * do-not-exceed ceiling up to 100% of the heart rate that provoked the
+ * patient's symptoms. The evidence puts the prescription at 80–90% of HRt
+ * (Haider/Leddy, Sports Health 2021) and calls safe exercise "below 90% of
+ * HRt" (BCTT Instruction Manual, Interpretation), so 90% is the ceiling and
+ * nothing above it may be prescribed.
+ */
+describe('ceiling cap — a prescribed ceiling never exceeds 90% of the measured HRt', () => {
   const clean3 = [session(), session(), session()]
 
-  it('a normal advance steps the ceiling +5', () => {
-    const rx = computePrescription(150, 'concussion') // upper 135
+  it('a fresh prescription is already AT the cap, so clean sessions mean re-test', () => {
+    const rx = computePrescription(150, 'concussion') // 120–135, i.e. 80–90%
+    expect(rx.upperBpm).toBe(135)
     const r = progressionDecision(rx, clean3)
-    expect(r.decision).toBe('advance')
-    expect(r.newCeilingBpm).toBe(140)
-  })
-
-  it('an advance near the HRt is clamped TO the HRt (partial step)', () => {
-    const rx = { ...computePrescription(150, 'concussion'), upperBpm: 148 }
-    const r = progressionDecision(rx, clean3)
-    expect(r.decision).toBe('advance')
-    expect(r.newCeilingBpm).toBe(150) // min(148 + 5, hrt 150)
-  })
-
-  it('at the cap the decision is RETEST, never an advance past the measurement', () => {
-    const rx = { ...computePrescription(150, 'concussion'), upperBpm: 150 }
-    const r = progressionDecision(rx, clean3)
+    // The trial raised the target by a new BCTT, not by walking the band up.
     expect(r.decision).toBe('retest')
     expect(r.newCeilingBpm).toBeUndefined()
+  })
+
+  it('an advance REBUILDS a ceiling a regress lowered, and stops at the cap', () => {
+    const rx = { ...computePrescription(150, 'concussion'), upperBpm: 125 }
+    const r = progressionDecision(rx, clean3)
+    expect(r.decision).toBe('advance')
+    expect(r.newCeilingBpm).toBe(130) // 125 + 5, still under the 135 cap
+  })
+
+  it('a rebuild near the cap is clamped TO the cap, never past it', () => {
+    const rx = { ...computePrescription(150, 'concussion'), upperBpm: 133 }
+    const r = progressionDecision(rx, clean3)
+    expect(r.decision).toBe('advance')
+    expect(r.newCeilingBpm).toBe(135) // min(133 + 5, cap 135)
+  })
+
+  it('the ceiling can never reach the heart rate that provoked symptoms', () => {
+    const rx = { ...computePrescription(150, 'concussion'), upperBpm: 133 }
+    const r = progressionDecision(rx, clean3)
+    expect(r.newCeilingBpm!).toBeLessThan(150)
+    expect(r.newCeilingBpm!).toBeLessThanOrEqual(Math.round(150 * 0.9))
+  })
+
+  it('a POTS/long-COVID prescription is capped against ITS band (80%), not 90%', () => {
+    const rx = { ...computePrescription(150, 'long-covid'), upperBpm: 115 }
+    const r = progressionDecision(rx, clean3, { condition: 'long-covid' })
+    expect(r.decision).toBe('advance')
+    expect(r.newCeilingBpm).toBe(120) // cap = round(150 * 0.8)
   })
 })
 
@@ -110,7 +136,9 @@ describe('regress is NEVER gated — safety data always counts', () => {
 })
 
 describe('manual sessions never advance the band', () => {
-  const rx = computePrescription(150, 'concussion')
+  // A ceiling below the 90%-of-HRt cap, so an advance is reachable at all and
+  // these tests isolate the VERIFICATION rule rather than the ceiling cap.
+  const rx = { ...computePrescription(150, 'concussion'), upperBpm: 125 }
 
   it('3 clean MANUAL sessions do not advance', () => {
     const manual = session({ hrVerified: false, verifiedReadingPct: 0 })

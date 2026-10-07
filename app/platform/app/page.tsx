@@ -520,7 +520,9 @@ export default function PlatformAppPage({
 
   // ── progression (page-owned so regress can auto-apply) ─────────────────────
   const decision = useMemo(
-    () => (prescription ? progressionDecision(prescription, sessions) : null),
+    // The condition decides the prescribed ceiling the advance may never pass
+    // (concussion 90% of HRt, POTS/long-COVID 80%, cardiac 75%).
+    () => (prescription ? progressionDecision(prescription, sessions, { condition }) : null),
     [prescription, sessions],
   )
   const decisionFresh = sessions.length > decisionCheckpoint

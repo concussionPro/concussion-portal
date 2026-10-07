@@ -24,7 +24,7 @@ export function HrtToPrescription() {
     <InfographicFrame
       eyebrow="Module 3–4 · From threshold to dose"
       title="HRt → the sub-symptom-threshold training band"
-      ariaLabel="Input to dose diagram. The heart rate at symptom threshold, HRt, of 150 beats per minute is multiplied by 80 to 90 percent to set a training band of 120 to 135 beats per minute, shown as a highlighted zone on a heart-rate gauge sitting just below the 150 threshold line. That band becomes a FITT prescription: frequency most days, 5 to 7 sessions a week; intensity 80 to 90 percent of HRt; time about 20 minutes continuous; type walking, stationary cycling or treadmill. The governing rule beneath: if symptoms rise more than 2 points, ease off regardless of heart rate."
+      ariaLabel="Input to dose diagram. The heart rate at symptom threshold, HRt, of 150 beats per minute is multiplied by 80 to 90 percent to set a training band of 120 to 135 beats per minute, shown as a highlighted zone on a heart-rate gauge sitting just below the 150 threshold line. That band becomes a FITT prescription: frequency most days, 5 to 7 sessions a week; intensity 80 to 90 percent of HRt; time about 20 minutes continuous; type walking, stationary cycling or treadmill. The governing rule beneath: if symptoms rise 2 points or more, ease off regardless of heart rate."
       caption="The test result personalises the dose: train inside an 80–90% band that loads the system without crossing the symptom ceiling."
     >
       <svg viewBox="0 0 760 380" className="h-auto w-full" preserveAspectRatio="xMidYMid meet">

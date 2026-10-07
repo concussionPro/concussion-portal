@@ -197,6 +197,14 @@ export default function GuidedTest({
   const [confirmJump, setConfirmJump] = useState<number | null>(null)
   /** guards the auto-logger so a stage logs at most once at its rollover */
   const autoLoggedRef = useRef(false)
+  /**
+   * Did the patient actually rate THIS minute? The BCTT asks for a rating at
+   * every stage; a stage the patient never touched is an unrated stage, and a
+   * test made entirely of unrated stages cannot evidence "no symptoms".
+   * Recorded per stage so the engine can fail closed instead of reading
+   * silence as a negative finding.
+   */
+  const ratedRef = useRef(false)
   /** guards the threshold finish so it fires exactly once */
   const finishingRef = useRef(false)
   const [justLogged, setJustLogged] = useState<number | null>(null)
@@ -278,6 +286,7 @@ export default function GuidedTest({
     setMinute(resume.minute)
     setRpe(resume.rpe)
     setSymptomScore(restingSymptomScore)
+    ratedRef.current = false
     setHeartRate('')
     lastLiveRef.current = ''
     setTappedSymptoms(new Set())
@@ -347,6 +356,10 @@ export default function GuidedTest({
     heartRate: hrValue as number,
     rpe,
     symptomScore,
+    // Whether the patient rated THIS minute, or the score simply carried over
+    // from the previous stage. The BCTT elicits a rating at every stage; a
+    // test of entirely unrated stages cannot evidence an absence of symptoms.
+    symptomRated: ratedRef.current || tappedSymptoms.size > 0,
     symptomsReported: [...tappedSymptoms],
     // verified iff the live feed is FRESH right now and the field equals it
     hrVerified: isVerifiedReading(hrValue, liveHr ?? null, hrStatus === 'streaming'),
@@ -386,12 +399,33 @@ export default function GuidedTest({
     setRecordedStages(stages)
     setJustLogged(minute)
     setMinute((m) => m + 1)
-    // fresh entry for every stage — no HR / symptom carry-over from the last
-    // minute (RPE carries: effort only ramps up)
+    // fresh entry for every stage — no HR carry-over from the last minute
+    // (RPE carries: effort only ramps up)
     setTappedSymptoms(new Set())
+    ratedRef.current = false
     setHeartRate('')
     lastLiveRef.current = ''
-    setSymptomScore(restingSymptomScore)
+    /**
+     * SYMPTOM SCORE CARRIES FORWARD; it is NOT reset to the resting value.
+     *
+     * The BCTT manual (Leddy, Haider & Willer — Test Protocol, step 2) has the
+     * examiner "Remind participant that he/she will be asked to rate symptom
+     * severity and exertion each minute during exercise", and step 5 repeats
+     * the rating request at every stage. The rating is ELICITED each minute —
+     * it is never assumed.
+     *
+     * Resetting the stepper to the resting score each minute meant the auto
+     * logger recorded "no symptom change" for any minute the patient did not
+     * re-tap, which on a live feed is every minute. A patient concentrating on
+     * the treadmill with a 7/10 headache logged twenty stages at their resting
+     * score, and twenty distinct minutes satisfies the completed-protocol arm
+     * of detectThreshold → 'no-intolerance', the clearance-grade read. The app
+     * was manufacturing the one measurement it exists to take.
+     *
+     * Carrying the last rating forward is the conservative direction: a rise
+     * the patient has already reported persists until they lower it, instead
+     * of silently evaporating at the top of each minute.
+     */
     stageStartRef.current = Date.now()
     setStageElapsed(0)
     cuedRef.current = false
@@ -696,7 +730,11 @@ export default function GuidedTest({
           Symptom level <span className="font-normal text-(--sst-muted)">· 0 none → 10 worst</span>
         </span>
         <div className="max-w-[360px]">
-          <SymptomStepper value={symptomScore} onChange={setSymptomScore} ariaLabel="Symptom level" />
+          <SymptomStepper
+            value={symptomScore}
+            onChange={(v) => { ratedRef.current = true; setSymptomScore(v) }}
+            ariaLabel="Symptom level"
+          />
         </div>
       </div>
 
