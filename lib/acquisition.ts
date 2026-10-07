@@ -57,6 +57,13 @@ export interface AcquisitionInput {
   utm?: Record<string, string> | null
   /** Landing path, when known. */
   landing?: string | null
+  /**
+   * Explicit source, used when the origin is known but is not a referring
+   * host — e.g. a campaign link whose utm_source survived a hop through the
+   * marketing site that would otherwise erase the referrer. Stored verbatim
+   * as the source; `referrer` is still kept for the audit trail.
+   */
+  sourceOverride?: string | null
 }
 
 export async function ensureAcquisitionColumns(): Promise<void> {
@@ -79,7 +86,7 @@ export async function recordAcquisition(
   email: string,
   input: AcquisitionInput,
 ): Promise<boolean> {
-  const source = normaliseReferrer(input.referrer)
+  const source = (input.sourceOverride || '').trim() || normaliseReferrer(input.referrer)
   if (!source) return false
   try {
     await ensureAcquisitionColumns()
@@ -108,6 +115,26 @@ export async function recordAcquisition(
  *
  * Idempotent — only fills rows that are still null.
  */
+/**
+ * FIRST-TOUCH REPAIR.
+ *
+ * Reads the origin back out of the person's own analytics events and promotes
+ * it onto their user row. Preference order: the converting session's
+ * firstReferrer from purchase_complete, then the firstReferrer carried on ANY
+ * of their events, then the raw document.referrer of their earliest row
+ * (usually one of our own pages, which normalises away).
+ *
+ * The middle step is the one that matters and was missing. getVisitorContext()
+ * stamps firstReferrer onto every client event, so a free signup already
+ * carries the origin that won them — but this only ever looked at
+ * purchase_complete, and recordAcquisition is otherwise called from exactly
+ * one place, the Stripe webhook. So only BUYERS were ever attributed.
+ * Measured 2026-10-07: 95% of users created after the one-off 2026-09-30
+ * backfill had no acquisition_source, which makes the top of the funnel
+ * unanswerable for everyone who has not yet paid.
+ *
+ * Idempotent: recordAcquisition only writes where acquisition_source IS NULL.
+ */
 export async function backfillAcquisition(): Promise<{ scanned: number; filled: number }> {
   await ensureAcquisitionColumns()
   const { rows } = await sql`
@@ -116,6 +143,19 @@ export async function backfillAcquisition(): Promise<{ scanned: number; filled: 
              WHERE LOWER(e.user_email) = LOWER(u.email)
                AND e.referrer IS NOT NULL
              ORDER BY e.created_at ASC LIMIT 1) AS ev_referrer,
+           -- first-touch from ANY event of theirs; see the note above
+           (SELECT e.event_data->>'firstReferrer' FROM analytics_events e
+             WHERE LOWER(e.user_email) = LOWER(u.email)
+               AND e.event_data->>'firstReferrer' IS NOT NULL
+             ORDER BY e.created_at ASC LIMIT 1) AS first_referrer,
+           -- the campaign that brought them, when the link carried one
+           (SELECT e.event_data->'firstUtm'->>'utm_source' FROM analytics_events e
+             WHERE LOWER(e.user_email) = LOWER(u.email)
+               AND e.event_data->'firstUtm'->>'utm_source' IS NOT NULL
+             ORDER BY e.created_at ASC LIMIT 1) AS first_utm_source,
+           -- did we see them at all? distinguishes 'direct' from 'no data'
+           (SELECT count(*)::int FROM analytics_events e
+             WHERE LOWER(e.user_email) = LOWER(u.email)) AS seen,
            (SELECT e.event_data::text FROM analytics_events e
              WHERE LOWER(e.user_email) = LOWER(u.email)
                AND e.event_type = 'purchase_complete'
@@ -135,7 +175,42 @@ export async function backfillAcquisition(): Promise<{ scanned: number; filled: 
         ref = (d.firstReferrer as string) || (d.referrer as string) || null
       } catch { /* fall through to the event referrer */ }
     }
+    // Then the first-touch referrer carried on any of their own events, and
+    // only then the raw document.referrer of the earliest row (which is often
+    // one of our own pages and normalises away).
+    if (!ref) ref = (r.first_referrer as string) || null
     if (!ref) ref = (r.ev_referrer as string) || null
+
+    /**
+     * A SELF-HOST FIRST-TOUCH IS NOT "UNKNOWN".
+     *
+     * normaliseReferrer deliberately returns null for our own domains, so a
+     * visitor who landed on the marketing site and clicked through to the
+     * portal produced no source at all — 146 of the 172 unattributed users
+     * are exactly this shape. The marketing-site hop erases the origin.
+     *
+     * Two recoveries, in order:
+     *  1. the first-touch UTM, when the link that brought them carried one
+     *     (this is how the Squarespace and campaign lanes stay attributable
+     *     across the hop);
+     *  2. failing that, '(direct)' — because we DID observe this person
+     *     browsing, and "arrived with no external referrer" is a finding.
+     *     Leaving it null conflates a direct visitor with a capture failure,
+     *     which is what made the number unreadable in the first place.
+     * Someone with no events at all stays null: that is genuinely unknown.
+     */
+    const seen = Number(r.seen ?? 0)
+    const normalised = normaliseReferrer(ref)
+    if (!normalised && seen > 0) {
+      const utmSource = ((r.first_utm_source as string) || '').trim().slice(0, 60)
+      const ok = await recordAcquisition(r.email as string, {
+        referrer: ref,
+        // '(direct)' when nothing carried them but we did observe the visit.
+        sourceOverride: utmSource ? `utm:${utmSource}` : '(direct)',
+      })
+      if (ok) filled++
+      continue
+    }
     if (await recordAcquisition(r.email as string, { referrer: ref })) filled++
   }
   return { scanned: rows.length, filled }

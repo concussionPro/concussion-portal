@@ -58,6 +58,10 @@
     {
       "path": "/api/cron/sst-renewal-prompt",
       "schedule": "0 23 * * 1"
+    },
+    {
+      "path": "/api/cron/backfill-acquisition",
+      "schedule": "40 22 * * *"
     }
   ]
 }
