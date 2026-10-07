@@ -11,9 +11,19 @@ import { PAID_TTL_MS, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
  * just paid and may open the email on Monday.
  */
 describe('a paid buyer never gets a short-lived login link', () => {
-  it('the paid window is 30 days, and longer than the nurture window', () => {
-    expect(PAID_TTL_MS).toBe(30 * 24 * 60 * 60 * 1000)
+  it('a paid link does not expire — owner decision, 2026-10-06', () => {
+    // Far-future expiry, not a sentinel: the verifier keeps one unconditional
+    // expiry comparison and no "expiry disabled" branch.
+    expect(PAID_TTL_MS).toBeGreaterThan(50 * 365 * 24 * 60 * 60 * 1000)
     expect(PAID_TTL_MS).toBeGreaterThan(NURTURE_TTL_MS)
+  })
+
+  it('but it is still SINGLE USE — no expiry is not a standing key', () => {
+    const verify = readFileSync('app/api/auth/verify/route.ts', 'utf8')
+    expect(verify).toContain('used_magic_tokens')
+    expect(verify).toContain('Link Already Used')
+    // and a bare GET can never consume it (scanner prefetch)
+    expect(verify).toContain('does NOT mark the token used')
   })
 
   const paidPaths = [

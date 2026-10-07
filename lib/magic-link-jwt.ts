@@ -37,25 +37,36 @@ const TRANSACTIONAL_TTL_MS = 24 * 60 * 60 * 1000
 export const NURTURE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 /**
- * PAID BUYERS. 30 days, because a 24-hour link is indefensible for someone who
- * has just paid: they buy on a Friday night, open the email on Monday, and the
- * only thing standing between them and the product they own has expired.
+ * PAID BUYERS — NO EXPIRY (owner decision, 2026-10-06: "do not put a limit to
+ * their login").
  *
- * Owner, 2026-10-06: "why would you mint a 24hr token for a paid user".
+ * A clinician who has paid should never be locked out of the product they own
+ * by a clock. The 24h default was written for a user-initiated /login request,
+ * where the person is sitting in front of the inbox — that is still the right
+ * window there, and it is unchanged. It was never right for a purchase
+ * welcome, a purchase-welcome RESEND (the repair path used precisely when
+ * someone already cannot get in), a hub-pack redeem, a Squarespace order or an
+ * admin-created account.
  *
- * The 24h default was written for a user-initiated /login request, where the
- * person is sitting in front of the inbox — that is still the right window
- * there. It was never right for a purchase welcome, a purchase-welcome RESEND
- * (the repair path used precisely when someone could not get in), a hub-pack
- * redeem, a Squarespace order or an admin-created account. All of those now
- * use this.
+ * WHAT STILL BOUNDS THIS TOKEN — it is not a standing key:
+ *  - SINGLE USE. The first successful verify writes its hash to
+ *    used_magic_tokens and every later presentation is refused. "No expiry"
+ *    means the first use can happen whenever they get to it, not that the link
+ *    keeps working.
+ *  - A scanner prefetch cannot burn it: the GET only serves the confirm
+ *    interstitial, and consumption requires the POST.
+ *  - It is traded immediately for an httpOnly session cookie.
  *
- * The length is safe because the token is not the only control: it is
- * single-use against the replay table, it cannot be burned by a scanner
- * prefetch (the GET only serves a confirm interstitial; consumption needs the
- * POST), and it is traded immediately for a session cookie.
+ * THE RESIDUAL RISK, stated plainly: an unused link in a mailbox is a
+ * first-use credential with no time bound, so a forwarded or breached inbox is
+ * an account takeover whenever it is read. Rotating MAGIC_LINK_SECRET
+ * invalidates every outstanding link at once if that is ever needed.
+ *
+ * Implemented as a far-future expiry rather than a null/zero sentinel on
+ * purpose: the verifier keeps one unconditional expiry comparison, so there is
+ * no "expiry disabled" branch for a malformed token to fall into.
  */
-export const PAID_TTL_MS = 30 * 24 * 60 * 60 * 1000
+export const PAID_TTL_MS = 100 * 365 * 24 * 60 * 60 * 1000
 
 // Create a signed token. ttlMs default = 24h for transactional links.
 export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview', ttlMs?: number): string {

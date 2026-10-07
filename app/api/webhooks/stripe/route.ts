@@ -1174,7 +1174,7 @@ async function handleShortCoursePurchase(
   // hardcoding 'preview' would downgrade an online-only/full-course user's
   // session when they click the link (same pattern as handleBookPurchase).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  // 30-day TTL (PAID_TTL_MS), never the 24h transactional default: an
+  // No-expiry single-use link (PAID_TTL_MS), never the 24h default: an
   // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
   // and this is a PAYING buyer's only way in.
   const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', PAID_TTL_MS)
@@ -1443,7 +1443,7 @@ async function handleCrmPurchase(
   // confirmation the CCM template gives a full-course buyer — parity of
   // substance, not of template (2026-08-05).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  // 30-day TTL (PAID_TTL_MS), never the 24h transactional default: an
+  // No-expiry single-use link (PAID_TTL_MS), never the 24h default: an
   // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
   // and this is a PAYING buyer's only way in.
   const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', PAID_TTL_MS)
@@ -1768,7 +1768,7 @@ async function handleBookPurchase(
   await markBookPurchased(customerEmail)
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  // 30-day TTL (PAID_TTL_MS), never the 24h transactional default: an
+  // No-expiry single-use link (PAID_TTL_MS), never the 24h default: an
   // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
   // and this is a PAYING buyer's only way in.
   const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', PAID_TTL_MS)
