@@ -65,3 +65,4 @@ sst-watch/Sources/Info.plist
 # Local dev smoke-test / screenshot scripts (read .env.local, not for CI)
 .runtime.mjs
 bcap.mjs
+.claude/worktrees/
