@@ -134,6 +134,8 @@ function sessionDayLabel(at: number): string {
 export default function PlatformAppPage({
   publicSurface = false,
   embeddedClinicCode = null,
+  embeddedPatientCode = null,
+  embeddedViewKey = null,
 }: {
   /**
    * true when rendered on the PUBLIC /sst-trainer route: patients arrive with
@@ -149,6 +151,16 @@ export default function PlatformAppPage({
    * owner 2026-07-06). Pre-fills clinic-code mode with this code.
    */
   embeddedClinicCode?: string | null
+  /**
+   * The patient this embedded session is for, picked from the clinician's own
+   * roster on /clinical-testing/sst. Same effect as arriving with ?p=&k= on
+   * the public route, but without leaving the portal or opening a tab — the
+   * tab hop was being blocked and closed by the browser (Zac 2026-10-07:
+   * "it tries to launch a new tab and gets closed").
+   */
+  embeddedPatientCode?: string | null
+  /** Clinic viewKey, so that record can be resolved and pre-filled. */
+  embeddedViewKey?: string | null
 }) {
   const [step, setStep] = useState<AppStep>('welcome')
   const [hydrated, setHydrated] = useState(false)
@@ -240,7 +252,7 @@ export default function PlatformAppPage({
      * device is just a terminal.
      */
     const qp0 = new URLSearchParams(window.location.search)
-    const urlP = (qp0.get('p') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9)
+    const urlP = (qp0.get('p') || embeddedPatientCode || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9)
     const storedP = (saved?.patientCode || '').trim().toUpperCase()
     const otherPatient = !!urlP && !!saved && storedP !== urlP
     if (otherPatient) {
@@ -807,8 +819,8 @@ export default function PlatformAppPage({
           device={device}
           allowSelfGuided={!publicSurface && !embeddedClinicCode}
           initialClinicCode={urlClinicCode ?? embeddedClinicCode ?? undefined}
-          initialPatientCode={urlPatientCode}
-          clinicianKey={urlViewKey}
+          initialPatientCode={urlPatientCode ?? embeddedPatientCode ?? undefined}
+          clinicianKey={urlViewKey ?? embeddedViewKey ?? undefined}
           savedIntake={savedIntake ?? undefined}
           onPair={handlePair}
           onStart={(r: OnboardingResult) => {

@@ -47,6 +47,21 @@ function Shell() {
   // fetch failure, permanently) runs in self-guided mode with no clinic code —
   // and nothing the clinician runs would sync to their own hub.
   const [clinicCode, setClinicCode] = useState<string | null | undefined>(undefined)
+  // The clinic's read key, so this page can list the roster and open the
+  // trainer ON a chosen patient without leaving the portal.
+  const [viewKey, setViewKey] = useState<string | null>(null)
+  /**
+   * WHO THIS SESSION IS FOR.
+   *
+   * null  = not chosen yet → show the picker (Zac 2026-10-07: "you should be
+   *         able to select current/past patients in this view")
+   * 'new' = a brand-new patient → the blank intake, which is what this page
+   *         used to do unconditionally ("unless starting a new one")
+   * {...} = an existing patient, opened on their record with nothing to re-key
+   */
+  const [subject, setSubject] = useState<'new' | { code: string; name: string } | null>(null)
+  const [roster, setRoster] = useState<Array<{ code: string | null; name: string; last: string | null; tested: boolean; sessions: number }>>([])
+  const [rosterState, setRosterState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   // bump to force-remount the embedded app for a fresh patient (see "New patient")
   const [resetSeq, setResetSeq] = useState(0)
   // The clinic code / sharing / runbook panel is SETUP reference. SHOWN by
@@ -68,9 +83,40 @@ function Shell() {
         // Demo clinic → the rail starts hidden (see comment above state).
         if (c === 'DEMO00') setSetupOpen(false)
         setClinicCode(typeof c === 'string' && c.trim() ? c : null)
+        const k = d?.clinic?.viewKey
+        if (typeof k === 'string' && k.trim()) setViewKey(k)
       })
       .catch(() => setClinicCode(null))
   }, [])
+
+  // The clinic's own caseload, for the picker. Same endpoint the hub uses.
+  useEffect(() => {
+    if (!clinicCode || !viewKey) return
+    setRosterState('loading')
+    void fetch(`/api/sst/clinic-sessions?code=${encodeURIComponent(clinicCode)}&k=${encodeURIComponent(viewKey)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const list = Array.isArray(d?.patients) ? d.patients : []
+        setRoster(
+          list.map((p: {
+            patientCode?: string | null; name?: string; label?: string
+            lastActivity?: string | null; hrt?: number | null
+            hrtTrajectory?: unknown[]; sessionCount?: number
+          }) => ({
+            code: p.patientCode ?? null,
+            // `name` carries the display-only "(2)" suffix that keeps two
+            // same-named patients apart on screen — which is exactly what the
+            // clinician needs to tell them apart in this list.
+            name: (p.name || p.label || 'Unidentified').trim(),
+            last: p.lastActivity ?? null,
+            tested: typeof p.hrt === 'number' && p.hrt > 0,
+            sessions: Number(p.sessionCount ?? 0),
+          })),
+        )
+        setRosterState('ready')
+      })
+      .catch(() => setRosterState('error'))
+  }, [clinicCode, viewKey])
 
   if (isLoading || access === 'loading') {
     return (
@@ -182,6 +228,7 @@ function Shell() {
                     )
                   ) {
                     clearState({ preservePendingSyncs: true })
+                    setSubject(null)
                     setResetSeq((n) => n + 1)
                   }
                 }}
@@ -230,7 +277,91 @@ function Shell() {
                       </p>
                     </div>
                   ) : (
-                    <PlatformApp key={resetSeq} embeddedClinicCode={clinicCode} />
+                    subject === null ? (
+                      /* WHO IS THIS TEST FOR — asked before the intake, not
+                         after. This page used to drop straight into a blank
+                         patient form, so running a re-test on someone already
+                         on the caseload meant re-keying their details or
+                         bouncing out to a new tab the browser then closed. */
+                      <div className="p-5">
+                        <h2 className="m-0 text-[15px] font-bold text-foreground">Who is this test for?</h2>
+                        <p className="mt-1 mb-4 text-[12.5px] leading-relaxed text-muted-foreground">
+                          Pick someone already on your caseload and the trainer opens on their record —
+                          nothing to re-enter, and the result extends their trajectory.
+                        </p>
+
+                        {rosterState === 'loading' && (
+                          <p className="text-[12.5px] text-muted-foreground">Loading your patients…</p>
+                        )}
+                        {rosterState === 'error' && (
+                          <p className="text-[12.5px] text-amber-700">
+                            Couldn&rsquo;t load your caseload. You can still start a new patient below.
+                          </p>
+                        )}
+                        {rosterState === 'ready' && roster.length === 0 && (
+                          <p className="text-[12.5px] text-muted-foreground">
+                            No patients yet — start your first one below.
+                          </p>
+                        )}
+
+                        {roster.length > 0 && (
+                          <ul className="m-0 mb-4 flex list-none flex-col gap-2 p-0">
+                            {roster.map((p, i) => (
+                              <li key={`${p.code ?? 'nocode'}-${i}`}>
+                                <button
+                                  type="button"
+                                  disabled={!p.code}
+                                  onClick={() => p.code && setSubject({ code: p.code, name: p.name })}
+                                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-left transition-colors hover:border-teal-500 disabled:cursor-not-allowed disabled:opacity-55"
+                                >
+                                  <span className="flex min-w-0 flex-col">
+                                    <span className="truncate text-[14px] font-bold text-foreground">{p.name}</span>
+                                    <span className="text-[11.5px] text-muted-foreground">
+                                      {p.tested ? 'threshold measured' : 'no graded test yet'}
+                                      {p.sessions > 0 ? ` · ${p.sessions} session${p.sessions === 1 ? '' : 's'}` : ''}
+                                      {p.last ? ` · last activity ${new Date(p.last).toLocaleDateString('en-AU')}` : ''}
+                                      {!p.code ? ' · open them in the patients screen once to link their record' : ''}
+                                    </span>
+                                  </span>
+                                  <span className="flex-none text-[11.5px] font-bold text-teal-700">
+                                    {p.tested ? 'Re-test' : 'Start test'}
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setSubject('new')}
+                          className="w-full rounded-xl border border-dashed border-black/20 px-4 py-3 text-[13px] font-semibold text-foreground transition-colors hover:border-teal-500"
+                        >
+                          + Someone new
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between gap-3 border-b border-black/5 px-5 py-2.5">
+                          <span className="truncate text-[12.5px] text-muted-foreground">
+                            {subject === 'new' ? 'New patient' : <>Testing <strong className="text-foreground">{subject.name}</strong></>}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => { setSubject(null); setResetSeq((n) => n + 1) }}
+                            className="flex-none text-[12px] font-semibold text-muted-foreground underline"
+                          >
+                            Change
+                          </button>
+                        </div>
+                        <PlatformApp
+                          key={`${resetSeq}-${subject === 'new' ? 'new' : subject.code}`}
+                          embeddedClinicCode={clinicCode}
+                          embeddedPatientCode={subject === 'new' ? null : subject.code}
+                          embeddedViewKey={subject === 'new' ? null : viewKey}
+                        />
+                      </>
+                    )
                   )}
                 </div>
                 {/* setup rail — code / sharing / runbook; only when open.

@@ -252,9 +252,18 @@ describe('a patient with history but no minted record can still be linked', () =
     expect(api).toContain("if (code !== 'DEMO00') {")
   })
 
-  it('find-or-create by label mints only when the label is unambiguous', () => {
+  it('find-or-create never ADOPTS a record when the name is ambiguous', () => {
     expect(registry).toContain('export async function findOrCreatePatientByLabel')
-    expect(registry).toContain('if (minted.length > 1) return null')
+    expect(registry).toContain('const ambiguous = minted.length > 1 || Number(refs[0]?.n ?? 0) > 1')
+    // adoption is gated behind the ambiguity check
+    expect(registry.indexOf('const ambiguous =')).toBeLessThan(registry.indexOf('if (minted.length === 1) {'))
+  })
+
+  it('but an ambiguous name WITH a roster identity mints a fresh record for that one', () => {
+    // refusing outright dead-ended the clinician mid-clinic (2026-10-07):
+    // two patients both entered as "zl" meant neither could be tested.
+    expect(registry).toContain('if (ambiguous && !patientRef) return null')
+    expect(registry).toContain('if (ambiguous && patientRef) {')
   })
 
   it('it mints nothing for a blank label', () => {
@@ -362,9 +371,8 @@ describe('sweep: no clinical identity is ever resolved by display name', () => {
     expect(registry.indexOf('patient_ref = ${patientRef}')).toBeLessThan(registry.indexOf('lower(btrim(label)) = ${label.toLowerCase()}'))
   })
 
-  it('and refuses a name claimed by more than one human, on BOTH sides', () => {
-    expect(registry).toContain('if (minted.length > 1) return null')
-    expect(registry).toContain('if (distinctHumans > 1) return null')
+  it('and counts competing claimants on BOTH sides before trusting a name', () => {
+    expect(registry).toContain('const ambiguous = minted.length > 1 || Number(refs[0]?.n ?? 0) > 1')
     expect(registry).toContain("count(DISTINCT payload->>'patientRef')")
   })
 
@@ -393,5 +401,45 @@ describe('sweep: no clinical identity is ever resolved by display name', () => {
   it("today's resting symptom score is never seeded from the last visit", () => {
     expect(app).toContain('initialRestingScore={undefined}')
     expect(app).not.toContain('initialRestingScore={restingSymptomScore}')
+  })
+})
+
+/**
+ * 2026-10-07, mid-clinic: "your run graded test is broken. it just re-routes to
+ * this same page" / "it tries to launch a new tab and gets closed" / "you
+ * should be able to select current/past patients in this view".
+ */
+describe('the in-portal trainer opens on a chosen patient, without a tab hop', () => {
+  const embedded = readFileSync('app/clinical-testing/sst/page.tsx', 'utf8')
+  const app = readFileSync('app/platform/app/page.tsx', 'utf8')
+
+  it('the embedded app accepts a patient and the clinic key as props', () => {
+    expect(app).toContain('embeddedPatientCode')
+    expect(app).toContain('embeddedViewKey')
+    expect(app).toContain('initialPatientCode={urlPatientCode ?? embeddedPatientCode ?? undefined}')
+    expect(app).toContain('clinicianKey={urlViewKey ?? embeddedViewKey ?? undefined}')
+  })
+
+  it('the wrong-patient interlock also sees an embedded selection', () => {
+    expect(app).toContain("(qp0.get('p') || embeddedPatientCode || '')")
+  })
+
+  it('the page asks who the test is for before showing any intake', () => {
+    expect(embedded).toContain('Who is this test for?')
+    expect(embedded).toContain("const [subject, setSubject] = useState<'new' | { code: string; name: string } | null>(null)")
+  })
+
+  it('starting someone new is still one tap', () => {
+    expect(embedded).toContain("onClick={() => setSubject('new')}")
+    expect(embedded).toContain('+ Someone new')
+  })
+
+  it('the roster list uses the display name, which carries the (2) suffix that tells two same-named patients apart', () => {
+    expect(embedded).toContain("name: (p.name || p.label || 'Unidentified').trim()")
+  })
+
+  it('a patient with no minted code cannot be picked by mistake', () => {
+    expect(embedded).toContain('disabled={!p.code}')
+    expect(embedded).toContain('onClick={() => p.code && setSubject(')
   })
 })

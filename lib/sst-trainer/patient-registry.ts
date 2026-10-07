@@ -193,17 +193,14 @@ export async function findOrCreatePatientByLabel(
       if (byRef.rows.length === 1) return await resolvePatient(clinicCode, String(byRef.rows[0].patient_code))
     }
 
-    // 2. The label is NOT an identity. It may only be used to adopt an
-    //    existing record when the name is unambiguous on BOTH sides: one
-    //    minted record with that name, AND one human with that name in the
-    //    clinic's session history. Two devices under one name means two
-    //    candidate humans and we must not guess which.
+    // 2. The label is NOT an identity, so it may only ADOPT an existing record
+    //    when the name is unambiguous on both sides: one minted record with
+    //    that name, and one human with that name in the session history.
     const { rows: minted } = await sql`
       SELECT patient_code, patient_ref FROM sst_clinic_patients
       WHERE clinic_code = ${clinicCode} AND lower(btrim(label)) = ${label.toLowerCase()}
       LIMIT 3
     `
-    if (minted.length > 1) return null
     const { rows: refs } = await sql`
       SELECT count(DISTINCT payload->>'patientRef')::int AS n
       FROM sst_clinic_sessions
@@ -211,8 +208,33 @@ export async function findOrCreatePatientByLabel(
         AND lower(btrim(patient_label)) = ${label.toLowerCase()}
         AND payload->>'patientRef' IS NOT NULL
     `
-    const distinctHumans = Number(refs[0]?.n ?? 0)
-    if (distinctHumans > 1) return null
+    const ambiguous = minted.length > 1 || Number(refs[0]?.n ?? 0) > 1
+
+    /**
+     * AMBIGUOUS NAME + A ROSTER IDENTITY = MINT A FRESH RECORD FOR *THIS* ONE.
+     *
+     * The first cut refused outright, which dead-ended the clinician: a clinic
+     * with two patients both entered as "zl" could not start a test on either
+     * (Zac, 2026-10-07, mid-clinic: "it just re-routes to this same page").
+     * Refusing was right only because we had nothing to tell the two apart —
+     * but the caller DOES pass patientRef, the roster's own identity, which
+     * separates them exactly. So mint a new record stamped with that ref
+     * rather than adopting a record that may belong to the other person.
+     *
+     * Adoption stays blocked while the name is ambiguous: that is the part
+     * that would have written one patient's test onto another's trajectory.
+     */
+    if (ambiguous && !patientRef) return null
+    if (ambiguous && patientRef) {
+      const created = await createPatient(clinicCode, label, null, null)
+      if (created) {
+        await sql`
+          UPDATE sst_clinic_patients SET patient_ref = ${patientRef}
+          WHERE clinic_code = ${created.clinicCode} AND patient_code = ${created.patientCode}
+        `.catch(() => {})
+      }
+      return created
+    }
 
     if (minted.length === 1) {
       const code = String(minted[0].patient_code)
