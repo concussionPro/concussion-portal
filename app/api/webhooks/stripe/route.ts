@@ -8,7 +8,7 @@ import { createUser, findUserByEmail, markBookPurchased, setUserNameFromTrustedS
 import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail, sendHubOwnerWelcomeEmail, isNonDeliverableRecipient } from '@/lib/resend-client'
 import { isEmailSuppressed } from '@/lib/email-suppression'
 import { createCourseHub, redeemHubSeat, revokeHub, hubSeatsForDeclaredCount, HUB_ADMIN_SEATS } from '@/lib/course-hub'
-import { createMagicToken, NURTURE_TTL_MS } from '@/lib/magic-link-jwt'
+import { createMagicToken, NURTURE_TTL_MS, PAID_TTL_MS } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG, SST_TIERS } from '@/lib/config'
@@ -959,7 +959,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const userName = freshUser?.name || customerName
     // 7-day TTL (not the 24h transactional default) — purchasers don't always
     // open the welcome email same-day, and an expired link dead-ends them.
-    const token = createMagicToken(freshUser?.id || userId, customerEmail, userName, finalAccess, NURTURE_TTL_MS)
+    const token = createMagicToken(freshUser?.id || userId, customerEmail, userName, finalAccess, PAID_TTL_MS)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     const melConfirmed = workshopCity === 'melbourne' && CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
@@ -1174,10 +1174,10 @@ async function handleShortCoursePurchase(
   // hardcoding 'preview' would downgrade an online-only/full-course user's
   // session when they click the link (same pattern as handleBookPurchase).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  // 7-day TTL (NURTURE_TTL_MS), never the 24h transactional default: an
+  // 30-day TTL (PAID_TTL_MS), never the 24h transactional default: an
   // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
   // and this is a PAYING buyer's only way in.
-  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', NURTURE_TTL_MS)
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', PAID_TTL_MS)
   const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=short_course_purchase&redirect=${encodeURIComponent(course.route)}`
 
   try {
@@ -1443,10 +1443,10 @@ async function handleCrmPurchase(
   // confirmation the CCM template gives a full-course buyer — parity of
   // substance, not of template (2026-08-05).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  // 7-day TTL (NURTURE_TTL_MS), never the 24h transactional default: an
+  // 30-day TTL (PAID_TTL_MS), never the 24h transactional default: an
   // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
   // and this is a PAYING buyer's only way in.
-  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', NURTURE_TTL_MS)
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', PAID_TTL_MS)
   const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=crm_purchase&redirect=${encodeURIComponent('/ep-course/dashboard')}`
   const tierLabel = tier === 'online' ? 'Online course' : tier === 'complete' ? 'Complete (online + practical day)' : 'Practical Day upgrade'
 
@@ -1659,7 +1659,7 @@ async function handleHubPackPurchase(session: Stripe.Checkout.Session, customerE
   // catch's ACTION-REQUIRED alert quotes the redeem URL.
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   try {
-    const token = createMagicToken(userId, customerEmail, customerName, 'full-course')
+    const token = createMagicToken(userId, customerEmail, customerName, 'full-course', PAID_TTL_MS)
     let invoiceAttachment: { filename: string; content: Buffer } | undefined
     try {
       const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
@@ -1768,10 +1768,10 @@ async function handleBookPurchase(
   await markBookPurchased(customerEmail)
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  // 7-day TTL (NURTURE_TTL_MS), never the 24h transactional default: an
+  // 30-day TTL (PAID_TTL_MS), never the 24h transactional default: an
   // expired welcome link is the dominant failure mode (see lib/magic-link-jwt.ts)
   // and this is a PAYING buyer's only way in.
-  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', NURTURE_TTL_MS)
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course', PAID_TTL_MS)
   const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=reference_purchase`
   const downloadUrl = `${baseUrl}/api/reference/download`
 

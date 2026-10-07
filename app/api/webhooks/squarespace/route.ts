@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createUser, findUserByEmail } from '@/lib/users'
-import { createMagicToken } from '@/lib/magic-link-jwt'
+import { createMagicToken, PAID_TTL_MS } from '@/lib/magic-link-jwt'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail, sendEmail, escapeHtml } from '@/lib/resend-client'
 import { isEmailSuppressed } from '@/lib/email-suppression'
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         const finalAccess = accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel
 
         // FIX: Use createMagicToken (not createJWTSession) for magic link emails
-        const token = createMagicToken(existingUser.id, existingUser.email, existingUser.name, finalAccess)
+        const token = createMagicToken(existingUser.id, existingUser.email, existingUser.name, finalAccess, PAID_TTL_MS)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
         await sendMagicLinkEmail(existingUser.email, token, baseUrl)
 
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       })
 
       // FIX: Use createMagicToken for magic link emails
-      const token = createMagicToken(userId, customerEmail, customerName, accessLevel)
+      const token = createMagicToken(userId, customerEmail, customerName, accessLevel, PAID_TTL_MS)
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
       const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 

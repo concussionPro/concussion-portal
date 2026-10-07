@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { findUserByEmail, createUser } from '@/lib/users'
-import { createMagicToken } from '@/lib/magic-link-jwt'
+import { createMagicToken, PAID_TTL_MS } from '@/lib/magic-link-jwt'
 import { sendPostPurchaseLoginEmail } from '@/lib/resend-client'
 import { isAdminRequest, isAdminHeaderRequest } from '@/lib/require-admin'
 import { CONFIG } from '@/lib/config'
@@ -154,7 +154,7 @@ async function handleSend(_request: NextRequest, body: {
     finalAccess = accessLevel
   }
 
-  const token = createMagicToken(userId, email, userName, finalAccess)
+  const token = createMagicToken(userId, email, userName, finalAccess, PAID_TTL_MS)
   const melConfirmed = workshopCity === 'melbourne' && CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
 
   const emailSent = await sendPostPurchaseLoginEmail({

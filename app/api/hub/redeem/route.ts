@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { createUser } from '@/lib/users'
-import { createMagicToken } from '@/lib/magic-link-jwt'
+import { createMagicToken, PAID_TTL_MS } from '@/lib/magic-link-jwt'
 import { createJWTSession } from '@/lib/jwt-session'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { redeemHubSeat, getCourseHub, type HubRole } from '@/lib/course-hub'
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
   // the seat is already consumed and the response below carries a live
   // session cookie, so the user can go straight to /dashboard regardless.
   try {
-    const token = createMagicToken(userId, email, name, 'full-course')
+    const token = createMagicToken(userId, email, name, 'full-course', PAID_TTL_MS)
     await sendMagicLinkEmail(email, token, request.nextUrl.origin)
   } catch (err) {
     console.error('Hub redeem login email failed (non-fatal, session cookie set):', err)

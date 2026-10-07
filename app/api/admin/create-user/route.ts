@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserById } from '@/lib/users'
-import { createMagicToken } from '@/lib/magic-link-jwt'
+import { createMagicToken, PAID_TTL_MS } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { isAdminRequest } from '@/lib/require-admin'
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       throw new Error('User creation failed')
     }
 
-    const token = createMagicToken(userId, email, name, accessLevel as 'online-only' | 'full-course' | 'preview')
+    const token = createMagicToken(userId, email, name, accessLevel as 'online-only' | 'full-course' | 'preview', PAID_TTL_MS)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(email)}&token=${token}`
 

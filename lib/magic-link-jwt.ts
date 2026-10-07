@@ -36,6 +36,27 @@ const TRANSACTIONAL_TTL_MS = 24 * 60 * 60 * 1000
 // users never logged in — most landed too late).
 export const NURTURE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
+/**
+ * PAID BUYERS. 30 days, because a 24-hour link is indefensible for someone who
+ * has just paid: they buy on a Friday night, open the email on Monday, and the
+ * only thing standing between them and the product they own has expired.
+ *
+ * Owner, 2026-10-06: "why would you mint a 24hr token for a paid user".
+ *
+ * The 24h default was written for a user-initiated /login request, where the
+ * person is sitting in front of the inbox — that is still the right window
+ * there. It was never right for a purchase welcome, a purchase-welcome RESEND
+ * (the repair path used precisely when someone could not get in), a hub-pack
+ * redeem, a Squarespace order or an admin-created account. All of those now
+ * use this.
+ *
+ * The length is safe because the token is not the only control: it is
+ * single-use against the replay table, it cannot be burned by a scanner
+ * prefetch (the GET only serves a confirm interstitial; consumption needs the
+ * POST), and it is traded immediately for a session cookie.
+ */
+export const PAID_TTL_MS = 30 * 24 * 60 * 60 * 1000
+
 // Create a signed token. ttlMs default = 24h for transactional links.
 export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview', ttlMs?: number): string {
   const payload: TokenPayload = {
