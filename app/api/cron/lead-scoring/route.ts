@@ -86,6 +86,32 @@ export async function GET(request: NextRequest) {
       )
       AND created_at > ${ninetyDaysAgo.toISOString()}
       AND COALESCE(is_test, false) = false
+      /**
+       * A LEAD IS SOMEONE WE MAY ACTUALLY CONTACT.
+       *
+       * The briefing was scoring people it is not permitted to email and
+       * people who were never prospects, which is why the same names recurred
+       * every morning with no action possible against them:
+       *
+       *  - SUPPRESSED / UNSUBSCRIBED. Contacting these is the one thing the
+       *    whole send stack fails closed to prevent. Ranking them as "hot"
+       *    and suggesting a "personalised follow-up" invites exactly that.
+       *  - The SQUARESPACE COLD IMPORT. 321 of 489 users arrived in a list
+       *    import and were never course-intenders; they drown every real
+       *    signal and skew every denominator. A squarespace row that has
+       *    since engaged on its own (started a module, viewed pricing) still
+       *    qualifies through the activity joins below — this only excludes
+       *    the inert bulk.
+       *  - SINGLE-ORGANISATION CLUSTERS. Eight @bmis.mw addresses (one
+       *    overseas school) signed up to the free SCAT course in one week and
+       *    have been sitting in "Warming Up" at 45-57 ever since. They are
+       *    one organisation, not eight leads, and none of them is a candidate
+       *    for an Australian practical day.
+       */
+      AND LOWER(email) NOT IN (SELECT LOWER(email) FROM email_suppression)
+      AND COALESCE(nurture_unsubscribed, false) = false
+      AND NOT (COALESCE(signup_source,'') = 'squarespace' AND last_login_at IS NULL)
+      AND LOWER(email) NOT LIKE '%@bmis.mw'
     ORDER BY created_at DESC
   `
 

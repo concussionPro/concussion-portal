@@ -1306,6 +1306,22 @@ export default function ClinicalHubPage() {
                 <Plus className="w-4 h-4" /> Add patient
               </button>
             )}
+            {/* THE TOUR ENDED NOWHERE. The analytics review has reported the
+                same finding every day since it started: 9 demo tours, 0
+                booking clicks. Someone who walks the whole worked-case
+                workspace is the most qualified visitor on the site and had no
+                next step from inside it — the only booking affordances live on
+                marketing pages they have already left. */}
+            {isDemo && (
+              <TrackedOutbound
+                href="https://cal.com/zac-lewis-so8zjs/30min"
+                event="demo_booking_click"
+                source="clinical-hub-demo-header"
+                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10 transition"
+              >
+                Book 20 minutes
+              </TrackedOutbound>
+            )}
           </div>
         </div>
 
