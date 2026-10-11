@@ -33,7 +33,7 @@ import SstConnectWizard from '@/components/platform/SstConnectWizard'
  * Heart-rate sourcing is honest about the verified tier: VERIFIED = a live
  * Bluetooth heart-rate stream (watch broadcast mode or chest strap). The phone
  * camera is a resting spot-check only — it never tracks a live session. Manual
- * entry always works (and is the Apple Watch / Fitbit path — those can't
+ * entry always works (and is the Fitbit path — Fitbit can't
  * broadcast standard BLE HR on any platform).
  *
  * The Bluetooth path adapts to the runtime (isNativeApp()):
@@ -764,7 +764,10 @@ export default function SstOnboarding({
               </li>
             ))}
             <li className="text-[11px] leading-snug text-(--sst-faint)">
-              Apple Watch and Fitbit can&rsquo;t broadcast this way — type your heart rate in instead.
+              Apple Watch: don&rsquo;t use this — install the SST Trainer watch app instead. It reads
+              the watch sensor directly, counts as a verified reading, and buzzes your wrist when you
+              go over your band. Fitbit can&rsquo;t broadcast at all — use any chest strap or armband,
+              or type your readings in.
             </li>
           </ul>
         )}
