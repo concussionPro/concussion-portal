@@ -238,6 +238,38 @@ function AnalyticsTracker(): null {
     const e = searchParams?.get('email');
     if (e && e.includes('@')) setIdentity(e);
   }, [searchParams]);
+
+  /**
+   * IDENTITY FROM THE SESSION — ask the server who this is.
+   *
+   * setIdentity() was only ever called from the React page at /auth/verify.
+   * That page stopped rendering when the magic link moved to a server
+   * interstitial (the GET serves a form, the POST 303-redirects straight to
+   * the destination), so a logged-in user's browser never learned their own
+   * address and every event they fired was anonymous.
+   *
+   * Measured 2026-10-10: 1 of 1,016 page views in 28 days carried a user
+   * identity. A paying customer could log in, work through the course, and
+   * appear in the analytics as nobody — which is exactly what happened to the
+   * newest CRM buyer, and it also starves the acquisition backfill, which
+   * matches on user_email.
+   *
+   * Asks once per load, only when nothing is stored, and only ever writes an
+   * address the server already associated with this browser's own session —
+   * no email in a URL, no PII in a query string.
+   */
+  useEffect(() => {
+    if (getIdentity()) return;
+    let cancelled = false;
+    void fetch('/api/auth/session', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { user?: { email?: string } } | null) => {
+        const email = d?.user?.email;
+        if (!cancelled && email && email.includes('@')) setIdentity(email);
+      })
+      .catch(() => { /* logged out, or offline — stay anonymous */ });
+    return () => { cancelled = true };
+  }, []);
   const previousPathRef = useRef<string | null>(null);
 
   // Track scroll depth on key conversion pages
