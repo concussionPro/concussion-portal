@@ -142,7 +142,28 @@ export async function GET(request: NextRequest) {
     const { rows: userRows } = await sql`SELECT COUNT(*)::int AS count FROM users`
     const totalUsers = userRows[0]?.count || 0
 
-    if (emailsSent === 0 && totalUsers > 50) {
+    /**
+     * A DELIBERATE PAUSE IS NOT AN OUTAGE.
+     *
+     * MARKETING_EMAILS_PAUSED has been true since 2026-10-04 — the nurture
+     * crons return early by design. Both of these checks have therefore been
+     * firing "alert" every morning for something nobody broke, which is how a
+     * monitor trains its reader to ignore it. The next real nurture failure
+     * would have arrived in an inbox that had already learned to skip this
+     * email.
+     *
+     * Paused: say so, as info, once. Not paused and silent: that is the alert.
+     */
+    const marketingPaused = process.env.MARKETING_EMAILS_PAUSED === 'true'
+
+    if (emailsSent === 0 && marketingPaused) {
+      findings.push({
+        severity: 'info',
+        title: 'Marketing email is paused (expected)',
+        detail: `0 nurture emails in 24h because MARKETING_EMAILS_PAUSED is set. Transactional mail is unaffected.`,
+        suggestion: 'No action. Unset MARKETING_EMAILS_PAUSED in Vercel to resume the nurture crons.',
+      })
+    } else if (emailsSent === 0 && totalUsers > 50) {
       findings.push({
         severity: 'alert',
         title: 'Nurture emails may have stopped',
@@ -167,7 +188,8 @@ export async function GET(request: NextRequest) {
 
     if (lastSent) {
       const hoursSince = (Date.now() - lastSent.getTime()) / (1000 * 60 * 60)
-      if (hoursSince > 26) {
+      // Same reasoning as Check 2: a paused lane is silent on purpose.
+      if (hoursSince > 26 && process.env.MARKETING_EMAILS_PAUSED !== 'true') {
         findings.push({
           severity: 'alert',
           title: 'Nurture cron may be stalled',
