@@ -9,6 +9,7 @@ import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
 import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
 import { REFERENCE_COUNT } from '@/data/reference-count'
+import { OaConferenceBand } from '@/components/OaConferenceBand'
 
 export default function ByronBayPage() {
   const location = CONFIG.LOCATIONS.BYRON_BAY as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
@@ -87,6 +88,7 @@ export default function ByronBayPage() {
                   <strong className="text-slate-900">A$100 holds your place.</strong> It is refundable,
                   and it counts toward anything — this workshop, another city, or the online course.
                 </p>
+                <OaConferenceBand city="Byron Bay" slug="byron-bay" />
                 {/* Dead-lander fix (2026-09-21): lander-dead-/courses/byron-bay —
                     FREE_WORKSHOP_NOTIFY off → NextEarlyBirdCapture is only
                     SecureSeatCheckout (Stripe embed ≠ second page). Put link

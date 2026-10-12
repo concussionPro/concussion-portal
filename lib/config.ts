@@ -44,8 +44,20 @@ export const CONFIG = {
     PRICE_EARLY_BIRD: 1190,
     // Secure your seat — refundable A$100 deposit (owner 2026-09-05).
     // REPLACES free location EOI. Counts toward CONFIRMATION_THRESHOLD (12)
-    // alongside full Complete purchases. Credit toward Complete when the date
-    // opens; refund if the cohort does not form. Charged via Stripe Checkout
+    // alongside full Complete purchases.
+    //
+    // TRANSFERABLE (owner 2026-10-12: "$100 counts to anything"). The public
+    // pages and the OA conference band now say it credits toward ANYTHING —
+    // that city's workshop, a different city, or the online course — and is
+    // refundable either way. Two consequences worth holding:
+    //   1. Honour it. The promise is on /courses/byron-bay, /courses/sydney
+    //      and in both SEO descriptions; a buyer who asks to move it to the
+    //      online course or another city is owed that.
+    //   2. It is MANUAL. No code applies this credit — redemption is a Stripe
+    //      credit or a discount at the clinician's next checkout, by hand.
+    //      Automate it if deposits ever reach a volume where that hurts.
+    //
+    // Refund if the cohort does not form. Charged via Stripe Checkout
     // price_data (COURSE_PRICING.SECURE_SEAT) — no separate Stripe Price id yet.
     // Zac: create a Stripe Price / Product when you want Dashboard analytics
     // against a fixed Price id; until then price_data is the source of truth.

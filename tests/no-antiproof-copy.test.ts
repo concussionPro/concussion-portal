@@ -48,3 +48,36 @@ describe('no page tells a visitor the round does not exist', () => {
     }
   })
 })
+
+/**
+ * The OA conference band — the only lever left on a submitted deck.
+ */
+describe('conference QR pages are built for the scan', () => {
+  const band = readFileSync('components/OaConferenceBand.tsx', 'utf8')
+
+  it('is mounted on both QR landing pages', () => {
+    for (const slug of ['byron-bay', 'sydney']) {
+      const src = readFileSync(`app/courses/${slug}/page.tsx`, 'utf8')
+      expect(src, slug).toContain('<OaConferenceBand')
+      expect(src, slug).toContain("from '@/components/OaConferenceBand'")
+    }
+  })
+
+  it('tags conference clicks so Byron/Sydney traffic is separable', () => {
+    expect(band).toContain('src=oa2026-')
+    expect(band).toContain('oa_conference_band_click')
+  })
+
+  it('does not tag the whole page — organic visitors are not conference traffic', () => {
+    expect(band).not.toMatch(/setIdentity|captureUtm|router\.replace/)
+  })
+
+  it('self-expires after the conference window', () => {
+    expect(band).toContain('if (!show) return null')
+    expect(band).toMatch(/const TO = Date\.UTC\(2026, 9, 31/)
+  })
+
+  it('routes to the live Melbourne date, which is the seat we need to fill', () => {
+    expect(band).toContain('/courses/melbourne?src=oa2026-')
+  })
+})
