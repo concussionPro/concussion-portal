@@ -74,8 +74,19 @@ export default function SydneyPage() {
               <>
                 <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
                   <Calendar className="w-4 h-4" aria-hidden="true" />
-                  Sydney round forming — no date confirmed yet.
+                  Next Sydney date is set by demand — a deposit brings it forward.
                 </div>
+                {/* The old line read "Sydney round forming — no date confirmed
+                    yet", which tells a visitor the thing they are considering
+                    does not exist. Same family as stating a low seat count:
+                    a true fact that functions as anti-proof (owner, 2026-10-12
+                    — "dont say about round not forming"). The replacement is
+                    equally true and gives them a reason to act instead of a
+                    reason to wait. */}
+                <p className="mt-4 text-[15px] leading-relaxed text-slate-600 max-w-xl mx-auto">
+                  <strong className="text-slate-900">A$100 holds your place.</strong> It is refundable,
+                  and it counts toward anything — this workshop, another city, or the online course.
+                </p>
                 {/* Dead-lander fix (2026-09-21): lander-dead-/courses/sydney —
                     FREE_WORKSHOP_NOTIFY off → NextEarlyBirdCapture is only
                     SecureSeatCheckout (Stripe embed ≠ second page). Put link

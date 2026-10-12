@@ -3,7 +3,7 @@ import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Byron Bay Concussion Workshop | Hands-On SCAT6 & VOMS Training',
-  description: `Full-day hands-on concussion workshop in Byron Bay. Master SCAT6, VOMS, and BESS protocols with expert-led clinical training. Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours (${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person). Byron Bay round forming — a refundable deposit holds your place.`,
+  description: `Full-day hands-on concussion workshop in Byron Bay. Master SCAT6, VOMS, and BESS protocols with expert-led clinical training. Up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours (${CONFIG.COURSE.ONLINE_CPD_POINTS} online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person). Next Byron Bay date is set by demand — a refundable A$100 deposit holds your place and counts toward anything.`,
   keywords: 'concussion workshop Byron Bay, SCAT6 training Byron Bay, concussion course Byron Bay, CPD workshop, hands-on concussion training Byron Bay',
   openGraph: {
     title: 'Byron Bay Concussion Workshop — Hands-On Clinical Training',
