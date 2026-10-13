@@ -96,10 +96,44 @@ export async function GET(request: NextRequest) {
     const data = await loadGpReportData(code, patientLabel, patientRef)
     if (!data) return NextResponse.json({ error: 'No episode data for that patient' }, { status: 404 })
     const pdf = renderGpReportPdf(data)
+    /**
+     * FILENAME IS THE INTEGRATION.
+     *
+     * Bp Premier (and VIP.net) import correspondence through Bulk Document
+     * Import: it reads a folder of PDFs and allocates each to a patient
+     * record, matching on the NAME in the filename. Get the filename right and
+     * a clinician can point their browser's download directory at that folder
+     * and let BP file a batch — no emailing a PDF to themselves, no per-file
+     * upload, no API, no secure-messaging vendor.
+     *
+     * Shape: `SURNAME_Firstname_SST-episode-report_YYYY-MM-DD.pdf`
+     *   - surname first, because that is the field BP matches on and the one a
+     *     human scans in a folder listing;
+     *   - underscores, because BDI's matcher splits on them and a hyphenated
+     *     "mary-jane" would otherwise read as one token;
+     *   - the date last, so a second report for the same patient sorts
+     *     chronologically beside the first instead of overwriting it.
+     *
+     * We deliberately hold no date of birth (age band and sex only — see
+     * patient-identity.ts), so a DOB-prefixed filename, which is what makes
+     * BP's match unambiguous, is not available. Name matching gets most of the
+     * way; a patient whose name is spelt differently in BP still lands in the
+     * provider Inbox for manual allocation, which is the same place it lands
+     * today.
+     */
+    const parts = patientLabel.trim().split(/\s+/).filter(Boolean)
+    const surname = (parts.length > 1 ? parts[parts.length - 1] : parts[0] || 'patient')
+      .replace(/[^a-z0-9]+/gi, '')
+      .toUpperCase()
+    const given = parts.slice(0, -1).join('-').replace(/[^a-z0-9-]+/gi, '') || ''
+    const dated = new Date().toISOString().slice(0, 10)
+    const filename = [surname, given, 'SST-episode-report', dated].filter(Boolean).join('_') + '.pdf'
     return new NextResponse(new Uint8Array(pdf), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="sst-episode-report-${patientLabel.replace(/[^a-z0-9-]+/gi, '-')}.pdf"`,
+        // `inline` so it still previews in the browser; the filename is what
+        // a Save As / download-directory workflow picks up.
+        'Content-Disposition': `inline; filename="${filename}"`,
       },
     })
   } catch (err) {

@@ -162,7 +162,20 @@ export async function GET(request: NextRequest) {
     // same watermark — the disclosure travels with the file).
     if ((sp.get('format') || '').toLowerCase() === 'pdf') {
       const pdf = renderReportContentToPdf(content, renderOpts)
-      const slug = `${skin}-${patientLabel.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'patient'}`
+      /**
+       * Same import-friendly shape as the GP report: SURNAME first, the
+       * document type, then the date. Bp Premier's Bulk Document Import
+       * allocates a folder of PDFs by matching the name in the filename, so
+       * every document this product issues should be fileable without being
+       * renamed by hand. See app/api/sst/gp-report/route.ts for the reasoning.
+       */
+      const parts = patientLabel.trim().split(/\s+/).filter(Boolean)
+      const surname = (parts.length > 1 ? parts[parts.length - 1] : parts[0] || 'patient')
+        .replace(/[^a-z0-9]+/gi, '').toUpperCase()
+      const given = parts.slice(0, -1).join('-').replace(/[^a-z0-9-]+/gi, '') || ''
+      const docType = skin.replace(/[^a-z0-9]+/gi, '-').toUpperCase()
+      const slug = [surname, given, docType, new Date().toISOString().slice(0, 10)]
+        .filter(Boolean).join('_')
       return new NextResponse(pdf, {
         headers: {
           'Content-Type': 'application/pdf',
