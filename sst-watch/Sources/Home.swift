@@ -8,10 +8,29 @@ struct HomeView: View {
 
     private var rx: Prescription? { flow.state.prescription }
 
+    /// Queued clinical events not yet accepted by the backend. Read on each
+    /// body evaluation rather than cached — the flush runs on launch and on
+    /// connectivity regain, so a cached count would show stale work.
+    private var pendingUploads: Int { SSTStore.pendingCount }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
                 header
+
+                // Clinical events still only on the wrist. Shown so a watch is
+                // never handed on — or factory-reset — while the last patient's
+                // sessions have not reached their file. They survive a patient
+                // handover either way (the queue keeps its own identity per
+                // entry), but a reset of the WATCH itself would take them, so
+                // the clinician needs to know to keep it on Wi-Fi.
+                if pendingUploads > 0 {
+                    Text("^[\(pendingUploads) session](inflect: true) still to upload — keep on Wi-Fi")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
 
                 if flow.state.redFlagLocked {
                     redFlagLockCard

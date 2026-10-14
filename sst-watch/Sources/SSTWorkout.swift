@@ -46,6 +46,21 @@ final class SSTWorkout: NSObject, ObservableObject {
     nonisolated private static let hrType = HKQuantityType(.heartRate)
     nonisolated private static let hrUnit = HKUnit.count().unitDivided(by: .minute())
 
+    /// One-minute heart-rate recovery — bpm drop in the 60s after exertion ends.
+    /// watchOS computes and writes this itself after a workout, so we only READ
+    /// it; nothing here has to time or derive it.
+    ///
+    /// Why it is worth having: HRR is an autonomic measure, and autonomic
+    /// dysfunction is the mechanism the whole sub-symptom threshold approach
+    /// rests on. Recorded post-BCTT it characterises recovery alongside HRt.
+    ///
+    /// CAPTURE AND DISPLAY ONLY. It is not an input to `decide()` and must not
+    /// become one: progression is prescribed off the HR threshold and symptoms,
+    /// which is the published protocol. An HRR-driven progression rule has no
+    /// basis in the SST literature, and the programme's credibility is that the
+    /// protocol is the cited one.
+    nonisolated private static let hrrType = HKQuantityType(.heartRateRecoveryOneMinute)
+
     override init() {
         super.init()
     }
@@ -60,12 +75,56 @@ final class SSTWorkout: NSObject, ObservableObject {
             authorized = false
             return
         }
-        let types: Set<HKSampleType> = [Self.hrType]
+        // HRR is READ-ONLY: watchOS writes it itself after a workout, we never
+        // do, so it must not go in the share set — asking to write a type the
+        // app never writes is an unnecessary permission.
+        let shareTypes: Set<HKSampleType> = [Self.hrType]
+        let readTypes: Set<HKObjectType> = [Self.hrType, Self.hrrType]
         do {
-            try await healthStore.requestAuthorization(toShare: types, read: types)
+            try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
             authorized = healthStore.authorizationStatus(for: Self.hrType) == .sharingAuthorized
         } catch {
             authorized = false
+        }
+    }
+
+    // MARK: - Heart-rate recovery (read-only, post-workout)
+
+    /// The most recent 1-minute HRR sample at or after `since`, in bpm.
+    ///
+    /// watchOS writes this a short time AFTER the workout ends, so a caller
+    /// polls briefly rather than reading once: the sample frequently is not
+    /// there the instant the session stops. Returns nil if it never lands,
+    /// which is a normal outcome (a session too short or too light to produce
+    /// one) and never an error — the sync simply omits the field.
+    func heartRateRecovery(since: Date, waitingUpTo seconds: Double = 90) async -> Int? {
+        guard HKHealthStore.isHealthDataAvailable() else { return nil }
+        let deadline = Date().addingTimeInterval(seconds)
+        repeat {
+            if let bpm = await latestHrrSample(since: since) { return bpm }
+            try? await Task.sleep(nanoseconds: 10_000_000_000)   // 10s
+        } while Date() < deadline
+        return nil
+    }
+
+    private func latestHrrSample(since: Date) async -> Int? {
+        let predicate = HKQuery.predicateForSamples(withStart: since, end: nil)
+        let sort = [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: Self.hrrType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: sort
+            ) { _, samples, _ in
+                guard let sample = (samples?.first as? HKQuantitySample) else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let bpm = sample.quantity.doubleValue(for: Self.hrUnit)
+                continuation.resume(returning: Int(bpm.rounded()))
+            }
+            healthStore.execute(query)
         }
     }
 

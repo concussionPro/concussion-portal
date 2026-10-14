@@ -198,9 +198,53 @@ final class SSTFlow: ObservableObject {
 
     /// A clinic code is optional: without one the app runs fully standalone —
     /// syncs no-op on the empty code (nothing queues) until a clinic is linked.
-    func completeOnboarding(code: String?, clinicName: String?, patientName: String) {
+    /// THE HANDOVER. A patient code different from the resident one means this
+    /// watch has moved to a new patient, so the previous patient's clinical
+    /// state is wiped and the funnel runs again from the symptom profile — a
+    /// new baseline test for the new patient, on their own file.
+    ///
+    /// This is the whole "new patient" action: there is no separate wipe button
+    /// to fire by accident, you cannot wipe the wrong patient, and you cannot
+    /// run patient B on patient A's band. Entering the SAME code resumes.
+    ///
+    /// Before 2026-10-14 this method set only the clinic code and the name, so
+    /// re-onboarding a second patient left A's prescription, sessions,
+    /// thresholds, checkpoints and red-flag locks in place and kept A's
+    /// `patientRef`: B trained on A's band, had their progression computed from
+    /// A's history, and synced all of it onto A's record. That path was
+    /// reachable from the UI (Home → start test → back).
+    ///
+    /// The pending sync queue is deliberately NOT cleared — see
+    /// SSTStore.handOver.
+    func completeOnboarding(
+        code: String?,
+        clinicName: String?,
+        patientName: String,
+        patientCode: String
+    ) {
+        let newCode = patientCode.trimmingCharacters(in: .whitespaces).uppercased()
+        let residentCode = state.patientCode?.uppercased()
+        let isNewPatient = !newCode.isEmpty && residentCode != nil && residentCode != newCode
+
+        if isNewPatient {
+            SSTStore.handOver(toPatientCode: newCode)
+            state = SSTState.load()
+            // Consent is per person and was cleared with the handover; the new
+            // patient agrees for themselves before anything is recorded.
+            state.setClinic(code: code, name: clinicName)
+            state.patientName = patientName.isEmpty ? nil : patientName
+            state.save()
+            selectedSymptoms = []
+            restingSymptom = 0
+            lastResult = nil
+            lastDecision = nil
+            step = .consent
+            return
+        }
+
         state.setClinic(code: code, name: clinicName)
         state.patientName = patientName.isEmpty ? nil : patientName
+        state.patientCode = newCode.isEmpty ? state.patientCode : newCode
         state.save()
         step = .symptomProfile
     }
@@ -417,6 +461,7 @@ final class SSTFlow: ObservableObject {
             if let note = SSTProtocol.clinicianNote(forHRt: hrt) { payload["clinicianNote"] = note }
         }
 
+        let thresholdPostedAt = Date()
         _ = await SSTSync.postSession(
             clinicCode: state.clinicCode ?? "",
             sessionType: "threshold",
@@ -424,6 +469,35 @@ final class SSTFlow: ObservableObject {
             condition: "concussion",
             payload: payload
         )
+
+        // 1-minute heart-rate recovery, read back after watchOS writes it.
+        // Post-BCTT this is the autonomic read that sits alongside HRt.
+        //
+        // Sent as a SECOND event rather than held in-line: waiting up to 90s
+        // for the sample before posting the threshold would stall the result
+        // the clinician is standing there waiting for, and would risk losing
+        // the whole test if the app were backgrounded meanwhile.
+        //
+        // Strictly observational — absent if it never lands, and no clinical
+        // decision waits on it. Skipped on a red-flag stop (the test was
+        // terminated, not completed) and in the simulator (no sensor).
+        if !redFlagStop, !workout.simulated {
+            let testStart = thresholdPostedAt.addingTimeInterval(-Double(stages.count + 2) * 60)
+            if let hrr = await workout.heartRateRecovery(since: testStart) {
+                _ = await SSTSync.postSession(
+                    clinicCode: state.clinicCode ?? "",
+                    sessionType: "threshold",
+                    patientLabel: state.patientName ?? "",
+                    condition: "concussion",
+                    payload: [
+                        "eventType": "hrr-1min",
+                        "hrrOneMinuteBpm": hrr,
+                        "hrSource": HRSource.liveWatch.rawValue,
+                        "hrVerified": true,
+                    ]
+                )
+            }
+        }
     }
 
     private func postTraining(log: SessionLog, feeling: Feeling, timeInBandPct: Int, decision: ProgressionDecision) async {

@@ -8,9 +8,14 @@ settings:
   base:
     # MUST track the iPhone app (sst-native/ios): an embedded watch app's
     # short version has to MATCH the companion's or App Store upload
-    # validation rejects the binary. iPhone is 1.0 (2).
-    MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "3"
+    # validation rejects the binary.
+    #
+    # 1.0.1 (2026-10-14): patient-code identity + handover wipe, the >=2
+    # session stop rule, RPE>17 exhaustion validity, and 1-min HRR capture.
+    # SET THE IPHONE TARGET TO 1.0.1 TOO before archiving — sst-native/ios is
+    # gitignored/local-only, so its MARKETING_VERSION is set in Xcode, not here.
+    MARKETING_VERSION: "1.0.1"
+    CURRENT_PROJECT_VERSION: "5"
     SWIFT_VERSION: "5.9"
 targets:
   SSTWatch:
@@ -44,7 +49,7 @@ targets:
         # was the pre-submission dev configuration.
         WKCompanionAppBundleIdentifier: au.com.concussioneducation.sst
         WKRunsIndependentlyOfCompanionApp: true
-        NSHealthShareUsageDescription: "SST Trainer reads your heart rate during the graded test and training sessions to pace your recovery to your measured threshold."
+        NSHealthShareUsageDescription: "SST Trainer reads your heart rate during the graded test and training sessions to pace your recovery to your measured threshold, and your one-minute heart-rate recovery after a test so your clinician can see how your system recovers."
         NSHealthUpdateUsageDescription: "SST Trainer records your training sessions as workouts."
         WKBackgroundModes:
           - workout-processing

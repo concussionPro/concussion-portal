@@ -15,12 +15,17 @@ enum SSTProtocol {
     static let sessionsPerWeek = 6
 
     // Symptom rules
+    // TWO DIFFERENT SYMPTOM RULES, and the asymmetry is the protocol:
+    //  - the graded TEST reads the threshold at a ≥3-point rise (provocation)
+    //  - a home SESSION STOPS at a ≥2-point rise
+    // Leddy 2019 (JAMA Pediatr) is explicit on the second: patients "stop their
+    // home exercise session if their symptoms increased by 2 or more points".
     static let provocationRise = 3   // graded-test HRt = first stage with a ≥3-pt rise over rest
-    static let sessionStopRise = 2   // max ACCEPTABLE rise — stop when EXCEEDED (>2; Amsterdam 2023 tolerates ≤2)
+    static let sessionStopRise = 2   // home session stops at a rise of 2 OR MORE (applied with >=)
     static let maxRestingToTest = 8  // resting symptoms ≥8/10 → don't test today
     // The OTHER validated BCTT termination criterion: volitional exhaustion.
-    // The manual phrases it as RPE > 17; the applied rule on every surface is
-    // ≥ 17 (EXHAUSTION_RPE in protocol.ts) — one point conservative.
+    // The manual phrases it as RPE > 17 and that is how it is applied — 18 or
+    // above (EXHAUSTION_RPE in protocol.ts, corrected 2026-10-07).
     static let exhaustionRPE = 17
     /// Top of the Borg 6–20 scale (BORG_MAX in protocol.ts) — above it is not a rating.
     static let borgMax = 20
@@ -99,7 +104,14 @@ enum SSTProtocol {
         // exhaustion endpoint. Stages are counted DISTINCT by minute so a
         // replayed/duplicated row set is never a completed ramp.
         let terminalRPE = stages.last?.rpe ?? -1
-        let reachedExhaustion = terminalRPE >= exhaustionRPE && terminalRPE <= borgMax
+        // > not >=. The BCTT manual phrases volitional exhaustion as RPE > 17,
+        // i.e. 18 or above, and protocol.ts applies it that way after the
+        // 2026-10-07 correction (`terminalRpe > EXHAUSTION_RPE`). Accepting 17
+        // let the watch treat a test as validly exhaustive that the web would
+        // call inconclusive — so a threshold read off it was trusted here and
+        // not there. Test VALIDITY, not a stop rule: the patient still stops
+        // when they stop.
+        let reachedExhaustion = terminalRPE > exhaustionRPE && terminalRPE <= borgMax
         let completedProtocol = Set(stages.map { $0.minute }).count >= protocolStageCap
         guard reachedExhaustion || completedProtocol else {
             return ThresholdResult(interpretation: .invalid, hrt: nil, bandLow: nil, bandHigh: nil)
@@ -248,7 +260,10 @@ struct SessionLog: Codable {
     var verified: Bool
     var nextDayFlare: Bool = false
     /// A flare = within-session provocation OR a next-day flare.
-    var flare: Bool { (peakSymptom - preSymptom) > SSTProtocol.sessionStopRise || nextDayFlare }
+    /// >= not >, matching the stop rule and protocol.ts:661 (`>= SESSION_STOP_RISE`).
+    /// This drives progression, so the old `>` also made a 2-point rise invisible
+    /// to `decide()` — the session neither stopped nor counted as a flare.
+    var flare: Bool { (peakSymptom - preSymptom) >= SSTProtocol.sessionStopRise || nextDayFlare }
 }
 
 enum ProgressionDecision: Equatable {

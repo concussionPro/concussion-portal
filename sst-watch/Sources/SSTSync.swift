@@ -105,9 +105,17 @@ struct SSTSync {
         let code = clinicCode.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !code.isEmpty else { return false }
 
-        // payload carries eventType (from caller) + patientRef (injected).
+        // payload carries eventType (from caller) + the identity keys (injected).
         var pl = payload
         pl["patientRef"] = SSTStore.patientRef
+        // THE identity key. /api/sst/session treats patientCode as "the
+        // clinic-scoped, minted identity" and falls back to matching on the
+        // typed first name without it — which patient-registry.ts refuses to
+        // call an identity. Injected here, at post time, so it is baked into
+        // the serialised body: a queued session therefore carries the patient
+        // it belongs to and still files correctly after the watch has been
+        // handed to someone else.
+        if let code = SSTStore.patientCode, !code.isEmpty { pl["patientCode"] = code }
         // Stamped once per event; the server reuses it as the row id so an
         // offline replay is idempotent (mirrors clinic-sync.ts syncId).
         if pl["syncId"] == nil { pl["syncId"] = UUID().uuidString.lowercased() }

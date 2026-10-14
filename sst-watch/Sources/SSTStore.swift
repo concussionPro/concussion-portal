@@ -23,12 +23,34 @@ struct PendingSync: Codable, Equatable {
 
 struct SSTState: Codable {
     /// Install UUID — the `patientRef` sent with every sync. Generated once.
+    ///
+    /// NOT an identity. See lib/sst-trainer/patient-identity.ts: an install UUID
+    /// makes one human on two devices two records, and a reinstall a third. It
+    /// stays because the backend still accepts it as a weak stitch, but
+    /// `patientCode` below is what actually files a session.
     var patientRef: String
 
-    // Clinic linkage (from onboarding).
+    // Clinic linkage (from onboarding). ONE clinic code serves every patient
+    // on this watch (owner 2026-10-14: "we can use the same clinic code for
+    // every patient, just their data needs to sync with their file") — so it
+    // is a device setting and survives a patient handover.
     var clinicCode: String?
     var clinicName: String?
     var patientName: String?
+
+    /// The clinic-scoped PATIENT CODE minted in the Clinical Suite — the
+    /// identity key. 6 chars of ABCDEFGHJKLMNPQRTUVWXY346789, read off the
+    /// handover card at the end of the consult and typed in here once.
+    ///
+    /// Why it exists: without it, `/api/sst/session` falls through to matching
+    /// on `patientLabel` — the typed first name — and patient-registry.ts says
+    /// plainly "the label is NOT an identity". Two patients called Bob, or
+    /// "Robert" minted against "Bob" typed here, and the sessions either adopt
+    /// the wrong file or spawn a parallel record that is not the one in the
+    /// roster. With it, every session lands on the file the clinician minted.
+    ///
+    /// Optional so states persisted before this field decode fine.
+    var patientCode: String?
 
     /// Single data agreement accepted (one screen, one button — covers HR
     /// reading, symptom entries, on-watch storage and clinic sync). Optional so
@@ -77,6 +99,7 @@ struct SSTState: Codable {
             clinicCode: nil,
             clinicName: nil,
             patientName: nil,
+            patientCode: nil,
             consentedAt: nil,
             prescription: nil,
             sessions: [],
@@ -287,4 +310,47 @@ enum SSTStore {
 
     /// The stable install UUID used as `patientRef` on every sync.
     static var patientRef: String { load().patientRef }
+
+    /// The resident patient's minted code, or nil before onboarding.
+    static var patientCode: String? { load().patientCode }
+
+    // MARK: - Patient handover ("new patient")
+
+    /// Hand this watch to a DIFFERENT patient: wipe the resident patient's
+    /// clinical state and mint a fresh install identity, so the next patient
+    /// starts from a new baseline test instead of inheriting a band, a session
+    /// history and a progression position that are not theirs.
+    ///
+    /// WHAT IT CLEARS: prescription, sessions, archived sessions, thresholds,
+    /// checkpoints, test/regress/red-flag stamps, consent and patient name.
+    /// Clearing the prescription is what re-arms the first-run funnel — SSTFlow's
+    /// launch rule is `prescription == nil → onboarding`, so the graded test runs
+    /// again for the new patient with no extra screen to build.
+    ///
+    /// WHAT IT KEEPS, deliberately:
+    ///  - `clinicCode` / `clinicName` — one clinic code serves every patient on
+    ///    this watch, so it is a device setting, not patient data.
+    ///  - THE PENDING SYNC QUEUE. This is the important one. Each queued entry
+    ///    carries the identity that was current when it was built (SSTSync
+    ///    injects patientCode/patientRef at post time and serialises the body),
+    ///    so the previous patient's unsent sessions still land on THEIR file
+    ///    after the handover. Clearing it — or deleting the app, which drops the
+    ///    whole container — destroys clinical data that only exists on the wrist.
+    ///
+    /// Consent is cleared because consent is per person, not per device.
+    static func handOver(toPatientCode newCode: String?) {
+        let prior = load()
+        var next = SSTState.fresh()          // fresh patientRef
+        next.clinicCode = prior.clinicCode   // device setting, survives
+        next.clinicName = prior.clinicName
+        next.patientCode = newCode
+        save(next)
+        // pendingKey intentionally untouched.
+    }
+
+    /// How many clinical events are still waiting to reach the backend. Shown
+    /// before a handover so a watch is never wiped while the last patient's
+    /// sessions are still only on the wrist (they survive the handover either
+    /// way — this is so the clinician knows to keep it on Wi-Fi).
+    static var pendingCount: Int { loadPending().count }
 }

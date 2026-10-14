@@ -51,7 +51,13 @@ struct ConsentView: View {
 struct OnboardingView: View {
     @EnvironmentObject var flow: SSTFlow
 
-    @State private var code = ""
+    /// Prefilled from the device's stored clinic code: ONE clinic code serves
+    /// every patient on this watch, so it survives a handover and the clinician
+    /// should never retype it — they just confirm it.
+    @State private var code = SSTStore.load().clinicCode ?? ""
+    /// The patient's minted code, prefilled with the resident one so a returning
+    /// patient's watch doesn't ask the clinician to retype it.
+    @State private var patientCode = SSTStore.patientCode ?? ""
     @State private var name = ""
     @State private var checking = false
     @State private var validated: Bool? = nil
@@ -102,6 +108,24 @@ struct OnboardingView: View {
                 }
 
                 if validated == true {
+                    // PATIENT CODE — the identity key, minted in the Clinical
+                    // Suite and shown on the handover card at the end of the
+                    // consult. Without it a session files by typed first name,
+                    // which patient-registry.ts refuses to treat as an identity.
+                    // Same 6-char alphabet as the clinic code above, so the same
+                    // scribble/dictation entry already proven on-device; the
+                    // server normalises case, spaces, hyphens and the
+                    // look-alike glyphs, so a near-miss still lands on the
+                    // right record rather than on nothing.
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Patient code").font(.caption).foregroundStyle(.secondary)
+                        TextField("e.g. 4B7KQM", text: $patientCode)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                        Text("From this patient's file in the clinical suite.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Your name").font(.caption).foregroundStyle(.secondary)
                         TextField("First name", text: $name)
@@ -112,10 +136,16 @@ struct OnboardingView: View {
                         flow.completeOnboarding(
                             code: code.trimmingCharacters(in: .whitespaces).uppercased(),
                             clinicName: clinicName,
-                            patientName: name.trimmingCharacters(in: .whitespaces)
+                            patientName: name.trimmingCharacters(in: .whitespaces),
+                            patientCode: patientCode
+                                .trimmingCharacters(in: .whitespaces)
+                                .uppercased()
                         )
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(
+                        name.trimmingCharacters(in: .whitespaces).isEmpty ||
+                        patientCode.trimmingCharacters(in: .whitespaces).count < 6
+                    )
                 }
             }
             .padding(.horizontal, 4)

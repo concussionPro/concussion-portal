@@ -137,7 +137,15 @@ struct TrainingSessionView: View {
                 CrownScorePicker(title: "Symptoms now", value: $symptomNow, descriptor: symptomWord, accentFor: symptomSeverityColor)
                     .onChange(of: symptomNow) { _, v in
                         peakSymptom = max(peakSymptom, v)
-                        if (v - preSymptom) > SSTProtocol.sessionStopRise {
+                        // >= not >. Leddy 2019 (JAMA Pediatr), verbatim: patients
+                        // "stop their home exercise session if their symptoms
+                        // increased by 2 or more points". The old `>` continued
+                        // through a 2-point rise and only stopped at 3 — the
+                        // comments on this file and on sessionStopRise both
+                        // already claimed >=2, so the code was the outlier.
+                        // Corrected on the web 2026-10-07; this is the watch
+                        // catching up (lib/sst-trainer/protocol.ts:660).
+                        if (v - preSymptom) >= SSTProtocol.sessionStopRise {
                             Haptics.play(.failure)
                             endSession(stoppedForSymptom: true)
                         }
@@ -269,7 +277,11 @@ struct TrainingSessionView: View {
         // "Worse" is a global post-session worsening → ensure it registers as a
         // flare so progression treats it honestly (see divergence notes).
         var peak = peakSymptom
-        if feeling == .worse { peak = max(peak, preSymptom + SSTProtocol.sessionStopRise + 1) }
+        // "Worse" with no tapped rise still has to register as a flare. Under
+        // the old `>` rule that needed stopRise + 1; with `>=` the rise itself
+        // is the flare threshold, so + 1 would overstate what the patient
+        // reported. Synthesise exactly the threshold, not one past it.
+        if feeling == .worse { peak = max(peak, preSymptom + SSTProtocol.sessionStopRise) }
 
         // Dropout seconds produce NO readings, so session verification must
         // also require the readings to COVER the session — otherwise a mostly
