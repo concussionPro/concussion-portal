@@ -49,24 +49,34 @@ export function OaConferenceBand({ city, slug }: { city: string; slug: string })
         Osteopathy Australia National Conference
       </p>
       <p className="mt-1.5 mb-3 text-[14.5px] leading-relaxed text-slate-700">
-        Scanned the code at the workshop? Everything demonstrated on stage is taught in full in
-        Concussion Clinical Mastery. A refundable A$100 holds a {city} place and counts toward
-        anything — {city}, another city, or the online course.
+        Scanned the code at the workshop? The next practical day is{' '}
+        <strong className="text-slate-900">Melbourne, Saturday 7 November</strong>, and the
+        conference discount is on it until 24 October. A refundable A$100 holds a {city} place
+        instead, and counts in full toward whatever you enrol in.
       </p>
+      {/* Melbourne leads, and it goes STRAIGHT to /oa2026 — the conference page
+          that pushes 7 Nov and auto-applies the OA2026 discount at checkout.
+          It used to point at /courses/melbourne, which then pointed at
+          /melbourne-nov7, which then opened Stripe: three clicks to pay, and
+          no discount at the end of them (owner 2026-10-13: "just click and
+          pay"). /oa2026 is one click from here to the payment page.
+
+          The $100 deposit for THIS city stays below, unchanged — Nov 7 is
+          commit-or-don't, other cities and future dates are the deposit's job. */}
       <div className="flex flex-col sm:flex-row gap-2.5">
+        <Link
+          href={`/oa2026?src=oa2026-${slug}`}
+          onClick={() => void trackEvent('oa_conference_band_click', { city: slug, cta: 'melbourne' })}
+          className="btn-primary px-5 py-2.5 rounded-xl text-sm font-bold inline-flex items-center justify-center"
+        >
+          Melbourne 7 Nov — reserve a seat
+        </Link>
         <Link
           href={`/pricing?src=oa2026-${slug}`}
           onClick={() => void trackEvent('oa_conference_band_click', { city: slug, cta: 'enrol' })}
-          className="btn-primary px-5 py-2.5 rounded-xl text-sm font-bold inline-flex items-center justify-center"
-        >
-          See the course
-        </Link>
-        <Link
-          href={`/courses/melbourne?src=oa2026-${slug}`}
-          onClick={() => void trackEvent('oa_conference_band_click', { city: slug, cta: 'melbourne' })}
           className="px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center border border-teal-300 text-teal-800 hover:bg-teal-100/60 transition-colors"
         >
-          Melbourne 7 Nov — seats open
+          See the course
         </Link>
       </div>
     </div>

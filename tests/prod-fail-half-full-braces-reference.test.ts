@@ -68,14 +68,20 @@ describe('prod FAIL regressions (half-full / scat6 braces / complete-reference)'
     expect(src).not.toContain('seats left — capped at')
   })
 
-  it('melbourne-nov7 offers Secure-seat soft-commit secondary CTA with live-date copy', () => {
+  it('melbourne-nov7 is commit-or-dont — no soft-commit against the dated room', () => {
     const src = readFileSync(join(root, 'app/melbourne-nov7/page.tsx'), 'utf8')
-    expect(src).toContain('SecureSeatCheckout')
-    expect(src).toContain('defaultCity="melbourne"')
-    expect(src).toContain('source="melbourne_nov7"')
-    expect(src).toMatch(/hasLiveDate/)
-    expect(src).toMatch(/A\$100 refundable deposit/i)
-    // Primary Complete CTA remains
+    // REVERSED 2026-10-13 by the owner: "no email sign up/pre reg for nov 7 ...
+    // they commit or not". This test used to REQUIRE the A$100 soft-commit on
+    // this page. On a dated room three weeks out it gave a ready buyer a $100
+    // way to avoid pressing the $1,190 button — the same failure mode as a free
+    // notify form under a paid CTA. The deposit is now scoped to ANY OTHER city
+    // or a FUTURE date, so this page links out to those instead of offering one.
+    expect(src).not.toContain('SecureSeatCheckout')
+    expect(src).not.toMatch(/soft-commit/i)
+    // The deposit is still OFFERED, just not for 7 Nov — it points elsewhere.
+    expect(src).toMatch(/A\$100 holds your place in any other city or a future date/i)
+    expect(src).toContain('href="/in-person"')
+    // Primary Complete CTA remains the only way to take THIS room.
     expect(src).toContain('Take a Melbourne seat')
   })
 

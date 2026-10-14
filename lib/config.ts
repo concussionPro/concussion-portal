@@ -97,6 +97,17 @@ export const CONFIG = {
     SCAT_MASTERY_CPD_POINTS: 1,
     SCAT_MASTERY_MODULES: 3,
     PROMO_CODE: 'SCAT6',
+
+    // Osteopathy Australia National Conference (Fri 16 Oct 2026, Sea World).
+    // $100 off the practical day for the room, on top of the early bird, and
+    // it dies WITH the early bird on 24 Oct (owner 2026-10-13: "extra $100 off
+    // for OA conference (code OA2026)" / "only up until early bird").
+    //
+    // The AMOUNT and the EXPIRY both live on the Stripe promotion code, not
+    // here — /api/promo-status reads them off the live code so a page can never
+    // advertise a discount the checkout would refuse. This constant is only the
+    // code's NAME, so the page, the auto-apply and the slide all say one thing.
+    OA_CONFERENCE_PROMO_CODE: 'OA2026',
   },
 
   // Training Locations & Dates

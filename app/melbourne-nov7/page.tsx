@@ -6,7 +6,6 @@ import { ArrowRight, BookOpen, Check, Loader2, MapPin, Users, Utensils } from 'l
 import { SiteNav } from '@/components/SiteNav'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
-import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import { CONFIG, upgradePriceFor, cpdYearEnd, CPD_YEAR_END_LABEL, CPD_HOURS_PHYSIO, CPD_HOURS_OSTEO } from '@/lib/config'
 import { buildSecureSeatUrgency } from '@/lib/secure-seat-urgency'
@@ -226,20 +225,28 @@ export default function MelbourneNov7Page() {
 
           {!soldOut && (
             <div className="mt-5 pt-5 border-t border-slate-200">
+              {/* NOV 7 IS COMMIT-OR-DON'T (owner 2026-10-13: "no email sign
+                  up/pre reg for nov 7 ... they commit or not"). The A$100
+                  deposit checkout that used to sit here is gone: on a dated
+                  room three weeks out it gave a ready buyer a $100 way to
+                  avoid pressing the $1,190 button, which is the same failure
+                  mode as a free notify form under a paid CTA (see
+                  NextEarlyBirdCapture). The deposit still exists — for ANY
+                  OTHER CITY or a FUTURE DATE, which is what this link is for.
+                  Guarded by prod-fail-half-full-braces-reference.test.ts. */}
               <p className="text-sm font-semibold text-center text-slate-800 mb-1">
-                Not ready for Complete yet?
+                Can&rsquo;t make 7 November?
               </p>
               <p className="text-[12px] text-center text-muted-foreground mb-3 leading-snug">
-                Soft-commit with an A$100 refundable deposit — counts toward the Melbourne room,
-                credited in full to Complete when you enrol.
+                A$100 holds your place in any other city or a future date — refundable, and it
+                counts in full toward whatever you enrol in.
               </p>
-              <SecureSeatCheckout
-                defaultCity="melbourne"
-                lockCity
-                hasLiveDate
-                variant="inline"
-                source="melbourne_nov7"
-              />
+              <Link
+                href="/in-person"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 px-5 py-2.5 text-[13.5px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                See other cities and dates <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           )}
 

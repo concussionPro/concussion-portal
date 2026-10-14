@@ -57,9 +57,23 @@ export default function PublicBcttCalculatorPage() {
             patient&rsquo;s own watch — every home session verified live, trajectory on your
             dashboard, GP and return-to-play reports rendered from the episode.
           </p>
-          <Link href="/clinics" className="btn-primary inline-flex items-center px-6 py-2.5 rounded-xl font-semibold text-sm">
-            See it live — no login
-          </Link>
+          {/* This page is a QR target on the OA conference deck (slide 22), so
+              it needs a route to the course, not only to the clinic software.
+              Its one CTA used to go to /clinics, which left a roomful of
+              osteopaths on a calculator with no way to the practical day.
+              /oa2026 is the conference page; /clinics stays as the secondary
+              for the SST lane. */}
+          <div className="flex flex-col sm:flex-row gap-2.5 items-center justify-center">
+            <Link href="/oa2026" className="btn-primary inline-flex items-center px-6 py-2.5 rounded-xl font-semibold text-sm">
+              Learn this in the course
+            </Link>
+            <Link
+              href="/clinics"
+              className="inline-flex items-center px-6 py-2.5 rounded-xl border border-slate-300 font-semibold text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              See it live — no login
+            </Link>
+          </div>
         </div>
       </div>
     </div>

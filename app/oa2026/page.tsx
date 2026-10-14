@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Check, MapPin, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Check, Loader2, MapPin, ShieldCheck } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
+import { CheckoutRescue } from '@/components/CheckoutRescue'
+import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
 import { CONFIG } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
@@ -25,9 +27,18 @@ import { trackEvent } from '@/lib/analytics'
  * (see [[cea_analytics_optimization_loop]]) — the conference is the volume
  * driver for Melbourne Round 4, so it has to be measurable on its own.
  *
- * Checkout is deliberately NOT duplicated here: the practical-day CTA hands
- * off to /melbourne-nov7, which owns the live seat count, the sold-out roll
- * and the rescue path.
+ * CHECKOUT IS ON THIS PAGE (owner 2026-10-13: "make it easy", "no huge forms
+ * or multiple clicks", "just click and pay. reserve seat"). It used to hand
+ * off to /melbourne-nov7, which made the room do two page loads before they
+ * could pay. The seat is now reserved from here: one email box, one button,
+ * Stripe. /melbourne-nov7 still exists for the warm-list blast and still owns
+ * the sold-out roll; this page posts to the same /api/create-checkout, so
+ * there is one checkout implementation, not two.
+ *
+ * NOV 7 IS COMMIT-OR-DON'T. No email capture, no pre-registration and no $100
+ * soft-commit on this date (owner: "no email sign up/pre reg for nov 7 ...
+ * they commit or not"). The A$100 deposit is for ANY OTHER city or a future
+ * date, and lives on those pages — not here.
  *
  * Date/venue copy is LOCAL, as on /melbourne-nov7 — this is an event page
  * with a fixed early-bird, not a surface the public config drives.
@@ -36,11 +47,103 @@ import { trackEvent } from '@/lib/analytics'
 const DATE_LABEL = 'Saturday 7 November 2026'
 const VENUE = 'Rydges Melbourne — Exhibition Street, CBD'
 const EARLY_BIRD_LABEL = '24 October'
+const PROMO = CONFIG.COURSE.OA_CONFERENCE_PROMO_CODE
 
 export default function Oa2026Page() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [stuckCheckoutUrl, setStuckCheckoutUrl] = useState<string | null>(null)
+  const {
+    email: checkoutEmail,
+    setEmail: setCheckoutEmail,
+    sessionEmail: checkoutSessionEmail,
+    resolved: resolvedCheckoutEmail,
+  } = useCheckoutEmail()
+
+  // The conference discount, read off the live Stripe promotion code. Null
+  // until the answer arrives, so the page renders the full early-bird price
+  // first and only ever moves DOWN — a visitor never sees a discount appear
+  // and then vanish, and never sees a price the checkout would refuse.
+  // See /api/promo-status for why this is not a constant.
+  const [promoOffAud, setPromoOffAud] = useState<number | null>(null)
+  useEffect(() => {
+    fetch(`/api/promo-status?code=${encodeURIComponent(PROMO)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.active && typeof d.amountOffAud === 'number') setPromoOffAud(d.amountOffAud)
+      })
+      .catch(() => null)
+  }, [])
+
+  const listPrice = CONFIG.COURSE.PRICE_EARLY_BIRD
+  const payNow = promoOffAud ? listPrice - promoOffAud : listPrice
+
   useEffect(() => {
     trackEvent('page_view', { source: 'oa2026', surface: 'conference_qr' })
   }, [])
+
+  // Redirect-blocked fallback — same pattern as /melbourne-nov7 and
+  // PricingOptions: only renders if the page survives the navigation.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('cea-checkout-pending')
+      if (raw) {
+        const { url, t } = JSON.parse(raw)
+        if (url && Date.now() - t < 10 * 60 * 1000) setStuckCheckoutUrl(url)
+        else sessionStorage.removeItem('cea-checkout-pending')
+      }
+    } catch {}
+  }, [])
+
+  const reserveSeat = async () => {
+    if (loading) return
+    if (!resolvedCheckoutEmail) {
+      setError('Enter your email so we can send your enrolment link if checkout is interrupted.')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    trackEvent('checkout_start', {
+      courseType: 'full-course',
+      location: 'melbourne',
+      source: 'oa2026',
+      promo: PROMO,
+    })
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          courseType: 'full-course',
+          location: 'melbourne',
+          email: resolvedCheckoutEmail,
+          // Auto-applied so nobody in the room has to type it. Stripe is the
+          // authority: an expired or exhausted code simply does not attach and
+          // they pay the early-bird price the page was already showing.
+          promoCode: PROMO,
+          utm: { source: 'oa2026', medium: 'qr', campaign: 'oa_conference_2026' },
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data?.url) {
+        setError(data?.error || 'Could not start checkout — please try again.')
+        setLoading(false)
+        return
+      }
+      try {
+        sessionStorage.setItem('cea-checkout-pending', JSON.stringify({ url: data.url, t: Date.now() }))
+      } catch {}
+      window.location.href = data.url
+      setTimeout(() => {
+        setStuckCheckoutUrl(data.url)
+        setLoading(false)
+      }, 2500)
+    } catch {
+      setError('Network error — please try again.')
+      setLoading(false)
+    }
+  }
 
   const cta = (destination: string, tier: string) =>
     trackEvent('enroll_button_click', { source: 'oa2026', destination, tier })
@@ -77,11 +180,16 @@ export default function Oa2026Page() {
             </div>
             <div className="text-right">
               <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-amber-100 border border-amber-300 text-amber-900 rounded-full px-2.5 py-0.5 mb-1">
-                Early-bird until {EARLY_BIRD_LABEL}
+                {promoOffAud ? 'Conference rate' : 'Early-bird'} until {EARLY_BIRD_LABEL}
               </span>
-              <div className="flex items-baseline gap-1 justify-end">
+              <div className="flex items-baseline gap-1.5 justify-end">
+                {promoOffAud ? (
+                  <span className="text-[15px] font-semibold text-muted-foreground line-through decoration-slate-400">
+                    ${listPrice.toLocaleString()}
+                  </span>
+                ) : null}
                 <span className="text-3xl font-bold text-foreground tracking-tight">
-                  ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
+                  ${payNow.toLocaleString()}
                 </span>
                 <span className="text-[11px] text-muted-foreground">AUD</span>
               </div>
@@ -105,16 +213,48 @@ export default function Oa2026Page() {
             ))}
           </ul>
 
-          <Link
-            href="/melbourne-nov7"
-            onClick={() => cta('/melbourne-nov7', 'complete')}
-            className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-[15px] font-bold rounded-xl"
+          {promoOffAud ? (
+            <p className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[13px] text-amber-900 text-center">
+              <span className="font-bold">
+                A${promoOffAud} conference discount applied — code {PROMO}.
+              </span>{' '}
+              Already on the button below. It closes with the early bird on {EARLY_BIRD_LABEL}.
+            </p>
+          ) : null}
+          <CheckoutEmailField
+            email={checkoutEmail}
+            setEmail={setCheckoutEmail}
+            sessionEmail={checkoutSessionEmail}
+            disabled={loading}
+            inputId="oa2026-checkout-email"
+            className="mb-3 text-left"
+          />
+          <button
+            type="button"
+            onClick={reserveSeat}
+            disabled={loading}
+            className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-[15px] font-bold rounded-xl disabled:opacity-60"
           >
-            Take a Melbourne seat <ArrowRight className="w-4 h-4" />
-          </Link>
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                Reserve my seat — ${payNow.toLocaleString()} <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+          {stuckCheckoutUrl && (
+            <div className="mt-3">
+              <CheckoutRescue url={stuckCheckoutUrl} />
+            </div>
+          )}
+          {error && <p className="text-xs text-red-600 mt-2 text-center">{error}</p>}
           <p className="text-[12px] text-muted-foreground text-center mt-2.5">
             Capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats · fully catered · practical
             handbook included
+          </p>
+          <p className="text-[11px] text-muted-foreground text-center mt-1.5">
+            Secure Stripe checkout · 7-day money-back guarantee · tax invoice with payment
           </p>
         </div>
 
@@ -145,6 +285,21 @@ export default function Oa2026Page() {
           >
             See what the modules cover <ArrowRight className="w-3.5 h-3.5" />
           </Link>
+          {/* The third door, kept to one line. 7 Nov is commit-or-don't; the
+              A$100 deposit is for any other city or a future date (owner:
+              "they can sign up to any location for any other future date with
+              $100 deposit"). It is NOT offered against Nov 7 above. */}
+          <p className="mt-3 pt-3 border-t border-slate-200 text-[13px] text-muted-foreground leading-relaxed">
+            Not in Melbourne on the 7th?{' '}
+            <Link
+              href="/in-person"
+              onClick={() => cta('/in-person', 'deposit')}
+              className="font-semibold text-accent hover:underline"
+            >
+              A$100 holds a place in another city or a future date
+            </Link>{' '}
+            — refundable, and it counts in full toward whatever you enrol in.
+          </p>
         </div>
 
         {/* THE CLINICAL SUITE — the answer to "what changes in my practice?"

@@ -78,6 +78,12 @@ describe('conference QR pages are built for the scan', () => {
   })
 
   it('routes to the live Melbourne date, which is the seat we need to fill', () => {
-    expect(band).toContain('/courses/melbourne?src=oa2026-')
+    // Was '/courses/melbourne?src=oa2026-'. That page only links on to
+    // /melbourne-nov7, which then opens Stripe — three clicks from the band to
+    // a payment page, and no conference discount at the end of them. It now
+    // points at /oa2026, which pushes 7 Nov, holds the checkout and
+    // auto-applies the OA2026 code (owner 2026-10-13: "just click and pay").
+    expect(band).toContain('/oa2026?src=oa2026-')
+    expect(band).not.toContain('/courses/melbourne?src=oa2026-')
   })
 })
