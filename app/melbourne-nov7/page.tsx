@@ -86,7 +86,10 @@ export default function MelbourneNov7Page() {
           courseType: 'full-course',
           location: 'melbourne',
           email: resolvedCheckoutEmail,
-          utm: { source: 'email', medium: 'email', campaign: 'quarterly_blast_v1' },
+          // utm_* keys, not source/medium/campaign — see the note on /oa2026.
+          // This page had the wrong shape since it was written, so no blast
+          // purchase has ever carried its utm_source into Stripe metadata.
+          utm: { utm_source: 'email', utm_medium: 'email', utm_campaign: 'quarterly_blast_v1' },
         }),
       })
       const data = await res.json().catch(() => ({}))

@@ -122,7 +122,13 @@ export default function Oa2026Page() {
           // authority: an expired or exhausted code simply does not attach and
           // they pay the early-bird price the page was already showing.
           promoCode: PROMO,
-          utm: { source: 'oa2026', medium: 'qr', campaign: 'oa_conference_2026' },
+          // Keys MUST be utm_source/utm_medium/utm_campaign: lib/stripe.ts
+          // stamps metadata from `utm?.utm_source`, and utmSchema is a loose
+          // string map, so a {source,medium,campaign} payload validates fine
+          // and then silently stamps nothing. Verified against a live session
+          // 2026-10-14 — conference attribution is the entire reason this
+          // route exists, so it cannot be left to a key that reads as correct.
+          utm: { utm_source: 'oa2026', utm_medium: 'qr', utm_campaign: 'oa_conference_2026' },
         }),
       })
       const data = await res.json().catch(() => ({}))

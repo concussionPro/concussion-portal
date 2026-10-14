@@ -66,6 +66,31 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // ...but payment_status alone cannot tell a BNPL buyer apart from someone
+    // who ABANDONED. Both read 'unpaid'. Found 2026-10-14 walking the OA
+    // conference QR flow: an open, never-paid session returned
+    // { success: true, amountPaid: 1190 }, so /checkout/success rendered a
+    // full "you're enrolled, $1,190 paid" confirmation for a payment that
+    // never happened. No entitlement is granted (that only comes from the
+    // checkout.session.completed webhook), so this is a false confirmation
+    // rather than a bypass — the buyer is told they're in, gets no login and
+    // no receipt, and contacts you. Easy to hit on a phone at a conference:
+    // start checkout, press back, land on the success URL.
+    //
+    // `status` is the discriminator the old check was missing:
+    //   'complete' → buyer finished Checkout (paid, or BNPL authorised and
+    //                settling) — this is the real confirmation case
+    //   'open'     → still/never completed — not a confirmation
+    //   'expired'  → abandoned and timed out
+    // Gating on status keeps Afterpay/Klarna working (their sessions are
+    // 'complete' with payment_status 'unpaid') while refusing an open one.
+    if (session.status !== 'complete') {
+      return NextResponse.json(
+        { success: false, error: 'Payment not completed' },
+        { status: 400 }
+      )
+    }
+
     // Only allow retrieval within 4 hours of session creation (accommodates Afterpay/Klarna delays)
     const createdAt = (session.created || 0) * 1000
     if (Date.now() - createdAt > 4 * 60 * 60 * 1000) {

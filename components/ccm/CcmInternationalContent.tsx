@@ -256,7 +256,8 @@ export default function CcmInternationalContent({ price, hideNav = false, uk = f
         body: JSON.stringify({
           courseType: 'international-online',
           email: resolvedCheckoutEmail,
-          utm: { source: 'csp', medium: 'course-advert', campaign: 'intl-ccm' },
+          // utm_* keys, not source/medium/campaign — see the note on /oa2026.
+          utm: { utm_source: 'csp', utm_medium: 'course-advert', utm_campaign: 'intl-ccm' },
         }),
       })
       const data = await res.json().catch(() => ({}))
