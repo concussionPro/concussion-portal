@@ -390,18 +390,41 @@ describe('the watch mirrors the web protocol constants', () => {
   })
 
   it('the watch stop rule uses the SAME comparator as the web, not just the same number', () => {
-    // 2026-08-12: the web moved to "stop when the rise EXCEEDS 2" (Amsterdam
-    // 2023) and the watch silently kept ">= 2" — this suite passed because it
-    // compared the CONSTANTS. Same number, different comparator, different
-    // clinical behaviour. Assert the comparator itself.
+    // The point of this test is unchanged: the same NUMBER with a different
+    // COMPARATOR is different clinical behaviour, and comparing constants alone
+    // hid that. What flipped is which comparator is correct.
+    //
+    // 2026-08-12 this asserted `>` — "stop when the rise EXCEEDS 2" — citing
+    // Amsterdam 2023. That conflated two rules from two different contexts:
+    //
+    //   Amsterdam 2022/2023, Return-to-Sport strategy: "mild and brief
+    //   exacerbation" is "an increase of no more than 2 points ... for less
+    //   than an hour". That is a TOLERANCE for progressing through RTS steps —
+    //   ≤2 does not send the athlete back a step.
+    //
+    //   Leddy 2019 (JAMA Pediatr), sub-symptom threshold aerobic exercise —
+    //   WHICH IS THE PROTOCOL THIS APP IMPLEMENTS: patients "stop their home
+    //   exercise session if their symptoms increased by 2 or more points".
+    //
+    // SST is the Buffalo/Leddy instrument end to end — BCTT, HRt, an 80–90%
+    // band — so Leddy's stop rule governs the exercise session. Amsterdam's
+    // tolerance governs return-to-sport staging, which this app does not do.
+    // Corrected on the web 2026-10-07 at the owner's instruction ("read the
+    // citations and fix the stop rule as per evidence"); the watch followed on
+    // 2026-10-14 and this lock now pins the Leddy comparator in both.
+    //
+    // If this ever looks wrong again, re-read the two sources before flipping
+    // it: the numbers agree, the contexts do not, and only one of them is a
+    // session stop rule.
     const proto = read('SSTProtocol.swift')
     const training = read('TrainingSession.swift')
-    expect(proto).toMatch(/\(peakSymptom - preSymptom\)\s*>\s*SSTProtocol\.sessionStopRise/)
-    expect(proto).not.toMatch(/\(peakSymptom - preSymptom\)\s*>=\s*SSTProtocol\.sessionStopRise/)
-    expect(training).toMatch(/\(v - preSymptom\)\s*>\s*SSTProtocol\.sessionStopRise/)
-    expect(training).not.toMatch(/\(v - preSymptom\)\s*>=\s*SSTProtocol\.sessionStopRise/)
-    // endFeel "worse" must map to a peak that IS a flare under the > rule.
-    expect(training).toMatch(/preSymptom \+ SSTProtocol\.sessionStopRise \+ 1/)
+    expect(proto).toMatch(/\(peakSymptom - preSymptom\)\s*>=\s*SSTProtocol\.sessionStopRise/)
+    expect(training).toMatch(/\(v - preSymptom\)\s*>=\s*SSTProtocol\.sessionStopRise/)
+    // endFeel "worse" must map to a peak that IS a flare under the >= rule —
+    // exactly the threshold, not one past it (the `+ 1` the `>` rule needed
+    // would now overstate what the patient actually reported).
+    expect(training).toMatch(/preSymptom \+ SSTProtocol\.sessionStopRise(?!\s*\+)/)
+    expect(training).not.toMatch(/preSymptom \+ SSTProtocol\.sessionStopRise \+ 1/)
   })
 
   it('the watch Borg picker is NOT pre-seeded at the exhaustion endpoint', () => {
