@@ -268,7 +268,9 @@ export default function MelbourneNov7Page() {
               the CPD year closes {CPD_YEAR_END_LABEL}. This day sits{' '}
               {Math.max(
                 0,
-                Math.round((cpdYearEnd().getTime() - (CONFIG.LOCATIONS.MELBOURNE.dateObj?.getTime() ?? 0)) / 86400000),
+                // floor, not round — see the note on /oa2026. Rounding claimed
+                // one more day before the CPD deadline than actually exists.
+                Math.floor((cpdYearEnd().getTime() - (CONFIG.LOCATIONS.MELBOURNE.dateObj?.getTime() ?? 0)) / 86400000),
               )}{' '}
               days before that deadline — and your certificate is issued on the day.
             </p>

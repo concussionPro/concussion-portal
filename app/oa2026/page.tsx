@@ -205,9 +205,13 @@ export default function Oa2026Page() {
             Osteopaths need {CPD_HOURS_OSTEO} hours a year and the CPD year closes{' '}
             {CPD_YEAR_END_LABEL} — so this is {CONFIG.COURSE.TOTAL_CPD_POINTS} of your{' '}
             {CPD_HOURS_OSTEO}, certificate issued on the day,{' '}
+            {/* floor, not round: cpdYearEnd() is 30 Nov 23:59:59, so 7 Nov to
+                the deadline is 23 days and change. Math.round rendered "24
+                days before the deadline", which is a day more than there are.
+                A public factual claim, so it takes the conservative integer. */}
             {Math.max(
               0,
-              Math.round(
+              Math.floor(
                 (cpdYearEnd().getTime() - (CONFIG.LOCATIONS.MELBOURNE.dateObj?.getTime() ?? 0)) /
                   86400000,
               ),
@@ -329,7 +333,10 @@ export default function Oa2026Page() {
             advertising rules would require us to substantiate. */}
         <div className="card card-visible rounded-2xl p-6 md:p-7 mb-6">
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent mb-2">
-            Included with either option
+            {/* Was "Included with either option" — true when the $497 rung sat
+                directly above this. It now sits BELOW, so "either option"
+                referred forward to something the reader had not met yet. */}
+            Included, and yours from the day you enrol
           </p>
           <h2 className="text-xl font-bold text-foreground mb-1.5">
             The clinical suite
