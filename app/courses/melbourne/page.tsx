@@ -72,7 +72,8 @@ export default function MelbournePage() {
                   <span className="hidden sm:inline text-slate-300">·</span>
                   <div className="flex items-center gap-2 text-slate-700">
                     <MapPin className="w-5 h-5 text-accent" aria-hidden="true" />
-                    <span className="font-semibold">Rydges Melbourne · Exhibition St</span>
+                    {/* Catering rides WITH the venue — see the note on /oa2026. */}
+                    <span className="font-semibold">Rydges Melbourne · Exhibition St · fully catered</span>
                   </div>
                   <span className="hidden sm:inline text-slate-300">·</span>
                   <SpotsRemaining location="MELBOURNE" />

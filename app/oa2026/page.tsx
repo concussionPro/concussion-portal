@@ -45,7 +45,11 @@ import { trackEvent } from '@/lib/analytics'
  */
 
 const DATE_LABEL = 'Saturday 7 November 2026'
-const VENUE = 'Rydges Melbourne — Exhibition Street, CBD'
+// Catering rides WITH the venue, not only in the small print under the button
+// (owner 2026-10-13; same rule as feedback_catering_leads_the_benefits). A
+// clinician giving up a Saturday reads the venue line and wants to know lunch
+// is handled — it is a benefit, not a logistics footnote.
+const VENUE = 'Rydges Melbourne — Exhibition Street, CBD · fully catered'
 const EARLY_BIRD_LABEL = '24 October'
 const PROMO = CONFIG.COURSE.OA_CONFERENCE_PROMO_CODE
 

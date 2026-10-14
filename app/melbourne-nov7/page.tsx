@@ -24,7 +24,8 @@ import { trackEvent } from '@/lib/analytics'
  */
 
 const DATE_LABEL = 'Saturday 7 November 2026'
-const VENUE = 'Rydges Melbourne — Exhibition Street, CBD'
+// Catering rides WITH the venue — see the note on /oa2026.
+const VENUE = 'Rydges Melbourne — Exhibition Street, CBD · fully catered'
 
 export default function MelbourneNov7Page() {
   const [loading, setLoading] = useState(false)
