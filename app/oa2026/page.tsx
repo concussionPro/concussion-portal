@@ -7,7 +7,13 @@ import { SiteNav } from '@/components/SiteNav'
 import { PracticalDayPhoto } from '@/components/pricing/PracticalDayPhoto'
 import { CheckoutRescue } from '@/components/CheckoutRescue'
 import { CheckoutEmailField, useCheckoutEmail } from '@/components/CheckoutEmailField'
-import { CONFIG } from '@/lib/config'
+import {
+  CONFIG,
+  cpdYearEnd,
+  CPD_YEAR_END_LABEL,
+  CPD_HOURS_PHYSIO,
+  CPD_HOURS_OSTEO,
+} from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 /**
@@ -168,11 +174,47 @@ export default function Oa2026Page() {
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-3">
           Concussion science in practice
         </h1>
-        <p className="text-[15px] text-muted-foreground text-center mb-8 leading-relaxed">
+        <p className="text-[15px] text-muted-foreground text-center mb-5 leading-relaxed">
           Everything demonstrated in the workshop — the rapid screen, the cervical and
           vestibulo-ocular differentiation, the exertion threshold and the staged return —
           is taught in full in Concussion Clinical Mastery.
         </p>
+
+        {/* AUTHORITY + VALUE, BEFORE THE PRICE.
+            This was the second-to-last block on the page, below four tool
+            descriptions. Two problems with that: the reader is standing inside
+            an OA conference, so OA's own endorsement is the most relevant trust
+            signal available and it was arriving last; and the CPD total — the
+            thing that makes $1,190 read as cheap rather than expensive — was
+            reached only after the price had already been judged.
+            Osteopaths need CPD_HOURS_OSTEO a year and the CPD year closes
+            30 Nov, 23 days after this workshop. That is the strongest
+            documented purchase trigger for a clinician (it is why the same
+            block exists on /melbourne-nov7) and it was missing here entirely. */}
+        <div className="rounded-2xl border border-teal-200 bg-teal-50/70 px-5 py-4 mb-6">
+          <p className="text-[13.5px] font-bold text-slate-900 flex items-start gap-2">
+            <ShieldCheck className="w-[18px] h-[18px] text-teal-700 flex-shrink-0 mt-[1px]" />
+            Endorsed by Osteopathy Australia · {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours
+            <span className="font-medium text-slate-600">
+              {' '}
+              ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in
+              person)
+            </span>
+          </p>
+          <p className="text-[13px] text-slate-700 mt-1.5 leading-relaxed">
+            Osteopaths need {CPD_HOURS_OSTEO} hours a year and the CPD year closes{' '}
+            {CPD_YEAR_END_LABEL} — so this is {CONFIG.COURSE.TOTAL_CPD_POINTS} of your{' '}
+            {CPD_HOURS_OSTEO}, certificate issued on the day,{' '}
+            {Math.max(
+              0,
+              Math.round(
+                (cpdYearEnd().getTime() - (CONFIG.LOCATIONS.MELBOURNE.dateObj?.getTime() ?? 0)) /
+                  86400000,
+              ),
+            )}{' '}
+            days before the deadline. Physiotherapists need {CPD_HOURS_PHYSIO}.
+          </p>
+        </div>
 
         <PracticalDayPhoto stream="ccm" />
 
@@ -181,6 +223,14 @@ export default function Oa2026Page() {
           className="card card-visible rounded-2xl p-6 md:p-7 mb-5"
           style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.35)' }}
         >
+          {/* NAME THE WHOLE THING ABOVE THE PRICE. The shared
+              PracticalDayPhoto above is headed "The practical day", so without
+              this the reader forms a price judgement on $1,190-for-one-Saturday
+              and only learns the 8 online modules are included four bullets
+              later. Same price, completely different judgement. */}
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent mb-1.5">
+            Complete course · {CONFIG.COURSE.TOTAL_MODULES} online modules + the practical day
+          </p>
           <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
             <div>
               <p className="text-xl font-bold text-foreground">{DATE_LABEL}</p>
@@ -268,49 +318,6 @@ export default function Oa2026Page() {
           </p>
         </div>
 
-        {/* SECONDARY — the online rung */}
-        <div className="card card-visible rounded-2xl p-5 md:p-6 mb-6">
-          <div className="flex items-start justify-between gap-3 flex-wrap mb-2.5">
-            <div>
-              <p className="text-[15px] font-bold text-foreground">
-                Not ready for the practical day?
-              </p>
-              <p className="text-[13.5px] text-muted-foreground mt-0.5">
-                Start with the {CONFIG.COURSE.TOTAL_MODULES} online modules —{' '}
-                {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours, self-paced, access never expires.
-                You can add the practical day later.
-              </p>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-foreground tracking-tight">
-                ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}
-              </span>
-              <span className="text-[11px] text-muted-foreground">AUD</span>
-            </div>
-          </div>
-          <Link
-            href="/course"
-            onClick={() => cta('/course', 'online')}
-            className="text-[14px] font-bold text-accent inline-flex items-center gap-1.5 hover:underline"
-          >
-            See what the modules cover <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-          {/* The third door, kept to one line. 7 Nov is commit-or-don't; the
-              A$100 deposit is for any other city or a future date (owner:
-              "they can sign up to any location for any other future date with
-              $100 deposit"). It is NOT offered against Nov 7 above. */}
-          <p className="mt-3 pt-3 border-t border-slate-200 text-[13px] text-muted-foreground leading-relaxed">
-            Not in Melbourne on the 7th?{' '}
-            <Link
-              href="/in-person"
-              onClick={() => cta('/in-person', 'deposit')}
-              className="font-semibold text-accent hover:underline"
-            >
-              A$100 holds a place in another city or a future date
-            </Link>{' '}
-            — refundable, and it counts in full toward whatever you enrol in.
-          </p>
-        </div>
 
         {/* THE CLINICAL SUITE — the answer to "what changes in my practice?"
             The session could not make this argument: the submitted disclosure
@@ -367,16 +374,59 @@ export default function Oa2026Page() {
           </div>
         </div>
 
-        <div className="flex items-start gap-2.5 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3">
-          <ShieldCheck className="w-5 h-5 text-teal-700 flex-shrink-0 mt-0.5" />
-          <p className="text-[13px] text-slate-700 leading-relaxed">
-            <span className="font-bold text-slate-900">Endorsed by Osteopathy Australia</span>{' '}
-            — {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours in total (
-            {CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in
-            person). Concussion Rehab Mastery, the separate ESSA-accredited stream for exercise
-            physiologists, shares the same practical day.
+        {/* SECONDARY — the online rung */}
+        <div className="card card-visible rounded-2xl p-5 md:p-6 mb-6">
+          <div className="flex items-start justify-between gap-3 flex-wrap mb-2.5">
+            <div>
+              <p className="text-[15px] font-bold text-foreground">
+                Not ready for the practical day?
+              </p>
+              <p className="text-[13.5px] text-muted-foreground mt-0.5">
+                Start with the {CONFIG.COURSE.TOTAL_MODULES} online modules —{' '}
+                {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours, self-paced, access never expires.
+                You can add the practical day later.
+              </p>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-foreground tracking-tight">
+                ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}
+              </span>
+              <span className="text-[11px] text-muted-foreground">AUD</span>
+            </div>
+          </div>
+          <Link
+            href="/course"
+            onClick={() => cta('/course', 'online')}
+            className="text-[14px] font-bold text-accent inline-flex items-center gap-1.5 hover:underline"
+          >
+            See what the modules cover <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+          {/* The third door, kept to one line. 7 Nov is commit-or-don't; the
+              A$100 deposit is for any other city or a future date (owner:
+              "they can sign up to any location for any other future date with
+              $100 deposit"). It is NOT offered against Nov 7 above. */}
+          <p className="mt-3 pt-3 border-t border-slate-200 text-[13px] text-muted-foreground leading-relaxed">
+            Not in Melbourne on the 7th?{' '}
+            <Link
+              href="/in-person"
+              onClick={() => cta('/in-person', 'deposit')}
+              className="font-semibold text-accent hover:underline"
+            >
+              A$100 holds a place in another city or a future date
+            </Link>{' '}
+            — refundable, and it counts in full toward whatever you enrol in.
           </p>
         </div>
+        {/* The OA endorsement + CPD total moved to the top of the page. What
+            remains here is the one fact that lived only in that box: CRM is a
+            SEPARATE, ESSA-accredited stream that shares this practical day.
+            Kept apart from the OA line by design — docs/brand-voice.md bans
+            presenting the two accreditations as one offering, and
+            tests/factual-claims-lock.test.ts enforces it. */}
+        <p className="text-[12.5px] text-muted-foreground text-center mt-6 leading-relaxed">
+          Concussion Rehab Mastery, the separate ESSA-accredited stream for exercise
+          physiologists, shares the same practical day.
+        </p>
 
         <p className="text-[12.5px] text-muted-foreground text-center mt-8">
           Questions about the workshop or the course?{' '}
