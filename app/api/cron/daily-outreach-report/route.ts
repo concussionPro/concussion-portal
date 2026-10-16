@@ -32,6 +32,114 @@ export const maxDuration = 60
 const BOT_REGEX =
   "(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)"
 
+/**
+ * OA National Conference (16 Oct 2026) conversion watch.
+ *
+ * The conference put ~52 human sessions through the QR targets in its first
+ * 36 hours and produced zero same-day purchases — which is the expected shape
+ * for a $1,190 Saturday a clinician has to check a roster against, not a
+ * failure. The decision window is the nine days to the early bird close, so
+ * the signal worth watching is a RETURN visit, not a first scan.
+ *
+ * Self-expires: after the early-bird close there is nothing left to convert on
+ * this offer, so the block stops rendering rather than becoming permanent
+ * clutter in a daily email. `OA_WATCH_UNTIL` is the only thing to change if
+ * the offer is ever extended.
+ */
+const OA_WATCH_UNTIL = new Date('2026-10-26T23:59:59+11:00')
+
+interface ConferenceWatch {
+  live: boolean
+  daysToEarlyBird: number
+  sessions: { path: string; sessions: number }[]
+  returning: number
+  attributedUsers: { email: string; created_at: string }[]
+  purchases: { user_email: string; course_slug: string; amount_aud: number }[]
+}
+
+async function conferenceWatch(): Promise<ConferenceWatch> {
+  const now = new Date()
+  const earlyBirdClose = new Date('2026-10-24T23:59:59+11:00')
+  const daysToEarlyBird = Math.max(
+    0,
+    Math.ceil((earlyBirdClose.getTime() - now.getTime()) / 86400000),
+  )
+  const empty: ConferenceWatch = {
+    live: now <= OA_WATCH_UNTIL,
+    daysToEarlyBird,
+    sessions: [],
+    returning: 0,
+    attributedUsers: [],
+    purchases: [],
+  }
+  if (!empty.live) return empty
+
+  // Every read is wrapped: a daily report must never fail because an optional
+  // analytics block errored. Each falls back to "nothing to show".
+  try {
+    const { rows } = await sql.query<{ path: string; sessions: number }>(
+      `SELECT path, COUNT(DISTINCT session_id)::int AS sessions
+         FROM analytics_events
+        WHERE created_at >= NOW() - INTERVAL '24 hours'
+          AND COALESCE(user_agent,'') !~* $1
+          AND path IN ('/oa2026','/clinical-hub','/tools/bctt-calculator',
+                       '/courses/sydney','/courses/byron-bay','/pricing')
+        GROUP BY path
+        HAVING COUNT(DISTINCT session_id) > 0
+        ORDER BY 2 DESC`,
+      [BOT_REGEX],
+    )
+    empty.sessions = rows
+  } catch (err) {
+    console.error('[daily-outreach-report] conference sessions read failed:', err)
+  }
+
+  // THE buying signal: a session id that has hit /oa2026 or /pricing on more
+  // than one calendar day. A first scan is curiosity; coming back is intent.
+  try {
+    const { rows } = await sql.query<{ n: number }>(
+      `SELECT COUNT(*)::int AS n FROM (
+         SELECT session_id
+           FROM analytics_events
+          WHERE created_at >= NOW() - INTERVAL '14 days'
+            AND COALESCE(user_agent,'') !~* $1
+            AND path IN ('/oa2026','/pricing')
+            AND session_id IS NOT NULL
+          GROUP BY session_id
+         HAVING COUNT(DISTINCT date_trunc('day', created_at)) > 1
+       ) r`,
+      [BOT_REGEX],
+    )
+    empty.returning = rows[0]?.n ?? 0
+  } catch (err) {
+    console.error('[daily-outreach-report] conference returning read failed:', err)
+  }
+
+  try {
+    const { rows } = await sql<{ email: string; created_at: string }>`
+      SELECT email, created_at::text FROM users
+       WHERE created_at >= NOW() - INTERVAL '24 hours'
+         AND is_test IS NOT TRUE
+         AND (acquisition_source ILIKE '%oa2026%' OR acquisition_landing ILIKE '%oa2026%')
+       ORDER BY created_at`
+    empty.attributedUsers = rows
+  } catch (err) {
+    console.error('[daily-outreach-report] conference user read failed:', err)
+  }
+
+  try {
+    const { rows } = await sql<{ user_email: string; course_slug: string; amount_aud: number }>`
+      SELECT user_email, course_slug, amount_aud FROM course_purchases
+       WHERE purchased_at >= NOW() - INTERVAL '24 hours' AND refunded_at IS NULL
+       ORDER BY purchased_at`
+    empty.purchases = rows
+  } catch (err) {
+    console.error('[daily-outreach-report] conference purchase read failed:', err)
+  }
+
+  return empty
+}
+
 interface EngagedClinicRow {
   id: number
   slug: string
@@ -218,7 +326,7 @@ export async function GET(request: NextRequest) {
     const sent = await sendEmail({
       to: CONFIG.CONTACT_EMAIL,
       subject,
-      html: buildReportEmail(direct, nurture, engagedCount),
+      html: buildReportEmail(direct, nurture, engagedCount, await conferenceWatch()),
       tags: [
         { name: 'type', value: 'daily-outreach-report' },
         { name: 'direct', value: String(direct.length) },
@@ -263,12 +371,57 @@ function contactName(row: EngagedClinicRow): string {
   return row.contact_full_name || row.contact_first_name || 'the contact'
 }
 
-function buildReportEmail(direct: DecidedClinic[], nurture: DecidedClinic[], engagedCount: number): string {
+function buildReportEmail(
+  direct: DecidedClinic[],
+  nurture: DecidedClinic[],
+  engagedCount: number,
+  oa?: ConferenceWatch,
+): string {
   const dateLine = new Date().toLocaleDateString('en-AU', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Australia/Melbourne',
   })
 
   const summary = `${engagedCount} clinic${engagedCount === 1 ? '' : 's'} engaged this week · ${direct.length} need a personal email · ${nurture.length} continuing in nurture.`
+
+  // ── OA conference watch — only while the offer is live ──
+  // Reads as a scoreboard, not an alert: the honest state most days is "n
+  // sessions, nobody back yet", and that is information, not a problem. The
+  // returning count is the line that matters.
+  const oaSection = oa?.live
+    ? (() => {
+        const rows = oa.sessions.length
+          ? oa.sessions
+              .map(
+                (s) =>
+                  `<tr><td style="padding:3px 10px 3px 0; font-size:13px; color:#334155;">${escapeHtml(s.path)}</td><td style="padding:3px 0; font-size:13px; font-weight:600; color:#0f172a;">${s.sessions}</td></tr>`,
+              )
+              .join('')
+          : '<tr><td colspan="2" style="padding:3px 0; font-size:13px; color:#94a3b8;">no sessions in the last 24h</td></tr>'
+        const converted = oa.purchases.length
+          ? `<p style="margin:10px 0 0; font-size:13.5px; font-weight:700; color:#065f46;">PURCHASE: ${oa.purchases
+              .map((p) => `${escapeHtml(p.user_email)} — ${escapeHtml(p.course_slug)} $${p.amount_aud}`)
+              .join('; ')}</p>`
+          : ''
+        const signed = oa.attributedUsers.length
+          ? `<p style="margin:8px 0 0; font-size:13px; color:#334155;">New accounts attributed to oa2026: ${oa.attributedUsers
+              .map((u) => escapeHtml(u.email))
+              .join(', ')}</p>`
+          : ''
+        return `
+          <div style="background:#f0fdfa; border:1px solid #99f6e4; border-radius:10px; padding:16px; margin:0 0 22px;">
+            <p style="margin:0 0 2px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#0f766e;">OA conference watch</p>
+            <p style="margin:0 0 10px; font-size:13px; color:#334155;">
+              Early-bird closes in <strong>${oa.daysToEarlyBird} day${oa.daysToEarlyBird === 1 ? '' : 's'}</strong> · OA2026 charges $1,090 until then.
+            </p>
+            <p style="margin:0 0 6px; font-size:13.5px; color:#0f172a;">
+              <strong>${oa.returning}</strong> visitor${oa.returning === 1 ? ' has' : 's have'} come back to /oa2026 or /pricing on a second day
+              <span style="color:#64748b;">— the actual buying signal; a first scan is curiosity.</span>
+            </p>
+            <table style="border-collapse:collapse; margin-top:8px;">${rows}</table>
+            ${signed}${converted}
+          </div>`
+      })()
+    : ''
 
   // ── Direct list — the suggested manual outreach ──
   const directSection = direct.length > 0
@@ -329,6 +482,8 @@ function buildReportEmail(direct: DecidedClinic[], nurture: DecidedClinic[], eng
       <p style="font-size: 14px; color: #334155; text-align:center; margin: 0 0 24px; font-weight:600;">
         ${escapeHtml(summary)}
       </p>
+
+      ${oaSection}
 
       <h2 style="font-size: 16px; color: #065f46; margin: 24px 0 12px;">
         &#128293; Reach out personally (${direct.length})
