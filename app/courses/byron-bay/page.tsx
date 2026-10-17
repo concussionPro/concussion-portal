@@ -118,7 +118,17 @@ export default function ByronBayPage() {
                 <p className="text-sm text-muted-foreground mt-3 mb-1">
                   Prefer to hold a Byron Bay seat? Refundable A${CONFIG.COURSE.PRICE_SECURE_SEAT} deposit below.
                 </p>
-                <NextEarlyBirdCapture defaultCity="sydney" />
+                {/* WAS defaultCity="sydney" — a copy-paste from the Sydney
+                    page. NextEarlyBirdCapture forwards this to
+                    SecureSeatCheckout with lockCity, so every deposit taken
+                    from the Byron page was minted against SYDNEY and the
+                    visitor could not change it. Found 2026-10-17 from a real
+                    abandoned checkout: a Brisbane clinician spent 24 page
+                    views bouncing between this page and /pricing, never
+                    touched a Sydney page, and landed in a Sydney deposit.
+                    Same failure class as the 2026-08-20 phantom-Sydney
+                    default. Guarded by tests/city-deposit-slug.test.ts. */}
+                <NextEarlyBirdCapture defaultCity="byron-bay" />
               </>
             )}
           </div>

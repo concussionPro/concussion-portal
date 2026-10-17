@@ -7,10 +7,21 @@ import { trackInterestRegistration } from '@/lib/analytics'
 import { CONFIG, isEarlyBirdForLocation, nextLiveWorkshop, workshopPriceFor } from '@/lib/config'
 import { SecureSeatCheckout } from '@/components/SecureSeatCheckout'
 
-type CitySlug = 'sydney' | 'adelaide' | 'wa' | 'melbourne'
+// Must stay a superset of every city that has a /courses/<city> page, because
+// that page passes its own slug here and the value is FORWARDED TO
+// SecureSeatCheckout WITH lockCity — it decides which city a A$100 deposit is
+// minted against, and the buyer cannot change it.
+//
+// 'byron-bay' was missing until 2026-10-17. SecureSeatCheckout has always
+// supported it (CITY_OPTIONS), but this type did not, so /courses/byron-bay
+// shipped `defaultCity="sydney"` on 1 Oct as the only value that compiled —
+// and every deposit started from the Byron page was nominated for Sydney.
+// Guarded by tests/city-deposit-slug.test.ts.
+type CitySlug = 'sydney' | 'adelaide' | 'wa' | 'melbourne' | 'byron-bay'
 
 const CITIES: { slug: CitySlug; label: string }[] = [
   { slug: 'sydney', label: 'Sydney' },
+  { slug: 'byron-bay', label: 'Byron Bay' },
   { slug: 'adelaide', label: 'Adelaide' },
   { slug: 'wa', label: 'Perth / WA' },
   { slug: 'melbourne', label: 'Next Melbourne' },
